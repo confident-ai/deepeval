@@ -1,3 +1,7 @@
+from time import perf_counter
+from asyncio import sleep
+import random
+
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     BiasMetric,
@@ -10,11 +14,6 @@ from deepeval.tracing import (
     RetrieverAttributes,
     LlmAttributes,
 )
-
-from time import perf_counter
-from asyncio import sleep
-import random
-
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
@@ -24,6 +23,8 @@ from deepeval.metrics.dag import (
     VerdictNode,
 )
 from deepeval.metrics import DAGMetric, GEval
+from deepeval import assert_test
+from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -177,10 +178,36 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
-start_time = perf_counter()
-evaluate(goldens, meta_agent, run_async=True)
-print(perf_counter() - start_time)
 
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=True)
-# print(perf_counter() - start_time)
+# # # Run Async
+# evaluate(goldens=goldens, traceable_callback=meta_agent, async_config=AsyncConfig(run_async=True))
+evaluate(
+    goldens=goldens,
+    traceable_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True),
+    display_config=DisplayConfig(show_indicator=False),
+)
+
+# # # # Run Sync
+# evaluate(
+#     goldens=goldens,
+#     traceable_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=False),
+#     display_config=DisplayConfig(show_indicator=True),
+# )
+# evaluate(
+#     goldens=goldens,
+#     traceable_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=False),
+#     display_config=DisplayConfig(show_indicator=False),
+# )
+
+# import pytest
+
+# # Assert Test
+# @pytest.mark.parametrize(
+#     "golden",
+#     goldens,
+# )
+# def test_meta_agent_0(golden):
+#     assert_test(golden=golden, traceable_callback=meta_agent)

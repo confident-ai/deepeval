@@ -7,7 +7,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from deepeval.confident.api import (
     Api,
     Endpoints,
-    DEEPEVAL_BASE_URL,
+    get_deepeval_base_url,
     HttpMethods,
 )
 from deepeval.confident.types import (
@@ -39,7 +39,7 @@ def confident_evaluate(
             )
             start_time = time.perf_counter()
 
-            api = Api(base_url=DEEPEVAL_BASE_URL)
+            api = Api(base_url=get_deepeval_base_url())
             confident_request_data = ConfidentEvaluateRequestData(
                 metricCollection=metric_collection, testCases=test_cases
             )

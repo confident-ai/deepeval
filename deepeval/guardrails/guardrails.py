@@ -10,7 +10,7 @@ from deepeval.guardrails.types import GuardType
 from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
 from deepeval.utils import is_confident
-from deepeval.guardrails.api import BASE_URL
+from deepeval.confident.api import get_base_api_url
 
 
 class Guardrails:
@@ -49,7 +49,7 @@ class Guardrails:
 
             # API request
             if is_confident():
-                api = Api(base_url=BASE_URL)
+                api = Api(base_url=get_base_api_url())
                 response = api.send_request(
                     method=HttpMethods.POST,
                     endpoint=Endpoints.GUARDRAILS_ENDPOINT,
@@ -91,7 +91,7 @@ class Guardrails:
 
             # API request
             if is_confident():
-                api = Api(base_url=BASE_URL)
+                api = Api(base_url=get_base_api_url())
                 response = api.send_request(
                     method=HttpMethods.POST,
                     endpoint=Endpoints.GUARDRAILS_ENDPOINT,

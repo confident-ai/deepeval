@@ -19,7 +19,7 @@ This guide will teach you how to use literally **ANY** embedding model to extrac
 
 You can use Azure's OpenAI embedding models by running the following commands in the CLI:
 
-```console
+```bash
 deepeval set-azure-openai --openai-endpoint=<endpoint> \
     --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --openai-api-key=<api_key> \
@@ -31,7 +31,7 @@ deepeval set-azure-openai --openai-endpoint=<endpoint> \
 
 Then, run this to set the Azure OpenAI embedder:
 
-```console
+```bash
 deepeval set-azure-openai-embedding --embedding-deployment-name=<embedding_deployment_name>
 ```
 
@@ -43,25 +43,25 @@ The first command configures `deepeval` to use Azure OpenAI LLM globally, while 
 
 To use a local model served by Ollama, use the following command:
 
-```console
+```bash
 deepeval set-ollama <model_name>
 ```
 
 Where model_name is one of the LLM that appears when executing `ollama list`. If you ever wish to stop using your local LLM model and move back to regular OpenAI, simply run:
 
-```console
+```bash
 deepeval unset-ollama
 ```
 
 Then, run this to set the local Embeddings model:
 
-```console
+```bash
 deepeval set-ollama-embeddings <embedding_model_name>
 ```
 
 To revert back to the default OpenAI embeddings run:
 
-```console
+```bash
 deepeval unset-ollama-embeddings
 ```
 
@@ -74,7 +74,7 @@ There are several local LLM providers that offer OpenAI API compatible endpoints
 
 For example to use a local model from LM Studio, use the following command:
 
-```console
+```bash
 deepeval set-local-model --model-name=<model_name> \
     --base-url="http://localhost:1234/v1/" \
     --api-key=<api-key>
@@ -82,7 +82,7 @@ deepeval set-local-model --model-name=<model_name> \
 
 Then, run this to set the local Embeddings model:
 
-```console
+```bash
 deepeval set-local-embeddings --model-name=<embedding_model_name> \
     --base-url="http://localhost:1234/v1/" \
     --api-key=<api-key>
@@ -90,7 +90,7 @@ deepeval set-local-embeddings --model-name=<embedding_model_name> \
 
 To revert back to the default OpenAI embeddings run:
 
-```console
+```bash
 deepeval unset-local-embeddings
 ```
 

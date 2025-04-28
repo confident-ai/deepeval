@@ -21,10 +21,16 @@ class AnthropicModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model: str = "claude-3-7-sonnet-latest",
+        temperature: float = 0,
         _anthropic_api_key: Optional[str] = None,
     ):
         model_name = model
         self._anthropic_api_key = _anthropic_api_key
+
+        if temperature < 0:
+            raise ValueError("Temperature must be >= 0.")
+        self.temperature = temperature
+
         super().__init__(model_name)
 
     ###############################################
@@ -44,6 +50,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                 }
             ],
             model=self.model_name,
+            temperature=self.temperature,
         )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
@@ -67,6 +74,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                 }
             ],
             model=self.model_name,
+            temperature=self.temperature,
         )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens

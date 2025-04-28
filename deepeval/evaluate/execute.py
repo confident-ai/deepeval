@@ -61,6 +61,7 @@ from deepeval.evaluate.utils import (
     create_metric_data,
     create_test_result,
     create_api_test_case,
+    count_metrics_in_trace,
 )
 
 
@@ -129,7 +130,7 @@ def execute_test_cases(
 
                     ##### Metric Calculation #####
                     api_test_case: LLMApiTestCase = create_api_test_case(
-                        test_case, llm_test_case_count
+                        test_case=test_case, index=llm_test_case_count
                     )
                     new_cached_test_case: CachedTestCase = CachedTestCase()
 
@@ -230,7 +231,7 @@ def execute_test_cases(
                         continue
 
                     api_test_case: LLMApiTestCase = create_api_test_case(
-                        test_case, llm_test_case_count
+                        test_case=test_case, index=llm_test_case_count
                     )
                     test_start_time = time.perf_counter()
                     for metric in mllm_metrics:
@@ -291,7 +292,8 @@ def execute_test_cases(
                     conversational_test_case_count += 1
                     api_test_case: ConversationalApiTestCase = (
                         create_api_test_case(
-                            test_case, conversational_test_case_count
+                            test_case=test_case,
+                            index=conversational_test_case_count,
                         )
                     )
 
@@ -595,7 +597,7 @@ async def a_execute_llm_test_cases(
         )
 
     ##### Metric Calculation #####
-    api_test_case = create_api_test_case(test_case, count)
+    api_test_case = create_api_test_case(test_case=test_case, index=count)
     new_cached_test_case: CachedTestCase = CachedTestCase()
     test_start_time = time.perf_counter()
     await measure_metrics_with_indicator(
@@ -674,7 +676,9 @@ async def a_execute_mllm_test_cases(
         metric.skipped = False
         metric.error = None  # Reset metric error
 
-    api_test_case: LLMApiTestCase = create_api_test_case(test_case, count)
+    api_test_case: LLMApiTestCase = create_api_test_case(
+        test_case=test_case, index=count
+    )
     test_start_time = time.perf_counter()
     await measure_metrics_with_indicator(
         metrics=metrics,
@@ -724,7 +728,7 @@ async def a_execute_conversational_test_cases(
         metric.error = None  # Reset metric error
 
     api_test_case: ConversationalApiTestCase = create_api_test_case(
-        test_case, count
+        test_caset=test_case, index=count
     )
 
     test_start_time = time.perf_counter()
@@ -766,25 +770,34 @@ def execute_agentic_test_cases(
     ignore_errors: bool,
     skip_on_missing_params: bool,
     show_indicator: bool,
+    save_to_disk: bool = False,
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = False
-    test_run_manager.create_test_run(identifier=identifier)
+
+    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.get_test_run(identifier=identifier)
+
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
     test_results: List[TestResult] = []
 
-    def evaluate_test_cases(pbar: Optional[tqdm] = None):
+    def evaluate_test_cases(
+        pbar: Optional[tqdm] = None, pbar_callback: Optional[tqdm] = None
+    ):
         count = 0
         show_metric_indicator = show_indicator and not _use_bar_indicator
 
         for golden in goldens:
             with capture_evaluation_run("golden"):
                 count += 1
-                # Invoke callback and extract trace
+                if pbar_callback is not None:
+                    pbar_callback.set_description(
+                        f"     ⚡ Invoking traceable callback (golden #{count})"
+                    )
+
                 with Observer("custom", func_name="Test Wrapper"):
                     if asyncio.iscoroutinefunction(traceable_callback):
                         loop = get_or_create_event_loop()
@@ -794,6 +807,9 @@ def execute_agentic_test_cases(
                     else:
                         traceable_callback(input=golden.input)
                     current_trace: Trace = get_current_trace()
+
+                if pbar_callback is not None:
+                    pbar_callback.update(1)
 
                 # Create empty trace api for llm api test case
                 trace_api = TraceApi(
@@ -830,6 +846,7 @@ def execute_agentic_test_cases(
                     tools_called=golden.tools_called,
                     expected_tools=golden.expected_tools,
                     comments=golden.comments,
+                    name=golden.name,
                     _dataset_alias=golden._dataset_alias,
                     _dataset_id=golden._dataset_id,
                 )
@@ -838,7 +855,7 @@ def execute_agentic_test_cases(
                 )
 
                 # Run DFS to calculate metrics synchronously
-                def dfs(span: BaseSpan):
+                def dfs(span: BaseSpan, pbar_eval: Optional[tqdm] = None):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
                     test_case: LLMTestCase = span.llm_test_case
@@ -910,12 +927,24 @@ def execute_agentic_test_cases(
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_metric_data(metric_data)
+                        if pbar_eval is not None:
+                            pbar_eval.update(1)
 
                     for child in span.children:
-                        dfs(child)
+                        dfs(child, pbar_eval)
+
+                if pbar is not None:
+                    pbar_eval = tqdm(
+                        desc=f"     🎯 Evaluating span metrics (golden #{count})",
+                        total=count_metrics_in_trace(trace=current_trace),
+                        bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+                        leave=False,
+                    )
+                else:
+                    pbar_eval = None
 
                 start_time = time.perf_counter()
-                dfs(current_trace.root_spans[0])
+                dfs(current_trace.root_spans[0], pbar_eval)
                 end_time = time.perf_counter()
                 run_duration = end_time - start_time
 
@@ -923,17 +952,27 @@ def execute_agentic_test_cases(
                 api_test_case.update_run_duration(run_duration)
                 test_run_manager.update_test_run(api_test_case, test_case)
                 test_results.append(create_test_result(api_test_case))
+
                 if pbar is not None:
                     pbar.update(1)
+                if pbar_eval is not None:
+                    pbar_eval.close()
 
     if show_indicator and _use_bar_indicator:
-        with tqdm(
+        pbar = tqdm(
             desc=f"Evaluating {len(goldens)} goldens(s) sequentially",
             unit="golden",
+            position=0,
             total=len(goldens),
             bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
-        ) as pbar:
-            evaluate_test_cases(pbar)
+        )
+        pbar_callback = tqdm(
+            desc="     ⚡ Invoking traceable callback",
+            total=len(goldens),
+            position=1,
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+        )
+        evaluate_test_cases(pbar, pbar_callback)
     else:
         evaluate_test_cases()
 
@@ -952,6 +991,7 @@ async def a_execute_agentic_test_cases(
     show_indicator: bool,
     throttle_value: int,
     max_concurrent: int,
+    save_to_disk: bool = False,
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
@@ -962,8 +1002,9 @@ async def a_execute_agentic_test_cases(
             return await func(*args, **kwargs)
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = False
-    test_run_manager.create_test_run(identifier=identifier)
+    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.get_test_run(identifier=identifier)
+
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
     test_results: List[TestResult] = []
@@ -971,33 +1012,21 @@ async def a_execute_agentic_test_cases(
     count = 0
 
     if show_indicator and _use_bar_indicator:
-        with tqdm_asyncio(
-            desc=f"Evaluating {len(goldens)} golden(s) in parallel",
-            unit="golden",
+
+        pbar = tqdm_asyncio(
+            desc="Evaluating goldens",
             total=len(goldens),
+            position=0,
             bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
-        ) as pbar:
-            for golden in goldens:
-                with capture_evaluation_run("golden"):
-                    count += 1
-                    task = execute_with_semaphore(
-                        func=a_execute_agentic_test_case,
-                        golden=golden,
-                        traceable_callback=traceable_callback,
-                        test_run_manager=test_run_manager,
-                        test_results=test_results,
-                        count=count,
-                        verbose_mode=verbose_mode,
-                        ignore_errors=ignore_errors,
-                        skip_on_missing_params=skip_on_missing_params,
-                        show_indicator=show_indicator,
-                        _use_bar_indicator=_use_bar_indicator,
-                        pbar=pbar,
-                    )
-                    tasks.append(asyncio.create_task(task))
-                    await asyncio.sleep(throttle_value)
-            await asyncio.gather(*tasks)
-    else:
+        )
+
+        pbar_callback = tqdm_asyncio(
+            desc="     ⚡ Invoking traceable callback",
+            total=len(goldens),
+            position=1,
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+        )
+
         for golden in goldens:
             with capture_evaluation_run("golden"):
                 count += 1
@@ -1014,6 +1043,30 @@ async def a_execute_agentic_test_cases(
                     show_indicator=show_indicator,
                     _use_bar_indicator=_use_bar_indicator,
                     pbar=pbar,
+                    pbar_callback=pbar_callback,
+                )
+                tasks.append(asyncio.create_task(task))
+                await asyncio.sleep(throttle_value)
+        await asyncio.gather(*tasks)
+        pbar.close()
+        pbar_callback.close()
+    else:
+        for golden in goldens:
+            with capture_evaluation_run("golden"):
+                count += 1
+                task = execute_with_semaphore(
+                    func=a_execute_agentic_test_case,
+                    golden=golden,
+                    traceable_callback=traceable_callback,
+                    test_run_manager=test_run_manager,
+                    test_results=test_results,
+                    count=count,
+                    verbose_mode=verbose_mode,
+                    ignore_errors=ignore_errors,
+                    skip_on_missing_params=skip_on_missing_params,
+                    show_indicator=show_indicator,
+                    _use_bar_indicator=_use_bar_indicator,
+                    pbar=None,
                 )
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(throttle_value)
@@ -1036,6 +1089,7 @@ async def a_execute_agentic_test_case(
     show_indicator: bool,
     _use_bar_indicator: bool,
     pbar: Optional[tqdm_asyncio] = None,
+    pbar_callback: Optional[tqdm_asyncio] = None,
 ):
     # Call callback and extract trace
     with Observer("custom", func_name="Test Wrapper"):
@@ -1044,6 +1098,8 @@ async def a_execute_agentic_test_case(
         else:
             traceable_callback(input=golden.input)
         current_trace: Trace = get_current_trace()
+    if pbar_callback is not None:
+        pbar_callback.update(1)
 
     # run evals through DFS
     trace_api = TraceApi(
@@ -1068,6 +1124,17 @@ async def a_execute_agentic_test_case(
             else None
         ),
     )
+
+    if pbar is not None:
+        pbar_eval = tqdm_asyncio(
+            desc=f"     🎯 Evaluating span metrics (golden #{count})",
+            total=count_metrics_in_trace(trace=current_trace),
+            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
+            leave=False,
+        )
+    else:
+        pbar_eval = None
+
     test_case = LLMTestCase(
         input=golden.input,
         actual_output=golden.actual_output,
@@ -1078,6 +1145,7 @@ async def a_execute_agentic_test_case(
         tools_called=golden.tools_called,
         expected_tools=golden.expected_tools,
         comments=golden.comments,
+        name=golden.name,
         _dataset_alias=golden._dataset_alias,
         _dataset_id=golden._dataset_id,
     )
@@ -1094,6 +1162,7 @@ async def a_execute_agentic_test_case(
             skip_on_missing_params=skip_on_missing_params,
             show_indicator=show_indicator,
             verbose_mode=verbose_mode,
+            pbar_eval=pbar_eval,
             _use_bar_indicator=_use_bar_indicator,
         )
         child_tasks = [dfs(child) for child in span.children]
@@ -1105,10 +1174,12 @@ async def a_execute_agentic_test_case(
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
 
-    ### Update Test Run ###
     api_test_case.update_run_duration(run_duration)
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
+
+    if pbar_eval is not None:
+        pbar_eval.close()
     if pbar is not None:
         pbar.update(1)
 
@@ -1121,6 +1192,7 @@ async def a_execute_span_test_case(
     skip_on_missing_params: bool,
     show_indicator: bool,
     verbose_mode: Optional[bool],
+    pbar_eval: Optional[tqdm_asyncio],
     _use_bar_indicator: bool,
 ):
     if span.metrics is None:
@@ -1159,6 +1231,7 @@ async def a_execute_span_test_case(
         skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
+        pbar_eval=pbar_eval,
     )
 
     api_span.metrics_data = []

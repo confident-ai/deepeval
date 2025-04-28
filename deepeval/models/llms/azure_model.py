@@ -33,6 +33,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         azure_openai_api_key: Optional[str] = None,
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
+        temperature: float = 0,
         *args,
         **kwargs,
     ):
@@ -54,6 +55,10 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_ENDPOINT
         )
+        if temperature < 0:
+            raise ValueError("Temperature must be >= 0.")
+        self.temperature = temperature
+
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs
@@ -80,6 +85,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -96,6 +102,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -111,6 +118,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             messages=[
                 {"role": "user", "content": prompt},
             ],
+            temperature=self.temperature,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -140,6 +148,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -156,6 +165,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -171,6 +181,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             messages=[
                 {"role": "user", "content": prompt},
             ],
+            temperature=self.temperature,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -216,6 +227,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
     # Utilities
     ###############################################
+
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = model_pricing.get(self.model_name, model_pricing["gpt-4o"])
         input_cost = input_tokens * pricing["input"]
@@ -251,6 +263,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             azure_endpoint=self.azure_endpoint,
             api_key=self.azure_openai_api_key,
             api_version=self.openai_api_version,
+            temperature=self.temperature,
             *self.args,
             **self.kwargs,
         )

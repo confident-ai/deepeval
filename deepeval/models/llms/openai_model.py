@@ -152,6 +152,7 @@ class GPTModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         _openai_api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        temperature: float = 0,
         *args,
         **kwargs,
     ):
@@ -168,6 +169,9 @@ class GPTModel(DeepEvalBaseLLM):
         self._openai_api_key = _openai_api_key
         self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
+        if temperature < 0:
+            raise ValueError("Temperature must be >= 0.")
+        self.temperature = temperature
         self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)
@@ -193,6 +197,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -209,6 +214,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -245,6 +251,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -261,6 +268,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -350,6 +358,7 @@ class GPTModel(DeepEvalBaseLLM):
             model_name=self.model_name,
             openai_api_key=self._openai_api_key,
             base_url=self.base_url,
+            temperature=self.temperature,
             *self.args,
             **self.kwargs,
         )

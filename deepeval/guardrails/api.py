@@ -1,10 +1,7 @@
 from typing import Optional, List, Union, Dict
 from pydantic import BaseModel
 
-
 from deepeval.guardrails.types import GuardType
-
-BASE_URL = "https://deepeval.confident-ai.com/"
 
 
 class ApiGuard(BaseModel):

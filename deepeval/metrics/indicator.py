@@ -5,6 +5,7 @@ import sys
 from typing import List, Optional, Union
 import time
 import asyncio
+from tqdm.asyncio import tqdm_asyncio
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import (
@@ -139,6 +140,7 @@ async def measure_metrics_with_indicator(
     ignore_errors: bool,
     skip_on_missing_params: bool,
     show_indicator: bool,
+    pbar_eval: Optional[tqdm_asyncio] = None,
 ):
     if show_indicator:
         with Progress(
@@ -194,7 +196,11 @@ async def measure_metrics_with_indicator(
             else:
                 tasks.append(
                     safe_a_measure(
-                        metric, test_case, ignore_errors, skip_on_missing_params
+                        metric,
+                        test_case,
+                        ignore_errors,
+                        skip_on_missing_params,
+                        pbar_eval,
                     )
                 )
 
@@ -206,9 +212,12 @@ async def safe_a_measure(
     tc: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
     skip_on_missing_params: bool,
+    pbar_eval: Optional[tqdm_asyncio] = None,
 ):
     try:
         await metric.a_measure(tc, _show_indicator=False)
+        if pbar_eval:
+            pbar_eval.update(1)
     except MissingTestCaseParamsError as e:
         if skip_on_missing_params:
             metric.skipped = True

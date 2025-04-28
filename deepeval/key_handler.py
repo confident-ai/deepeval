@@ -7,7 +7,9 @@ from .constants import KEY_FILE
 
 
 class KeyValues(Enum):
+    # Confident AI
     API_KEY = "api_key"
+    CONFIDENT_REGION = "confident_region"
     # Azure Open AI
     AZURE_OPENAI_API_KEY = "AZURE_OPENAI_API_KEY"
     AZURE_OPENAI_ENDPOINT = "AZURE_OPENAI_ENDPOINT"
@@ -46,7 +48,11 @@ class KeyFileHandler:
         try:
             with open(KEY_FILE, "r") as f:
                 # Load existing data
-                self.data = json.load(f)
+                try:
+                    self.data = json.load(f)
+                except json.JSONDecodeError:
+                    # Handle corrupted JSON file
+                    self.data = {}
         except FileNotFoundError:
             # If file doesn't exist, start with an empty dictionary
             self.data = {}
@@ -62,7 +68,11 @@ class KeyFileHandler:
         """Fetches the data from the hidden file"""
         try:
             with open(KEY_FILE, "r") as f:
-                self.data = json.load(f)
+                try:
+                    self.data = json.load(f)
+                except json.JSONDecodeError:
+                    # Handle corrupted JSON file
+                    self.data = {}
         except FileNotFoundError:
             # Handle the case when the file doesn't exist
             self.data = {}
@@ -72,7 +82,11 @@ class KeyFileHandler:
         """Removes the specified key from the data."""
         try:
             with open(KEY_FILE, "r") as f:
-                self.data = json.load(f)
+                try:
+                    self.data = json.load(f)
+                except json.JSONDecodeError:
+                    # Handle corrupted JSON file
+                    self.data = {}
             self.data.pop(key.value, None)  # Remove the key if it exists
             with open(KEY_FILE, "w") as f:
                 json.dump(self.data, f)

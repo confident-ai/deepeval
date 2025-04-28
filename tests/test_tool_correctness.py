@@ -1,3 +1,4 @@
+from deepeval.evaluate.configs import DisplayConfig
 from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
 from deepeval.metrics import ToolCorrectnessMetric
 from deepeval import evaluate
@@ -133,5 +134,7 @@ test_cases = [
 ]
 
 evaluate(
-    test_cases=test_cases, metrics=[tool_correctness_metric], verbose_mode=True
+    test_cases=test_cases,
+    metrics=[tool_correctness_metric],
+    display_config=DisplayConfig(verbose_mode=True),
 )

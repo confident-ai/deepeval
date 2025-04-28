@@ -14,8 +14,26 @@ from tenacity import (
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
+DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
 API_BASE_URL = "https://api.confident-ai.com"
+API_BASE_URL_EU = "https://eu.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
+
+
+def get_base_api_url():
+    region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
+    if region == "US":
+        return API_BASE_URL_EU
+    else:
+        return API_BASE_URL
+
+
+def get_deepeval_base_url():
+    region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
+    if region == "US":
+        return DEEPEVAL_BASE_URL
+    else:
+        return DEEPEVAL_BASE_URL_EU
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -61,7 +79,7 @@ class Api:
             # "User-Agent": "Python/Requests",
             "CONFIDENT_API_KEY": api_key,
         }
-        self.base_api_url = base_url or API_BASE_URL
+        self.base_api_url = base_url or get_base_api_url()
 
     @staticmethod
     @retry(

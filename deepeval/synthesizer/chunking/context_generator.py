@@ -1,20 +1,20 @@
-import shutil
-from typing import List, Tuple, Dict, Optional, Union
-from langchain_core.documents import Document
-from tqdm.asyncio import tqdm_asyncio
-from tqdm import tqdm as tqdm_bar
-from pydantic import BaseModel
 import asyncio
-import random
 import math
 import os
+import random
+import shutil
+from typing import Dict, List, Optional, Tuple, Union
 
+from pydantic import BaseModel
+from tqdm import tqdm as tqdm_bar
+from tqdm.asyncio import tqdm_asyncio
+
+from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseLLM,
 )
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.synthesizer.file_handler import FileHandler
 from deepeval.synthesizer.templates.template import FilterTemplate
 
@@ -40,7 +40,6 @@ class ContextGenerator:
         similarity_threshold: float = 0.5,
         additional_loaders: Optional[Dict[str, FileHandler]] = None,
     ):
-        from chromadb.api.models.Collection import Collection
 
         # Ensure document_paths is provided
         if not document_paths:
@@ -95,9 +94,7 @@ class ContextGenerator:
             source_files = []
 
             # Load the source files and create document chunkers for each file
-            source_file_to_chunker_map: Dict[str, DocumentChunker] = (
-                self._load_docs()
-            )
+            source_file_to_chunker_map: Dict[str, DocumentChunker] = self._load_docs()
 
             # Chunk each file into a chroma collection of chunks
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
@@ -105,12 +102,8 @@ class ContextGenerator:
                 source_file_to_chunker_map.items(),
                 "✨ 📚 ✨ Chunking Documents",
             ):
-                collection = chunker.chunk_doc(
-                    self.chunk_size, self.chunk_overlap
-                )
-                self.validate_chunk_size(
-                    min_contexts_per_source_file, collection
-                )
+                collection = chunker.chunk_doc(self.chunk_size, self.chunk_overlap)
+                self.validate_chunk_size(min_contexts_per_source_file, collection)
                 source_files_to_chunk_collections_map[key] = collection
 
             # Intialize progress bar for context generation
@@ -184,9 +177,9 @@ class ContextGenerator:
             source_files = []
 
             # Check if chunk_size and max_context_size is valid for document lengths
-            source_file_to_chunker_map: Dict[str, DocumentChunker] = (
-                await self._a_load_docs()
-            )
+            source_file_to_chunker_map: Dict[
+                str, DocumentChunker
+            ] = await self._a_load_docs()
 
             # Chunk each file into a chroma collection of chunks
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
@@ -195,18 +188,14 @@ class ContextGenerator:
                 collection = await chunker.a_chunk_doc(
                     self.chunk_size, self.chunk_overlap
                 )
-                self.validate_chunk_size(
-                    min_contexts_per_source_file, collection
-                )
+                self.validate_chunk_size(min_contexts_per_source_file, collection)
                 source_files_to_chunk_collections_map[key] = collection
 
             tasks = [
                 a_chunk_and_store(key, chunker)
                 for key, chunker in source_file_to_chunker_map.items()
             ]
-            await tqdm_asyncio.gather(
-                *tasks, desc="✨ 📚 ✨ Chunking Documents"
-            )
+            await tqdm_asyncio.gather(*tasks, desc="✨ 📚 ✨ Chunking Documents")
 
             # Intialize progress bar for context generation
             num_contexts = sum(
@@ -268,15 +257,16 @@ class ContextGenerator:
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
-        contexts_per_doc, scores_per_doc = (
-            await self._a_get_n_random_contexts_per_source_file(
-                path=path,
-                n_contexts_per_source_file=num_context_per_source_file,
-                context_size=max_context_size,
-                similarity_threshold=self.similarity_threshold,
-                generation_p_bar=generation_p_bar,
-                source_files_to_collections_map=source_files_to_collections_map,
-            )
+        (
+            contexts_per_doc,
+            scores_per_doc,
+        ) = await self._a_get_n_random_contexts_per_source_file(
+            path=path,
+            n_contexts_per_source_file=num_context_per_source_file,
+            context_size=max_context_size,
+            similarity_threshold=self.similarity_threshold,
+            generation_p_bar=generation_p_bar,
+            source_files_to_collections_map=source_files_to_collections_map,
         )
         return path, contexts_per_doc, scores_per_doc
 
@@ -289,17 +279,17 @@ class ContextGenerator:
         path: str,
         n_contexts_per_source_file: int,
         context_size: int,
-        similarity_threshold: int,
+        similarity_threshold: float,
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
-        assert (
-            n_contexts_per_source_file > 0
-        ), "n_contexts_per_doc must be a positive integer."
+        assert n_contexts_per_source_file > 0, (
+            "n_contexts_per_doc must be a positive integer."
+        )
         assert context_size > 0, "context_size must be a positive integer."
-        assert (
-            0 <= similarity_threshold <= 1
-        ), "similarity_threshold must be between 0 and 1."
+        assert 0 <= similarity_threshold <= 1, (
+            "similarity_threshold must be between 0 and 1."
+        )
 
         # Initialize lists for scores, contexts
         contexts = []
@@ -338,7 +328,6 @@ class ContextGenerator:
             # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-
                 # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
@@ -364,13 +353,13 @@ class ContextGenerator:
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
-        assert (
-            n_contexts_per_source_file > 0
-        ), "n_contexts_per_doc must be a positive integer."
+        assert n_contexts_per_source_file > 0, (
+            "n_contexts_per_doc must be a positive integer."
+        )
         assert context_size > 0, "context_size must be a positive integer."
-        assert (
-            0 <= similarity_threshold <= 1
-        ), "similarity_threshold must be between 0 and 1."
+        assert 0 <= similarity_threshold <= 1, (
+            "similarity_threshold must be between 0 and 1."
+        )
 
         # Initialize lists for scores, contexts
         contexts = []
@@ -384,13 +373,11 @@ class ContextGenerator:
             desc="  ✨ 🫗 ✨ Filling Contexts",
             leave=False,
         )
-        random_chunks, scores = (
-            await self._a_get_n_random_chunks_per_source_file(
-                path,
-                n_contexts_per_source_file,
-                generation_p_bar,
-                source_files_to_collections_map,
-            )
+        random_chunks, scores = await self._a_get_n_random_chunks_per_source_file(
+            path,
+            n_contexts_per_source_file,
+            generation_p_bar,
+            source_files_to_collections_map,
         )
 
         # Find similar chunks for each context
@@ -411,7 +398,6 @@ class ContextGenerator:
             # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-
                 # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
@@ -449,9 +435,7 @@ class ContextGenerator:
             sample_size = n_chunks
 
         # Randomly sample chunks
-        random_ids = [
-            str(i) for i in random.sample(range(total_chunks), sample_size)
-        ]
+        random_ids = [str(i) for i in random.sample(range(total_chunks), sample_size)]
         chunks = collection.get(ids=random_ids)["documents"]
 
         # If total_chunks is less than n_chunks * max_retries, simply evaluate all chunks
@@ -503,9 +487,7 @@ class ContextGenerator:
             sample_size = n_chunks
 
         # Randomly sample chunks
-        random_ids = [
-            str(i) for i in random.sample(range(total_chunks), sample_size)
-        ]
+        random_ids = [str(i) for i in random.sample(range(total_chunks), sample_size)]
         chunks = collection.get(ids=random_ids)["documents"]
 
         # If total_chunks is less than n_chunks * max_retries, simply evaluate all chunks
@@ -548,12 +530,8 @@ class ContextGenerator:
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
-                res: ContextScore = self.model.generate(
-                    prompt, schema=ContextScore
-                )
-                return (
-                    res.clarity + res.depth + res.structure + res.relevance
-                ) / 4
+                res: ContextScore = self.model.generate(prompt, schema=ContextScore)
+                return (res.clarity + res.depth + res.structure + res.relevance) / 4
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
@@ -572,14 +550,11 @@ class ContextGenerator:
             self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
-
             try:
                 res: ContextScore = await self.model.a_generate(
                     prompt, schema=ContextScore
                 )
-                return (
-                    res.clarity + res.depth + res.structure + res.relevance
-                ) / 4
+                return (res.clarity + res.depth + res.structure + res.relevance) / 4
             except TypeError:
                 res: ContextScore = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
@@ -623,7 +598,6 @@ class ContextGenerator:
 
         # If not enough chunks are produced, raise an error with suggestions.
         if document_num_chunks < min_contexts_per_source_file:
-
             # Build the error message with suggestions.
             error_lines = [
                 f"Impossible to generate {min_contexts_per_source_file} contexts from a document of size {document_token_count}.",
@@ -644,8 +618,7 @@ class ContextGenerator:
                 + (self.chunk_overlap * (min_contexts_per_source_file - 1))
             ) // min_contexts_per_source_file
             adjust_chunk_size = (
-                suggested_chunk_size > 0
-                and suggested_chunk_size > self.chunk_overlap
+                suggested_chunk_size > 0 and suggested_chunk_size > self.chunk_overlap
             )
             if adjust_chunk_size:
                 error_lines.append(
@@ -664,8 +637,7 @@ class ContextGenerator:
                     // (min_contexts_per_source_file - 1)
                 ) + 1
                 adjust_overlap = (
-                    suggested_overlap > 0
-                    and self.chunk_size > suggested_overlap
+                    suggested_overlap > 0 and self.chunk_size > suggested_overlap
                 )
                 if adjust_overlap:
                     error_lines.append(
@@ -710,68 +682,3 @@ class ContextGenerator:
         tasks = [a_process_document(path) for path in self.document_paths]
         await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Documents")
         return doc_to_chunker_map
-
-    # #########################################################
-    # ### Generate Contexts from Nodes ########################
-    # #########################################################
-
-    # def generate_contexts_from_nodes(
-    #     self, num_context: int, max_chunks_per_context: int = 3
-    # ):
-    #     scores = []
-    #     contexts = []
-    #     source_files = []
-
-    #     # Determine the number of contexts to generate
-    #     nodes_collection = self.source_files_to_collections_map["nodes"]
-    #     num_chunks = nodes_collection.count()
-    #     num_context = min(num_context, num_chunks)
-
-    #     # Progress Bar
-    #     p_bar = tqdm_bar(
-    #         total=max_chunks_per_context * num_context,
-    #         desc="✨ 🧩 ✨ Generating Contexts",
-    #     )
-
-    #     # Generate contexts
-    #     self.total_chunks = 0
-    #     for path, _ in self.source_files_to_collections_map.items():
-    #         contexts_per_doc, scores_per_doc = (
-    #             self._get_n_random_contexts_per_doc(
-    #                 path=path,
-    #                 n_contexts_per_doc=num_context,
-    #                 context_size=max_chunks_per_context,
-    #                 similarity_threshold=self.similarity_threshold,
-    #                 p_bar=p_bar,
-    #             )
-    #         )
-    #         contexts.extend(contexts_per_doc)
-    #         scores.extend(scores_per_doc)
-    #         for _ in contexts_per_doc:
-    #             source_files.append(path)
-    #         self.total_chunks += num_chunks
-
-    #     return contexts, source_files, scores
-
-    # #########################################################
-    # ### Load Nodes ##########################################
-    # #########################################################
-
-    # def _load_nodes(self):
-    #     doc_to_chunker_map = {}
-    #     for _ in tqdm_bar(range(1), "✨ 🚀 ✨ Loading Nodes"):
-    #         doc_chunker = DocumentChunker(self.embedder)
-    #         collection = doc_chunker.from_nodes(self._nodes)
-    #         self.source_files_to_collections_map = {}
-    #         self.source_files_to_collections_map["nodes"] = collection
-
-    # async def _a_load_nodes(self):
-    #     doc_to_chunker_map = {}
-    #     async def a_process_nodes(path):
-    #         doc_chunker = DocumentChunker(self.embedder)
-    #         collection = await doc_chunker.a_from_nodes(self._nodes)
-    #         self.source_files_to_collections_map["nodes"] = collection
-
-    #     # Process all documents asynchronously with a progress bar
-    #     tasks = [a_process_nodes() for _ in range(1)]
-    #     await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Nodes")

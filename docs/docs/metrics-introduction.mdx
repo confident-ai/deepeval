@@ -55,7 +55,7 @@ evaluate(test_cases=[...], metrics=[AnswerRelevancyMetric()])
 
 You should also login to the `deepeval` cloud platform, [Confident AI](https://confident-ai.com), before running `evaluate()`:
 
-```console
+```bash
 deepeval login
 ```
 
@@ -206,13 +206,13 @@ You can also wrap your own LLM API in `deepeval`'s `DeepEvalBaseLLM` class to us
 
 To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the CLI:
 
-```console
+```bash
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
 
-```console
+```bash
 %env OPENAI_API_KEY=<your-openai-api-key>
 ```
 
@@ -240,7 +240,7 @@ Your OpenAI API version must be at least `2024-08-01-preview`, when structured o
 
 Note that the `model-version` is **optional**. If you ever wish to stop using Azure OpenAI and move back to regular OpenAI, simply run:
 
-```console
+```bash
 deepeval unset-azure-openai
 ```
 
@@ -369,9 +369,9 @@ While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globall
 :::caution
 We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
 
-Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](/docs/evaluation-introduction#evaluating-with-pytest):
+Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](/docs/evaluation-running-llm-evals#flags-for-deepeval-test-run):
 
-```console
+```bash
 deepeval test run test_example.py -i -c
 ```
 
@@ -420,7 +420,7 @@ Visit an individual metric page to learn how they are calculated, and what is re
 
 Here's a quick example.
 
-```console
+```bash
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
@@ -459,7 +459,7 @@ def test_answer_relevancy():
     assert_test(test_case, [metric])
 ```
 
-```console
+```bash
 deepeval test run test_file.py
 ```
 

@@ -1,24 +1,26 @@
+import asyncio
+import functools
+import inspect
+import queue
+import random
+import threading
+import uuid
 from contextvars import ContextVar
 from datetime import datetime, time, timezone
 from enum import Enum
-from typing import Any, List, Set, Union, Optional, Dict, Literal
 from time import perf_counter, sleep
+from typing import Any, Dict, List, Literal, Optional, Set, Union
+
 from pydantic import BaseModel, Field
-import inspect
-import uuid
 from rich.console import Console
-import random
-import threading
-import queue
-import asyncio
-import functools
+
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.test_case import LLMTestCase
-from deepeval.utils import dataclass_to_dict, is_confident
-from deepeval.prompt import Prompt
-from deepeval.tracing.api import TraceApi, BaseApiSpan, SpanApiType
 from deepeval.metrics import BaseMetric
+from deepeval.prompt import Prompt
+from deepeval.test_case import LLMTestCase
+from deepeval.tracing.api import BaseApiSpan, SpanApiType, TraceApi
+from deepeval.utils import dataclass_to_dict, is_confident
 
 
 def to_zod_compatible_iso(dt: datetime) -> str:
@@ -58,7 +60,7 @@ class SpanType(Enum):
 
 class TraceSpanStatus(Enum):
     SUCCESS = "SUCCESS"
-    ERROR = "ERROR"
+    ERRORED = "ERRORED"
     IN_PROGRESS = "IN_PROGRESS"
 
 
@@ -681,7 +683,7 @@ class Observer:
 
         current_span.end_time = end_time
         if exc_type is not None:
-            current_span.status = TraceSpanStatus.ERROR
+            current_span.status = TraceSpanStatus.ERRORED
             current_span.error = str(exc_val)
         else:
             current_span.status = TraceSpanStatus.SUCCESS

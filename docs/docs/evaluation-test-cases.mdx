@@ -58,7 +58,7 @@ Since `deepeval` is an LLM evaluation framework, the ** `input` and `actual_outp
 
 To get your own sharable testing report with `deepeval`, [sign up to Confident AI](https://app.confident-ai.com), or run `deepeval login` in the CLI:
 
-```console
+```bash
 deepeval login
 ```
 
@@ -197,7 +197,7 @@ Not all `input`s should include your prompt template, as this is determined by t
 
 If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best `actual_output`s for a given `input`:
 
-```console
+```bash
 deepeval login
 ```
 
@@ -222,7 +222,7 @@ def hyperparameters():
     }
 ```
 
-```console
+```bash
 deepeval test run test_file.py
 ```
 
@@ -526,8 +526,9 @@ However, you'll notice that we're missing out on a lot of information in our LLM
 
 To evaluate an LLM interaction for a nested component, such as the **RAG Pipeline** in our `research_agent` example, involves adding `deepeval`'s `@observe` **decoraters** to your application, and setting the `LLMTestCase` at runtime instead. This is what it looks like:
 
-```python showLineNumbers {25,34,39}
+```python title="tracing_example.py"  showLineNumbers {26,35,40}
 from typing import List
+
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     observe,
@@ -757,7 +758,7 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 
-You can include the `deepeval test run` command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
+You can find the full documentation on `deepeval test run`, including how to use it **with tracing**, on the [running LLM-evals page.](/docs/evaluation-running-llm-evals#using-deepeval-test-run-in-cicd-pipelines)
 
 :::info
 The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](/docs/metrics-introduction), determines whether each metric can execute asynchronously.
@@ -765,9 +766,11 @@ The `run_async` parameter overrides the `async_mode` property of all metrics bei
 
 To execute the test cases, run `deepeval test run` via the CLI, which uses `deepeval`'s Pytest integration under the hood to execute these tests. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
 
-```console
+```bash
 deepeval test run test_assert_example.py -n 4
 ```
+
+You can include the `deepeval test run` command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
 
 ## Evaluate Test Cases in Bulk
 
@@ -790,28 +793,23 @@ metric = HallucinationMetric(threshold=0.7)
 evaluate([test_case], [metric])
 ```
 
-There are **TWO** mandatory and **THIRTEEN** optional arguments when calling the `evaluate()` function:
+There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function:
 
 - `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
 - `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of test cases **AND** metrics. Defaulted to `True`.
-- [Optional] `throttle_value`: an integer that determines how long (in seconds) to throttle the evaluation of each test case. You can increase this value if your evaluation model is running into rate limit errors. Defaulted to 0.
-- [Optional] `max_concurrent`: an integer that determines the maximum number of test cases that can be ran in parallel at any point in time. You can decrease this value if your evaluation model is running into rate limit errors. Defaulted to 100.
-- [Optional] `skip_on_missing_params`: a boolean which when set to `True`, skips all metric executions for test cases with missing parameters. Defaulted to `False`.
-- [Optional] `ignore_errors`: a boolean which when set to `True`, ignores all exceptions raised during metrics execution for each test case. Defaulted to `False`.
-- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
-- [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
-- [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
-- [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
-- [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
-- [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
+- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-running-llm-evals#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
+- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-running-llm-evals#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
+- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-running-llm-evals#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
+- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-running-llm-evals#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
+
+You can find the full documentation on `evaluate()`, including how to use it **with tracing**, on the [running LLM-evals page.](/docs/evaluation-running-llm-evals#using-the-evaluate-function)
 
 :::tip DID YOU KNOW?
 Similar to `assert_test`, `evaluate` allows you to log and view test results and the hyperparameters associated with each on Confident AI.
 
-```console
+```bash
 deepeval login
 ```
 

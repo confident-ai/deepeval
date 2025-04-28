@@ -35,11 +35,18 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 model = GeminiModel(
     model_name="gemini-1.5-pro",
-    api_key="Your Gemini API Key"
+    api_key="Your Gemini API Key",
+    temperature=0
 )
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+There are **TWO** mandatory and **ONE** optional parameters when creating an `GeminiModel`:
+
+- `model_name`: A string specifying the name of the Gemini model to use.
+- `api_key`: A string specifying the Google API key for authentication.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
 ### Available Gemini Models
 

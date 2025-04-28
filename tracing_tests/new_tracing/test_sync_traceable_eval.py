@@ -1,5 +1,5 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.test_case.llm_test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     update_current_span_test_case,
     update_current_span_attributes,
@@ -41,7 +41,6 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    print("retrieving")
     # update_current_span_attributes(
     #     RetrieverAttributes(
     #         embedding_input=query,
@@ -128,7 +127,7 @@ def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
     update_current_span_test_case(
-        LLMTestCase(input=input, actual_output=final_response)
+        test_case=LLMTestCase(input=input, actual_output=final_response)
     )
     return final_response
 
@@ -136,21 +135,28 @@ def meta_agent(input: str):
 ###################################v
 
 from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval import evaluate, assert_test
 
 goldens = [
     Golden(input="What's the weather like in SF?"),
     Golden(input="Tell me about Elon Musk."),
 ]
 
-meta_agent(goldens[0].input)
+# # Run Async
+# evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
+# evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
 
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=True)
-# print(perf_counter() - start_time)
+# # Run Sync
+# evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
+# evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
 
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=False)
-# print(perf_counter() - start_time)
 
-trace_manager.shutdown()
+# Assert Test
+def test_meta_agent_0():
+    golden = Golden(input="What's the weather like in SF?")
+    assert_test(golden=golden, traceable_callback=meta_agent, run_async=False)
+
+
+def test_meta_agent_1():
+    golden = Golden(input="What's the weather like in SF?")
+    assert_test(golden=golden, traceable_callback=meta_agent, run_async=False)

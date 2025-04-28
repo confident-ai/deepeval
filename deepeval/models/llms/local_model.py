@@ -11,6 +11,7 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 class LocalModel(DeepEvalBaseLLM):
     def __init__(
         self,
+        temperature: float = 0,
         *args,
         **kwargs,
     ):
@@ -23,6 +24,9 @@ class LocalModel(DeepEvalBaseLLM):
         )
         self.format = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_FORMAT)
         # args and kwargs will be passed to the underlying model, in load_model function
+        if temperature < 0:
+            raise ValueError("Temperature must be >= 0.")
+        self.temperature = temperature
         self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)
@@ -74,7 +78,7 @@ class LocalModel(DeepEvalBaseLLM):
             model_name=self.model_name,
             openai_api_key=self.local_model_api_key,
             base_url=self.base_url,
-            temperature=0,
+            temperature=self.temperature,
             *self.args,
             **self.kwargs,
         )

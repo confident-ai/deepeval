@@ -58,7 +58,7 @@ The remaining **20 optional parameters** can be broken down into evaluation, syn
 **Optional Synthesizer Parameters:**
 
 - [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
-- [Optional] `filtration_config`: an instance of type `FiltrationConfig` that allows you to [customize the degree of which goldens are filtered](synthesizer-introduction#filtration-degree) during generation. Defaulted to the default `FiltrationConfig` values.
+- [Optional] `filtration_config`: an instance of type `FiltrationConfig` that allows you to [customize the degree of which goldens are filtered](synthesizer-introduction#filtration-quality) during generation. Defaulted to the default `FiltrationConfig` values.
 - [Optional] `evolution_config`: an instance of type `EvolutionConfig` that allows you to [customize the complexity of evolutions applied](synthesizer-introduction#evolution-complexity) during generation. Defaulted to the default `EvolutionConfig` values.
 - [Optional] `styling_config`: an instance of type `StylingConfig` that allows you to [customize the styles and formats](synthesizer-introduction#styling-options) of generations. Defaulted to the default `StylingConfig` values.
 - [Optional] `include_expected_output`: a boolean which when set to `True`, will additionally generate an `expected_output` for each synthetic `Golden`. Defaulted to `True`.

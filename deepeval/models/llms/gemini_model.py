@@ -44,6 +44,7 @@ class GeminiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         project: Optional[str] = None,
         location: Optional[str] = None,
+        temperature: float = 0,
         *args,
         **kwargs,
     ):
@@ -66,7 +67,9 @@ class GeminiModel(DeepEvalBaseLLM):
         self.use_vertexai = KEY_FILE_HANDLER.fetch_data(
             KeyValues.GOOGLE_GENAI_USE_VERTEXAI
         )
-
+        if temperature < 0:
+            raise ValueError("Temperature must be >= 0.")
+        self.temperature = temperature
         super().__init__(model_name, *args, **kwargs)
 
     def should_use_vertexai(self):
@@ -135,7 +138,6 @@ class GeminiModel(DeepEvalBaseLLM):
                 threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
             ),
         ]
-        self.model_temperature = 0.0
         return self.client.models
 
     def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
@@ -156,7 +158,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.parsed, 0
@@ -166,7 +168,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.text, 0
@@ -191,7 +193,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     response_mime_type="application/json",
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.parsed, 0
@@ -201,7 +203,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
-                    temperature=self.model_temperature,
+                    temperature=self.temperature,
                 ),
             )
             return response.text, 0
