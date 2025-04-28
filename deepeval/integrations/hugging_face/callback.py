@@ -3,7 +3,7 @@ from .utils import get_column_order, generate_test_cases
 from .rich_manager import RichManager
 
 from deepeval.metrics import BaseMetric
-from deepeval.evaluate import execute_test_cases
+from deepeval.evaluate.execute import execute_test_cases
 from deepeval.dataset import EvaluationDataset
 
 try:

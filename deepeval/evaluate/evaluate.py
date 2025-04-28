@@ -2,6 +2,12 @@ from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
 import time
 from rich.console import Console
 
+from deepeval.evaluate.configs import (
+    AsyncConfig,
+    DisplayConfig,
+    CacheConfig,
+    ErrorConfig,
+)
 from deepeval.evaluate.utils import (
     validate_assert_test_inputs,
     validate_evaluate_inputs,
@@ -159,6 +165,7 @@ def assert_test(
 
 
 def evaluate(
+    # without tracing
     test_cases: Optional[
         Union[
             List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
@@ -171,27 +178,19 @@ def evaluate(
             List[BaseMultimodalMetric],
         ]
     ] = None,
+    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
+    # with tracing
     goldens: Optional[List[Golden]] = None,
     traceable_callback: Optional[
         Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
-    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
-    # Async config
-    run_async: bool = True,
-    throttle_value: int = 0,
-    max_concurrent: int = 100,
-    # Display config
-    show_indicator: bool = True,
-    print_results: bool = True,
-    verbose_mode: Optional[bool] = None,
-    display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
-    # Cache config
-    write_cache: bool = True,
-    use_cache: bool = False,
-    # Error config
-    ignore_errors: bool = False,
-    skip_on_missing_params: bool = False,
+    # agnostic
     identifier: Optional[str] = None,
+    # Configs
+    async_config: Optional[AsyncConfig] = AsyncConfig(),
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
 ) -> EvaluationResult:
     validate_evaluate_inputs(
         goldens=goldens,
@@ -203,35 +202,41 @@ def evaluate(
         global_test_run_manager.reset()
         start_time = time.perf_counter()
         with capture_evaluation_run("traceable evaluate()"):
-            if run_async:
+            if async_config.run_async:
                 loop = get_or_create_event_loop()
                 test_results = loop.run_until_complete(
                     a_execute_agentic_test_cases(
                         goldens=goldens,
                         traceable_callback=traceable_callback,
-                        ignore_errors=ignore_errors,
-                        verbose_mode=verbose_mode,
-                        show_indicator=show_indicator,
-                        skip_on_missing_params=skip_on_missing_params,
-                        throttle_value=throttle_value,
+                        ignore_errors=error_config.ignore_errors,
+                        verbose_mode=display_config.verbose_mode,
+                        show_indicator=display_config.show_indicator,
+                        skip_on_missing_params=error_config.skip_on_missing_params,
+                        throttle_value=async_config.throttle_value,
                         identifier=identifier,
-                        max_concurrent=max_concurrent,
+                        max_concurrent=async_config.max_concurrent,
                     )
                 )
             else:
                 test_results = execute_agentic_test_cases(
                     goldens=goldens,
                     traceable_callback=traceable_callback,
-                    ignore_errors=ignore_errors,
-                    verbose_mode=verbose_mode,
-                    show_indicator=show_indicator,
-                    skip_on_missing_params=skip_on_missing_params,
+                    ignore_errors=error_config.ignore_errors,
+                    verbose_mode=display_config.verbose_mode,
+                    show_indicator=display_config.show_indicator,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
                     identifier=identifier,
                 )
         end_time = time.perf_counter()
         run_duration = end_time - start_time
+        if display_config.print_results:
+            for test_result in test_results:
+                print_test_result(test_result, display_config.display_option)
+
+            aggregate_metric_pass_rates(test_results)
+
         global_test_run_manager.wrap_up_test_run(
-            run_duration, display_table=True
+            run_duration, display_table=False
         )
 
     elif test_cases and metrics:
@@ -240,54 +245,56 @@ def evaluate(
         global_test_run_manager.reset()
         start_time = time.perf_counter()
 
-        if show_indicator:
+        if display_config.show_indicator:
             console = Console()
             for metric in metrics:
                 console.print(
-                    format_metric_description(metric, async_mode=run_async)
+                    format_metric_description(
+                        metric, async_mode=async_config.run_async
+                    )
                 )
 
         with capture_evaluation_run("evaluate()"):
-            if run_async:
+            if async_config.run_async:
                 loop = get_or_create_event_loop()
                 test_results = loop.run_until_complete(
                     a_execute_test_cases(
                         test_cases,
                         metrics,
-                        ignore_errors=ignore_errors,
-                        use_cache=use_cache,
-                        verbose_mode=verbose_mode,
-                        save_to_disk=write_cache,
-                        show_indicator=show_indicator,
-                        skip_on_missing_params=skip_on_missing_params,
-                        throttle_value=throttle_value,
                         identifier=identifier,
-                        max_concurrent=max_concurrent,
+                        ignore_errors=error_config.ignore_errors,
+                        skip_on_missing_params=error_config.skip_on_missing_params,
+                        use_cache=cache_config.use_cache,
+                        save_to_disk=cache_config.write_cache,
+                        verbose_mode=display_config.verbose_mode,
+                        show_indicator=display_config.show_indicator,
+                        throttle_value=async_config.throttle_value,
+                        max_concurrent=async_config.max_concurrent,
                     )
                 )
             else:
                 test_results = execute_test_cases(
                     test_cases,
                     metrics,
-                    ignore_errors=ignore_errors,
-                    use_cache=use_cache,
-                    verbose_mode=verbose_mode,
-                    save_to_disk=write_cache,
-                    skip_on_missing_params=skip_on_missing_params,
                     identifier=identifier,
-                    show_indicator=show_indicator,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    use_cache=cache_config.use_cache,
+                    save_to_disk=cache_config.write_cache,
+                    show_indicator=display_config.show_indicator,
+                    verbose_mode=display_config.verbose_mode,
                 )
 
         end_time = time.perf_counter()
         run_duration = end_time - start_time
-        if print_results:
+        if display_config.print_results:
             for test_result in test_results:
-                print_test_result(test_result, display)
+                print_test_result(test_result, display_config.display_option)
 
             aggregate_metric_pass_rates(test_results)
 
         test_run = global_test_run_manager.get_test_run()
-        test_run.hyperparameters = hyperparameters
+        test_run.hyperparameters = process_hyperparameters(hyperparameters)
         global_test_run_manager.save_test_run()
         confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False

@@ -2,6 +2,7 @@ import pytest
 
 from deepeval.dataset import EvaluationDataset
 from deepeval import evaluate
+from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 from deepeval.test_case import MLLMTestCase, LLMTestCase, MLLMImage
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -104,8 +105,8 @@ def test_text_to_image(text_to_image_case):
     evaluate(
         test_cases=[text_to_image_case],
         metrics=[TextToImageMetric()],
-        verbose_mode=True,
-        run_async=False,
+        display_config=DisplayConfig(verbose_mode=True),
+        async_config=AsyncConfig(run_async=False),
     )
 
 
@@ -113,8 +114,8 @@ def test_image_editing(image_editing_case):
     evaluate(
         test_cases=[image_editing_case],
         metrics=[ImageEditingMetric()],
-        verbose_mode=True,
-        run_async=False,
+        display_config=DisplayConfig(verbose_mode=True),
+        async_config=AsyncConfig(run_async=False),
     )
 
 
@@ -128,6 +129,6 @@ def test_multimodal_rag_case(multimodal_rag_case):
             MultimodalAnswerRelevancyMetric(),
             MultimodalFaithfulnessMetric(),
         ],
-        verbose_mode=True,
-        run_async=False,
+        display_config=DisplayConfig(verbose_mode=True),
+        async_config=AsyncConfig(run_async=False),
     )

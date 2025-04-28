@@ -1,3 +1,4 @@
+from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 from deepeval.metrics import (
     ToolCorrectnessMetric,
     AnswerRelevancyMetric,
@@ -233,6 +234,6 @@ task_completion_metric = TaskCompletionMetric()
 evaluate(
     test_cases=test_cases + bad_test_cases,
     metrics=[task_completion_metric],
-    verbose_mode=True,
-    run_async=False,
+    display_config=DisplayConfig(verbose_mode=True),
+    async_config=AsyncConfig(run_async=False),
 )
