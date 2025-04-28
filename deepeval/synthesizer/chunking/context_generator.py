@@ -94,7 +94,9 @@ class ContextGenerator:
             source_files = []
 
             # Load the source files and create document chunkers for each file
-            source_file_to_chunker_map: Dict[str, DocumentChunker] = self._load_docs()
+            source_file_to_chunker_map: Dict[str, DocumentChunker] = (
+                self._load_docs()
+            )
 
             # Chunk each file into a chroma collection of chunks
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
@@ -102,8 +104,12 @@ class ContextGenerator:
                 source_file_to_chunker_map.items(),
                 "✨ 📚 ✨ Chunking Documents",
             ):
-                collection = chunker.chunk_doc(self.chunk_size, self.chunk_overlap)
-                self.validate_chunk_size(min_contexts_per_source_file, collection)
+                collection = chunker.chunk_doc(
+                    self.chunk_size, self.chunk_overlap
+                )
+                self.validate_chunk_size(
+                    min_contexts_per_source_file, collection
+                )
                 source_files_to_chunk_collections_map[key] = collection
 
             # Intialize progress bar for context generation
@@ -177,9 +183,9 @@ class ContextGenerator:
             source_files = []
 
             # Check if chunk_size and max_context_size is valid for document lengths
-            source_file_to_chunker_map: Dict[
-                str, DocumentChunker
-            ] = await self._a_load_docs()
+            source_file_to_chunker_map: Dict[str, DocumentChunker] = (
+                await self._a_load_docs()
+            )
 
             # Chunk each file into a chroma collection of chunks
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
@@ -188,14 +194,18 @@ class ContextGenerator:
                 collection = await chunker.a_chunk_doc(
                     self.chunk_size, self.chunk_overlap
                 )
-                self.validate_chunk_size(min_contexts_per_source_file, collection)
+                self.validate_chunk_size(
+                    min_contexts_per_source_file, collection
+                )
                 source_files_to_chunk_collections_map[key] = collection
 
             tasks = [
                 a_chunk_and_store(key, chunker)
                 for key, chunker in source_file_to_chunker_map.items()
             ]
-            await tqdm_asyncio.gather(*tasks, desc="✨ 📚 ✨ Chunking Documents")
+            await tqdm_asyncio.gather(
+                *tasks, desc="✨ 📚 ✨ Chunking Documents"
+            )
 
             # Intialize progress bar for context generation
             num_contexts = sum(
@@ -283,13 +293,13 @@ class ContextGenerator:
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
-        assert n_contexts_per_source_file > 0, (
-            "n_contexts_per_doc must be a positive integer."
-        )
+        assert (
+            n_contexts_per_source_file > 0
+        ), "n_contexts_per_doc must be a positive integer."
         assert context_size > 0, "context_size must be a positive integer."
-        assert 0 <= similarity_threshold <= 1, (
-            "similarity_threshold must be between 0 and 1."
-        )
+        assert (
+            0 <= similarity_threshold <= 1
+        ), "similarity_threshold must be between 0 and 1."
 
         # Initialize lists for scores, contexts
         contexts = []
@@ -353,13 +363,13 @@ class ContextGenerator:
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
-        assert n_contexts_per_source_file > 0, (
-            "n_contexts_per_doc must be a positive integer."
-        )
+        assert (
+            n_contexts_per_source_file > 0
+        ), "n_contexts_per_doc must be a positive integer."
         assert context_size > 0, "context_size must be a positive integer."
-        assert 0 <= similarity_threshold <= 1, (
-            "similarity_threshold must be between 0 and 1."
-        )
+        assert (
+            0 <= similarity_threshold <= 1
+        ), "similarity_threshold must be between 0 and 1."
 
         # Initialize lists for scores, contexts
         contexts = []
@@ -373,11 +383,13 @@ class ContextGenerator:
             desc="  ✨ 🫗 ✨ Filling Contexts",
             leave=False,
         )
-        random_chunks, scores = await self._a_get_n_random_chunks_per_source_file(
-            path,
-            n_contexts_per_source_file,
-            generation_p_bar,
-            source_files_to_collections_map,
+        random_chunks, scores = (
+            await self._a_get_n_random_chunks_per_source_file(
+                path,
+                n_contexts_per_source_file,
+                generation_p_bar,
+                source_files_to_collections_map,
+            )
         )
 
         # Find similar chunks for each context
@@ -435,7 +447,9 @@ class ContextGenerator:
             sample_size = n_chunks
 
         # Randomly sample chunks
-        random_ids = [str(i) for i in random.sample(range(total_chunks), sample_size)]
+        random_ids = [
+            str(i) for i in random.sample(range(total_chunks), sample_size)
+        ]
         chunks = collection.get(ids=random_ids)["documents"]
 
         # If total_chunks is less than n_chunks * max_retries, simply evaluate all chunks
@@ -487,7 +501,9 @@ class ContextGenerator:
             sample_size = n_chunks
 
         # Randomly sample chunks
-        random_ids = [str(i) for i in random.sample(range(total_chunks), sample_size)]
+        random_ids = [
+            str(i) for i in random.sample(range(total_chunks), sample_size)
+        ]
         chunks = collection.get(ids=random_ids)["documents"]
 
         # If total_chunks is less than n_chunks * max_retries, simply evaluate all chunks
@@ -530,8 +546,12 @@ class ContextGenerator:
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
             try:
-                res: ContextScore = self.model.generate(prompt, schema=ContextScore)
-                return (res.clarity + res.depth + res.structure + res.relevance) / 4
+                res: ContextScore = self.model.generate(
+                    prompt, schema=ContextScore
+                )
+                return (
+                    res.clarity + res.depth + res.structure + res.relevance
+                ) / 4
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
@@ -554,7 +574,9 @@ class ContextGenerator:
                 res: ContextScore = await self.model.a_generate(
                     prompt, schema=ContextScore
                 )
-                return (res.clarity + res.depth + res.structure + res.relevance) / 4
+                return (
+                    res.clarity + res.depth + res.structure + res.relevance
+                ) / 4
             except TypeError:
                 res: ContextScore = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
@@ -618,7 +640,8 @@ class ContextGenerator:
                 + (self.chunk_overlap * (min_contexts_per_source_file - 1))
             ) // min_contexts_per_source_file
             adjust_chunk_size = (
-                suggested_chunk_size > 0 and suggested_chunk_size > self.chunk_overlap
+                suggested_chunk_size > 0
+                and suggested_chunk_size > self.chunk_overlap
             )
             if adjust_chunk_size:
                 error_lines.append(
@@ -637,7 +660,8 @@ class ContextGenerator:
                     // (min_contexts_per_source_file - 1)
                 ) + 1
                 adjust_overlap = (
-                    suggested_overlap > 0 and self.chunk_size > suggested_overlap
+                    suggested_overlap > 0
+                    and self.chunk_size > suggested_overlap
                 )
                 if adjust_overlap:
                     error_lines.append(

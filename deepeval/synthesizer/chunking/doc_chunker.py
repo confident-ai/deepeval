@@ -71,7 +71,9 @@ class DocumentChunker:
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
-            raise ValueError("Document Chunker has yet to properly load documents")
+            raise ValueError(
+                "Document Chunker has yet to properly load documents"
+            )
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
@@ -117,7 +119,9 @@ class DocumentChunker:
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
-            raise ValueError("Document Chunker has yet to properly load documents")
+            raise ValueError(
+                "Document Chunker has yet to properly load documents"
+            )
 
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
