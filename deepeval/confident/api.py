@@ -30,7 +30,7 @@ def get_base_api_url():
 
 def get_deepeval_base_url():
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
-    if region is "US":
+    if region == "US":
         return DEEPEVAL_BASE_URL
     else:
         return DEEPEVAL_BASE_URL_EU

@@ -78,6 +78,7 @@ def assert_test(
                     ignore_errors=should_ignore_errors(),
                     verbose_mode=should_verbose_print(),
                     show_indicator=True,
+                    save_to_disk=get_is_running_deepeval(),
                     skip_on_missing_params=should_skip_on_missing_params(),
                     throttle_value=0,
                     max_concurrent=100,
@@ -91,6 +92,7 @@ def assert_test(
                 ignore_errors=should_ignore_errors(),
                 verbose_mode=should_verbose_print(),
                 show_indicator=True,
+                save_to_disk=get_is_running_deepeval(),
                 skip_on_missing_params=should_skip_on_missing_params(),
                 _use_bar_indicator=False,
             )[0]
