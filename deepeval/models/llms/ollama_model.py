@@ -18,8 +18,8 @@ class OllamaModel(DeepEvalBaseLLM):
             KeyValues.LOCAL_MODEL_NAME
         )
         self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_BASE_URL
-        )
+            KeyValues.LOCAL_MODEL_BASE_URL 
+        ) or "http://localhost:11434"
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature

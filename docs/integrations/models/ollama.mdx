@@ -49,11 +49,18 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 model = OllamaModel(
     model_name="deepseek-r1:1.5b",
-    base_url="http://localhost:11434"
+    base_url="http://localhost:11434",
+    temperature=0
 )
 
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+There are **FIVE** mandatory and **ONE** optional parameters when creating an `AzureOpenAIModel`:
+
+- `model`: A string specifying the name of the Ollama model to use.
+- [Optional] `base_url`: A string specifying the base URL of the Ollama server. Defaulted to `'http://localhost:11434'`.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
 ### Available Ollama Models
 

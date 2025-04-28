@@ -28,9 +28,17 @@ To use Anthropic models for DeepEval metrics, define an `AnthropicModel` and spe
 from deepeval.models import AnthropicModel
 from deepeval.metrics import AnswerRelevancyMetric
 
-model = AnthropicModel(model="claude-3-7-sonnet-latest")
+model = AnthropicModel(
+    model="claude-3-7-sonnet-latest",
+    temperature=0
+)
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+There are **TWO** optional parameters when creating an `AnthropicModel`:
+
+- [Optional] `model`: A string specifying which of Anthropic's Claude models to use. Defaulted to `'claude-3-7-sonnet-latest'`.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
 ### Available Anthropic Models
 

@@ -22,19 +22,27 @@ Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), s
 
 ### Python
 
-You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `OpenAIModel`.
+You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `GPTModel`.
 
 :::info
 You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 :::
 
 ```python
-from deepeval.models import OpenAIModel
+from deepeval.models import GPTModel
 from deepeval.metrics import AnswerRelevancyMetric
 
-model = OpenAIModel(model="o1")
+model = GPTModel(
+    model="o1",
+    temperature=0
+)
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
+
+There are **ONE** mandatory and **ONE** optional parameters when creating a `GPTModel`:
+
+- `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4o`.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
 ### Available OpenAI Models
 
