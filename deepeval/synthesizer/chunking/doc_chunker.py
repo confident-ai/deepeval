@@ -184,8 +184,8 @@ class DocumentChunker:
             raise ValueError(
                 f"Unsupported file format: '{extension}'\n"
                 f"Currently supported formats: {', '.join(all_formats)}\n"
-                f"To add support for '{extension}', use DocumentChunker.register_handler('{extension}', handler)\n"
-                f"where 'handler' is a FileHandler implementation for the '{extension}' format."
+                f"To add support for '{extension}', provide a custom FileHandler in the 'file_loaders' parameter when creating ContextConstructionConfig:\n"
+                f"context_config = ContextConstructionConfig(file_loaders={{'{extension}': YourCustomHandler()}})"
             )
 
         # Load doc into sections and calculate total character count
