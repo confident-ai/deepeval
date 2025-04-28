@@ -312,12 +312,12 @@ def test_rag(test_case: LLMTestCase):
 
 Then, simply execute `deepeval test run` in the CLI:
 
-```console
+```bash
 deepeval test run test_rag.py
 ```
 
 :::note
-You can learn about everything `deepeval test run` has to offer [here (including parallelization, caching, error handling, etc.).](/docs/evaluation-introduction#evaluating-with-pytest)
+You can learn about everything `deepeval test run` has to offer [here (including parallelization, caching, error handling, etc.).](/docs/evaluation-running-llm-evals#flags-for-deepeval-test-run)
 :::
 
 Once you have included all the metrics, include it in your GitHub workflow `.YAML` file:
@@ -354,7 +354,7 @@ In `deepeval`, you can associate hyperparameters such as text chunk size, top-K,
 
 Confident AI is a web-based LLM evaluation platform which all users of `deepeval` automatically have access to. To begin, login via the CLI:
 
-```console
+```bash
 deepeval login
 ```
 

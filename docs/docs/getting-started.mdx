@@ -41,7 +41,7 @@ It takes no additional code to setup, is automatically integrated with all code 
 
 Go to the root directory of your project and create a virtual environment (if you don't already have one). In the CLI, run:
 
-```console
+```bash
 python3 -m venv venv
 source venv/bin/activate
 ```
@@ -50,13 +50,13 @@ source venv/bin/activate
 
 In your newly created virtual environment, run:
 
-```console.log
+```bash.log
 pip install -U deepeval
 ```
 
 `deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the native evaluation platform for DeepEval:
 
-```console
+```bash
 deepeval login
 ```
 
@@ -95,7 +95,7 @@ def test_correctness():
 
 Run `deepeval test run` from the root directory of your project:
 
-```console
+```bash
 deepeval test run test_example.py
 ```
 
@@ -116,7 +116,7 @@ You'll need to set your `OPENAI_API_KEY` as an enviornment variable before runni
 
 Simply login with `deepeval login` (or [click here](https://app.confident-ai.com)) to get your API key.
 
-```console
+```bash
 deepeval login
 ```
 
@@ -138,7 +138,7 @@ This allows you to run experiments with different models, prompts, and pinpoint 
 
 Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice.
 
-```console
+```bash
 # linux
 export DEEPEVAL_RESULTS_FOLDER="./data"
 
@@ -171,7 +171,7 @@ def test_correctness():
     assert_test(test_case, [correctness_metric])
 ```
 
-```console
+```bash
 deepeval test run test_example.py
 ```
 
@@ -200,7 +200,7 @@ We didn't use the same test case data as shown above to demonstrate a more reali
 :::info
 If you're having trouble deciding on which metric to use, you can follow [this tutorial](/tutorials/tutorial-metrics-defining-an-evaluation-criteria) or run this command in the CLI:
 
-```console
+```bash
 deepeval recommend metrics
 ```
 
@@ -342,7 +342,7 @@ def test_everything():
 
 In this scenario, `test_everything` only passes if all metrics are passing. Run `deepeval test run` again to see the results:
 
-```console
+```bash
 deepeval test run test_example.py
 ```
 
@@ -405,7 +405,7 @@ deepeval test run test_dataset.py -n 2
 
 :::tip
 
-Visit the [evaluation introduction section](/docs/evaluation-introduction#evaluating-with-pytest) to learn about the different types of flags you can use with the `deepeval test run` command.
+Visit the [evaluation introduction section](/docs/evaluation-running-llm-evals#flags-for-deepeval-test-run) to learn about the different types of flags you can use with the `deepeval test run` command.
 :::
 
 Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:
@@ -533,7 +533,7 @@ This section is just an overview of Confident AI. If Confident AI sounds interes
 
 Confident AI integrates 100% with `deepeval`. All you need to do is [create an account here](https://app.confident-ai.com), or run the following command to login:
 
-```console
+```bash
 deepeval login
 ```
 

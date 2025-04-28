@@ -404,7 +404,7 @@ This error arises when the custom LLM used for evaluation is unable to generate 
 :::info
 All of `deepeval`'s metrics require the evaluation model to generate valid JSONs to extract properties such as: reasons, verdicts, statements, and other types of LLM-generated responses that are later used for calculating metric scores, and so when the generated JSONs required to extract these properties are invalid (eg. missing brackets, incomplete string quotations, extra trailing commas, or mismatched keys), `deepeval` won't be able to use the necessary information required for metric calculation. Here's an example of an invalid JSON an open-source model like `mistralai/Mistral-7B-Instruct-v0.3` might output:
 
-```console
+```bash
 {
     "reaso: "The actual output does directly not address the input",
 }
@@ -450,7 +450,7 @@ With the new method signatures, `deepeval` will now automatically inject your cu
 
 There are many ways to leverage Pydantic schemas to confine LLMs to generate valid JSONs, and continuing with our `CustomLlama3_8B` example we will be using the `lm-format-enforcer` library to confine JSON outputs using the provided Pydantic schema.
 
-```console
+```bash
 pip install lm-format-enforcer
 ```
 
@@ -544,7 +544,7 @@ In the final section, we'll show several popular end-to-end examples of custom L
 
 Begin by installing the `lm-format-enforcer` package:
 
-```console
+```bash
 pip install lm-format-enforcer
 ```
 
