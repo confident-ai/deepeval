@@ -215,6 +215,15 @@ def validate_assert_test_inputs(
     test_case: Optional[LLMTestCase] = None,
     metrics: Optional[List] = None,
 ):
+    if isinstance(golden, Golden) is False:
+        raise TypeError("'golden' must be of type 'Golden'")
+    if isinstance(traceable_callback, Callable) is False:
+        raise TypeError("'traceable_callback' must be of type 'Callable'")
+    if isinstance(test_case, LLMTestCase) is False:
+        raise TypeError("'test_case' must be of type 'LLMTestCase'")
+    if isinstance(metrics, List) is False:
+        raise TypeError("'metrics' must be of type 'List[BaseMetric]'")
+
     if golden and traceable_callback:
         if not getattr(traceable_callback, "_is_deepeval_observed", False):
             raise ValueError(
@@ -248,6 +257,7 @@ def validate_evaluate_inputs(
     test_cases: Optional[List] = None,
     metrics: Optional[List] = None,
 ):
+
     if goldens and traceable_callback:
         if not getattr(traceable_callback, "_is_deepeval_observed", False):
             raise ValueError(

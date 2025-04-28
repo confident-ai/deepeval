@@ -49,15 +49,19 @@ from deepeval.evaluate.execute import (
 
 
 def assert_test(
-    golden: Optional[Golden] = None,
-    traceable_callback: Optional[
-        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
-    ] = None,
     test_case: Optional[
         Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
     ] = None,
     metrics: Optional[
-        List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]]
+        Union[
+            List[BaseMetric],
+            List[BaseConversationalMetric],
+            List[BaseMultimodalMetric],
+        ]
+    ] = None,
+    golden: Optional[Golden] = None,
+    traceable_callback: Optional[
+        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
     run_async: bool = True,
 ):
@@ -155,16 +159,22 @@ def assert_test(
 
 
 def evaluate(
+    test_cases: Optional[
+        Union[
+            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+        ]
+    ] = None,
+    metrics: Optional[
+        Union[
+            List[BaseMetric],
+            List[BaseConversationalMetric],
+            List[BaseMultimodalMetric],
+        ]
+    ] = None,
     goldens: Optional[List[Golden]] = None,
     traceable_callback: Optional[
         Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
-    test_cases: Optional[
-        Union[
-            List[Union[LLMTestCase, MLLMTestCase]], List[ConversationalTestCase]
-        ]
-    ] = None,
-    metrics: Optional[List[BaseMetric]] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # Async config
     run_async: bool = True,
