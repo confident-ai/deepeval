@@ -22,13 +22,6 @@ class FileHandler(Protocol):
         """Load a document and return a list of LangChain Document objects."""
         ...
 
-    @abstractmethod
-    async def aload(
-        self, path: str, encoding: Optional[str] = None
-    ) -> AsyncIterator[LCDocument]:
-        """Asynchronously load a document and return a list of LangChain Document objects."""
-        ...
-
 
 class FileHandlerLoaderAdapter(BaseLoader):
     """Adapter to make FileHandler compatible with BaseLoader interface."""
