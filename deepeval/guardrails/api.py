@@ -1,7 +1,6 @@
 from typing import Optional, List, Union, Dict
 from pydantic import BaseModel
 
-
 from deepeval.guardrails.types import GuardType
 
 

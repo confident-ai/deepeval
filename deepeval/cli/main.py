@@ -22,6 +22,11 @@ app.add_typer(test_app, name="test")
 app.add_typer(recommend_app, name="recommend")
 
 
+class Regions(Enum):
+    US = "US"
+    EU = "EU"
+
+
 def generate_pairing_code():
     """Generate a random pairing code."""
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -31,6 +36,21 @@ def find_available_port():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("localhost", 0))  # Bind to port 0 to get an available port
         return s.getsockname()[1]
+
+
+@app.command(name="set-confident-region")
+def set_confident_region_command(
+    region: Regions = typer.Argument(
+        ..., help="The data region to use (US or EU)"
+    )
+):
+    """Set the Confident AI data region."""
+    # Add flag emojis based on region
+    flag = "🇺🇸" if region == Regions.US else "🇪🇺"
+    KEY_FILE_HANDLER.write_key(KeyValues.CONFIDENT_REGION, region.value)
+    print(
+        f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
+    )
 
 
 @app.command()
@@ -106,23 +126,6 @@ def login(
             )
         except:
             span.set_attribute("completed", False)
-
-
-class Regions(Enum):
-    US = "US"
-    EU = "EU"
-
-
-@app.command(name="set-confident-region")
-def set_confident_region(
-    region: Regions = typer.Option(
-        ..., "--region", help="Region to use for the Confident AI API"
-    ),
-):
-    KEY_FILE_HANDLER.write_key(KeyValues.CONFIDENT_REGION, region)
-    print(
-        f":raising_hands: Congratulations! You're now using the {region} data region for Confident AI."
-    )
 
 
 @app.command(name="set-azure-openai")
