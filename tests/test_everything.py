@@ -198,8 +198,8 @@ def test_everything():
         turns=[test_case, test_case], chatbot_role="have a conversation"
     )
     assert_test(
-        test_case,
-        [
+        test_case=test_case,
+        metrics=[
             metric1,
             metric2,
             metric3,
