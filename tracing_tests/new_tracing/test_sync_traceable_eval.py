@@ -1,12 +1,12 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.test_case.llm_test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     update_current_span_test_case,
     update_current_span_attributes,
     observe,
     RetrieverAttributes,
     LlmAttributes,
-    trace_manager,
+    trace_manager
 )
 
 from time import sleep, perf_counter
@@ -41,7 +41,6 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    print("retrieving")
     # update_current_span_attributes(
     #     RetrieverAttributes(
     #         embedding_input=query,
@@ -96,7 +95,8 @@ def custom_research_agent(query: str):
 def weather_agent(query: str):
     update_current_span_test_case(
         LLMTestCase(
-            input=query, actual_output="Weather information unavailable"
+            input=query, 
+            actual_output="Weather information unavailable"
         )
     )
     sleep(random.uniform(1, 3))
@@ -128,7 +128,9 @@ def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
     update_current_span_test_case(
-        LLMTestCase(input=input, actual_output=final_response)
+        test_case=LLMTestCase(
+            input=input, actual_output=final_response
+        )
     )
     return final_response
 
@@ -136,21 +138,25 @@ def meta_agent(input: str):
 ###################################v
 
 from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval import evaluate, assert_test
 
 goldens = [
     Golden(input="What's the weather like in SF?"),
-    Golden(input="Tell me about Elon Musk."),
+    Golden(input="Tell me about Elon Musk.")
 ]
 
-meta_agent(goldens[0].input)
+# Run Async
+evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
+evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
 
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=True)
-# print(perf_counter() - start_time)
+# Run Sync
+evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
+evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
 
-# start_time = perf_counter()
-# evaluate(goldens, meta_agent, run_async=False)
-# print(perf_counter() - start_time)
-
-trace_manager.shutdown()
+# Assert Test
+def test_meta_agent():
+    golden = Golden(input="What's the weather like in SF?")
+    assert_test(golden, meta_agent, run_async=True)
+def test_meta_agent():
+    golden = Golden(input="What's the weather like in SF?")
+    assert_test(golden, meta_agent, run_async=False)

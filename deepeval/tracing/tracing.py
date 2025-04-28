@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union
 from pydantic import BaseModel, Field
 from rich.console import Console
 
+
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
@@ -327,7 +328,7 @@ class TraceManager:
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             return None
-
+            
         # Add the trace to the queue
         self._trace_queue.put(trace)
 
