@@ -1,6 +1,6 @@
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict
 from copy import deepcopy
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
 
 from deepeval.test_case import LLMTestCase
 

@@ -1,23 +1,23 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
 import math
 import textwrap
+from typing import List, Optional, Tuple, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
 from deepeval.metrics.multimodal_metrics.text_to_image.template import (
     TextToImageTemplate,
 )
-from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
     check_mllm_test_case_params,
+    construct_verbose_logs,
     initialize_multimodal_model,
+    trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.multimodal_metrics.text_to_image.schema import ReasonScore
-from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.test_case import MLLMImage, MLLMTestCase, MLLMTestCaseParams
+from deepeval.utils import get_or_create_event_loop
 
 required_params: List[MLLMTestCaseParams] = [
     MLLMTestCaseParams.INPUT,

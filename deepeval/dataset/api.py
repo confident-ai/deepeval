@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import List, Optional
 
-from deepeval.dataset.golden import Golden, ConversationalGolden
+from pydantic import BaseModel, Field
+
+from deepeval.dataset.golden import ConversationalGolden, Golden
 
 
 class APIDataset(BaseModel):

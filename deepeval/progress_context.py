@@ -1,16 +1,16 @@
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from tqdm.asyncio import tqdm as async_tqdm_bar
-from typing import Optional, Generator
-from contextlib import contextmanager
-from tqdm import tqdm as tqdm_bar
-from rich.console import Console
-from typing import Dict
-import tqdm
 import sys
+from contextlib import contextmanager
+from typing import Dict, Generator, Optional
+
+import tqdm
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from tqdm import tqdm as tqdm_bar
+from tqdm.asyncio import tqdm as async_tqdm_bar
 
 from deepeval.telemetry import (
-    capture_synthesizer_run,
     capture_conversation_simulatior_run,
+    capture_synthesizer_run,
 )
 
 

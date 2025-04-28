@@ -1,14 +1,14 @@
 import logging
+from enum import Enum
 from typing import Optional
+
 import aiohttp
 import requests
-from enum import Enum
-
 from tenacity import (
-    retry,
-    wait_exponential_jitter,
-    retry_if_exception_type,
     RetryCallState,
+    retry,
+    retry_if_exception_type,
+    wait_exponential_jitter,
 )
 
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues

@@ -1,12 +1,13 @@
 """Tests for Gemini model implementations"""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from google.genai import types
 
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import GeminiModel, MultimodalGeminiModel
 from deepeval.test_case import MLLMImage
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 # Mock credentials for testing
 TEST_API_KEY = ""

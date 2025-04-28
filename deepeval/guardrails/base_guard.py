@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Dict
+from typing import Dict, Optional
+
 from deepeval.guardrails.types import GuardType
 
 

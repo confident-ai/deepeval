@@ -1,5 +1,5 @@
-from typing import Optional
 from dataclasses import dataclass
+from typing import Optional
 
 from deepeval.test_run.test_run import TestRunResultDisplay
 

@@ -1,27 +1,27 @@
 from deepeval.models.base_model import (
-    DeepEvalBaseModel,
+    DeepEvalBaseEmbeddingModel,
     DeepEvalBaseLLM,
     DeepEvalBaseMLLM,
-    DeepEvalBaseEmbeddingModel,
-)
-from deepeval.models.llms import (
-    GPTModel,
-    AzureOpenAIModel,
-    LocalModel,
-    OllamaModel,
-    AnthropicModel,
-    GeminiModel,
-)
-from deepeval.models.mlllms import (
-    MultimodalOpenAIModel,
-    MultimodalOllamaModel,
-    MultimodalGeminiModel,
+    DeepEvalBaseModel,
 )
 from deepeval.models.embedding_models import (
-    OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
     LocalEmbeddingModel,
     OllamaEmbeddingModel,
+    OpenAIEmbeddingModel,
+)
+from deepeval.models.llms import (
+    AnthropicModel,
+    AzureOpenAIModel,
+    GeminiModel,
+    GPTModel,
+    LocalModel,
+    OllamaModel,
+)
+from deepeval.models.mlllms import (
+    MultimodalGeminiModel,
+    MultimodalOllamaModel,
+    MultimodalOpenAIModel,
 )
 
 # TODO: uncomment out once fixed

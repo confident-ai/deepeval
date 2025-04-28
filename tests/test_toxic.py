@@ -1,8 +1,9 @@
 import pytest
+
+from deepeval import assert_test
+from deepeval.metrics import ToxicityMetric
 from deepeval.metrics.toxicity.schema import Verdicts
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import ToxicityMetric
-from deepeval import assert_test
 from tests.custom_judge import CustomJudge
 
 output = """

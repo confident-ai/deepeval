@@ -1,6 +1,7 @@
 """Tests for metrics calculator"""
 
 import unittest
+
 from deepeval.scorer import Scorer
 
 

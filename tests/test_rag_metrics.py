@@ -1,11 +1,12 @@
 import pytest
+
 from deepeval import assert_test
 from deepeval.metrics import (
-    FaithfulnessMetric,
     AnswerRelevancyMetric,
     ContextualPrecisionMetric,
     ContextualRecallMetric,
     ContextualRelevancyMetric,
+    FaithfulnessMetric,
 )
 from deepeval.test_case import LLMTestCase
 

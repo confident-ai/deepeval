@@ -1,20 +1,21 @@
 import time
-from typing import List, Optional, Union
 import webbrowser
+from typing import List, Optional, Union
+
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from deepeval.confident.api import (
     Api,
     Endpoints,
-    get_deepeval_base_url,
     HttpMethods,
+    get_deepeval_base_url,
 )
 from deepeval.confident.types import (
     ConfidentEvaluateRequestData,
     ConfidentEvaluateResponseData,
 )
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.utils import is_confident
 

@@ -1,8 +1,9 @@
 import pytest
+
 from deepeval import assert_test
+from deepeval.metrics import SummarizationMetric
 from deepeval.metrics.summarization.schema import Verdicts
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import SummarizationMetric
 from tests.custom_judge import CustomJudge
 
 

@@ -1,21 +1,22 @@
-from typing import Optional, List, Union, Literal
-from dataclasses import dataclass
-from pydantic import create_model
 import asyncio
+from dataclasses import dataclass
+from typing import List, Literal, Optional, Union
 
+from pydantic import create_model
+
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.dag.schema import (
-    Reason,
     BinaryJudgementVerdict,
     NonBinaryJudgementVerdict,
+    Reason,
     TaskNodeOutput,
 )
 from deepeval.metrics.dag.templates import (
-    VerdictNodeTemplate,
-    TaskNodeTemplate,
     BinaryJudgementTemplate,
     NonBinaryJudgementTemplate,
+    TaskNodeTemplate,
+    VerdictNodeTemplate,
 )
-from deepeval.metrics.base_metric import BaseMetric
 from deepeval.metrics.g_eval.g_eval import G_EVAL_PARAMS, GEval
 from deepeval.metrics.utils import copy_metrics, trimAndLoadJson
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall

@@ -1,9 +1,10 @@
-from pydantic import BaseModel
-from google.genai import types
 from typing import Optional
-from google import genai
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from google import genai
+from google.genai import types
+from pydantic import BaseModel
+
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models.base_model import DeepEvalBaseLLM
 
 default_gemini_model = "gemini-1.5-pro"

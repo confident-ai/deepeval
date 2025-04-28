@@ -5,18 +5,20 @@ Skip these tests if you don't want to incur API costs.
 """
 
 import os
+
 import pytest
-from deepeval.models import GeminiModel, MultimodalGeminiModel
-from deepeval.test_case import LLMTestCase, MLLMTestCase, MLLMImage
+
 from deepeval import assert_test
 from deepeval.metrics import (
     AnswerRelevancyMetric,
+    MultimodalAnswerRelevancyMetric,
+    MultimodalContextualPrecisionMetric,
     MultimodalContextualRecallMetric,
     MultimodalContextualRelevancyMetric,
-    MultimodalContextualPrecisionMetric,
-    MultimodalAnswerRelevancyMetric,
     MultimodalFaithfulnessMetric,
 )
+from deepeval.models import GeminiModel, MultimodalGeminiModel
+from deepeval.test_case import LLMTestCase, MLLMImage, MLLMTestCase
 
 # Skip all tests if credentials are not set
 SKIP_LIVE_TESTS = not (

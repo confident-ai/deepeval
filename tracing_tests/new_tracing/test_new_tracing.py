@@ -1,15 +1,16 @@
+import random
+from asyncio import sleep
+
 from deepeval.tracing import (
-    observe,
-    update_current_span_attributes,
-    update_current_span_test_case,
+    AgentAttributes,
     LlmAttributes,
     RetrieverAttributes,
     ToolAttributes,
-    AgentAttributes,
+    observe,
     trace_manager,
+    update_current_span_attributes,
+    update_current_span_test_case,
 )
-import random
-from asyncio import sleep
 
 trace_manager._daemon = False
 
@@ -263,15 +264,15 @@ async def meta_agent(query: str):
     return final_response
 
 
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import DAGMetric, GEval
 from deepeval.metrics.dag import (
-    DeepAcyclicGraph,
-    TaskNode,
     BinaryJudgementNode,
+    DeepAcyclicGraph,
     NonBinaryJudgementNode,
+    TaskNode,
     VerdictNode,
 )
-from deepeval.metrics import DAGMetric, GEval
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -295,8 +296,9 @@ metric = DAGMetric(dag=dag)
 ###################################
 
 import asyncio
-from deepeval.tracing import get_current_trace
 import contextvars
+
+from deepeval.tracing import get_current_trace
 
 
 # # Gather multiple traceable tasks

@@ -1,7 +1,7 @@
-from typing import Optional, List, Dict, Union, Any
+from typing import Any, Dict, List, Optional, Union
 
-from deepeval.monitor.monitor import monitor
 from deepeval.monitor.api import Link
+from deepeval.monitor.monitor import monitor
 
 
 def track(

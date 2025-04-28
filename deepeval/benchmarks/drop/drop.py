@@ -1,19 +1,19 @@
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional, Union
+
 import pandas as pd
 from tqdm import tqdm
-from typing import Union
 
-from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
-from deepeval.benchmarks.utils import should_use_batch
 from deepeval.benchmarks.schema import (
     DROPDateSchema,
     DROPNumberSchema,
     DROPStringSchema,
 )
+from deepeval.benchmarks.utils import should_use_batch
+from deepeval.dataset import Golden
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.telemetry import capture_benchmark_run
 
 DELIMITER = ","

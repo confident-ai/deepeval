@@ -1,18 +1,19 @@
-import portalocker
-import sys
 import json
 import os
-from typing import List, Optional, Dict, Union
+import sys
 from enum import Enum
+from typing import Dict, List, Optional, Union
+
+import portalocker
 from pydantic import BaseModel, Field
 
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCallParams
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCallParams
 from deepeval.test_run.api import MetricData
 from deepeval.utils import (
     delete_file_if_exists,
     serialize,
 )
-from deepeval.metrics import BaseMetric
 
 CACHE_FILE_NAME = ".deepeval-cache.json"
 TEMP_CACHE_FILE_NAME = ".temp-deepeval-cache.json"

@@ -1,15 +1,15 @@
-from typing import Optional, List, Dict, Union, Any
+from typing import Any, Dict, List, Optional, Union
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.monitor.utils import process_additional_data
-from deepeval.test_run.hyperparameters import process_hyperparameters
-from deepeval.utils import clean_nested_dict
 from deepeval.monitor.api import (
     APIEvent,
     EventHttpResponse,
     Link,
 )
+from deepeval.monitor.utils import process_additional_data
 from deepeval.prompt import Prompt
+from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.utils import clean_nested_dict
 
 
 def monitor(

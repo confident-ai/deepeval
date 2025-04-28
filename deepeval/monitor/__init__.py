@@ -1,3 +1,3 @@
-from .monitor import monitor, a_monitor
-from .feedback import send_feedback, a_send_feedback
 from .api import Link
+from .feedback import a_send_feedback, send_feedback
+from .monitor import a_monitor, monitor

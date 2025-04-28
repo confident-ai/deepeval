@@ -1,13 +1,13 @@
-from typing import Optional, List, Union
-import requests
-from pydantic import BaseModel
-from google.genai import types
-from google import genai
+from typing import List, Optional, Union
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+import requests
+from google import genai
+from google.genai import types
+from pydantic import BaseModel
+
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models.base_model import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
-
 
 default_multimodal_gemini_model = "gemini-1.5-pro"
 

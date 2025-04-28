@@ -1,24 +1,24 @@
-from typing import Optional, List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.red_teaming_metrics.contracts.template import (
     ContractsTemplate,
 )
-from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.red_teaming_metrics.debug_access.schema import *
 from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
     check_llm_test_case_params,
+    construct_verbose_logs,
     initialize_model,
+    trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.red_teaming_metrics.debug_access.schema import *
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
+from deepeval.utils import get_or_create_event_loop
 
 required_params: List[LLMTestCaseParams] = [
     LLMTestCaseParams.INPUT,

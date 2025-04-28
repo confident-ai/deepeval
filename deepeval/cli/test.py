@@ -1,24 +1,24 @@
-import time
-import pytest
-import typer
 import os
 import sys
-from typing_extensions import Annotated
+import time
 from typing import Optional
 
-from deepeval.test_run import global_test_run_manager, TEMP_FILE_NAME
+import pytest
+import typer
+from typing_extensions import Annotated
+
+from deepeval.telemetry import capture_evaluation_run
+from deepeval.test_run import TEMP_FILE_NAME, global_test_run_manager, invoke_test_run_end_hook
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
     delete_file_if_exists,
+    set_is_running_deepeval,
     set_should_ignore_errors,
     set_should_skip_on_missing_params,
     set_should_use_cache,
     set_verbose_mode,
 )
-from deepeval.test_run import invoke_test_run_end_hook
-from deepeval.telemetry import capture_evaluation_run
-from deepeval.utils import set_is_running_deepeval
 
 app = typer.Typer(name="test")
 

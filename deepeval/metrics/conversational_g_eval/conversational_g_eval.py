@@ -1,29 +1,31 @@
 """A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Optional, List, Tuple, Union, Dict
-from langchain_core.messages import AIMessage
 import math
+from typing import Dict, List, Optional, Tuple, Union
+
+from langchain_core.messages import AIMessage
+
 from deepeval.metrics import BaseMetric
-from deepeval.metrics.g_eval.g_eval import construct_g_eval_params_string
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
+from deepeval.metrics.conversational_g_eval.schema import *
 from deepeval.metrics.conversational_g_eval.template import (
     ConversationalGEvalTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.g_eval.g_eval import construct_g_eval_params_string
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     format_turns,
-    trimAndLoadJson,
     initialize_model,
+    trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.conversational_g_eval.schema import *
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
+from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class ConversationalGEval(BaseMetric):

@@ -1,6 +1,6 @@
-from typing import Union, List
+from typing import List, Union
 
-from deepeval.test_case import LLMTestCase, MLLMTestCase, ConversationalTestCase
+from deepeval.test_case import ConversationalTestCase, LLMTestCase, MLLMTestCase
 
 
 def check_valid_test_cases_type(

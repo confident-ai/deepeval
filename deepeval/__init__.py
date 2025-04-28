@@ -1,17 +1,17 @@
 import os
-import warnings
 import re
+import warnings
+
+from deepeval.confident import confident_evaluate
+from deepeval.evaluate import assert_test, evaluate
+from deepeval.event import track
+from deepeval.monitor import a_monitor, a_send_feedback, monitor, send_feedback
+from deepeval.telemetry import *
+from deepeval.test_run import log_hyperparameters, on_test_run_end
+from deepeval.utils import login_with_confident_api_key
 
 # Optionally add telemetry
 from ._version import __version__
-
-from deepeval.event import track
-from deepeval.monitor import monitor, a_monitor, send_feedback, a_send_feedback
-from deepeval.evaluate import evaluate, assert_test
-from deepeval.test_run import on_test_run_end, log_hyperparameters
-from deepeval.utils import login_with_confident_api_key
-from deepeval.telemetry import *
-from deepeval.confident import confident_evaluate
 
 __all__ = [
     "login_with_confident_api_key",

@@ -1,10 +1,11 @@
 """Tests for answer relevancy"""
 
 import pytest
+
+from deepeval import assert_test
 from deepeval.metrics.answer_relevancy.schema import Verdicts
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval import assert_test
 
 question = "What are the primary benefits of meditation?"
 answer = """

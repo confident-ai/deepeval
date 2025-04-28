@@ -1,23 +1,24 @@
-from typing import List, Optional, Union
 import json
+from typing import List, Optional, Union
+
 from pydantic import BaseModel, ValidationError
 
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.json_correctness.schema import Reason
+from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
 from deepeval.metrics.utils import (
-    construct_verbose_logs,
     check_llm_test_case_params,
+    construct_verbose_logs,
     initialize_model,
     trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
-from deepeval.metrics.json_correctness.schema import Reason
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
 from deepeval.utils import get_or_create_event_loop
 
 DEFAULT_CORRERCT_REASON = "The generated Json matches and is syntactically correct to the expected schema."

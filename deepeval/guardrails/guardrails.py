@@ -1,5 +1,6 @@
 from typing import List
 
+from deepeval.confident.api import Api, Endpoints, HttpMethods, get_base_api_url
 from deepeval.guardrails.api import (
     ApiGuard,
     ApiGuardrails,
@@ -7,10 +8,8 @@ from deepeval.guardrails.api import (
 )
 from deepeval.guardrails.base_guard import BaseGuard
 from deepeval.guardrails.types import GuardType
-from deepeval.confident.api import Api, HttpMethods, Endpoints
 from deepeval.telemetry import capture_guardrails
 from deepeval.utils import is_confident
-from deepeval.confident.api import get_base_api_url
 
 
 class Guardrails:

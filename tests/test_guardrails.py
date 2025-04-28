@@ -1,19 +1,20 @@
-from deepeval.guardrails.cybersecurity_guard import CyberattackCategory
+import asyncio
+
 from deepeval.guardrails import (
-    PrivacyGuard,
+    CybersecurityGuard,
     GraphicContentGuard,
-    PromptInjectionGuard,
-    JailbreakingGuard,
+    GuardType,
     HallucinationGuard,
     IllegalGuard,
+    JailbreakingGuard,
     ModernizationGuard,
+    PrivacyGuard,
+    PromptInjectionGuard,
     SyntaxGuard,
     TopicalGuard,
     ToxicityGuard,
-    CybersecurityGuard,
-    GuardType,
 )
-import asyncio
+from deepeval.guardrails.cybersecurity_guard import CyberattackCategory
 
 ############################################
 # Input Guards
@@ -142,8 +143,9 @@ async def test_special_guard():
 # Test Guardrails
 ############################################
 
-from deepeval.guardrails import Guardrails
 import json
+
+from deepeval.guardrails import Guardrails
 
 input = "Hi, my name is Alex, and I live at 123 Maple Street in New York."
 response = "Hi Alex from New York, nice to meet you."

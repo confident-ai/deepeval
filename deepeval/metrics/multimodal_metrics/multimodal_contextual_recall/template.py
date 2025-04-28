@@ -1,5 +1,5 @@
-from typing import Union, List
 import textwrap
+from typing import List, Union
 
 from deepeval.test_case import MLLMImage
 

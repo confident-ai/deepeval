@@ -1,7 +1,8 @@
 import os
+
 from deepeval.dataset import (
-    create_evaluation_query_answer_pairs,
     EvaluationDataset,
+    create_evaluation_query_answer_pairs,
 )
 
 dataset: EvaluationDataset = create_evaluation_query_answer_pairs(

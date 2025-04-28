@@ -1,25 +1,25 @@
 import asyncio
-from typing import Optional, Union, Dict, List
+from typing import Dict, List, Optional, Union
 
 from deepeval.metrics import BaseConversationalMetric
+from deepeval.metrics.conversation_completeness.schema import *
 from deepeval.metrics.conversation_completeness.template import (
     ConversationCompletenessTemplate,
 )
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     format_turns,
-    trimAndLoadJson,
     initialize_model,
+    trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import (
-    LLMTestCaseParams,
     ConversationalTestCase,
+    LLMTestCaseParams,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.conversation_completeness.schema import *
 
 
 class ConversationCompletenessMetric(BaseConversationalMetric):

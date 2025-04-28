@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Union, Dict
+from typing import Dict, Optional, Union
 
 from deepeval.metrics.utils import initialize_embedding_model, initialize_model
 from deepeval.models import DeepEvalBaseLLM

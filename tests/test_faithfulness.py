@@ -1,10 +1,11 @@
 import pytest
-from deepeval.metrics.faithfulness.schema import Verdicts
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import FaithfulnessMetric
-from deepeval import assert_test
-from deepeval.models import DeepEvalBaseLLM
 from langchain_openai import ChatOpenAI
+
+from deepeval import assert_test
+from deepeval.metrics import FaithfulnessMetric
+from deepeval.metrics.faithfulness.schema import Verdicts
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import LLMTestCase
 from tests.custom_judge import CustomJudge
 
 output = """

@@ -1,9 +1,11 @@
-import pytest
-from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
-from deepeval import assert_test
 import random
 import time
+
+import pytest
+
+from deepeval import assert_test
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
 
 
 class FakeMetric(BaseMetric):

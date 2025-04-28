@@ -1,5 +1,6 @@
-from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
 import random
+
+from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
 
 
 class TruthfulQATemplate:

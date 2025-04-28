@@ -1,18 +1,18 @@
-from typing import Optional, Tuple, Union, Dict
-from openai import OpenAI, AsyncOpenAI
-from pydantic import BaseModel
 import logging
-import openai
+from typing import Dict, Optional, Tuple, Union
 
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    wait_exponential_jitter,
-    RetryCallState,
-)
+import openai
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_openai import ChatOpenAI
+from openai import AsyncOpenAI, OpenAI
+from pydantic import BaseModel
+from tenacity import (
+    RetryCallState,
+    retry,
+    retry_if_exception_type,
+    wait_exponential_jitter,
+)
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json

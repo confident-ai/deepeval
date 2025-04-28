@@ -1,20 +1,20 @@
-from typing import Optional, Tuple, List, Union
-from openai import OpenAI, AsyncOpenAI
-from pydantic import BaseModel
-from io import BytesIO
-import logging
-import openai
 import base64
+import logging
+from io import BytesIO
+from typing import List, Optional, Tuple, Union
+
+import openai
+from openai import AsyncOpenAI, OpenAI
+from pydantic import BaseModel
 from tenacity import (
+    RetryCallState,
     retry,
     retry_if_exception_type,
     wait_exponential_jitter,
-    RetryCallState,
 )
 
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
-
 
 retryable_exceptions = (
     openai.RateLimitError,

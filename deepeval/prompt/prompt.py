@@ -1,11 +1,12 @@
-from typing import Optional, List
-from rich.progress import Progress, SpinnerColumn, TextColumn
-import time
 import re
+import time
+from typing import List, Optional
 
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.prompt.api import PromptHttpResponse, PromptMessage, PromptType
 from deepeval.utils import is_confident
-from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 
 class Prompt:

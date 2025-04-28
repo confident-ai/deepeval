@@ -1,8 +1,8 @@
 """Test for custom metrics in Python"""
 
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import BaseMetric
 from deepeval import assert_test
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
 
 
 class LatencyMetric(BaseMetric):

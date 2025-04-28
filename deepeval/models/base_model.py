@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List
+from typing import Any, List, Optional
 
 
 class DeepEvalBaseModel(ABC):

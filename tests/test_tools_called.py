@@ -1,4 +1,4 @@
-from deepeval.test_case import ToolCall, LLMTestCase
+from deepeval.test_case import LLMTestCase, ToolCall
 
 ################################################
 # Initialization ###############################
@@ -31,9 +31,9 @@ tool_test_case = LLMTestCase(
 # Metrics ######################################
 ################################################
 
-from deepeval.metrics import ToolCorrectnessMetric, GEval
-from deepeval.test_case import LLMTestCaseParams
 from deepeval import evaluate
+from deepeval.metrics import GEval, ToolCorrectnessMetric
+from deepeval.test_case import LLMTestCaseParams
 
 tool_correctness_metric = ToolCorrectnessMetric(verbose_mode=True)
 # tool_correctness_geval_metric = GEval(

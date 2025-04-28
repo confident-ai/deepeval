@@ -1,22 +1,22 @@
 from typing import List, Optional, Type, Union
 
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.bias.schema import *
+from deepeval.metrics.bias.template import BiasTemplate
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.utils import (
+    check_llm_test_case_params,
+    construct_verbose_logs,
+    initialize_model,
+    trimAndLoadJson,
+)
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import (
+    ConversationalTestCase,
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
-    check_llm_test_case_params,
-    initialize_model,
-)
-from deepeval.metrics.bias.template import BiasTemplate
-from deepeval.metrics.bias.schema import *
 
 
 class BiasMetric(BaseMetric):

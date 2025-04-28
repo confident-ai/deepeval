@@ -1,22 +1,22 @@
-from typing import Optional, List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
-from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
-    check_llm_test_case_params,
-    initialize_model,
-)
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.task_completion.template import TaskCompletionTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.task_completion.schema import *
+from deepeval.metrics.task_completion.template import TaskCompletionTemplate
+from deepeval.metrics.utils import (
+    check_llm_test_case_params,
+    construct_verbose_logs,
+    initialize_model,
+    trimAndLoadJson,
+)
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
+from deepeval.utils import get_or_create_event_loop
 
 
 class TaskCompletionMetric(BaseMetric):

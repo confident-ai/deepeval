@@ -1,2 +1,2 @@
-from .evaluate import evaluate, assert_test
-from .configs import AsyncConfig, DisplayConfig, CacheConfig, ErrorConfig
+from .configs import AsyncConfig, CacheConfig, DisplayConfig, ErrorConfig
+from .evaluate import assert_test, evaluate

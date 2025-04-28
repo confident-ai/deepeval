@@ -1,15 +1,16 @@
 import pytest
-from deepeval.test_case import LLMTestCase
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+
+from deepeval import assert_test
 from deepeval.metrics.ragas import (
-    RagasMetric,
+    RAGASAnswerRelevancyMetric,
+    RAGASContextualEntitiesRecall,
     RAGASContextualPrecisionMetric,
     RAGASContextualRecallMetric,
-    RAGASContextualEntitiesRecall,
-    RAGASAnswerRelevancyMetric,
     RAGASFaithfulnessMetric,
+    RagasMetric,
 )
-from deepeval import assert_test
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from deepeval.test_case import LLMTestCase
 
 query = "Who won the FIFA World Cup in 2018 and what was the score?"
 output = (

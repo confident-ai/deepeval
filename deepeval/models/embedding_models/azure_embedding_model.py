@@ -1,7 +1,8 @@
-from langchain_openai import AzureOpenAIEmbeddings
 from typing import List
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from langchain_openai import AzureOpenAIEmbeddings
+
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
 

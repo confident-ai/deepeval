@@ -1,67 +1,67 @@
 import asyncio
-from copy import deepcopy
-from typing import Callable, List, Optional, Union, Any, Awaitable
 import time
-from tqdm.asyncio import tqdm_asyncio
+from copy import deepcopy
+from typing import Any, Awaitable, Callable, List, Optional, Union
+
 from tqdm import tqdm
+from tqdm.asyncio import tqdm_asyncio
 
-
-from deepeval.tracing.tracing import (
-    Observer,
-    get_current_trace,
-    trace_manager,
-    Trace,
-    BaseSpan,
-    AgentSpan,
-    LlmSpan,
-    RetrieverSpan,
-    ToolSpan,
-    perf_counter_to_datetime,
-    to_zod_compatible_iso,
-)
-from deepeval.tracing.api import (
-    TraceApi,
-    BaseApiSpan,
-)
 from deepeval.dataset import Golden
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.metrics.utils import copy_metrics
-from deepeval.utils import (
-    get_or_create_event_loop,
+from deepeval.evaluate.types import TestResult
+from deepeval.evaluate.utils import (
+    count_metrics_in_trace,
+    create_api_test_case,
+    create_metric_data,
+    create_test_result,
 )
-from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
-    BaseMetric,
     BaseConversationalMetric,
+    BaseMetric,
     BaseMultimodalMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
 )
+from deepeval.metrics.utils import copy_metrics
+from deepeval.telemetry import capture_evaluation_run
 from deepeval.test_case import (
-    LLMTestCase,
     ConversationalTestCase,
+    LLMTestCase,
     MLLMTestCase,
 )
 from deepeval.test_run import (
-    global_test_run_manager,
-    LLMApiTestCase,
     ConversationalApiTestCase,
-    TestRunManager,
+    LLMApiTestCase,
     TestRun,
+    TestRunManager,
+    global_test_run_manager,
 )
 from deepeval.test_run.cache import (
-    global_test_run_cache_manager,
     Cache,
-    CachedTestCase,
     CachedMetricData,
+    CachedTestCase,
+    global_test_run_cache_manager,
 )
-from deepeval.evaluate.types import TestResult
-from deepeval.evaluate.utils import (
-    create_metric_data,
-    create_test_result,
-    create_api_test_case,
-    count_metrics_in_trace,
+from deepeval.tracing.api import (
+    BaseApiSpan,
+    TraceApi,
+)
+from deepeval.tracing.tracing import (
+    AgentSpan,
+    BaseSpan,
+    LlmSpan,
+    Observer,
+    RetrieverSpan,
+    ToolSpan,
+    Trace,
+    get_current_trace,
+    perf_counter_to_datetime,
+    to_zod_compatible_iso,
+    trace_manager,
+)
+from deepeval.utils import (
+    get_or_create_event_loop,
 )
 
 

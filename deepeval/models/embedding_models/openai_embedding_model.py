@@ -1,5 +1,6 @@
+from typing import List, Optional
+
 from langchain_openai import OpenAIEmbeddings
-from typing import Optional, List
 
 from deepeval.models import DeepEvalBaseEmbeddingModel
 

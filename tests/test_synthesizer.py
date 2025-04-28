@@ -1,17 +1,16 @@
-from typing import Callable
 import asyncio
-import pytest
-import time
-import os
 import json
+import os
+import time
+from typing import Callable
 
-from deepeval.synthesizer.chunking.context_generator import ContextGenerator
+import pytest
+
 from deepeval.dataset import EvaluationDataset
 from deepeval.dataset.golden import Golden
-from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer import Evolution, Synthesizer
+from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.synthesizer.config import *
-from deepeval.synthesizer import Evolution
-
 
 #########################################################
 ### Context #############################################
@@ -281,7 +280,7 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
     synthesizer.push("Test Dataset 3")
 
 
-from custom_judge import JSONCustomModel, CustomModel
+from custom_judge import CustomModel, JSONCustomModel
 
 model = CustomModel()
 synthesizer_sync = Synthesizer(async_mode=False)

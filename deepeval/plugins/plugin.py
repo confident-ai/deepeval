@@ -1,7 +1,9 @@
-import pytest
 import os
+from typing import Any, Optional
+
+import pytest
 from rich import print
-from typing import Optional, Any
+
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.test_run import global_test_run_manager
 from deepeval.utils import get_is_running_deepeval

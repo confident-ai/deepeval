@@ -1,16 +1,16 @@
+import random
+from time import perf_counter, sleep
+
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
-    update_current_span_test_case,
-    update_current_span_attributes,
-    observe,
-    RetrieverAttributes,
     LlmAttributes,
+    RetrieverAttributes,
+    observe,
     trace_manager,
+    update_current_span_attributes,
+    update_current_span_test_case,
 )
-
-from time import sleep, perf_counter
-import random
 
 trace_manager._daemon = False
 
@@ -134,8 +134,8 @@ def meta_agent(input: str):
 
 ###################################v
 
+from deepeval import assert_test, evaluate
 from deepeval.dataset import Golden
-from deepeval import evaluate, assert_test
 
 goldens = [
     Golden(input="What's the weather like in SF?"),

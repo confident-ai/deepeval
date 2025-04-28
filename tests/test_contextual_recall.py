@@ -1,8 +1,9 @@
 import pytest
+
+from deepeval import assert_test
+from deepeval.metrics import ContextualRecallMetric
 from deepeval.metrics.contextual_recall.schema import Verdicts
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import ContextualRecallMetric
-from deepeval import assert_test
 from tests.custom_judge import CustomJudge
 
 output = """The primary difference between a comet and an asteroid lies in their 

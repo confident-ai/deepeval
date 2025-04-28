@@ -1,21 +1,22 @@
+import asyncio
+import sys
+import time
+from contextlib import contextmanager
+from typing import List, Optional, Union
+
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from contextlib import contextmanager
-import sys
-from typing import List, Optional, Union
-import time
-import asyncio
 from tqdm.asyncio import tqdm_asyncio
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import (
-    BaseMetric,
     BaseConversationalMetric,
+    BaseMetric,
     BaseMultimodalMetric,
 )
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
-from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
+from deepeval.test_case import ConversationalTestCase, LLMTestCase, MLLMTestCase
+from deepeval.test_run.cache import Cache, CachedTestCase
 
 
 def format_metric_description(

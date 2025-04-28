@@ -1,7 +1,7 @@
-from deepeval.evaluate.configs import DisplayConfig
-from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
-from deepeval.metrics import ToolCorrectnessMetric
 from deepeval import evaluate
+from deepeval.evaluate.configs import DisplayConfig
+from deepeval.metrics import ToolCorrectnessMetric
+from deepeval.test_case import LLMTestCase, ToolCall, ToolCallParams
 
 tool_correctness_metric = ToolCorrectnessMetric(
     threshold=0.5,

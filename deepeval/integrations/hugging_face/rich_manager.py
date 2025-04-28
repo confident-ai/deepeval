@@ -1,11 +1,11 @@
 from typing import Union
 
-from rich.live import Live
-from rich.text import Text
-from rich.table import Table
 from rich.columns import Columns
 from rich.console import Console
-from rich.progress import Progress, BarColumn, SpinnerColumn, TextColumn
+from rich.live import Live
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.text import Text
 
 
 class RichManager:

@@ -1,5 +1,7 @@
 from typing import Any, Callable
+
 from langchain_core.callbacks import BaseCallbackManager
+
 from deepeval.integrations.langchain.callback import LangChainCallbackHandler
 
 

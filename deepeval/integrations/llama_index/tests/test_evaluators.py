@@ -1,9 +1,9 @@
 from deepeval.integrations.llama_index import (
     DeepEvalAnswerRelevancyEvaluator,
-    DeepEvalFaithfulnessEvaluator,
-    DeepEvalContextualRelevancyEvaluator,
-    DeepEvalSummarizationEvaluator,
     DeepEvalBiasEvaluator,
+    DeepEvalContextualRelevancyEvaluator,
+    DeepEvalFaithfulnessEvaluator,
+    DeepEvalSummarizationEvaluator,
     DeepEvalToxicityEvaluator,
 )
 

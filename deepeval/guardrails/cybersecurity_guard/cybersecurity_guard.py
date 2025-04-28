@@ -1,7 +1,7 @@
 from typing import List
 
-from deepeval.guardrails.cybersecurity_guard.category import CyberattackCategory
 from deepeval.guardrails.base_guard import BaseDecorativeGuard
+from deepeval.guardrails.cybersecurity_guard.category import CyberattackCategory
 
 
 class CybersecurityGuard(BaseDecorativeGuard):

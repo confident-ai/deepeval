@@ -1,37 +1,35 @@
-import pytest
-from langchain_openai import OpenAIEmbeddings
 import asyncio
 import os
 import sys
+
+import pytest
+from langchain_openai import OpenAIEmbeddings
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
 import deepeval
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
+from deepeval import assert_test, evaluate
+from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import (
     AnswerRelevancyMetric,
-    FaithfulnessMetric,
+    BaseMetric,
+    BiasMetric,
+    ContextualPrecisionMetric,
     ContextualRecallMetric,
     ContextualRelevancyMetric,
-    ContextualPrecisionMetric,
-    HallucinationMetric,
-    BiasMetric,
-    ToxicityMetric,
+    FaithfulnessMetric,
     GEval,
+    HallucinationMetric,
     SummarizationMetric,
-    BaseMetric,
+    ToxicityMetric,
 )
-from deepeval.dataset import EvaluationDataset
 from deepeval.metrics.ragas import RagasMetric
-from deepeval import assert_test, evaluate
-
-from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
 
 
 # Inherit BaseMetric

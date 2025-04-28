@@ -1,10 +1,11 @@
 import pytest
+
+from deepeval import assert_test
+from deepeval.metrics import ContextualRelevancyMetric
 from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyVerdicts,
 )
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import ContextualRelevancyMetric
-from deepeval import assert_test
 from tests.custom_judge import CustomJudge
 
 output = """

@@ -1,8 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar, Generic, List, Optional
+from typing import Generic, List, Optional, TypeVar
 
 from deepeval.dataset import Golden
-
 
 T = TypeVar("T")
 

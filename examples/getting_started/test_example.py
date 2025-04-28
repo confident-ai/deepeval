@@ -1,9 +1,10 @@
 import pytest
+
 import deepeval
 from deepeval import assert_test
 from deepeval.dataset import EvaluationDataset
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import AnswerRelevancyMetric, GEval
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 # To run this file: deepeval test run <file_name>.py
 

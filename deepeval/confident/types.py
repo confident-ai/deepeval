@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
 from typing import List, Union
 
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from pydantic import BaseModel, Field
+
+from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
 
 class ConfidentEvaluateRequestData(BaseModel):

@@ -1,8 +1,8 @@
 import os
-from urllib.parse import urlparse
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict, Union
 from enum import Enum
+from typing import Dict, List, Optional, Union
+from urllib.parse import urlparse
 
 from deepeval.test_case import ToolCall
 

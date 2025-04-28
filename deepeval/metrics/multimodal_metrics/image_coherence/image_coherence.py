@@ -1,22 +1,22 @@
 import asyncio
-from typing import Optional, List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
+    ReasonScore,
+)
 from deepeval.metrics.multimodal_metrics.image_coherence.template import (
     ImageCoherenceTemplate,
 )
 from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
     check_mllm_test_case_params,
+    construct_verbose_logs,
     initialize_multimodal_model,
+    trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.multimodal_metrics.image_coherence.schema import (
-    ReasonScore,
-)
-from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.test_case import MLLMImage, MLLMTestCase, MLLMTestCaseParams
 from deepeval.utils import get_or_create_event_loop
 
 

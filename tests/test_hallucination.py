@@ -1,8 +1,9 @@
 import pytest
+
+from deepeval import assert_test
+from deepeval.metrics import HallucinationMetric
 from deepeval.metrics.hallucination.schema import Verdicts
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import HallucinationMetric
-from deepeval import assert_test
 from tests.custom_judge import CustomJudge
 
 

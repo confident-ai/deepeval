@@ -1,6 +1,6 @@
-from typing import Dict
-import re
 import json
+import re
+from typing import Dict
 
 
 def trim_and_load_json(

@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Union
 from enum import Enum
+from typing import Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field
 
 from deepeval.prompt import PromptApi
 

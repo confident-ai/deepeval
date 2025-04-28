@@ -1,17 +1,17 @@
-from typing import List, Optional, Dict, Union
-from tqdm import tqdm
+from typing import Dict, List, Optional, Union
+
 import pandas as pd
+from tqdm import tqdm
 
-
-from deepeval.dataset import Golden
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import BiasMetric
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.equity_med_qa.task import EquityMedQATask
 from deepeval.benchmarks.equity_med_qa.template import EquityMedQATemplate
-from deepeval.telemetry import capture_benchmark_run
+from deepeval.dataset import Golden
+from deepeval.metrics import BiasMetric
 from deepeval.metrics.utils import initialize_model
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.telemetry import capture_benchmark_run
+from deepeval.test_case import LLMTestCase
 
 
 class EquityMedQA(DeepEvalBaseBenchmark):

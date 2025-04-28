@@ -13,7 +13,6 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union
 from pydantic import BaseModel, Field
 from rich.console import Console
 
-
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt

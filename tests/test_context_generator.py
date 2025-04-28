@@ -1,8 +1,9 @@
-from deepeval.synthesizer.chunking.context_generator import ContextGenerator
+from itertools import chain
+
 from deepeval.models.embedding_models.openai_embedding_model import (
     OpenAIEmbeddingModel,
 )
-from itertools import chain
+from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 
 context_generator = ContextGenerator(
     document_paths=["./synthesizer_data/pdf_example.pdf"],

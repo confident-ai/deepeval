@@ -1,12 +1,13 @@
 import pytest
+from pydantic import BaseModel
+
 from deepeval.models.base_model import DeepEvalBaseLLM
 from deepeval.models.llms import (
-    GPTModel,
     AzureOpenAIModel,
-    OllamaModel,
+    GPTModel,
     LocalModel,
+    OllamaModel,
 )
-from pydantic import BaseModel
 
 # Sample input
 input_text = """What is the best city in the world? 

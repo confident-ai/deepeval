@@ -1,8 +1,8 @@
 from importlib import resources
 
-from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.cot_prompts import *
 from deepeval.benchmarks.big_bench_hard.shot_prompts import *
+from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 
 
 class BigBenchHardTemplate:

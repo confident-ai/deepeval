@@ -1,13 +1,13 @@
 import asyncio
 from typing import List
 
+from deepeval.metrics import BaseMetric
 from deepeval.metrics.dag import (
     BaseNode,
-    NonBinaryJudgementNode,
     BinaryJudgementNode,
+    NonBinaryJudgementNode,
 )
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import BaseMetric
 
 
 class DeepAcyclicGraph:

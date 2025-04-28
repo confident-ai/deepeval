@@ -1,10 +1,10 @@
-from typing import Union, List, Optional, Any
 import textwrap
+from typing import Any, List, Optional, Union
 
-from deepeval.metrics.utils import trimAndLoadJson
-from deepeval.utils import normalize_text
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.schema import NumberSchema
+from deepeval.metrics.utils import trimAndLoadJson
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.utils import normalize_text
 
 
 # TODO: More scores are to be added

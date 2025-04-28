@@ -1,15 +1,17 @@
-from contextlib import contextmanager
 import logging
 import os
 import socket
 import sys
 import uuid
-import sentry_sdk
+from contextlib import contextmanager
 from enum import Enum
-from typing import List, Dict
+from typing import Dict, List
+
 import requests
-from deepeval.constants import LOGIN_PROMPT
+import sentry_sdk
 from posthog import Posthog
+
+from deepeval.constants import LOGIN_PROMPT
 
 
 class Feature(Enum):
@@ -56,11 +58,11 @@ anonymous_public_ip = None
 
 if not telemetry_opt_out():
     from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
         OTLPSpanExporter,
     )
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     anonymous_public_ip = get_anonymous_public_ip()
     sentry_sdk.init(

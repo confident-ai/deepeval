@@ -51,12 +51,13 @@
 ## Import ##############################
 ########################################
 
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
-from deepeval.models import GPTModel
-from deepeval.benchmarks.tasks import *
-from deepeval.benchmarks.modes import *
-from deepeval.benchmarks import *
 from typing import List
+
+from deepeval.benchmarks import *
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.modes import *
+from deepeval.benchmarks.tasks import *
+from deepeval.models import GPTModel
 
 gpt_model = GPTModel(model="gpt-4o")
 n_problems = 2

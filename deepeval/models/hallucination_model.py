@@ -1,7 +1,8 @@
 import os
 from typing import Optional
-from deepeval.singleton import Singleton
+
 from deepeval.progress_context import progress_context
+from deepeval.singleton import Singleton
 
 
 class HallucinationModel(metaclass=Singleton):

@@ -1,14 +1,15 @@
 from typing import List
-from rich import print
+
 import typer
+from rich import print
 
 from deepeval.cli.types import (
     RecommendMetricsRequestData,
     RecommendMetricsResponseData,
 )
-from deepeval.confident.api import Api, HttpMethods, Endpoints
-from deepeval.telemetry import capture_recommend_metrics
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import LOGIN_PROMPT
+from deepeval.telemetry import capture_recommend_metrics
 
 app = typer.Typer(name="recommend")
 

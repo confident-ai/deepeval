@@ -1,12 +1,12 @@
 import asyncio
-import openai
-
 from typing import Optional, Tuple
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
+
+import openai
 from langchain_community.callbacks import get_openai_callback
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.models.llms.openai_model import *
 
@@ -140,8 +140,7 @@ from deepeval.metrics import (
     SummarizationMetric,
     ToxicityMetric,
 )
-from deepeval.test_case import LLMTestCaseParams
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 test_case = LLMTestCase(
     input="What is this",

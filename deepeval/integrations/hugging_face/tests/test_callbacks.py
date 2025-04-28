@@ -1,20 +1,19 @@
 """Test for callbacks"""
 
-from transformers import (
-    Seq2SeqTrainer,
-    Seq2SeqTrainingArguments,
-    T5Tokenizer,
-    T5ForConditionalGeneration,
-    DataCollatorForSeq2Seq,
-)
-
-
-from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
-from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
-
 import os
 import random
+
+from transformers import (
+    DataCollatorForSeq2Seq,
+    Seq2SeqTrainer,
+    Seq2SeqTrainingArguments,
+    T5ForConditionalGeneration,
+    T5Tokenizer,
+)
+
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.integrations.hugging_face import DeepEvalHuggingFaceCallback
+from deepeval.metrics import AnswerRelevancyMetric, HallucinationMetric
 
 os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "true"
 os.environ["OPENAI_API_KEY"] = "API-KEY"

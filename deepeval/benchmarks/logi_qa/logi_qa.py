@@ -1,16 +1,17 @@
-from typing import List, Optional, Dict
-from tqdm import tqdm
+import json
+from typing import Dict, List, Optional
+
 import pandas as pd
 import requests
-import json
+from tqdm import tqdm
 
-from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.logi_qa.task import LogiQATask
 from deepeval.benchmarks.logi_qa.template import LogiQATemplate
-from deepeval.benchmarks.utils import should_use_batch
 from deepeval.benchmarks.schema import MultipleChoiceSchema
+from deepeval.benchmarks.utils import should_use_batch
+from deepeval.dataset import Golden
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.telemetry import capture_benchmark_run
 
 

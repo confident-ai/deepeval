@@ -1,9 +1,10 @@
-from typing import Optional, Tuple, List, Union, Dict
-from ollama import Client, AsyncClient, ChatResponse
-from pydantic import BaseModel
-import requests
 import base64
 import io
+from typing import Dict, List, Optional, Tuple, Union
+
+import requests
+from ollama import AsyncClient, ChatResponse, Client
+from pydantic import BaseModel
 
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import DeepEvalBaseMLLM

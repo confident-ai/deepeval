@@ -1,8 +1,9 @@
 import pytest
+
+from deepeval import assert_test
+from deepeval.metrics import ContextualPrecisionMetric
 from deepeval.metrics.contextual_precision.schema import Verdicts
 from deepeval.test_case import LLMTestCase
-from deepeval.metrics import ContextualPrecisionMetric
-from deepeval import assert_test
 from tests.custom_judge import CustomJudge
 
 question = "What are the primary benefits of meditation?"

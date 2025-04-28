@@ -1,11 +1,13 @@
-import time
-import pytest
 import random
+import time
+
+import pytest
+
 import deepeval
-from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
 from deepeval import assert_test
 from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import LLMTestCase
 
 
 # Inherit BaseMetric

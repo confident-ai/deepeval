@@ -1,30 +1,31 @@
-from time import perf_counter
-from asyncio import sleep
 import random
+from asyncio import sleep
+from time import perf_counter
 
+from deepeval import assert_test
+from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     BiasMetric,
+    DAGMetric,
     FaithfulnessMetric,
+    GEval,
 )
-from deepeval.tracing import (
-    update_current_span_test_case,
-    update_current_span_attributes,
-    observe,
-    RetrieverAttributes,
-    LlmAttributes,
-)
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.dag import (
-    DeepAcyclicGraph,
-    TaskNode,
     BinaryJudgementNode,
+    DeepAcyclicGraph,
     NonBinaryJudgementNode,
+    TaskNode,
     VerdictNode,
 )
-from deepeval.metrics import DAGMetric, GEval
-from deepeval import assert_test
-from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.tracing import (
+    LlmAttributes,
+    RetrieverAttributes,
+    observe,
+    update_current_span_attributes,
+    update_current_span_test_case,
+)
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -170,8 +171,8 @@ async def meta_agent(input: str):
 
 ###################################v
 
-from deepeval.dataset import Golden
 from deepeval import evaluate
+from deepeval.dataset import Golden
 
 goldens = [
     Golden(input="What's the weather like in SF?"),

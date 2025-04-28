@@ -1,13 +1,14 @@
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
+
 import pandas as pd
 from tqdm import tqdm
 
-from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.bbq.task import BBQTask
 from deepeval.benchmarks.bbq.template import BBQTemplate
 from deepeval.benchmarks.schema import TrinaryChoiceSchema
+from deepeval.dataset import Golden
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.telemetry import capture_benchmark_run
 
 

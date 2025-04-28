@@ -1,23 +1,24 @@
 from typing import Optional, Union
+
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import (
-    LLMTestCase,
+from deepeval.metrics.dag.graph import DeepAcyclicGraph
+from deepeval.metrics.dag.utils import (
+    copy_graph,
+    extract_required_params,
+    is_valid_dag_from_roots,
 )
-from deepeval.utils import get_or_create_event_loop
+from deepeval.metrics.g_eval.schema import *
+from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     check_llm_test_case_params,
     construct_verbose_logs,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.g_eval.schema import *
-from deepeval.metrics.dag.graph import DeepAcyclicGraph
-from deepeval.metrics.dag.utils import copy_graph
-from deepeval.metrics.dag.utils import (
-    is_valid_dag_from_roots,
-    extract_required_params,
+from deepeval.test_case import (
+    LLMTestCase,
 )
+from deepeval.utils import get_or_create_event_loop
 
 
 class DAGMetric(BaseMetric):

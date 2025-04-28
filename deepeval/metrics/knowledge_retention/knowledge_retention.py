@@ -1,26 +1,26 @@
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
-from deepeval.test_case import (
-    ConversationalTestCase,
-    LLMTestCase,
-    LLMTestCaseParams,
-)
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.utils import (
-    check_conversational_test_case_params,
-    construct_verbose_logs,
-    trimAndLoadJson,
-    initialize_model,
-)
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics.knowledge_retention.template import (
-    KnowledgeRetentionTemplate,
-)
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
     KnowledgeRetentionVerdict,
     Reason,
+)
+from deepeval.metrics.knowledge_retention.template import (
+    KnowledgeRetentionTemplate,
+)
+from deepeval.metrics.utils import (
+    check_conversational_test_case_params,
+    construct_verbose_logs,
+    initialize_model,
+    trimAndLoadJson,
+)
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 

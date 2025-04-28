@@ -1,2 +1,2 @@
-from .prompt import Prompt
 from .api import PromptApi
+from .prompt import Prompt

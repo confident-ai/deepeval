@@ -1,13 +1,13 @@
 import os
 
 import pytest
-from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.metrics import HallucinationMetric
+
 from deepeval import assert_test, evaluate
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.evaluate.utils import aggregate_metric_pass_rates
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric, HallucinationMetric
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.evaluate.utils import aggregate_metric_pass_rates
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 
 
 class FakeMetric1(BaseMetric):

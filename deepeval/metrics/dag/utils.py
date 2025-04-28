@@ -1,13 +1,13 @@
-from typing import Set, Dict
 import inspect
+from typing import Dict, Set
 
 from deepeval.metrics.dag import (
     BaseNode,
     BinaryJudgementNode,
-    NonBinaryJudgementNode,
-    VerdictNode,
-    TaskNode,
     DeepAcyclicGraph,
+    NonBinaryJudgementNode,
+    TaskNode,
+    VerdictNode,
 )
 from deepeval.test_case import LLMTestCaseParams
 

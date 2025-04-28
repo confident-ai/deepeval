@@ -1,23 +1,24 @@
-import inspect
-from typing import Optional, List, Union, Callable
 import asyncio
-import random
+import inspect
 import json
+import random
+from typing import Callable, List, Optional, Union
+
 import tqdm
 
-from deepeval.utils import get_or_create_event_loop
-from deepeval.metrics.utils import initialize_model, trimAndLoadJson
-from deepeval.test_case import ConversationalTestCase, LLMTestCase
+from deepeval.conversation_simulator.schema import (
+    Scenario,
+    SimulatedInput,
+    UserProfile,
+)
 from deepeval.conversation_simulator.template import (
     ConversationSimulatorTemplate,
 )
+from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.conversation_simulator.schema import (
-    SimulatedInput,
-    Scenario,
-    UserProfile,
-)
 from deepeval.progress_context import conversation_simulator_progress_context
+from deepeval.test_case import ConversationalTestCase, LLMTestCase
+from deepeval.utils import get_or_create_event_loop
 
 
 class ConversationSimulator:

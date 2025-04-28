@@ -10,13 +10,14 @@
 
 # You can then find results of the evaluation in the Confident AI dashboard
 
-from tqdm.notebook import tqdm
 from datasets import load_dataset
-from qdrant_client import QdrantClient
-from tqdm import tqdm
 from langchain.docstore.document import Document as LangchainDocument
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from openai import OpenAI
+from qdrant_client import QdrantClient
+from tqdm import tqdm
+from tqdm.notebook import tqdm
+
 import deepeval
 
 # Get your key from https://platform.openai.com/api-keys

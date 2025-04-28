@@ -1,8 +1,9 @@
-from typing import List, Optional, Any
-from deepeval.dataset.api import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
 import json
 import re
+from typing import Any, List, Optional
+
+from deepeval.dataset.api import ConversationalGolden, Golden
+from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
 
 def convert_test_cases_to_goldens(

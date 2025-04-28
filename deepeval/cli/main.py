@@ -1,18 +1,19 @@
-from typing import Optional
-from rich import print
-import webbrowser
-import threading
 import random
-import string
 import socket
-import typer
+import string
+import threading
+import webbrowser
 from enum import Enum
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
-from deepeval.cli.recommend import app as recommend_app
-from deepeval.telemetry import capture_login_event
-from deepeval.cli.test import app as test_app
-from deepeval.cli.server import start_server
+from typing import Optional
 
+import typer
+from rich import print
+
+from deepeval.cli.recommend import app as recommend_app
+from deepeval.cli.server import start_server
+from deepeval.cli.test import app as test_app
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
+from deepeval.telemetry import capture_login_event
 
 PROD = "https://app.confident-ai.com"
 LOCAL = "http://localhost:3000"

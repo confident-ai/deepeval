@@ -1,11 +1,12 @@
+from typing import Dict, Optional, Tuple, Union
+
 from langchain_community.callbacks import get_openai_callback
-from typing import Optional, Tuple, Union, Dict
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
 
-from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.models.llms.utils import trim_and_load_json
 
 
 class LocalModel(DeepEvalBaseLLM):

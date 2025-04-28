@@ -1,19 +1,20 @@
-from typing import List, Dict
-from .utils import get_column_order, generate_test_cases
-from .rich_manager import RichManager
+from typing import Dict, List
 
-from deepeval.metrics import BaseMetric
-from deepeval.evaluate.execute import execute_test_cases
 from deepeval.dataset import EvaluationDataset
+from deepeval.evaluate.execute import execute_test_cases
+from deepeval.metrics import BaseMetric
+
+from .rich_manager import RichManager
+from .utils import generate_test_cases, get_column_order
 
 try:
     from transformers import (
-        TrainerCallback,
         ProgressCallback,
         Trainer,
-        TrainingArguments,
-        TrainerState,
+        TrainerCallback,
         TrainerControl,
+        TrainerState,
+        TrainingArguments,
     )
 
     class DeepEvalHuggingFaceCallback(TrainerCallback):

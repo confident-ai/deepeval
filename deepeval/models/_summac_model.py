@@ -3,12 +3,13 @@
 # Source: https://github.com/tingofurro/summac
 ###############################################
 
-import nltk
-import os
 import json
-import torch
-from deepeval import utils as utils_misc
+import os
 
+import nltk
+import torch
+
+from deepeval import utils as utils_misc
 
 model_map = {
     "snli-base": {
@@ -131,8 +132,8 @@ class _SummaCImager:
         else:
             try:
                 from transformers import (
-                    AutoTokenizer,
                     AutoModelForSequenceClassification,
+                    AutoTokenizer,
                 )
             except ModuleNotFoundError:
                 print(

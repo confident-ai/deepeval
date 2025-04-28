@@ -1,14 +1,15 @@
-from langchain_core.documents import Document as LCDocument
+import os
+from typing import Dict, List, Optional, Type, Union
+
 from langchain_community.document_loaders import (
+    Docx2txtLoader,
     PyPDFLoader,
     TextLoader,
-    Docx2txtLoader,
 )
 from langchain_community.document_loaders.base import BaseLoader
+from langchain_core.documents import Document as LCDocument
 from langchain_text_splitters import TokenTextSplitter
 from langchain_text_splitters.base import TextSplitter
-from typing import Optional, List, Dict, Union, Type
-import os
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 

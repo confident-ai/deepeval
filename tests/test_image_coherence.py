@@ -1,10 +1,11 @@
+import textwrap
+
 from deepeval.metrics import (
     ImageCoherenceMetric,
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
 )
 from deepeval.test_case import MLLMImage, MLLMTestCase
-import textwrap
 
 mllm_test_case = MLLMTestCase(
     input=[],

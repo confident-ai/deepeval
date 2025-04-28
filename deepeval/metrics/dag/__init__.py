@@ -1,8 +1,8 @@
+from .graph import DeepAcyclicGraph
 from .nodes import (
     BaseNode,
-    VerdictNode,
-    TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
+    TaskNode,
+    VerdictNode,
 )
-from .graph import DeepAcyclicGraph

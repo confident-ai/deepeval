@@ -1,34 +1,35 @@
-from enum import Enum
-import os
-import json
-from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict, Union
-import shutil
-import webbrowser
-import sys
 import datetime
-import portalocker
-from rich.table import Table
-from rich.console import Console
-from rich import print
+import json
+import os
+import shutil
+import sys
+import webbrowser
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from deepeval.metrics import BaseMetric
+import portalocker
+from pydantic import BaseModel, Field
+from rich import print
+from rich.console import Console
+from rich.table import Table
+
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.constants import LOGIN_PROMPT
+from deepeval.metrics import BaseMetric
+from deepeval.test_case import ConversationalTestCase, LLMTestCase, MLLMTestCase
 from deepeval.test_run.api import (
-    LLMApiTestCase,
     ConversationalApiTestCase,
-    TestRunHttpResponse,
+    LLMApiTestCase,
     MetricData,
+    TestRunHttpResponse,
 )
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
     is_confident,
     is_in_ci_env,
 )
-from deepeval.test_run.cache import global_test_run_cache_manager
-from deepeval.constants import LOGIN_PROMPT
 
 TEMP_FILE_NAME = "temp_test_run_data.json"
 

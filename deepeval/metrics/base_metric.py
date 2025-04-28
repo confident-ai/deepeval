@@ -1,13 +1,13 @@
 from abc import abstractmethod
-from typing import Optional, Dict, List
+from typing import Dict, List, Optional
 
-from deepeval.test_case import (
-    LLMTestCase,
-    ConversationalTestCase,
-    MLLMTestCase,
-    LLMTestCaseParams,
-)
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+    MLLMTestCase,
+)
 
 
 class BaseMetric:

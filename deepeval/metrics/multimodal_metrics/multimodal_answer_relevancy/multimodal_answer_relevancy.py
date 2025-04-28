@@ -1,20 +1,20 @@
-from typing import Optional, List, Union
+from typing import List, Optional, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.multimodal_metrics.multimodal_answer_relevancy.schema import *
 from deepeval.metrics.multimodal_metrics.multimodal_answer_relevancy.template import (
     MultimodalAnswerRelevancyTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
     check_mllm_test_case_params,
+    construct_verbose_logs,
     initialize_multimodal_model,
+    trimAndLoadJson,
 )
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.multimodal_metrics.multimodal_answer_relevancy.schema import *
-from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.test_case import MLLMImage, MLLMTestCase, MLLMTestCaseParams
+from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):

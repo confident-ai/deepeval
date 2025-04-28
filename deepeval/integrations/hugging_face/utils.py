@@ -1,7 +1,8 @@
-from deepeval.test_case import LLMTestCase
+from typing import Dict, List
+
 from deepeval.dataset import EvaluationDataset
 from deepeval.dataset.utils import convert_goldens_to_test_cases
-from typing import List, Dict
+from deepeval.test_case import LLMTestCase
 
 
 def get_column_order(scores: Dict) -> List[str]:

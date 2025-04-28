@@ -1,8 +1,8 @@
-from typing import Dict
-import socketserver
 import http.server
-import threading
 import json
+import socketserver
+import threading
+from typing import Dict
 
 from deepeval.telemetry import set_logged_in_with
 

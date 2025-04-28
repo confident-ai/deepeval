@@ -1,4 +1,4 @@
-from typing import Optional, Sequence, List, Union
+from typing import List, Optional, Sequence, Union
 
 
 def conform_contexts_type(

@@ -1,14 +1,15 @@
-from typing import List, Optional, Dict
-from tqdm import tqdm
-import pandas as pd
+from typing import Dict, List, Optional
 
-from deepeval.dataset import Golden
+import pandas as pd
+from tqdm import tqdm
+
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.math_qa.task import MathQATask
 from deepeval.benchmarks.math_qa.template import MathQATemplate
-from deepeval.benchmarks.utils import should_use_batch
 from deepeval.benchmarks.schema import MultipleChoiceSchemaLower
+from deepeval.benchmarks.utils import should_use_batch
+from deepeval.dataset import Golden
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.telemetry import capture_benchmark_run
 
 

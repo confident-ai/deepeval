@@ -1,24 +1,23 @@
-from typing import Optional, List, Callable, Union, Dict
 import os
+from typing import Callable, Dict, List, Optional, Union
 
-
-from deepeval.test_run.test_run import TestRunResultDisplay
+from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.dataset import Golden
+from deepeval.evaluate.types import TestResult
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
-    LLMTestCase,
     ConversationalTestCase,
+    LLMTestCase,
     MLLMTestCase,
 )
 from deepeval.test_run import (
-    LLMApiTestCase,
     ConversationalApiTestCase,
+    LLMApiTestCase,
     MetricData,
 )
-from deepeval.evaluate.types import TestResult
+from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.tracing.api import TraceApi
 from deepeval.tracing.tracing import BaseSpan, Trace
-from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
 def create_metric_data(metric: BaseMetric) -> MetricData:

@@ -1,16 +1,16 @@
-from typing import Optional, Sequence, Any
 import asyncio
+from typing import Any, Optional, Sequence
 
-from deepeval.test_case import LLMTestCase
+from deepeval.integrations.llama_index.utils import conform_contexts_type
 from deepeval.metrics import (
     AnswerRelevancyMetric,
+    BiasMetric,
+    ContextualRelevancyMetric,
     FaithfulnessMetric,
     SummarizationMetric,
-    ContextualRelevancyMetric,
-    BiasMetric,
     ToxicityMetric,
 )
-from deepeval.integrations.llama_index.utils import conform_contexts_type
+from deepeval.test_case import LLMTestCase
 
 
 class AnswerRelevancyEvaluator("BaseEvaluator"):

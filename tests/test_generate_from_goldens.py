@@ -1,5 +1,5 @@
-from deepeval.synthesizer import Synthesizer
 from deepeval.dataset import EvaluationDataset
+from deepeval.synthesizer import Synthesizer
 
 
 def test_expand_dataset_from_contexts():

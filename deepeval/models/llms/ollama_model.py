@@ -1,9 +1,10 @@
-from ollama import Client, AsyncClient, ChatResponse
-from typing import Optional, Tuple, Union, Dict
+from typing import Dict, Optional, Tuple, Union
+
+from ollama import AsyncClient, ChatResponse, Client
 from pydantic import BaseModel
 
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
 class OllamaModel(DeepEvalBaseLLM):

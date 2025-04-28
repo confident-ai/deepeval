@@ -1,13 +1,14 @@
 """An implementation of the Ragas metric"""
 
-from typing import Optional, Union, List
-from langchain_core.language_models import BaseChatModel
+from typing import List, Optional, Union
+
 from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 
 from deepeval.metrics import BaseMetric
-from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
 from deepeval.telemetry import capture_metric_type
+from deepeval.test_case import LLMTestCase
 
 
 def format_ragas_metric_name(name: str):

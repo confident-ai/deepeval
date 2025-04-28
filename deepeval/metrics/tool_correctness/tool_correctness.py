@@ -1,18 +1,18 @@
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
+from deepeval.metrics import BaseMetric
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
-    construct_verbose_logs,
     check_llm_test_case_params,
+    construct_verbose_logs,
 )
 from deepeval.test_case import (
+    ConversationalTestCase,
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
-    ToolCallParams,
     ToolCall,
+    ToolCallParams,
 )
-from deepeval.metrics import BaseMetric
 
 
 class ToolCorrectnessMetric(BaseMetric):

@@ -2,32 +2,32 @@ import pytest
 from langchain_openai import OpenAIEmbeddings
 
 import deepeval
-from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
+from deepeval import assert_test
 from deepeval.metrics import (
     AnswerRelevancyMetric,
-    FaithfulnessMetric,
+    BiasMetric,
+    ContextualPrecisionMetric,
     ContextualRecallMetric,
     ContextualRelevancyMetric,
-    ContextualPrecisionMetric,
-    HallucinationMetric,
-    BiasMetric,
-    ToxicityMetric,
-    GEval,
-    SummarizationMetric,
-    ToolCorrectnessMetric,
-    ConversationRelevancyMetric,
-    RoleAdherenceMetric,
     ConversationCompletenessMetric,
-    PromptAlignmentMetric,
+    ConversationRelevancyMetric,
+    FaithfulnessMetric,
+    GEval,
+    HallucinationMetric,
     JsonCorrectnessMetric,
     KnowledgeRetentionMetric,
+    PromptAlignmentMetric,
+    RoleAdherenceMetric,
+    SummarizationMetric,
+    ToolCorrectnessMetric,
+    ToxicityMetric,
 )
 from deepeval.metrics.ragas import RagasMetric
-from deepeval import assert_test
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    LLMTestCaseParams,
+)
 
 question = "What are the primary benefits of meditation?"
 answer = """

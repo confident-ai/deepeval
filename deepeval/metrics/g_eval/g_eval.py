@@ -1,28 +1,29 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Optional, List, Tuple, Union, Dict
-from langchain_core.messages import AIMessage
 import math
+from typing import Dict, List, Optional, Tuple, Union
+
+from langchain_core.messages import AIMessage
+
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.g_eval.schema import *
+from deepeval.metrics.g_eval.template import GEvalTemplate
+from deepeval.metrics.indicator import metric_progress_indicator
+from deepeval.metrics.utils import (
+    check_llm_test_case_params,
+    construct_verbose_logs,
+    initialize_model,
+    trimAndLoadJson,
+)
+from deepeval.models import AzureOpenAIModel, DeepEvalBaseLLM, GPTModel
+from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from deepeval.test_case import (
+    ConversationalTestCase,
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
     ToolCall,
 )
-
-from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.utils import (
-    construct_verbose_logs,
-    trimAndLoadJson,
-    check_llm_test_case_params,
-    initialize_model,
-)
-from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
-from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
-from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.g_eval.schema import *
 
 G_EVAL_PARAMS = {
     LLMTestCaseParams.INPUT: "Input",

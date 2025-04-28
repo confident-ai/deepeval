@@ -2,41 +2,40 @@ import inspect
 import json
 import re
 import sys
-from typing import Any, Dict, Optional, List, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
+from deepeval.metrics import (
+    BaseConversationalMetric,
+    BaseMetric,
+    BaseMultimodalMetric,
+)
 from deepeval.models import (
+    AnthropicModel,
+    AzureOpenAIEmbeddingModel,
+    AzureOpenAIModel,
     DeepEvalBaseLLM,
     DeepEvalBaseMLLM,
-    GPTModel,
-    AnthropicModel,
-    AzureOpenAIModel,
-    OllamaModel,
-    LocalModel,
-    OpenAIEmbeddingModel,
-    AzureOpenAIEmbeddingModel,
-    OllamaEmbeddingModel,
-    LocalEmbeddingModel,
     GeminiModel,
-    MultimodalOpenAIModel,
+    GPTModel,
+    LocalEmbeddingModel,
+    LocalModel,
     MultimodalGeminiModel,
     MultimodalOllamaModel,
-)
-
-
-from deepeval.metrics import (
-    BaseMetric,
-    BaseConversationalMetric,
-    BaseMultimodalMetric,
+    MultimodalOpenAIModel,
+    OllamaEmbeddingModel,
+    OllamaModel,
+    OpenAIEmbeddingModel,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
+    ConversationalTestCase,
     LLMTestCase,
     LLMTestCaseParams,
+    MLLMImage,
     MLLMTestCase,
     MLLMTestCaseParams,
-    ConversationalTestCase,
-    MLLMImage,
 )
 
 

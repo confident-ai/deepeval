@@ -1,19 +1,19 @@
 import pytest
 
-from deepeval.dataset import EvaluationDataset
 from deepeval import evaluate
+from deepeval.dataset import EvaluationDataset
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
-from deepeval.test_case import MLLMTestCase, LLMTestCase, MLLMImage
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     ImageEditingMetric,
-    TextToImageMetric,
+    MultimodalAnswerRelevancyMetric,
+    MultimodalContextualPrecisionMetric,
     MultimodalContextualRecallMetric,
     MultimodalContextualRelevancyMetric,
-    MultimodalContextualPrecisionMetric,
-    MultimodalAnswerRelevancyMetric,
     MultimodalFaithfulnessMetric,
+    TextToImageMetric,
 )
+from deepeval.test_case import LLMTestCase, MLLMImage, MLLMTestCase
 
 image_path = "./data/image_1.jpg"
 edited_image_path = "./data/edited_image.webp"

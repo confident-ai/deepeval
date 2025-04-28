@@ -1,11 +1,11 @@
+from deepeval import assert_test, evaluate
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 from deepeval.metrics import (
-    ToolCorrectnessMetric,
     AnswerRelevancyMetric,
     TaskCompletionMetric,
+    ToolCorrectnessMetric,
 )
 from deepeval.test_case import LLMTestCase, ToolCall
-from deepeval import evaluate, assert_test
 
 test_case_travel_itinerary = LLMTestCase(
     input="Plan a 3-day itinerary for a trip to Paris, including cultural landmarks and local cuisine recommendations.",

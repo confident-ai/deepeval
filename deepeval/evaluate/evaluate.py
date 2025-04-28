@@ -1,55 +1,56 @@
-from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
 import time
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
+
 from rich.console import Console
 
+from deepeval.dataset import Golden
 from deepeval.evaluate.configs import (
     AsyncConfig,
-    DisplayConfig,
     CacheConfig,
+    DisplayConfig,
     ErrorConfig,
 )
-from deepeval.evaluate.utils import (
-    validate_assert_test_inputs,
-    validate_evaluate_inputs,
-    print_test_result,
-    aggregate_metric_pass_rates,
-)
-from deepeval.dataset import Golden
-from deepeval.prompt import Prompt
-from deepeval.test_case.utils import check_valid_test_cases_type
-from deepeval.test_run.hyperparameters import process_hyperparameters
-from deepeval.utils import (
-    get_or_create_event_loop,
-    should_ignore_errors,
-    should_skip_on_missing_params,
-    should_use_cache,
-    should_verbose_print,
-)
-from deepeval.telemetry import capture_evaluation_run
-from deepeval.metrics import (
-    BaseMetric,
-    BaseConversationalMetric,
-    BaseMultimodalMetric,
-)
-from deepeval.metrics.indicator import (
-    format_metric_description,
-)
-from deepeval.test_case import (
-    LLMTestCase,
-    ConversationalTestCase,
-    MLLMTestCase,
-)
-from deepeval.test_run import (
-    global_test_run_manager,
-    MetricData,
-)
-from deepeval.utils import get_is_running_deepeval
-from deepeval.evaluate.types import EvaluationResult
 from deepeval.evaluate.execute import (
     a_execute_agentic_test_cases,
     a_execute_test_cases,
     execute_agentic_test_cases,
     execute_test_cases,
+)
+from deepeval.evaluate.types import EvaluationResult
+from deepeval.evaluate.utils import (
+    aggregate_metric_pass_rates,
+    print_test_result,
+    validate_assert_test_inputs,
+    validate_evaluate_inputs,
+)
+from deepeval.metrics import (
+    BaseConversationalMetric,
+    BaseMetric,
+    BaseMultimodalMetric,
+)
+from deepeval.metrics.indicator import (
+    format_metric_description,
+)
+from deepeval.prompt import Prompt
+from deepeval.telemetry import capture_evaluation_run
+from deepeval.test_case import (
+    ConversationalTestCase,
+    LLMTestCase,
+    MLLMTestCase,
+)
+from deepeval.test_case.utils import check_valid_test_cases_type
+from deepeval.test_run import (
+    MetricData,
+    global_test_run_manager,
+)
+from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.utils import (
+    get_is_running_deepeval,
+    get_or_create_event_loop,
+    should_ignore_errors,
+    should_skip_on_missing_params,
+    should_use_cache,
+    should_verbose_print,
 )
 
 

@@ -1,7 +1,8 @@
-from deepeval.test_case import ToolCall
-from typing import List
-import textwrap
 import json
+import textwrap
+from typing import List
+
+from deepeval.test_case import ToolCall
 
 
 class TaskCompletionTemplate:

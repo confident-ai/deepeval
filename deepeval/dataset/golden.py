@@ -1,5 +1,7 @@
+from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field, PrivateAttr
-from typing import Optional, Dict, List
+
 from deepeval.test_case import ToolCall
 
 

@@ -1,20 +1,21 @@
-import shutil
-from typing import List, Tuple, Dict, Optional, Union
-from langchain_core.documents import Document
-from tqdm.asyncio import tqdm_asyncio
-from tqdm import tqdm as tqdm_bar
-from pydantic import BaseModel
 import asyncio
-import random
 import math
 import os
+import random
+import shutil
+from typing import Dict, List, Optional, Tuple, Union
 
+from langchain_core.documents import Document
+from pydantic import BaseModel
+from tqdm import tqdm as tqdm_bar
+from tqdm.asyncio import tqdm_asyncio
+
+from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseLLM,
 )
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.synthesizer.templates.template import FilterTemplate
 
 

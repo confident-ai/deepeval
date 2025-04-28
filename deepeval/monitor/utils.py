@@ -1,5 +1,6 @@
-from typing import Optional, Dict, Union, List
-from deepeval.monitor.api import Link, CustomProperty, CustomPropertyType
+from typing import Dict, List, Optional, Union
+
+from deepeval.monitor.api import CustomProperty, CustomPropertyType, Link
 
 
 def process_additional_data(

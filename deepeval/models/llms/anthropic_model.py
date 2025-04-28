@@ -1,7 +1,8 @@
-from typing import Optional, Tuple, Union, Dict
+import os
+from typing import Dict, Optional, Tuple, Union
+
 from anthropic import Anthropic, AsyncAnthropic
 from pydantic import BaseModel
-import os
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
