@@ -1,6 +1,5 @@
 """Tests for answer relevancy"""
 
-import pytest
 
 from deepeval import assert_test
 from deepeval.metrics.answer_relevancy.schema import Verdicts

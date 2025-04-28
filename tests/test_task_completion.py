@@ -1,9 +1,7 @@
-from deepeval import assert_test, evaluate
+from deepeval import evaluate
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 from deepeval.metrics import (
-    AnswerRelevancyMetric,
     TaskCompletionMetric,
-    ToolCorrectnessMetric,
 )
 from deepeval.test_case import LLMTestCase, ToolCall
 
@@ -89,9 +87,7 @@ test_case_recipe_recommendation = LLMTestCase(
         ToolCall(
             name="Cooking Steps Generator",
             description="Provides step-by-step instructions for a given recipe.",
-            input_parameters={
-                "recipe": "Garlic butter chicken with sautéed spinach"
-            },
+            input_parameters={"recipe": "Garlic butter chicken with sautéed spinach"},
             output="1. Sauté garlic. 2. Cook chicken in butter. 3. Add spinach and season with salt and pepper.",
         ),
     ],

@@ -9,7 +9,6 @@ from deepeval.tracing import (
     observe,
     trace_manager,
     update_current_span_attributes,
-    update_current_span_test_case,
 )
 
 trace_manager._daemon = False
@@ -70,9 +69,7 @@ async def get_weather(city: str):
     weather = f"Sunny in {city}"
 
     # Create attributes
-    attributes = ToolAttributes(
-        input_parameters={"asdfsaf": city}, output=weather
-    )
+    attributes = ToolAttributes(input_parameters={"asdfsaf": city}, output=weather)
 
     # Set attributes using the helper function
     update_current_span_attributes(attributes)
@@ -268,11 +265,9 @@ from deepeval.metrics import DAGMetric, GEval
 from deepeval.metrics.dag import (
     BinaryJudgementNode,
     DeepAcyclicGraph,
-    NonBinaryJudgementNode,
-    TaskNode,
     VerdictNode,
 )
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.test_case import LLMTestCaseParams
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -296,9 +291,6 @@ metric = DAGMetric(dag=dag)
 ###################################
 
 import asyncio
-import contextvars
-
-from deepeval.tracing import get_current_trace
 
 
 # # Gather multiple traceable tasks

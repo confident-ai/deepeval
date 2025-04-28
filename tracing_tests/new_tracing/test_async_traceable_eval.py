@@ -1,29 +1,22 @@
 import random
 from asyncio import sleep
-from time import perf_counter
 
-from deepeval import assert_test
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     BiasMetric,
     DAGMetric,
-    FaithfulnessMetric,
     GEval,
 )
 from deepeval.metrics.dag import (
     BinaryJudgementNode,
     DeepAcyclicGraph,
-    NonBinaryJudgementNode,
-    TaskNode,
     VerdictNode,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.tracing import (
     LlmAttributes,
-    RetrieverAttributes,
     observe,
-    update_current_span_attributes,
     update_current_span_test_case,
 )
 
@@ -124,11 +117,7 @@ async def custom_research_agent(query: str):
     metrics=[AnswerRelevancyMetric(), BiasMetric()],
 )
 async def weather_agent(query: str):
-    update_current_span_test_case(
-        LLMTestCase(
-            input=query, actual_output="Weather information unavailable"
-        )
-    )
+    update_current_span_test_case(LLMTestCase(input=query, actual_output="Weather information unavailable"))
     await sleep(random.uniform(1, 3))
     return "Weather information unavailable"
 
@@ -163,9 +152,7 @@ async def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
 
-    update_current_span_test_case(
-        LLMTestCase(input=input, actual_output=final_response)
-    )
+    update_current_span_test_case(LLMTestCase(input=input, actual_output=final_response))
     return final_response
 
 

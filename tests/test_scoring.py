@@ -2,8 +2,6 @@
 
 import unittest
 
-from deepeval.scorer import Scorer
-
 
 class TestScorer(unittest.TestCase):
     pass

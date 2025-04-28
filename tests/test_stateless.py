@@ -1,34 +1,14 @@
-import asyncio
 import os
 import sys
-
-import pytest
-from langchain_openai import OpenAIEmbeddings
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
-import deepeval
-from deepeval import assert_test, evaluate
-from deepeval.dataset import EvaluationDataset
 from deepeval.metrics import (
-    AnswerRelevancyMetric,
     BaseMetric,
-    BiasMetric,
-    ContextualPrecisionMetric,
-    ContextualRecallMetric,
-    ContextualRelevancyMetric,
-    FaithfulnessMetric,
-    GEval,
-    HallucinationMetric,
-    SummarizationMetric,
-    ToxicityMetric,
 )
-from deepeval.metrics.ragas import RagasMetric
 from deepeval.test_case import (
-    ConversationalTestCase,
     LLMTestCase,
-    LLMTestCaseParams,
 )
 
 
@@ -41,9 +21,7 @@ class LatencyMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase):
         # Set self.success and self.score in the "measure" method
-        self.success = (
-            test_case.additional_metadata["latency"] <= self.threshold
-        )
+        self.success = test_case.additional_metadata["latency"] <= self.threshold
         if self.success:
             self.score = 1
         else:

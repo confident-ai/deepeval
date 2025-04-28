@@ -1,7 +1,5 @@
 import pytest
-from langchain_openai import OpenAIEmbeddings
 
-import deepeval
 from deepeval import assert_test
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -19,10 +17,8 @@ from deepeval.metrics import (
     PromptAlignmentMetric,
     RoleAdherenceMetric,
     SummarizationMetric,
-    ToolCorrectnessMetric,
     ToxicityMetric,
 )
-from deepeval.metrics.ragas import RagasMetric
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,

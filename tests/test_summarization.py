@@ -33,7 +33,6 @@ def test_summarization():
 
 
 def test_verdict_schema():
-
     judge = CustomJudge("mock")
     schema = Verdicts
     answer = (
