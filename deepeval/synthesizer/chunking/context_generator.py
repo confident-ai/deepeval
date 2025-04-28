@@ -37,10 +37,9 @@ class ContextGenerator:
         max_retries: int = 3,
         filter_threshold: float = 0.5,
         similarity_threshold: float = 0.5,
-        _nodes: Optional[List[Union["TextNode", Document]]] = None,  # type: ignore
     ):
-        # Ensure either document_paths or _nodes is provided
-        if not document_paths and not _nodes:
+        # Ensure document_paths is provided
+        if not document_paths:
             raise ValueError("`document_path` is empty or missing.")
         if chunk_overlap > chunk_size - 1:
             raise ValueError(
@@ -53,7 +52,6 @@ class ContextGenerator:
         self.total_chunks = 0
         self.document_paths: List[str] = document_paths
         self.encoding = encoding
-        self._nodes = _nodes
 
         # Model parameters
         self.model, self.using_native_model = initialize_model(model)
@@ -286,7 +284,7 @@ class ContextGenerator:
         path: str,
         n_contexts_per_source_file: int,
         context_size: int,
-        similarity_threshold: int,
+        similarity_threshold: float,
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
@@ -465,7 +463,7 @@ class ContextGenerator:
         evaluated_chunks = []
         scores = []
         retry_count = 0
-        for i, chunk in enumerate(chunks):
+        for chunk in chunks:
             score = self.evaluate_chunk(chunk)
             if score > self.filter_threshold:
                 p_bar.update(self.max_retries - retry_count)
@@ -700,68 +698,3 @@ class ContextGenerator:
         tasks = [a_process_document(path) for path in self.document_paths]
         await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Documents")
         return doc_to_chunker_map
-
-    # #########################################################
-    # ### Generate Contexts from Nodes ########################
-    # #########################################################
-
-    # def generate_contexts_from_nodes(
-    #     self, num_context: int, max_chunks_per_context: int = 3
-    # ):
-    #     scores = []
-    #     contexts = []
-    #     source_files = []
-
-    #     # Determine the number of contexts to generate
-    #     nodes_collection = self.source_files_to_collections_map["nodes"]
-    #     num_chunks = nodes_collection.count()
-    #     num_context = min(num_context, num_chunks)
-
-    #     # Progress Bar
-    #     p_bar = tqdm_bar(
-    #         total=max_chunks_per_context * num_context,
-    #         desc="✨ 🧩 ✨ Generating Contexts",
-    #     )
-
-    #     # Generate contexts
-    #     self.total_chunks = 0
-    #     for path, _ in self.source_files_to_collections_map.items():
-    #         contexts_per_doc, scores_per_doc = (
-    #             self._get_n_random_contexts_per_doc(
-    #                 path=path,
-    #                 n_contexts_per_doc=num_context,
-    #                 context_size=max_chunks_per_context,
-    #                 similarity_threshold=self.similarity_threshold,
-    #                 p_bar=p_bar,
-    #             )
-    #         )
-    #         contexts.extend(contexts_per_doc)
-    #         scores.extend(scores_per_doc)
-    #         for _ in contexts_per_doc:
-    #             source_files.append(path)
-    #         self.total_chunks += num_chunks
-
-    #     return contexts, source_files, scores
-
-    # #########################################################
-    # ### Load Nodes ##########################################
-    # #########################################################
-
-    # def _load_nodes(self):
-    #     doc_to_chunker_map = {}
-    #     for _ in tqdm_bar(range(1), "✨ 🚀 ✨ Loading Nodes"):
-    #         doc_chunker = DocumentChunker(self.embedder)
-    #         collection = doc_chunker.from_nodes(self._nodes)
-    #         self.source_files_to_collections_map = {}
-    #         self.source_files_to_collections_map["nodes"] = collection
-
-    # async def _a_load_nodes(self):
-    #     doc_to_chunker_map = {}
-    #     async def a_process_nodes(path):
-    #         doc_chunker = DocumentChunker(self.embedder)
-    #         collection = await doc_chunker.a_from_nodes(self._nodes)
-    #         self.source_files_to_collections_map["nodes"] = collection
-
-    #     # Process all documents asynchronously with a progress bar
-    #     tasks = [a_process_nodes() for _ in range(1)]
-    #     await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Nodes")
