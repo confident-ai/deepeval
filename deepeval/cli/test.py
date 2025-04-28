@@ -8,7 +8,11 @@ import typer
 from typing_extensions import Annotated
 
 from deepeval.telemetry import capture_evaluation_run
-from deepeval.test_run import TEMP_FILE_NAME, global_test_run_manager, invoke_test_run_end_hook
+from deepeval.test_run import (
+    TEMP_FILE_NAME,
+    global_test_run_manager,
+    invoke_test_run_end_hook,
+)
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (

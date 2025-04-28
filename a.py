@@ -1,8 +1,8 @@
 from typing import List
 
+from deepeval.metrics.contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
-    ContextualRelevancyMetric,
     observe,
     update_current_span_test_case,
 )
