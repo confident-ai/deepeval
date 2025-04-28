@@ -232,11 +232,13 @@ def evaluate(
         if display_config.print_results:
             for test_result in test_results:
                 print_test_result(test_result, display_config.display_option)
-
             aggregate_metric_pass_rates(test_results)
 
-        global_test_run_manager.wrap_up_test_run(
+        confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False
+        )
+        return EvaluationResult(
+            test_results=test_results, confident_link=confident_link
         )
 
     elif test_cases and metrics:
@@ -290,7 +292,6 @@ def evaluate(
         if display_config.print_results:
             for test_result in test_results:
                 print_test_result(test_result, display_config.display_option)
-
             aggregate_metric_pass_rates(test_results)
 
         test_run = global_test_run_manager.get_test_run()
