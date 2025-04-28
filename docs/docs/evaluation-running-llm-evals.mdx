@@ -501,8 +501,9 @@ The `AsyncConfig` controlls how concurrently `metrics`, `traceable_callback`, an
 
 ```python
 from deepeval.evaluate import AsyncConfig
+from deepeval import evaluate
 
-async_config = AsyncConfig()
+evaluate(async_config=AsyncConfig(), ...)
 ```
 
 There are **THREE** optional parameters when creating an `AsyncConfig`:
@@ -519,8 +520,9 @@ The `DisplayConfig` controlls how results and intermediate execution steps are d
 
 ```python
 from deepeval.evaluate import DisplayConfig
+from deepeval import evaluate
 
-display_config = DisplayConfig()
+evaluate(display_config=DisplayConfig(), ...)
 ```
 
 There are **FOUR** optional parameters when creating an `DisplayConfig`:
@@ -536,8 +538,9 @@ The `ErrorConfig` controlls how error is handled in `evaluate()`.
 
 ```python
 from deepeval.evaluate import ErrorConfig
+from deepeval import evaluate
 
-error_config = ErrorConfig()
+evaluate(error_config=ErrorConfig(), ...)
 ```
 
 There are **TWO** optional parameters when creating an `ErrorConfig`:
@@ -553,8 +556,9 @@ The `CacheConfig` controlls the caching behavior of `evaluate()`.
 
 ```python
 from deepeval.evaluate import CacheConfig
+from deepeval import evaluate
 
-cache_config = CacheConfig()
+evaluate(cache_config=CacheConfig(), ...)
 ```
 
 There are **TWO** optional parameters when creating an `CacheConfig`:
