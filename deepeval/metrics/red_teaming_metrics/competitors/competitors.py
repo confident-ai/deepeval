@@ -187,4 +187,4 @@ class CompetitorsGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Competitors (Red Teaming)"
+        return "Competitors (Red Teaming)"

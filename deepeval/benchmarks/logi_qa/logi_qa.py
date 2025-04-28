@@ -3,7 +3,6 @@ from tqdm import tqdm
 import pandas as pd
 import requests
 import json
-import io
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark

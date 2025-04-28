@@ -1,7 +1,7 @@
-from typing import Union, Dict
+from typing import Dict, Union
 
-from deepeval.test_run import global_test_run_manager
 from deepeval.prompt import Prompt, PromptApi
+from deepeval.test_run import global_test_run_manager
 
 
 def process_hyperparameters(
@@ -35,7 +35,7 @@ def process_hyperparameters(
                 )
             else:
                 raise ValueError(
-                    f"Cannot log Prompt where template was not pulled from Confident AI. Pleaes import your prompt on Confident AI to continue."
+                    "Cannot log Prompt where template was not pulled from Confident AI. Please import your prompt on Confident AI to continue."
                 )
         else:
             processed_hyperparameters[key] = str(value)

@@ -187,4 +187,4 @@ class SSRFGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"SSRF (Red Teaming)"
+        return "SSRF (Red Teaming)"

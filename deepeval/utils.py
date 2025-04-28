@@ -1,22 +1,22 @@
-from contextvars import ContextVar
-from enum import Enum
+import asyncio
 import copy
-import os
 import json
-import time
-from typing import Any, Optional, Dict, List, Union
-from collections.abc import Iterable
-import tqdm
+import os
 import re
 import string
-from dataclasses import asdict, is_dataclass
-import re
-import asyncio
-import nest_asyncio
+import time
 import uuid
+from collections.abc import Iterable
+from contextvars import ContextVar
+from dataclasses import asdict, is_dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
+
+import nest_asyncio
+import tqdm
 from pydantic import BaseModel
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
 
 def get_lcs(seq1, seq2):
@@ -202,7 +202,7 @@ def set_should_use_cache(yes: bool):
         os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
 
 
-def login_with_confident_api_key(api_key: string):
+def login_with_confident_api_key(api_key: str):
     if not api_key or not isinstance(api_key, str):
         raise ValueError("Oh no! Please provide an api key string to login.")
     elif len(api_key) == 0:

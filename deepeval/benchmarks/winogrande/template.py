@@ -1,6 +1,3 @@
-import re
-
-
 class WinograndeTemplate:
 
     n_shot_examples = [

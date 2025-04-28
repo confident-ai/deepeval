@@ -9,7 +9,7 @@ from deepeval.test_case import (
 from deepeval.metrics.red_teaming_metrics.sql_injection.template import (
     SQLInjectionTemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_conversational_test_case_params,
@@ -143,4 +143,4 @@ class SQLInjectionGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"SQL Injection (Red Teaming)"
+        return "SQL Injection (Red Teaming)"

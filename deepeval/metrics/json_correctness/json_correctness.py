@@ -69,7 +69,7 @@ class JsonCorrectnessMetric(BaseMetric):
                     self.expected_schema.model_validate_json(
                         test_case.actual_output
                     )
-                except ValidationError as e:
+                except ValidationError:
                     valid_json = False
 
                 self.score = 1 if valid_json else 0
@@ -104,7 +104,7 @@ class JsonCorrectnessMetric(BaseMetric):
                 self.expected_schema.model_validate_json(
                     test_case.actual_output
                 )
-            except ValidationError as e:
+            except ValidationError:
                 valid_json = False
 
             self.score = 1 if valid_json else 0

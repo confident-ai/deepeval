@@ -187,4 +187,4 @@ class HijackingGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Hijacking (Red Teaming)"
+        return "Hijacking (Red Teaming)"

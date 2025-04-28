@@ -1,4 +1,3 @@
-import pytest
 from deepeval.integrations.llama_index import (
     DeepEvalAnswerRelevancyEvaluator,
     DeepEvalFaithfulnessEvaluator,

@@ -1,4 +1,4 @@
-from typing import Union, List, Dict
+from typing import List, Dict
 from .utils import get_column_order, generate_test_cases
 from .rich_manager import RichManager
 

@@ -194,7 +194,7 @@ def capture_synthesizer_run(
     method: str, max_generations: int, num_evolutions: int, evolutions: Dict
 ):
     if not telemetry_opt_out() and max_generations is not None:
-        with tracer.start_as_current_span(f"Invoked synthesizer") as span:
+        with tracer.start_as_current_span("Invoked synthesizer") as span:
             posthog.capture(get_unique_id(), "Invoked synthesizer")
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
@@ -221,7 +221,7 @@ def capture_synthesizer_run(
 def capture_conversation_simulatior_run(num_conversations: int):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(
-            f"Invoked conversation simulator"
+            "Invoked conversation simulator"
         ) as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
@@ -247,7 +247,7 @@ def capture_red_teamer_run(
     attack_enhancements: Dict,
 ):
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Invokved redteamer") as span:
+        with tracer.start_as_current_span("Invokved redteamer") as span:
             # if anonymous_public_ip:
             #     span.set_attribute("user.public_ip", anonymous_public_ip)
             # span.set_attribute("logged_in_with", get_logged_in_with())
@@ -277,7 +277,7 @@ def capture_red_teamer_run(
 @contextmanager
 def capture_guardrails(guards: List[str]):
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Ran guardrails") as span:
+        with tracer.start_as_current_span("Ran guardrails") as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("logged_in_with", get_logged_in_with())
@@ -299,7 +299,7 @@ def capture_guardrails(guards: List[str]):
 @contextmanager
 def capture_benchmark_run(benchmark: str, num_tasks: int):
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Ran benchmark") as span:
+        with tracer.start_as_current_span("Ran benchmark") as span:
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
             span.set_attribute("logged_in_with", get_logged_in_with())
@@ -321,7 +321,7 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
 @contextmanager
 def capture_login_event():
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Login") as span:
+        with tracer.start_as_current_span("Login") as span:
             last_feature = get_last_feature()
             if anonymous_public_ip:
                 span.set_attribute("user.public_ip", anonymous_public_ip)
@@ -340,7 +340,7 @@ def capture_login_event():
 @contextmanager
 def capture_pull_dataset():
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Pull") as span:
+        with tracer.start_as_current_span("Pull") as span:
             span.set_attribute("logged_in_with", get_logged_in_with())
             span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
             span.set_attribute("user.status", get_status())

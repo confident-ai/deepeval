@@ -1,5 +1,4 @@
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
-import re
 
 
 class HumanEvalTemplate:

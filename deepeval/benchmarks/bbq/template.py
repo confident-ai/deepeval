@@ -1,6 +1,3 @@
-import re
-
-
 class BBQTemplate:
 
     n_shot_examples = [

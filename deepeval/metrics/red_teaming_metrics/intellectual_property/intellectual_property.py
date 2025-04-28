@@ -189,4 +189,4 @@ class IntellectualPropertyGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Intellectual Property (Red Teaming)"
+        return "Intellectual Property (Red Teaming)"

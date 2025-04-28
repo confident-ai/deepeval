@@ -2,7 +2,6 @@ import time
 import pytest
 import typer
 import os
-import json
 import sys
 from typing_extensions import Annotated
 from typing import Optional

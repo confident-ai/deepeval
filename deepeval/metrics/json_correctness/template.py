@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class JsonCorrectnessTemplate:
     @staticmethod
     def generate_reason(

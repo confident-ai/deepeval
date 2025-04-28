@@ -187,4 +187,4 @@ class OverrelianceGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Overreliance (Red Teaming)"
+        return "Overreliance (Red Teaming)"

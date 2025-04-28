@@ -1,6 +1,6 @@
 import torch
 from typing import Union, List, Optional
-from typing import List, Union, get_origin
+from typing import get_origin
 from deepeval.models.base_model import DeepEvalBaseModel
 from deepeval.models._summac_model import _SummaCZS
 

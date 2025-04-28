@@ -1,6 +1,3 @@
-from typing import List, Union
-
-
 # from deepeval.experimental import BaseEvaluationExperiment
 
 try:

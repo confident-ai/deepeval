@@ -1,7 +1,7 @@
 from typing import Optional, List, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import MLLMTestCase
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.template import (
     MultiModalContextualPrecisionTemplate,
 )

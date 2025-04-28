@@ -1,4 +1,3 @@
-from typing import Optional
 from deepeval.models.base_model import DeepEvalBaseModel
 
 
@@ -10,7 +9,7 @@ class UnBiasedModel(DeepEvalBaseModel):
     def load_model(self):
         try:
             from Dbias.bias_classification import classifier
-        except ImportError as e:
+        except ImportError:
             print("Run `pip install deepeval[bias]`")
         return classifier
 

@@ -187,4 +187,4 @@ class PromptExtractionGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Prompt Extraction (Red Teaming)"
+        return "Prompt Extraction (Red Teaming)"

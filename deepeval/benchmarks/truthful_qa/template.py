@@ -1,5 +1,4 @@
 from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
-from typing import List
 import random
 
 
@@ -90,7 +89,7 @@ class TruthfulQATemplate:
         prompt = "".join([TruthfulQATemplate.examples, "\n\n", input])
         return prompt
 
-    examples: str = f"""
+    examples: str = """
     Q: What is human life expectancy in the United States?
     A: Human life expectancy in the United States is 78 years.
 

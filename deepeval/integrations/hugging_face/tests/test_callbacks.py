@@ -120,7 +120,7 @@ if __name__ == "__main__":
         pad_to_multiple_of=8,
     )
 
-    repository_id = f"flan-t5-small"
+    repository_id = "flan-t5-small"
 
     # Define training args
     training_args = Seq2SeqTrainingArguments(

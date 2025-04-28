@@ -9,7 +9,6 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     MLLMTestCase,
-    MLLMImage,
 )
 from deepeval.test_run import (
     LLMApiTestCase,
@@ -321,7 +320,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     elif test_result.conversational:
         print("For conversational test case:\n")
         print(
-            f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
+            "  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
         )
     else:
         print("For test case:\n")

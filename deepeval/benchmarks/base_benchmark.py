@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeVar, Generic, List, Optional
+from typing import TypeVar, Generic, List, Optional
 
 from deepeval.dataset import Golden
 

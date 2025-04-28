@@ -140,4 +140,4 @@ class ContractsGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"Contracts (Red Teaming)"
+        return "Contracts (Red Teaming)"

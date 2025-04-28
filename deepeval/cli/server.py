@@ -1,5 +1,4 @@
 from typing import Dict
-from rich import print
 import socketserver
 import http.server
 import threading

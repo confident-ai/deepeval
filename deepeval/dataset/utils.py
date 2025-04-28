@@ -1,6 +1,6 @@
 from typing import List, Optional, Any
 from deepeval.dataset.api import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 import json
 import re
 

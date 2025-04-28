@@ -59,7 +59,7 @@ class DocumentChunker:
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -106,7 +106,7 @@ class DocumentChunker:
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -146,7 +146,7 @@ class DocumentChunker:
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
 
@@ -189,7 +189,7 @@ class DocumentChunker:
         collection_name = "processed_chunks"
         try:
             collection = client.get_collection(name=collection_name)
-        except Exception as e:
+        except Exception:
             # Collection doesn't exist, so create it and then add documents
             collection = client.create_collection(name=collection_name)
             contents = [node.text for node in nodes]

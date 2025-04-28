@@ -123,7 +123,7 @@ class HumanEval(DeepEvalBaseBenchmark):
                     exec(function)
                     exec(golden.expected_output)
                     c += 1
-                except AssertionError as e:
+                except AssertionError:
                     pass
             self.c[task.value] = c
             self.functions[task.value] = functions

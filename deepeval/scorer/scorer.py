@@ -71,7 +71,7 @@ class Scorer:
         try:
             from nltk.tokenize import word_tokenize
             from nltk.translate.bleu_score import sentence_bleu
-        except ModuleNotFoundError as e:
+        except ModuleNotFoundError:
             print("Please install nltk module. Command: pip install nltk")
 
         assert bleu_type in [
@@ -156,14 +156,14 @@ class Scorer:
         """
         try:
             from bert_score import BERTScorer
-        except ModuleNotFoundError as e:
+        except ModuleNotFoundError:
             print(
                 "Please install bert_score module. Command: pip install bert-score"
             )
 
         try:
             import torch
-        except ModuleNotFoundError as e:
+        except ModuleNotFoundError:
             print("Please install torch module. Command: pip install torch")
 
         # FIXME: Fix the case for mps
@@ -417,7 +417,7 @@ class Scorer:
             score_percentage = (correct_matches / len(target_list)) * 100
 
             return round(score_percentage)  # Return rounded percentage
-        except Exception as e:
+        except Exception:
             return 0  # Return score as 0 in case of any exception
 
     def pass_at_k(self, n, c, k):

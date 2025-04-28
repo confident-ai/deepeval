@@ -9,7 +9,7 @@ from deepeval.test_case import (
 from deepeval.metrics.red_teaming_metrics.bola.template import (
     BOLATemplate,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     check_conversational_test_case_params,
@@ -187,4 +187,4 @@ class BOLAGrader(BaseMetric):
 
     @property
     def __name__(self):
-        return f"BOLA (Red Teaming)"
+        return "BOLA (Red Teaming)"

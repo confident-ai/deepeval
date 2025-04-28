@@ -22,7 +22,6 @@ from deepeval.models import (
     MultimodalGeminiModel,
     MultimodalOllamaModel,
 )
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
 from deepeval.metrics import (
