@@ -197,7 +197,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -214,7 +214,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -251,7 +251,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -268,7 +268,7 @@ class GPTModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content

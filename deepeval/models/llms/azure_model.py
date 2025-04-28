@@ -85,7 +85,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format=schema,
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -102,7 +102,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -118,7 +118,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             messages=[
                 {"role": "user", "content": prompt},
             ],
-            temperature=self.temperature
+            temperature=self.temperature,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -165,7 +165,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                         {"role": "user", "content": prompt},
                     ],
                     response_format={"type": "json_object"},
-                    temperature=self.temperature
+                    temperature=self.temperature,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -181,7 +181,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             messages=[
                 {"role": "user", "content": prompt},
             ],
-            temperature=self.temperature
+            temperature=self.temperature,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -233,7 +233,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-
 
     ###############################################
     # Model

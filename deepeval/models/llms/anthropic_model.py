@@ -30,7 +30,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        
+
         super().__init__(model_name)
 
     ###############################################
@@ -50,7 +50,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                 }
             ],
             model=self.model_name,
-            temperature=self.temperature
+            temperature=self.temperature,
         )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
@@ -74,7 +74,7 @@ class AnthropicModel(DeepEvalBaseLLM):
                 }
             ],
             model=self.model_name,
-            temperature=self.temperature
+            temperature=self.temperature,
         )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens

@@ -17,9 +17,11 @@ class OllamaModel(DeepEvalBaseLLM):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_NAME
         )
-        self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_BASE_URL 
-        ) or "http://localhost:11434"
+        self.base_url = (
+            base_url
+            or KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_BASE_URL)
+            or "http://localhost:11434"
+        )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
@@ -37,7 +39,7 @@ class OllamaModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
-            options={"temperature": self.temperature}
+            options={"temperature": self.temperature},
         )
         return (
             (
@@ -57,7 +59,7 @@ class OllamaModel(DeepEvalBaseLLM):
             model=model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
-            options={"temperature": self.temperature}
+            options={"temperature": self.temperature},
         )
         return (
             (
