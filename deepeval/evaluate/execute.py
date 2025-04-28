@@ -770,13 +770,16 @@ def execute_agentic_test_cases(
     ignore_errors: bool,
     skip_on_missing_params: bool,
     show_indicator: bool,
+    save_to_disk: bool = False,
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = False
-    test_run_manager.create_test_run(identifier=identifier)
+    
+    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.get_test_run(identifier=identifier)
+
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
     test_results: List[TestResult] = []
@@ -988,6 +991,7 @@ async def a_execute_agentic_test_cases(
     show_indicator: bool,
     throttle_value: int,
     max_concurrent: int,
+    save_to_disk: bool = False,
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
 ) -> List[TestResult]:
@@ -998,8 +1002,9 @@ async def a_execute_agentic_test_cases(
             return await func(*args, **kwargs)
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = False
-    test_run_manager.create_test_run(identifier=identifier)
+    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.get_test_run(identifier=identifier)
+
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
     test_results: List[TestResult] = []
