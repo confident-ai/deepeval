@@ -1,56 +1,57 @@
-from typing import List, Optional, Union, Tuple, Dict, Literal
-from rich.console import Console
-from pydantic import BaseModel
-from itertools import chain
-import webbrowser
-import datetime
 import asyncio
-import random
-import json
-from rich import print
-import tqdm
 import csv
+import datetime
+import json
 import os
+import random
+import webbrowser
+from itertools import chain
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
-from deepeval.utils import get_or_create_event_loop, is_confident
-from deepeval.synthesizer.chunking.context_generator import ContextGenerator
-from deepeval.metrics.utils import (
-    is_native_model,
-    trimAndLoadJson,
-    initialize_model,
-)
-from deepeval.progress_context import synthesizer_progress_context
+import tqdm
+from pydantic import BaseModel
+from rich import print
+from rich.console import Console
+
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.dataset.golden import Golden
-from deepeval.synthesizer.types import *
-from deepeval.synthesizer.templates import (
-    EvolutionTemplate,
-    SynthesizerTemplate,
-    FilterTemplate,
-    PromptEvolutionTemplate,
-    PromptSynthesizerTemplate,
-    ExtractionTemplate,
-)
-from deepeval.synthesizer.schema import (
-    SyntheticData,
-    SyntheticDataList,
-    SQLData,
-    Response,
-    InputFeedback,
-    RewrittenInput,
-    PromptStyling,
-)
-from deepeval.synthesizer.config import (
-    FiltrationConfig,
-    EvolutionConfig,
-    StylingConfig,
-    ContextConstructionConfig,
-)
 from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
 )
+from deepeval.dataset.golden import Golden
+from deepeval.metrics.utils import (
+    initialize_model,
+    is_native_model,
+    trimAndLoadJson,
+)
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.progress_context import synthesizer_progress_context
+from deepeval.synthesizer.chunking.context_generator import ContextGenerator
+from deepeval.synthesizer.config import (
+    ContextConstructionConfig,
+    EvolutionConfig,
+    FiltrationConfig,
+    StylingConfig,
+)
+from deepeval.synthesizer.schema import (
+    InputFeedback,
+    PromptStyling,
+    Response,
+    RewrittenInput,
+    SQLData,
+    SyntheticData,
+    SyntheticDataList,
+)
+from deepeval.synthesizer.templates import (
+    EvolutionTemplate,
+    ExtractionTemplate,
+    FilterTemplate,
+    PromptEvolutionTemplate,
+    PromptSynthesizerTemplate,
+    SynthesizerTemplate,
+)
+from deepeval.synthesizer.types import *
+from deepeval.utils import get_or_create_event_loop, is_confident
 
 valid_file_types = ["csv", "json"]
 
