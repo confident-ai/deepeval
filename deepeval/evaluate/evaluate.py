@@ -53,17 +53,19 @@ def assert_test(
     traceable_callback: Optional[
         Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
-    test_case: Optional[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]] = None,
-    metrics:  Optional[List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
-    ]] = None,
+    test_case: Optional[
+        Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
+    ] = None,
+    metrics: Optional[
+        List[Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]]
+    ] = None,
     run_async: bool = True,
 ):
     validate_assert_test_inputs(
         golden=golden,
         traceable_callback=traceable_callback,
         test_case=test_case,
-        metrics=metrics
+        metrics=metrics,
     )
 
     if golden and traceable_callback:
@@ -92,7 +94,7 @@ def assert_test(
                 skip_on_missing_params=should_skip_on_missing_params(),
                 _use_bar_indicator=False,
             )[0]
-    
+
     elif test_case and metrics:
         if run_async:
             loop = get_or_create_event_loop()

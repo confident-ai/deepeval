@@ -101,7 +101,7 @@ def test_verdict_schema():
 from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 
-test_cases=[
+test_cases = [
     LLMTestCase(
         input="What is your name",
         actual_output="Idk",

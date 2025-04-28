@@ -328,7 +328,7 @@ class TraceManager:
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             return None
-            
+
         # Add the trace to the queue
         self._trace_queue.put(trace)
 

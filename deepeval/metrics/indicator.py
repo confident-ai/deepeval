@@ -196,7 +196,11 @@ async def measure_metrics_with_indicator(
             else:
                 tasks.append(
                     safe_a_measure(
-                        metric, test_case, ignore_errors, skip_on_missing_params, pbar_eval
+                        metric,
+                        test_case,
+                        ignore_errors,
+                        skip_on_missing_params,
+                        pbar_eval,
                     )
                 )
 

@@ -17,13 +17,8 @@ from deepeval.test_run import (
     MetricData,
 )
 from deepeval.evaluate.types import TestResult
-from deepeval.tracing.api import (
-    TraceApi
-)
-from deepeval.tracing.tracing import (
-    BaseSpan,
-    Trace
-)
+from deepeval.tracing.api import TraceApi
+from deepeval.tracing.tracing import BaseSpan, Trace
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
 
@@ -227,23 +222,23 @@ def validate_assert_test_inputs(
             )
         if test_case or metrics:
             raise ValueError(
-                "You cannot provide both (golden + traceable_callback) and (test_case + metrics). Choose one mode."
+                "You cannot provide both ('golden' + 'traceable_callback') and ('test_case' + 'metrics'). Choose one mode."
             )
     elif (golden and not traceable_callback) or (
         traceable_callback and not golden
     ):
         raise ValueError(
-            "Both `golden` and `traceable_callback` must be provided together."
+            "Both 'golden' and 'traceable_callback' must be provided together."
         )
 
     if (test_case and not metrics) or (metrics and not test_case):
         raise ValueError(
-            "Both `test_case` and `metrics` must be provided together."
+            "Both 'test_case' and 'metrics' must be provided together."
         )
 
     if not ((golden and traceable_callback) or (test_case and metrics)):
         raise ValueError(
-            "You must provide either (golden + traceable_callback) or (test_case + metrics)."
+            "You must provide either ('golden' + 'traceable_callback') or ('test_case' + 'metrics')."
         )
 
 
@@ -260,19 +255,21 @@ def validate_evaluate_inputs(
             )
         if test_cases or metrics:
             raise ValueError(
-                "You cannot provide both (goldens with traceable_callback) and (test_cases with metrics). Please choose one mode."
+                "You cannot provide both ('goldens' with 'traceable_callback') and ('test_cases' with 'metrics'). Please choose one mode."
             )
     elif (goldens and not traceable_callback) or (
         traceable_callback and not goldens
     ):
         raise ValueError(
-            "If using goldens, you must also provide a traceable_callback."
+            "If using 'goldens', you must also provide a 'traceable_callback'."
         )
     if (test_cases and not metrics) or (metrics and not test_cases):
-        raise ValueError("If using test_cases, you must also provide metrics.")
+        raise ValueError(
+            "If using 'test_cases', you must also provide 'metrics'."
+        )
     if not ((goldens and traceable_callback) or (test_cases and metrics)):
         raise ValueError(
-            "You must provide either goldens with a traceable_callback, or test_cases with metrics."
+            "You must provide either goldens with a 'traceable_callback', or test_cases with 'metrics'."
         )
 
 

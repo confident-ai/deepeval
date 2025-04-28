@@ -1,4 +1,3 @@
-
 from time import perf_counter
 from asyncio import sleep
 import random
@@ -176,21 +175,23 @@ from deepeval import evaluate
 goldens = [
     Golden(input="What's the weather like in SF?"),
     Golden(input="Tell me about Elon Musk."),
-] 
+]
 
 
-# # Run Async
-evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
-evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
+# # # Run Async
+evaluate(goldens, meta_agent, run_async=True)
+# evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
 
-# # Run Sync
-evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
-evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
+# # # Run Sync
+# evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
+# evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
 
-# Assert Test
-def test_meta_agent():
-    golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden, meta_agent, run_async=True)
-def test_meta_agent():
-    golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden, meta_agent, run_async=False)
+# import pytest
+
+# # Assert Test
+# @pytest.mark.parametrize(
+#     "golden",
+#     goldens,
+# )
+# def test_meta_agent_0(golden):
+#     assert_test(golden=golden, traceable_callback=meta_agent)

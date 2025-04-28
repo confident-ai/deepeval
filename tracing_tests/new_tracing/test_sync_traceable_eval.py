@@ -6,7 +6,7 @@ from deepeval.tracing import (
     observe,
     RetrieverAttributes,
     LlmAttributes,
-    trace_manager
+    trace_manager,
 )
 
 from time import sleep, perf_counter
@@ -95,8 +95,7 @@ def custom_research_agent(query: str):
 def weather_agent(query: str):
     update_current_span_test_case(
         LLMTestCase(
-            input=query, 
-            actual_output="Weather information unavailable"
+            input=query, actual_output="Weather information unavailable"
         )
     )
     sleep(random.uniform(1, 3))
@@ -128,9 +127,7 @@ def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
     update_current_span_test_case(
-        test_case=LLMTestCase(
-            input=input, actual_output=final_response
-        )
+        test_case=LLMTestCase(input=input, actual_output=final_response)
     )
     return final_response
 
@@ -142,21 +139,24 @@ from deepeval import evaluate, assert_test
 
 goldens = [
     Golden(input="What's the weather like in SF?"),
-    Golden(input="Tell me about Elon Musk.")
+    Golden(input="Tell me about Elon Musk."),
 ]
 
-# Run Async
-evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
-evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
+# # Run Async
+# evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
+# evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
 
-# Run Sync
-evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
-evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
+# # Run Sync
+# evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
+# evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
+
 
 # Assert Test
-def test_meta_agent():
+def test_meta_agent_0():
     golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden, meta_agent, run_async=True)
-def test_meta_agent():
+    assert_test(golden=golden, traceable_callback=meta_agent, run_async=False)
+
+
+def test_meta_agent_1():
     golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden, meta_agent, run_async=False)
+    assert_test(golden=golden, traceable_callback=meta_agent, run_async=False)
