@@ -776,7 +776,7 @@ def execute_agentic_test_cases(
 ) -> List[TestResult]:
 
     test_run_manager = global_test_run_manager
-    
+
     test_run_manager.save_to_disk = save_to_disk
     test_run_manager.get_test_run(identifier=identifier)
 
