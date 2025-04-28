@@ -27,7 +27,7 @@ class FileHandlerLoaderAdapter(BaseLoader):
     """Adapter to make FileHandler compatible with BaseLoader interface."""
 
     def __init__(
-        self, handler: FileHandler, path: str, encoding: Optional[str] = None
+        self, *, handler: FileHandler, path: str, encoding: Optional[str] = None
     ):
         self.handler = handler
         self.path = path

@@ -172,7 +172,7 @@ class DocumentChunker:
         # Check custom handlers first
         custom_handler = self.additional_loaders.get(extension)
         if custom_handler:
-            return FileHandlerLoaderAdapter(custom_handler, path, encoding)
+            return FileHandlerLoaderAdapter(handler=custom_handler, path=path, encoding=encoding)
 
         # Fall back to default handlers
         loader = self.loader_mapping.get(extension)
