@@ -1,9 +1,7 @@
 from abc import abstractmethod
 from typing import (
-    AsyncIterable,
     AsyncIterator,
     Iterator,
-    List,
     Optional,
     Protocol,
 )
