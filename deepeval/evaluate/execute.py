@@ -439,7 +439,6 @@ async def a_execute_test_cases(
                         copied_llm_metrics: List[BaseMetric] = copy_metrics(
                             llm_metrics
                         )
-                        print(llm_test_case_counter)
                         task = execute_with_semaphore(
                             func=a_execute_llm_test_cases,
                             metrics=copied_llm_metrics,
