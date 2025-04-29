@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Union
 from pydantic import BaseModel, Field
 
 from deepeval.test_case import LLMTestCase
+from deepeval.test_case.llm_test_case import ToolCall
 
 
 class SpanApiType(Enum):
@@ -30,6 +31,20 @@ class MetricData(BaseModel):
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
+
+
+class SpanTestCase(BaseModel):
+    input: str
+    actual_output: str = Field(alias="actualOutput")
+    expected_output: Optional[str] = Field(None, lias="expectedOutput")
+    retrieval_context: Optional[List[str]] = Field(
+        None, alias="retrievalContext"
+    )
+    context: Optional[List[str]] = Field(None, alias="context")
+    tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, alias="expectedTools"
+    )
 
 
 class BaseApiSpan(BaseModel):
@@ -69,7 +84,7 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    test_case: Optional[LLMTestCase] = Field(None, alias="testCase")
+    span_test_case: Optional[SpanTestCase] = Field(None, alias="spanTestCase")
     metrics: Optional[List[str]] = Field(None, alias="metrics")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 

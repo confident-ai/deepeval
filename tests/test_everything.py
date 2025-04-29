@@ -97,7 +97,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -202,15 +202,15 @@ def test_everything():
         metrics=[
             metric1,
             metric2,
-            metric3,
-            metric4,
-            metric5,
-            metric6,
-            metric7,
-            metric8,
-            metric9,
-            metric10,
-            metric11,
+            # metric3,
+            # metric4,
+            # metric5,
+            # metric6,
+            # metric7,
+            # metric8,
+            # metric9,
+            # metric10,
+            # metric11,
             # metric12,
             # # metric13,
             # metric14,
@@ -223,7 +223,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openadi is expensive")
+# @pytest.mark.skip(reason="openadi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -261,9 +261,9 @@ def test_everything_2():
         test_case,
         [
             metric1,
-            metric2,
-            metric3,
-            metric4,
+            # metric2,
+            # metric3,
+            # metric4,
             # metric5,
             # metric6,
             # metric7,
@@ -277,14 +277,12 @@ def test_everything_2():
     )
 
 
-# from deepeval.prompt import Prompt
+from deepeval.prompt import Prompt
 
-# prompt = Prompt(alias="New Prompt")
-# prompt.pull()
+prompt = Prompt(alias="First Prompt")
+prompt.pull()
 
 
-# @deepeval.log_hyperparameters(
-#     model="gpt-4", prompt_template="another template!"
-# )
-# def hyperparameters():
-#     return {"System Prompt": prompt, "temperature": 1}
+@deepeval.log_hyperparameters
+def hyperparameters():
+    return {"temperature": 1, "model": "gpt-4", "Prompt": prompt}

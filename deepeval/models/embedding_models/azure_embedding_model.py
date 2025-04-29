@@ -1,12 +1,11 @@
-from langchain_openai import AzureOpenAIEmbeddings
 from typing import List
-
+from openai import AzureOpenAI, AsyncAzureOpenAI
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_API_KEY
         )
@@ -19,33 +18,55 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_OPENAI_ENDPOINT
         )
-        self.args = args
-        self.kwargs = kwargs
-        super().__init__(self.azure_embedding_deployment)
-
-    def load_model(self):
-        return AzureOpenAIEmbeddings(
-            openai_api_version=self.openai_api_version,
-            azure_deployment=self.azure_embedding_deployment,
-            azure_endpoint=self.azure_endpoint,
-            openai_api_key=self.azure_openai_api_key,
-        )
+        self.model_name = self.azure_embedding_deployment
 
     def embed_text(self, text: str) -> List[float]:
-        embedding_model = self.load_model()
-        return embedding_model.embed_query(text)
+        client = self.load_model(async_mode=False)
+        response = client.embeddings.create(
+            input=text,
+            model=self.azure_embedding_deployment,
+        )
+        return response.data[0].embedding
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        embedding_model = self.load_model()
-        return embedding_model.embed_documents(texts)
+        client = self.load_model(async_mode=False)
+        response = client.embeddings.create(
+            input=texts,
+            model=self.azure_embedding_deployment,
+        )
+        return [item.embedding for item in response.data]
 
     async def a_embed_text(self, text: str) -> List[float]:
-        embedding_model = self.load_model()
-        return await embedding_model.aembed_query(text)
+        client = self.load_model(async_mode=True)
+        response = await client.embeddings.create(
+            input=text,
+            model=self.azure_embedding_deployment,
+        )
+        return response.data[0].embedding
 
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
-        embedding_model = self.load_model()
-        return await embedding_model.aembed_documents(texts)
+        client = self.load_model(async_mode=True)
+        response = await client.embeddings.create(
+            input=texts,
+            model=self.azure_embedding_deployment,
+        )
+        return [item.embedding for item in response.data]
 
-    def get_model_name(self):
+    def get_model_name(self) -> str:
         return self.model_name
+
+    def load_model(self, async_mode: bool = False):
+        if not async_mode:
+            return AzureOpenAI(
+                api_key=self.azure_openai_api_key,
+                api_version=self.openai_api_version,
+                azure_endpoint=self.azure_endpoint,
+                azure_deployment=self.azure_embedding_deployment,
+            )
+        else:
+            return AsyncAzureOpenAI(
+                api_key=self.azure_openai_api_key,
+                api_version=self.openai_api_version,
+                azure_endpoint=self.azure_endpoint,
+                azure_deployment=self.azure_embedding_deployment,
+            )

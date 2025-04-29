@@ -105,7 +105,6 @@ class LLMTestCase:
     comments: Optional[str] = None
     tools_called: Optional[List[ToolCall]] = None
     expected_tools: Optional[List[ToolCall]] = None
-    reasoning: Optional[str] = None
     token_cost: Optional[float] = None
     completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)

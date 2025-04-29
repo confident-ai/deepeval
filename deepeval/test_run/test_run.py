@@ -236,6 +236,34 @@ class TestRun(BaseModel):
             for metric_data in test_case.metrics_data:
                 process_metric_data(metric_data)
 
+            if test_case.trace is None:
+                continue
+
+            for span in test_case.trace.agent_spans:
+                if span.metrics_data is not None:
+                    for metric_data in span.metrics_data:
+                        process_metric_data(metric_data)
+
+            for span in test_case.trace.tool_spans:
+                if span.metrics_data is not None:
+                    for metric_data in span.metrics_data:
+                        process_metric_data(metric_data)
+
+            for span in test_case.trace.retriever_spans:
+                if span.metrics_data is not None:
+                    for metric_data in span.metrics_data:
+                        process_metric_data(metric_data)
+
+            for span in test_case.trace.llm_spans:
+                if span.metrics_data is not None:
+                    for metric_data in span.metrics_data:
+                        process_metric_data(metric_data)
+
+            for span in test_case.trace.base_spans:
+                if span.metrics_data is not None:
+                    for metric_data in span.metrics_data:
+                        process_metric_data(metric_data)
+
         # Process conversational test cases.
         for convo_test_case in self.conversational_test_cases:
             if convo_test_case.metrics_data is not None:
@@ -388,6 +416,7 @@ class TestRunManager:
         if (
             api_test_case.metrics_data is not None
             and len(api_test_case.metrics_data) == 0
+            and api_test_case.trace is None
         ):
             return
 
@@ -640,15 +669,15 @@ class TestRunManager:
         )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
-        # TODO: remove later
-        if any(
-            test_case.trace is not None for test_case in test_run.test_cases
-        ):
-            return
+        # # TODO: remove later
+        # if any(
+        #     test_case.trace is not None for test_case in test_run.test_cases
+        # ):
+        #     return
 
         console = Console()
         if is_confident() and self.disable_request is False:
-            BATCH_SIZE = 60
+            BATCH_SIZE = 40
             CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
 
             initial_batch = test_run.test_cases[:BATCH_SIZE]

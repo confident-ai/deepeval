@@ -926,7 +926,6 @@ def execute_agentic_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
-                        api_test_case.update_metric_data(metric_data)
                         if pbar_eval is not None:
                             pbar_eval.update(1)
 
@@ -1240,6 +1239,3 @@ async def a_execute_span_test_case(
             continue
         metric_data = create_metric_data(metric)
         api_span.metrics_data.append(metric_data)
-        llm_api_test_case.update_metric_data(
-            metric_data
-        )  # add metric data to agentic_api_test_case

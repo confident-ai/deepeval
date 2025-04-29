@@ -1,7 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
+from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, List, Tuple, Union, Dict
-from langchain_core.messages import AIMessage
 import math
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -275,10 +275,10 @@ class GEval(BaseMetric):
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
             res, cost = await self.model.a_generate_raw_response(
-                prompt, logprobs=True, top_logprobs=self.top_logprobs
+                prompt, top_logprobs=self.top_logprobs
             )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res.content, self)
+            data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -312,7 +312,7 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        text = self._prepare_evaluation_text(test_case)
+        text = self.construct_test_case_string(test_case)
 
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
@@ -337,10 +337,10 @@ class GEval(BaseMetric):
                 raise AttributeError("log_probs unsupported.")
 
             res, cost = self.model.generate_raw_response(
-                prompt, logprobs=True, top_logprobs=self.top_logprobs
+                prompt, top_logprobs=self.top_logprobs
             )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res.content, self)
+            data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -373,51 +373,14 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def generate_weighted_summed_score(
-        self, raw_score: int, raw_response: AIMessage
+        self, raw_score: int, raw_response: ChatCompletion
     ) -> Union[int, float]:
-        """
-        Example raw_response.response_metadata["logprobs"]["content"]
-        [
-            {
-                'token': '9',
-                'bytes': [57],
-                'logprob': -0.18066935,
-                'top_logprobs': [
-                    {'token': '9', 'bytes': [57], 'logprob': -0.18066935},
-                    {'token': '8', 'bytes': [56], 'logprob': -1.8056693},
-                    {'token': '10', 'bytes': [49, 48], 'logprob': -7.1337943},
-                    {'token': '7', 'bytes': [55], 'logprob': -8.977545},
-                    {'token': ' ', 'bytes': [32], 'logprob': -15.477545},
-                    {'token': '6', 'bytes': [54], 'logprob': -17.133795},
-                    {'token': '5', 'bytes': [53], 'logprob': -20.352545},
-                    {'token': '09', 'bytes': [48, 57], 'logprob': -21.83692},
-                    {'token': '0', 'bytes': [48], 'logprob': -22.383795},
-                    {'token': ' nine', 'bytes': [32, 110, 105, 110, 101], 'logprob': -22.74317},
-                    {'token': '4', 'bytes': [52], 'logprob': -22.875982},
-                    {'token': '08', 'bytes': [48, 56], 'logprob': -22.99317},
-                    {'token': '<|end|>', 'bytes': None, 'logprob': -23.469732},
-                    {'token': '９', 'bytes': [239, 188, 153], 'logprob': -23.625982},
-                    {'token': '\xa0', 'bytes': [194, 160], 'logprob': -24.079107},
-                    {'token': '3', 'bytes': [51], 'logprob': -24.125982},
-                    {'token': ' eight',
-                    'bytes': [32, 101, 105, 103, 104, 116],
-                    'logprob': -24.39942},
-                    {'token': '90', 'bytes': [57, 48], 'logprob': -24.454107},
-                    {'token': '８', 'bytes': [239, 188, 152], 'logprob': -24.89942},
-                    {'token': '1', 'bytes': [49], 'logprob': -25.329107}
-                ]
-            },
-            { next token in generation with top_logprobs ...}
-        ]
-        """
         try:
-            generated_logprobs = raw_response.response_metadata["logprobs"][
-                "content"
-            ]
+            generated_logprobs = raw_response.choices[0].logprobs.content
             # First, locate the token that we care for logprobs, i.e., the token matching the score
             score_logprobs = None
             for token_logprobs in generated_logprobs:
-                if token_logprobs["token"] == str(raw_score):
+                if token_logprobs.token == str(raw_score):
                     score_logprobs = token_logprobs
                     break
             # Then, calculate the score based on the logprobs
@@ -425,19 +388,19 @@ class GEval(BaseMetric):
             sum_linear_probability = 0
             # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
             min_logprob = math.log(0.01)
-            for token_logprob in score_logprobs["top_logprobs"]:
-                logprob = token_logprob["logprob"]
+            for token_logprob in score_logprobs.top_logprobs:
+                logprob = token_logprob.logprob
 
                 # Filter out low probability tokens
                 if logprob < min_logprob:
                     continue
                 # Filter out non-decimal token to prevent errors in later int(token) conversion
-                if not token_logprob["token"].isdecimal():
+                if not token_logprob.token.isdecimal():
                     continue
 
                 # Calculate the linear probability
                 linear_prob = math.exp(logprob)
-                token_score = int(token_logprob["token"])
+                token_score = int(token_logprob.token)
                 if token_linear_probability.get(token_score):
                     token_linear_probability[token_score] += linear_prob
                 else:

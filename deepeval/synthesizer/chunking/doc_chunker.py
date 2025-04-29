@@ -1,22 +1,25 @@
+from typing import Optional, List, Dict, Union, Type
 import os
-from typing import Dict, List, Optional, Type
-
-from langchain_community.document_loaders import (
-    Docx2txtLoader,
-    PyPDFLoader,
-    TextLoader,
-)
-from langchain_community.document_loaders.base import BaseLoader
-from langchain_core.documents import Document as LCDocument
-from langchain_text_splitters import TokenTextSplitter
-from langchain_text_splitters.base import TextSplitter
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.synthesizer.file_handler import (
-    FileHandler,
-    FileHandlerLoaderAdapter,
-)
+from deepeval.synthesizer.file_handler import FileHandler, FileHandlerLoaderAdapter
 
+# check langchain availability
+try:
+    from langchain_core.documents import Document as LCDocument
+    from langchain_text_splitters import TokenTextSplitter
+    from langchain_text_splitters.base import TextSplitter
+    from langchain_community.document_loaders import (
+        PyPDFLoader,
+        TextLoader,
+        Docx2txtLoader,
+    )
+    from langchain_community.document_loaders.base import BaseLoader
+    langchain_available = True
+except ImportError:
+    langchain_available = False
+
+# check chromadb availability
 try:
     import chromadb
     from chromadb import Metadata
@@ -35,6 +38,13 @@ def _check_chromadb_available():
         )
 
 
+def _check_langchain_available():
+    if not langchain_available:
+        raise ImportError(
+            "langchain, langchain_community, and langchain_text_splitters are required for this functionality. Install it via your package manager"
+        )
+
+
 class DocumentChunker:
     def __init__(
         self,
@@ -42,6 +52,7 @@ class DocumentChunker:
         additional_loaders: Optional[dict[str, FileHandler]],
     ):
         _check_chromadb_available()
+        _check_langchain_available()
         self.text_token_count: Optional[int] = None  # set later
 
         self.text_token_count: Optional[int] = None
@@ -67,7 +78,6 @@ class DocumentChunker:
         self, chunk_size: int = 1024, chunk_overlap: int = 0
     ) -> "Collection":
         _check_chromadb_available()
-        import chromadb
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
@@ -115,7 +125,6 @@ class DocumentChunker:
 
     def chunk_doc(self, chunk_size: int = 1024, chunk_overlap: int = 0):
         _check_chromadb_available()
-        import chromadb
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
@@ -165,7 +174,7 @@ class DocumentChunker:
     ### Loading Docs ########################################
     #########################################################
 
-    def get_loader(self, path: str, encoding: Optional[str]) -> BaseLoader:
+    def get_loader(self, path: str, encoding: Optional[str]) -> "BaseLoader":
         """Get the appropriate loader for the file."""
         _, extension = os.path.splitext(path)
         extension = extension.lower()
@@ -208,6 +217,6 @@ class DocumentChunker:
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path
 
-    def count_tokens(self, chunks: List[LCDocument]):
+    def count_tokens(self, chunks: List["LCDocument"]):
         counter = TokenTextSplitter(chunk_size=1, chunk_overlap=0)
         return len(counter.split_documents(chunks))
