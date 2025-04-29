@@ -169,7 +169,7 @@ class DocumentChunker:
     ### Loading Docs ########################################
     #########################################################
 
-    def get_loader(self, path: str, encoding: Optional[str]) -> BaseLoader:
+    def get_loader(self, path: str, encoding: Optional[str]) -> "BaseLoader":
         # Find appropriate doc loader
         _, extension = os.path.splitext(path)
         extension = extension.lower()
@@ -197,6 +197,6 @@ class DocumentChunker:
         self.text_token_count = self.count_tokens(self.sections)
         self.source_file = path
 
-    def count_tokens(self, chunks: List[LCDocument]):
+    def count_tokens(self, chunks: List["LCDocument"]):
         counter = TokenTextSplitter(chunk_size=1, chunk_overlap=0)
         return len(counter.split_documents(chunks))
