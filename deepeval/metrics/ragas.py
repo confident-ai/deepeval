@@ -1,14 +1,27 @@
 """An implementation of the Ragas metric"""
 
 from typing import Optional, Union, List
-from langchain_core.language_models import BaseChatModel
-from langchain_core.embeddings import Embeddings
+
 
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.models import GPTModel
 from deepeval.telemetry import capture_metric_type
 
+# check langchain availability
+try:
+    import langchain_core
+    from langchain_core.language_models import BaseChatModel
+    from langchain_core.embeddings import Embeddings
+    langchain_available = True
+except ImportError:
+    langchain_available = False
+
+def _check_langchain_available():
+    if not langchain_available:
+        raise ImportError(
+            "langchain_core is required for this functionality. Install it via your package manager"
+        )
 
 def format_ragas_metric_name(name: str):
     return f"{name} (ragas)"
@@ -28,6 +41,7 @@ class RAGASContextualPrecisionMetric(BaseMetric):
         model: Optional[Union[str, BaseChatModel]] = "gpt-3.5-turbo",
         _track: bool = True,
     ):
+        _check_langchain_available()
         self.threshold = threshold
         self.model = model
         self._track = _track

@@ -1,23 +1,28 @@
-from langchain_core.documents import Document as LCDocument
-from langchain_community.document_loaders import (
-    PyPDFLoader,
-    TextLoader,
-    Docx2txtLoader,
-)
-from langchain_community.document_loaders.base import BaseLoader
-from langchain_text_splitters import TokenTextSplitter
-from langchain_text_splitters.base import TextSplitter
 from typing import Optional, List, Dict, Union, Type
 import os
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 
+# check langchain availability
+try:
+    from langchain_core.documents import Document as LCDocument
+    from langchain_text_splitters import TokenTextSplitter
+    from langchain_text_splitters.base import TextSplitter
+    from langchain_community.document_loaders import (
+        PyPDFLoader,
+        TextLoader,
+        Docx2txtLoader,
+    )
+    from langchain_community.document_loaders.base import BaseLoader
+    langchain_available = True
+except ImportError:
+    langchain_available = False
 
+# check chromadb availability
 try:
     import chromadb
     from chromadb import Metadata
     from chromadb.api.models.Collection import Collection
-
     chroma_db_available = True
 except ImportError:
     chroma_db_available = False
@@ -30,6 +35,13 @@ def _check_chromadb_available():
             "chromadb is required for this functionality. Install it via your package manager"
         )
 
+def _check_langchain_available():
+    if not langchain_available:
+        raise ImportError(
+            "langchain, langchain_community, and langchain_text_splitters are required for this functionality. Install it via your package manager"
+        )
+        
+
 
 class DocumentChunker:
     def __init__(
@@ -37,6 +49,7 @@ class DocumentChunker:
         embedder: DeepEvalBaseEmbeddingModel,
     ):
         _check_chromadb_available()
+        _check_langchain_available()
         self.text_token_count: Optional[int] = None  # set later
 
         self.source_file: Optional[str] = None
@@ -60,7 +73,6 @@ class DocumentChunker:
         self, chunk_size: int = 1024, chunk_overlap: int = 0
     ) -> "Collection":
         _check_chromadb_available()
-        import chromadb
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
@@ -108,7 +120,6 @@ class DocumentChunker:
 
     def chunk_doc(self, chunk_size: int = 1024, chunk_overlap: int = 0):
         _check_chromadb_available()
-        import chromadb
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:

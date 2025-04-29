@@ -1,6 +1,5 @@
 import shutil
 from typing import List, Tuple, Dict, Optional, Union
-from langchain_core.documents import Document
 from tqdm.asyncio import tqdm_asyncio
 from tqdm import tqdm as tqdm_bar
 from pydantic import BaseModel
