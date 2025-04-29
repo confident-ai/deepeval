@@ -1,7 +1,8 @@
-from langchain_community.callbacks import get_openai_callback
 from typing import Optional, Tuple, Union, Dict
-from langchain_openai import ChatOpenAI
 from pydantic import BaseModel
+
+from openai import OpenAI, AsyncOpenAI
+from openai.types.chat import ChatCompletion
 
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
@@ -16,14 +17,9 @@ class LocalModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
-        self.local_model_api_key = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_API_KEY
-        )
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_BASE_URL
-        )
+        self.local_model_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
+        self.base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_BASE_URL)
         self.format = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_FORMAT)
-        # args and kwargs will be passed to the underlying model, in load_model function
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
@@ -38,32 +34,36 @@ class LocalModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=False)
+        response: ChatCompletion = client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+        )
+        res_content = response.choices[0].message.content
+
         if schema:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = chat_model.invoke(prompt)
-                json_output = trim_and_load_json(res.content)
-                return schema.model_validate(json_output), cb.total_cost
+            json_output = trim_and_load_json(res_content)
+            return schema.model_validate(json_output), 0.0
         else:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = chat_model.invoke(prompt)
-                return res.content, cb.total_cost
+            return res_content, 0.0
 
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[str, float]:
+    ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=True)
+        response: ChatCompletion = await client.chat.completions.create(
+            model=self.model_name,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+        )
+        res_content = response.choices[0].message.content
+
         if schema:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = await chat_model.ainvoke(prompt)
-                json_output = trim_and_load_json(res.content)
-                return schema.model_validate(json_output), cb.total_cost
+            json_output = trim_and_load_json(res_content)
+            return schema.model_validate(json_output), 0.0
         else:
-            chat_model = self.load_model()
-            with get_openai_callback() as cb:
-                res = await chat_model.ainvoke(prompt)
-                return res.content, cb.total_cost
+            return res_content, 0.0
 
     ###############################################
     # Model
@@ -73,12 +73,18 @@ class LocalModel(DeepEvalBaseLLM):
         model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
         return f"{model_name} (Local Model)"
 
-    def load_model(self):
-        return ChatOpenAI(
-            model_name=self.model_name,
-            openai_api_key=self.local_model_api_key,
-            base_url=self.base_url,
-            temperature=self.temperature,
-            *self.args,
-            **self.kwargs,
-        )
+    def load_model(self, async_mode: bool = False):
+        if not async_mode:
+            return OpenAI(
+                api_key=self.local_model_api_key,
+                base_url=self.base_url,
+                *self.args,
+                **self.kwargs,
+            )
+        else:
+            return AsyncOpenAI(
+                api_key=self.local_model_api_key,
+                base_url=self.base_url,
+                *self.args,
+                **self.kwargs,
+            )

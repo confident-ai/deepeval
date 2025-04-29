@@ -52,11 +52,11 @@
 # logger = logging.getLogger(__name__)
 # logger.addHandler(logging.NullHandler())
 
-from langchain_core.tracers.base import BaseTracer
+# from langchain_core.tracers.base import BaseTracer
 
 
-class LangChainCallbackHandler(BaseTracer):
-    pass
+# class LangChainCallbackHandler(BaseTracer):
+#     pass
 
 
 # class LangChainCallbackHandler(BaseTracer):
