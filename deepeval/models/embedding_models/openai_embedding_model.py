@@ -22,7 +22,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
                 f"Invalid model. Available OpenAI Embedding models: {', '.join(valid_openai_embedding_models)}"
             )
         self._openai_api_key = _openai_api_key
-        super().__init__(model_name)
+        self.model_name = model_name
 
     def embed_text(self, text: str) -> List[float]:
         client=self.load_model(async_mode=False)

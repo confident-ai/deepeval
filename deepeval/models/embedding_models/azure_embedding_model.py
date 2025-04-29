@@ -10,7 +10,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         self.openai_api_version = KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_API_VERSION)
         self.azure_embedding_deployment = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
         self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_ENDPOINT)
-        super().__init__(self.azure_embedding_deployment)
+        self.model_name = self.azure_embedding_deployment
 
     def embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=False)
