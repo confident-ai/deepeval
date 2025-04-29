@@ -559,7 +559,8 @@ class TraceManager:
         if span.metrics:
             is_metric_strings = isinstance(span.metrics[0], str)
 
-        span_test_case = SpanTestCase(
+        span_test_case = (
+            SpanTestCase(
                 input=span.llm_test_case.input,
                 actualOutput=span.llm_test_case.actual_output,
                 expectedOutput=span.llm_test_case.expected_output,
@@ -567,7 +568,10 @@ class TraceManager:
                 context=span.llm_test_case.context,
                 toolsCalled=span.llm_test_case.tools_called,
                 expectedTools=span.llm_test_case.expected_tools,
-            ) if span.llm_test_case else None
+            )
+            if span.llm_test_case
+            else None
+        )
 
         # Create the base API span
         api_span = BaseApiSpan(
