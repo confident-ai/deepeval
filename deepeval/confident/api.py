@@ -23,9 +23,9 @@ retryable_exceptions = requests.exceptions.SSLError
 def get_base_api_url():
     region = KEY_FILE_HANDLER.fetch_data(KeyValues.CONFIDENT_REGION)
     if region == "US":
-        return API_BASE_URL_EU
-    else:
         return API_BASE_URL
+    else:
+        return API_BASE_URL_EU
 
 
 def get_deepeval_base_url():
