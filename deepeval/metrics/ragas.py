@@ -13,15 +13,18 @@ try:
     import langchain_core
     from langchain_core.language_models import BaseChatModel
     from langchain_core.embeddings import Embeddings
+
     langchain_available = True
 except ImportError:
     langchain_available = False
+
 
 def _check_langchain_available():
     if not langchain_available:
         raise ImportError(
             "langchain_core is required for this functionality. Install it via your package manager"
         )
+
 
 def format_ragas_metric_name(name: str):
     return f"{name} (ragas)"

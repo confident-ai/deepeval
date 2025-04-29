@@ -226,10 +226,12 @@ class GPTModel(DeepEvalBaseLLM):
 
         completion = client.chat.completions.create(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         output = completion.choices[0].message.content
-        cost = self.calculate_cost(completion.usage.prompt_tokens, completion.usage.completion_tokens)
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
+        )
         if schema:
             json_output = trim_and_load_json(output)
             return schema.model_validate(json_output), cost
@@ -280,13 +282,15 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return schema.model_validate(json_output), cost
-        
+
         completion = await client.chat.completions.create(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
         output = completion.choices[0].message.content
-        cost = self.calculate_cost(completion.usage.prompt_tokens, completion.usage.completion_tokens)
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
+        )
         if schema:
             json_output = trim_and_load_json(output)
             return schema.model_validate(json_output), cost
@@ -323,7 +327,6 @@ class GPTModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(retryable_exceptions),
@@ -356,10 +359,7 @@ class GPTModel(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     def generate_samples(
-        self, 
-        prompt: str, 
-        n: int, 
-        temperature: float
+        self, prompt: str, n: int, temperature: float
     ) -> Tuple[list[str], float]:
         client = self.load_model(async_mode=False)
         response = client.chat.completions.create(

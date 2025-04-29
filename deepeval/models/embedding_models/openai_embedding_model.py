@@ -25,7 +25,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         self.model_name = model_name
 
     def embed_text(self, text: str) -> List[float]:
-        client=self.load_model(async_mode=False)
+        client = self.load_model(async_mode=False)
         response = client.embeddings.create(
             input=text,
             model=self.model_name,
@@ -33,7 +33,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return response.data[0].embedding
 
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
-        client=self.load_model(async_mode=False)
+        client = self.load_model(async_mode=False)
         response = client.embeddings.create(
             input=texts,
             model=self.model_name,
@@ -41,7 +41,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return [item.embedding for item in response.data]
 
     async def a_embed_text(self, text: str) -> List[float]:
-        client=self.load_model(async_mode=True)
+        client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
             input=text,
             model=self.model_name,
@@ -49,7 +49,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return response.data[0].embedding
 
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
-        client=self.load_model(async_mode=True)
+        client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
             input=texts,
             model=self.model_name,
@@ -58,7 +58,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
     def get_model_name(self) -> str:
         return self.model_name
-    
+
     def load_model(self, async_mode: bool):
         if async_mode == False:
             return OpenAI(api_key=self._openai_api_key)

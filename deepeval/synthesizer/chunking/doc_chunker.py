@@ -14,6 +14,7 @@ try:
         Docx2txtLoader,
     )
     from langchain_community.document_loaders.base import BaseLoader
+
     langchain_available = True
 except ImportError:
     langchain_available = False
@@ -23,6 +24,7 @@ try:
     import chromadb
     from chromadb import Metadata
     from chromadb.api.models.Collection import Collection
+
     chroma_db_available = True
 except ImportError:
     chroma_db_available = False
@@ -35,12 +37,12 @@ def _check_chromadb_available():
             "chromadb is required for this functionality. Install it via your package manager"
         )
 
+
 def _check_langchain_available():
     if not langchain_available:
         raise ImportError(
             "langchain, langchain_community, and langchain_text_splitters are required for this functionality. Install it via your package manager"
         )
-        
 
 
 class DocumentChunker:

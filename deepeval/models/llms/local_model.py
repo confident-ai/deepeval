@@ -17,8 +17,12 @@ class LocalModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
-        self.local_model_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
-        self.base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_BASE_URL)
+        self.local_model_api_key = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_API_KEY
+        )
+        self.base_url = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_BASE_URL
+        )
         self.format = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_FORMAT)
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
