@@ -104,6 +104,7 @@ def create_api_test_case(
     additional_metadata: Optional[Dict] = None,
     comments: Optional[str] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
+    print(index)
     if isinstance(test_case, ConversationalTestCase):
         order = (
             test_case._dataset_rank
