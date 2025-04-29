@@ -69,7 +69,7 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    test_case: Optional[LLMTestCase] = Field(None, alias="testCase")
+    llm_test_case: Optional[LLMTestCase] = Field(None, alias="llmTestCase")
     metrics: Optional[List[str]] = Field(None, alias="metrics")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 

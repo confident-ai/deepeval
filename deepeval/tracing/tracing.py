@@ -567,7 +567,7 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
-            testCase=span.llm_test_case,
+            llmTestCase=span.llm_test_case,
             metrics=(
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals
