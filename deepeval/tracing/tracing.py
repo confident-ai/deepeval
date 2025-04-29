@@ -19,7 +19,12 @@ from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
 from deepeval.test_case import LLMTestCase
-from deepeval.tracing.api import BaseApiSpan, SpanApiType, TraceApi
+from deepeval.tracing.api import (
+    BaseApiSpan,
+    SpanApiType,
+    SpanTestCase,
+    TraceApi,
+)
 from deepeval.utils import dataclass_to_dict, is_confident
 
 
@@ -567,7 +572,15 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
-            llmTestCase=span.llm_test_case,
+            spanTestCase=SpanTestCase(
+                input=span.llm_test_case.input,
+                actualOutput=span.llm_test_case.actual_output,
+                expectedOutput=span.llm_test_case.expected_output,
+                retrievalContext=span.llm_test_case.retrieval_context,
+                context=span.llm_test_case.context,
+                toolsCalled=span.llm_test_case.tools_called,
+                expectedTools=span.llm_test_case.expected_tools,
+            ),
             metrics=(
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals

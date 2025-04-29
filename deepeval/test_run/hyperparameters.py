@@ -43,28 +43,22 @@ def process_hyperparameters(
     return processed_hyperparameters
 
 
-def log_hyperparameters(model: str, prompt_template: str):
-    def decorator(func):
-        test_run = global_test_run_manager.get_test_run()
+def log_hyperparameters(func):
+    test_run = global_test_run_manager.get_test_run()
 
-        def modified_hyperparameters():
-            base_hyperparameters = func()
-            base_hyperparameters["model"] = model
-            base_hyperparameters["prompt template"] = prompt_template
-            return base_hyperparameters
+    def modified_hyperparameters():
+        base_hyperparameters = func()
+        return base_hyperparameters
 
-        hyperparameters = process_hyperparameters(modified_hyperparameters())
-        test_run.hyperparameters = hyperparameters
-        global_test_run_manager.save_test_run()
+    hyperparameters = process_hyperparameters(modified_hyperparameters())
+    test_run.hyperparameters = hyperparameters
+    global_test_run_manager.save_test_run()
 
-        # Define the wrapper function that will be the actual decorator
-        def wrapper(*args, **kwargs):
-            # Optional: You can decide if you want to do something else here
-            # every time the decorated function is called
-            return func(*args, **kwargs)
+    # Define the wrapper function that will be the actual decorator
+    def wrapper(*args, **kwargs):
+        # Optional: You can decide if you want to do something else here
+        # every time the decorated function is called
+        return func(*args, **kwargs)
 
-        # Return the wrapper function to be used as the decorator
-        return wrapper
-
-    # Return the decorator itself
-    return decorator
+    # Return the wrapper function to be used as the decorator
+    return wrapper

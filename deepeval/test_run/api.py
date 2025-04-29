@@ -7,7 +7,7 @@ from deepeval.tracing.api import TraceApi, MetricData
 
 class LLMApiTestCase(BaseModel):
     name: str
-    input: Optional[str] = None
+    input: str
     actual_output: Optional[str] = Field(None, alias="actualOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
     context: Optional[list] = Field(None)

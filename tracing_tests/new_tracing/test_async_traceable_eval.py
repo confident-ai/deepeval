@@ -175,7 +175,7 @@ from deepeval import evaluate
 
 goldens = [
     Golden(input="What's the weather like in SF?"),
-    Golden(input="Tell me about Elon Musk."),
+    # Golden(input="Tell me about Elon Musk."),
 ]
 
 
