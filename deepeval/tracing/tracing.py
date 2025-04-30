@@ -735,7 +735,6 @@ class Observer:
 
     def create_span_instance(self):
         """Create a span instance based on the span type."""
-        trace = get_current_trace()
 
         span_kwargs = {
             "uuid": self.uuid,
