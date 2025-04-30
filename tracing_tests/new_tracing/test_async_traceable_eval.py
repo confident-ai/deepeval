@@ -185,7 +185,7 @@ evaluate(
     goldens=goldens,
     traceable_callback=meta_agent,
     async_config=AsyncConfig(run_async=True),
-    display_config=DisplayConfig(show_indicator=False),
+    display_config=DisplayConfig(show_indicator=True),
 )
 
 # # # # Run Sync

@@ -262,6 +262,8 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 trace.root_spans = [trace.root_spans[0].children[0]]
+                for root_span in trace.root_spans:
+                    root_span.parent_uuid = None
 
             # Remove from active traces
             del self.active_traces[trace_uuid]

@@ -1119,7 +1119,6 @@ async def a_execute_agentic_test_case(
         current_trace: Trace = get_current_trace()
     if pbar_callback is not None:
         pbar_callback.update(1)
-
     # run evals through DFS
     trace_api = TraceApi(
         uuid=current_trace.uuid,
