@@ -129,6 +129,7 @@ async def weather_agent(query: str):
         )
     )
     await sleep(random.uniform(1, 3))
+    print("@@")
     return "Weather information unavailable"
 
 

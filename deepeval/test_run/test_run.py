@@ -1,8 +1,8 @@
 from enum import Enum
 import os
 import json
-from pydantic import BaseModel, Field, RootModel
-from typing import Any, Optional, List, Dict, Union, Literal
+from pydantic import BaseModel, Field
+from typing import Any, Optional, List, Dict, Union
 import shutil
 import webbrowser
 import sys
@@ -58,11 +58,11 @@ class MetricScores(BaseModel):
 
 
 class TraceMetricScores(BaseModel):
-    agent: Dict[str, MetricScores] = Field(default_factory=dict)
-    tool: Dict[str, MetricScores] = Field(default_factory=dict)
-    retriever: Dict[str, MetricScores] = Field(default_factory=dict)
-    llm: Dict[str, MetricScores] = Field(default_factory=dict)
-    base: Dict[str, MetricScores] = Field(default_factory=dict)
+    agent: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    tool: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    retriever: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    llm: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    base: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
 
 
 class MetricsAverageDict:
@@ -809,6 +809,8 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
+            # print(body)
+            # return
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,

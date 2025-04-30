@@ -29,6 +29,9 @@ class Golden(BaseModel):
         default=None, serialization_alias="sourceFile"
     )
     name: Optional[str] = Field(default=None)
+    custom_column_key_values: Optional[Dict[str, str]] = Field(
+        default=None, serialization_alias="customColumnKeyValues"
+    )
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)

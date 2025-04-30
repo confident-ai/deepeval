@@ -842,9 +842,9 @@ def execute_agentic_test_cases(
                     ),
                     endTime=(
                         to_zod_compatible_iso(
-                            perf_counter_to_datetime(current_trace.start_time)
+                            perf_counter_to_datetime(current_trace.end_time)
                         )
-                        if current_trace.start_time
+                        if current_trace.end_time
                         else None
                     ),
                 )
@@ -942,6 +942,7 @@ def execute_agentic_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
+                        llm_api_test_case.update_status(metric_data.success)
                         if pbar_eval is not None:
                             pbar_eval.update(1)
 
@@ -1117,6 +1118,7 @@ async def a_execute_agentic_test_case(
         else:
             traceable_callback(input=golden.input)
         current_trace: Trace = get_current_trace()
+
     if pbar_callback is not None:
         pbar_callback.update(1)
     # run evals through DFS
@@ -1136,9 +1138,9 @@ async def a_execute_agentic_test_case(
         ),
         endTime=(
             to_zod_compatible_iso(
-                perf_counter_to_datetime(current_trace.start_time)
+                perf_counter_to_datetime(current_trace.end_time)
             )
-            if current_trace.start_time
+            if current_trace.end_time
             else None
         ),
     )
@@ -1260,3 +1262,4 @@ async def a_execute_span_test_case(
             continue
         metric_data = create_metric_data(metric)
         api_span.metrics_data.append(metric_data)
+        llm_api_test_case.update_status(metric_data.success)
