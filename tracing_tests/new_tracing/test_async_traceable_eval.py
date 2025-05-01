@@ -129,6 +129,7 @@ async def weather_agent(query: str):
         )
     )
     await sleep(random.uniform(1, 3))
+    print("@@")
     return "Weather information unavailable"
 
 
@@ -185,7 +186,7 @@ evaluate(
     goldens=goldens,
     traceable_callback=meta_agent,
     async_config=AsyncConfig(run_async=True),
-    display_config=DisplayConfig(show_indicator=False),
+    display_config=DisplayConfig(show_indicator=True),
 )
 
 # # # # Run Sync

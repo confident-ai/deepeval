@@ -1,9 +1,7 @@
 from enum import Enum
-from typing import Dict, List, Optional, Union
-
+from typing import Dict, List, Optional, Union, Literal
 from pydantic import BaseModel, Field
 
-from deepeval.test_case import LLMTestCase
 from deepeval.test_case.llm_test_case import ToolCall
 
 
@@ -13,6 +11,9 @@ class SpanApiType(Enum):
     LLM = "llm"
     RETRIEVER = "retriever"
     TOOL = "tool"
+
+
+span_api_type_literals = Literal["base", "agent", "llm", "retriever", "tool"]
 
 
 class TraceSpanApiStatus(Enum):

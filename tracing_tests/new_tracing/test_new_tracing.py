@@ -289,7 +289,7 @@ conciseness_node = BinaryJudgementNode(
 
 # create the DAG
 dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
-metric = DAGMetric(dag=dag)
+metric = DAGMetric(dag=dag, name="Persuasiveness")
 
 
 ###################################

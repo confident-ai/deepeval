@@ -262,6 +262,8 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 trace.root_spans = [trace.root_spans[0].children[0]]
+                for root_span in trace.root_spans:
+                    root_span.parent_uuid = None
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
@@ -559,6 +561,20 @@ class TraceManager:
         if span.metrics:
             is_metric_strings = isinstance(span.metrics[0], str)
 
+        span_test_case = (
+            SpanTestCase(
+                input=span.llm_test_case.input,
+                actualOutput=span.llm_test_case.actual_output,
+                expectedOutput=span.llm_test_case.expected_output,
+                retrievalContext=span.llm_test_case.retrieval_context,
+                context=span.llm_test_case.context,
+                toolsCalled=span.llm_test_case.tools_called,
+                expectedTools=span.llm_test_case.expected_tools,
+            )
+            if span.llm_test_case
+            else None
+        )
+
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -572,15 +588,7 @@ class TraceManager:
             input=input_data,
             output=output_data,
             error=span.error,
-            spanTestCase=SpanTestCase(
-                input=span.llm_test_case.input,
-                actualOutput=span.llm_test_case.actual_output,
-                expectedOutput=span.llm_test_case.expected_output,
-                retrievalContext=span.llm_test_case.retrieval_context,
-                context=span.llm_test_case.context,
-                toolsCalled=span.llm_test_case.tools_called,
-                expectedTools=span.llm_test_case.expected_tools,
-            ),
+            spanTestCase=span_test_case,
             metrics=(
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals
@@ -664,7 +672,6 @@ class Observer:
             else:
                 trace = trace_manager.start_new_trace()
                 self.trace_uuid = trace.uuid
-                # print(trace.uuid)
                 current_trace_context.set(trace)
 
         # Now create the span instance with the correct trace_uuid and parent_uuid
@@ -728,6 +735,7 @@ class Observer:
 
     def create_span_instance(self):
         """Create a span instance based on the span type."""
+
         span_kwargs = {
             "uuid": self.uuid,
             "trace_uuid": self.trace_uuid,

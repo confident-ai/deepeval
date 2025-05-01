@@ -79,6 +79,7 @@ def execute_test_cases(
     identifier: Optional[str] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
+    _is_assert_test: bool = False,
 ) -> List[TestResult]:
     global_test_run_cache_manager.disable_write_cache = save_to_disk == False
 
@@ -384,6 +385,7 @@ async def a_execute_test_cases(
     identifier: Optional[str] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
+    _is_assert_test: bool = False,
 ) -> List[TestResult]:
     semaphore = asyncio.Semaphore(max_concurrent)
 
@@ -450,6 +452,7 @@ async def a_execute_test_cases(
                             use_cache=use_cache,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
+                            _is_assert_test=_is_assert_test,
                             pbar=pbar,
                         )
                         tasks.append(asyncio.create_task(task))
@@ -470,6 +473,7 @@ async def a_execute_test_cases(
                             skip_on_missing_params=skip_on_missing_params,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
+                            _is_assert_test=_is_assert_test,
                             pbar=pbar,
                         )
                         tasks.append(asyncio.create_task(task))
@@ -488,6 +492,7 @@ async def a_execute_test_cases(
                             skip_on_missing_params=skip_on_missing_params,
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
+                            _is_assert_test=_is_assert_test,
                             pbar=pbar,
                         )
                         tasks.append(asyncio.create_task(task))
@@ -517,6 +522,7 @@ async def a_execute_test_cases(
                         skip_on_missing_params=skip_on_missing_params,
                         use_cache=use_cache,
                         _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
                         show_indicator=show_indicator,
                     )
                     tasks.append(asyncio.create_task((task)))
@@ -539,6 +545,7 @@ async def a_execute_test_cases(
                         ignore_errors=ignore_errors,
                         skip_on_missing_params=skip_on_missing_params,
                         _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
                         show_indicator=show_indicator,
                     )
                     tasks.append(asyncio.create_task((task)))
@@ -558,6 +565,7 @@ async def a_execute_test_cases(
                         ignore_errors=ignore_errors,
                         skip_on_missing_params=skip_on_missing_params,
                         _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
                         show_indicator=show_indicator,
                     )
                     tasks.append(asyncio.create_task(task))
@@ -580,6 +588,7 @@ async def a_execute_llm_test_cases(
     use_cache: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
+    _is_assert_test: bool,
     pbar: Optional[tqdm_asyncio] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
@@ -597,7 +606,9 @@ async def a_execute_llm_test_cases(
         )
 
     ##### Metric Calculation #####
-    api_test_case = create_api_test_case(test_case=test_case, index=count)
+    api_test_case = create_api_test_case(
+        test_case=test_case, index=count if not _is_assert_test else None
+    )
     new_cached_test_case: CachedTestCase = CachedTestCase()
     test_start_time = time.perf_counter()
     await measure_metrics_with_indicator(
@@ -668,6 +679,7 @@ async def a_execute_mllm_test_cases(
     skip_on_missing_params: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
+    _is_assert_test: bool,
     pbar: Optional[tqdm_asyncio] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
@@ -677,7 +689,7 @@ async def a_execute_mllm_test_cases(
         metric.error = None  # Reset metric error
 
     api_test_case: LLMApiTestCase = create_api_test_case(
-        test_case=test_case, index=count
+        test_case=test_case, index=count if not _is_assert_test else None
     )
     test_start_time = time.perf_counter()
     await measure_metrics_with_indicator(
@@ -719,6 +731,7 @@ async def a_execute_conversational_test_cases(
     skip_on_missing_params: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
+    _is_assert_test: bool,
     pbar: Optional[tqdm_asyncio] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
@@ -728,7 +741,7 @@ async def a_execute_conversational_test_cases(
         metric.error = None  # Reset metric error
 
     api_test_case: ConversationalApiTestCase = create_api_test_case(
-        test_caset=test_case, index=count
+        test_case=test_case, index=count if not _is_assert_test else None
     )
 
     test_start_time = time.perf_counter()
@@ -773,6 +786,7 @@ def execute_agentic_test_cases(
     save_to_disk: bool = False,
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
+    _is_assert_test: bool = False,
 ) -> List[TestResult]:
 
     test_run_manager = global_test_run_manager
@@ -828,9 +842,9 @@ def execute_agentic_test_cases(
                     ),
                     endTime=(
                         to_zod_compatible_iso(
-                            perf_counter_to_datetime(current_trace.start_time)
+                            perf_counter_to_datetime(current_trace.end_time)
                         )
-                        if current_trace.start_time
+                        if current_trace.end_time
                         else None
                     ),
                 )
@@ -851,7 +865,9 @@ def execute_agentic_test_cases(
                     _dataset_id=golden._dataset_id,
                 )
                 api_test_case = create_api_test_case(
-                    test_case=test_case, trace=trace_api, index=count
+                    test_case=test_case,
+                    trace=trace_api,
+                    index=count if not _is_assert_test else None,
                 )
 
                 # Run DFS to calculate metrics synchronously
@@ -926,6 +942,7 @@ def execute_agentic_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
+                        llm_api_test_case.update_status(metric_data.success)
                         if pbar_eval is not None:
                             pbar_eval.update(1)
 
@@ -993,6 +1010,7 @@ async def a_execute_agentic_test_cases(
     save_to_disk: bool = False,
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
+    _is_assert_test: bool = False,
 ) -> List[TestResult]:
     semaphore = asyncio.Semaphore(max_concurrent)
 
@@ -1041,6 +1059,7 @@ async def a_execute_agentic_test_cases(
                     skip_on_missing_params=skip_on_missing_params,
                     show_indicator=show_indicator,
                     _use_bar_indicator=_use_bar_indicator,
+                    _is_assert_test=_is_assert_test,
                     pbar=pbar,
                     pbar_callback=pbar_callback,
                 )
@@ -1065,6 +1084,7 @@ async def a_execute_agentic_test_cases(
                     skip_on_missing_params=skip_on_missing_params,
                     show_indicator=show_indicator,
                     _use_bar_indicator=_use_bar_indicator,
+                    _is_assert_test=_is_assert_test,
                     pbar=None,
                 )
                 tasks.append(asyncio.create_task(task))
@@ -1087,6 +1107,7 @@ async def a_execute_agentic_test_case(
     skip_on_missing_params: bool,
     show_indicator: bool,
     _use_bar_indicator: bool,
+    _is_assert_test: bool,
     pbar: Optional[tqdm_asyncio] = None,
     pbar_callback: Optional[tqdm_asyncio] = None,
 ):
@@ -1097,9 +1118,9 @@ async def a_execute_agentic_test_case(
         else:
             traceable_callback(input=golden.input)
         current_trace: Trace = get_current_trace()
+
     if pbar_callback is not None:
         pbar_callback.update(1)
-
     # run evals through DFS
     trace_api = TraceApi(
         uuid=current_trace.uuid,
@@ -1117,9 +1138,9 @@ async def a_execute_agentic_test_case(
         ),
         endTime=(
             to_zod_compatible_iso(
-                perf_counter_to_datetime(current_trace.start_time)
+                perf_counter_to_datetime(current_trace.end_time)
             )
-            if current_trace.start_time
+            if current_trace.end_time
             else None
         ),
     )
@@ -1149,7 +1170,9 @@ async def a_execute_agentic_test_case(
         _dataset_id=golden._dataset_id,
     )
     api_test_case = create_api_test_case(
-        test_case=test_case, trace=trace_api, index=count
+        test_case=test_case,
+        trace=trace_api,
+        index=count if not _is_assert_test else None,
     )
 
     async def dfs(span: BaseSpan):
@@ -1239,3 +1262,4 @@ async def a_execute_span_test_case(
             continue
         metric_data = create_metric_data(metric)
         api_span.metrics_data.append(metric_data)
+        llm_api_test_case.update_status(metric_data.success)

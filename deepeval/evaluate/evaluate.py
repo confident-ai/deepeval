@@ -93,6 +93,7 @@ def assert_test(
                     throttle_value=0,
                     max_concurrent=100,
                     _use_bar_indicator=True,
+                    _is_assert_test=True,
                 )
             )[0]
         else:
@@ -105,6 +106,7 @@ def assert_test(
                 save_to_disk=get_is_running_deepeval(),
                 skip_on_missing_params=should_skip_on_missing_params(),
                 _use_bar_indicator=False,
+                _is_assert_test=True,
             )[0]
 
     elif test_case and metrics:
@@ -124,6 +126,7 @@ def assert_test(
                     save_to_disk=get_is_running_deepeval(),
                     show_indicator=True,
                     _use_bar_indicator=True,
+                    _is_assert_test=True,
                 )
             )[0]
         else:
@@ -137,6 +140,7 @@ def assert_test(
                 save_to_disk=get_is_running_deepeval(),
                 show_indicator=True,
                 _use_bar_indicator=False,
+                _is_assert_test=True,
             )[0]
 
     if not test_result.success:

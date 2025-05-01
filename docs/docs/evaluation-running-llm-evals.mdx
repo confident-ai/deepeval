@@ -74,12 +74,12 @@ from deepeval.tracing import observe, update_current_span_test_case
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+    response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
 
-update_current_span_test_case(
-  test_case=LLMTestCase(input=query, output=response)
-)
-return response
+    update_current_span_test_case(
+        test_case=LLMTestCase(input=query, output=response)
+    )
+    return response
 ```
 
 :::info

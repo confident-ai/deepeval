@@ -20,6 +20,7 @@ from deepeval.test_run.api import (
     TestRunHttpResponse,
     MetricData,
 )
+from deepeval.tracing.api import SpanApiType, span_api_type_literals
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
     delete_file_if_exists,
@@ -54,6 +55,14 @@ class MetricScores(BaseModel):
     passes: int
     fails: int
     errors: int
+
+
+class TraceMetricScores(BaseModel):
+    agent: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    tool: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    retriever: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    llm: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+    base: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
 
 
 class MetricsAverageDict:
@@ -102,6 +111,9 @@ class TestRun(BaseModel):
     )
     metrics_scores: List[MetricScores] = Field(
         default_factory=lambda: [], alias="metricsScores"
+    )
+    trace_metrics_scores: Optional[TraceMetricScores] = Field(
+        None, alias="traceMetricsScores"
     )
     identifier: Optional[str] = None
     hyperparameters: Optional[Dict[str, Any]] = Field(None)
@@ -199,6 +211,16 @@ class TestRun(BaseModel):
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.
         metrics_dict: Dict[str, Dict[str, Any]] = {}
+        # Add dict for trace metrics
+        trace_metrics_dict: Dict[
+            span_api_type_literals, Dict[str, Dict[str, Dict[str, Any]]]
+        ] = {
+            SpanApiType.AGENT.value: {},
+            SpanApiType.TOOL.value: {},
+            SpanApiType.RETRIEVER.value: {},
+            SpanApiType.LLM.value: {},
+            SpanApiType.BASE.value: {},
+        }
         valid_scores = 0
 
         def process_metric_data(metric_data: MetricData):
@@ -229,6 +251,39 @@ class TestRun(BaseModel):
                 else:
                     metrics_dict[name]["fails"] += 1
 
+        def process_span_metric_data(
+            metric_data: MetricData, type: span_api_type_literals, name: str
+        ):
+            metric_name = metric_data.name
+            score = metric_data.score
+            success = metric_data.success
+
+            # Initialize the structure if needed
+            if name not in trace_metrics_dict[type]:
+                trace_metrics_dict[type][name] = {}
+
+            if metric_name not in trace_metrics_dict[type][name]:
+                trace_metrics_dict[type][name][metric_name] = {
+                    "scores": [],
+                    "passes": 0,
+                    "fails": 0,
+                    "errors": 0,
+                }
+
+            if score is None or success is None:
+                trace_metrics_dict[type][name][metric_name]["errors"] += 1
+            else:
+                # Append the score
+                trace_metrics_dict[type][name][metric_name]["scores"].append(
+                    score
+                )
+
+                # Increment passes or fails
+                if success:
+                    trace_metrics_dict[type][name][metric_name]["passes"] += 1
+                else:
+                    trace_metrics_dict[type][name][metric_name]["fails"] += 1
+
         # Process non-conversational test cases.
         for test_case in self.test_cases:
             if test_case.metrics_data is None:
@@ -243,26 +298,41 @@ class TestRun(BaseModel):
                 if span.metrics_data is not None:
                     for metric_data in span.metrics_data:
                         process_metric_data(metric_data)
+                        process_span_metric_data(
+                            metric_data, SpanApiType.AGENT.value, span.name
+                        )
 
             for span in test_case.trace.tool_spans:
                 if span.metrics_data is not None:
                     for metric_data in span.metrics_data:
                         process_metric_data(metric_data)
+                        process_span_metric_data(
+                            metric_data, SpanApiType.TOOL.value, span.name
+                        )
 
             for span in test_case.trace.retriever_spans:
                 if span.metrics_data is not None:
                     for metric_data in span.metrics_data:
                         process_metric_data(metric_data)
+                        process_span_metric_data(
+                            metric_data, SpanApiType.RETRIEVER.value, span.name
+                        )
 
             for span in test_case.trace.llm_spans:
                 if span.metrics_data is not None:
                     for metric_data in span.metrics_data:
                         process_metric_data(metric_data)
+                        process_span_metric_data(
+                            metric_data, SpanApiType.LLM.value, span.name
+                        )
 
             for span in test_case.trace.base_spans:
                 if span.metrics_data is not None:
                     for metric_data in span.metrics_data:
                         process_metric_data(metric_data)
+                        process_span_metric_data(
+                            metric_data, SpanApiType.BASE.value, span.name
+                        )
 
         # Process conversational test cases.
         for convo_test_case in self.conversational_test_cases:
@@ -287,6 +357,36 @@ class TestRun(BaseModel):
             )
             for metric, data in metrics_dict.items()
         ]
+
+        # Create a single TraceMetricScores object instead of a list
+        trace_metrics_score = TraceMetricScores()
+        has_span_metrics = False
+
+        for span_type, spans in trace_metrics_dict.items():
+            if not spans:  # Skip empty span types
+                continue
+
+            span_dict = {}
+            for span_name, metrics in spans.items():
+                span_dict[span_name] = {
+                    metric_name: MetricScores(
+                        metric=metric_name,
+                        scores=metric_data["scores"],
+                        passes=metric_data["passes"],
+                        fails=metric_data["fails"],
+                        errors=metric_data["errors"],
+                    )
+                    for metric_name, metric_data in metrics.items()
+                }
+
+            if span_dict:  # Only set if there are spans
+                has_span_metrics = True
+                setattr(trace_metrics_score, span_type, span_dict)
+
+        # Set to None if no span metrics were found
+        self.trace_metrics_scores = (
+            trace_metrics_score if has_span_metrics else None
+        )
         return valid_scores
 
     def calculate_test_passes_and_fails(self):
@@ -709,6 +809,8 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
+            # print(body)
+            # return
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,

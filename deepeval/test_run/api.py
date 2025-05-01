@@ -68,6 +68,13 @@ class LLMApiTestCase(BaseModel):
     def update_run_duration(self, run_duration: float):
         self.run_duration = run_duration
 
+    def update_status(self, success: bool):
+        if self.success is None:
+            self.success = success
+        else:
+            if success is False:
+                self.success = False
+
     # # TODO: Do a post init check for multi modal and tracing scenario
     # @model_validator(mode="before")
     # def check_input_and_multimodal_input(cls, values: Dict[str, Any]):

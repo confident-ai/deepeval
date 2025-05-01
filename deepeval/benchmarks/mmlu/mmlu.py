@@ -15,7 +15,7 @@ from deepeval.telemetry import capture_benchmark_run
 class MMLU(DeepEvalBaseBenchmark):
     def __init__(
         self,
-        tasks: List[MMLUTask] = None,
+        tasks: Optional[List[MMLUTask]] = None,
         n_shots: int = 5,
         n_problems_per_task: Optional[int] = None,
         verbose_mode: bool = False,
@@ -157,9 +157,9 @@ class MMLU(DeepEvalBaseBenchmark):
     ) -> Dict:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_datase
         ), "Example dataset is empty. Call load_benchmark."
-        prompt: dict = MMLUTemplate.generate_output(
+        prompt = MMLUTemplate.generate_output(
             train_set=self.shots_dataset,
             input=golden.input,
             task=task,
@@ -195,12 +195,12 @@ class MMLU(DeepEvalBaseBenchmark):
     ) -> List[Dict]:
         # Define prompt template
         assert (
-            self.shots_dataset != None
+            self.shots_dataset
         ), "Example dataset is empty. Call load_benchmark."
 
         prompts = []
         for golden in goldens:
-            prompt: dict = MMLUTemplate.generate_output(
+            prompt = MMLUTemplate.generate_output(
                 train_set=self.shots_dataset,
                 input=golden.input,
                 task=task,
