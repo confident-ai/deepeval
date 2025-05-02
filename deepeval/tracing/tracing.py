@@ -517,9 +517,6 @@ class TraceManager:
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
-        print("---------span-----------------------")
-        print(span)
-        print("---------span-----------------------")
         # Determine span type
         if isinstance(span, AgentSpan):
             span_type = SpanApiType.AGENT
