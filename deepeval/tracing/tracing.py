@@ -80,7 +80,7 @@ class LlmAttributes(BaseModel):
     input: Union[str, List[Dict[str, str]]]
     # TODO: create an abstraction wrapper for tools
     tools: Optional[List[Dict]] = None
-    
+
     # output
     output: str
     prompt: Optional[Prompt] = None
@@ -156,7 +156,7 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-    model: str
+    model: Optional[str] = None
     attributes: Optional[LlmAttributes] = None
     cost_per_input_token: Optional[float] = Field(
         None, serialization_alias="costPerInputToken"
@@ -599,7 +599,7 @@ class TraceManager:
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals
             tools=tools,
-            tool_calls=tool_calls 
+            tool_calls=tool_calls,
         )
 
         # Add type-specific attributes
@@ -639,6 +639,8 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+        llm_provider: Optional[str] = None,
+        client: Optional[Any] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -662,8 +664,12 @@ class Observer:
             self.name if span_type is None else span_type
         )
 
+        self.llm_provider = llm_provider
+        self.client = client
+
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
+        self.patch_client(self.client, self.llm_provider)
         self.start_time = perf_counter()
 
         # Get the current span from the context
@@ -831,6 +837,105 @@ class Observer:
             current_span.input = self.function_kwargs
             current_span.output = self.result
 
+    def patch_client(self, client, llm_provider):
+        if not client or not llm_provider:
+            return
+
+        original_methods = {}
+
+        if llm_provider == "openai":
+            methods_to_patch = [
+                "chat.completions.create",
+                "beta.chat.completions.parse",
+            ]
+
+            for method_path in methods_to_patch:
+                # Split the path into components
+                parts = method_path.split(".")
+                current_obj = client
+
+                # Navigate to the parent object
+                for part in parts[:-1]:
+                    if not hasattr(current_obj, part):
+                        print(
+                            f"Warning: Cannot find {part} in the path {method_path}"
+                        )
+                        continue
+                    current_obj = getattr(current_obj, part)
+
+                method_name = parts[-1]
+                if not hasattr(current_obj, method_name):
+                    print(
+                        f"Warning: Cannot find method {method_name} in the path {method_path}"
+                    )
+                    continue
+
+                method = getattr(current_obj, method_name)
+
+                if callable(method) and not isinstance(method, type):
+                    original_methods[method_path] = method
+
+                    # Capture the current 'method' using a default argument
+                    @functools.wraps(method)
+                    def wrapped_method(*args, original_method=method, **kwargs):
+                        current_span = current_span_context.get()
+                        # call the original method using the captured default argument
+                        response = original_method(*args, **kwargs)
+                        if isinstance(current_span, LlmSpan):
+
+                            # extract output message
+                            output = None
+                            try:
+                                output = response.choices[0].message.content
+                            except Exception as e:
+                                pass
+
+                            # extract input output token counts
+                            input_token_count = None
+                            output_token_count = None
+                            try:
+                                input_token_count = response.usage.prompt_tokens
+                                output_token_count = (
+                                    response.usage.completion_tokens
+                                )
+                            except Exception as e:
+                                pass
+
+                            # extract tool calls
+                            tool_calls_dict = None
+                            try:
+                                tool_calls = response.choices[
+                                    0
+                                ].message.tool_calls
+                                if tool_calls:
+                                    tool_calls_dict = []
+                                    for tool_call in tool_calls:
+                                        tool_calls_dict.append(
+                                            tool_call.to_dict()
+                                        )
+                            except Exception as e:
+                                pass
+
+                            update_current_span_attributes(
+                                LlmAttributes(
+                                    input=kwargs.get(
+                                        "messages", "INPUT_MESSAGE_NOT_FOUND"
+                                    ),
+                                    output=(
+                                        output
+                                        if output
+                                        else "OUTPUT_MESSAGE_NOT_FOUND"
+                                    ),
+                                    input_token_count=input_token_count,
+                                    output_token_count=output_token_count,
+                                    tools=kwargs.get("tools", None),
+                                    tool_calls=tool_calls_dict,
+                                )
+                            )
+                        return response
+
+                    setattr(current_obj, method_name, wrapped_method)
+
 
 ########################################################
 ### Decorator ##########################################
@@ -840,6 +945,8 @@ class Observer:
 def observe(
     type: Union[Literal["agent", "llm", "retriever", "tool"], str, None],
     metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+    llm_provider: Optional[str] = None,
+    client: Optional[Any] = None,
     **observe_kwargs,
 ):
     """
@@ -875,6 +982,8 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
+                    llm_provider=llm_provider,
+                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function
@@ -903,6 +1012,8 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
+                    llm_provider=llm_provider,
+                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function
