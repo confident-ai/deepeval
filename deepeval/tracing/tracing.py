@@ -544,6 +544,8 @@ class TraceManager:
             if span.attributes:
                 input_data = span.attributes.input
                 output_data = span.attributes.output
+                tools = span.attributes.tools
+                tool_calls = span.attributes.tool_calls
         else:
             # For BaseSpan, Agent, or Tool types, use the standard logic
             input_data = span.input
@@ -596,6 +598,8 @@ class TraceManager:
             metrics=(
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals
+            tools=tools,
+            tool_calls=tool_calls 
         )
 
         # Add type-specific attributes
