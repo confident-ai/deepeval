@@ -107,7 +107,7 @@ class ContextGenerator:
                 )
                 source_files_to_chunk_collections_map[key] = collection
 
-            # Intialize progress bar for context generation
+            # Initialize progress bar for context generation
             num_contexts = sum(
                 min(max_contexts_per_source_file, collection.count())
                 for _, collection in source_files_to_chunk_collections_map.items()
@@ -202,7 +202,7 @@ class ContextGenerator:
                 *tasks, desc="✨ 📚 ✨ Chunking Documents"
             )
 
-            # Intialize progress bar for context generation
+            # Initialize progress bar for context generation
             num_contexts = sum(
                 min(max_contexts_per_source_file, collection.count())
                 for _, collection in source_files_to_chunk_collections_map.items()

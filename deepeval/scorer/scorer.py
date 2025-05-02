@@ -79,7 +79,7 @@ class Scorer:
             "bleu2",
             "bleu3",
             "bleu4",
-        ], "Invalud bleu_type. Options: 'bleu1', 'bleu2', 'bleu3', 'bleu4'"
+        ], "Invalid bleu_type. Options: 'bleu1', 'bleu2', 'bleu3', 'bleu4'"
         targets = [references] if isinstance(references, str) else references
         tokenized_targets = [word_tokenize(target) for target in targets]
         tokenized_prediction = word_tokenize(prediction)
@@ -220,7 +220,7 @@ class Scorer:
         Returns:
             float: The computed faithfulness score. Higher values indicate greater faithfulness to the target text.
 
-        Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfullness.
+        Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfulness.
         """
         try:
             from deepeval.models import SummaCModels
@@ -295,7 +295,7 @@ class Scorer:
         If model is 'unbiased', we get a dict with the same as keys as 'original', but
         along with `sexual_explicit`.
 
-        If the model is 'multilingual', we get a dict same as the unbiasd one.
+        If the model is 'multilingual', we get a dict same as the unbiased one.
         """
         try:
             from deepeval.models.detoxify_model import DetoxifyModel

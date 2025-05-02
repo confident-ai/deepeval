@@ -437,7 +437,7 @@ test_case = LLMTestCase(completion_time=7.53, ...)
 
 ## Create Your First `LLMTestCase`
 
-Since an `LLMTestCase` represents an [LLM interaction](#what-is-an-llm-interaction), you can either create `LLMTestCase`s for the overall LLM application (best for simplier systems), or for nested components within your system. Let’s take this LLM system as an example:
+Since an `LLMTestCase` represents an [LLM interaction](#what-is-an-llm-interaction), you can either create `LLMTestCase`s for the overall LLM application (best for simpler systems), or for nested components within your system. Let’s take this LLM system as an example:
 
 <div style={{textAlign: 'center', margin: "2rem 0"}}>
 
@@ -524,7 +524,7 @@ However, you'll notice that we're missing out on a lot of information in our LLM
 
 ### For Deeply Nested Components
 
-To evaluate an LLM interaction for a nested component, such as the **RAG Pipeline** in our `research_agent` example, involves adding `deepeval`'s `@observe` **decoraters** to your application, and setting the `LLMTestCase` at runtime instead. This is what it looks like:
+To evaluate an LLM interaction for a nested component, such as the **RAG Pipeline** in our `research_agent` example, involves adding `deepeval`'s `@observe` **decorators** to your application, and setting the `LLMTestCase` at runtime instead. This is what it looks like:
 
 ```python title="tracing_example.py"  showLineNumbers {26,35,40}
 from typing import List

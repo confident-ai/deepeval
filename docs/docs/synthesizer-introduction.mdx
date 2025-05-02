@@ -236,7 +236,7 @@ There are **TWO** optional parameters when creating an `EvolutionConfig`:
 
 `Evolution` is an `ENUM` that specifies the different data evolution techniques you wish to employ to make synthetic `Golden`s more realistic. `deepeval`'s `Synthesizer` supports 7 types of evolutions, which are randomly sampled based on a defined distribution. You can apply multiple evolutions to each `Golden`, and later access the evolution sequence through the `Golden`'s additional metadata field.
 
-If used for RAG evaluation: Note that some evolution techinques do not necessarily require that the evolved input can be answered from the context. Currently, only these 4 types of evolutions stick to the context: `Evolution.MULTICONTEXT`, `Evolution.CONCRETIZING`, `Evolution.CONSTRAINED` and `Evolution.COMPARATIVE`.
+If used for RAG evaluation: Note that some evolution techniques do not necessarily require that the evolved input can be answered from the context. Currently, only these 4 types of evolutions stick to the context: `Evolution.MULTICONTEXT`, `Evolution.CONCRETIZING`, `Evolution.CONSTRAINED` and `Evolution.COMPARATIVE`.
 
 ```python
 from deepeval.synthesizer import Evolution
@@ -332,7 +332,7 @@ In the **filtration** step, `input`s of generated goldens are subject to quality
   />
 </div>
 
-Any goldens that has a quality scores below the `synthetic_input_quality_threshold` will be re-generated. If the quality score still does not meet the required `synthetic_input_quality_threshold` after the allowed `max_quality_retries`, the most generation with the highest score is used. As a result, some generated `Goldens` in your final evaluation dataset may not meet the minimum input quality scores, but you will be guarenteed at least a golden regardless of its quality.
+Any goldens that has a quality scores below the `synthetic_input_quality_threshold` will be re-generated. If the quality score still does not meet the required `synthetic_input_quality_threshold` after the allowed `max_quality_retries`, the most generation with the highest score is used. As a result, some generated `Goldens` in your final evaluation dataset may not meet the minimum input quality scores, but you will be guaranteed at least a golden regardless of its quality.
 
 [Click here](#filtration-quality) to learn how to customize the `synthetic_input_quality_threshold` and `max_quality_retries` parameters.
 
@@ -370,7 +370,7 @@ As an example, a golden might take the following evolutionary route when `num_ev
 ### Styling
 
 :::tip
-This might be useful to you if for example you want to generate goldens in another languague, or have the `expected_output`s to be in SQL format for a text-sql use case.
+This might be useful to you if for example you want to generate goldens in another language, or have the `expected_output`s to be in SQL format for a text-sql use case.
 :::
 
 In the final **styling** step, the `input`s and `expected_outputs` of each golden are rewritten into the desired formats and styles if required. This can be configured by setting the `scenario`, `task`, `input_format`, and `expected_output_format` parameters, and `deepeval` will use what you have provided to style goldens tailored to your use case at the end of the generation pipeline to ensure all synthetic data makes sense to you.

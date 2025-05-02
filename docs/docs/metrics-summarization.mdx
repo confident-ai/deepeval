@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer referenceless={true} />
 
-The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the neccessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
+The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the necessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
 
 :::note
 The `SummarizationMetric` is the only default metric in `deepeval` that is not cacheable.
@@ -120,7 +120,7 @@ The `SummarizationMetric` score is calculated according to the following equatio
 To break it down, the:
 
 - `alignment_score` determines whether the summary contains hallucinated or contradictory information to the original text.
-- `coverage_score` determines whether the summary contains the neccessary information from the original text.
+- `coverage_score` determines whether the summary contains the necessary information from the original text.
 
 While the `alignment_score` is similar to that of the [`HallucinationMetric`](/docs/metrics-hallucination), the `coverage_score` is first calculated by generating `n` closed-ended questions that can only be answered with either a 'yes or a 'no', before calculating the ratio of which the original text and summary yields the same answer. [Here is a great article](https://www.confident-ai.com/blog/a-step-by-step-guide-to-evaluating-an-llm-text-summarization-task) on how `deepeval`'s summarization metric was build.
 

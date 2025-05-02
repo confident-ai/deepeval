@@ -4,7 +4,7 @@ title: Running an Evaluation
 sidebar_label: Running an Evaluation
 ---
 
-With our merics chosen, we can finally begin running evaluations. In order to do so, we'll need to **construct a dataset** with the documents we want to summarize and generate summaries for them using our LLM summarizer. This will allow us to directly apply our metrics to the dataset when running evaluations.
+With our metrics chosen, we can finally begin running evaluations. In order to do so, we'll need to **construct a dataset** with the documents we want to summarize and generate summaries for them using our LLM summarizer. This will allow us to directly apply our metrics to the dataset when running evaluations.
 
 :::caution important
 You'll want to login to Confident AI before running an evaluation to **save our evaluation results** and easily **analyze them** in a report format.
@@ -98,7 +98,7 @@ The `evaluate` function offers flexible customization for how you want to run ev
 Once your evaluation is complete, you'll be redirected to the test cases page on Confident AI, which will display the evaluation report for the 5 document summaries we generated.
 
 :::info
-Each **test case** includes a status (pass or fail), input (document), and actual output (summary). A test case is considered failling if any one of its metric score fails to meet the metric threshold.
+Each **test case** includes a status (pass or fail), input (document), and actual output (summary). A test case is considered failing if any one of its metric score fails to meet the metric threshold.
 :::
 
 ### Identifying the Failing Test Case

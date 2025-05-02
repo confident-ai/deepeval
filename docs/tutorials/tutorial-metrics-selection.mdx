@@ -58,7 +58,7 @@ Our final metric will address Criterion 3, focusing on evaluating our chatbot's 
 Criterion 3: The chatbot should provide clear, respectful, and professional responses.
 ```
 
-Since `deepeval` doesn't natively support this evaluation criteria, we'll need to define our own custom `Professionalism` metric using `deepeval`'s custom metric [`G-Eval`](/docs/metrics-llm-evals), and that's OK. Defining custom metrics is nothing to be afriad of, and while `deepeval` offers a tons of default metrics that are ready to use out-of-the-box there are often times more use case specific definitions of a metric that requires more customization.
+Since `deepeval` doesn't natively support this evaluation criteria, we'll need to define our own custom `Professionalism` metric using `deepeval`'s custom metric [`G-Eval`](/docs/metrics-llm-evals), and that's OK. Defining custom metrics is nothing to be afraid of, and while `deepeval` offers a tons of default metrics that are ready to use out-of-the-box there are often times more use case specific definitions of a metric that requires more customization.
 
 The professionalism metric here is a great example - what it means to be professional in one work setting can be drastically different from another and in our case, the custom professionalism metric we define will allow us to ensure that the chatbot maintains a professional tone typically expected in a medical setting.
 

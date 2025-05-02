@@ -376,16 +376,16 @@ class SummarizationMetric(BaseMetric):
         if len(original_answers) != len(summary_answers):
             raise ValueError("Number of verdicts generated does not equal.")
 
-        coverage_veridcts: List[SummarizationCoverageVerdict] = []
+        coverage_verdicts: List[SummarizationCoverageVerdict] = []
         for i in range(len(original_answers)):
-            coverage_veridcts.append(
+            coverage_verdicts.append(
                 SummarizationCoverageVerdict(
                     summary_verdict=summary_answers[i],
                     original_verdict=original_answers[i],
                     question=self.assessment_questions[i],
                 )
             )
-        return coverage_veridcts
+        return coverage_verdicts
 
     def _generate_coverage_verdicts(
         self, test_case: LLMTestCase
@@ -401,9 +401,9 @@ class SummarizationMetric(BaseMetric):
         if len(original_answers) != len(summary_answers):
             raise ValueError("Number of verdicts generated does not equal.")
 
-        coverage_veridcts: List[SummarizationCoverageVerdict] = []
+        coverage_verdicts: List[SummarizationCoverageVerdict] = []
         for i in range(len(original_answers)):
-            coverage_veridcts.append(
+            coverage_verdicts.append(
                 SummarizationCoverageVerdict(
                     summary_verdict=summary_answers[i],
                     original_verdict=original_answers[i],
@@ -411,7 +411,7 @@ class SummarizationMetric(BaseMetric):
                 )
             )
 
-        return coverage_veridcts
+        return coverage_verdicts
 
     async def _a_generate_alignment_verdicts(
         self,
@@ -421,7 +421,7 @@ class SummarizationMetric(BaseMetric):
 
         verdicts: List[SummarizationAlignmentVerdict] = []
         prompt = SummarizationTemplate.generate_alignment_verdicts(
-            summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
+            summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -452,7 +452,7 @@ class SummarizationMetric(BaseMetric):
 
         verdicts: List[SummarizationAlignmentVerdict] = []
         prompt = SummarizationTemplate.generate_alignment_verdicts(
-            summary_claims=self.claims, orignal_text="\n\n".join(self.truths)
+            summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)

@@ -258,7 +258,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 #############################################################
 
 # class RAGASNoiseSensitivityMetric(BaseMetric):
-#     """This metric checks the noise sentivity using Ragas"""
+#     """This metric checks the noise sensitivity using Ragas"""
 
 #     def __init__(
 #         self,
@@ -312,9 +312,9 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 #                 metrics=[NoiseSensitivity()],
 #                 llm=chat_model,
 #             )
-#             noise_sensitivty_score = scores["noise_sensitivity_relevant"][0]
-#             self.success = noise_sensitivty_score >= self.threshold
-#             self.score = noise_sensitivty_score
+#             noise_sensitivity_score = scores["noise_sensitivity_relevant"][0]
+#             self.success = noise_sensitivity_score >= self.threshold
+#             self.score = noise_sensitivity_score
 #             return self.score
 
 #     def is_successful(self):

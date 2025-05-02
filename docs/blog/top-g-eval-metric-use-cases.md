@@ -54,7 +54,7 @@ As described in the original G-Eval paper, DeepEval uses the provided `criteria`
 
 Users use DeepEval for their G-Eval implementation is because it abstracts away much of the boilerplate and complexity involved in building an evaluation framework from scratch. For example, DeepEval automatically handles the normalization of the final G-Eval score by calculating a weighted summation of the probabilities of the LLM judge's output tokens, as stated in the original G-Eval paper.
 
-Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows users to run G-Eval with any LLM judge they prefer, without additional setup, is optimized for speed through concurrent execution of metrics, offers results caching, erroring handling, integration with CI/CD pipelines through Pytest, is integrated with platforms like Confident AI, and has other metrics such as DAG (more on this later) that users can incorperate G-Eval in.
+Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows users to run G-Eval with any LLM judge they prefer, without additional setup, is optimized for speed through concurrent execution of metrics, offers results caching, erroring handling, integration with CI/CD pipelines through Pytest, is integrated with platforms like Confident AI, and has other metrics such as DAG (more on this later) that users can incorporate G-Eval in.
 
 ## Answer Correctness
 
@@ -312,13 +312,13 @@ DAG-based metrics are composed of nodes that form an evaluation directed acyclic
 - **Task Node** – Transforms or preprocesses the `LLMTestCase` into the desired format for evaluation. For example, extracting fields from a JSON output.
 - **Binary Judgement Node** – Evaluates a yes/no criterion and returns `True` or `False`. Perfect for checks like “Is the signature line present?”
 - **Non-Binary Judgement Node** – Allows more nuanced scoring (e.g. 0–1 scale or class labels) for criteria that aren't binary. Useful for partially correct outputs or relevance scoring.
-- **Verdic Node** – A required leaf node that consolidates all upstream logic and determines the final metric score based on the path taken through the graph.
+- **Verdict Node** – A required leaf node that consolidates all upstream logic and determines the final metric score based on the path taken through the graph.
 
 Unlike G-Eval, DAG evaluates each condition explicitly and independently, offering fine-grained control over scoring. It’s ideal for complex tasks like _code generation_ or _document formatting_.
 
 ### Example
 
-A **DAG** handles the above use case determinisitically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `actual_output` is as a sales email.
+A **DAG** handles the above use case deterministically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `actual_output` is as a sales email.
 
 Here is an example of a G-Eval + DAG approach:
 

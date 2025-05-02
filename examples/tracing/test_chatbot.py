@@ -81,7 +81,7 @@
 #         "Be at least 35 years old.",
 #         "Have been a resident of the United States for 14 years.",
 #     ]
-#     input = "What are the requirments to be president?"
+#     input = "What are the requirements to be president?"
 
 #     metric = HallucinationMetric(threshold=0.8)
 #     test_case = LLMTestCase(

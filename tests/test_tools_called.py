@@ -61,7 +61,7 @@ dataset = EvaluationDataset(test_cases=[tool_test_case])
 # print(dataset)
 
 ################################################
-# Evalutae #####################################
+# Evaluate #####################################
 ################################################
 
 # evaluate([tool_test_case], metrics=[tool_correctness_metric, tool_correctness_geval_metric])

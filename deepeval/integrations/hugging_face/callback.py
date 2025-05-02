@@ -117,7 +117,7 @@ try:
             **kwargs,
         ):
             """
-            Event triggered at the begining of each training epoch.
+            Event triggered at the beginning of each training epoch.
             """
             self.epoch_counter += 1
 
@@ -215,7 +215,7 @@ try:
             **kwargs,
         ):
             """
-            Event triggered at the begining of model training.
+            Event triggered at the beginning of model training.
             """
             self.rich_manager.start()
             self.rich_manager.change_spinner_text(

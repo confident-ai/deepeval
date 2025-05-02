@@ -38,7 +38,7 @@ You'll also need to supply any additional arguments such as `expected_output` an
 
 ## Complete Walkthrough
 
-In this walkthough, we'll write a custom `DAGMetric` to see whether our LLM application has summarized meeting transcripts in the correct format. Let's say here are our criteria, in plain english:
+In this walkthrough, we'll write a custom `DAGMetric` to see whether our LLM application has summarized meeting transcripts in the correct format. Let's say here are our criteria, in plain english:
 
 - The summary of meeting transcripts should contain the "intro", "body", and "conclusion" headings.
 - The summary of meeting transcripts should present the "into", "body", and "conclusion" headings in the correct order.
@@ -130,7 +130,7 @@ We can see that our decision tree involves **involves four types of nodes**:
 Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `actual_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode`s.
 
 :::note
-Some might skeptical if this complexity is necessary but in reality, you'll quickly realize that the more processing you do, the more deterministic your evaluation gets. You can of course combine the correctness and ordering of the summary headings in one step, but as your crtieria gets more complicated, your evaluation model is likely to hallucinate more and more.
+Some might skeptical if this complexity is necessary but in reality, you'll quickly realize that the more processing you do, the more deterministic your evaluation gets. You can of course combine the correctness and ordering of the summary headings in one step, but as your criteria gets more complicated, your evaluation model is likely to hallucinate more and more.
 :::
 
 ### Implementing DAG In Code
@@ -322,7 +322,7 @@ class VerdictNode(BaseNode):
 There are **ONE** mandatory **TWO** optional parameters when creating a `VerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is a `NonBinaryJudgementNode`, else boolean if the parent is a `BinaryJudgementNode`.
-- [Optional] `score`: a integar between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
+- [Optional] `score`: a integer between 0 - 10 that determines the final score of your `DAGMetric` based on the specified `verdict` value. You must provide a score if `g_eval` is `None`.
 - [Optional] `child`: a `BaseNode` **OR** any [`BaseMetric`](/docs/metrics-introduction), including [`GEval`](/docs/metrics-llm-evals) metric instances. If the `score` is not provided, the `DAGMetric` will use this provided `child` to run the provided `BaseMetric` instance to calculate a score, **OR** propagate the DAG execution to the `BaseNode` `child`.
 
 :::caution

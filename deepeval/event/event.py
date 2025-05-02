@@ -20,7 +20,7 @@ def track(
     ] = None,
     hyperparameters: Optional[Dict[str, str]] = {},
     fail_silently: Optional[bool] = False,
-    raise_expection: Optional[bool] = True,
+    raise_exception: Optional[bool] = True,
     trace_stack: Optional[Dict[str, Any]] = None,
     trace_provider: Optional[str] = None,
 ) -> str:
@@ -41,7 +41,7 @@ def track(
         additional_data=additional_data,
         hyperparameters=hyperparameters,
         fail_silently=fail_silently,
-        raise_expection=raise_expection,
+        raise_exception=raise_exception,
         trace_stack=trace_stack,
         trace_provider=trace_provider,
     )

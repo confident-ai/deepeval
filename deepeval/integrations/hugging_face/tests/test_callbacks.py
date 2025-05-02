@@ -95,7 +95,7 @@ if __name__ == "__main__":
     # initialize tokenizer
     tokenizer = T5Tokenizer.from_pretrained("google/flan-t5-small")
 
-    # initalize model
+    # initialize model
     model = T5ForConditionalGeneration.from_pretrained("google/flan-t5-small")
     model.resize_token_embeddings(len(tokenizer))
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     )
     metrics = [hallucination_metric, answer_relevancy_metric]
 
-    # initalize DeepEvalHuggingFaceCallback
+    # initialize DeepEvalHuggingFaceCallback
     callback = DeepEvalHuggingFaceCallback(
         metrics=metrics,
         evaluation_dataset=eval_dataset,

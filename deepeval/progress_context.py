@@ -10,7 +10,7 @@ import sys
 
 from deepeval.telemetry import (
     capture_synthesizer_run,
-    capture_conversation_simulatior_run,
+    capture_conversation_simulator_run,
 )
 
 
@@ -70,7 +70,7 @@ def conversation_simulator_progress_context(
     async_mode: bool = False,
     progress_bar: Optional[tqdm.std.tqdm] = None,
 ) -> Generator[Optional[tqdm.std.tqdm], None, None]:
-    with capture_conversation_simulatior_run(num_conversations):
+    with capture_conversation_simulator_run(num_conversations):
         description = f"🪄 Simulating {num_conversations} conversational test case(s) using DeepEval (using {simulator_model})"
 
         if not progress_bar:

@@ -75,7 +75,7 @@ Prompt template-based metrics aren’t research-backed, offer limited control, a
 
 ### Metrics
 
-Langfuse allows users to create custom metrics using prompt templates but doesn't provide out-of-the-box metrics. This means you can use any prompt template to calculate metrics, but it also means that the metrics are research-backed, and don't give you granualr score control.
+Langfuse allows users to create custom metrics using prompt templates but doesn't provide out-of-the-box metrics. This means you can use any prompt template to calculate metrics, but it also means that the metrics are research-backed, and don't give you granular score control.
 
 <FeatureComparisonTable type="langfuse::metrics" competitor="Langfuse" />
 

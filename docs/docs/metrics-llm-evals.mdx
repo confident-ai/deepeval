@@ -111,7 +111,7 @@ The G-Eval algorithm first generates a series of evaluation steps for chain of t
 
 After generating a series of evaluation steps, G-Eval will:
 
-1. Create prompt by concatenating the evaluation steps with all the paramters in an `LLMTestCase` that is supplied to `evaluation_params`.
+1. Create prompt by concatenating the evaluation steps with all the parameters in an `LLMTestCase` that is supplied to `evaluation_params`.
 2. At the end of the prompt, ask it to generate a score between 1–5, where 5 is better than 1.
 3. Take the probabilities of the output tokens from the LLM to normalize the score and take their weighted summation as the final result.
 

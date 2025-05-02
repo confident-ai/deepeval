@@ -73,7 +73,7 @@ Arize AI's Phoenix product is most known for LLM monitoring and tracing, where t
 ### Key differences
 
 1. **LLM evaluation focus**: DeepEval is purpose-built for LLM evaluation with native support for RAG, chatbot, agentic experimentation, with synthetic data generation capabilities, whereas Arize AI is a broader LLM observability platform that is better for one-off debugging via tracing.
-2. **Evalution metrics**: DeepEval provides reliable, customizable, and deterministic evaluation metrics built specifically for LLMs, whereas Arize's metrics is more for surface-level insight; helpful to glance at, but can't rely on 100%.
+2. **Evaluation metrics**: DeepEval provides reliable, customizable, and deterministic evaluation metrics built specifically for LLMs, whereas Arize's metrics is more for surface-level insight; helpful to glance at, but can't rely on 100%.
 3. **Scales to safety testing**: DeepEval scales seamlessly into safety-critical use cases like red teaming through attack simulations, while Arize lacks the depth needed to support structured safety workflows out of the box.
 
 ### What people like about Arize
@@ -103,7 +103,7 @@ Promptfoo is known for being focused on security testing and red teaming for LLM
 
 1. **Breadth of metrics:** DeepEval supports a wide range (60+) of metrics across prompt, RAG, chatbot, and safety testing, while Promptfoo is limited to basic RAG and safety metrics.
 2. **Developer experience:** DeepEval offers a clean, code-first experience with intuitive APIs, whereas Promptfoo relies heavily on YAML files and plugin-based abstractions, which can feel rigid and unfriendly to developers.
-3. **More comprehensive platform**: DeepEval is 100% integrated with Confident AI, which is a full-fledged evaluation platform with support for regression testing, test case management, observability, and red teaming, while Promptfoo is a minimal tool focused mainly on generating risk assesments on red teaming results.
+3. **More comprehensive platform**: DeepEval is 100% integrated with Confident AI, which is a full-fledged evaluation platform with support for regression testing, test case management, observability, and red teaming, while Promptfoo is a minimal tool focused mainly on generating risk assessments on red teaming results.
 
 ### What people like about Promptfoo
 

@@ -20,7 +20,7 @@ It provides a score to holistically evaluate of your RAG pipeline's generator an
 :::info WHAT'S THE DIFFERENCE?
 The `RAGASMetric` uses the `ragas` library under the hood and are available on `deepeval` with the intention to allow users of `deepeval` can have access to `ragas` in `deepeval`'s ecosystem as well. They are implemented in an almost identical way to `deepeval`'s default RAG metrics. However there are a few differences, including but not limited to:
 
-- `deepeval`'s RAG metrics generates a reason that corresponds to the score equation. Although both `ragas` and `deepeval` has equations attached to their default metrics, `deepeval` incorperates an LLM judges' reasoning along the way.
+- `deepeval`'s RAG metrics generates a reason that corresponds to the score equation. Although both `ragas` and `deepeval` has equations attached to their default metrics, `deepeval` incorporates an LLM judges' reasoning along the way.
 - `deepeval`'s RAG metrics are debuggable - meaning you can inspect the LLM judges' judgements along the way to see why the score is a certain way.
 - `deepeval`'s RAG metrics are JSON confineable. You'll often meet `NaN` scores in `ragas` because of invalid JSONs generated - but `deepeval` offers a way for you to use literally any custom LLM for evaluation and [JSON confine them in a few lines of code.](/guides/guides-using-custom-llms)
 - `deepeval`'s RAG metrics integrates **fully** with `deepeval`'s ecosystem. This means you'll get access to metrics caching, native support for `pytest` integrations, first-class error handling, available on Confident AI, and so much more.

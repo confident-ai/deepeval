@@ -34,14 +34,14 @@ pip install deepteam
 ```
 
 ```python
-from deepteam.attaks.single_turn import PromptInjection
+from deepteam.attacks.single_turn import PromptInjection
 from deepteam.attacks.multi_turn import LinearJailbreaking
 from deepteam import red_team
 
 prompt_injection = PromptInjection()
-linaer_jailbreaking = LinearJailbreaking()
+linear_jailbreaking = LinearJailbreaking()
 
-risk_assessment = red_team(attacks=[prompt_injection, linaer_jailbreaking], model_callback=..., vulnerabilities=...)
+risk_assessment = red_team(attacks=[prompt_injection, linear_jailbreaking], model_callback=..., vulnerabilities=...)
 ```
 
 You can read how to use adversarial attacks on [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-adversarial-attacks)

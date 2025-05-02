@@ -751,7 +751,7 @@
 #         ), f"expected Mapping, found {type(metadata)}"
 #         if session_id := (
 #             metadata.get("langchain_session_id")
-#             or metadata.get("langchain_converation_id")
+#             or metadata.get("langchain_conversation_id")
 #             or metadata.get("langchain_thread_id")
 #         ):
 #             yield "session_id", session_id

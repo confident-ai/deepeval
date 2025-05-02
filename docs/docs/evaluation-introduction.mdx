@@ -101,7 +101,7 @@ dataset.evaluate([answer_relevancy_metric])
 ```
 
 :::note
-You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](/docs/evaluation-test-cases#assert-a-test-case) to learn how to assert inidividual test cases.
+You don't need to create an evaluation dataset to evaluate individual test cases. Visit the [test cases section](/docs/evaluation-test-cases#assert-a-test-case) to learn how to assert individual test cases.
 :::
 
 ## Synthesizer
@@ -132,7 +132,7 @@ Although `deepeval` integrates with Pytest, we highly recommend you to **AVOID**
 
 `deepeval` allows you to run evaluations as if you're using Pytest via our Pytest integration. Simply create a test file:
 
-```python titile="test_example.py"
+```python title="test_example.py"
 from deepeval import assert_test
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -221,7 +221,7 @@ def complete(query: str):
 
 This is very useful especially if you:
 
-- Want to run a different set of metrics on differnet components
+- Want to run a different set of metrics on different components
 - Wish to evaluate multiple components at once
 - Don't want to rewrite your codebase just to bubble up returned variables to create an `LLMTestCase`
 

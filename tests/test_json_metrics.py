@@ -262,7 +262,7 @@ g_eval = GEval(
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
         "Response should be concise",
-        "Reponse should read easily",
+        "Response should read easily",
     ],
     verbose_mode=True,
     threshold=0.5,
@@ -273,7 +273,7 @@ g_eval_non_confine = GEval(
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
         "Response should be concise",
-        "Reponse should read easily",
+        "Response should read easily",
     ],
     verbose_mode=True,
     threshold=0.5,
@@ -284,7 +284,7 @@ g_eval_confine = GEval(
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
         "Response should be concise",
-        "Reponse should read easily",
+        "Response should read easily",
     ],
     verbose_mode=True,
     threshold=0.5,

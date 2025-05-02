@@ -402,7 +402,7 @@ class BinaryJudgementNode(BaseNode):
 
             if not isinstance(child.verdict, bool):
                 raise ValueError(
-                    "All children BinaryJudgementNode must have a boolean vedict."
+                    "All children BinaryJudgementNode must have a boolean verdict."
                 )
 
         # Check if there is one True and one False classification

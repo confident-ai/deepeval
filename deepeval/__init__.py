@@ -59,7 +59,7 @@ def check_for_update():
             # when pypi servers go down
             pass
     except ModuleNotFoundError:
-        # they're just getting the versione
+        # they're just getting the versions
         pass
 
 

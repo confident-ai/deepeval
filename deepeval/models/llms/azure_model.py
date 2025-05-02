@@ -27,7 +27,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
         model_name: Optional[str] = None,
-        deploynment_name: Optional[str] = None,
+        deployment_name: Optional[str] = None,
         azure_openai_api_key: Optional[str] = None,
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
@@ -39,7 +39,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         model_name = model_name or KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_MODEL_NAME
         )
-        self.deploynment_name = deploynment_name or KEY_FILE_HANDLER.fetch_data(
+        self.deployment_name = deployment_name or KEY_FILE_HANDLER.fetch_data(
             KeyValues.AZURE_DEPLOYMENT_NAME
         )
         self.azure_openai_api_key = (
@@ -271,12 +271,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.deploynment_name,
+                azure_deployment=self.deployment_name,
             )
         else:
             return AsyncAzureOpenAI(
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.deploynment_name,
+                azure_deployment=self.deployment_name,
             )

@@ -89,7 +89,7 @@ You can increase the complexity of the generated goldens by configuring the **ev
 
 ### Additional Customizations
 
-It's also important to be exploring additional styling configurations when generating your datasets. Using multiple styling configurations allows you to generate a truly **diverse dataset** that is not only comprehensvie but also captures edge cases.
+It's also important to be exploring additional styling configurations when generating your datasets. Using multiple styling configurations allows you to generate a truly **diverse dataset** that is not only comprehensive but also captures edge cases.
 
 #### Ambiguous Inputs
 
@@ -139,7 +139,7 @@ synthesizer = Synthesizer(filtration_config=filtration_config)
 You might want to push different evaluation datasets for various configurations to the platform. To do so, simply push the new dataset under a different name:
 
 ```python
-dataest.push(alias="Ambiguous Synthetic Test")
+dataset.push(alias="Ambiguous Synthetic Test")
 ```
 
 ## Generating Synthetic Data Without Context
@@ -242,7 +242,7 @@ To inspect the goldens individually, click on the dataset you're interested in r
   />
 </div>
 
-Examining this interaction, you’ll notice that the chatbot’s expected output isn’t ideal. Although it addresses the user, it suggests “steps” that are actually questions rather than actionable guidance, which reads a little bit odd within the context of the iteraction.
+Examining this interaction, you’ll notice that the chatbot’s expected output isn’t ideal. Although it addresses the user, it suggests “steps” that are actually questions rather than actionable guidance, which reads a little bit odd within the context of the interaction.
 
 :::info
 Generating a dataset and reviewing these test cases can inspire new ideas for **evaluation criteria and metrics** to include in your workflow.  

@@ -6,13 +6,13 @@ class Statements(BaseModel):
     statements: List[str]
 
 
-class AnswerRelvancyVerdict(BaseModel):
+class AnswerRelevancyVerdict(BaseModel):
     verdict: str
     reason: Optional[str] = Field(default=None)
 
 
 class Verdicts(BaseModel):
-    verdicts: List[AnswerRelvancyVerdict]
+    verdicts: List[AnswerRelevancyVerdict]
 
 
 class Reason(BaseModel):

@@ -105,7 +105,7 @@ JSON:
     @staticmethod
     def generate_reason(score, incompletenesses, intentions):
         return f"""Below is a list of incompletenesses drawn from some messages in a conversation, which you have minimal knowledge of. It is a list of strings explaining why an LLM 'actual_output' is incomplete to satisfy the user `input` for a particular message.
-Given the completelness score, which is a 0-1 score indicating how incompletle the OVERALL `actual_output`s are to the user intentions found in the `input`s of a conversation (higher the better), CONCISELY summarize the incompletenesses to justify the score. 
+Given the completeness score, which is a 0-1 score indicating how incomplete the OVERALL `actual_output`s are to the user intentions found in the `input`s of a conversation (higher the better), CONCISELY summarize the incompletenesses to justify the score. 
 
 ** 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
@@ -116,7 +116,7 @@ Example JSON:
 
 Always quote information that are cited from messages in the incompletenesses in your final reason.
 You should NOT mention incompletenesses in your reason, and make the reason sound convincing.
-You should mention LLM response instead of `actual_output`, and User isntead of `input`.
+You should mention LLM response instead of `actual_output`, and User instead of `input`.
 Always refer to user intentions, but meet it minimal and phrase it in your own words. Explain which are met with supporting reason from the provided incompletenesses.
 Be sure in your reason, as if you know what the `actual_output`s from messages in a conversation is from the incompletenesses.
 **

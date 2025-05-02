@@ -103,7 +103,7 @@ There are two types of custom metrics, with varying degree of deterministicity:
 - [G-Eval](/docs/metrics-llm-evals)
 - [DAG](/docs/metrics-dag)
 
-The DAG metric is a decision-tree based LLM-evaluated metric, and is currently the most versitile metric `deepeval` has to offer. However, G-Eval is also extremely competent and takes no effort at all to setup so we recommend everyone to start with G-Eval and move to DAG if there's a need for it.
+The DAG metric is a decision-tree based LLM-evaluated metric, and is currently the most versatile metric `deepeval` has to offer. However, G-Eval is also extremely competent and takes no effort at all to setup so we recommend everyone to start with G-Eval and move to DAG if there's a need for it.
 
 :::tip
 
@@ -111,7 +111,7 @@ If your evaluation criteria is more subjective (e.g. answer "correctness", coher
 
 :::
 
-You can also inhert a `BaseMetric` class to create your own custom metric. They are extremely easy to create and almost 10% of all metrics ran using `deepeval` are self-built metrics.
+You can also inherit a `BaseMetric` class to create your own custom metric. They are extremely easy to create and almost 10% of all metrics ran using `deepeval` are self-built metrics.
 
 ### Generic Metrics
 
@@ -155,7 +155,7 @@ When deciding which metrics to use, it is very tempting to evaluate everything (
 If you feel extreme pain and struggle when trying to cut down on your metric selection, especially for generic ones, you're on the right track. The goal is to force yourself to prioritize and clearly define your evaluation criteria. This will not only help you use `deepeval`, but also help you understand what you care most about in your LLM application.
 
 :::note
-In some cases, where your LLM model is doing most of the heavy lifting (e.g. drafting documents, summarizers), it is not uncommon for there to be more use case targetted metric than system targetted ones.
+In some cases, where your LLM model is doing most of the heavy lifting (e.g. drafting documents, summarizers), it is not uncommon for there to be more use case targeted metric than system targeted ones.
 :::
 
 <div style={{textAlign: 'center', margin: "1rem 0"}}>
@@ -210,19 +210,19 @@ To use OpenAI for `deepeval`'s LLM metrics, supply your `OPENAI_API_KEY` in the 
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-Alternatively, if you're working in a notebook enviornment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+Alternatively, if you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
 
 ```bash
 %env OPENAI_API_KEY=<your-openai-api-key>
 ```
 
 :::note
-Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if you're working in a notebook enviornment.
+Please **do not include** quotation marks when setting your `OPENAI_API_KEY` if you're working in a notebook environment.
 :::
 
 ### Azure OpenAI
 
-`deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` enviornment to use Azure OpenAI for **all** LLM-based metrics.
+`deepeval` also allows you to use Azure OpenAI for metrics that are evaluated using an LLM. Run the following command in the CLI to configure your `deepeval` environment to use Azure OpenAI for **all** LLM-based metrics.
 
 ```bash
 deepeval set-azure-openai \
@@ -367,7 +367,7 @@ While the Azure OpenAI command configures `deepeval` to use Azure OpenAI globall
 :::
 
 :::caution
-We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputing responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
+We **CANNOT** guarantee that evaluations will work as expected when using a custom model. This is because evaluation requires high levels of reasoning and the ability to follow instructions such as outputting responses in valid JSON formats. [**To better enable custom LLMs output valid JSONs, read this guide**](/guides/guides-using-custom-llms).
 
 Alternatively, if you find yourself running into JSON errors and would like to ignore it, use the [`-c` and `-i` flag during `deepeval test run`](/docs/evaluation-running-llm-evals#flags-for-deepeval-test-run):
 
