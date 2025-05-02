@@ -83,6 +83,8 @@ class BaseApiSpan(BaseModel):
     cost_per_output_token: Optional[float] = Field(
         None, alias="costPerOutputToken"
     )
+    tool_calls: Optional[List[Dict]] = None
+    tools: Optional[List[Dict]] = None
 
     ## evals
     span_test_case: Optional[SpanTestCase] = Field(None, alias="spanTestCase")
