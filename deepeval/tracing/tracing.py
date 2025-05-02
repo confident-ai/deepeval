@@ -78,9 +78,13 @@ class AgentAttributes(BaseModel):
 class LlmAttributes(BaseModel):
     # input
     input: Union[str, List[Dict[str, str]]]
+    # TODO: create an abstraction wrapper for tools
+    tools: Optional[List[Dict]] = None
+    
     # output
     output: str
     prompt: Optional[Prompt] = None
+    # TODO: create an abstraction wrapper for output tools
     tool_calls: Optional[List[Dict]] = None
 
     # Optional variables
@@ -513,6 +517,9 @@ class TraceManager:
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
+        print("---------span-----------------------")
+        print(span)
+        print("---------span-----------------------")
         # Determine span type
         if isinstance(span, AgentSpan):
             span_type = SpanApiType.AGENT
