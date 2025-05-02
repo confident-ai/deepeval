@@ -14,7 +14,6 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union
 from pydantic import BaseModel, Field
 from rich.console import Console
 
-
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
@@ -78,10 +77,11 @@ class AgentAttributes(BaseModel):
 
 class LlmAttributes(BaseModel):
     # input
-    input: str
+    input: Union[str, List[Dict[str, str]]]
     # output
     output: str
     prompt: Optional[Prompt] = None
+    tool_calls: Optional[List[Dict]] = None
 
     # Optional variables
     input_token_count: Optional[int] = Field(
