@@ -60,7 +60,7 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self.model_name
 
     def load_model(self, async_mode: bool):
-        if async_mode == False:
+        if not async_mode:
             return OpenAI(api_key=self._openai_api_key)
-        else:
-            return AsyncOpenAI(api_key=self._openai_api_key)
+
+        return AsyncOpenAI(api_key=self._openai_api_key)

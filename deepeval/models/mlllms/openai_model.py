@@ -14,7 +14,7 @@ from tenacity import (
 
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
-
+from deepeval.models.utils import get_actual_model_name
 
 retryable_exceptions = (
     openai.RateLimitError,
@@ -88,7 +88,8 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         model_name = None
         if isinstance(model, str):
             model_name = model
-            if model_name not in valid_multimodal_gpt_models:
+            actual_model_name = get_actual_model_name(model_name)
+            if actual_model_name not in valid_multimodal_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available Multimodal GPT models: {', '.join(model for model in valid_multimodal_gpt_models)}"
                 )
@@ -98,7 +99,8 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         self._openai_api_key = _openai_api_key
         self.args = args
         self.kwargs = kwargs
-        self.model_name = model_name
+
+        super().__init__(model_name, *args, **kwargs)
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -119,9 +121,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         )
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        total_cost = self.calculate_cost(
-            input_tokens, output_tokens, self.model_name
-        )
+        total_cost = self.calculate_cost(input_tokens, output_tokens)
         generated_text = response.choices[0].message.parsed
         return generated_text, total_cost
 
@@ -144,9 +144,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         )
         input_tokens = response.usage.prompt_tokens
         output_tokens = response.usage.completion_tokens
-        total_cost = self.calculate_cost(
-            input_tokens, output_tokens, self.model_name
-        )
+        total_cost = self.calculate_cost(input_tokens, output_tokens)
         generated_text = response.choices[0].message.parsed
         return generated_text, total_cost
 
@@ -158,7 +156,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
             if isinstance(ele, str):
                 prompt.append({"type": "text", "text": ele})
             elif isinstance(ele, MLLMImage):
-                if ele.local == True:
+                if ele.local:
                     import PIL.Image
 
                     image = PIL.Image.open(ele.url)
@@ -180,11 +178,9 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     # Utilities
     ###############################################
 
-    def calculate_cost(
-        self, input_tokens: int, output_tokens: int, model_name: str
-    ) -> float:
+    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = model_pricing.get(
-            model_name, model_pricing["gpt-4o"]
+            self.actual_model_name, model_pricing["gpt-4o"]
         )  # Default to 'gpt-4o' if model not found
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
