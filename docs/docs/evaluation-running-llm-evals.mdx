@@ -86,8 +86,6 @@ def complete(query: str):
 Each metric in `metrics` is evaluated using exactly the same algorithm, require the same `LLMTestCase` parameters, and with the same configurations, as you would expect when running evaluations without tracing.
 :::
 
-### Terminologies
-
 There are two terminologies you need to know before setting up tracing:
 
 - **Trace:** The overall execution flow of your LLM application
@@ -127,7 +125,7 @@ Although the `metrics` parameter is optional, to run an evaluation you **MUST**:
 
 If you simply decorate your LLM application with `@observe` and don't supply any arguments, nothing will happen at all. The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://documentation.confident-ai.com/llm-observability/llm-tracing), and not necessarily run evaluations on individual components.
 
-:::tip
+:::note
 
 For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
 
