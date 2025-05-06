@@ -1,9 +1,14 @@
 from typing import Optional, List
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import time
-import re
 
-from deepeval.prompt.api import PromptHttpResponse, PromptMessage, PromptType
+from deepeval.prompt.api import (
+    PromptHttpResponse,
+    PromptMessage,
+    PromptType,
+    PromptInterpolationType,
+)
+from deepeval.prompt.utils import interpolate_text
 from deepeval.utils import is_confident
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 
@@ -11,12 +16,13 @@ from deepeval.confident.api import Api, Endpoints, HttpMethods
 class Prompt:
     _prompt_version_id: Optional[str] = None
     _type: Optional[PromptType] = None
+    _interpolation_type: Optional[PromptInterpolationType] = None
 
     def __init__(
         self,
         alias: Optional[str] = None,
         template: Optional[str] = None,
-        message_templates: Optional[List[PromptMessage]] = None,
+        messages_template: Optional[List[PromptMessage]] = None,
     ):
         if alias is None and template is None:
             raise TypeError(
@@ -24,33 +30,32 @@ class Prompt:
             )
 
         self.alias = alias
-        self.template = template
-        self.message_templates = message_templates
+        self._text_template = template
+        self._messages_template = messages_template
         self.version = None
 
     def interpolate(self, **kwargs):
         if self._type == PromptType.TEXT:
-            if self.template is None:
+            if self._text_template is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
-            formatted_template = re.sub(
-                r"\{\{ (\w+) \}\}", r"{\1}", self.template
+            return interpolate_text(
+                self._interpolation_type, self._text_template, **kwargs
             )
-            return formatted_template.format(**kwargs)
+
         elif self._type == PromptType.LIST:
-            if self.message_templates is None:
+            if self._messages_template is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template messages. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
             interpolated_messages = []
-            for message in self.message_templates:
-                formatted_content = re.sub(
-                    r"\{\{ (\w+) \}\}", r"{\1}", message.content
+            for message in self._messages_template:
+                interpolated_content = interpolate_text(
+                    self._interpolation_type, message.content, **kwargs
                 )
-                interpolated_content = formatted_content.format(**kwargs)
                 interpolated_messages.append(
                     {"role": message.role, "content": interpolated_content}
                 )
@@ -86,12 +91,15 @@ class Prompt:
                     template=result["value"],
                     messages=result["messages"],
                     type=result["type"],
+                    interpolation_type=result["interpolationType"],
                 )
+
                 self.version = version
-                self.template = response.template
-                self.message_templates = response.messages
+                self._text_template = response.template
+                self._messages_template = response.messages
                 self._prompt_version_id = response.promptVersionId
                 self._type = response.type
+                self._interpolation_type = response.interpolation_type
 
                 end_time = time.perf_counter()
                 time_taken = format(end_time - start_time, ".2f")

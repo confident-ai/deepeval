@@ -287,7 +287,7 @@ The correct LLM evaluation lifecycle is only achievable with [the DeepEval platf
 5. Monitor & evaluate LLM responses in product to improve datasets with real-world data
 6. Repeat until perfection
 
-Everything on Confident AI, including how to use Confident is available [here](https://docs.confident-ai.com/confidnet-ai/confident-ai-introduction?utm_source=GitHub).
+Everything on Confident AI, including how to use Confident is available [here](https://documentation.confident-ai.com?utm_source=GitHub).
 
 To begin, login from the CLI:
 
