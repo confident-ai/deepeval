@@ -75,9 +75,13 @@ class AgentAttributes(BaseModel):
     output: Union[str, Dict, list]
 
 
+class OpenAIMessage(BaseModel):
+    role: str
+    content: str
+
 class LlmAttributes(BaseModel):
     # input
-    input: Union[str, List[Dict[str, str]]]
+    input: Union[str, List[OpenAIMessage]]
     # TODO: create an abstraction wrapper for tools
     tools: Optional[List[Dict]] = None
     
@@ -400,6 +404,7 @@ class TraceManager:
 
                             # Send the request without blocking the worker
                             api = Api()
+                            print(body)
                             await api.a_send_request(
                                 method=HttpMethods.POST,
                                 endpoint=Endpoints.TRACING_ENDPOINT,
