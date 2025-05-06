@@ -161,7 +161,7 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-    model: str
+    model: Optional[str] = None
     attributes: Optional[LlmAttributes] = None
     cost_per_input_token: Optional[float] = Field(
         None, serialization_alias="costPerInputToken"
@@ -725,6 +725,7 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+        client: Optional[Any] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -747,9 +748,11 @@ class Observer:
         self.span_type: SpanType | str = (
             self.name if span_type is None else span_type
         )
+        self.client = client
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
+        self.patch_client(self.client)
         self.start_time = perf_counter()
 
         # Get the current span from the context
@@ -858,8 +861,8 @@ class Observer:
             )
         elif self.span_type == SpanType.LLM.value:
             model = self.observe_kwargs.get("model", None)
-            if model is None:
-                raise ValueError("model is required for LlmSpan")
+            if model is None and self.client is None:
+                raise ValueError("model or client is required for LlmSpan")
 
             return LlmSpan(**span_kwargs, attributes=None, model=model)
         elif self.span_type == SpanType.RETRIEVER.value:
@@ -918,6 +921,95 @@ class Observer:
             current_span.input = self.function_kwargs
             current_span.output = self.result
 
+    def patch_client(self, client):
+        if not client:
+            return
+        
+        original_methods = {}
+
+        # patches these methods
+        methods_to_patch = [
+            "chat.completions.create",
+            "beta.chat.completions.parse",
+        ]
+
+        for method_path in methods_to_patch:
+            # Split the path into components
+            parts = method_path.split(".")
+            current_obj = client
+
+            # Navigate to the parent object
+            for part in parts[:-1]:
+                if not hasattr(current_obj, part):
+                    print(
+                        f"Warning: Cannot find {part} in the path {method_path}"
+                    )
+                    continue
+                current_obj = getattr(current_obj, part)
+
+            method_name = parts[-1]
+            if not hasattr(current_obj, method_name):
+                print(
+                    f"Warning: Cannot find method {method_name} in the path {method_path}"
+                )
+                continue
+
+            method = getattr(current_obj, method_name)
+
+            if callable(method) and not isinstance(method, type):
+                original_methods[method_path] = method
+
+                # Capture the current 'method' using a default argument
+                @functools.wraps(method)
+                def wrapped_method(*args, original_method=method, **kwargs):
+                    current_span = current_span_context.get()
+                    # call the original method using the captured default argument
+                    response = original_method(*args, **kwargs)
+                    if isinstance(current_span, LlmSpan):
+                        # extract model
+                        model = kwargs.get("model", None)
+                        if model is None:
+                            raise ValueError("model not found in client")
+                        
+                        # set model
+                        current_span.model = model
+
+                        # extract output message
+                        output = None
+                        try:
+                            output = response.choices[0].message.content
+                        except Exception as e:
+                            pass
+
+                        # extract input output token counts
+                        input_token_count = None
+                        output_token_count = None
+                        try:
+                            input_token_count = response.usage.prompt_tokens
+                            output_token_count = (
+                                response.usage.completion_tokens
+                            )
+                        except Exception as e:
+                            pass
+
+                        update_current_span_attributes(
+                            LlmAttributes(
+                                input=kwargs.get(
+                                    "messages", "INPUT_MESSAGE_NOT_FOUND"
+                                ),
+                                output=(
+                                    output
+                                    if output
+                                    else "OUTPUT_MESSAGE_NOT_FOUND"
+                                ),
+                                input_token_count=input_token_count,
+                                output_token_count=output_token_count,
+                            )
+                        )
+                    return response
+
+                setattr(current_obj, method_name, wrapped_method)
+
 
 ########################################################
 ### Decorator ##########################################
@@ -931,6 +1023,7 @@ def observe(
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
+    client: Optional[Any] = None,
     **observe_kwargs,
 ):
     """
@@ -966,6 +1059,7 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
+                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function
@@ -994,6 +1088,7 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
+                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function
