@@ -515,7 +515,7 @@ class TraceManager:
                 self._print_trace_status(
                     trace_worker_status=TraceWorkerStatus.SUCCESS,
                     message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                    description=resp.get("link"),
+                    description=resp["link"],
                 )
             except Exception as e:
                 qs = self._trace_queue.qsize()
