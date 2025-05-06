@@ -308,8 +308,10 @@ async def run_parallel_examples():
     ]
     await asyncio.gather(*tasks)
 
+
 # Run it
 import os
+
 print(trace_manager._daemon)
 print(os.environ["CONFIDENT_TRACE_FLUSH"])
 print(os.environ["CONFIDENT_TRACE_VERBOSE"])

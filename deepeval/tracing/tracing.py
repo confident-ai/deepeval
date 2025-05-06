@@ -56,10 +56,12 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
+
 class TraceWorkerStatus(Enum):
     SUCCESS = "success"
     FAILURE = "failure"
     WARNING = "warning"
+
 
 class SpanType(Enum):
     AGENT = "agent"
@@ -231,12 +233,14 @@ class TraceManager:
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
-        self._daemon = False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
+        self._daemon = (
+            False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
+        )
         self.evaluating = False
-        
+
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
-        
+
     def _warn_on_exit(self):
         """Warn if there are still traces in the queue when the program exits."""
         queue_size = self._trace_queue.qsize()
@@ -244,7 +248,7 @@ class TraceManager:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size} trace{'s' if queue_size != 1 else ''} still in queue.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"To flush traces before exit, call trace_manager.shutdown() or set {CONFIDENT_TRACE_FLUSH}=YES"
+                description=f"To flush traces before exit, call trace_manager.shutdown() or set {CONFIDENT_TRACE_FLUSH}=YES",
             )
 
     def start_new_trace(self) -> Trace:
@@ -351,10 +355,10 @@ class TraceManager:
         return [self.get_trace_dict(trace) for trace in self.traces]
 
     def _print_trace_status(
-        self, 
-        trace_worker_status: TraceWorkerStatus, 
-        message: str, 
-        description: Optional[str] = None
+        self,
+        trace_worker_status: TraceWorkerStatus,
+        message: str,
+        description: Optional[str] = None,
     ):
         # abstract into dim, error (red), green (success)
         if os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO":
@@ -382,7 +386,7 @@ class TraceManager:
 
         # Add the trace to the queue
         self._trace_queue.put(trace)
-        
+
         # Start the worker thread if it's not already running
         if self._worker_thread is None or not self._worker_thread.is_alive():
             self._worker_thread = threading.Thread(
@@ -450,7 +454,7 @@ class TraceManager:
                             self._print_trace_status(
                                 trace_worker_status=TraceWorkerStatus.SUCCESS,
                                 message=f"Successfully posted trace {queue_status}",
-                                description=response["link"]
+                                description=response["link"],
                             )
                         except RuntimeError as e:
                             queue_size = self._trace_queue.qsize()
@@ -458,7 +462,8 @@ class TraceManager:
                             self._print_trace_status(
                                 trace_worker_status=TraceWorkerStatus.FAILURE,
                                 message=f"Some trace(s) were not posted {queue_status}",
-                                description=str(e) + ". Remember to call trace_manager.shutdown() to flush remaining traces."
+                                description=str(e)
+                                + ". Remember to call trace_manager.shutdown() to flush remaining traces.",
                             )
                             self.shutdown()
                         except Exception as e:
@@ -467,7 +472,7 @@ class TraceManager:
                             self._print_trace_status(
                                 trace_worker_status=TraceWorkerStatus.FAILURE,
                                 message="Error posting trace",
-                                description=str(e)
+                                description=str(e),
                             )
 
                     # Create a task for this trace and add to tracking set
@@ -481,7 +486,7 @@ class TraceManager:
                     self._print_trace_status(
                         message="Error in worker",
                         trace_worker_status=TraceWorkerStatus.FAILURE,
-                        description=str(e)
+                        description=str(e),
                     )
                     await asyncio.sleep(1.0)  # Wait a bit before continuing
 
