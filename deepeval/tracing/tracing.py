@@ -11,6 +11,8 @@ from enum import Enum
 from time import perf_counter
 import os
 from typing import Any, Dict, List, Literal, Optional, Set, Union
+import signal
+import sys
 
 from pydantic import BaseModel, Field
 from rich.console import Console
@@ -239,6 +241,17 @@ class TraceManager:
         self.evaluating = False
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
+        signal.signal(signal.SIGINT,  self._on_signal)  
+        signal.signal(signal.SIGTERM, self._on_signal)
+
+    def _on_signal(self, signum, frame):
+        queue_size = self._trace_queue.qsize()
+        in_flight = len(self._in_flight_tasks)
+        self._print_trace_status(
+            message=f"INTERRUPTED: Posting remaining trace(s).",
+            trace_worker_status=TraceWorkerStatus.WARNING,
+        )
+        sys.exit(0)
 
     def _warn_on_exit(self):
         if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES":
@@ -503,6 +516,10 @@ class TraceManager:
             loop.close()
 
     def flush_traces(self, remaining_trace_request_bodies: List[Dict[str, Any]]):
+        self._print_trace_status(
+            TraceWorkerStatus.WARNING,
+            message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)"
+        )
         for body in remaining_trace_request_bodies:
             try:
                 api = Api()
@@ -525,6 +542,7 @@ class TraceManager:
                     description=str(e),
                 )
 
+            
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
         base_spans = []
