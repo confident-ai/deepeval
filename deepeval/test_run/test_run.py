@@ -31,7 +31,7 @@ from deepeval.utils import (
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import LOGIN_PROMPT
 
-TEMP_FILE_NAME = "temp_test_run_data.json"
+TEMP_FILE_NAME = ".deepeval/.temp_test_run_data.json"
 
 
 class TestRunResultDisplay(Enum):

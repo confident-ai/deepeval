@@ -21,9 +21,30 @@ class Feature(Enum):
     CONVERSATION_SIMULATOR = "conversation_simulator"
     UNKNOWN = "unknown"
 
-
+DEEPEVAL_FOLDER = ".deepeval"
 TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
+TELEMETRY_PATH = os.path.join(DEEPEVAL_FOLDER, TELEMETRY_DATA_FILE)
 
+#########################################################
+### Move Folders ########################################
+#########################################################
+
+if os.path.exists(".deepeval") and not os.path.isdir(".deepeval"):
+    temp_deepeval_file_name = ".deepeval_legacy"
+    os.rename(".deepeval", temp_deepeval_file_name)
+    os.makedirs(DEEPEVAL_FOLDER, exist_ok=True)
+    os.rename(temp_deepeval_file_name, os.path.join(DEEPEVAL_FOLDER, ".deepeval"))
+
+os.makedirs(DEEPEVAL_FOLDER, exist_ok=True)
+
+if os.path.exists(TELEMETRY_DATA_FILE):
+    os.rename(TELEMETRY_DATA_FILE, TELEMETRY_PATH)
+
+if os.path.exists(".deepeval-cache.json"):
+    os.rename(".deepeval-cache.json", ".deepeval/.deepeval-cache.json")
+    
+if os.path.exists("temp_test_run_data.json"):
+    os.rename("temp_test_run_data.json", ".deepeval/.temp_test_run_data.json")
 
 #########################################################
 ### Telemetry Config ####################################
@@ -359,9 +380,9 @@ def capture_pull_dataset():
 
 def read_telemetry_file() -> dict:
     """Reads the telemetry data file and returns the key-value pairs as a dictionary."""
-    if not os.path.exists(TELEMETRY_DATA_FILE):
+    if not os.path.exists(TELEMETRY_PATH):
         return {}
-    with open(TELEMETRY_DATA_FILE, "r") as file:
+    with open(TELEMETRY_PATH, "r") as file:
         lines = file.readlines()
     data = {}
     for line in lines:
@@ -372,7 +393,7 @@ def read_telemetry_file() -> dict:
 
 def write_telemetry_file(data: dict):
     """Writes the given key-value pairs to the telemetry data file."""
-    with open(TELEMETRY_DATA_FILE, "w") as file:
+    with open(TELEMETRY_PATH, "w") as file:
         for key, value in data.items():
             file.write(f"{key}={value}\n")
 

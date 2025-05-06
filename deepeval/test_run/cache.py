@@ -14,8 +14,8 @@ from deepeval.utils import (
 )
 from deepeval.metrics import BaseMetric
 
-CACHE_FILE_NAME = ".deepeval-cache.json"
-TEMP_CACHE_FILE_NAME = ".temp-deepeval-cache.json"
+CACHE_FILE_NAME = ".deepeval/.deepeval-cache.json"
+TEMP_CACHE_FILE_NAME = ".deepeval/.temp-deepeval-cache.json"
 
 
 class MetricConfiguration(BaseModel):
