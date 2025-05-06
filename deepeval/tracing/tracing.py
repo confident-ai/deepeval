@@ -1,4 +1,5 @@
 import asyncio
+import atexit
 import functools
 import inspect
 import queue
@@ -14,7 +15,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union
 from pydantic import BaseModel, Field
 from rich.console import Console
 
-from deepeval.constants import DEEPEVAL_TRACE_VERBOSE
+from deepeval.constants import CONFIDENT_TRACE_VERBOSE, CONFIDENT_TRACE_FLUSH
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
@@ -55,6 +56,10 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
+class TraceWorkerStatus(Enum):
+    SUCCESS = "success"
+    FAILURE = "failure"
+    WARNING = "warning"
 
 class SpanType(Enum):
     AGENT = "agent"
@@ -226,8 +231,21 @@ class TraceManager:
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
-        self._daemon = True
+        self._daemon = False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
         self.evaluating = False
+        
+        # Register an exit handler to warn about unprocessed traces
+        atexit.register(self._warn_on_exit)
+        
+    def _warn_on_exit(self):
+        """Warn if there are still traces in the queue when the program exits."""
+        queue_size = self._trace_queue.qsize()
+        if queue_size > 0:
+            self._print_trace_status(
+                message=f"WARNING: Exiting with {queue_size} trace{'s' if queue_size != 1 else ''} still in queue.",
+                trace_worker_status=TraceWorkerStatus.WARNING,
+                description=f"To flush traces before exit, call trace_manager.shutdown() or set {CONFIDENT_TRACE_FLUSH}=YES"
+            )
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -332,23 +350,39 @@ class TraceManager:
         """Get all traces as dictionaries."""
         return [self.get_trace_dict(trace) for trace in self.traces]
 
-    def _print_trace_status(self, message: str):
+    def _print_trace_status(
+        self, 
+        trace_worker_status: TraceWorkerStatus, 
+        message: str, 
+        description: Optional[str] = None
+    ):
         # abstract into dim, error (red), green (success)
-        # for [dim][DeepEval Trace Log][/dim]
-        if os.getenv(DEEPEVAL_TRACE_VERBOSE) != "NO":
+        if os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO":
             console = Console()
-            console.print(message)
+            message_prefix = "[dim][Confident AI Trace Log][/dim]"
+            if trace_worker_status == TraceWorkerStatus.SUCCESS:
+                message = f"[green]{message}[/green]"
+            elif trace_worker_status == TraceWorkerStatus.FAILURE:
+                message = f"[red]{message}[/red]"
+            elif trace_worker_status == TraceWorkerStatus.WARNING:
+                message = f"[yellow]{message}[/yellow]"
+
+            if description:
+                console.print(message_prefix, message + ":", description)
+            else:
+                console.print(message_prefix, message)
 
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             self._print_trace_status(
-                "[dim][DeepEval Trace Log][/dim] No Confident AI API key found. Skipping trace posting."
+                message="No Confident AI API key found. Skipping trace posting.",
+                trace_worker_status=TraceWorkerStatus.FAILURE,
             )
             return None
 
         # Add the trace to the queue
         self._trace_queue.put(trace)
-
+        
         # Start the worker thread if it's not already running
         if self._worker_thread is None or not self._worker_thread.is_alive():
             self._worker_thread = threading.Thread(
@@ -398,7 +432,6 @@ class TraceManager:
                                 body = trace_api.model_dump(
                                     by_alias=True, exclude_none=True
                                 )
-                                print(body)
                             except AttributeError:
                                 # Pydantic version below 2.0
                                 body = trace_api.dict(
@@ -407,17 +440,34 @@ class TraceManager:
 
                             # Send the request without blocking the worker
                             api = Api()
-                            await api.a_send_request(
+                            response = await api.a_send_request(
                                 method=HttpMethods.POST,
                                 endpoint=Endpoints.TRACING_ENDPOINT,
                                 body=body,
                             )
+                            queue_size = self._trace_queue.qsize()
+                            queue_status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue)"
                             self._print_trace_status(
-                                f"[dim][DeepEval Trace Log][/dim] Successfully post trace: {str(e)}"
+                                trace_worker_status=TraceWorkerStatus.SUCCESS,
+                                message=f"Successfully posted trace {queue_status}",
+                                description=response["link"]
                             )
-                        except Exception as e:
+                        except RuntimeError as e:
+                            queue_size = self._trace_queue.qsize()
+                            queue_status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue)"
                             self._print_trace_status(
-                                f"[dim][DeepEval Trace Log][/dim] Error posting trace: {str(e)}"
+                                trace_worker_status=TraceWorkerStatus.FAILURE,
+                                message=f"Some trace(s) were not posted {queue_status}",
+                                description=str(e) + ". Remember to call trace_manager.shutdown() to flush remaining traces."
+                            )
+                            self.shutdown()
+                        except Exception as e:
+                            queue_size = self._trace_queue.qsize()
+                            queue_status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue)"
+                            self._print_trace_status(
+                                trace_worker_status=TraceWorkerStatus.FAILURE,
+                                message="Error posting trace",
+                                description=str(e)
                             )
 
                     # Create a task for this trace and add to tracking set
@@ -429,7 +479,9 @@ class TraceManager:
                     await asyncio.sleep(0.1)
                 except Exception as e:
                     self._print_trace_status(
-                        f"[dim][DeepEval Trace Log][/dim] Error in worker: {str(e)}"
+                        message="Error in worker",
+                        trace_worker_status=TraceWorkerStatus.FAILURE,
+                        description=str(e)
                     )
                     await asyncio.sleep(1.0)  # Wait a bit before continuing
 
@@ -455,17 +507,19 @@ class TraceManager:
                 pass
 
     def shutdown(self):
-        self._trace_queue.join()
-        done_tasks = {task for task in self._in_flight_tasks if task.done()}
-        self._in_flight_tasks -= done_tasks
-        for task in self._in_flight_tasks:
-            try:
-                task.result()
-            except Exception:
-                pass
-        self._trace_queue.put(None)
-        if self._worker_thread:
-            self._worker_thread.join()
+        should_flush = os.getenv(CONFIDENT_TRACE_FLUSH) != "NO"
+        if should_flush:
+            self._trace_queue.join()
+            done_tasks = {task for task in self._in_flight_tasks if task.done()}
+            self._in_flight_tasks -= done_tasks
+            for task in self._in_flight_tasks:
+                try:
+                    task.result()
+                except Exception:
+                    pass
+            self._trace_queue.put(None)
+            if self._worker_thread:
+                self._worker_thread.join()
 
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
