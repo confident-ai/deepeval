@@ -237,19 +237,19 @@ class TraceManager:
             False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
         )
         self.evaluating = False
-
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
 
     def _warn_on_exit(self):
-        """Warn if there are still traces in the queue when the program exits."""
-        queue_size = self._trace_queue.qsize()
-        if queue_size > 0:
+        if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES":
+            queue_size = self._trace_queue.qsize()
+            in_flight = len(self._in_flight_tasks)
             self._print_trace_status(
-                message=f"WARNING: Exiting with {queue_size} trace{'s' if queue_size != 1 else ''} still in queue.",
+                message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"To flush traces before exit, call trace_manager.shutdown() or set {CONFIDENT_TRACE_FLUSH}=YES",
+                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces.",
             )
+
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -398,133 +398,131 @@ class TraceManager:
         return "ok"
 
     def _process_trace_queue(self):
-        """Worker thread function that processes the trace queue with throttling."""
-        # Create a new event loop for this thread
+        """Worker thread function that processes the trace queue"""
+        import threading
+        main_thr = threading.main_thread()
+
+        # Create a new event loop
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-        # Define the async worker function
-        async def async_worker():
-            while True:
+        # buffer for payloads that need to be sent after main exits
+        remaining_trace_request_bodies: List[Dict[str, Any]] = []
+
+        async def _a_send_trace(trace_obj):
+            nonlocal remaining_trace_request_bodies
+            try:
+                # Build API object & payload
+                trace_api = self.create_trace_api(trace_obj)
                 try:
-                    # Clean up completed tasks
-                    self._clean_finished_tasks()
+                    body = trace_api.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
+                except AttributeError:
+                    # Pydantic version below 2.0
+                    body = trace_api.dict(
+                        by_alias=True, exclude_none=True
+                    )
 
-                    # Get a trace from the queue
+                # If the main thread is still alive, send now
+                if main_thr.is_alive():
+                    api = Api()
+                    response = await api.a_send_request(
+                        method=HttpMethods.POST,
+                        endpoint=Endpoints.TRACING_ENDPOINT,
+                        body=body,
+                    )
+                    queue_size = self._trace_queue.qsize()
+                    in_flight = len(self._in_flight_tasks)
+                    status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
+                    self._print_trace_status(
+                        trace_worker_status=TraceWorkerStatus.SUCCESS,
+                        message=f"Successfully posted trace {status}",
+                        description=response["link"]
+                    )
+                elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
+                    # Main thread gone → to be flushed
+                    remaining_trace_request_bodies.append(body)
+
+            except Exception as e:
+                queue_size = self._trace_queue.qsize()
+                in_flight = len(self._in_flight_tasks)
+                status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                    message=f"Error posting trace {status}",
+                    description=str(e)
+                )
+            finally:
+                task = asyncio.current_task()
+                if task:
+                    self._in_flight_tasks.discard(task)
+
+
+        async def async_worker():
+            # Continue while user code is running or work remains
+            while (
+                main_thr.is_alive()
+                or not self._trace_queue.empty()
+                or self._in_flight_tasks
+            ):
+                try:
                     trace = self._trace_queue.get(block=True, timeout=1.0)
-                    if trace is None:
-                        self._trace_queue.task_done()
-                        break
 
-                    # Apply rate limiting
+                    # rate-limit
                     now = perf_counter()
-                    time_since_last = now - self._last_post_time
-                    if time_since_last < self._min_interval:
-                        await asyncio.sleep(
-                            self._min_interval - time_since_last
-                        )
-
-                    # Update the last post time BEFORE making the API call
+                    elapsed = now - self._last_post_time
+                    if elapsed < self._min_interval:
+                        await asyncio.sleep(self._min_interval - elapsed)
                     self._last_post_time = perf_counter()
 
-                    # Create the API request but don't await it
-                    async def _a_send_trace(trace_obj):
-                        try:
-                            trace_api = self.create_trace_api(trace_obj)
-
-                            try:
-                                body = trace_api.model_dump(
-                                    by_alias=True, exclude_none=True
-                                )
-                            except AttributeError:
-                                # Pydantic version below 2.0
-                                body = trace_api.dict(
-                                    by_alias=True, exclude_none=True
-                                )
-
-                            # Send the request without blocking the worker
-                            api = Api()
-                            response = await api.a_send_request(
-                                method=HttpMethods.POST,
-                                endpoint=Endpoints.TRACING_ENDPOINT,
-                                body=body,
-                            )
-                            queue_size = self._trace_queue.qsize()
-                            queue_status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue)"
-                            self._print_trace_status(
-                                trace_worker_status=TraceWorkerStatus.SUCCESS,
-                                message=f"Successfully posted trace {queue_status}",
-                                description=response["link"],
-                            )
-                        except RuntimeError as e:
-                            queue_size = self._trace_queue.qsize()
-                            queue_status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue)"
-                            self._print_trace_status(
-                                trace_worker_status=TraceWorkerStatus.FAILURE,
-                                message=f"Some trace(s) were not posted {queue_status}",
-                                description=str(e)
-                                + ". Remember to call trace_manager.shutdown() to flush remaining traces.",
-                            )
-                            self.shutdown()
-                        except Exception as e:
-                            queue_size = self._trace_queue.qsize()
-                            queue_status = f"({queue_size} trace{'s' if queue_size != 1 else ''} remaining in queue)"
-                            self._print_trace_status(
-                                trace_worker_status=TraceWorkerStatus.FAILURE,
-                                message="Error posting trace",
-                                description=str(e),
-                            )
-
-                    # Create a task for this trace and add to tracking set
+                    # schedule async send
                     task = asyncio.create_task(_a_send_trace(trace))
                     self._in_flight_tasks.add(task)
                     self._trace_queue.task_done()
 
                 except queue.Empty:
                     await asyncio.sleep(0.1)
+                    continue
                 except Exception as e:
                     self._print_trace_status(
                         message="Error in worker",
                         trace_worker_status=TraceWorkerStatus.FAILURE,
                         description=str(e),
                     )
-                    await asyncio.sleep(1.0)  # Wait a bit before continuing
+                    await asyncio.sleep(1.0)
 
-        # Run the main async worker and ensure all pending tasks are completed before closing the event loop.
-        # This prevents orphaned tasks and ensures a clean shutdown of the async system.
         try:
             loop.run_until_complete(async_worker())
         finally:
+            # Drain any pending tasks
             pending = asyncio.all_tasks(loop=loop)
             if pending:
-                loop.run_until_complete(
-                    asyncio.gather(*pending, return_exceptions=True)
-                )
+                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+            self.flush_traces(remaining_trace_request_bodies)
             loop.close()
 
-    def _clean_finished_tasks(self) -> None:
-        done_tasks = {task for task in self._in_flight_tasks if task.done()}
-        self._in_flight_tasks -= done_tasks
-        for task in done_tasks:
+    def flush_traces(self, remaining_trace_request_bodies: List[Dict[str, Any]]):
+        for body in remaining_trace_request_bodies:
             try:
-                task.exception()
-            except (asyncio.CancelledError, asyncio.InvalidStateError):
-                pass
-
-    def shutdown(self):
-        should_flush = os.getenv(CONFIDENT_TRACE_FLUSH) != "NO"
-        if should_flush:
-            self._trace_queue.join()
-            done_tasks = {task for task in self._in_flight_tasks if task.done()}
-            self._in_flight_tasks -= done_tasks
-            for task in self._in_flight_tasks:
-                try:
-                    task.result()
-                except Exception:
-                    pass
-            self._trace_queue.put(None)
-            if self._worker_thread:
-                self._worker_thread.join()
+                api = Api()
+                resp = api.send_request(
+                    method=HttpMethods.POST,
+                    endpoint=Endpoints.TRACING_ENDPOINT,
+                    body=body,
+                )
+                qs = self._trace_queue.qsize()
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.SUCCESS,
+                    message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
+                    description=resp.get("link"),
+            except Exception as e:
+                qs = self._trace_queue.qsize()
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                    message="Error flushing remaining trace(s)",
+                    description=str(e),
+                )
 
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
