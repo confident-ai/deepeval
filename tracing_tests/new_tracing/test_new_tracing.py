@@ -23,7 +23,7 @@ trace_manager._daemon = False
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
     attributes = LlmAttributes(
-        input=prompt,
+        input=[{"role": "user", "content": prompt}],
         output=generated_text,
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),

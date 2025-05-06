@@ -2,19 +2,19 @@ import asyncio
 import functools
 import inspect
 import queue
-import random
 import threading
 import uuid
 from contextvars import ContextVar
-from datetime import datetime, time, timezone
+from datetime import datetime, timezone
 from enum import Enum
-from time import perf_counter, sleep
+from time import perf_counter
+import os
 from typing import Any, Dict, List, Literal, Optional, Set, Union
 
 from pydantic import BaseModel, Field
 from rich.console import Console
 
-
+from deepeval.constants import DEEPEVAL_TRACE_VERBOSE
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.metrics import BaseMetric
 from deepeval.prompt import Prompt
@@ -78,7 +78,7 @@ class AgentAttributes(BaseModel):
 
 class LlmAttributes(BaseModel):
     # input
-    input: str
+    input: Union[str, List[Dict[str, Any]]]
     # output
     output: str
     prompt: Optional[Prompt] = None
@@ -332,8 +332,18 @@ class TraceManager:
         """Get all traces as dictionaries."""
         return [self.get_trace_dict(trace) for trace in self.traces]
 
+    def _print_trace_status(self, message: str):
+        # abstract into dim, error (red), green (success)
+        # for [dim][DeepEval Trace Log][/dim]
+        if os.getenv(DEEPEVAL_TRACE_VERBOSE) != "NO":
+            console = Console()
+            console.print(message)
+
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
+            self._print_trace_status(
+                "[dim][DeepEval Trace Log][/dim] No Confident AI API key found. Skipping trace posting."
+            )
             return None
 
         # Add the trace to the queue
@@ -388,6 +398,7 @@ class TraceManager:
                                 body = trace_api.model_dump(
                                     by_alias=True, exclude_none=True
                                 )
+                                print(body)
                             except AttributeError:
                                 # Pydantic version below 2.0
                                 body = trace_api.dict(
@@ -401,10 +412,12 @@ class TraceManager:
                                 endpoint=Endpoints.TRACING_ENDPOINT,
                                 body=body,
                             )
+                            self._print_trace_status(
+                                f"[dim][DeepEval Trace Log][/dim] Successfully post trace: {str(e)}"
+                            )
                         except Exception as e:
-                            console = Console()
-                            console.print(
-                                f"[dim][Tracing][/dim] Error posting trace: {str(e)}"
+                            self._print_trace_status(
+                                f"[dim][DeepEval Trace Log][/dim] Error posting trace: {str(e)}"
                             )
 
                     # Create a task for this trace and add to tracking set
@@ -415,9 +428,8 @@ class TraceManager:
                 except queue.Empty:
                     await asyncio.sleep(0.1)
                 except Exception as e:
-                    console = Console()
-                    console.print(
-                        f"[dim][Tracing][/dim] Error in worker: {str(e)}"
+                    self._print_trace_status(
+                        f"[dim][DeepEval Trace Log][/dim] Error in worker: {str(e)}"
                     )
                     await asyncio.sleep(1.0)  # Wait a bit before continuing
 
