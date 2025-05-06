@@ -31,8 +31,8 @@ def start_server(pairing_code: str, port: str, prod_url: str) -> str:
             data: Dict = json.loads(body)
             if self.path == f"/{LOGGED_IN_WITH}":
                 logged_in_with = data.get(LOGGED_IN_WITH)
-                pairing_code_recieved = data.get("pairing_code")
-                if logged_in_with and pairing_code == pairing_code_recieved:
+                pairing_code_received = data.get("pairing_code")
+                if logged_in_with and pairing_code == pairing_code_received:
                     set_logged_in_with(logged_in_with)
                     self.send_response(200)
                     self.send_header("Access-Control-Allow-Origin", prod_url)

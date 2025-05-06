@@ -172,7 +172,7 @@ test_case = LLMTestCase(
 
 ### Running Evaluations
 
-To run evaluations on the `LLMTestCase`, we first need to define relevant `deepeval` metrics to evaluate the Elastisearch retriever: contextual recall, contextual precision, and contextual relevancy.
+To run evaluations on the `LLMTestCase`, we first need to define relevant `deepeval` metrics to evaluate the Elasticsearch retriever: contextual recall, contextual precision, and contextual relevancy.
 
 :::note
 These **contextual metrics** help assess your retriever. For more retriever evaluation details, check out this [guide](/guides/guides-rag-evaluation).  
@@ -187,7 +187,7 @@ from deepeval.metrics import (
 
 contextual_recall = ContextualRecallMetric(),
 contextual_precision = ContextualPrecisionMetric()
-contextual_relevancy = ontextualRelevancyMetric()
+contextual_relevancy = ContextualRelevancyMetric()
 ```
 
 Finally, pass the test case and metrics into the `evaluate` function to begin the evaluation.

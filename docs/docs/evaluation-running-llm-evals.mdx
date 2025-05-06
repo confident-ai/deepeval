@@ -55,7 +55,7 @@ Tracing in `deepeval` also does not affect production code, unless you wish to a
 
 - **Apply metrics flexibly across components**: Tracing lets you attach `LLMTestCase`s at any level—whether system-wide or deep inside a nested flow—so you can run targeted metrics on specific components without restructuring your code.
 
-- **Does not affect production code**: If you're worried that tracing will affect your LLM calls in productioin, it won't. This is because you can simply disable all `@observe` functionality in `deepeval`.
+- **Does not affect production code**: If you're worried that tracing will affect your LLM calls in production, it won't. This is because you can simply disable all `@observe` functionality in `deepeval`.
 
 - **Evaluate complex systems easily**: Modern LLM apps span retrieval, tool use, and orchestration across different parts of your system. Tracing captures outputs from anywhere in your code without manual wiring.
 
@@ -133,7 +133,7 @@ For simplicity, we always recommend **custom spans** unless needed otherwise, si
 - This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
 - Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visitng the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/llm-observability/llm-tracing)
+To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/llm-observability/llm-tracing)
 
 :::
 
@@ -280,11 +280,11 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `traceable_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
-When `assert_test()` calls, what happens is your `traceable_callback` is first called using the provided `golden` to invoke your LLM application to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` as you would noramlly expect. An execution of `assert_test()` in this case passes only if all `@observe` decorated `metrics` passes.
+When `assert_test()` calls, what happens is your `traceable_callback` is first called using the provided `golden` to invoke your LLM application to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` as you would normally expect. An execution of `assert_test()` in this case passes only if all `@observe` decorated `metrics` passes.
 
 ### Without Tracing
 
-If your LLM application has a simplier architecture, you can use `deepeval test run` without tracing:
+If your LLM application has a simpler architecture, you can use `deepeval test run` without tracing:
 
 ```python test_llm_app.py
 from deepeval.dataset import Golden
@@ -355,7 +355,7 @@ deepeval test run test_example.py -i
 ```
 
 :::tip
-You can combine differnet flags, such as the `-i`, `-c`, and `-n` flag to execute any uncached test cases in parallel while ignoring any errors along the way:
+You can combine different flags, such as the `-i`, `-c`, and `-n` flag to execute any uncached test cases in parallel while ignoring any errors along the way:
 
 ```python
 deepeval test run test_example.py -i -c -n 2
@@ -409,7 +409,7 @@ deepeval test run test_example.py -r 2
 
 #### Hooks
 
-`deepeval`'s Pytest integration allosw you to run custom code at the end of each evaluation via the `@deepeval.on_test_run_end` decorator:
+`deepeval`'s Pytest integration allows you to run custom code at the end of each evaluation via the `@deepeval.on_test_run_end` decorator:
 
 ```python title="test_example.py"
 ...
@@ -495,7 +495,7 @@ Unlike `deepeval test run` where flags are used, behaviors for the `evaluate()` 
 
 #### Async Configs
 
-The `AsyncConfig` controlls how concurrently `metrics`, `traceable_callback`, and `test_cases` will be evaluated during `evaluate()`.
+The `AsyncConfig` controls how concurrently `metrics`, `traceable_callback`, and `test_cases` will be evaluated during `evaluate()`.
 
 ```python
 from deepeval.evaluate import AsyncConfig
@@ -514,7 +514,7 @@ The `throttle_value` and `max_concurrent` parameter is only used when `run_async
 
 #### Display Configs
 
-The `DisplayConfig` controlls how results and intermediate execution steps are displayed during `evaluate()`.
+The `DisplayConfig` controls how results and intermediate execution steps are displayed during `evaluate()`.
 
 ```python
 from deepeval.evaluate import DisplayConfig
@@ -532,7 +532,7 @@ There are **FOUR** optional parameters when creating an `DisplayConfig`:
 
 #### Error Configs
 
-The `ErrorConfig` controlls how error is handled in `evaluate()`.
+The `ErrorConfig` controls how error is handled in `evaluate()`.
 
 ```python
 from deepeval.evaluate import ErrorConfig
@@ -550,7 +550,7 @@ If both `skip_on_missing_params` and `ignore_errors` are set to `True`, `skip_on
 
 #### Cache Configs
 
-The `CacheConfig` controlls the caching behavior of `evaluate()`.
+The `CacheConfig` controls the caching behavior of `evaluate()`.
 
 ```python
 from deepeval.evaluate import CacheConfig
@@ -564,4 +564,4 @@ There are **TWO** optional parameters when creating an `CacheConfig`:
 - [Optional] `use_cache`: a boolean which when set to `True`, uses cached test run results instead. Defaulted to `False`.
 - [Optional] `write_cache`: a boolean which when set to `True`, uses writes test run results to **DISK**. Defaulted to `True`.
 
-The `write_cache` parameter writes to disk and so you should disable it if that is causing any errors in your enviornment.
+The `write_cache` parameter writes to disk and so you should disable it if that is causing any errors in your environment.

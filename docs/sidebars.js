@@ -118,7 +118,7 @@ module.exports = {
         "red-teaming-attack-enhancements",
         {
           type: "category",
-          label: "Vulnerabilties",
+          label: "Vulnerabilities",
           items: [
             "red-teaming-vulnerabilities",
             "red-teaming-vulnerabilities-bias",

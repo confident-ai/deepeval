@@ -8,7 +8,7 @@ from deepeval.benchmarks.big_bench_hard.shot_prompts import *
 class BigBenchHardTemplate:
 
     # COT prompts were taken directly from BBH Github Repo
-    # Few-shot prompts were adpated from COT prompts by removing CoT Reasoning
+    # Few-shot prompts were adapted from COT prompts by removing CoT Reasoning
 
     @staticmethod
     def generate_output(

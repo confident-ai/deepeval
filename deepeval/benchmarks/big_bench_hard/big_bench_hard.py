@@ -16,7 +16,7 @@ bbh_confinement_statements_dict = {
     BigBenchHardTask.CAUSAL_JUDGEMENT: "\n\nOutput 'Yes' or 'No'. Full answer not needed.",
     BigBenchHardTask.DATE_UNDERSTANDING: "\n\nOutput '(A)', '(B)', '(C)', '(D)', '(E)', or '(F)'. Full answer not needed.",
     BigBenchHardTask.DISAMBIGUATION_QA: "\n\nOutput '(A)', '(B)', or '(C)'. Full answer not needed.",
-    BigBenchHardTask.DYCK_LANGUAGES: "\n\nOutput only the sequence of parenthases characters separated by white space. Full answer not needed.",
+    BigBenchHardTask.DYCK_LANGUAGES: "\n\nOutput only the sequence of parentheses characters separated by white space. Full answer not needed.",
     BigBenchHardTask.FORMAL_FALLACIES: "\n\nOutput 'invalid' or 'valid'. Full answer not needed.",
     BigBenchHardTask.GEOMETRIC_SHAPES: "\n\nOutput '(A)', '(B)', '(C)', '(D)', '(E)', '(F)', '(G)', '(H)', '(I)', '(J)', or '(K)'. Full answer not needed.",
     BigBenchHardTask.HYPERBATON: "\n\nOutput '(A)' or'(B)'. Full answer not needed.",

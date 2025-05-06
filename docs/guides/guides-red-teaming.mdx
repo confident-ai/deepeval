@@ -207,7 +207,7 @@ While it might be tempting to conduct an exhaustive scan, targeting the **highes
 3. **Tune Attack Enhancements to Match Model Strength**: Adjust enhancement distributions for optimal effectiveness. Encoding-based enhancements may work well on simpler models, while advanced models with strong filters benefit from more dialogue-based enhancements.
 4. **Optimize Attack Volume Per Vulnerability**: Start with a reasonable number of attacks (e.g., 5 per vulnerability). For critical vulnerabilities, increase the number of attacks to probe deeper, focusing on the most effective enhancement types for your model's risk profile.
 
-In our `FinancialAdvisorLLM` example, we start with an attack volume of 5 attacks per vulnerability, which is a moderate starting point suited for initial testing. Given that `FinancialAdvisorLLM` is powered by GPT-4o, which has strong filtering capabilities, we include Jailbreak Crescendo right away. Additionally, we use a balanced mix of encoding and one-shot enhancements to explore a range of bypass strategies and assess how well the model protects user privacy (we've defined multiple user privacy vulnerabilties) in response to these types of enhancements.
+In our `FinancialAdvisorLLM` example, we start with an attack volume of 5 attacks per vulnerability, which is a moderate starting point suited for initial testing. Given that `FinancialAdvisorLLM` is powered by GPT-4o, which has strong filtering capabilities, we include Jailbreak Crescendo right away. Additionally, we use a balanced mix of encoding and one-shot enhancements to explore a range of bypass strategies and assess how well the model protects user privacy (we've defined multiple user privacy vulnerabilities) in response to these types of enhancements.
 
 ### Considerations for Attack Enhancements
 
@@ -272,7 +272,7 @@ This detailed breakdown shows **mixed results** for Excessive Agency. The model 
 
 The final step is to refine your LLM based on the scan results and make improvements to strengthen its security, compliance, and overall reliability. Here are some practical steps:
 
-1. **Refine the System Prompt and/or Fine-Tune**: Adjust the system prompt to clearly outline the model's role and limitations, and/or incoporate fine-tuning to enhance the model's safety, accuracy, and relevance if needed.
+1. **Refine the System Prompt and/or Fine-Tune**: Adjust the system prompt to clearly outline the model's role and limitations, and/or incorporate fine-tuning to enhance the model's safety, accuracy, and relevance if needed.
 2. **Add Privacy and Compliance Filters**: Implement guardrails in the form of filters for sensitive data, such as personal identifiers or financial details, to ensure that the model never provides direct responses to such requests.
 3. **Re-Scan After Each Adjustment**: Perform targeted scans after each iteration to ensure improvements are effective and to catch any remaining vulnerabilities that may arise.
 4. **Monitor Long-Term Performance**: Conduct regular red-teaming scans to maintain security and compliance as updates and model adjustments are made. Ongoing testing helps the model stay aligned with organizational standards over time.

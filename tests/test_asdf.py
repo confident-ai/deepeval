@@ -16,7 +16,7 @@ from deepeval.models import GPTModel, AzureOpenAIModel
 # )
 # test_case = LLMTestCase(
 #     input="What is the capital of France?",
-#     actual_output="Countires have capitals",
+#     actual_output="Countries have capitals",
 #     expected_output="Paris",
 #     context=["Geography"],
 # )

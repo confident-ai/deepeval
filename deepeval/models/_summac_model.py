@@ -373,7 +373,7 @@ class _SummaCConv(torch.nn.Module):
         self.full_size = self.n_depth * self.n_bins
         if self.norm_histo:
             self.full_size += (
-                2  # Will explicitely give the count of originals and generateds
+                2  # Will explicitly give the count of originals and generateds
             )
 
         self.agg = agg

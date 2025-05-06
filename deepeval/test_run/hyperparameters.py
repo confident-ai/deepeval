@@ -35,7 +35,7 @@ def process_hyperparameters(
                 )
             else:
                 raise ValueError(
-                    f"Cannot log Prompt where template was not pulled from Confident AI. Pleaes import your prompt on Confident AI to continue."
+                    f"Cannot log Prompt where template was not pulled from Confident AI. Please import your prompt on Confident AI to continue."
                 )
         else:
             processed_hyperparameters[key] = str(value)

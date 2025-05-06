@@ -124,7 +124,7 @@ In summary, the documents are first split into chunks and embedded to form a col
 
 In the initial **document parsing** step, each provided document is parsed using an **token-based text splitter**. This means the `chunk_size` and `chunk_overlap` parameters do not guarantee exact text chunk sizes. This approach ensures text chunks are meaningful and coherent, but might lead to variations in the expected size of each `context`.
 
-These text chunks are then embedded by the `embedder` and stored in a vector database for subssequent selection and grouping.
+These text chunks are then embedded by the `embedder` and stored in a vector database for subsequent selection and grouping.
 
 :::caution
 The synthesizer will raise an error if `chunk_size` is too large to generate n=`max_contexts_per_document` unique contexts.
@@ -141,7 +141,7 @@ Each chunk is quality scored (0-1) by an LLM (the `critic_model`) based based on
 - **Structure**: How well-organized and logical the content is.
 - **Relevance**: How closely the content relates to the main topic.
 
-If the quality score is still lower than the `context_quality_threshold` after `max_retries`, the context with the highest quality score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guarenteed to have context to be used for grouping.
+If the quality score is still lower than the `context_quality_threshold` after `max_retries`, the context with the highest quality score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guaranteed to have context to be used for grouping.
 
 :::note
 The `critic_model` in the context construction pipeline can be different from the one used in the [`FiltrationConfig` of the generation pipeline](/docs/synthesizer-introduction#filteration-quality).
@@ -151,7 +151,7 @@ The `critic_model` in the context construction pipeline can be different from th
 
 In the final **context grouping** step, each previously selected nodes are grouped with `max_context_length` other nodes with a cosine similarity score higher than the `context_similarity_threshold`. This ensure that each context is coherent for subsequent generation to happen smoothly.
 
-Similar to the context selection step, if the cosine similarity is still lower than the `context_similarity_threshold` after `max_retries`, the context with the highest similarity score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guarenteed to have context groups to be used for generation.
+Similar to the context selection step, if the cosine similarity is still lower than the `context_similarity_threshold` after `max_retries`, the context with the highest similarity score will be used. Although this means that you might find context that have failed the filtering process being used, but you will be guaranteed to have context groups to be used for generation.
 
 <div
   style={{

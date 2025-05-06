@@ -54,7 +54,7 @@ In your newly created virtual environment, run:
 pip install -U deepeval
 ```
 
-`deepeval` runs evaluations locally on your enviornment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the native evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com), the native evaluation platform for DeepEval:
 
 ```bash
 deepeval login
@@ -109,7 +109,7 @@ deepeval test run test_example.py
 **If you don't have a labelled dataset, don't worry**, because the `expected_output` is only required in this example. Different metrics will require different parameters in an `LLMTestCase` for evaluation, so be sure to checkout each metric's documentation pages to avoid any unexpected errors.
 
 :::info
-You'll need to set your `OPENAI_API_KEY` as an enviornment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
+You'll need to set your `OPENAI_API_KEY` as an environment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
 :::
 
 #### Save Results On Confident AI (highly recommended)
@@ -176,17 +176,17 @@ deepeval test run test_example.py
 ```
 
 :::info
-In this example, we've delibrately showed a "worse" `actual_output` that is extremely irrelevant when compared to the previous test case. In reality, you'll not be hardcoding the `actual_output`s but rather be generating them at evaluation time.
+In this example, we've deliberately showed a "worse" `actual_output` that is extremely irrelevant when compared to the previous test case. In reality, you'll not be hardcoding the `actual_output`s but rather be generating them at evaluation time.
 :::
 
-After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipeliens, or just in a python script. Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
+After running the new `test run` , you should see the `GEval` correctness metric failing, and it is because the `actual_output` is incorrect according to the `expected_output`. This is actually known as a "regression", and you can catch these by including `deepeval` in CI/CD pipelines, or just in a python script. Based on these two results, you can decide which iterate is better, and whether the latest change you've made to your LLM application is safe to deploy.
 
 If you're logged into Confident AI, here's how you can catch regressions in your LLM app:
 
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:ab-regression-testing.mp4"
   confidentUrl="/llm-evaluation/ab-regression-testing"
-  label="Watch LLM Regresion Testing on Confident AI"
+  label="Watch LLM Regression Testing on Confident AI"
 />
 
 Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression. For detailed documentation on regression testing with Confident AI, visit [this link](https://documentation.confident-ai.com/llm-evaluation/ab-regression-testing).
@@ -265,7 +265,7 @@ correctness_metric.measure(test_case)
 print(correctness_metric.score, correctness_metric.reason)
 ```
 
-Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjuction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
+Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
 
 :::tip
 
@@ -560,7 +560,7 @@ By keeping your datasets on Confident AI, you can ensure that your datasets that
   />
 </video>
 
-Once you have your dataset on Confident AI, acces it by pulling it from the cloud:
+Once you have your dataset on Confident AI, access it by pulling it from the cloud:
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -574,7 +574,7 @@ You'll often times want to process the pulled dataset before evaluating it, sinc
 
 ### Running Evaluations
 
-You can either run evaluations [locally using `deepeval`](https://documentation.confident-ai.com), or on the cloud on a [collection of metrics](https://documentation.confident-ai.com) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled daataset, we can run an evaluation:
+You can either run evaluations [locally using `deepeval`](https://documentation.confident-ai.com), or on the cloud on a [collection of metrics](https://documentation.confident-ai.com) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled dataset, we can run an evaluation:
 
 ```python
 from deepeval import evaluate

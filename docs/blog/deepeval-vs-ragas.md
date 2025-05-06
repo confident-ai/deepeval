@@ -24,9 +24,9 @@ This means:
 - **Modular, plug-and-play metrics** that you can use to build your own evaluation pipeline
 - **Less bugs and clearer error messages**, so you know exactly what is going on
 - **Extensive customizations** with no vendor-locking into any LLM or framework
-- **Abstracted into clear, extendable** classess and methods for better reusability
+- **Abstracted into clear, extendable** classes and methods for better reusability
 - **Clean, readable code** that is essential if you ever need to customize DeepEval for yourself
-- **Exhuastive ecosystem**, meaning you can easily build on top of DeepEval while taking advantage of DeepEval's features
+- **Exhaustive ecosystem**, meaning you can easily build on top of DeepEval while taking advantage of DeepEval's features
 
 ### 2. We care about your experience, a lot
 
@@ -36,7 +36,7 @@ In terms of the codebase, a recent example is we actually broke away DeepEval's 
 
 ### 3. We have a vibrant community
 
-Whenever we're working, the team is always in the discord community on a voice call. Alhough we might not be talking all the time (in fact most times on mute), we do this to let users know we're always here whenever they run into a problem.
+Whenever we're working, the team is always in the discord community on a voice call. Although we might not be talking all the time (in fact most times on mute), we do this to let users know we're always here whenever they run into a problem.
 
 This means you'll find people are more willing to ask questions with active discussions going on.
 

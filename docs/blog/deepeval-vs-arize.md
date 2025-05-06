@@ -46,7 +46,7 @@ Take the [DAG metric](/docs/metrics-dag), for example, which took less than a we
 
 ### 4. We're always here for you... literally
 
-We’re always in Discord and live in a voice channel. Most of the time, we’re muted and heads-down, but our presence means you can jump in, ask questions, and get help, **whenver you want**.
+We’re always in Discord and live in a voice channel. Most of the time, we’re muted and heads-down, but our presence means you can jump in, ask questions, and get help, **whenever you want**.
 
 DeepEval is where it is today because of our community—your feedback has shaped the product at every step. And with fast, direct support, we can make DeepEval better, faster.
 

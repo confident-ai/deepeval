@@ -229,7 +229,7 @@ class ConversationSimulator:
                     except TypeError:
                         res = self.simulator_model.generate(prompt)
                         data = trimAndLoadJson(res, self)
-                        user_input = data["simluated_input"]
+                        user_input = data["simulated_input"]
 
             turns.append(
                 LLMTestCase(
@@ -311,7 +311,7 @@ class ConversationSimulator:
             except TypeError:
                 res = await self.simulator_model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["simluated_input"]
+                return data["simulated_input"]
 
     async def _a_simulate_single_conversation(
         self,
@@ -365,7 +365,7 @@ class ConversationSimulator:
                     except TypeError:
                         res = await self.simulator_model.a_generate(prompt)
                         data = trimAndLoadJson(res, self)
-                        user_input = data["simluated_input"]
+                        user_input = data["simulated_input"]
 
                 user_input = res.simulated_input
 

@@ -27,7 +27,7 @@ class PromptSynthesizerTemplate:
         }}
 
         You MUST include at least one statement as the input. `input` MUST be of `{input_format}` format.
-        You MUST TRY to generate {num_goldens} data points, unless the generated `input` is getting reptitive.
+        You MUST TRY to generate {num_goldens} data points, unless the generated `input` is getting repetitive.
         **
 
         scenario: {scenario}

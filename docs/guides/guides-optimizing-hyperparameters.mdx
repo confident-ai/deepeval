@@ -14,7 +14,7 @@ sidebar_label: Optimizing Hyperparameters
 Apart from catching regressions and sanity checking your LLM applications, LLM evaluation and testing plays an pivotal role in picking the best hyperparameters for your LLM application.
 
 :::info
-In `deepeval`, hyperparameters refer to indepdent variables that affect the final `actual_output` of your LLM application, which includes the LLM used, the prompt template, temperature, etc.
+In `deepeval`, hyperparameters refer to independent variables that affect the final `actual_output` of your LLM application, which includes the LLM used, the prompt template, temperature, etc.
 :::
 
 ## Which Hyperparameters Should I Iterate On?
@@ -44,7 +44,7 @@ To find the best hyperparameter combination, simply:
 In reality, you don't have to strictly generate `actual_outputs` at evaluation time and can evaluate with datasets of precomputed `actual_outputs`, but you ought to ensure that the `actual_outputs` in each [`LLMTestCase`](/docs/evaluation-test-cases) can be properly identified by a hyperparameter combination for this to work.
 :::
 
-Let's walkthrough a quick example hypothentical example showing how to find the best model and prompt template hyperparameter combination using the `AnswerRelevancyMetric` as a measurement. First, define a function to generate `actual_output`s for `LLMTestCase`s based on a certain hyperparameter combination:
+Let's walkthrough a quick example hypothetical example showing how to find the best model and prompt template hyperparameter combination using the `AnswerRelevancyMetric` as a measurement. First, define a function to generate `actual_output`s for `LLMTestCase`s based on a certain hyperparameter combination:
 
 ```python
 from typing import List

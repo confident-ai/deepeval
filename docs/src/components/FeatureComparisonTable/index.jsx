@@ -288,7 +288,7 @@ const datasets = {
         },
         {
           feature: "Illegal risks metrics",
-          description: "Illegal activity, graphic content, peronsal safety, etc.",
+          description: "Illegal activity, graphic content, personal safety, etc.",
           deepeval: true,
           competitor: false,
         },
@@ -559,7 +559,7 @@ const datasets = {
         },
         {
           feature: "HIPAA-ready",
-          description: "For companies in the healthcare indudstry",
+          description: "For companies in the healthcare industry",
           deepeval: true,
           competitor: false,
         },
@@ -781,7 +781,7 @@ const datasets = {
         },
         {
           feature: "Illegal risks metrics",
-          description: "Illegal activity, graphic content, peronsal safety, etc.",
+          description: "Illegal activity, graphic content, personal safety, etc.",
           deepeval: true,
           competitor: false,
         },
@@ -1046,7 +1046,7 @@ const datasets = {
         },
         {
           feature: "HIPAA-ready",
-          description: "For companies in the healthcare indudstry",
+          description: "For companies in the healthcare industry",
           deepeval: true,
           competitor: false,
         },
@@ -1344,7 +1344,7 @@ const datasets = {
         },
         {
           feature: "Illegal risks metrics",
-          description: "Illegal activity, graphic content, peronsal safety, etc.",
+          description: "Illegal activity, graphic content, personal safety, etc.",
           deepeval: true,
           competitor: false,
         },
@@ -1615,7 +1615,7 @@ const datasets = {
         },
         {
           feature: "HIPAA-ready",
-          description: "For companies in the healthcare indudstry",
+          description: "For companies in the healthcare industry",
           deepeval: true,
           competitor: true,
         },
@@ -1837,7 +1837,7 @@ const datasets = {
         },
         {
           feature: "Illegal risks metrics",
-          description: "Illegal activity, graphic content, peronsal safety, etc.",
+          description: "Illegal activity, graphic content, personal safety, etc.",
           deepeval: true,
           competitor: false,
         },
@@ -2108,7 +2108,7 @@ const datasets = {
         },
         {
           feature: "HIPAA-ready",
-          description: "For companies in the healthcare indudstry",
+          description: "For companies in the healthcare industry",
           deepeval: true,
           competitor: false,
         },

@@ -21,7 +21,7 @@ class DeepEvalBaseModel(ABC):
 
     @abstractmethod
     def _call(self, *args, **kwargs):
-        """Runs the model to score / ourput the model predictions.
+        """Runs the model to score / output the model predictions.
 
         Returns:
             A score or a list of results.

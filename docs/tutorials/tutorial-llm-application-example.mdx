@@ -230,8 +230,8 @@ from llama_index.llms.openai import OpenAI
 class MedicalAppointmentSystem:
     ...
     def setup_agent(self):
-        # use MODEL and TEMPERATRE here
-        gpt = OpenAI(model=MODEL, temperature=TEMPERATRE)
+        # use MODEL and TEMPERATURE here
+        gpt = OpenAI(model=MODEL, temperature=TEMPERATURE)
         self.agent = FunctionCallingAgent.from_tools(
             tools=[
                 self.get_appointment_state_tool,

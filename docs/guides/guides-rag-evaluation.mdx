@@ -17,7 +17,7 @@ Retrieval-Augmented Generation (RAG) is a technique used to enrich LLM outputs b
 The processes of retrieving relevant context, is carried out by the **retriever**, while generating responses based on the **retrieval context**, is carried out by the **generator**. Together, the retriever and generator forms your **RAG pipeline.**
 :::
 
-Since a satisfactory LLM output depends entirely on the quality of the retriever and generator, RAG evaluation focuses on evaluating the retriever and generator in your RAG pipeline seperately. This also allows for easier debugging and to pinpoint issues on a component level.
+Since a satisfactory LLM output depends entirely on the quality of the retriever and generator, RAG evaluation focuses on evaluating the retriever and generator in your RAG pipeline separately. This also allows for easier debugging and to pinpoint issues on a component level.
 
 <div
   style={{
@@ -57,7 +57,7 @@ As you've noticed, there are quite a few hyperparameters such as the choice of e
 
 - **Does the embedding model you're using capture domain-specific nuances?** (If you're working on a medical use case, a generic embedding model offered by OpenAI might not provide expected the vector search results.)
 - **Does your reranker model ranks the retrieved nodes in the "correct" order?**
-- **Are you retrieving the right amount of information?** This is influenced by hyperparmeters text chunk size, top-K number.
+- **Are you retrieving the right amount of information?** This is influenced by hyperparameters text chunk size, top-K number.
 
 We'll explore what other hyperparameters to consider in the generation step of a RAG pipeline, before showing how to evaluate RAG.
 
@@ -87,7 +87,7 @@ Usually you'll find yourself starting with a state-of-the-art model such as `gpt
 - [`ContextualRelevancyMetric`](/docs/metrics-contextual-relevancy): evaluates whether the **text chunk size** and **top-K** of your retriever is able to retrieve information without much irrelevancies.
 
 :::note
-It is no coincidence that these three metrics so happen to cover all major hyperparameters that would influence the quality of your retrieval context. You should aim to use all three metrics in conjuction for comprehensive evaluation results.
+It is no coincidence that these three metrics so happen to cover all major hyperparameters that would influence the quality of your retrieval context. You should aim to use all three metrics in conjunction for comprehensive evaluation results.
 :::
 
 A **combination of these three metrics are needed** because, you want to make sure the retriever is able to retrieve just the right amount of information, in the right order. RAG evaluation in the retrieval step ensures you are feeding **clean data** to your generator.
@@ -182,7 +182,7 @@ In reality, the hyperparameters for the generator isn't as clear-cut as hyperpar
 
 _(To evaluate generation on customized criteria, you should use the [`GEval`](/docs/metrics-llm-evals) metric instead, which covers all custom use cases.)_
 
-Similar to retrieval metrics, using these scores in conjucation will best align with human expectations of what a good LLM output looks like.
+Similar to retrieval metrics, using these scores in conjunction will best align with human expectations of what a good LLM output looks like.
 
 To begin, define your metrics:
 
@@ -249,7 +249,7 @@ Visit their respective metric documentation pages to learn how they calculated:
 
 As mentioned above, these RAG metrics are useful but extremely generic. For example, if I'd like my RAG-based chatbot to answer questions using dark humor, how can I evaluate that?
 
-Here is where you can take advantage of `deepeval`'s `GEval` metric, capcable of evaluating LLM outputs on **ANY** criteria.
+Here is where you can take advantage of `deepeval`'s `GEval` metric, capable of evaluating LLM outputs on **ANY** criteria.
 
 ```python
 from deepeval.metrics import GEval
@@ -350,7 +350,7 @@ For those interested, here is another nice article on [Unit Testing RAG Applicat
 
 ## Optimizing On Hyperparameters
 
-In `deepeval`, you can associate hyperparameters such as text chunk size, top-K, embedding model, LLM, etc. to each test run, which when used in conjuction with Confident AI, allows you to easily see how changing different hyperparameters lead to different evaluation results.
+In `deepeval`, you can associate hyperparameters such as text chunk size, top-K, embedding model, LLM, etc. to each test run, which when used in conjunction with Confident AI, allows you to easily see how changing different hyperparameters lead to different evaluation results.
 
 Confident AI is a web-based LLM evaluation platform which all users of `deepeval` automatically have access to. To begin, login via the CLI:
 

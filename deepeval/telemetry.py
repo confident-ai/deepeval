@@ -241,7 +241,7 @@ def capture_synthesizer_run(
 
 
 @contextmanager
-def capture_conversation_simulatior_run(num_conversations: int):
+def capture_conversation_simulator_run(num_conversations: int):
     if not telemetry_opt_out():
         with tracer.start_as_current_span(
             f"Invoked conversation simulator"
@@ -270,7 +270,7 @@ def capture_red_teamer_run(
     attack_enhancements: Dict,
 ):
     if not telemetry_opt_out():
-        with tracer.start_as_current_span(f"Invokved redteamer") as span:
+        with tracer.start_as_current_span(f"Invoked redteamer") as span:
             # if anonymous_public_ip:
             #     span.set_attribute("user.public_ip", anonymous_public_ip)
             # span.set_attribute("logged_in_with", get_logged_in_with())

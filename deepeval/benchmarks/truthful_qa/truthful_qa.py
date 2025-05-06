@@ -291,7 +291,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             lambda data: data["category"] == task.value
         )
 
-        # Create goldens list from datset
+        # Create goldens list from dataset
         goldens: List[Golden] = []
         for data in dataset:
             if mode == TruthfulQAMode.MC1:

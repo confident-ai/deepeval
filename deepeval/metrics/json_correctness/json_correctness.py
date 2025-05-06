@@ -20,7 +20,7 @@ from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
 from deepeval.metrics.json_correctness.schema import Reason
 from deepeval.utils import get_or_create_event_loop
 
-DEFAULT_CORRERCT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
+DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
 
 
 class JsonCorrectnessMetric(BaseMetric):
@@ -127,7 +127,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
         is_valid_json = self.score == 1
         if is_valid_json:
-            return DEFAULT_CORRERCT_REASON
+            return DEFAULT_CORRECT_REASON
 
         prompt: dict = JsonCorrectnessTemplate.generate_reason(
             actual_output=actual_output,
@@ -156,7 +156,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
         is_valid_json = self.score == 1
         if is_valid_json:
-            return DEFAULT_CORRERCT_REASON
+            return DEFAULT_CORRECT_REASON
 
         prompt: dict = JsonCorrectnessTemplate.generate_reason(
             actual_output=actual_output,

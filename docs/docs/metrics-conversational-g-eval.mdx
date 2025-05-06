@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer custom={true} chatbot={true} />
 
-The conversationl G-Eval is an adopted version of `deepeval`'s popular [`GEval` metric](/docs/metrics-llm-evals) but for evaluating entire conversations instead. It is currently the best way to define custom critera to evaluate multi-turn conversations in `deepeval`. By defining a custom `ConversationalGEval`, you can easily determine whether your LLM chatbot is able to consistently generate responses that are up to standard with your custom criteria **throughout a conversation**.
+The conversational G-Eval is an adopted version of `deepeval`'s popular [`GEval` metric](/docs/metrics-llm-evals) but for evaluating entire conversations instead. It is currently the best way to define custom criteria to evaluate multi-turn conversations in `deepeval`. By defining a custom `ConversationalGEval`, you can easily determine whether your LLM chatbot is able to consistently generate responses that are up to standard with your custom criteria **throughout a conversation**.
 
 ## Required Arguments
 
@@ -52,7 +52,7 @@ professionalism_metric = ConversationalGEval(
     evaluation_steps=[
         "Check whether each LLM 'actual output' is professional with regards to the user 'input'",
         "Being professional means no profanity, no toxic language, and consistently says 'please' or 'thank you'.",
-        "Penalize heavily if exclaimation marks are used in a rude demeanour."
+        "Penalize heavily if exclamation marks are used in a rude demeanour."
     ],
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )

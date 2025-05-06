@@ -70,7 +70,7 @@ JSON:
 """
 
     @staticmethod
-    def generate_alignment_verdicts(orignal_text, summary_claims):
+    def generate_alignment_verdicts(original_text, summary_claims):
         return f"""Based on the given summary claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH piece of info contradicts any facts in the original text. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given summary claim agrees with the original text. 
 Provide a 'reason' ONLY if the answer is 'no' OR 'idk'. 
@@ -79,7 +79,7 @@ The provided summary claims is drawn from the summary. Try to provide a correcti
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
 Example Original Text: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. Einstein won the Nobel Prize in 1968. Einstein is a German Scientist."
-Example Summary Claims: ["Barack Obama is a caucasian male.", "Zurich is a city in London", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a Germen chef."]
+Example Summary Claims: ["Barack Obama is a caucasian male.", "Zurich is a city in London", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a German chef."]
 
 Example:
 {{
@@ -101,7 +101,7 @@ Example:
         }},
         {{
             "verdict": "no",
-            "reason": "The summary claims Einstein is a Germen chef, which is not correct as the original text states he was a German scientist instead."
+            "reason": "The summary claims Einstein is a German chef, which is not correct as the original text states he was a German scientist instead."
         }},
     ]  
 }}
@@ -115,7 +115,7 @@ Claims that is not backed up due to a lack of information/is not mentioned in th
 **
 
 Original Text:
-{orignal_text}
+{original_text}
 
 Summary Claims:
 {summary_claims}

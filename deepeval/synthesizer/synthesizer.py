@@ -270,7 +270,7 @@ class Synthesizer:
     ) -> List[Golden]:
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
-        # Intialize Goldens as an empty list
+        # Initialize Goldens as an empty list
         goldens: List[Golden] = []
 
         if self.async_mode:

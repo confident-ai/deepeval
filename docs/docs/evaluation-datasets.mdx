@@ -157,7 +157,7 @@ By default the `save_as()` method only saves the `Golden`s within your `Evaluati
 
 ## Load an Existing Dataset
 
-`deepeval` offers support for loading datasetes stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
+`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
 
 ### From Confident AI
 
@@ -241,7 +241,7 @@ dataset.add_goldens_from_csv_file(
 ```
 
 :::note
-Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarily **optional** parameters when adding test cases from an existing dataset.
+Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarly **optional** parameters when adding test cases from an existing dataset.
 :::
 
 ## Evaluate Your Dataset Using `deepeval`

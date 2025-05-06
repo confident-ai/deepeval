@@ -11,7 +11,7 @@ sidebar_label: Using Custom LLMs for Evaluation
   />
 </head>
 
-All of `deepeval`'s metrics uses LLMs for evaluation, and is currently defaulted to OpenAI's GPT models. However, for users that don't wish to use OpenAI's GPT models and would instead prefer other providers such as Claude (Anthropic), Gemini (Google), Llama-3 (Meta), or Mistral, `deepeval` provides an easy way for anyone to use literaly **ANY** custom LLM for evaluation.
+All of `deepeval`'s metrics uses LLMs for evaluation, and is currently defaulted to OpenAI's GPT models. However, for users that don't wish to use OpenAI's GPT models and would instead prefer other providers such as Claude (Anthropic), Gemini (Google), Llama-3 (Meta), or Mistral, `deepeval` provides an easy way for anyone to use literally **ANY** custom LLM for evaluation.
 
 This guide will show you how to create custom LLMs for evaluation in `deepeval`, and demonstrate various methods to enforce valid JSON LLM outputs that are required for evaluation with the following examples:
 
@@ -303,7 +303,7 @@ class GoogleVertexAI(DeepEvalBaseLLM):
     def get_model_name(self):
         return "Vertex AI Model"
 
-# Initilialize safety filters for vertex model
+# Initialize safety filters for vertex model
 # This is important to ensure no evaluation responses are blocked
 safety_settings = {
     HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
@@ -321,7 +321,7 @@ custom_model_gemini = ChatVertexAI(
     , location= "<region>" #example : us-central1
 )
 
-# initiatialize the  wrapper class
+# initialize the  wrapper class
 vertexai_gemini = GoogleVertexAI(model=custom_model_gemini)
 print(vertexai_gemini.generate("Write me a joke"))
 ```
