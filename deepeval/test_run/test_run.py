@@ -29,9 +29,9 @@ from deepeval.utils import (
     is_in_ci_env,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
-from deepeval.constants import LOGIN_PROMPT
+from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR
 
-TEMP_FILE_NAME = ".deepeval/.temp_test_run_data.json"
+TEMP_FILE_NAME = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 
 
 class TestRunResultDisplay(Enum):

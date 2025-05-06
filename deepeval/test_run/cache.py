@@ -13,9 +13,10 @@ from deepeval.utils import (
     serialize,
 )
 from deepeval.metrics import BaseMetric
+from deepeval.constants import HIDDEN_DIR
 
-CACHE_FILE_NAME = ".deepeval/.deepeval-cache.json"
-TEMP_CACHE_FILE_NAME = ".deepeval/.temp-deepeval-cache.json"
+CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-cache.json"
+TEMP_CACHE_FILE_NAME = f"{HIDDEN_DIR}/.temp-deepeval-cache.json"
 
 
 class MetricConfiguration(BaseModel):

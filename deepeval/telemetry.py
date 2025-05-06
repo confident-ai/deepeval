@@ -8,7 +8,7 @@ import sentry_sdk
 from enum import Enum
 from typing import List, Dict
 import requests
-from deepeval.constants import LOGIN_PROMPT
+from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR, KEY_FILE
 from posthog import Posthog
 
 
@@ -21,30 +21,32 @@ class Feature(Enum):
     CONVERSATION_SIMULATOR = "conversation_simulator"
     UNKNOWN = "unknown"
 
-DEEPEVAL_FOLDER = ".deepeval"
+
 TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
-TELEMETRY_PATH = os.path.join(DEEPEVAL_FOLDER, TELEMETRY_DATA_FILE)
+TELEMETRY_PATH = os.path.join(HIDDEN_DIR, TELEMETRY_DATA_FILE)
 
 #########################################################
 ### Move Folders ########################################
 #########################################################
 
-if os.path.exists(".deepeval") and not os.path.isdir(".deepeval"):
-    temp_deepeval_file_name = ".deepeval_legacy"
-    os.rename(".deepeval", temp_deepeval_file_name)
-    os.makedirs(DEEPEVAL_FOLDER, exist_ok=True)
-    os.rename(temp_deepeval_file_name, os.path.join(DEEPEVAL_FOLDER, ".deepeval"))
+if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
+    temp_deepeval_file_name = ".deepeval_temp"
+    os.rename(KEY_FILE, temp_deepeval_file_name)
+    os.makedirs(HIDDEN_DIR, exist_ok=True)
+    os.rename(temp_deepeval_file_name, os.path.join(HIDDEN_DIR, KEY_FILE))
 
-os.makedirs(DEEPEVAL_FOLDER, exist_ok=True)
+os.makedirs(HIDDEN_DIR, exist_ok=True)
 
 if os.path.exists(TELEMETRY_DATA_FILE):
     os.rename(TELEMETRY_DATA_FILE, TELEMETRY_PATH)
 
 if os.path.exists(".deepeval-cache.json"):
-    os.rename(".deepeval-cache.json", ".deepeval/.deepeval-cache.json")
-    
-if os.path.exists("temp_test_run_data.json"):
-    os.rename("temp_test_run_data.json", ".deepeval/.temp_test_run_data.json")
+    os.rename(".deepeval-cache.json", f"{HIDDEN_DIR}/.deepeval-cache.json")
+
+if os.path.exists(".temp_test_run_data.json"):
+    os.rename(
+        ".temp_test_run_data.json", f"{HIDDEN_DIR}/.temp_test_run_data.json"
+    )
 
 #########################################################
 ### Telemetry Config ####################################

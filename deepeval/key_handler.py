@@ -3,7 +3,7 @@
 import json
 from enum import Enum
 
-from .constants import KEY_FILE
+from .constants import KEY_FILE, HIDDEN_DIR
 
 
 class KeyValues(Enum):
@@ -46,7 +46,7 @@ class KeyFileHandler:
     def write_key(self, key: KeyValues, value):
         """Appends or updates data in the hidden file"""
         try:
-            with open(".deepeval/" + KEY_FILE, "r") as f:
+            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 # Load existing data
                 try:
                     self.data = json.load(f)
@@ -61,13 +61,13 @@ class KeyFileHandler:
         self.data[key.value] = value
 
         # Write the updated data back to the file
-        with open(".deepeval/" + KEY_FILE, "w") as f:
+        with open(f"{HIDDEN_DIR}/{KEY_FILE}", "w") as f:
             json.dump(self.data, f)
 
     def fetch_data(self, key: KeyValues):
         """Fetches the data from the hidden file"""
         try:
-            with open(".deepeval/" + KEY_FILE, "r") as f:
+            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 try:
                     self.data = json.load(f)
                 except json.JSONDecodeError:
@@ -81,14 +81,14 @@ class KeyFileHandler:
     def remove_key(self, key: KeyValues):
         """Removes the specified key from the data."""
         try:
-            with open(".deepeval/" + KEY_FILE, "r") as f:
+            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 try:
                     self.data = json.load(f)
                 except json.JSONDecodeError:
                     # Handle corrupted JSON file
                     self.data = {}
             self.data.pop(key.value, None)  # Remove the key if it exists
-            with open(".deepeval/" + KEY_FILE, "w") as f:
+            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "w") as f:
                 json.dump(self.data, f)
         except FileNotFoundError:
             # Handle the case when the file doesn't exist
