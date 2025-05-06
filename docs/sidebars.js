@@ -15,7 +15,18 @@ module.exports = {
         "evaluation-introduction",
         "evaluation-test-cases",
         "evaluation-datasets",
-        "evaluation-running-llm-evals",
+        {
+          type: "category",
+          label: "Run LLM Evals",
+          items: [
+            "evaluation-end-to-end-llm-evals",
+            "evaluation-component-level-llm-evals",
+            "evaluation-llm-tracing",
+            "evaluation-unit-test-in-cicd",
+            "evaluation-python-script",
+          ],
+          collapsed: false,
+        },
         {
           type: "category",
           label: "Metrics",
