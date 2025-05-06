@@ -11,8 +11,6 @@ from deepeval.tracing import (
 import random
 from asyncio import sleep
 
-trace_manager._daemon = False
-
 #######################################################
 ## Example ############################################
 #######################################################
@@ -23,7 +21,7 @@ trace_manager._daemon = False
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
     attributes = LlmAttributes(
-        input=[{"role": "user", "content": prompt}],
+        input=prompt,
         output=generated_text,
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
@@ -248,7 +246,8 @@ async def research_agent(query: str):
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
 )
 async def meta_agent(query: str):
-    print(query)
+    # print(query)
+    # raise ValueError("Test Error")
     # 50% probability of executing the function
     weather_info = await weather_agent(query)
     research_info = await research_agent(query)
@@ -258,7 +257,7 @@ async def meta_agent(query: str):
     Research: {research_info}
     Custom Analysis: {custom_info}
     """
-    print(final_response)
+    # print(final_response)
 
     return final_response
 
@@ -302,13 +301,18 @@ import contextvars
 # # Gather multiple traceable tasks
 async def run_parallel_examples():
     tasks = [
-        meta_agent("What's the weather like in SF?"),
-        meta_agent("Tell me about Elon Musk."),
+        meta_agent("1. What's the weather like in SF?"),
+        meta_agent("2. Tell me about Elon Musk."),
+        meta_agent("3. What's the weather like in SF?"),
+        meta_agent("4. Tell me about Elon Musk."),
     ]
     await asyncio.gather(*tasks)
 
-
 # Run it
-asyncio.run(run_parallel_examples())
+import os
+print(trace_manager._daemon)
+print(os.environ["CONFIDENT_TRACE_FLUSH"])
+print(os.environ["CONFIDENT_TRACE_VERBOSE"])
 
+asyncio.run(run_parallel_examples())
 trace_manager.shutdown()
