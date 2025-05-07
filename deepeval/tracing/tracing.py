@@ -247,10 +247,12 @@ class TraceManager:
     def _on_signal(self, signum, frame):
         queue_size = self._trace_queue.qsize()
         in_flight = len(self._in_flight_tasks)
-        self._print_trace_status(
-            message=f"INTERRUPTED: Posting remaining trace(s).",
-            trace_worker_status=TraceWorkerStatus.WARNING,
-        )
+        remaining_tasks = queue_size + in_flight
+        if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES" and remaining_tasks > 0:
+            self._print_trace_status(
+                message=f"INTERRUPTED: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
+                trace_worker_status=TraceWorkerStatus.WARNING,
+            )
         sys.exit(0)
 
     def _warn_on_exit(self):
