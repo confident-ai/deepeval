@@ -241,7 +241,7 @@ class TraceManager:
         self.evaluating = False
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
-        signal.signal(signal.SIGINT,  self._on_signal)  
+        signal.signal(signal.SIGINT, self._on_signal)
         signal.signal(signal.SIGTERM, self._on_signal)
 
     def _on_signal(self, signum, frame):
@@ -262,7 +262,6 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces.",
             )
-
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -413,6 +412,7 @@ class TraceManager:
     def _process_trace_queue(self):
         """Worker thread function that processes the trace queue"""
         import threading
+
         main_thr = threading.main_thread()
 
         # Create a new event loop
@@ -433,9 +433,7 @@ class TraceManager:
                     )
                 except AttributeError:
                     # Pydantic version below 2.0
-                    body = trace_api.dict(
-                        by_alias=True, exclude_none=True
-                    )
+                    body = trace_api.dict(by_alias=True, exclude_none=True)
 
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
@@ -451,7 +449,7 @@ class TraceManager:
                     self._print_trace_status(
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace {status}",
-                        description=response["link"]
+                        description=response["link"],
                     )
                 elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
                     # Main thread gone → to be flushed
@@ -464,13 +462,12 @@ class TraceManager:
                 self._print_trace_status(
                     trace_worker_status=TraceWorkerStatus.FAILURE,
                     message=f"Error posting trace {status}",
-                    description=str(e)
+                    description=str(e),
                 )
             finally:
                 task = asyncio.current_task()
                 if task:
                     self._in_flight_tasks.discard(task)
-
 
         async def async_worker():
             # Continue while user code is running or work remains
@@ -511,14 +508,18 @@ class TraceManager:
             # Drain any pending tasks
             pending = asyncio.all_tasks(loop=loop)
             if pending:
-                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                loop.run_until_complete(
+                    asyncio.gather(*pending, return_exceptions=True)
+                )
             self.flush_traces(remaining_trace_request_bodies)
             loop.close()
 
-    def flush_traces(self, remaining_trace_request_bodies: List[Dict[str, Any]]):
+    def flush_traces(
+        self, remaining_trace_request_bodies: List[Dict[str, Any]]
+    ):
         self._print_trace_status(
             TraceWorkerStatus.WARNING,
-            message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)"
+            message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)",
         )
         for body in remaining_trace_request_bodies:
             try:
@@ -542,7 +543,6 @@ class TraceManager:
                     description=str(e),
                 )
 
-            
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
         base_spans = []
