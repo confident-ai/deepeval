@@ -211,24 +211,24 @@ def create_api_test_case(
 
 def validate_assert_test_inputs(
     golden: Optional[Golden] = None,
-    traceable_callback: Optional[Callable] = None,
+    observed_callback: Optional[Callable] = None,
     test_case: Optional[LLMTestCase] = None,
     metrics: Optional[List] = None,
 ):
-    if golden and traceable_callback:
-        if not getattr(traceable_callback, "_is_deepeval_observed", False):
+    if golden and observed_callback:
+        if not getattr(observed_callback, "_is_deepeval_observed", False):
             raise ValueError(
-                "The provided 'traceable_callback' must be decorated with '@observe' from deepeval.tracing."
+                "The provided 'observed_callback' must be decorated with '@observe' from deepeval.tracing."
             )
         if test_case or metrics:
             raise ValueError(
-                "You cannot provide both ('golden' + 'traceable_callback') and ('test_case' + 'metrics'). Choose one mode."
+                "You cannot provide both ('golden' + 'observed_callback') and ('test_case' + 'metrics'). Choose one mode."
             )
-    elif (golden and not traceable_callback) or (
-        traceable_callback and not golden
+    elif (golden and not observed_callback) or (
+        observed_callback and not golden
     ):
         raise ValueError(
-            "Both 'golden' and 'traceable_callback' must be provided together."
+            "Both 'golden' and 'observed_callback' must be provided together."
         )
 
     if (test_case and not metrics) or (metrics and not test_case):
@@ -236,41 +236,41 @@ def validate_assert_test_inputs(
             "Both 'test_case' and 'metrics' must be provided together."
         )
 
-    if not ((golden and traceable_callback) or (test_case and metrics)):
+    if not ((golden and observed_callback) or (test_case and metrics)):
         raise ValueError(
-            "You must provide either ('golden' + 'traceable_callback') or ('test_case' + 'metrics')."
+            "You must provide either ('golden' + 'observed_callback') or ('test_case' + 'metrics')."
         )
 
 
 def validate_evaluate_inputs(
     goldens: Optional[List] = None,
-    traceable_callback: Optional[Callable] = None,
+    observed_callback: Optional[Callable] = None,
     test_cases: Optional[List] = None,
     metrics: Optional[List] = None,
 ):
 
-    if goldens and traceable_callback:
-        if not getattr(traceable_callback, "_is_deepeval_observed", False):
+    if goldens and observed_callback:
+        if not getattr(observed_callback, "_is_deepeval_observed", False):
             raise ValueError(
-                "The provided 'traceable_callback' must be decorated with '@observe' from deepeval.tracing."
+                "The provided 'observed_callback' must be decorated with '@observe' from deepeval.tracing."
             )
         if test_cases or metrics:
             raise ValueError(
-                "You cannot provide both ('goldens' with 'traceable_callback') and ('test_cases' with 'metrics'). Please choose one mode."
+                "You cannot provide both ('goldens' with 'observed_callback') and ('test_cases' with 'metrics'). Please choose one mode."
             )
-    elif (goldens and not traceable_callback) or (
-        traceable_callback and not goldens
+    elif (goldens and not observed_callback) or (
+        observed_callback and not goldens
     ):
         raise ValueError(
-            "If using 'goldens', you must also provide a 'traceable_callback'."
+            "If using 'goldens', you must also provide a 'observed_callback'."
         )
     if (test_cases and not metrics) or (metrics and not test_cases):
         raise ValueError(
             "If using 'test_cases', you must also provide 'metrics'."
         )
-    if not ((goldens and traceable_callback) or (test_cases and metrics)):
+    if not ((goldens and observed_callback) or (test_cases and metrics)):
         raise ValueError(
-            "You must provide either goldens with a 'traceable_callback', or test_cases with 'metrics'."
+            "You must provide either goldens with a 'observed_callback', or test_cases with 'metrics'."
         )
 
 

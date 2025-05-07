@@ -16,6 +16,7 @@ and iterate on LLM (applications) and was built with the following principles in
 
 - Easily "unit test" LLM outputs in a similar way to Pytest.
 - Plug-and-use 30+ LLM-evaluated metrics, most with research backing.
+- Supports both end-to-end and component level evaluation.
 - Evaluation for RAG, agents, chatbots, and virtually any use case.
 - Synthetic dataset generation with state-of-the-art evolution techniques.
 - Metrics are simple to customize and covers all use cases.
@@ -405,7 +406,7 @@ deepeval test run test_dataset.py -n 2
 
 :::tip
 
-Visit the [evaluation introduction section](/docs/evaluation-running-llm-evals#flags-for-deepeval-test-run) to learn about the different types of flags you can use with the `deepeval test run` command.
+Visit the [evaluation introduction section](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the different types of flags you can use with the `deepeval test run` command.
 :::
 
 Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:

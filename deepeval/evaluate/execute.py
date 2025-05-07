@@ -776,7 +776,7 @@ async def a_execute_conversational_test_cases(
 
 def execute_agentic_test_cases(
     goldens: List[Golden],
-    traceable_callback: Union[
+    observed_callback: Union[
         Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
     verbose_mode: Optional[bool],
@@ -813,13 +813,13 @@ def execute_agentic_test_cases(
                     )
 
                 with Observer("custom", func_name="Test Wrapper"):
-                    if asyncio.iscoroutinefunction(traceable_callback):
+                    if asyncio.iscoroutinefunction(observed_callback):
                         loop = get_or_create_event_loop()
                         loop.run_until_complete(
-                            traceable_callback(input=golden.input)
+                            observed_callback(input=golden.input)
                         )
                     else:
-                        traceable_callback(input=golden.input)
+                        observed_callback(input=golden.input)
                     current_trace: Trace = get_current_trace()
 
                 if pbar_callback is not None:
@@ -998,7 +998,7 @@ def execute_agentic_test_cases(
 
 async def a_execute_agentic_test_cases(
     goldens: List[Golden],
-    traceable_callback: Union[
+    observed_callback: Union[
         Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
     verbose_mode: Optional[bool],
@@ -1050,7 +1050,7 @@ async def a_execute_agentic_test_cases(
                 task = execute_with_semaphore(
                     func=a_execute_agentic_test_case,
                     golden=golden,
-                    traceable_callback=traceable_callback,
+                    observed_callback=observed_callback,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
                     count=count,
@@ -1075,7 +1075,7 @@ async def a_execute_agentic_test_cases(
                 task = execute_with_semaphore(
                     func=a_execute_agentic_test_case,
                     golden=golden,
-                    traceable_callback=traceable_callback,
+                    observed_callback=observed_callback,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
                     count=count,
@@ -1096,7 +1096,7 @@ async def a_execute_agentic_test_cases(
 
 async def a_execute_agentic_test_case(
     golden: Golden,
-    traceable_callback: Union[
+    observed_callback: Union[
         Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
     test_run_manager: TestRunManager,
@@ -1113,10 +1113,10 @@ async def a_execute_agentic_test_case(
 ):
     # Call callback and extract trace
     with Observer("custom", func_name="Test Wrapper"):
-        if asyncio.iscoroutinefunction(traceable_callback):
-            await traceable_callback(input=golden.input)
+        if asyncio.iscoroutinefunction(observed_callback):
+            await observed_callback(input=golden.input)
         else:
-            traceable_callback(input=golden.input)
+            observed_callback(input=golden.input)
         current_trace: Trace = get_current_trace()
 
     if pbar_callback is not None:

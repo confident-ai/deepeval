@@ -181,10 +181,10 @@ goldens = [
 
 
 # # # Run Async
-# evaluate(goldens=goldens, traceable_callback=meta_agent, async_config=AsyncConfig(run_async=True))
+# evaluate(goldens=goldens, observed_callback=meta_agent, async_config=AsyncConfig(run_async=True))
 evaluate(
     goldens=goldens,
-    traceable_callback=meta_agent,
+    observed_callback=meta_agent,
     async_config=AsyncConfig(run_async=True),
     display_config=DisplayConfig(show_indicator=True),
 )
@@ -192,13 +192,13 @@ evaluate(
 # # # # Run Sync
 # evaluate(
 #     goldens=goldens,
-#     traceable_callback=meta_agent,
+#     observed_callback=meta_agent,
 #     async_config=AsyncConfig(run_async=False),
 #     display_config=DisplayConfig(show_indicator=True),
 # )
 # evaluate(
 #     goldens=goldens,
-#     traceable_callback=meta_agent,
+#     observed_callback=meta_agent,
 #     async_config=AsyncConfig(run_async=False),
 #     display_config=DisplayConfig(show_indicator=False),
 # )
@@ -211,4 +211,4 @@ evaluate(
 #     goldens,
 # )
 # def test_meta_agent_0(golden):
-#     assert_test(golden=golden, traceable_callback=meta_agent)
+#     assert_test(golden=golden, observed_callback=meta_agent)

@@ -27,15 +27,26 @@ Here's a diagram of what an ideal evaluation workflow looks like using `deepeval
   style={{ padding: "30px", marginTop: "20px" }}
 />
 
+There are **TWO** types of LLM evaluations in `deepeval`:
+
+- [End-to-end evaluation](/docs/evaluation-end-to-end-llm-evals): The overall input and outputs of your LLM system.
+
+- [Component-level evaluation](/docs/evaluation-component-level-llm-evals): The individual inner workings of your LLM system.
+
+Both can be done using either `deepeval test run` in CI/CD pipelines, or via the `evaluate()` function in Python scripts.
+
+:::note
 Your test cases will typically be in a single python file, and executing them will be as easy as running `deepeval test run`:
 
 ```
 deepeval test run test_example.py
 ```
 
-:::tip
-[Click here](/tutorials/tutorial-introduction) for an end-to-end **tutorial on how to evaluate an LLM medical chatbot** using `deepeval`.
 :::
+
+## Test Run
+
+Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/llm-evaluation/testing-reports) on the cloud.
 
 ## Metrics
 
@@ -51,7 +62,7 @@ You'll need to create a test case to run `deepeval`'s metrics.
 
 ## Test Cases
 
-In `deepeval`, a test case allows you to use evaluation metrics you have defined to unit test LLM applications.
+In `deepeval`, a test case represents an [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) and allows you to use evaluation metrics you have defined to unit test LLM applications.
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -160,7 +171,7 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
 
-You can find the full documentation on `deepeval test run`, including how to use it **with tracing**, on the [running LLM-evals page.](/docs/evaluation-running-llm-evals#using-deepeval-test-run-in-cicd-pipelines)
+You can find the full documentation on `deepeval test run`, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines) and [component-level](/docs/evaluation-component-level-llm-evals#use-deepeval-test-run-in-cicd-pipelines) evaluation by clicking on their respective links.
 
 :::info
 `@pytest.mark.parametrize` is a decorator offered by Pytest. It simply loops through your `EvaluationDataset` to evaluate each test case individually.
@@ -189,12 +200,12 @@ There are **TWO** mandatory and **SIX** optional parameters when calling the `ev
 - `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
-- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-running-llm-evals#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
-- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-running-llm-evals#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
-- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-running-llm-evals#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
-- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-running-llm-evals#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
+- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
+- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
+- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
+- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
-You can find the full documentation on `evaluate()`, including how to use it **with tracing**, on the [running LLM-evals page.](/docs/evaluation-running-llm-evals#using-the-evaluate-function)
+You can find the full documentation on `evaluate()`, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts) and [component-level](/docs/evaluation-component-level-llm-evals#use-evaluate-in-python-scripts) evaluation by clicking on their respective links.
 
 :::tip
 You can also replace `dataset` with a list of test cases, as shown in the [test cases section.](/docs/evaluation-test-cases#evaluate-test-cases-in-bulk)
@@ -225,4 +236,4 @@ This is very useful especially if you:
 - Wish to evaluate multiple components at once
 - Don't want to rewrite your codebase just to bubble up returned variables to create an `LLMTestCase`
 
-You can also simply configure `deepeval` to not run any metrics when you're running your LLM application in production. For the full guide on evaluating with tracing, visit [this page.](/docs/evaluation-running-llm-evals#setup-tracing-highly-recommended)
+By defauly, `deepeval` will not run any metrics when you're running your LLM application outside of `evaluate()` or `assert_test()`. For the full guide on evaluating with tracing, visit [this page.](/docs/evaluation-component-level-llm-evals)

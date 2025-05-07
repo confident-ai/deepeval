@@ -154,9 +154,9 @@ goldens = [
 # Assert Test
 def test_meta_agent_0():
     golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden=golden, traceable_callback=meta_agent, run_async=False)
+    assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
 
 
 def test_meta_agent_1():
     golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden=golden, traceable_callback=meta_agent, run_async=False)
+    assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
