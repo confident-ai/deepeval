@@ -590,12 +590,17 @@ class TestRunManager:
                 else:
                     fail_count += 1
 
+            success_rate = (
+                round((100 * pass_count) / (pass_count + fail_count), 2)
+                if pass_count + fail_count > 0
+                else "Cannot display metrics for component-level evals, please login to Confident AI to see results."
+            )
             table.add_row(
                 test_case_name,
                 "",
                 "",
                 "",
-                f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
+                f"{success_rate}%",
             )
 
             for metric_data in test_case.metrics_data:
@@ -809,7 +814,6 @@ class TestRunManager:
                 # Pydantic version below 2.0
                 body = test_run.dict(by_alias=True, exclude_none=True)
 
-            # print(body)
             # return
             api = Api()
             result = api.send_request(

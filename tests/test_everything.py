@@ -97,7 +97,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -223,7 +223,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openapi is expensive")
+# @pytest.mark.skip(reason="openapi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -277,12 +277,12 @@ def test_everything_2():
     )
 
 
-from deepeval.prompt import Prompt
+# from deepeval.prompt import Prompt
 
-prompt = Prompt(alias="First Prompt")
-prompt.pull()
+# prompt = Prompt(alias="First Prompt")
+# prompt.pull()
 
 
-@deepeval.log_hyperparameters
-def hyperparameters():
-    return {"temperature": 1, "model": "gpt-4", "Prompt": prompt}
+# @deepeval.log_hyperparameters
+# def hyperparameters():
+#     return {"temperature": 1, "model": "gpt-4", "Prompt": prompt}
