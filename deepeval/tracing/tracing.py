@@ -373,7 +373,7 @@ class TraceManager:
         description: Optional[str] = None,
     ):
         # abstract into dim, error (red), green (success)
-        if os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO":
+        if os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO" and self.evaluating is False:
             console = Console()
             message_prefix = "[dim][Confident AI Trace Log][/dim]"
             if trace_worker_status == TraceWorkerStatus.SUCCESS:
