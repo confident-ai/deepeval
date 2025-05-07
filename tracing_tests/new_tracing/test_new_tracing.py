@@ -317,4 +317,3 @@ print(os.environ["CONFIDENT_TRACE_FLUSH"])
 print(os.environ["CONFIDENT_TRACE_VERBOSE"])
 
 asyncio.run(run_parallel_examples())
-trace_manager.shutdown()
