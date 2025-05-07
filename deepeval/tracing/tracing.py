@@ -254,9 +254,10 @@ class TraceManager:
         sys.exit(0)
 
     def _warn_on_exit(self):
-        if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES":
-            queue_size = self._trace_queue.qsize()
-            in_flight = len(self._in_flight_tasks)
+        queue_size = self._trace_queue.qsize()
+        in_flight = len(self._in_flight_tasks)
+        remaining_tasks = queue_size + in_flight
+        if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES" and remaining_tasks > 0:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
