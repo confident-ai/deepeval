@@ -941,7 +941,6 @@ def execute_agentic_test_cases(
                             else:
                                 raise
                         metric_data = create_metric_data(metric)
-                        print("@@@@@@", metric_data.success)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_status(metric_data.success)
                         if pbar_eval is not None:
