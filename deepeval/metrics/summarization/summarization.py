@@ -113,8 +113,14 @@ class SummarizationMetric(BaseMetric):
     async def a_measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
+        assessment_questions: Optional[List[str]] = None,
         _show_indicator: bool = True,
     ) -> float:
+        if assessment_questions is not None and len(assessment_questions) == 0:
+            self.assessment_questions = None
+        else:
+            self.assessment_questions = assessment_questions
+            
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self._required_params, self)
