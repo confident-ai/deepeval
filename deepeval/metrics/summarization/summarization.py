@@ -34,7 +34,6 @@ class SummarizationMetric(BaseMetric):
         threshold: float = 0.5,
         n: int = 5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        assessment_questions: Optional[List[str]] = None,
         include_reason: bool = True,
         async_mode=True,
         strict_mode: bool = False,
@@ -44,11 +43,6 @@ class SummarizationMetric(BaseMetric):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
-
-        if assessment_questions is not None and len(assessment_questions) == 0:
-            self.assessment_questions = None
-        else:
-            self.assessment_questions = assessment_questions
 
         self.include_reason = include_reason
         self.n = n
@@ -63,8 +57,14 @@ class SummarizationMetric(BaseMetric):
     def measure(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
+        assessment_questions: Optional[List[str]] = None,
         _show_indicator: bool = True,
     ) -> float:
+        if assessment_questions is not None and len(assessment_questions) == 0:
+            self.assessment_questions = None
+        else:
+            self.assessment_questions = assessment_questions
+            
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self._required_params, self)
