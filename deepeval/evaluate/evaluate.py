@@ -66,25 +66,25 @@ def assert_test(
         ]
     ] = None,
     golden: Optional[Golden] = None,
-    traceable_callback: Optional[
+    observed_callback: Optional[
         Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
     run_async: bool = True,
 ):
     validate_assert_test_inputs(
         golden=golden,
-        traceable_callback=traceable_callback,
+        observed_callback=observed_callback,
         test_case=test_case,
         metrics=metrics,
     )
 
-    if golden and traceable_callback:
+    if golden and observed_callback:
         if run_async:
             loop = get_or_create_event_loop()
             test_result = loop.run_until_complete(
                 a_execute_agentic_test_cases(
                     goldens=[golden],
-                    traceable_callback=traceable_callback,
+                    observed_callback=observed_callback,
                     ignore_errors=should_ignore_errors(),
                     verbose_mode=should_verbose_print(),
                     show_indicator=True,
@@ -99,7 +99,7 @@ def assert_test(
         else:
             test_result = execute_agentic_test_cases(
                 goldens=[golden],
-                traceable_callback=traceable_callback,
+                observed_callback=observed_callback,
                 ignore_errors=should_ignore_errors(),
                 verbose_mode=should_verbose_print(),
                 show_indicator=True,
@@ -185,7 +185,7 @@ def evaluate(
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # with tracing
     goldens: Optional[List[Golden]] = None,
-    traceable_callback: Optional[
+    observed_callback: Optional[
         Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
     # agnostic
@@ -198,11 +198,11 @@ def evaluate(
 ) -> EvaluationResult:
     validate_evaluate_inputs(
         goldens=goldens,
-        traceable_callback=traceable_callback,
+        observed_callback=observed_callback,
         test_cases=test_cases,
         metrics=metrics,
     )
-    if goldens and traceable_callback:
+    if goldens and observed_callback:
         global_test_run_manager.reset()
         start_time = time.perf_counter()
         with capture_evaluation_run("traceable evaluate()"):
@@ -211,7 +211,7 @@ def evaluate(
                 test_results = loop.run_until_complete(
                     a_execute_agentic_test_cases(
                         goldens=goldens,
-                        traceable_callback=traceable_callback,
+                        observed_callback=observed_callback,
                         ignore_errors=error_config.ignore_errors,
                         verbose_mode=display_config.verbose_mode,
                         show_indicator=display_config.show_indicator,
@@ -224,7 +224,7 @@ def evaluate(
             else:
                 test_results = execute_agentic_test_cases(
                     goldens=goldens,
-                    traceable_callback=traceable_callback,
+                    observed_callback=observed_callback,
                     ignore_errors=error_config.ignore_errors,
                     verbose_mode=display_config.verbose_mode,
                     show_indicator=display_config.show_indicator,
