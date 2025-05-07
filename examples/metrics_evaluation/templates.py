@@ -1,42 +1,25 @@
-from typing import Optional, List, Protocol
+from typing import List, Optional
 
 
-class FaithfulnessTemplateProtocol(Protocol):
+class MovieKGFaithfulnessTemplate:
     @staticmethod
     def generate_claims(actual_output: str) -> str:
-        ...
+        return f"""Based on the given response, extract factual claims made about movies, actors, and directors. These should be concrete statements involving relationships such as 'acted in', 'directed', or 'released in'.
 
-    @staticmethod
-    def generate_truths(
-        retrieval_context: str, extraction_limit: Optional[int] = None
-    ) -> str:
-        ...
-
-    @staticmethod
-    def generate_verdicts(claims: List[str], retrieval_context: str) -> str:
-        ...
-
-    @staticmethod
-    def generate_reason(score: float, contradictions: List[str]) -> str:
-        ...
-
-
-class FaithfulnessTemplate:
-    @staticmethod
-    def generate_claims(actual_output: str) -> str:
-        return f"""Based on the given text, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
-These truths, MUST BE COHERENT, and CANNOT be taken out of context.
-    
 Example:
-Example Text: 
-"Albert Einstein, the genius often associated with wild hair and mind-bending theories, famously won the Nobel Prize in Physics—though not for his groundbreaking work on relativity, as many assume. Instead, in 1968, he was honored for his discovery of the photoelectric effect, a phenomenon that laid the foundation for quantum mechanics."
+Actual Output: ```
+In the 1992 movie \"Unforgiven\", Clint Eastwood portrayed a retired gunslinger named William Munny. The film was directed by Eastwood and also starred Gene Hackman as Little Bill Daggett.
+```
 
-Example JSON: 
+Example JSON:
 {{
-    "claims": [
-        "Einstein won the noble prize for his discovery of the photoelectric effect in 1968."
-        "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
-    ]  
+  "claims": [
+    "There is a movie titled 'Unforgiven'.",
+    "'Unforgiven' was released in 1992.",
+    "Clint Eastwood portrayed William Munny in the movie 'Unforgiven'.",
+    "Clint Eastwood directed the movie 'Unforgiven'.",
+    "Gene Hackman played Little Bill Daggett in 'Unforgiven'."
+  ]
 }}
 ===== END OF EXAMPLE ======
 
@@ -53,32 +36,39 @@ JSON:
 """
 
     @staticmethod
-    def generate_truths(
-        retrieval_context: str, extraction_limit: Optional[int] = None
-    ) -> str:
+    def generate_truths(retrieval_context: str, extraction_limit: Optional[int] = None) -> str:
         if extraction_limit is None:
             limit = " FACTUAL, undisputed truths"
         elif extraction_limit == 1:
             limit = " the single most important FACTUAL, undisputed truth"
         else:
             limit = f" the {extraction_limit} most important FACTUAL, undisputed truths per document"
-        return f"""Based on the given text, please generate a comprehensive list of{limit}, that can inferred from the provided text.
-These truths, MUST BE COHERENT. They must NOT be taken out of context.
-        
+
+        return f"""Based on the given text, please generate a comprehensive list of{limit}, that can be inferred from the provided text.
+These truths MUST BE COHERENT. They must NOT be taken out of context.
+
 Example:
 Example Text: 
-"Albert Einstein, the genius often associated with wild hair and mind-bending theories, famously won the Nobel Prize in Physics—though not for his groundbreaking work on relativity, as many assume. Instead, in 1968, he was honored for his discovery of the photoelectric effect, a phenomenon that laid the foundation for quantum mechanics."
+[
+    "Movie: Unforgiven",
+    "Year: 1992",
+    "Director: Clint Eastwood",
+    "Actors: Clint Eastwood as William Munny, Gene Hackman as Little Bill Daggett"
+]
 
 Example JSON: 
 {{
     "truths": [
-        "Einstein won the noble prize for his discovery of the photoelectric effect in 1968."
-        "The photoelectric effect is a phenomenon that laid the foundation for quantum mechanics."
+        "There is a movie titled 'Unforgiven'.",
+        "'Unforgiven' was released in 1992.",
+        "Clint Eastwood directed 'Unforgiven'.",
+        "Clint Eastwood portrayed William Munny in 'Unforgiven'.",
+        "Gene Hackman played Little Bill Daggett in 'Unforgiven'."
     ]  
 }}
 ===== END OF EXAMPLE ======
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "truths" key as a list of strings. No words or explanation is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the \"truths\" key as a list of strings. No words or explanation is needed.
 Only include truths that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALLY CORRECT.
 **
 
@@ -97,29 +87,22 @@ The provided claim is drawn from the actual output. Try to provide a correction 
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
-Example retrieval contexts: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. Einstein won the Nobel Prize in 1968. Einstein is a German Scientist."
-Example claims: ["Barack Obama is a caucasian male.", "Zurich is a city in London", "Einstein won the Nobel Prize for the discovery of the photoelectric effect which may have contributed to his fame.", "Einstein won the Nobel Prize in 1969 for his discovery of the photoelectric effect.", "Einstein was a German chef."]
+Example retrieval context: "'Unforgiven' was directed by Clint Eastwood. Gene Hackman played Little Bill Daggett. Morgan Freeman also appeared in the film."
+Example claims: ["Clint Eastwood directed 'Unforgiven'.", "Tom Hanks starred in 'Unforgiven'.", "Gene Hackman played a sheriff in 'Unforgiven'."]
 
 Example:
 {{
     "verdicts": [
         {{
-            "verdict": "idk"
-        }},
-        {{
-            "verdict": "idk"
-        }},
-        {{
             "verdict": "yes"
         }},
         {{
             "verdict": "no",
-            "reason": "The actual output claims Einstein won the Nobel Prize in 1969, which is untrue as the retrieval context states it is 1968 instead."
+            "reason": "The actual output claims Tom Hanks starred in 'Unforgiven', but the retrieval context does not mention Tom Hanks at all."
         }},
         {{
-            "verdict": "no",
-            "reason": "The actual output claims Einstein is a German chef, which is not correct as the retrieval context states he was a German scientist instead."
-        }},
+            "verdict": "idk"
+        }}
     ]  
 }}
 ===== END OF EXAMPLE ======
@@ -128,7 +111,7 @@ The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of claims.
 You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
 ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
 Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
-Claims that is not backed up due to a lack of information/is not mentioned in the retrieval contexts MUST be answered 'idk', otherwise I WILL DIE.
+Claims that are not backed up due to a lack of information/is not mentioned in the retrieval contexts MUST be answered 'idk', otherwise I WILL DIE.
 **
 
 Retrieval Contexts:
