@@ -942,7 +942,7 @@ def execute_agentic_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
-                        llm_api_test_case.update_status(metric_data.success)
+                        api_test_case.update_status(metric_data.success)
                         if pbar_eval is not None:
                             pbar_eval.update(1)
 
@@ -1179,7 +1179,7 @@ async def a_execute_agentic_test_case(
         await a_execute_span_test_case(
             span=span,
             trace_api=trace_api,
-            llm_api_test_case=api_test_case,
+            api_test_case=api_test_case,
             ignore_errors=ignore_errors,
             skip_on_missing_params=skip_on_missing_params,
             show_indicator=show_indicator,
@@ -1209,7 +1209,7 @@ async def a_execute_agentic_test_case(
 async def a_execute_span_test_case(
     span: BaseSpan,
     trace_api: TraceApi,
-    llm_api_test_case: LLMApiTestCase,
+    api_test_case: LLMApiTestCase,
     ignore_errors: bool,
     skip_on_missing_params: bool,
     show_indicator: bool,
@@ -1262,4 +1262,4 @@ async def a_execute_span_test_case(
             continue
         metric_data = create_metric_data(metric)
         api_span.metrics_data.append(metric_data)
-        llm_api_test_case.update_status(metric_data.success)
+        api_test_case.update_status(metric_data.success)
