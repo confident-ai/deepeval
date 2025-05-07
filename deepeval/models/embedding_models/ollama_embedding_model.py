@@ -23,8 +23,8 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def load_model(self, async_mode: bool = False):
         if not async_mode:
             return Client(host=self.base_url)
-        else:
-            return AsyncClient(host=self.base_url)
+
+        return AsyncClient(host=self.base_url)
 
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()

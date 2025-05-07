@@ -76,7 +76,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.actual_model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -93,7 +93,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.actual_model_name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -139,7 +139,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
         if schema:
-            if self.model_name in structured_outputs_models:
+            if self.actual_model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -156,7 +156,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.model_name in json_mode_models:
+            if self.actual_model_name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -253,7 +253,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing["gpt-4o"])
+        pricing = model_pricing.get(
+            self.actual_model_name, model_pricing["gpt-4o"]
+        )
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
@@ -266,17 +268,16 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return f"Azure OpenAI ({self.model_name})"
 
     def load_model(self, async_mode: bool = False):
-        if async_mode == False:
+        if not async_mode:
             return AzureOpenAI(
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
                 azure_deployment=self.deployment_name,
             )
-        else:
-            return AsyncAzureOpenAI(
-                api_key=self.azure_openai_api_key,
-                api_version=self.openai_api_version,
-                azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.deployment_name,
-            )
+        return AsyncAzureOpenAI(
+            api_key=self.azure_openai_api_key,
+            api_version=self.openai_api_version,
+            azure_endpoint=self.azure_endpoint,
+            azure_deployment=self.deploynment_name,
+        )

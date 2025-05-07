@@ -91,7 +91,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.model_name, model_pricing)
+        pricing = model_pricing.get(self.actual_model_name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
