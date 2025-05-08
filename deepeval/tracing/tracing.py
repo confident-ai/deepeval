@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 import os
-from typing import Any, Dict, List, Literal, Optional, Set, Union
+from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
 import signal
 import sys
 
@@ -298,6 +298,7 @@ class TraceManager:
             if not self.evaluating:
                 self.post_trace(trace)
             else:
+                print(f"Ending trace: {trace.root_spans}")
                 trace.root_spans = [trace.root_spans[0].children[0]]
                 for root_span in trace.root_spans:
                     root_span.parent_uuid = None
@@ -797,6 +798,7 @@ class Observer:
         current_span.end_time = end_time
         if exc_type is not None:
             current_span.status = TraceSpanStatus.ERRORED
+            print(current_span)
             current_span.error = str(exc_val)
         else:
             current_span.status = TraceSpanStatus.SUCCESS
@@ -923,8 +925,12 @@ class Observer:
 
 
 def observe(
-    type: Union[Literal["agent", "llm", "retriever", "tool"], str, None],
+    _func: Optional[Callable] = None,
+    *,
     metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+    type: Optional[
+        Union[Literal["agent", "llm", "retriever", "tool"], str]
+    ] = None,
     **observe_kwargs,
 ):
     """
@@ -999,6 +1005,9 @@ def observe(
             # Set the marker attribute on the wrapper
             setattr(wrapper, "_is_deepeval_observed", True)
             return wrapper
+
+    if _func is not None and callable(_func):
+        return decorator(_func)
 
     return decorator
 

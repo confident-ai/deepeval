@@ -815,11 +815,9 @@ def execute_agentic_test_cases(
                 with Observer("custom", func_name="Test Wrapper"):
                     if asyncio.iscoroutinefunction(observed_callback):
                         loop = get_or_create_event_loop()
-                        loop.run_until_complete(
-                            observed_callback(input=golden.input)
-                        )
+                        loop.run_until_complete(observed_callback(golden.input))
                     else:
-                        observed_callback(input=golden.input)
+                        observed_callback(golden.input)
                     current_trace: Trace = get_current_trace()
 
                 if pbar_callback is not None:
@@ -1114,9 +1112,9 @@ async def a_execute_agentic_test_case(
     # Call callback and extract trace
     with Observer("custom", func_name="Test Wrapper"):
         if asyncio.iscoroutinefunction(observed_callback):
-            await observed_callback(input=golden.input)
+            await observed_callback(golden.input)
         else:
-            observed_callback(input=golden.input)
+            observed_callback(golden.input)
         current_trace: Trace = get_current_trace()
 
     if pbar_callback is not None:

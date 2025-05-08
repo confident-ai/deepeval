@@ -111,7 +111,7 @@ def nested_component():
     pass
 
 @observe
-def llm_app():
+def llm_app(input: str):
     nested_component()
 
 evaluate(goldens=[Golden(...)], observed_callback=[llm_app])
@@ -442,7 +442,7 @@ def nested_component():
     pass
 
 @observe
-def llm_app():
+def llm_app(input: str):
     nested_component()
 
 evaluate(goldens=[Golden(...)], observed_callback=[llm_app])

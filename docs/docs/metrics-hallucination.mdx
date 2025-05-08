@@ -80,13 +80,13 @@ from deepeval.tracing import observe, update_current_span_test_case
 ...
 
 @observe(metrics=[metric])
-def inner_component:
+def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
     update_current_span_test_case(test_case)
     return
 
 @observe
-def llm_app():
+def llm_app(input: str):
     inner_component()
     return
 
