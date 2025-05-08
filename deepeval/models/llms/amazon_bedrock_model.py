@@ -1,26 +1,29 @@
 from typing import Optional, Tuple, Union, Dict
+from aiobotocore.session import get_session
+from contextlib import AsyncExitStack
+from botocore.config import Config
 from pydantic import BaseModel
-# import httpx
-# import json
+import asyncio
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 
-# check boto availability
+# check aiobotocore availability
 try:
-    import boto3
-    # from botocore.awsrequest import AWSRequest
-    # from botocore.auth import SigV4Auth
+    from aiobotocore.session import get_session
     from botocore.config import Config
-    boto_available = True
+    aiobotocore_available = True
 except ImportError:
-    boto_available = False
+    aiobotocore_available = False
 
-def _check_boto_available():
-    if not boto_available:
+
+def _check_aiobotocore_available():
+    if not aiobotocore_available:
         raise ImportError(
-            "boto3 and botocore are required for this functionality. Install it via your package manager"
+            "aiobotocore and botocore are required for this functionality. "
+            "Install them via your package manager (e.g. pip install aiobotocore botocore)"
         )
+
 
 class AmazonBedrockModel(DeepEvalBaseLLM):
     def __init__(
@@ -31,35 +34,31 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         aws_secret_access_key: Optional[str] = None,
         temperature: float = 0,
         input_token_cost: float = 0,
-        output_token_cost: float = 0
+        output_token_cost: float = 0,
     ):
-        _check_boto_available()
+        _check_aiobotocore_available()
+        super().__init__(model_id)
+
         self.model_id = model_id
-        self.temperature = temperature
-        self.input_token_cost = input_token_cost
-        self.output_token_cost = output_token_cost
         self.region_name = region_name
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
+        self.temperature = temperature
+        self.input_token_cost = input_token_cost
+        self.output_token_cost = output_token_cost
         self.top_p = 0
-        self.max_tokens = 10000
+        self.max_tokens = 1000
 
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
 
-        super().__init__(model_id)
-
-        # TODO: Potentially reimplement a_generate once aiobotocore is compatible with boto3
-        # boto_sess = boto3.Session(
-        #     aws_access_key_id=aws_access_key_id,
-        #     aws_secret_access_key=aws_secret_access_key,
-        #     region_name=region_name,
-        # )
-        # creds = boto_sess.get_credentials().get_frozen_credentials()
-        # self._signer = SigV4Auth(creds, "bedrock", region_name)
-        # base = f"https://bedrock-runtime.{region_name}.amazonaws.com"
-        # self._conv_url = f"{base}/model/{model_id}/converse"
-        # self._http = httpx.AsyncClient(timeout=None)
+        # prepare aiobotocore session, config, and async exit stack
+        self._session = get_session()
+        self._config = Config(
+            retries={"max_attempts": 5, "mode": "adaptive"}
+        )
+        self._exit_stack = AsyncExitStack()
+        self._client = None
 
     ###############################################
     # Generate functions
@@ -67,35 +66,24 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:     
-        converse_request = self.get_converse_request_body(prompt)
-        client = self.load_model()
-        response = client.converse(
-            modelId=self.model_id,
-            messages=converse_request["messages"],
-            inferenceConfig=converse_request["inferenceConfig"]
-        )
-        message = response["output"]["message"]["content"][0]["text"]
-        cost = self.calculate_cost(response["usage"]["inputTokens"], response["usage"]["outputTokens"])
-        if schema is None:
-            return message, cost
-        else:
-        # TODO: Decide whether to enforce JSON output via Instructor (sacrifice cost reporting)
-            json_output = trim_and_load_json(message)
-            return schema.model_validate(json_output), cost
+    ) -> Tuple[Union[str, Dict], float]:
+        return asyncio.run(self.a_generate(prompt, schema))
 
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
-    ) -> Tuple[Union[str, Dict], float]:     
-        converse_request = self.get_converse_request_body(prompt)
-        client = self.load_model()
-        response = client.converse(
+    ) -> Tuple[Union[str, Dict], float]:
+        payload = self.get_converse_request_body(prompt)
+        client = await self._ensure_client()
+        response = await client.converse(
             modelId=self.model_id,
-            messages=converse_request["messages"],
-            inferenceConfig=converse_request["inferenceConfig"]
+            messages=payload["messages"],
+            inferenceConfig=payload["inferenceConfig"],
         )
         message = response["output"]["message"]["content"][0]["text"]
-        cost = self.calculate_cost(response["usage"]["inputTokens"], response["usage"]["outputTokens"])
+        cost = self.calculate_cost(
+            response["usage"]["inputTokens"],
+            response["usage"]["outputTokens"],
+        )
         if schema is None:
             return message, cost
         else:
@@ -103,84 +91,44 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), cost
 
     ###############################################
-    # Helper Functions
+    # Client management
     ###############################################
-    
-    # TODO: Potentially reimplement a_generate once aiobotocore is compatible with boto3
-    #  async def a_generate(
-    #     self, prompt: str, schema: Optional[BaseModel] = None
-    # ) -> Tuple[Union[str, Dict], float]:
-    #     converse_request = self.get_converse_request_body(prompt)
-    #     response = await self.a_converse(converse_request)
-    #     print(response)
-    #     message = response["output"]["message"]["content"][0]["text"]
-    #     cost = self.calculate_cost(response["usage"]["inputTokens"], response["usage"]["outputTokens"])
-    #     if schema is None:
-    #         return message, cost
-    #     else:
-    #         json_output = trim_and_load_json(message)
-    #         return schema.model_validate(json_output), cost
 
-    # async def a_converse(self, payload: dict) -> Dict:
-    #     body = json.dumps(payload)
-    #     aws_req = AWSRequest(
-    #         method="POST",
-    #         url=self._conv_url,
-    #         data=body,
-    #         headers={"Content-Type": "application/json"},
-    #     )
-    #     self._signer.add_auth(aws_req)
-    #     prepped = aws_req.prepare()
-    #     resp = await self._http.post(
-    #         self._conv_url,
-    #         headers=dict(prepped.headers),
-    #         content=prepped.body,
-    #     )
-    #     resp.raise_for_status()
-    #     return resp.json()
+    async def _ensure_client(self):
+        if self._client is None:
+            cm = self._session.create_client(
+                "bedrock-runtime",
+                region_name=self.region_name,
+                aws_access_key_id=self.aws_access_key_id,
+                aws_secret_access_key=self.aws_secret_access_key,
+                config=self._config,
+            )
+            self._client = await self._exit_stack.enter_async_context(cm)
+        return self._client
 
-    def get_converse_request_body(self, prompt):
+    async def close(self):
+        await self._exit_stack.aclose()
+        self._client = None
+
+    ###############################################
+    # Helpers
+    ###############################################
+
+    def get_converse_request_body(self, prompt: str) -> dict:
         return {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [{"text": prompt}]
-                }
-            ],
+            "messages": [{"role": "user", "content": [{"text": prompt}]}],
             "inferenceConfig": {
                 "temperature": self.temperature,
                 "topP": self.top_p,
-                "maxTokens": self.max_tokens
-            }
+                "maxTokens": self.max_tokens,
+            },
         }
 
-    ###############################################
-    # Utilities
-    ###############################################
-
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        input_cost = input_tokens * self.input_token_cost
-        output_cost = output_tokens * self.output_token_cost
-        return input_cost + output_cost
-
-    ###############################################
-    # Model
-    ###############################################
+        return input_tokens * self.input_token_cost + output_tokens * self.output_token_cost
 
     def load_model(self):
-        bedrock_client = boto3.client(
-            "bedrock-runtime",
-            region_name=self.region_name,
-            aws_access_key_id=self.aws_access_key_id,
-            aws_secret_access_key=self.aws_secret_access_key,
-            config=Config(
-            retries={
-                "max_attempts": 5,
-                "mode": "adaptive"
-            }
-        )
-        )
-        return bedrock_client
+        pass
 
-    def get_model_name(self):
+    def get_model_name(self) -> str:
         return self.model_id
