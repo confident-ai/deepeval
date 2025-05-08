@@ -37,6 +37,8 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
+The `ContextualPrecisionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -45,7 +47,7 @@ from deepeval.metrics import ContextualPrecisionMetric
 # Replace this with the actual output from your LLM application
 actual_output = "We offer a 30-day full refund at no extra cost."
 
-# Replace this with the expected output from your RAG generator
+# Replace this with the expected output of your RAG generator
 expected_output = "You are eligible for a 30 day full refund at no extra cost."
 
 # Replace this with the actual retrieved context from your RAG pipeline
@@ -79,6 +81,29 @@ There are **SEVEN** optional parameters when creating a `ContextualPrecisionMetr
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `ContextualPrecisionTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualPrecisionMetric` score. Defaulted to `deepeval`'s `ContextualPrecisionTemplate`.
+
+### Within nested components
+
+You can also run the `ContextualPrecisionMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span_test_case
+...
+
+@observe(metrics=[metric])
+def inner_component:
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span_test_case(test_case)
+    return
+
+@observe
+def llm_app():
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
 
 ### As a standalone
 

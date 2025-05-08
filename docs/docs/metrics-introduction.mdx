@@ -78,6 +78,7 @@ More information on everything can be found on the [Confident AI evaluation docs
 - Make deterministic metric scores possible (when using `DAGMetric`).
 - Can be scored using any LLM judge.
 - Are "routable" - meaning you can apply different metrics based on different scenarios.
+- Can be used for both end-to-end and component-level evaluation.
 - Easily customizable (`GEval` and `DAGMetric`).
 - Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
 - Provide a comprehensive reason for the scores computed.
@@ -85,6 +86,36 @@ More information on everything can be found on the [Confident AI evaluation docs
 - Integrated 100% with Confident AI.
 
 All of `deepeval`'s metrics output a score between 0-1. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
+
+Additionally, `deepeval`'s metrics can also be used for both **end-to-end** evals:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval import evaluate
+
+evaluate(test_cases=[LLMTestCase(...)], metrics=[AnswerRelevancyMetric()])
+```
+
+And **component-level** evals:
+
+```python
+from deepeval.dataset import Golden
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import observe, update_current_span_test_case
+from deepeval import evaluate
+
+@observe(metrics=[AnswerRelevancyMetric()])
+def nested_component():
+    update_current_span_test_case(LLMTestCase(...))
+    pass
+
+@observe
+def llm_app():
+    nested_component()
+
+evaluate(goldens=[Golden(...)], observed_callback=[llm_app])
+```
 
 ## Types of Metrics
 
@@ -379,18 +410,42 @@ The `-i` flag ignores errors while the `-c` flag utilizes the local `deepeval` c
 
 :::
 
-## Running Evaluations With Metrics
+## Running LLM Evals Metrics
 
-To run evaluations using any metric of your choice, simply provide a list of [test cases](/docs/evaluation-test-cases) to evaluate your metrics against:
+### End-to-end
+
+To run end-to-end evaluations of your LLM system using any metric of your choice, simply provide a list of [test cases](/docs/evaluation-test-cases) to evaluate your metrics against:
 
 ```python
-from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval import evaluate
 
 test_case = LLMTestCase(input="...", actual_output="...")
 
 evaluate(test_cases=[test_case], metrics=[AnswerRelevancyMetric()])
+```
+
+### Component-level
+
+To run component-level evaluations of your LLM system using any metric of your choice, simply decorate your components with `@observe` and create [test cases](/docs/evaluation-test-cases) at runtime:
+
+```python
+from deepeval.dataset import Golden
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import observe, update_current_span_test_case
+from deepeval import evaluate
+
+@observe(metrics=[AnswerRelevancyMetric()])
+def nested_component():
+    update_current_span_test_case(LLMTestCase(...))
+    pass
+
+@observe
+def llm_app():
+    nested_component()
+
+evaluate(goldens=[Golden(...)], observed_callback=[llm_app])
 ```
 
 The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pytest) or `deepeval test run` **is the best way to run evaluations**. They offer tons of features out of the box, including caching, parallelization, cost tracking, error handling, and integration with [Confident AI.](https://confident-ai.com)

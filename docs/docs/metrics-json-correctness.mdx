@@ -59,7 +59,7 @@ class ExampleSchemaList(RootModel[List[ExampleSchema]]):
 
 :::
 
-Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`:
+Then supply it as the `expected_schema` when creating a `JsonCorrectnessMetric`, which can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
 ```python
 from deepeval import evaluate
@@ -98,6 +98,29 @@ There are **ONE** mandatory and **SIX** optional parameters when creating an `Pr
 :::info
 Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
 :::
+
+### Within nested components
+
+You can also run the `JsonCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span_test_case
+...
+
+@observe(metrics=[metric])
+def inner_component:
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span_test_case(test_case)
+    return
+
+@observe
+def llm_app():
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
 
 ### As a standalone
 

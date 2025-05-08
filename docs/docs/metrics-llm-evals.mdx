@@ -86,6 +86,33 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[correctness_metric])
 ```
 
+:::note
+This is an example of [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals), where your LLM application is treated as a black-box.
+:::
+
+### Within nested components
+
+You can also run `GEval` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span_test_case
+...
+
+@observe(metrics=[correctness_metric])
+def inner_component:
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span_test_case(test_case)
+    return
+
+@observe
+def llm_app():
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
+
 ### As a standalone
 
 You can also run `GEval` on a single test case as a standalone, one-off execution.

@@ -40,6 +40,8 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
+The `ContextualRecallMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -82,6 +84,29 @@ There are **SEVEN** optional parameters when creating a `ContextualRecallMetric`
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `ContextualRecallTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualRecallMetric` score. Defaulted to `deepeval`'s `ContextualRecallTemplate`.
+
+### Within nested components
+
+You can also run the `ContextualRecallMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span_test_case
+...
+
+@observe(metrics=[metric])
+def inner_component:
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span_test_case(test_case)
+    return
+
+@observe
+def llm_app():
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
 
 ### As a standalone
 

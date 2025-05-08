@@ -54,7 +54,7 @@ with a higher score indicating greater comprehensiveness.
 """
 ```
 
-You can use the `SummarizationMetric` as follows:
+You can use the `SummarizationMetric` as follows for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
 ```python
 from deepeval import evaluate
@@ -95,6 +95,29 @@ There are **NINE** optional parameters when instantiating an `SummarizationMetri
 :::note
 Sometimes, you may want to only consider the most important factual truths in the `input`. If this is the case, you can choose to set the `truths_extraction_limit` parameter to limit the maximum number of truths to consider during evaluation.
 :::
+
+### Within nested components
+
+You can also run the `SummarizationMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span_test_case
+...
+
+@observe(metrics=[metric])
+def inner_component:
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span_test_case(test_case)
+    return
+
+@observe
+def llm_app():
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
 
 ### As a standalone
 

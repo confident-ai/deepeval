@@ -134,7 +134,7 @@ goldens = [Golden(input="...")]
 evaluate(goldens=goldens, observed_callback=your_llm_app)
 ```
 
-There are **TWO** mandatory and **FIVE** optional parameters when calling the `evaluate()` function:
+There are **TWO** mandatory and **FIVE** optional parameters when calling the `evaluate()` function for **COMPONENT-LEVEL** evaluation:
 
 - `golden`: a list of `Golden`s that you wish to invoke your `observed_callback` with.
 - `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
@@ -181,7 +181,7 @@ Finally, don't forget to run the test file in the CLI:
 deepeval test run test_llm_app.py
 ```
 
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function **WITH** tracing:
+There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
 
 - `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
 - `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.

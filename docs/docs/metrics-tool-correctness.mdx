@@ -35,6 +35,8 @@ The `input` and `actual_output` are required to create an `LLMTestCase` (and hen
 
 ## Usage
 
+The `ToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+
 ```python
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, ToolCall
@@ -69,6 +71,29 @@ There are **SEVEN** optional parameters when creating a `ToolCorrectnessMetric`:
 :::info
 Since `should_exact_match` is a stricter criteria than `should_consider_ordering`, setting `should_consider_ordering` will have no effect when `should_exact_match` is set to `True`.
 :::
+
+### Within nested components
+
+You can also run the `ToolCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span_test_case
+...
+
+@observe(metrics=[metric])
+def inner_component:
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span_test_case(test_case)
+    return
+
+@observe
+def llm_app():
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
 
 ### As a standalone
 
