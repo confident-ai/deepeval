@@ -12,6 +12,7 @@ from deepeval.models.llms.utils import trim_and_load_json
 try:
     from aiobotocore.session import get_session
     from botocore.config import Config
+
     aiobotocore_available = True
 except ImportError:
     aiobotocore_available = False
@@ -54,9 +55,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
         # prepare aiobotocore session, config, and async exit stack
         self._session = get_session()
-        self._config = Config(
-            retries={"max_attempts": 5, "mode": "adaptive"}
-        )
+        self._config = Config(retries={"max_attempts": 5, "mode": "adaptive"})
         self._exit_stack = AsyncExitStack()
         self._client = None
 
@@ -125,7 +124,10 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         }
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        return input_tokens * self.input_token_cost + output_tokens * self.output_token_cost
+        return (
+            input_tokens * self.input_token_cost
+            + output_tokens * self.output_token_cost
+        )
 
     def load_model(self):
         pass

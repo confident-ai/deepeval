@@ -11,17 +11,19 @@ import asyncio
 model = AmazonBedrockModel(
     model_id="us.anthropic.claude-3-7-sonnet-20250219-v1:0",
     region_name="us-east-1",
-    aws_access_key_id="...", 
+    aws_access_key_id="...",
     aws_secret_access_key="...",
     temperature=0.5,
     input_token_cost=0.0,
     output_token_cost=0.0,
 )
 
+
 class ModelResponseSchema(BaseModel):
     summary: str
     timestamp: str
     confidence_score: float
+
 
 simple_prompt = "How are you today?"
 structured_prompt = """
@@ -34,6 +36,7 @@ Please respond in the following JSON format:
 
 Question: "How are you today?"
 """
+
 
 async def test_async():
     tasks = [
@@ -77,6 +80,7 @@ def test_evaluate():
         test_cases=[test_case, test_case, test_case],
         metrics=[FaithfulnessMetric(model=model), BiasMetric(model=model)],
     )
+
 
 if __name__ == "__main__":
     # test_sync()

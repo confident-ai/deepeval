@@ -21,7 +21,7 @@ from deepeval.models import (
     MultimodalOpenAIModel,
     MultimodalGeminiModel,
     MultimodalOllamaModel,
-    AmazonBedrockModel
+    AmazonBedrockModel,
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
@@ -351,7 +351,7 @@ def is_native_model(
         or isinstance(model, OllamaModel)
         or isinstance(model, LocalModel)
         or isinstance(model, GeminiModel)
-          or isinstance(model, AmazonBedrockModel)
+        or isinstance(model, AmazonBedrockModel)
     ):
         return True
     else:
