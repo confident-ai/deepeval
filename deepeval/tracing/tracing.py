@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
 import signal
 import sys
 
+from openai import OpenAI
 from pydantic import BaseModel, Field
 from rich.console import Console
 
@@ -921,10 +922,11 @@ class Observer:
             current_span.input = self.function_kwargs
             current_span.output = self.result
 
-    def patch_client(self, client):
-        if not client:
-            return
-        
+    def patch_client(self, client: Any):
+ 
+        if not isinstance(client, OpenAI):
+            raise ValueError("client must be an instance of OpenAI")
+
         original_methods = {}
 
         # patches these methods
