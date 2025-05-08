@@ -24,7 +24,7 @@ module.exports = {
             "evaluation-llm-tracing",
             "evaluation-flags-and-configs",
           ],
-          collapsed: false,
+          collapsed: true,
         },
         {
           type: "category",
