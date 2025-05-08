@@ -51,6 +51,7 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
 
 > 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure
 
+- Supports both end-to-end and component-level LLM evaluation.
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
   - DAG ([deep acyclic graph](https://deepeval.com/docs/metrics-dag))
@@ -75,7 +76,6 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
     - Conversation Relevancy
     - Role Adherence
   - etc.
-- Supports both end-to-end and component-level evaluation.
 - Build your own custom metrics that are automatically integrated with DeepEval's ecosystem.
 - Generate synthetic datasets for evaluation.
 - Integrates seamlessly with **ANY** CI/CD environment.
@@ -220,6 +220,8 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
 
 You can learn everything about component-level evaluations [here.](https://www.deepeval.com/docs/evaluation-component-level-llm-evals)
+
+<br />
 
 ## Evaluating Without Pytest Integration
 
