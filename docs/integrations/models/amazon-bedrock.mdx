@@ -3,3 +3,63 @@ id: amazon-bedrock
 title: Amazon Bedrock
 sidebar_label: Amazon Bedrock
 ---
+
+DeepEval supports using any Amazon Bedrock model for all evaluation metrics. To get started, you'll need to set up your AWS credentials.
+
+### Setting Up Your API Key
+
+To use Amazon Bedrock for `deepeval`'s LLM-based evaluations (metrics evaluated using an LLM), provide your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in the CLI:
+
+```bash
+export AWS_ACCESS_KEY_ID=<your-aws-access-key-id>
+export AWS_SECRET_ACCESS_KEY=<your-aws-secret-access-key>
+```
+
+Alternatively, if you're working in a notebook environment (e.g., Jupyter or Colab), set your keys in a cell:
+
+```bash
+%env AWS_ACCESS_KEY_ID=<your-aws-access-key-id>
+%env AWS_SECRET_ACCESS_KEY=<your-aws-secret-access-key>
+```
+
+### Python
+
+To use Amazon bedrock models for DeepEval metrics, define an `AmazonBedrockModel` and specify the model you want to use.
+
+```python
+from deepeval.models import AmazonBedrockModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = AnthropicModel(
+    model="claude-3-7-sonnet-latest",
+    temperature=0
+)
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+There are **TWO** mandatory and **FIVE** optional parameters when creating an `AmazonBedrockModel`:
+
+- `model_id`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`).
+- `region_name`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`).
+- [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. If omitted, falls back to the default AWS credentials chain.
+- [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. If omitted, falls back to the default AWS credentials chain.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `input_token_cost`: A float specifying the per-input-token cost in USD. Defaulted to 0.
+- [Optional] `output_token_cost`: A float specifying the per-output-token cost in USD. Defaulted to 0.
+
+### Available Amazon Bedrock Models
+
+:::note
+This list only displays some of the available models. For a comprehensive list, refer to the Amazon Bedrock's official documentation.
+:::
+
+Below is a list of commonly used Amazon Bedrock foundation models:
+
+- `anthropic.claude-3-opus-20240229-v1:0`
+- `anthropic.claude-3-sonnet-20240229-v1:0`
+- `amazon.titan-text-express-v1`
+- `amazon.titan-text-premier-v1:0`
+- `amazon.nova-micro-v1:0`
+- `amazon.nova-lite-v1:0`
+- `amazon.nova-pro-v1:0`
+- `amazon.nova-premier-v1:0`
