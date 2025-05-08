@@ -8,6 +8,7 @@ module.exports = {
         "models/azure-openai",
         "models/ollama",
         "models/anthropic",
+        "models/amazon-bedrock",
         "models/gemini",
         "models/vertex-ai",
         "models/vllm",
@@ -18,10 +19,7 @@ module.exports = {
     {
       type: "category",
       label: "Frameworks",
-      items: [
-        "frameworks/llamaindex",
-        "frameworks/huggingface"
-      ],
+      items: ["frameworks/llamaindex", "frameworks/huggingface"],
       collapsed: false,
     },
     {
