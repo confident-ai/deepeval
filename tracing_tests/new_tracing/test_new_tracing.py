@@ -137,7 +137,6 @@ async def weather_research_agent(user_query: str):
 async def supervisor_agent(user_query: str):
     research = await random_research_agent(user_query)
     weather_research = await weather_research_agent(user_query)
-
     update_current_span(
         attributes=AgentAttributes(
             input=user_query,
@@ -290,6 +289,11 @@ async def meta_agent(query: str):
         metadata={
             "user_id": "11111",
             "date": "1/1/11"
+        }
+    )
+    update_current_trace(
+        metadata={
+            "input": "input"
         }
     )
 

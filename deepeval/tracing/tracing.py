@@ -201,7 +201,7 @@ class Trace(BaseModel):
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     tags: List[str] = Field([], serialization_alias="tags")
-    # metadata: Optional[Dict] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 # Create a context variable to track the current span
@@ -632,6 +632,7 @@ class TraceManager:
             toolSpans=tool_spans,
             startTime=start_time,
             endTime=end_time,
+            metadata=trace.metadata,
             tags=trace.tags,
             environment=self.environment
         )
@@ -1058,10 +1059,14 @@ def update_current_span(
 
 def update_current_trace(
     tags: List[str] = [],
+    metadata: Optional[Dict[str, Any]] = None
+
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
         return
-    if current_trace:
-        current_trace.tags = tags
+    current_trace.tags = tags
+    if metadata:
+        current_trace.metadata = metadata
+    
    
