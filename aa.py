@@ -40,9 +40,7 @@ def generate_response(input: str) -> str:
     # <--Include format prompts and call your LLM provider here-->
     output = "Generated response based on the prompt: " + input
 
-    update_current_span(
-        attributes=LlmAttributes(input=input, output=output)
-    )
+    update_current_span(attributes=LlmAttributes(input=input, output=output))
     return output
 
 

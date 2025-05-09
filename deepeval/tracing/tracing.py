@@ -1013,13 +1013,13 @@ def observe(
 
 
 def update_current_span(
-    test_case: Optional[LLMTestCase]=None, 
-    attributes: Optional[Attributes]=None
+    test_case: Optional[LLMTestCase] = None,
+    attributes: Optional[Attributes] = None,
 ):
     current_span = current_span_context.get()
-    if not current_span: return
+    if not current_span:
+        return
     if attributes:
         current_span.set_attributes(attributes)
     if test_case:
         current_span.llm_test_case = test_case
-
