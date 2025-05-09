@@ -1,35 +1,33 @@
-import asyncio
-import atexit
+from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+from deepeval.utils import dataclass_to_dict, is_confident
+from datetime import datetime, timezone
+from contextvars import ContextVar
+from time import perf_counter
+from enum import Enum
+import threading
 import functools
 import inspect
-import queue
-import threading
-import uuid
-from contextvars import ContextVar
-from datetime import datetime, timezone
-from enum import Enum
-from time import perf_counter
-import os
-from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+import asyncio
+import atexit
 import signal
+import queue
+import uuid
 import sys
-
-from pydantic import BaseModel, Field
-from rich.console import Console
+import os
 
 from deepeval.constants import CONFIDENT_TRACE_VERBOSE, CONFIDENT_TRACE_FLUSH
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.metrics import BaseMetric
-from deepeval.prompt import Prompt
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
+from pydantic import BaseModel, Field
+from deepeval.prompt import Prompt
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
     SpanTestCase,
     TraceApi,
 )
-from deepeval.utils import dataclass_to_dict, is_confident
-
+from rich.console import Console
 
 def to_zod_compatible_iso(dt: datetime) -> str:
     return (
@@ -37,7 +35,6 @@ def to_zod_compatible_iso(dt: datetime) -> str:
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )
-
 
 def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     """
@@ -139,7 +136,7 @@ class BaseSpan(BaseModel):
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     name: Optional[str] = None
-    # metadata: Optional[Dict] = None
+    metadata: Optional[Dict[str, str]] = None
     input: Optional[Union[str, Dict, list]] = None
     output: Optional[Union[str, Dict, list]] = None
     error: Optional[str] = None
@@ -654,7 +651,6 @@ class TraceManager:
         is_metric_strings = None
         if span.metrics:
             is_metric_strings = isinstance(span.metrics[0], str)
-
         span_test_case = (
             SpanTestCase(
                 input=span.llm_test_case.input,
@@ -681,6 +677,7 @@ class TraceManager:
             endTime=end_time,
             input=input_data,
             output=output_data,
+            metadata=span.metadata,
             error=span.error,
             spanTestCase=span_test_case,
             metrics=(
@@ -1015,6 +1012,7 @@ def observe(
 def update_current_span(
     test_case: Optional[LLMTestCase] = None,
     attributes: Optional[Attributes] = None,
+    metadata: Optional[Dict[str, str]] = None
 ):
     current_span = current_span_context.get()
     if not current_span:
@@ -1023,3 +1021,5 @@ def update_current_span(
         current_span.set_attributes(attributes)
     if test_case:
         current_span.llm_test_case = test_case
+    if metadata:
+        current_span.metadata = metadata

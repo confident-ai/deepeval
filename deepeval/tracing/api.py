@@ -57,6 +57,7 @@ class BaseApiSpan(BaseModel):
     parent_uuid: Optional[str] = Field(None, alias="parentUuid")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
+    metadata: Optional[Dict[str, str]] = None
     input: Optional[Union[Dict, list, str]] = None
     output: Optional[Union[Dict, list, str]] = None
     error: Optional[str] = None
