@@ -239,7 +239,7 @@ class TraceManager:
         )
         self.evaluating = False
 
-        # masking
+        # trace manager attributes
         self.custom_mask_fn: Optional[Callable] = None
         self.environment = os.environ.get(CONFIDENT_TRACE_ENVIRONMENT)
 
