@@ -187,6 +187,13 @@ async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
 
 @observe("CustomLLM")
 async def custom_generate(prompt: str, model: str = "custom-model"):
+    # print(final_response)
+    update_current_span(
+        metadata={
+            "user_id": "11111",
+            "date": "1/1/11"
+        }
+    )
     response = f"Custom response for: {prompt}"
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -195,6 +202,13 @@ async def custom_generate(prompt: str, model: str = "custom-model"):
 
 @observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
 async def custom_research_agent(query: str):
+    # print(final_response)
+    update_current_span(
+        metadata={
+            "user_id": "11111",
+            "date": "1/1/11"
+        }
+    )
     if random.random() < 0.5:
         docs = await custom_retrieve(query)
         analysis = await custom_generate(str(docs))
@@ -209,6 +223,13 @@ async def custom_research_agent(query: str):
 
 @observe(type="agent", available_tools=["get_weather", "get_location"])
 async def weather_agent(query: str):
+    # print(final_response)
+    update_current_span(
+        metadata={
+            "user_id": "11111",
+            "date": "1/1/11"
+        }
+    )
     if random.random() < 0.5:
         location = await get_location(query)
         if random.random() < 0.5:
@@ -228,6 +249,13 @@ async def weather_agent(query: str):
 
 @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
 async def research_agent(query: str):
+    # print(final_response)
+    update_current_span(
+        metadata={
+            "user_id": "11111",
+            "date": "1/1/11"
+        }
+    )
     if random.random() < 0.5:
         docs = await retrieve_documents(query)
         analysis = await generate_text(str(docs))
@@ -257,6 +285,12 @@ async def meta_agent(query: str):
     Custom Analysis: {custom_info}
     """
     # print(final_response)
+    update_current_span(
+        metadata={
+            "user_id": "11111",
+            "date": "1/1/11"
+        }
+    )
 
     return final_response
 

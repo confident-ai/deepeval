@@ -651,7 +651,6 @@ class TraceManager:
         is_metric_strings = None
         if span.metrics:
             is_metric_strings = isinstance(span.metrics[0], str)
-
         span_test_case = (
             SpanTestCase(
                 input=span.llm_test_case.input,
@@ -678,6 +677,7 @@ class TraceManager:
             endTime=end_time,
             input=input_data,
             output=output_data,
+            metadata=span.metadata,
             error=span.error,
             spanTestCase=span_test_case,
             metrics=(
@@ -1023,4 +1023,3 @@ def update_current_span(
         current_span.llm_test_case = test_case
     if metadata:
         current_span.metadata = metadata
-    
