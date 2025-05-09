@@ -157,7 +157,7 @@ class MMLU(DeepEvalBaseBenchmark):
     ) -> Dict:
         # Define prompt template
         assert (
-            self.shots_datase
+            self.shots_dataset
         ), "Example dataset is empty. Call load_benchmark."
         prompt = MMLUTemplate.generate_output(
             train_set=self.shots_dataset,
