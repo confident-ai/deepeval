@@ -127,7 +127,11 @@ def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
     update_current_span(
-        test_case=LLMTestCase(input=input, actual_output=final_response)
+        test_case=LLMTestCase(input=input, actual_output=final_response),
+        metadata={
+            "user_id": "11111",
+            "date": "1/1/11"
+        }
     )
     return final_response
 
