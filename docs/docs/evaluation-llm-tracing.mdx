@@ -47,7 +47,7 @@ Tracing only runs when you want it to run, and takes 3 lines of code:
 ```python showLineNumbers {3,5,12}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
@@ -56,7 +56,7 @@ def complete(query: str):
         messages=[{"role": "user", "content": query}]
     ).choices[0].message["content"]
 
-    update_current_span_test_case(test_case=LLMTestCase(input=query, output=response))
+    update_current_span(test_case=LLMTestCase(input=query, output=response))
     return response
 ```
 
@@ -80,13 +80,13 @@ The `@observe` decorator creates spans, and a call to your LLM application decor
 ```python showLineNumbers {5}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
   response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
 
-  update_current_span_test_case(
+  update_current_span(
     test_case=LLMTestCase(input=query, output=response)
   )
   return response
@@ -101,7 +101,7 @@ There are **ZERO** mandatory and **THREE** optional parameters when using the `@
 Although the `metrics` parameter is optional, to run a component-level evaluation you **MUST**:
 
 - Supply a list of `metrics`
-- Call `update_current_span_test_case` to create an `LLMTestCase` at runtime to evaluate the LLM interaction in the current span
+- Call `update_current_span` and pass in an `LLMTestCase` at runtime to evaluate the LLM interaction in the current span
 
 If you simply decorate your LLM application with `@observe` and don't supply any arguments, nothing will happen at all.
 
@@ -138,7 +138,7 @@ from typing import List
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     observe,
-    update_current_span_test_case,
+    update_current_span,
     ContextualRelevancyMetric,
 )
 
@@ -154,7 +154,7 @@ def retrieve_documents(query: str) -> List[str]:
 def generate_response(input: str) -> str:
     response = "Generated response based on the prompt: " + input
 
-    update_current_span_test_case(
+    update_current_span(
         test_case=LLMTestCase(input=input, actual_output=response)
     )
     return response
@@ -167,7 +167,7 @@ def rag_pipeline(query: str) -> str:
     context = "\n".join(docs)
     response = generate_response(f"Context: {context}\nQuery: {query}")
 
-    update_current_span_test_case(
+    update_current_span(
         test_case=LLMTestCase(input=query, actual_output=response, retrieval_context=docs)
     )
     return response

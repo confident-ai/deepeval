@@ -79,14 +79,14 @@ You can also run the `PromptAlignmentMetric` within nested components for [compo
 
 ```python
 from deepeval.dataset import Golden
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 ...
 
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
     test_case = LLMTestCase(input="...", actual_output="...")
-    update_current_span_test_case(test_case=test_case)
+    update_current_span(test_case=test_case)
     return
 
 @observe
