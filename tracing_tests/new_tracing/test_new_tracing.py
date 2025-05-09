@@ -1,6 +1,7 @@
 from deepeval.tracing import (
     observe,
     update_current_span,
+    update_current_trace,
     LlmAttributes,
     RetrieverAttributes,
     ToolAttributes,
@@ -327,9 +328,14 @@ metric = DAGMetric(dag=dag, name="Persuasiveness")
 ###################################
 
 import asyncio
-from deepeval.tracing import get_current_trace
-import contextvars
+import re
 
+def mask_function(data):
+    if type(data) is str:
+        censored_data = re.sub("Elon", '[REDACTED NAME]', data)
+        return censored_data
+
+trace_manager.configure(mask=mask_function, environment="test_environment")
 
 # # Gather multiple traceable tasks
 async def run_parallel_examples():
@@ -343,10 +349,4 @@ async def run_parallel_examples():
 
 
 # Run it
-import os
-
-print(trace_manager._daemon)
-print(os.environ["CONFIDENT_TRACE_FLUSH"])
-# print(os.environ["CONFIDENT_TRACE_VERBOSE"])
-
 asyncio.run(run_parallel_examples())

@@ -1,6 +1,7 @@
 from .tracing import (
     observe,
     update_current_span,
+    update_current_trace,
     LlmAttributes,
     RetrieverAttributes,
     ToolAttributes,
