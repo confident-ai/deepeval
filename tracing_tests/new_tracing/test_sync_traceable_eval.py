@@ -1,8 +1,8 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.evaluate import AsyncConfig, DisplayConfig
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
-    update_current_span_test_case,
-    update_current_span_attributes,
+    update_current_span,
     observe,
     RetrieverAttributes,
     LlmAttributes,
@@ -28,7 +28,7 @@ def generate_text(prompt: str):
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    # update_current_span_attributes(attributes)
+    update_current_span(attributes=attributes)
     sleep(random.uniform(1, 3))
     return generated_text
 
@@ -41,12 +41,12 @@ def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    # update_current_span_attributes(
-    #     RetrieverAttributes(
-    #         embedding_input=query,
-    #         retrieval_context=documents,
-    #     )
-    # )
+    update_current_span(
+        attributes=RetrieverAttributes(
+            embedding_input=query,
+            retrieval_context=documents,
+        )
+    )
     return documents
 
 
@@ -93,8 +93,8 @@ def custom_research_agent(query: str):
     metrics=[AnswerRelevancyMetric(), BiasMetric()],
 )
 def weather_agent(query: str):
-    update_current_span_test_case(
-        LLMTestCase(
+    update_current_span(
+        test_case=LLMTestCase(
             input=query, actual_output="Weather information unavailable"
         )
     )
@@ -126,7 +126,7 @@ def meta_agent(input: str):
     Research: {research_info}
     Custom Analysis: {custom_info}
     """
-    update_current_span_test_case(
+    update_current_span(
         test_case=LLMTestCase(input=input, actual_output=final_response)
     )
     return final_response
@@ -142,13 +142,32 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
-# # Run Async
-# evaluate(goldens, meta_agent, run_async=True, show_indicator=True)
-# evaluate(goldens, meta_agent, run_async=True, show_indicator=False)
-
-# # Run Sync
-# evaluate(goldens, meta_agent, run_async=False, show_indicator=True)
-# evaluate(goldens, meta_agent, run_async=False, show_indicator=False)
+# Run Async
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True),
+    display_config=DisplayConfig(show_indicator=True),
+)
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True),
+    display_config=DisplayConfig(show_indicator=False),
+)
+# Run Sync
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=False),
+    display_config=DisplayConfig(show_indicator=True),
+)
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True),
+    display_config=DisplayConfig(show_indicator=True),
+)
 
 
 # Assert Test

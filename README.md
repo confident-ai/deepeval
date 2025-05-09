@@ -197,7 +197,7 @@ If you wish to evaluate individual components within your LLM app, you need to r
 Simply trace "components" such as LLM calls, retrievers, tool calls, and agents within your LLM application using the `@observe` decorator to apply metrics on a component-level. Tracing with `deepeval` is non-instrusive (learn more [here](https://deepeval.com/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)) and helps you avoid rewriting your codebase just for evals:
 
 ```python
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import Golden
 from deepeval.metrics import GEval
@@ -208,7 +208,7 @@ correctness = GEval(name="Correctness", criteria="Determine if the 'actual outpu
 @observe(metrics=[correctness])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span_test_case(LLMTestCase(input="...", actual_output="..."))
+    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
     return
 
 @observe

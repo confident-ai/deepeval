@@ -56,7 +56,7 @@ An `@observe` decorator creates a **span**, and the overall collection of spans 
 from typing import List
 import openai
 
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
@@ -75,7 +75,7 @@ def your_llm_app(input: str):
         ).choices[0].message["content"]
 
         # Create test case at runtime
-        update_current_span_test_case(test_case=LLMTestCase(input=input, actual_output=res))
+        update_current_span(test_case=LLMTestCase(input=input, actual_output=res))
 
         return res
 
@@ -145,7 +145,7 @@ There are **TWO** mandatory and **FIVE** optional parameters when calling the `e
 - [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
 :::tip
-You'll notice that unlike end-to-end evaluation, there is no declaration of `metrics` because those are defined in `@observe` in the `metrics` parameter, and there are no creation of `LLMTestCase`s because it is handled at runtime by `update_current_span_test_case` in your LLM app.
+You'll notice that unlike end-to-end evaluation, there is no declaration of `metrics` because those are defined in `@observe` in the `metrics` parameter, and there are no creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
 :::
 
 ### Use `deepeval test run` in CI/CD pipelines
@@ -171,7 +171,7 @@ def test_llm_app(golden: Golden):
 Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
 
 - Declaration of `metrics` because those are defined at the span level in the `metrics` parameter.
-- Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span_test_case` in your LLM app.
+- Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
 
 :::
 

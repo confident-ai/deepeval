@@ -1,7 +1,6 @@
 from deepeval.tracing import (
     observe,
-    update_current_span_attributes,
-    update_current_span_test_case,
+    update_current_span,
     LlmAttributes,
     RetrieverAttributes,
     ToolAttributes,
@@ -26,7 +25,7 @@ async def generate_text(prompt: str):
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span_attributes(attributes)
+    update_current_span(attributes=attributes)
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
     return generated_text
@@ -48,8 +47,8 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    update_current_span_attributes(
-        RetrieverAttributes(
+    update_current_span(
+        attributes=RetrieverAttributes(
             embedding_input=query,
             retrieval_context=documents,
         )
@@ -72,7 +71,7 @@ async def get_weather(city: str):
     )
 
     # Set attributes using the helper function
-    update_current_span_attributes(attributes)
+    update_current_span(attributes=attributes)
 
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -119,8 +118,8 @@ async def weather_research_agent(user_query: str):
     weather = await get_weather(location)
     documents = await retrieve_documents(f"{weather} in {location}", top_k=2)
     response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
-    update_current_span_attributes(
-        AgentAttributes(
+    update_current_span(
+        attributes=AgentAttributes(
             input=user_query,
             output=response,
         )
@@ -138,8 +137,8 @@ async def supervisor_agent(user_query: str):
     research = await random_research_agent(user_query)
     weather_research = await weather_research_agent(user_query)
 
-    update_current_span_attributes(
-        AgentAttributes(
+    update_current_span(
+        attributes=AgentAttributes(
             input=user_query,
             output=research + weather_research,
         )
@@ -314,6 +313,6 @@ import os
 
 print(trace_manager._daemon)
 print(os.environ["CONFIDENT_TRACE_FLUSH"])
-print(os.environ["CONFIDENT_TRACE_VERBOSE"])
+# print(os.environ["CONFIDENT_TRACE_VERBOSE"])
 
 asyncio.run(run_parallel_examples())

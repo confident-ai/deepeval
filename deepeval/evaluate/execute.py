@@ -1219,7 +1219,7 @@ async def a_execute_span_test_case(
         return
     if span.llm_test_case is None:
         raise ValueError(
-            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span_test_case()`?"
+            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
         )
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
