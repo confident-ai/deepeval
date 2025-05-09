@@ -1,7 +1,5 @@
 from typing import Optional, Tuple, Union, Dict
-from aiobotocore.session import get_session
 from contextlib import AsyncExitStack
-from botocore.config import Config
 from pydantic import BaseModel
 import asyncio
 
