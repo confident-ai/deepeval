@@ -124,7 +124,7 @@ class GEval(BaseMetric):
             test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self.evaluation_params, self)
 
-        self.evaluation_cost = 0 if self.using_native_model else None
+        self.evaluation_cost = 0
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
                 loop = get_or_create_event_loop()
@@ -163,7 +163,7 @@ class GEval(BaseMetric):
             test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self.evaluation_params, self)
 
-        self.evaluation_cost = 0 if self.using_native_model else None
+        self.evaluation_cost = 0
         with metric_progress_indicator(
             self,
             async_mode=True,
