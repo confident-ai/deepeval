@@ -30,8 +30,8 @@ To use Amazon bedrock models for DeepEval metrics, define an `AmazonBedrockModel
 from deepeval.models import AmazonBedrockModel
 from deepeval.metrics import AnswerRelevancyMetric
 
-model = AnthropicModel(
-    model="claude-3-7-sonnet-latest",
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
     temperature=0
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
