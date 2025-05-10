@@ -8,6 +8,7 @@ import threading
 import functools
 import inspect
 import asyncio
+import random
 import atexit
 import signal
 import queue
@@ -15,7 +16,7 @@ import uuid
 import sys
 import os
 
-from deepeval.constants import CONFIDENT_TRACE_VERBOSE, CONFIDENT_TRACE_FLUSH
+from deepeval.constants import CONFIDENT_TRACE_VERBOSE, CONFIDENT_TRACE_FLUSH, CONFIDENT_SAMPLE_RATE, CONFIDENT_TRACE_ENVIRONMENT
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -136,7 +137,7 @@ class BaseSpan(BaseModel):
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     name: Optional[str] = None
-    metadata: Optional[Dict[str, str]] = None
+    metadata: Optional[Dict[str, Any]] = None
     input: Optional[Union[str, Dict, list]] = None
     output: Optional[Union[str, Dict, list]] = None
     error: Optional[str] = None
@@ -199,7 +200,8 @@ class Trace(BaseModel):
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
-    # metadata: Optional[Dict] = None
+    tags: List[str] = Field([], serialization_alias="tags")
+    metadata: Optional[Dict[str, Any]] = None
 
 
 # Create a context variable to track the current span
@@ -236,6 +238,11 @@ class TraceManager:
             False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
         )
         self.evaluating = False
+
+        # trace manager attributes
+        self.custom_mask_fn: Optional[Callable] = None
+        self.environment = os.environ.get(CONFIDENT_TRACE_ENVIRONMENT)
+
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
         signal.signal(signal.SIGINT, self._on_signal)
@@ -262,6 +269,22 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces.",
             )
+
+    def mask(self, data: Any):
+        if self.custom_mask_fn is not None:
+            self.custom_mask_fn(data)
+        else:
+            return data
+
+    def configure(
+        self,
+        mask: Optional[Callable] = None,
+        environment: Optional[str] = None,
+    ) -> None:
+        if mask is not None:
+            self.custom_mask_fn = mask
+        if environment is not None:
+            self.environment = environment
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -398,6 +421,15 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.FAILURE,
             )
             return None
+        sampling_rate = float(os.environ.get(CONFIDENT_SAMPLE_RATE, 1))
+        random_number = random.random() 
+        if random_number > sampling_rate:
+            rate_str = f"{sampling_rate:.2f}"
+            self._print_trace_status(
+                message=f"Skipped posting trace due to sampling rate ({rate_str})",
+                trace_worker_status=TraceWorkerStatus.SUCCESS,
+            )
+            return None
 
         # Add the trace to the queue
         self._trace_queue.put(trace)
@@ -432,7 +464,7 @@ class TraceManager:
                 trace_api = self.create_trace_api(trace_obj)
                 try:
                     body = trace_api.model_dump(
-                        by_alias=True, exclude_none=True
+                        by_alias=True, exclude_none=True,
                     )
                 except AttributeError:
                     # Pydantic version below 2.0
@@ -591,7 +623,6 @@ class TraceManager:
             else None
         )
 
-        # Create and return the TraceApi object
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -601,6 +632,9 @@ class TraceManager:
             toolSpans=tool_spans,
             startTime=start_time,
             endTime=end_time,
+            metadata=trace.metadata,
+            tags=trace.tags,
+            environment=self.environment
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -795,7 +829,6 @@ class Observer:
         current_span.end_time = end_time
         if exc_type is not None:
             current_span.status = TraceSpanStatus.ERRORED
-            print(current_span)
             current_span.error = str(exc_val)
         else:
             current_span.status = TraceSpanStatus.SUCCESS
@@ -882,38 +915,38 @@ class Observer:
             if current_span and isinstance(
                 current_span.attributes, AgentAttributes
             ):
-                current_span.input = current_span.attributes.input
-                current_span.output = current_span.attributes.output
+                current_span.input = trace_manager.mask(current_span.attributes.input)
+                current_span.output = trace_manager.mask(current_span.attributes.output)
             else:
-                current_span.input = self.function_kwargs
-                current_span.output = self.result
+                current_span.input = trace_manager.mask(self.function_kwargs)
+                current_span.output = trace_manager.mask(self.result)
 
         elif isinstance(current_span, LlmSpan):
             if current_span and isinstance(
                 current_span.attributes, LlmAttributes
             ):
-                current_span.input = current_span.attributes.input
-                current_span.output = current_span.attributes.output
+                current_span.input = trace_manager.mask(current_span.attributes.input)
+                current_span.output = trace_manager.mask(current_span.attributes.output)
 
         elif isinstance(current_span, RetrieverSpan):
             if current_span and isinstance(
                 current_span.attributes, RetrieverAttributes
             ):
-                current_span.input = current_span.attributes.embedding_input
-                current_span.output = current_span.attributes.retrieval_context
+                current_span.input = trace_manager.mask(current_span.attributes.embedding_input)
+                current_span.output = trace_manager.mask(current_span.attributes.retrieval_context)
 
         elif isinstance(current_span, ToolSpan):
             if current_span and isinstance(
                 current_span.attributes, ToolAttributes
             ):
-                current_span.input = current_span.attributes.input_parameters
-                current_span.output = current_span.attributes.output
+                current_span.input = trace_manager.mask(current_span.attributes.input_parameters)
+                current_span.output = trace_manager.mask(current_span.attributes.output)
             else:
-                current_span.input = self.function_kwargs
-                current_span.output = self.result
+                current_span.input = trace_manager.mask(self.function_kwargs)
+                current_span.output = trace_manager.mask(self.result)
         else:
-            current_span.input = self.function_kwargs
-            current_span.output = self.result
+            current_span.input = trace_manager.mask(self.function_kwargs)
+            current_span.output = trace_manager.mask(self.result)
 
 
 ########################################################
@@ -1012,7 +1045,7 @@ def observe(
 def update_current_span(
     test_case: Optional[LLMTestCase] = None,
     attributes: Optional[Attributes] = None,
-    metadata: Optional[Dict[str, str]] = None
+    metadata: Optional[Dict[str, Any]] = None
 ):
     current_span = current_span_context.get()
     if not current_span:
@@ -1023,3 +1056,17 @@ def update_current_span(
         current_span.llm_test_case = test_case
     if metadata:
         current_span.metadata = metadata
+
+def update_current_trace(
+    tags: List[str] = [],
+    metadata: Optional[Dict[str, Any]] = None
+
+):
+    current_trace = current_trace_context.get()
+    if not current_trace:
+        return
+    current_trace.tags = tags
+    if metadata:
+        current_trace.metadata = metadata
+    
+   
