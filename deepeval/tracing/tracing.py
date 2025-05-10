@@ -16,7 +16,12 @@ import uuid
 import sys
 import os
 
-from deepeval.constants import CONFIDENT_TRACE_VERBOSE, CONFIDENT_TRACE_FLUSH, CONFIDENT_SAMPLE_RATE, CONFIDENT_TRACE_ENVIRONMENT
+from deepeval.constants import (
+    CONFIDENT_TRACE_VERBOSE,
+    CONFIDENT_TRACE_FLUSH,
+    CONFIDENT_SAMPLE_RATE,
+    CONFIDENT_TRACE_ENVIRONMENT,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -30,12 +35,14 @@ from deepeval.tracing.api import (
 )
 from rich.console import Console
 
+
 def to_zod_compatible_iso(dt: datetime) -> str:
     return (
         dt.astimezone(timezone.utc)
         .isoformat(timespec="milliseconds")
         .replace("+00:00", "Z")
     )
+
 
 def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     """
@@ -422,7 +429,7 @@ class TraceManager:
             )
             return None
         sampling_rate = float(os.environ.get(CONFIDENT_SAMPLE_RATE, 1))
-        random_number = random.random() 
+        random_number = random.random()
         if random_number > sampling_rate:
             rate_str = f"{sampling_rate:.2f}"
             self._print_trace_status(
@@ -464,7 +471,8 @@ class TraceManager:
                 trace_api = self.create_trace_api(trace_obj)
                 try:
                     body = trace_api.model_dump(
-                        by_alias=True, exclude_none=True,
+                        by_alias=True,
+                        exclude_none=True,
                     )
                 except AttributeError:
                     # Pydantic version below 2.0
@@ -634,7 +642,7 @@ class TraceManager:
             endTime=end_time,
             metadata=trace.metadata,
             tags=trace.tags,
-            environment=self.environment
+            environment=self.environment,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -915,8 +923,12 @@ class Observer:
             if current_span and isinstance(
                 current_span.attributes, AgentAttributes
             ):
-                current_span.input = trace_manager.mask(current_span.attributes.input)
-                current_span.output = trace_manager.mask(current_span.attributes.output)
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.input
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.output
+                )
             else:
                 current_span.input = trace_manager.mask(self.function_kwargs)
                 current_span.output = trace_manager.mask(self.result)
@@ -925,22 +937,34 @@ class Observer:
             if current_span and isinstance(
                 current_span.attributes, LlmAttributes
             ):
-                current_span.input = trace_manager.mask(current_span.attributes.input)
-                current_span.output = trace_manager.mask(current_span.attributes.output)
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.input
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.output
+                )
 
         elif isinstance(current_span, RetrieverSpan):
             if current_span and isinstance(
                 current_span.attributes, RetrieverAttributes
             ):
-                current_span.input = trace_manager.mask(current_span.attributes.embedding_input)
-                current_span.output = trace_manager.mask(current_span.attributes.retrieval_context)
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.embedding_input
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.retrieval_context
+                )
 
         elif isinstance(current_span, ToolSpan):
             if current_span and isinstance(
                 current_span.attributes, ToolAttributes
             ):
-                current_span.input = trace_manager.mask(current_span.attributes.input_parameters)
-                current_span.output = trace_manager.mask(current_span.attributes.output)
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.input_parameters
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.output
+                )
             else:
                 current_span.input = trace_manager.mask(self.function_kwargs)
                 current_span.output = trace_manager.mask(self.result)
@@ -1045,7 +1069,7 @@ def observe(
 def update_current_span(
     test_case: Optional[LLMTestCase] = None,
     attributes: Optional[Attributes] = None,
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None,
 ):
     current_span = current_span_context.get()
     if not current_span:
@@ -1057,10 +1081,9 @@ def update_current_span(
     if metadata:
         current_span.metadata = metadata
 
-def update_current_trace(
-    tags: List[str] = [],
-    metadata: Optional[Dict[str, Any]] = None
 
+def update_current_trace(
+    tags: List[str] = [], metadata: Optional[Dict[str, Any]] = None
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -1068,5 +1091,3 @@ def update_current_trace(
     current_trace.tags = tags
     if metadata:
         current_trace.metadata = metadata
-    
-   
