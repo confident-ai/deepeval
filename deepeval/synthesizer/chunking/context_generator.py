@@ -1,19 +1,21 @@
-import shutil
-from typing import List, Tuple, Dict, Optional, Union
-from tqdm.asyncio import tqdm_asyncio
-from tqdm import tqdm as tqdm_bar
-from pydantic import BaseModel
 import asyncio
-import random
 import math
 import os
+import random
+import shutil
+from typing import Dict, List, Optional, Tuple, Union
 
+from pydantic import BaseModel
+from tqdm import tqdm as tqdm_bar
+from tqdm.asyncio import tqdm_asyncio
+
+from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseLLM,
 )
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
+from deepeval.synthesizer.file_handler import FileHandler
 from deepeval.synthesizer.templates.template import FilterTemplate
 
 
@@ -36,7 +38,9 @@ class ContextGenerator:
         max_retries: int = 3,
         filter_threshold: float = 0.5,
         similarity_threshold: float = 0.5,
+        additional_loaders: Optional[Dict[str, FileHandler]] = None,
     ):
+
         # Ensure document_paths is provided
         if not document_paths:
             raise ValueError("`document_path` is empty or missing.")
@@ -51,6 +55,7 @@ class ContextGenerator:
         self.total_chunks = 0
         self.document_paths: List[str] = document_paths
         self.encoding = encoding
+        self.additional_loaders = additional_loaders
 
         # Model parameters
         self.model, self.using_native_model = initialize_model(model)
@@ -262,15 +267,16 @@ class ContextGenerator:
         generation_p_bar: tqdm_bar,
         source_files_to_collections_map: Dict,
     ):
-        contexts_per_doc, scores_per_doc = (
-            await self._a_get_n_random_contexts_per_source_file(
-                path=path,
-                n_contexts_per_source_file=num_context_per_source_file,
-                context_size=max_context_size,
-                similarity_threshold=self.similarity_threshold,
-                generation_p_bar=generation_p_bar,
-                source_files_to_collections_map=source_files_to_collections_map,
-            )
+        (
+            contexts_per_doc,
+            scores_per_doc,
+        ) = await self._a_get_n_random_contexts_per_source_file(
+            path=path,
+            n_contexts_per_source_file=num_context_per_source_file,
+            context_size=max_context_size,
+            similarity_threshold=self.similarity_threshold,
+            generation_p_bar=generation_p_bar,
+            source_files_to_collections_map=source_files_to_collections_map,
         )
         return path, contexts_per_doc, scores_per_doc
 
@@ -332,7 +338,6 @@ class ContextGenerator:
             # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-
                 # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
@@ -405,7 +410,6 @@ class ContextGenerator:
             # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-
                 # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
@@ -566,7 +570,6 @@ class ContextGenerator:
             self.total_cost += cost
             return (res.clarity + res.depth + res.structure + res.relevance) / 4
         else:
-
             try:
                 res: ContextScore = await self.model.a_generate(
                     prompt, schema=ContextScore
@@ -617,7 +620,6 @@ class ContextGenerator:
 
         # If not enough chunks are produced, raise an error with suggestions.
         if document_num_chunks < min_contexts_per_source_file:
-
             # Build the error message with suggestions.
             error_lines = [
                 f"Impossible to generate {min_contexts_per_source_file} contexts from a document of size {document_token_count}.",
@@ -648,6 +650,7 @@ class ContextGenerator:
                 suggestion_num += 1
 
             # 3. Determine whether to suggest adjustments for chunk_overlap.
+            adjust_overlap = False
             if min_contexts_per_source_file > 1:
                 suggested_overlap = (
                     (
@@ -681,7 +684,10 @@ class ContextGenerator:
     def _load_docs(self):
         doc_to_chunker_map = {}
         for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
-            doc_chunker = DocumentChunker(self.embedder)
+            doc_chunker = DocumentChunker(
+                embedder=self.embedder,
+                additional_loaders=self.additional_loaders,
+            )
             doc_chunker.load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
         return doc_to_chunker_map
@@ -690,7 +696,10 @@ class ContextGenerator:
         doc_to_chunker_map = {}
 
         async def a_process_document(path):
-            doc_chunker = DocumentChunker(self.embedder)
+            doc_chunker = DocumentChunker(
+                embedder=self.embedder,
+                additional_loaders=self.additional_loaders,
+            )
             await doc_chunker.a_load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
 

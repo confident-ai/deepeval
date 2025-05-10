@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Union, Type
 import os
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
+from deepeval.synthesizer.file_handler import FileHandler, FileHandlerLoaderAdapter
 
 # check langchain availability
 try:
@@ -14,7 +15,6 @@ try:
         Docx2txtLoader,
     )
     from langchain_community.document_loaders.base import BaseLoader
-
     langchain_available = True
 except ImportError:
     langchain_available = False
@@ -49,11 +49,13 @@ class DocumentChunker:
     def __init__(
         self,
         embedder: DeepEvalBaseEmbeddingModel,
+        additional_loaders: Optional[dict[str, FileHandler]],
     ):
         _check_chromadb_available()
         _check_langchain_available()
         self.text_token_count: Optional[int] = None  # set later
 
+        self.text_token_count: Optional[int] = None
         self.source_file: Optional[str] = None
         self.chunks: Optional["Collection"] = None
         self.sections: Optional[List[LCDocument]] = None
@@ -61,6 +63,7 @@ class DocumentChunker:
         self.mean_embedding: Optional[float] = None
 
         # Mapping of file extensions to their respective loader classes
+        self.additional_loaders = additional_loaders or {}
         self.loader_mapping: Dict[str, Type[BaseLoader]] = {
             ".pdf": PyPDFLoader,
             ".txt": TextLoader,
@@ -172,12 +175,27 @@ class DocumentChunker:
     #########################################################
 
     def get_loader(self, path: str, encoding: Optional[str]) -> "BaseLoader":
-        # Find appropriate doc loader
+        """Get the appropriate loader for the file."""
         _, extension = os.path.splitext(path)
         extension = extension.lower()
-        loader: Optional[type[BaseLoader]] = self.loader_mapping.get(extension)
+        # Check custom handlers first
+        custom_handler = self.additional_loaders.get(extension)
+        if custom_handler:
+            return FileHandlerLoaderAdapter(handler=custom_handler, path=path, encoding=encoding)
+
+        # Fall back to default handlers
+        loader = self.loader_mapping.get(extension)
         if loader is None:
-            raise ValueError(f"Unsupported file format: {extension}")
+            supported_formats = list(self.loader_mapping.keys())
+            custom_formats = list(self.additional_loaders.keys())
+            all_formats = sorted(supported_formats + custom_formats)
+
+            raise ValueError(
+                f"Unsupported file format: '{extension}'\n"
+                f"Currently supported formats: {', '.join(all_formats)}\n"
+                f"To add support for '{extension}', provide a custom FileHandler in the 'file_loaders' parameter when creating ContextConstructionConfig:\n"
+                f"context_config = ContextConstructionConfig(file_loaders={{'{extension}': YourCustomHandler()}})"
+            )
 
         # Load doc into sections and calculate total character count
         if loader is TextLoader:
