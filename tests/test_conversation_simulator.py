@@ -2,6 +2,7 @@ import asyncio
 import random
 
 from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.models import GPTModel
 
 user_profile_requirements_1 = [
     "name (first and last)",
@@ -17,11 +18,11 @@ user_intentions_1 = [
 ]
 user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
 user_intentions_2 = [
-    "Seeking medical advice for a chronic condition",
+    # "Seeking medical advice for a chronic condition",
     "Booking an appointment with a specialist",
-    "Following up on test results",
-    "Requesting prescription refills",
-    "Exploring treatment options for a new diagnosis",
+    # "Following up on test results",
+    # "Requesting prescription refills",
+    # "Exploring treatment options for a new diagnosis",
 ]
 
 
@@ -57,8 +58,11 @@ async def test_generate_conversations(
         print(("================================"))
 
 
-async def callback(prompt: str):
-    return f"OMG haha {prompt}"
+def callback(prompt: str, test = None):
+    if test is not None:
+        print(test)
+    model = GPTModel()
+    return model.generate(prompt)
 
 
 async def main():
@@ -68,14 +72,17 @@ async def main():
         user_profile_items=user_profile_requirements,
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
+        async_mode=False
     )
     a = conversational_synthesizer.simulate(
-        min_turns=3,
-        max_turns=5,
+        min_turns=5,
+        max_turns=10,
         num_conversations=1,
         model_callback=callback,
+        # model_callback_kwargs={"test": "test"},
+        stopping_criteria="The user has succesfully booked an appointment",
+        early_stopping=True,
     )
-    print(a)
 
     # user_profiles = await test_user_profile(conversational_synthesizer)
     # await test_scenario(
