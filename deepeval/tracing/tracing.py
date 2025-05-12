@@ -1,4 +1,9 @@
 from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+from deepeval.tracing.utils import (
+    Environment,
+    validate_environment,
+    validate_sampling_rate,
+)
 from deepeval.utils import dataclass_to_dict, is_confident
 from datetime import datetime, timezone
 from contextvars import ContextVar
@@ -207,7 +212,7 @@ class Trace(BaseModel):
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
-    tags: List[str] = Field([], serialization_alias="tags")
+    tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
 
 
@@ -248,7 +253,13 @@ class TraceManager:
 
         # trace manager attributes
         self.custom_mask_fn: Optional[Callable] = None
-        self.environment = os.environ.get(CONFIDENT_TRACE_ENVIRONMENT)
+        self.environment = os.environ.get(
+            CONFIDENT_TRACE_ENVIRONMENT, Environment.DEVELOPMENT.value
+        )
+        validate_environment(self.environment)
+
+        self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
+        validate_sampling_rate(self.sampling_rate)
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -274,7 +285,7 @@ class TraceManager:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces.",
+                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces to Confident AI.",
             )
 
     def mask(self, data: Any):
@@ -287,11 +298,16 @@ class TraceManager:
         self,
         mask: Optional[Callable] = None,
         environment: Optional[str] = None,
+        sampling_rate: Optional[float] = None,
     ) -> None:
         if mask is not None:
             self.custom_mask_fn = mask
         if environment is not None:
+            validate_environment(environment)
             self.environment = environment
+        if sampling_rate is not None:
+            validate_sampling_rate(sampling_rate)
+            self.sampling_rate = sampling_rate
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -402,6 +418,7 @@ class TraceManager:
         trace_worker_status: TraceWorkerStatus,
         message: str,
         description: Optional[str] = None,
+        environment: Optional[str] = None,
     ):
         if (
             os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO"
@@ -416,10 +433,14 @@ class TraceManager:
             elif trace_worker_status == TraceWorkerStatus.WARNING:
                 message = f"[yellow]{message}[/yellow]"
 
+            env_text = f"[{environment}]" if environment else ""
+
             if description:
-                console.print(message_prefix, message + ":", description)
+                console.print(
+                    message_prefix, env_text, message + ":", description
+                )
             else:
-                console.print(message_prefix, message)
+                console.print(message_prefix, env_text, message)
 
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
@@ -428,10 +449,10 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.FAILURE,
             )
             return None
-        sampling_rate = float(os.environ.get(CONFIDENT_SAMPLE_RATE, 1))
+
         random_number = random.random()
-        if random_number > sampling_rate:
-            rate_str = f"{sampling_rate:.2f}"
+        if random_number > self.sampling_rate:
+            rate_str = f"{self.sampling_rate:.2f}"
             self._print_trace_status(
                 message=f"Skipped posting trace due to sampling rate ({rate_str})",
                 trace_worker_status=TraceWorkerStatus.SUCCESS,
@@ -477,7 +498,7 @@ class TraceManager:
                 except AttributeError:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
-
+                print(body)
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
                     api = Api()
@@ -493,6 +514,7 @@ class TraceManager:
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace {status}",
                         description=response["link"],
+                        environment=self.environment,
                     )
                 elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
                     # Main thread gone → to be flushed
@@ -577,6 +599,7 @@ class TraceManager:
                     trace_worker_status=TraceWorkerStatus.SUCCESS,
                     message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
                     description=resp["link"],
+                    environment=self.environment,
                 )
             except Exception as e:
                 qs = self._trace_queue.qsize()
@@ -1083,11 +1106,12 @@ def update_current_span(
 
 
 def update_current_trace(
-    tags: List[str] = [], metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None, metadata: Optional[Dict[str, Any]] = None
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
         return
-    current_trace.tags = tags
+    if tags:
+        current_trace.tags = tags
     if metadata:
         current_trace.metadata = metadata

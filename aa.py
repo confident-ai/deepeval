@@ -5,7 +5,6 @@ from deepeval.tracing import (
     update_current_span,
     RetrieverAttributes,
     LlmAttributes,
-    trace_manager,
 )
 
 
@@ -88,5 +87,3 @@ def research_agent(query: str) -> str:
 # Calling the agent will trace & trigger
 # online metrics on Confident AI
 research_agent("What is the weather like in San Francisco?")
-
-trace_manager.shutdown()

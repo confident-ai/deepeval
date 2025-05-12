@@ -140,7 +140,6 @@ class Api:
                 print("Aborted.")
                 return None
         else:
-            print(res.json())
             raise Exception(res.json().get("error", res.text))
 
     async def a_send_request(
