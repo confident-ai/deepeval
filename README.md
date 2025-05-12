@@ -107,8 +107,8 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
 
 # 🔌 Integrations
 
-- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://deepeval.com/docs/integrations/frameworks/llamaindex?utm_source=GitHub)
-- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://deepeval.com/docs/integrations/frameworks/huggingface?utm_source=GitHub)
+- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://www.deepeval.com/integrations/frameworks/llamaindex?utm_source=GitHub)
+- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://www.deepeval.com/integrations/frameworks/huggingface?utm_source=GitHub)
 
 <br />
 
