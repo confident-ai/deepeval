@@ -818,7 +818,8 @@ class Observer:
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
-        self.patch_client(self.client)
+        if self.client:
+            self.patch_client(self.client)
         self.start_time = perf_counter()
 
         # Get the current span from the context
