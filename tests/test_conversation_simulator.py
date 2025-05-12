@@ -58,18 +58,19 @@ async def test_generate_conversations(
         print(("================================"))
 
 
-def callback(prompt: str, test = None):
+def callback(input: str, test = None):
     if test is not None:
         print(test)
     model = GPTModel()
-    return model.generate(prompt)
+    return model.generate(input)
 
 
 async def main():
     user_profile_requirements = user_profile_requirements_2
     user_intentions = user_intentions_2
     conversational_synthesizer = ConversationSimulator(
-        user_profile_items=user_profile_requirements,
+        # user_profile_items=user_profile_requirements,
+        user_profiles=["Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
         async_mode=False

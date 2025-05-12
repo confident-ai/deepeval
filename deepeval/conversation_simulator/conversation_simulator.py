@@ -63,7 +63,7 @@ class ConversationSimulator:
         if min_turns > max_turns:
             raise ValueError("`min_turns` cannot be greater than `max_turns`.")
         if early_stopping and stopping_criteria is None:
-            raise ValueError("`stopping_criteria` cannot be None if `early_stopping` is true.")
+            raise ValueError("`stopping_criteria` cannot be None if `early_stopping` is `True`.")
 
         self.simulation_cost = 0 if self.using_native_model else None
         with conversation_simulator_progress_context(
@@ -482,9 +482,9 @@ class ConversationSimulator:
         model_callback_kwargs: Optional[Dict[str, Any]]
     ):
         if model_callback_kwargs is not None:
-            res =  model_callback(input, **model_callback_kwargs)
+            res =  model_callback(input=input, **model_callback_kwargs)
         else: 
-            res = model_callback(input)
+            res = model_callback(input=input)
         return res
 
     async def _a_generate_chatbot_response(
@@ -494,9 +494,9 @@ class ConversationSimulator:
         model_callback_kwargs: Optional[Dict[str, Any]]
     ):
         if model_callback_kwargs is not None:
-            res = await model_callback(input, **model_callback_kwargs)
+            res = await model_callback(input=input, **model_callback_kwargs)
         else: 
-            res = await model_callback(input)
+            res = await model_callback(input=input)
         return res
 
     def _format_conversational_turns(self, turns: List[LLMTestCase]) -> str:

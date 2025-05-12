@@ -25,21 +25,32 @@ print(convo_simulator.simulated_conversations)
 
 The `ConversationSimulator` uses an LLM to generate a fake user profile and scenario, then simulates a back-and-forth with your chatbot. The resulting dialogue is used to create `ConversationalTestCase`s for evaluation using `deepeval`'s conversational metrics.
 
+:::info
+Alternatively, you can skip generating user profiles entirely, and instead supply a list of fake user profiles via the `user_profiles` parameter. See the following section for more details.
+:::
+
 ## Create Your First Simulator
 
 ```python
 from deepeval.conversation_simulator import ConversationSimulator
 
-user_profile_items = ["first name", "last name", "address", "social security number"]
 user_intentions = ["opening a bank account", "disputing a payment", "enquiring a recent transaction"]
+user_profile_items = ["first name", "last name", "address", "social security number"]
+
+# Alternatively, supply a list of user profiles
+user_profiles = [
+  "Emily Carter lives at 159 Oakwood Drive, Denver, CO 80203, and her Social Security Number is 345-67-8901.",
+  "Marcus Lee lives at 984 Pine Street, Brooklyn, NY 11201, and his Social Security Number is 789-12-3456."
+]
 
 convo_simulator = ConversationSimulator(user_profile_items=user_profile_items, user_intentions=user_intentions)
 ```
 
 There are **TWO** mandatory and **FOUR** optional parameters when creating a `ConversationSimulator`:
 
-- `user_profile_items`: a list of strings representing the fake user properties that should be generated for each user profile.
 - `user_intentions`: a list of strings representing the possible user intentions of a fake user profile. `deepeval` will randomly sample from the list of `user_intentions` to determine which user intention will be mimicked to simulate a particular conversation.
+- [Optional] `user_profile_items`: a list of strings representing the fake user properties that should be generated for each user profile, which must be supplied if `user_profiles` isn't provided. Defaulted to `None`.
+- [Optional] `user_profiles`: a list of strings representing complete fake user profiles, which must be supplied if `user_profile_items` isn't provided. Defaulted to `None`.
 - [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
 - [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
@@ -57,22 +68,30 @@ To simulate your first conversation, simply define a callback that wraps around 
 ...
 
 # Remove `async` if `async_mode` is `True
-async def model_callback(input: str) -> str:
+async def model_callback(input: str, is_conversation: bool) -> str:
     # Replace this with your LLM application
     return f"I don't know how to answer this: {input}"
 
-convo_simulator.simulate(model_callback=model_callback)
+convo_simulator.simulate(
+  model_callback=model_callback,
+  early_stopping=true,
+  stopping_criteria="Stop when the user's banking request (opening an account, disputing a payment, or querying a transaction) has been fully resolved.",
+  model_callback_kwargs={"is_conversation": True}
+)
 ```
 
 There are **ONE** mandatory and **THREE** optional parameters when calling the `simulate` method:
 
 - `model_callback`: a callback of type `Callable[[str], str]` that wraps around the target LLM application you wish to generate output from.
+- [Optional] `model_callback_kwargs`: a mapping of keyword arguments of type `Dict[str, Any]` that will be passed to `model_callback` during simulation. Defaulted to `None`.
 - [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation. Defaulted to `5`.
-- [Optional] `max_turns`:an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
+- [Optional] `max_turns`: an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
+- [Optional] `early_stopping`: a boolean that, when set to `True`, ends the simulation immediately once the stopping criteria is met, ignoring any remaining turns. Defaulted to `False`.
+- [Optional] `stopping_criteria`: a string that defines the criteria under which the simulation should terminate, which must be supplied if `early_stopping` is `True`. Defaulted to `None`.
 - [Optional] `num_conversations`: an integer that specifies the total number of `ConversationalGoldens`s to simulate. Defaulted to `5`.
 
 :::info
-Your `model_callback` most accept **ONE AND ONLY ONE** parameter of type string, and **MUST** only return a string and nothing else.
+Your `model_callback` must accept at least one parameter named `input` of type `str` and **must** return only a string. Any additional arguments can be provided via `model_callback_kwargs`, which help with configuring parameters like temperature or maintaining conversational context.
 :::
 
 ## Using Simulated Conversations

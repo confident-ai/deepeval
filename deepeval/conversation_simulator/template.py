@@ -162,7 +162,7 @@ class ConversationSimulatorTemplate:
             ]
             Example JSON Output:
             {{
-                "is_complete": false,
+                "is_complete": False,
                 "reason": "The assistant explained how to forget password but ahas not confirmed that the user successfully set a new password."
             }}
 
