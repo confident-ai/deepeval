@@ -1,35 +1,48 @@
-import asyncio
-import atexit
+from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+from deepeval.tracing.utils import (
+    Environment,
+    validate_environment,
+    validate_sampling_rate,
+)
+from deepeval.utils import dataclass_to_dict, is_confident
+from datetime import datetime, timezone
+from contextvars import ContextVar
+from time import perf_counter
+from enum import Enum
+import threading
 import functools
 import inspect
-import queue
-import threading
-import uuid
-from contextvars import ContextVar
-from datetime import datetime, timezone
-from enum import Enum
-from time import perf_counter
-import os
-from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+import asyncio
+import random
+import atexit
 import signal
+import queue
+import uuid
 import sys
-
+import os
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from rich.console import Console
 
-from deepeval.constants import CONFIDENT_TRACE_VERBOSE, CONFIDENT_TRACE_FLUSH
+
+from deepeval.constants import (
+    CONFIDENT_TRACE_VERBOSE,
+    CONFIDENT_TRACE_FLUSH,
+    CONFIDENT_SAMPLE_RATE,
+    CONFIDENT_TRACE_ENVIRONMENT,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.metrics import BaseMetric
-from deepeval.prompt import Prompt
 from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BaseMetric
+from pydantic import BaseModel, Field
+from deepeval.prompt import Prompt
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
     SpanTestCase,
     TraceApi,
 )
-from deepeval.utils import dataclass_to_dict, is_confident
+from rich.console import Console
 
 
 def to_zod_compatible_iso(dt: datetime) -> str:
@@ -140,7 +153,7 @@ class BaseSpan(BaseModel):
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     name: Optional[str] = None
-    # metadata: Optional[Dict] = None
+    metadata: Optional[Dict[str, Any]] = None
     input: Optional[Union[str, Dict, list]] = None
     output: Optional[Union[str, Dict, list]] = None
     error: Optional[str] = None
@@ -203,7 +216,8 @@ class Trace(BaseModel):
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
-    # metadata: Optional[Dict] = None
+    tags: Optional[List[str]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 
 # Create a context variable to track the current span
@@ -240,6 +254,17 @@ class TraceManager:
             False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
         )
         self.evaluating = False
+
+        # trace manager attributes
+        self.custom_mask_fn: Optional[Callable] = None
+        self.environment = os.environ.get(
+            CONFIDENT_TRACE_ENVIRONMENT, Environment.DEVELOPMENT.value
+        )
+        validate_environment(self.environment)
+
+        self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
+        validate_sampling_rate(self.sampling_rate)
+
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
         signal.signal(signal.SIGINT, self._on_signal)
@@ -264,8 +289,29 @@ class TraceManager:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces.",
+                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces to Confident AI.",
             )
+
+    def mask(self, data: Any):
+        if self.custom_mask_fn is not None:
+            self.custom_mask_fn(data)
+        else:
+            return data
+
+    def configure(
+        self,
+        mask: Optional[Callable] = None,
+        environment: Optional[str] = None,
+        sampling_rate: Optional[float] = None,
+    ) -> None:
+        if mask is not None:
+            self.custom_mask_fn = mask
+        if environment is not None:
+            validate_environment(environment)
+            self.environment = environment
+        if sampling_rate is not None:
+            validate_sampling_rate(sampling_rate)
+            self.sampling_rate = sampling_rate
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -376,6 +422,7 @@ class TraceManager:
         trace_worker_status: TraceWorkerStatus,
         message: str,
         description: Optional[str] = None,
+        environment: Optional[str] = None,
     ):
         if (
             os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO"
@@ -390,16 +437,29 @@ class TraceManager:
             elif trace_worker_status == TraceWorkerStatus.WARNING:
                 message = f"[yellow]{message}[/yellow]"
 
+            env_text = f"[{environment}]" if environment else ""
+
             if description:
-                console.print(message_prefix, message + ":", description)
+                console.print(
+                    message_prefix, env_text, message + ":", description
+                )
             else:
-                console.print(message_prefix, message)
+                console.print(message_prefix, env_text, message)
 
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
                 trace_worker_status=TraceWorkerStatus.FAILURE,
+            )
+            return None
+
+        random_number = random.random()
+        if random_number > self.sampling_rate:
+            rate_str = f"{self.sampling_rate:.2f}"
+            self._print_trace_status(
+                message=f"Skipped posting trace due to sampling rate ({rate_str})",
+                trace_worker_status=TraceWorkerStatus.SUCCESS,
             )
             return None
 
@@ -436,12 +496,13 @@ class TraceManager:
                 trace_api = self.create_trace_api(trace_obj)
                 try:
                     body = trace_api.model_dump(
-                        by_alias=True, exclude_none=True
+                        by_alias=True,
+                        exclude_none=True,
                     )
                 except AttributeError:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
-
+                print(body)
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
                     api = Api()
@@ -457,6 +518,7 @@ class TraceManager:
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace {status}",
                         description=response["link"],
+                        environment=self.environment,
                     )
                 elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
                     # Main thread gone → to be flushed
@@ -541,6 +603,7 @@ class TraceManager:
                     trace_worker_status=TraceWorkerStatus.SUCCESS,
                     message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
                     description=resp["link"],
+                    environment=self.environment,
                 )
             except Exception as e:
                 qs = self._trace_queue.qsize()
@@ -595,7 +658,6 @@ class TraceManager:
             else None
         )
 
-        # Create and return the TraceApi object
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -605,6 +667,9 @@ class TraceManager:
             toolSpans=tool_spans,
             startTime=start_time,
             endTime=end_time,
+            metadata=trace.metadata,
+            tags=trace.tags,
+            environment=self.environment,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -655,7 +720,6 @@ class TraceManager:
         is_metric_strings = None
         if span.metrics:
             is_metric_strings = isinstance(span.metrics[0], str)
-
         span_test_case = (
             SpanTestCase(
                 input=span.llm_test_case.input,
@@ -682,6 +746,7 @@ class TraceManager:
             endTime=end_time,
             input=input_data,
             output=output_data,
+            metadata=span.metadata,
             error=span.error,
             spanTestCase=span_test_case,
             metrics=(
@@ -802,7 +867,6 @@ class Observer:
         current_span.end_time = end_time
         if exc_type is not None:
             current_span.status = TraceSpanStatus.ERRORED
-            print(current_span)
             current_span.error = str(exc_val)
         else:
             current_span.status = TraceSpanStatus.SUCCESS
@@ -889,38 +953,54 @@ class Observer:
             if current_span and isinstance(
                 current_span.attributes, AgentAttributes
             ):
-                current_span.input = current_span.attributes.input
-                current_span.output = current_span.attributes.output
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.input
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.output
+                )
             else:
-                current_span.input = self.function_kwargs
-                current_span.output = self.result
+                current_span.input = trace_manager.mask(self.function_kwargs)
+                current_span.output = trace_manager.mask(self.result)
 
         elif isinstance(current_span, LlmSpan):
             if current_span and isinstance(
                 current_span.attributes, LlmAttributes
             ):
-                current_span.input = current_span.attributes.input
-                current_span.output = current_span.attributes.output
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.input
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.output
+                )
 
         elif isinstance(current_span, RetrieverSpan):
             if current_span and isinstance(
                 current_span.attributes, RetrieverAttributes
             ):
-                current_span.input = current_span.attributes.embedding_input
-                current_span.output = current_span.attributes.retrieval_context
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.embedding_input
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.retrieval_context
+                )
 
         elif isinstance(current_span, ToolSpan):
             if current_span and isinstance(
                 current_span.attributes, ToolAttributes
             ):
-                current_span.input = current_span.attributes.input_parameters
-                current_span.output = current_span.attributes.output
+                current_span.input = trace_manager.mask(
+                    current_span.attributes.input_parameters
+                )
+                current_span.output = trace_manager.mask(
+                    current_span.attributes.output
+                )
             else:
-                current_span.input = self.function_kwargs
-                current_span.output = self.result
+                current_span.input = trace_manager.mask(self.function_kwargs)
+                current_span.output = trace_manager.mask(self.result)
         else:
-            current_span.input = self.function_kwargs
-            current_span.output = self.result
+            current_span.input = trace_manager.mask(self.function_kwargs)
+            current_span.output = trace_manager.mask(self.result)
 
     def patch_client(self, client: Any):
  
@@ -1109,13 +1189,29 @@ def observe(
     return decorator
 
 
-def update_current_span_attributes(attributes: Attributes):
+def update_current_span(
+    test_case: Optional[LLMTestCase] = None,
+    attributes: Optional[Attributes] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+):
     current_span = current_span_context.get()
-    if current_span:
+    if not current_span:
+        return
+    if attributes:
         current_span.set_attributes(attributes)
-
-
-def update_current_span_test_case(test_case: LLMTestCase):
-    current_span = current_span_context.get()
-    if current_span:
+    if test_case:
         current_span.llm_test_case = test_case
+    if metadata:
+        current_span.metadata = metadata
+
+
+def update_current_trace(
+    tags: Optional[List[str]] = None, metadata: Optional[Dict[str, Any]] = None
+):
+    current_trace = current_trace_context.get()
+    if not current_trace:
+        return
+    if tags:
+        current_trace.tags = tags
+    if metadata:
+        current_trace.metadata = metadata

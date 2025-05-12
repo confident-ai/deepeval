@@ -1,6 +1,10 @@
+from enum import Enum
 from typing import Optional, List
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import time
+import json
+import os
+from pydantic import BaseModel
 
 from deepeval.prompt.api import (
     PromptHttpResponse,
@@ -11,6 +15,32 @@ from deepeval.prompt.api import (
 from deepeval.prompt.utils import interpolate_text
 from deepeval.utils import is_confident
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+
+from deepeval.constants import HIDDEN_DIR
+
+CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
+
+
+class CustomEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Enum):
+            return obj.value
+        elif isinstance(obj, BaseModel):
+            return obj.model_dump(by_alias=True, exclude_none=True)
+        return json.JSONEncoder.default(self, obj)
+
+
+class CachedPrompt(BaseModel):
+    alias: str
+    version: str
+    template: Optional[str]
+    messages_template: Optional[List[PromptMessage]]
+    prompt_version_id: str
+    type: PromptType
+    interpolation_type: PromptInterpolationType
+
+    class Config:
+        use_enum_values = True
 
 
 class Prompt:
@@ -63,7 +93,75 @@ class Prompt:
         else:
             raise ValueError(f"Unsupported prompt type: {self._type}")
 
-    def pull(self, version: Optional[str] = None):
+    def _read_from_cache(
+        self, alias: str, version: Optional[str] = None
+    ) -> Optional[CachedPrompt]:
+        if not os.path.exists(CACHE_FILE_NAME):
+            raise Exception("No Prompt cache file found")
+
+        try:
+            with open(CACHE_FILE_NAME, "r") as f:
+                cache_data = json.load(f)
+
+            if alias in cache_data:
+                if version:
+                    if version in cache_data[alias]:
+                        return CachedPrompt(**cache_data[alias][version])
+                    else:
+                        raise Exception(
+                            f"Unable to find Prompt version: '{version}' for alias: '{alias}' in cache"
+                        )
+                else:
+                    raise Exception(
+                        f"Unable to load Prompt with alias: '{alias}' from cache when no version is specified "
+                    )
+            else:
+                raise Exception(
+                    f"Unable to find Prompt with alias: '{alias}' in cache"
+                )
+        except Exception as e:
+            raise Exception(f"Error reading Prompt cache from disk: {e}")
+
+    def _write_to_cache(self):
+        if not self.alias or not self.version:
+            return
+
+        cache_data = {}
+        if os.path.exists(CACHE_FILE_NAME):
+            try:
+                with open(CACHE_FILE_NAME, "r") as f:
+                    cache_data = json.load(f)
+            except Exception:
+                cache_data = {}
+
+        # Ensure the cache structure is initialized properly
+        if self.alias not in cache_data:
+            cache_data[self.alias] = {}
+
+        # Cache the prompt
+        cache_data[self.alias][self.version] = {
+            "alias": self.alias,
+            "version": self.version,
+            "template": self._text_template,
+            "messages_template": self._messages_template,
+            "prompt_version_id": self._prompt_version_id,
+            "type": self._type,
+            "interpolation_type": self._interpolation_type,
+        }
+
+        # Ensure directory exists
+        os.makedirs(HIDDEN_DIR, exist_ok=True)
+
+        # Write back to cache file
+        with open(CACHE_FILE_NAME, "w") as f:
+            json.dump(cache_data, f, cls=CustomEncoder)
+
+    def pull(
+        self,
+        version: Optional[str] = None,
+        fallback_to_cache: bool = True,
+        write_to_cache: bool = True,
+    ):
         if self.alias is None:
             raise TypeError(
                 "Unable to pull prompt from Confident AI when no alias is provided."
@@ -81,20 +179,55 @@ class Prompt:
                     total=100,
                 )
                 start_time = time.perf_counter()
-                result = api.send_request(
-                    method=HttpMethods.GET,
-                    endpoint=Endpoints.PROMPT_ENDPOINT,
-                    params={"alias": self.alias, "version": version},
-                )
-                response = PromptHttpResponse(
-                    promptVersionId=result["promptVersionId"],
-                    template=result["value"],
-                    messages=result["messages"],
-                    type=result["type"],
-                    interpolation_type=result["interpolationType"],
-                )
+                try:
+                    result = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPT_ENDPOINT,
+                        params={"alias": self.alias, "version": version},
+                    )
+                    response = PromptHttpResponse(
+                        promptVersionId=result["promptVersionId"],
+                        template=result["value"],
+                        messages=result["messages"],
+                        type=result["type"],
+                        interpolation_type=result["interpolationType"],
+                    )
+                    # raise Exception("test")
+                except:
+                    try:
+                        if fallback_to_cache:
+                            cached_prompt = self._read_from_cache(
+                                self.alias, version
+                            )
+                            if cached_prompt:
+                                self.version = cached_prompt.version
+                                self._text_template = cached_prompt.template
+                                self._messages_template = (
+                                    cached_prompt.messages_template
+                                )
+                                self._prompt_version_id = (
+                                    cached_prompt.prompt_version_id
+                                )
+                                self._type = PromptType(cached_prompt.type)
+                                self._interpolation_type = (
+                                    PromptInterpolationType(
+                                        cached_prompt.interpolation_type
+                                    )
+                                )
 
-                self.version = version
+                                end_time = time.perf_counter()
+                                time_taken = format(
+                                    end_time - start_time, ".2f"
+                                )
+                                progress.update(
+                                    task_id,
+                                    description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
+                                )
+                                return
+                    except:
+                        raise
+
+                self.version = version or "latest"
                 self._text_template = response.template
                 self._messages_template = response.messages
                 self._prompt_version_id = response.promptVersionId
@@ -107,6 +240,8 @@ class Prompt:
                     task_id,
                     description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Done! ({time_taken}s)",
                 )
+                if write_to_cache:
+                    self._write_to_cache()
         else:
             raise Exception(
                 "Run `deepeval login` to pull prompt template from Confident AI"

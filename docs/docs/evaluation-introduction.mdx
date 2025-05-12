@@ -218,13 +218,13 @@ You can also run metrics on nested components by setting up tracing in `deepeval
 ```python showLineNumbers {5}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
   response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
 
-  update_current_span_test_case(
+  update_current_span(
     test_case=LLMTestCase(input=query, output=response)
   )
   return response

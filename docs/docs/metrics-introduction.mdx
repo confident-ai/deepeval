@@ -102,12 +102,12 @@ And **component-level** evals:
 ```python
 from deepeval.dataset import Golden
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 from deepeval import evaluate
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def nested_component():
-    update_current_span_test_case(LLMTestCase(...))
+    update_current_span(test_case=LLMTestCase(...))
     pass
 
 @observe
@@ -433,12 +433,12 @@ To run component-level evaluations of your LLM system using any metric of your c
 ```python
 from deepeval.dataset import Golden
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 from deepeval import evaluate
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def nested_component():
-    update_current_span_test_case(LLMTestCase(...))
+    update_current_span(test_case=LLMTestCase(...))
     pass
 
 @observe

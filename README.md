@@ -51,6 +51,7 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
 
 > 🥳 You can now share DeepEval's test results on the cloud directly on [Confident AI](https://confident-ai.com?utm_source=GitHub)'s infrastructure
 
+- Supports both end-to-end and component-level LLM evaluation.
 - Large variety of ready-to-use LLM evaluation metrics (all with explanations) powered by **ANY** LLM of your choice, statistical methods, or NLP models that runs **locally on your machine**:
   - G-Eval
   - DAG ([deep acyclic graph](https://deepeval.com/docs/metrics-dag))
@@ -106,8 +107,8 @@ Whether your LLM applications are RAG pipelines, chatbots, AI agents, implemente
 
 # 🔌 Integrations
 
-- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://deepeval.com/docs/integrations/frameworks/llamaindex?utm_source=GitHub)
-- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://deepeval.com/docs/integrations/frameworks/huggingface?utm_source=GitHub)
+- 🦄 LlamaIndex, to [**unit test RAG applications in CI/CD**](https://www.deepeval.com/integrations/frameworks/llamaindex?utm_source=GitHub)
+- 🤗 Hugging Face, to [**enable real-time evaluations during LLM fine-tuning**](https://www.deepeval.com/integrations/frameworks/huggingface?utm_source=GitHub)
 
 <br />
 
@@ -141,7 +142,7 @@ Create a test file:
 touch test_chatbot.py
 ```
 
-Open `test_chatbot.py` and write your first test case using DeepEval:
+Open `test_chatbot.py` and write your first test case to run an **end-to-end** evaluation using DeepEval, which treats your LLM app as a black-box:
 
 ```python
 import pytest
@@ -185,7 +186,40 @@ deepeval test run test_chatbot.py
 - In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
-[Read our documentation](https://deepeval.com/docs/getting-started?utm_source=GitHub) for more information on how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
+[Read our documentation](https://deepeval.com/docs/getting-started?utm_source=GitHub) for more information on more options to run end-to-end evaluation, how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
+
+<br />
+
+## Evaluating Nested Components
+
+If you wish to evaluate individual components within your LLM app, you need to run **component-level** evals - a powerful way to evaluate any component within an LLM system.
+
+Simply trace "components" such as LLM calls, retrievers, tool calls, and agents within your LLM application using the `@observe` decorator to apply metrics on a component-level. Tracing with `deepeval` is non-instrusive (learn more [here](https://deepeval.com/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)) and helps you avoid rewriting your codebase just for evals:
+
+```python
+from deepeval.tracing import observe, update_current_span
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import Golden
+from deepeval.metrics import GEval
+from deepeval import evaluate
+
+correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
+
+@observe(metrics=[correctness])
+def inner_component():
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    return
+
+@observe
+def llm_app(input: str):
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
+
+You can learn everything about component-level evaluations [here.](https://www.deepeval.com/docs/evaluation-component-level-llm-evals)
 
 <br />
 

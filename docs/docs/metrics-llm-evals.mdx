@@ -96,13 +96,13 @@ You can also run `GEval` within nested components for [component-level](/docs/ev
 
 ```python
 from deepeval.dataset import Golden
-from deepeval.tracing import observe, update_current_span_test_case
+from deepeval.tracing import observe, update_current_span
 ...
 
 @observe(metrics=[correctness_metric])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span_test_case(test_case)
+    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
     return
 
 @observe

@@ -1,7 +1,7 @@
 from deepeval.tracing import (
     observe,
-    update_current_span_attributes,
-    update_current_span_test_case,
+    update_current_span,
+    update_current_trace,
     LlmAttributes,
     RetrieverAttributes,
     ToolAttributes,
@@ -26,7 +26,7 @@ async def generate_text(prompt: str):
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span_attributes(attributes)
+    update_current_span(attributes=attributes)
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
     return generated_text
@@ -48,8 +48,8 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    update_current_span_attributes(
-        RetrieverAttributes(
+    update_current_span(
+        attributes=RetrieverAttributes(
             embedding_input=query,
             retrieval_context=documents,
         )
@@ -72,7 +72,7 @@ async def get_weather(city: str):
     )
 
     # Set attributes using the helper function
-    update_current_span_attributes(attributes)
+    update_current_span(attributes=attributes)
 
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -119,8 +119,8 @@ async def weather_research_agent(user_query: str):
     weather = await get_weather(location)
     documents = await retrieve_documents(f"{weather} in {location}", top_k=2)
     response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
-    update_current_span_attributes(
-        AgentAttributes(
+    update_current_span(
+        attributes=AgentAttributes(
             input=user_query,
             output=response,
         )
@@ -137,9 +137,8 @@ async def weather_research_agent(user_query: str):
 async def supervisor_agent(user_query: str):
     research = await random_research_agent(user_query)
     weather_research = await weather_research_agent(user_query)
-
-    update_current_span_attributes(
-        AgentAttributes(
+    update_current_span(
+        attributes=AgentAttributes(
             input=user_query,
             output=research + weather_research,
         )
@@ -188,6 +187,8 @@ async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
 
 @observe("CustomLLM")
 async def custom_generate(prompt: str, model: str = "custom-model"):
+    # print(final_response)
+    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
     response = f"Custom response for: {prompt}"
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -196,6 +197,8 @@ async def custom_generate(prompt: str, model: str = "custom-model"):
 
 @observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
 async def custom_research_agent(query: str):
+    # print(final_response)
+    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
     if random.random() < 0.5:
         docs = await custom_retrieve(query)
         analysis = await custom_generate(str(docs))
@@ -210,6 +213,8 @@ async def custom_research_agent(query: str):
 
 @observe(type="agent", available_tools=["get_weather", "get_location"])
 async def weather_agent(query: str):
+    # print(final_response)
+    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
     if random.random() < 0.5:
         location = await get_location(query)
         if random.random() < 0.5:
@@ -229,6 +234,8 @@ async def weather_agent(query: str):
 
 @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
 async def research_agent(query: str):
+    # print(final_response)
+    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
     if random.random() < 0.5:
         docs = await retrieve_documents(query)
         analysis = await generate_text(str(docs))
@@ -258,6 +265,8 @@ async def meta_agent(query: str):
     Custom Analysis: {custom_info}
     """
     # print(final_response)
+    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
+    update_current_trace(metadata={"input": "input"})
 
     return final_response
 
@@ -294,8 +303,16 @@ metric = DAGMetric(dag=dag, name="Persuasiveness")
 ###################################
 
 import asyncio
-from deepeval.tracing import get_current_trace
-import contextvars
+import re
+
+
+def mask_function(data):
+    if type(data) is str:
+        censored_data = re.sub("Elon", "[REDACTED NAME]", data)
+        return censored_data
+
+
+trace_manager.configure(mask=mask_function, environment="test_environment")
 
 
 # # Gather multiple traceable tasks
@@ -310,10 +327,4 @@ async def run_parallel_examples():
 
 
 # Run it
-import os
-
-print(trace_manager._daemon)
-print(os.environ["CONFIDENT_TRACE_FLUSH"])
-print(os.environ["CONFIDENT_TRACE_VERBOSE"])
-
 asyncio.run(run_parallel_examples())

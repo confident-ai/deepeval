@@ -8,8 +8,7 @@ from deepeval.metrics import (
     FaithfulnessMetric,
 )
 from deepeval.tracing import (
-    update_current_span_test_case,
-    update_current_span_attributes,
+    update_current_span,
     observe,
     RetrieverAttributes,
     LlmAttributes,
@@ -59,7 +58,7 @@ async def generate_text(prompt: str):
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    # update_current_span_attributes(attributes)
+    update_current_span(attributes=attributes)
     await sleep(random.uniform(1, 3))
     return generated_text
 
@@ -72,12 +71,12 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    # update_current_span_attributes(
-    #     RetrieverAttributes(
-    #         embedding_input=query,
-    #         retrieval_context=documents,
-    #     )
-    # )
+    update_current_span(
+        attributes=RetrieverAttributes(
+            embedding_input=query,
+            retrieval_context=documents,
+        )
+    )
     return documents
 
 
@@ -123,8 +122,8 @@ async def custom_research_agent(query: str):
     metrics=[AnswerRelevancyMetric(), BiasMetric()],
 )
 async def weather_agent(query: str):
-    update_current_span_test_case(
-        LLMTestCase(
+    update_current_span(
+        test_case=LLMTestCase(
             input=query, actual_output="Weather information unavailable"
         )
     )
@@ -163,8 +162,8 @@ async def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
 
-    update_current_span_test_case(
-        LLMTestCase(input=input, actual_output=final_response)
+    update_current_span(
+        test_case=LLMTestCase(input=input, actual_output=final_response)
     )
     return final_response
 
@@ -179,17 +178,20 @@ goldens = [
     # Golden(input="Tell me about Elon Musk."),
 ]
 
-
-# # # Run Async
-# evaluate(goldens=goldens, observed_callback=meta_agent, async_config=AsyncConfig(run_async=True))
-evaluate(
-    goldens=goldens,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True),
-    display_config=DisplayConfig(show_indicator=True),
-)
-
-# # # # Run Sync
+# # Run Async
+# evaluate(
+#     goldens=goldens,
+#     observed_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=True),
+#     display_config=DisplayConfig(show_indicator=True),
+# )
+# evaluate(
+#     goldens=goldens,
+#     observed_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=True),
+#     display_config=DisplayConfig(show_indicator=False),
+# )
+# # Run Sync
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
@@ -199,16 +201,17 @@ evaluate(
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=False),
-#     display_config=DisplayConfig(show_indicator=False),
+#     async_config=AsyncConfig(run_async=True),
+#     display_config=DisplayConfig(show_indicator=True),
 # )
 
-# import pytest
+import pytest
 
-# # Assert Test
-# @pytest.mark.parametrize(
-#     "golden",
-#     goldens,
-# )
-# def test_meta_agent_0(golden):
-#     assert_test(golden=golden, observed_callback=meta_agent)
+
+# Assert Test
+@pytest.mark.parametrize(
+    "golden",
+    goldens,
+)
+def test_meta_agent_0(golden):
+    assert_test(golden=golden, observed_callback=meta_agent)

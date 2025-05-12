@@ -2,11 +2,9 @@ from typing import List
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     observe,
-    update_current_span_attributes,
-    update_current_span_test_case,
+    update_current_span,
     RetrieverAttributes,
     LlmAttributes,
-    trace_manager,
 )
 
 
@@ -27,8 +25,8 @@ def retrieve_documents(query: str) -> List[str]:
         "Document 3: Additional context that might be useful.",
     ]
 
-    update_current_span_attributes(
-        RetrieverAttributes(
+    update_current_span(
+        attributes=RetrieverAttributes(
             embedding_input=query, retrieval_context=fetched_documents
         )
     )
@@ -41,7 +39,7 @@ def generate_response(input: str) -> str:
     # <--Include format prompts and call your LLM provider here-->
     output = "Generated response based on the prompt: " + input
 
-    update_current_span_attributes(LlmAttributes(input=input, output=output))
+    update_current_span(attributes=LlmAttributes(input=input, output=output))
     return output
 
 
@@ -60,7 +58,7 @@ def rag_pipeline(query: str) -> str:
     response = generate_response(f"Context: {context}\nQuery: {query}")
 
     # Set test case to evaluate current span
-    update_current_span_test_case(
+    update_current_span(
         test_case=LLMTestCase(
             input=query, actual_output=response, retrieval_context=docs
         )
@@ -89,5 +87,3 @@ def research_agent(query: str) -> str:
 # Calling the agent will trace & trigger
 # online metrics on Confident AI
 research_agent("What is the weather like in San Francisco?")
-
-trace_manager.shutdown()

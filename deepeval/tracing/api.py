@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Dict, List, Optional, Union, Literal
+from typing import Dict, List, Optional, Union, Literal, Any
 from pydantic import BaseModel, Field
 
 from deepeval.test_case.llm_test_case import ToolCall
@@ -57,6 +57,7 @@ class BaseApiSpan(BaseModel):
     parent_uuid: Optional[str] = Field(None, alias="parentUuid")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
+    metadata: Optional[Dict[str, Any]] = None
     input: Optional[Union[Dict, list, str]] = None
     output: Optional[Union[Dict, list, str]] = None
     error: Optional[str] = None
@@ -102,3 +103,6 @@ class TraceApi(BaseModel):
     tool_spans: List[BaseApiSpan] = Field(alias="toolSpans")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
+    metadata: Optional[Dict[str, Any]] = Field(None)
+    tags: Optional[List[str]] = Field(None)
+    environment: Optional[str] = Field(None)

@@ -1,5 +1,6 @@
 .videoContainer {
   position: relative;
+  margin-bottom: 1rem;
 }
 
 /* Only show overlay on non-mobile screens */
