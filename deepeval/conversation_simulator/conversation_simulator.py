@@ -16,7 +16,7 @@ from deepeval.conversation_simulator.schema import (
     SimulatedInput,
     Scenario,
     UserProfile,
-    ConversationCompletion
+    ConversationCompletion,
 )
 from deepeval.progress_context import conversation_simulator_progress_context
 
@@ -28,7 +28,6 @@ class ConversationSimulator:
         user_profile_items: Optional[List[str]] = None,
         user_profiles: Optional[List[str]] = None,
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        model_kwargs: Optional[Dict] = None,
         opening_message: Optional[str] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
@@ -48,12 +47,10 @@ class ConversationSimulator:
         self.async_mode = async_mode
         self.simulated_conversations: List[ConversationalTestCase] = []
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.model_kwargs = model_kwargs
 
     def simulate(
         self,
         model_callback: Callable[[str], str],
-        model_callback_kwargs: Optional[Dict[str, Any]] = None,
         min_turns: int = 5,
         max_turns: int = 20,
         early_stopping: bool = False,
@@ -63,7 +60,9 @@ class ConversationSimulator:
         if min_turns > max_turns:
             raise ValueError("`min_turns` cannot be greater than `max_turns`.")
         if early_stopping and stopping_criteria is None:
-            raise ValueError("`stopping_criteria` cannot be None if `early_stopping` is `True`.")
+            raise ValueError(
+                "`stopping_criteria` cannot be None if `early_stopping` is `True`."
+            )
 
         self.simulation_cost = 0 if self.using_native_model else None
         with conversation_simulator_progress_context(
@@ -81,7 +80,6 @@ class ConversationSimulator:
                 loop.run_until_complete(
                     self._a_simulate(
                         model_callback=model_callback,
-                        model_callback_kwargs=model_callback_kwargs,
                         min_turns=min_turns,
                         max_turns=max_turns,
                         early_stopping=early_stopping,
@@ -101,11 +99,10 @@ class ConversationSimulator:
                     conversational_test_case = (
                         self._simulate_single_conversation(
                             model_callback=model_callback,
-                            model_callback_kwargs=model_callback_kwargs,
                             min_turns=min_turns,
                             max_turns=max_turns,
                             early_stopping=early_stopping,
-                            stopping_criteria = stopping_criteria
+                            stopping_criteria=stopping_criteria,
                         )
                     )
                     conversational_test_cases.append(conversational_test_case)
@@ -118,7 +115,6 @@ class ConversationSimulator:
     async def _a_simulate(
         self,
         model_callback: Callable[[str], str],
-        model_callback_kwargs: Optional[Dict[str, Any]],
         min_turns: int,
         max_turns: int,
         early_stopping: bool,
@@ -132,7 +128,6 @@ class ConversationSimulator:
             async with self.semaphore:
                 return await self._a_simulate_single_conversation(
                     model_callback=model_callback,
-                    model_callback_kwargs=model_callback_kwargs,
                     min_turns=min_turns,
                     max_turns=max_turns,
                     early_stopping=early_stopping,
@@ -210,13 +205,12 @@ class ConversationSimulator:
                 return data["simulated_input"]
 
     def _simulate_single_conversation(
-        self, 
-        model_callback: Callable, 
-        model_callback_kwargs: Optional[Dict[str, Any]],
+        self,
+        model_callback: Callable,
         min_turns: int,
-        max_turns: int, 
+        max_turns: int,
         early_stopping: bool,
-        stopping_criteria: Optional[str]
+        stopping_criteria: Optional[str],
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
         intent = random.choice(self.user_intentions)
@@ -246,7 +240,11 @@ class ConversationSimulator:
                 conversation_history = self._format_conversational_turns(turns)
 
                 # Check if conversation should stop early
-                prompt = ConversationSimulatorTemplate.check_conversation_completed(conversation_history, stopping_criteria)
+                prompt = (
+                    ConversationSimulatorTemplate.check_conversation_completed(
+                        conversation_history, stopping_criteria
+                    )
+                )
                 if early_stopping:
                     if self.using_native_model:
                         res, cost = self.simulator_model.generate(
@@ -256,8 +254,10 @@ class ConversationSimulator:
                         is_complete = res.is_complete
                     else:
                         try:
-                            res: ConversationCompletion = self.simulator_model.generate(
-                                prompt, ConversationCompletion
+                            res: ConversationCompletion = (
+                                self.simulator_model.generate(
+                                    prompt, ConversationCompletion
+                                )
                             )
                             is_complete = res.is_complete
                         except TypeError:
@@ -293,7 +293,9 @@ class ConversationSimulator:
                 LLMTestCase(
                     input=user_input,
                     actual_output=self._generate_chatbot_response(
-                        user_input, model_callback=model_callback, model_callback_kwargs=model_callback_kwargs
+                        user_input,
+                        model_callback=model_callback,
+                        conversation_history=conversation_history,
                     ),
                     additional_metadata=additional_metadata,
                 )
@@ -376,7 +378,6 @@ class ConversationSimulator:
     async def _a_simulate_single_conversation(
         self,
         model_callback: Callable,
-        model_callback_kwargs: Optional[Dict[str, Any]],
         min_turns: int,
         max_turns: int,
         early_stopping: bool,
@@ -385,7 +386,7 @@ class ConversationSimulator:
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
         intent = random.choice(self.user_intentions)
-        user_profile = await self._a_simulate_user_profile() 
+        user_profile = await self._a_simulate_user_profile()
         scenario = await self._a_simulate_scenario(user_profile, intent)
         additional_metadata = {
             "User Profile": user_profile,
@@ -409,7 +410,11 @@ class ConversationSimulator:
                 conversation_history = self._format_conversational_turns(turns)
 
                 # Check if conversation should stop early
-                prompt = ConversationSimulatorTemplate.check_conversation_completed(conversation_history, stopping_criteria)
+                prompt = (
+                    ConversationSimulatorTemplate.check_conversation_completed(
+                        conversation_history, stopping_criteria
+                    )
+                )
                 if early_stopping:
                     if self.using_native_model:
                         res, cost = await self.simulator_model.a_generate(
@@ -419,8 +424,10 @@ class ConversationSimulator:
                         is_complete = res.is_complete
                     else:
                         try:
-                            res: ConversationCompletion = await self.simulator_model.a_generate(
-                                prompt, ConversationCompletion
+                            res: ConversationCompletion = (
+                                await self.simulator_model.a_generate(
+                                    prompt, ConversationCompletion
+                                )
                             )
                             is_complete = res.is_complete
                         except TypeError:
@@ -458,7 +465,9 @@ class ConversationSimulator:
                 LLMTestCase(
                     input=user_input,
                     actual_output=await self._a_generate_chatbot_response(
-                        user_input, model_callback=model_callback, model_callback_kwargs=model_callback_kwargs
+                        user_input,
+                        model_callback=model_callback,
+                        conversation_history=conversation_history,
                     ),
                     additional_metadata=additional_metadata,
                 )
@@ -476,28 +485,23 @@ class ConversationSimulator:
     ############################################
 
     def _generate_chatbot_response(
-        self, 
-        input: str, 
-        model_callback: Callable, 
-        model_callback_kwargs: Optional[Dict[str, Any]]
+        self,
+        input: str,
+        model_callback: Callable,
+        conversation_history: str,
     ):
-        if model_callback_kwargs is not None:
-            res =  model_callback(input=input, **model_callback_kwargs)
-        else: 
-            res = model_callback(input=input)
+        res = model_callback(input, conversation_history=conversation_history)
         return res
 
     async def _a_generate_chatbot_response(
-        self, 
-        input: str, 
-        model_callback: Callable, 
-        model_callback_kwargs: Optional[Dict[str, Any]]
+        self,
+        input: str,
+        model_callback: Callable,
+        conversation_history: str,
     ):
-        if model_callback_kwargs is not None:
-            res = await model_callback(input=input, **model_callback_kwargs)
-        else: 
-            res = await model_callback(input=input)
-        return res
+        res = await model_callback(
+            input, conversation_history=conversation_history
+        )
 
     def _format_conversational_turns(self, turns: List[LLMTestCase]) -> str:
         formatted_turns = []

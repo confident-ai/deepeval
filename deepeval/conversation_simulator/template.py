@@ -141,7 +141,9 @@ class ConversationSimulatorTemplate:
         return prompt
 
     @staticmethod
-    def check_conversation_completed(previous_conversation: str, stopping_criteria: str) -> str:
+    def check_conversation_completed(
+        previous_conversation: str, stopping_criteria: str
+    ) -> str:
         prompt = textwrap.dedent(
             f"""You are a Conversation Completion Checker.
             Your task is to determine whether the conversation satisfies the provided stopping criteria and should be terminated.
@@ -171,5 +173,5 @@ class ConversationSimulatorTemplate:
             {previous_conversation}
             JSON Output:
             """
-                )
+        )
         return prompt
