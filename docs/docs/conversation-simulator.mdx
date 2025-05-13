@@ -68,7 +68,9 @@ To simulate your first conversation, simply define a callback that wraps around 
 ...
 
 # Remove `async` if `async_mode` is `True
-async def model_callback(input: str, is_conversation: bool) -> str:
+async def model_callback(input: str, **kwargs) -> str:
+    # Access conversation history from kwargs
+    print(kwargs["conversation_history"])
     # Replace this with your LLM application
     return f"I don't know how to answer this: {input}"
 
@@ -76,14 +78,12 @@ convo_simulator.simulate(
   model_callback=model_callback,
   early_stopping=true,
   stopping_criteria="Stop when the user's banking request (opening an account, disputing a payment, or querying a transaction) has been fully resolved.",
-  model_callback_kwargs={"is_conversation": True}
 )
 ```
 
 There are **ONE** mandatory and **THREE** optional parameters when calling the `simulate` method:
 
 - `model_callback`: a callback of type `Callable[[str], str]` that wraps around the target LLM application you wish to generate output from.
-- [Optional] `model_callback_kwargs`: a mapping of keyword arguments of type `Dict[str, Any]` that will be passed to `model_callback` during simulation. Defaulted to `None`.
 - [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation. Defaulted to `5`.
 - [Optional] `max_turns`: an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
 - [Optional] `early_stopping`: a boolean that, when set to `True`, ends the simulation immediately once the stopping criteria is met, ignoring any remaining turns. Defaulted to `False`.
@@ -91,7 +91,7 @@ There are **ONE** mandatory and **THREE** optional parameters when calling the `
 - [Optional] `num_conversations`: an integer that specifies the total number of `ConversationalGoldens`s to simulate. Defaulted to `5`.
 
 :::info
-Your `model_callback` must accept at least one parameter named `input` of type `str` and **must** return only a string. Any additional arguments can be provided via `model_callback_kwargs`, which help with configuring parameters like temperature or maintaining conversational context.
+Your `model_callback` must take a single positional argument of type `str` (the model input), accept additional keyword arguments `**kwargs`, and return a `str`. If your model callback cannot maintain conversational context, you can access the conversation history via `kwargs["conversation_history"]`.
 :::
 
 ## Using Simulated Conversations

@@ -223,6 +223,7 @@ class ConversationSimulator:
 
         turns = []
         user_input = None
+        conversation_history = None
         for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 # Add optional opening message from chatbot
@@ -395,6 +396,7 @@ class ConversationSimulator:
 
         turns = []
         user_input = None
+        conversation_history = None
         for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 turns.append(

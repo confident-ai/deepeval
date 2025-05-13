@@ -48,7 +48,7 @@ async def test_scenario(
 
 
 async def test_generate_conversations(
-    conversation_simulator: ConversationSimulator,
+    conversation_simulator: ConversationSimulator, 
 ):
     conversational_test_cases = await conversation_simulator._a_simulate()
     for tc in conversational_test_cases:
@@ -58,11 +58,10 @@ async def test_generate_conversations(
         print(("================================"))
 
 
-def callback(input: str, test=None):
-    if test is not None:
-        print(test)
+async def callback(prompt: str, **kwargs):
+    print(kwargs["conversation_history"])
     model = GPTModel()
-    return model.generate(input)
+    return await model.a_generate(prompt)
 
 
 async def main():
@@ -75,7 +74,7 @@ async def main():
         ],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
-        async_mode=False,
+        async_mode=True,
     )
     a = conversational_synthesizer.simulate(
         min_turns=5,
