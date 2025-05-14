@@ -54,9 +54,8 @@ class OllamaModel(DeepEvalBaseLLM):
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
         chat_model = self.load_model(async_mode=True)
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
         response: ChatResponse = await chat_model.chat(
-            model=model_name,
+            model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
             options={"temperature": self.temperature},
