@@ -1,5 +1,5 @@
 from enum import Enum
-
+from opentelemetry import trace
 
 class Environment(Enum):
     PRODUCTION = "production"
@@ -20,3 +20,9 @@ def validate_sampling_rate(sampling_rate: float):
         raise ValueError(
             f"Invalid sampling rate: {sampling_rate}. Please use a value between 0 and 1"
         )
+
+def get_trace_id_from_otel_current_span():
+    trace_id = trace.get_current_span().get_span_context().trace_id
+    if trace_id:
+        return f"{trace_id:032x}"
+    return None

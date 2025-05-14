@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.utils import (
     Environment,
+    get_trace_id_from_otel_current_span,
     validate_environment,
     validate_sampling_rate,
 )
@@ -310,7 +311,8 @@ class TraceManager:
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
-        trace_uuid = str(uuid.uuid4())
+        _otel_trace_id = get_trace_id_from_otel_current_span()
+        trace_uuid = _otel_trace_id if _otel_trace_id else str(uuid.uuid4()) # Get trace id from otel
         new_trace = Trace(
             uuid=trace_uuid,
             root_spans=[],
