@@ -46,12 +46,13 @@ class ToolCorrectnessMetric(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        _in_component: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self._required_params, self)
         self.test_case = test_case
-        with metric_progress_indicator(self, _show_indicator=_show_indicator):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator, _in_component=_in_component):
             self.tools_called: List[ToolCall] = test_case.tools_called
             self.expected_tools: List[ToolCall] = test_case.expected_tools
             self.score = self._calculate_score()
@@ -86,9 +87,9 @@ class ToolCorrectnessMetric(BaseMetric):
             return self.score
 
     async def a_measure(
-        self, test_case: LLMTestCase, _show_indicator: bool = True
+        self, test_case: LLMTestCase, _show_indicator: bool = True, _in_component: bool = False
     ) -> float:
-        return self.measure(test_case, _show_indicator=_show_indicator)
+        return self.measure(test_case, _show_indicator=_show_indicator, _in_component=_in_component)
 
     ##################################################
     ### Tool Correctness (Tool) ######################

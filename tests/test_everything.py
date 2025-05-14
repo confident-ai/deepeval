@@ -1,5 +1,6 @@
 import pytest
-from langchain_openai import OpenAIEmbeddings
+
+# from langchain_openai import OpenAIEmbeddings
 
 import deepeval
 from deepeval.test_case import (

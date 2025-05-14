@@ -49,18 +49,18 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self.verbose_mode = verbose_mode
 
     def measure(
-        self, test_case: ConversationalTestCase, _show_indicator: bool = True
+        self, test_case: ConversationalTestCase, _show_indicator: bool = True, _in_component: bool = False,
     ):
         check_conversational_test_case_params(
             test_case, self._required_params, self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self, _show_indicator=_show_indicator):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator, _in_component=_in_component):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                    self.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
                 )
             else:
                 self.knowledges: List[Knowledge] = self._generate_knowledges(
@@ -86,6 +86,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
+        _in_component: bool = False,
     ) -> float:
         check_conversational_test_case_params(
             test_case, self._required_params, self
@@ -93,7 +94,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
+            self, async_mode=True, _show_indicator=_show_indicator, _in_component=_in_component
         ):
             self.knowledges: List[Knowledge] = (
                 await self._a_generate_knowledges(test_case.turns)
