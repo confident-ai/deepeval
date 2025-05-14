@@ -24,5 +24,5 @@ def validate_sampling_rate(sampling_rate: float):
 def get_trace_id_from_otel_current_span():
     trace_id = trace.get_current_span().get_span_context().trace_id
     if trace_id:
-        return f"{trace_id:032x}"
+        return f"{trace_id:032x}" # Convert trace id to hex string
     return None
