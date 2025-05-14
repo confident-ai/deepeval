@@ -904,6 +904,7 @@ def execute_agentic_test_cases(
                             metric.measure(
                                 test_case,
                                 _show_indicator=show_metric_indicator,
+                                _in_component=True,
                             )
                         except MissingTestCaseParamsError as e:
                             if skip_on_missing_params:
@@ -916,7 +917,7 @@ def execute_agentic_test_cases(
                                     raise
                         except TypeError:
                             try:
-                                metric.measure(test_case)
+                                metric.measure(test_case, _in_component=True)
                             except MissingTestCaseParamsError as e:
                                 if skip_on_missing_params:
                                     continue
@@ -1252,6 +1253,7 @@ async def a_execute_span_test_case(
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
         pbar_eval=pbar_eval,
+        _in_component=True,
     )
 
     api_span.metrics_data = []
