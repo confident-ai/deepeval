@@ -13,6 +13,11 @@ class APIDataset(BaseModel):
     )
 
 
+class APIQueueDataset(BaseModel):
+    alias: str
+    goldens: List[Golden]
+
+
 class CreateDatasetHttpResponse(BaseModel):
     link: str
 
