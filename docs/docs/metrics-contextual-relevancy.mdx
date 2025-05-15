@@ -84,7 +84,7 @@ There are **SEVEN** optional parameters when creating a `ContextualRelevancyMetr
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `ContextualRelevancyTemplate`, which allows you to override the default prompt templates used to compute the `ContextualRelevancyMetric` score. You can learn what the default prompts looks like [here](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/contextual_relevancy/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section below to understand how you can tailor it to your needs. Defaulted to `deepeval`'s `ContextualRelevancyTemplate`.
 
-### Within nested components
+### Within components
 
 You can also run the `ContextualRelevancyMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 

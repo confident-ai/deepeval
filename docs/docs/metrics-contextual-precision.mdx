@@ -82,7 +82,7 @@ There are **SEVEN** optional parameters when creating a `ContextualPrecisionMetr
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `ContextualPrecisionTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualPrecisionMetric` score. Defaulted to `deepeval`'s `ContextualPrecisionTemplate`.
 
-### Within nested components
+### Within components
 
 You can also run the `ContextualPrecisionMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 

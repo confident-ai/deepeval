@@ -18,10 +18,12 @@ class Rubric(BaseModel):
         start, end = value
         if not (0 <= start <= 10 and 0 <= end <= 10):
             raise ValueError(
-                "Both score_range values must be between 0 and 10 inclusive."
+                "Both Rubric's 'score_range' values must be between 0 and 10 inclusive."
             )
-        if start >= end:
-            raise ValueError("score_range start must be less than end.")
+        if start > end:
+            raise ValueError(
+                "Rubric's 'score_range' start must be less than or equal to end."
+            )
         return value
 
 
@@ -63,17 +65,6 @@ def validate_and_sort_rubrics(
     if rubrics is None:
         return None
 
-    for rubric in rubrics:
-        start, end = rubric.score_range
-        if not (0 <= start <= 10 and 0 <= end <= 10):
-            raise ValueError(
-                f"Score range {rubric.score_range} must be between 0 and 10 inclusive."
-            )
-        if start >= end:
-            raise ValueError(
-                f"Invalid score range {rubric.score_range}: start must be less than end."
-            )
-
     # Sort rubrics by start of range
     sorted_rubrics = sorted(rubrics, key=lambda r: r.score_range[0])
 
@@ -83,7 +74,7 @@ def validate_and_sort_rubrics(
         for j in range(i + 1, len(sorted_rubrics)):
             b_start, b_end = sorted_rubrics[j].score_range
             # Check if ranges overlap
-            if a_end > b_start:
+            if a_end >= b_start:
                 raise ValueError(
                     f"Overlapping score ranges: {sorted_rubrics[i].score_range} and {sorted_rubrics[j].score_range}"
                 )
@@ -91,12 +82,16 @@ def validate_and_sort_rubrics(
     return sorted_rubrics
 
 
-def format_rubrics(rubrics: Optional[List[Rubric]]) -> str:
+def format_rubrics(rubrics: Optional[List[Rubric]]) -> Optional[str]:
     if rubrics is None:
         return None
 
     return "\n".join(
-        f"{start}-{end}: {rubric.expected_outcome}"
+        (
+            f"{start}: {rubric.expected_outcome}"
+            if start == end
+            else f"{start}-{end}: {rubric.expected_outcome}"
+        )
         for rubric in rubrics
         for start, end in [rubric.score_range]
     )
