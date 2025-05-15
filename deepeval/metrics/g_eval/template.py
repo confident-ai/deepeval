@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from deepeval.metrics.g_eval.utils import Rubric
 
 
@@ -26,14 +26,20 @@ JSON:
         evaluation_steps: str,
         test_case_content: str,
         parameters: str,
-        rubric: Optional[List[Rubric]] = None,
+        rubric: Optional[str] = None,
+        score_range: Tuple[int, int] = (0, 10),
     ):
         rubric_text = f"Rubric:\n{rubric}\n" if rubric else ""
         dependencies = (
             "evaluation steps and rubric" if rubric else "evaluation steps"
         )
+        score_explanation = (
+            "according to the rubric provided"
+            if rubric
+            else f"with {score_range[1]} being that it follows the criteria outlined in the steps and {score_range[0]} being that it does not"
+        )
 
-        return f"""Given the {dependencies}, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria outlined in the steps and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+        return f"""Given the {dependencies}, return a JSON with two keys: 1) a `score` key ranging from {score_range[0]} to {score_range[1]}, {score_explanation}, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
 Evaluation Steps:
 {evaluation_steps}
@@ -47,7 +53,7 @@ IMPORTANT: Please make sure to only return in JSON format, with the "score" and 
 
 Example JSON:
 {{
-    "score": 0,
+    "score": {score_range[0]},
     "reason": "The text does not follow the evaluation steps provided."
 }}
 **
@@ -59,7 +65,7 @@ JSON:
     def generate_strict_evaluation_results(
         evaluation_steps: str, test_case_content: str, parameters: str
     ):
-        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is either 1 (follows the criteria outlined in the steps) or 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
 Evaluation Steps:
 {evaluation_steps}

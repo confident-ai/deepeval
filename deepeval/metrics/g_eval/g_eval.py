@@ -1,16 +1,12 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, List, Tuple, Union, Dict
-import math
+from typing import Optional, List, Tuple, Union
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
-    ToolCall,
 )
-
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -23,11 +19,16 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
 from deepeval.metrics.g_eval.utils import (
-    G_EVAL_PARAMS,
-    construct_g_eval_params_string,
-    no_log_prob_support,
     Rubric,
+    construct_g_eval_params_string,
+    construct_test_case_string,
+    format_rubrics,
+    no_log_prob_support,
+    calculate_weighted_summed_score,
     validate_and_sort_rubrics,
+    validate_criteria_and_evaluation_steps,
+    number_evaluation_steps,
+    get_score_range,
 )
 
 
@@ -47,25 +48,9 @@ class GEval(BaseMetric):
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
     ):
+        validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         self.name = name
         self.evaluation_params = evaluation_params
-
-        # Check if both criteria and evaluation_steps are not None at the same time
-        if criteria is None and evaluation_steps is None:
-            raise ValueError(
-                "Either 'criteria' or 'evaluation_steps' must be provided."
-            )
-
-        # Check if criteria is provided, it cannot be an empty string
-        if criteria is not None and not criteria.strip():
-            raise ValueError("Criteria provided cannot be an empty string.")
-
-        # Check if evaluation_steps is provided, it cannot be an empty list
-        if evaluation_steps is not None and len(evaluation_steps) == 0:
-            raise ValueError(
-                "'evaluation_steps' must not be an empty list. Either omit evaluation steps or include a non-empty list of steps."
-            )
-
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
         self.model, self.using_native_model = initialize_model(model)
@@ -98,7 +83,7 @@ class GEval(BaseMetric):
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                g_score, reason = self.evaluate(test_case)
+                g_score, reason = self._evaluate(test_case)
                 self.reason = reason
                 self.score = float(g_score) / 10
                 self.score = (
@@ -110,7 +95,9 @@ class GEval(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
+                        f"Criteria:\n{self.criteria}",
                         f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                        f"Rubric:\n{format_rubrics(self.rubric)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -146,19 +133,11 @@ class GEval(BaseMetric):
                 steps=[
                     f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                    f"Rubric:\n{format_rubrics(self.rubric)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
             return self.score
-
-    def construct_test_case_string(self, test_case: LLMTestCase) -> str:
-        text = """"""
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value} \n\n"
-        return text
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -211,22 +190,24 @@ class GEval(BaseMetric):
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = self.construct_test_case_string(test_case)
-
+        test_case_content = construct_test_case_string(
+            self.evaluation_params, test_case
+        )
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-
         if not self.strict_mode:
+            rubric_str = format_rubrics(self.rubric) if self.rubric else None
             prompt = GEvalTemplate.generate_evaluation_results(
-                evaluation_steps=self.number_evaluation_steps(),
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
-                rubric=self.rubric,
+                rubric=rubric_str,
+                score_range=get_score_range(self.rubric),
             )
         else:
             prompt = GEvalTemplate.generate_strict_evaluation_results(
-                evaluation_steps=self.number_evaluation_steps(),
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
             )
@@ -250,7 +231,7 @@ class GEval(BaseMetric):
                 return score, reason
 
             try:
-                weighted_summed_score = self.generate_weighted_summed_score(
+                weighted_summed_score = calculate_weighted_summed_score(
                     score, res
                 )
                 return weighted_summed_score, reason
@@ -275,23 +256,28 @@ class GEval(BaseMetric):
                     data = trimAndLoadJson(res, self)
                     return data["score"], data["reason"]
 
-    def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        test_case_content = self.construct_test_case_string(test_case)
-
+    def _evaluate(
+        self, test_case: LLMTestCase
+    ) -> Tuple[Union[int, float], str]:
+        test_case_content = construct_test_case_string(
+            self.evaluation_params, test_case
+        )
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
 
         if not self.strict_mode:
+            rubric_str = format_rubrics(self.rubric) if self.rubric else None
             prompt = GEvalTemplate.generate_evaluation_results(
-                evaluation_steps=self.number_evaluation_steps(),
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
-                rubric=self.rubric,
+                rubric=rubric_str,
+                score_range=get_score_range(self.rubric),
             )
         else:
             prompt = GEvalTemplate.generate_strict_evaluation_results(
-                evaluation_steps=self.number_evaluation_steps(),
+                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
             )
@@ -313,7 +299,7 @@ class GEval(BaseMetric):
                 return score, reason
 
             try:
-                weighted_summed_score = self.generate_weighted_summed_score(
+                weighted_summed_score = calculate_weighted_summed_score(
                     score, res
                 )
                 return weighted_summed_score, reason
@@ -336,59 +322,6 @@ class GEval(BaseMetric):
                     res = self.model.generate(prompt)
                     data = trimAndLoadJson(res, self)
                     return data["score"], data["reason"]
-
-    def generate_weighted_summed_score(
-        self, raw_score: int, raw_response: ChatCompletion
-    ) -> Union[int, float]:
-        try:
-            generated_logprobs = raw_response.choices[0].logprobs.content
-            # First, locate the token that we care for logprobs, i.e., the token matching the score
-            score_logprobs = None
-            for token_logprobs in generated_logprobs:
-                if token_logprobs.token == str(raw_score):
-                    score_logprobs = token_logprobs
-                    break
-            # Then, calculate the score based on the logprobs
-            token_linear_probability: Dict[int, float] = {}
-            sum_linear_probability = 0
-            # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
-            min_logprob = math.log(0.01)
-            for token_logprob in score_logprobs.top_logprobs:
-                logprob = token_logprob.logprob
-
-                # Filter out low probability tokens
-                if logprob < min_logprob:
-                    continue
-                # Filter out non-decimal token to prevent errors in later int(token) conversion
-                if not token_logprob.token.isdecimal():
-                    continue
-
-                # Calculate the linear probability
-                linear_prob = math.exp(logprob)
-                token_score = int(token_logprob.token)
-                if token_linear_probability.get(token_score):
-                    token_linear_probability[token_score] += linear_prob
-                else:
-                    token_linear_probability[token_score] = linear_prob
-                sum_linear_probability += linear_prob
-
-            sum_of_weighted_scores = 0.0
-            for score, prob in token_linear_probability.items():
-                sum_of_weighted_scores += score * prob
-
-            # Scale the sum of linear probability to 1
-            weighted_summed_score = (
-                sum_of_weighted_scores / sum_linear_probability
-            )
-            return weighted_summed_score
-        except:
-            raise
-
-    def number_evaluation_steps(self):
-        evaluation_steps = """"""
-        for index, string in enumerate(self.evaluation_steps, start=1):
-            evaluation_steps += f"{index}. {string}\n"
-        return evaluation_steps
 
     def is_successful(self) -> bool:
         if self.error is not None:
