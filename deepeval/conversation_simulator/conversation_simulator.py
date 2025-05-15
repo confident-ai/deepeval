@@ -1,5 +1,5 @@
+from typing import Optional, List, Union, Callable, Dict, Any, Tuple
 import inspect
-from typing import Optional, List, Union, Callable, Dict, Any
 import asyncio
 import random
 import json
@@ -214,6 +214,7 @@ class ConversationSimulator:
             "User Profile": user_profile,
             "User Intent": intent,
         }
+        model_callback_kwargs = {}
 
         turns = []
         user_input = None
@@ -284,14 +285,17 @@ class ConversationSimulator:
                         data = trimAndLoadJson(res, self)
                         user_input = data["simulated_input"]
 
+            actual_output, new_model_callback_kwargs = self._generate_chatbot_response(
+                user_input,
+                model_callback=model_callback,
+                conversation_history=conversation_history,
+                callback_kwargs=model_callback_kwargs,
+            )
+            model_callback_kwargs = new_model_callback_kwargs
             turns.append(
                 LLMTestCase(
                     input=user_input,
-                    actual_output=self._generate_chatbot_response(
-                        user_input,
-                        model_callback=model_callback,
-                        conversation_history=conversation_history,
-                    ),
+                    actual_output=actual_output,
                     additional_metadata=additional_metadata,
                 )
             )
@@ -386,6 +390,7 @@ class ConversationSimulator:
             "User Profile": user_profile,
             "User Intent": intent,
         }
+        model_callback_kwargs = {}
 
         turns = []
         user_input = None
@@ -456,14 +461,17 @@ class ConversationSimulator:
 
                 user_input = res.simulated_input
 
+            actual_output, new_model_callback_kwargs = await self._a_generate_chatbot_response(
+                user_input,
+                model_callback=model_callback,
+                conversation_history=conversation_history,
+                callback_kwargs=model_callback_kwargs,
+            )
+            model_callback_kwargs = new_model_callback_kwargs
             turns.append(
                 LLMTestCase(
                     input=user_input,
-                    actual_output=await self._a_generate_chatbot_response(
-                        user_input,
-                        model_callback=model_callback,
-                        conversation_history=conversation_history,
-                    ),
+                    actual_output=actual_output,
                     additional_metadata=additional_metadata,
                 )
             )
@@ -483,21 +491,37 @@ class ConversationSimulator:
         self,
         input: str,
         model_callback: Callable,
-        conversation_history: str,
-    ):
-        res = model_callback(input, conversation_history=conversation_history)
-        return res
+        conversation_history: List[Dict[str, str]],
+        callback_kwargs: Dict[str, Any],
+    ) -> Tuple[str, Dict[str, Any]]:
+        try:
+            res = model_callback(input, conversation_history=conversation_history, **callback_kwargs)
+        except TypeError:
+            res = model_callback(input, conversation_history=conversation_history)
+        if type(res) is str:
+            return res, {}
+        elif type(res) is tuple:
+            return res[0], res[1]
 
     async def _a_generate_chatbot_response(
         self,
         input: str,
         model_callback: Callable,
-        conversation_history: str,
-    ):
-        res = await model_callback(
-            input, conversation_history=conversation_history
-        )
-        return res
+        conversation_history: List[Dict[str, str]],
+        callback_kwargs: Dict[str, Any],
+    ) -> Tuple[str, Dict[str, Any]]:
+        try:
+            res = await model_callback(
+                input, conversation_history=conversation_history, **callback_kwargs
+            )
+        except TypeError:
+            res = await model_callback(
+                input, conversation_history=conversation_history
+            )
+        if type(res) is str:
+            return res, {}
+        elif type(res) is tuple:
+            return res[0], res[1]
 
     def _format_conversational_turns(self, turns: List[LLMTestCase]) -> str:
         formatted_turns = []

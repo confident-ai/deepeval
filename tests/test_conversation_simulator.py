@@ -58,9 +58,15 @@ async def test_generate_conversations(
         print(("================================"))
 
 
-async def callback(prompt: str, **kwargs):
-    print(kwargs["conversation_history"])
+async def callback(prompt: str, conversation_history):
     model = GPTModel()
+    # if kwargs:
+    #     print(kwargs)
+    # else:
+    #     id = random.choice([i for i in range(1, 100)])
+    #     kwargs["key"] = id
+    print(conversation_history)
+
     res, cost = await model.a_generate(prompt)
     return res
 

@@ -72,9 +72,9 @@ To simulate your first conversation, simply define a callback that wraps around 
 ...
 
 # Remove `async` if `async_mode` is `True
-async def model_callback(input: str, **kwargs) -> str:
-    # Access conversation history from kwargs
-    print(kwargs["conversation_history"])
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    # Access conversation_history
+    print(conversation_history)
     # Replace this with your LLM application
     return f"I don't know how to answer this: {input}"
 
@@ -94,7 +94,7 @@ There are **ONE** mandatory and **FOUR** optional parameters when calling the `s
 - [Optional] `stopping_criteria`: a string that defines the criteria under which the simulation should terminate, which must be supplied if `early_stopping` is `True`. Defaulted to `None`.
 
 :::info
-Your `model_callback` must take a single positional argument of type `str` (the model input), accept additional keyword arguments `**kwargs`, and return a `str`. If your model callback cannot maintain conversational context, you can access the conversation history via `kwargs["conversation_history"]`.
+Your `model_callback` must take a positional argument of type `str` which specifies the model input, a keyword argument `conversation_history` of type `List[Dict[str, str]]` which represents the past conversation history, and return a `str`.
 :::
 
 The `simulate` function returns a list of `ConversationalTestCase`s, which can be used to evaluate your LLM chatbot using `deepeval`'s conversational metrics. Each generated `ConversationalTestCase` includes the user profile and user intention, which can be accessed via `additional_metadata` attribute.
@@ -102,6 +102,27 @@ The `simulate` function returns a list of `ConversationalTestCase`s, which can b
 ```python
 conversations = convo_simulator.simulate(...)
 print(conversations[0].additional_metadata)
+```
+
+## Advanced Usage
+
+While `conversation_history` captures the dialogue context for each turn, some applications must persist additional state across turns—for example, when invoking external APIs or tracking user-specific data (e.g. session IDs). In these cases, `conversation_history` is insufficient.
+
+:::info
+To persist state information across turns, extend the signature of your `model_callback` to accept arbitrary keyword arguments and return a tuple of `(response, kwargs)` rather than a lone string.
+:::
+
+```python
+...
+
+async def model_callback(input: str, conversation_history: List[Dict[str, str]], **kwargs) -> Tuple[str, Dict[str, Any]]:
+    # Extract state from kwargs if it exists
+    session_id = kwargs.get('session_id')
+    if not session_id:
+        session_id = await create_new_session()
+
+    response = await your_llm_app(input, conversation_history, session_id)
+    return response, {'session_id': session_id}
 ```
 
 ## Using Simulated Conversations
