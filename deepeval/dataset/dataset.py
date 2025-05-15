@@ -635,7 +635,10 @@ class EvaluationDataset:
             )
 
     def pull(
-        self, alias: str, auto_convert_goldens_to_test_cases: bool = False
+        self,
+        alias: str,
+        finalized: bool = True,
+        auto_convert_goldens_to_test_cases: bool = False,
     ):
         with capture_pull_dataset():
             if is_confident() or self._confident_api_key is not None:
@@ -653,7 +656,10 @@ class EvaluationDataset:
                     result = api.send_request(
                         method=HttpMethods.GET,
                         endpoint=Endpoints.DATASET_ENDPOINT,
-                        params={"alias": alias},
+                        params={
+                            "alias": alias,
+                            "finalized": str(finalized).lower(),
+                        },
                     )
 
                     conversational_goldens = []
