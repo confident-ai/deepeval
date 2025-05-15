@@ -9,21 +9,21 @@ user_profile_requirements_1 = [
     "phone number",
     "availabilities (between monday and friday)",
 ]
-user_intentions_1 = [
-    "Ordering new products",
-    "Repair for existing products",
-    "Picking products up because somebody died or moved into intensive care",
-    "Questions regarding open invoices",
-    "Questions regarding the order status",
-]
+user_intentions_1 = {
+    "Ordering new products": 1,
+    "Repair for existing products": 1,
+    "Picking products up because somebody died or moved into intensive care": 1,
+    "Questions regarding open invoices": 1,
+    "Questions regarding the order status": 1
+}
 user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
-user_intentions_2 = [
+user_intentions_2 = {
     # "Seeking medical advice for a chronic condition",
-    "Booking an appointment with a specialist",
-    # "Following up on test results",
+    "Booking an appointment with a specialist": 1,
+    "Following up on test results": 2,
     # "Requesting prescription refills",
     # "Exploring treatment options for a new diagnosis",
-]
+}
 
 
 async def test_user_profile(conversation_simulator: ConversationSimulator):
@@ -48,7 +48,7 @@ async def test_scenario(
 
 
 async def test_generate_conversations(
-    conversation_simulator: ConversationSimulator, 
+    conversation_simulator: ConversationSimulator,
 ):
     conversational_test_cases = await conversation_simulator._a_simulate()
     for tc in conversational_test_cases:
@@ -61,7 +61,8 @@ async def test_generate_conversations(
 async def callback(prompt: str, **kwargs):
     print(kwargs["conversation_history"])
     model = GPTModel()
-    return await model.a_generate(prompt)
+    res, cost = await model.a_generate(prompt)
+    return res
 
 
 async def main():
@@ -79,11 +80,8 @@ async def main():
     a = conversational_synthesizer.simulate(
         min_turns=5,
         max_turns=10,
-        num_conversations=1,
         model_callback=callback,
-        # model_callback_kwargs={"test": "test"},
         stopping_criteria="The user has succesfully booked an appointment",
-        early_stopping=True,
     )
 
     # user_profiles = await test_user_profile(conversational_synthesizer)

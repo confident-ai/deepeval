@@ -34,7 +34,11 @@ Alternatively, you can skip generating user profiles entirely, and instead suppl
 ```python
 from deepeval.conversation_simulator import ConversationSimulator
 
-user_intentions = ["opening a bank account", "disputing a payment", "enquiring a recent transaction"]
+user_intentions = {
+  "opening a bank account"" 1,
+  "disputing a payment": 2,
+  "enquiring a recent transaction": 2
+}
 user_profile_items = ["first name", "last name", "address", "social security number"]
 
 # Alternatively, supply a list of user profiles
@@ -43,12 +47,12 @@ user_profiles = [
   "Marcus Lee lives at 984 Pine Street, Brooklyn, NY 11201, and his Social Security Number is 789-12-3456."
 ]
 
-convo_simulator = ConversationSimulator(user_profile_items=user_profile_items, user_intentions=user_intentions)
+convo_simulator = ConversationSimulator(user_intentions=user_intentions, user_profile_items=user_profile_items)
 ```
 
-There are **TWO** mandatory and **FOUR** optional parameters when creating a `ConversationSimulator`:
+There are **ONE** mandatory and **SIX** optional parameters when creating a `ConversationSimulator`:
 
-- `user_intentions`: a list of strings representing the possible user intentions of a fake user profile. `deepeval` will randomly sample from the list of `user_intentions` to determine which user intention will be mimicked to simulate a particular conversation.
+- `user_intentions`: a dictionary of type `Dict[str, int]`, where string keys specify the possible user intentions of a fake user profile, and integer values specify the number of conversations to generate for each corresponding intention.
 - [Optional] `user_profile_items`: a list of strings representing the fake user properties that should be generated for each user profile, which must be supplied if `user_profiles` isn't provided. Defaulted to `None`.
 - [Optional] `user_profiles`: a list of strings representing complete fake user profiles, which must be supplied if `user_profile_items` isn't provided. Defaulted to `None`.
 - [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
@@ -81,18 +85,24 @@ convo_simulator.simulate(
 )
 ```
 
-There are **ONE** mandatory and **THREE** optional parameters when calling the `simulate` method:
+There are **ONE** mandatory and **FOUR** optional parameters when calling the `simulate` method:
 
 - `model_callback`: a callback of type `Callable[[str], str]` that wraps around the target LLM application you wish to generate output from.
 - [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation. Defaulted to `5`.
 - [Optional] `max_turns`: an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
 - [Optional] `early_stopping`: a boolean that, when set to `True`, ends the simulation immediately once the stopping criteria is met, ignoring any remaining turns. Defaulted to `False`.
 - [Optional] `stopping_criteria`: a string that defines the criteria under which the simulation should terminate, which must be supplied if `early_stopping` is `True`. Defaulted to `None`.
-- [Optional] `num_conversations`: an integer that specifies the total number of `ConversationalGoldens`s to simulate. Defaulted to `5`.
 
 :::info
 Your `model_callback` must take a single positional argument of type `str` (the model input), accept additional keyword arguments `**kwargs`, and return a `str`. If your model callback cannot maintain conversational context, you can access the conversation history via `kwargs["conversation_history"]`.
 :::
+
+The `simulate` function returns a list of `ConversationalTestCase`s, which can be used to evaluate your LLM chatbot using `deepeval`'s conversational metrics. Each generated `ConversationalTestCase` includes the user profile and user intention, which can be accessed via `additional_metadata` attribute.
+
+```python
+conversations = convo_simulator.simulate(...)
+print(conversations[0].additional_metadata)
+```
 
 ## Using Simulated Conversations
 

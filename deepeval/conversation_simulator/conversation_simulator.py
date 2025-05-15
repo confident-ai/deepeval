@@ -24,7 +24,7 @@ from deepeval.progress_context import conversation_simulator_progress_context
 class ConversationSimulator:
     def __init__(
         self,
-        user_intentions: List[str],
+        user_intentions: Dict[str, int],
         user_profile_items: Optional[List[str]] = None,
         user_profiles: Optional[List[str]] = None,
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -53,21 +53,16 @@ class ConversationSimulator:
         model_callback: Callable[[str], str],
         min_turns: int = 5,
         max_turns: int = 20,
-        early_stopping: bool = False,
         stopping_criteria: Optional[str] = None,
-        num_conversations: int = 5,
     ) -> List[ConversationalTestCase]:
         if min_turns > max_turns:
             raise ValueError("`min_turns` cannot be greater than `max_turns`.")
-        if early_stopping and stopping_criteria is None:
-            raise ValueError(
-                "`stopping_criteria` cannot be None if `early_stopping` is `True`."
-            )
 
         self.simulation_cost = 0 if self.using_native_model else None
+        total_conversations = sum([num for _, num in self.user_intentions.items()])
         with conversation_simulator_progress_context(
             simulator_model=self.simulator_model.get_model_name(),
-            num_conversations=num_conversations,
+            num_conversations=total_conversations,
             async_mode=self.async_mode,
         ) as progress_bar:
             if self.async_mode:
@@ -82,9 +77,7 @@ class ConversationSimulator:
                         model_callback=model_callback,
                         min_turns=min_turns,
                         max_turns=max_turns,
-                        early_stopping=early_stopping,
                         stopping_criteria=stopping_criteria,
-                        num_conversations=num_conversations,
                         _progress_bar=progress_bar,
                     )
                 )
@@ -95,18 +88,19 @@ class ConversationSimulator:
                     )
 
                 conversational_test_cases: List[ConversationalTestCase] = []
-                for _ in range(num_conversations):
-                    conversational_test_case = (
-                        self._simulate_single_conversation(
-                            model_callback=model_callback,
-                            min_turns=min_turns,
-                            max_turns=max_turns,
-                            early_stopping=early_stopping,
-                            stopping_criteria=stopping_criteria,
+                for intent, num_conversations_per_intent in self.user_intentions.items():
+                    for _ in range(num_conversations_per_intent):
+                        conversational_test_case = (
+                            self._simulate_single_conversation(
+                                intent=intent,
+                                model_callback=model_callback,
+                                min_turns=min_turns,
+                                max_turns=max_turns,
+                                stopping_criteria=stopping_criteria,
+                            )
                         )
-                    )
-                    conversational_test_cases.append(conversational_test_case)
-                    progress_bar.update(1)
+                        conversational_test_cases.append(conversational_test_case)
+                        progress_bar.update(1)
 
                 self.simulated_conversations = conversational_test_cases
 
@@ -117,25 +111,26 @@ class ConversationSimulator:
         model_callback: Callable[[str], str],
         min_turns: int,
         max_turns: int,
-        early_stopping: bool,
         stopping_criteria: Optional[str],
-        num_conversations: int,
         _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
 
-        async def limited_simulation():
+        async def limited_simulation(intent: str):
             async with self.semaphore:
                 return await self._a_simulate_single_conversation(
+                    intent=intent,
                     model_callback=model_callback,
                     min_turns=min_turns,
                     max_turns=max_turns,
-                    early_stopping=early_stopping,
                     stopping_criteria=stopping_criteria,
                     _progress_bar=_progress_bar,
                 )
 
-        tasks = [limited_simulation() for _ in range(num_conversations)]
+        tasks = [
+            limited_simulation(intent) for intent, num_conversations_per_intent in self.user_intentions.items() 
+            for _ in range(num_conversations_per_intent)
+        ]
         self.simulated_conversations = await asyncio.gather(*tasks)
 
     def _simulate_user_profile(self) -> str:
@@ -206,14 +201,13 @@ class ConversationSimulator:
 
     def _simulate_single_conversation(
         self,
+        intent: str,
         model_callback: Callable,
         min_turns: int,
         max_turns: int,
-        early_stopping: bool,
         stopping_criteria: Optional[str],
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
-        intent = random.choice(self.user_intentions)
         user_profile = self._simulate_user_profile()
         scenario = self._simulate_scenario(user_profile, intent)
         additional_metadata = {
@@ -246,7 +240,7 @@ class ConversationSimulator:
                         conversation_history, stopping_criteria
                     )
                 )
-                if early_stopping:
+                if stopping_criteria is not None:
                     if self.using_native_model:
                         res, cost = self.simulator_model.generate(
                             prompt, schema=ConversationCompletion
@@ -378,15 +372,14 @@ class ConversationSimulator:
 
     async def _a_simulate_single_conversation(
         self,
+        intent: str,
         model_callback: Callable,
         min_turns: int,
         max_turns: int,
-        early_stopping: bool,
         stopping_criteria: Optional[str],
         _progress_bar: Optional[tqdm.std.tqdm] = None,
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
-        intent = random.choice(self.user_intentions)
         user_profile = await self._a_simulate_user_profile()
         scenario = await self._a_simulate_scenario(user_profile, intent)
         additional_metadata = {
@@ -417,7 +410,7 @@ class ConversationSimulator:
                         conversation_history, stopping_criteria
                     )
                 )
-                if early_stopping:
+                if stopping_criteria is not None:
                     if self.using_native_model:
                         res, cost = await self.simulator_model.a_generate(
                             prompt, schema=ConversationCompletion
@@ -504,6 +497,7 @@ class ConversationSimulator:
         res = await model_callback(
             input, conversation_history=conversation_history
         )
+        return res
 
     def _format_conversational_turns(self, turns: List[LLMTestCase]) -> str:
         formatted_turns = []
