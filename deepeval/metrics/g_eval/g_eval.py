@@ -67,6 +67,7 @@ class GEval(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        _additional_context: Optional[str] = None,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[-1]
@@ -77,13 +78,19 @@ class GEval(BaseMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                    self.a_measure(
+                        test_case,
+                        _show_indicator=False,
+                        _additional_context=_additional_context,
+                    )
                 )
             else:
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                g_score, reason = self._evaluate(test_case)
+                g_score, reason = self._evaluate(
+                    test_case, _additional_context=_additional_context
+                )
                 self.reason = reason
                 self.score = float(g_score) / 10
                 self.score = (
@@ -108,6 +115,7 @@ class GEval(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
+        _additional_context: Optional[str] = None,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[-1]
@@ -122,7 +130,9 @@ class GEval(BaseMetric):
             self.evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
-            g_score, reason = await self._a_evaluate(test_case)
+            g_score, reason = await self._a_evaluate(
+                test_case, _additional_context=_additional_context
+            )
             self.reason = reason
             self.score = (
                 float(g_score) / 10 if not self.strict_mode else int(g_score)
@@ -188,7 +198,7 @@ class GEval(BaseMetric):
                 return data["steps"]
 
     async def _a_evaluate(
-        self, test_case: LLMTestCase
+        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_content = construct_test_case_string(
             self.evaluation_params, test_case
@@ -204,12 +214,14 @@ class GEval(BaseMetric):
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
                 score_range=get_score_range(self.rubric),
+                _additional_context=_additional_context,
             )
         else:
             prompt = GEvalTemplate.generate_strict_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
+                _additional_context=_additional_context,
             )
 
         try:
@@ -257,7 +269,7 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def _evaluate(
-        self, test_case: LLMTestCase
+        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_content = construct_test_case_string(
             self.evaluation_params, test_case
@@ -274,12 +286,14 @@ class GEval(BaseMetric):
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
                 score_range=get_score_range(self.rubric),
+                _additional_context=_additional_context,
             )
         else:
             prompt = GEvalTemplate.generate_strict_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
+                _additional_context=_additional_context,
             )
 
         try:
