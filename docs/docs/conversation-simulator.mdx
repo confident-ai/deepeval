@@ -80,7 +80,6 @@ async def model_callback(input: str, conversation_history: List[Dict[str, str]])
 
 convo_simulator.simulate(
   model_callback=model_callback,
-  early_stopping=true,
   stopping_criteria="Stop when the user's banking request (opening an account, disputing a payment, or querying a transaction) has been fully resolved.",
 )
 ```
@@ -90,8 +89,9 @@ There are **ONE** mandatory and **FOUR** optional parameters when calling the `s
 - `model_callback`: a callback of type `Callable[[str], str]` that wraps around the target LLM application you wish to generate output from.
 - [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation. Defaulted to `5`.
 - [Optional] `max_turns`: an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
-- [Optional] `early_stopping`: a boolean that, when set to `True`, ends the simulation immediately once the stopping criteria is met, ignoring any remaining turns. Defaulted to `False`.
-- [Optional] `stopping_criteria`: a string that defines the criteria under which the simulation should terminate, which must be supplied if `early_stopping` is `True`. Defaulted to `None`.
+- [Optional] `stopping_criteria`: a string that defines the criteria under which the simulation should terminate. Defaulted to `None`.
+
+A conversation ends either when `stopping_criteria` is met (if provided), or when the `max_turns` has been reached.
 
 :::info
 Your `model_callback` must take a positional argument of type `str` which specifies the model input, a keyword argument `conversation_history` of type `List[Dict[str, str]]` which represents the past conversation history, and return a `str`.

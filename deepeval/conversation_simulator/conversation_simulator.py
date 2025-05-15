@@ -59,7 +59,9 @@ class ConversationSimulator:
             raise ValueError("`min_turns` cannot be greater than `max_turns`.")
 
         self.simulation_cost = 0 if self.using_native_model else None
-        total_conversations = sum([num for _, num in self.user_intentions.items()])
+        total_conversations = sum(
+            [num for _, num in self.user_intentions.items()]
+        )
         with conversation_simulator_progress_context(
             simulator_model=self.simulator_model.get_model_name(),
             num_conversations=total_conversations,
@@ -88,7 +90,10 @@ class ConversationSimulator:
                     )
 
                 conversational_test_cases: List[ConversationalTestCase] = []
-                for intent, num_conversations_per_intent in self.user_intentions.items():
+                for (
+                    intent,
+                    num_conversations_per_intent,
+                ) in self.user_intentions.items():
                     for _ in range(num_conversations_per_intent):
                         conversational_test_case = (
                             self._simulate_single_conversation(
@@ -99,7 +104,9 @@ class ConversationSimulator:
                                 stopping_criteria=stopping_criteria,
                             )
                         )
-                        conversational_test_cases.append(conversational_test_case)
+                        conversational_test_cases.append(
+                            conversational_test_case
+                        )
                         progress_bar.update(1)
 
                 self.simulated_conversations = conversational_test_cases
@@ -128,7 +135,8 @@ class ConversationSimulator:
                 )
 
         tasks = [
-            limited_simulation(intent) for intent, num_conversations_per_intent in self.user_intentions.items() 
+            limited_simulation(intent)
+            for intent, num_conversations_per_intent in self.user_intentions.items()
             for _ in range(num_conversations_per_intent)
         ]
         self.simulated_conversations = await asyncio.gather(*tasks)
@@ -285,11 +293,13 @@ class ConversationSimulator:
                         data = trimAndLoadJson(res, self)
                         user_input = data["simulated_input"]
 
-            actual_output, new_model_callback_kwargs = self._generate_chatbot_response(
-                user_input,
-                model_callback=model_callback,
-                conversation_history=conversation_history,
-                callback_kwargs=model_callback_kwargs,
+            actual_output, new_model_callback_kwargs = (
+                self._generate_chatbot_response(
+                    user_input,
+                    model_callback=model_callback,
+                    conversation_history=conversation_history,
+                    callback_kwargs=model_callback_kwargs,
+                )
             )
             model_callback_kwargs = new_model_callback_kwargs
             turns.append(
@@ -461,11 +471,13 @@ class ConversationSimulator:
 
                 user_input = res.simulated_input
 
-            actual_output, new_model_callback_kwargs = await self._a_generate_chatbot_response(
-                user_input,
-                model_callback=model_callback,
-                conversation_history=conversation_history,
-                callback_kwargs=model_callback_kwargs,
+            actual_output, new_model_callback_kwargs = (
+                await self._a_generate_chatbot_response(
+                    user_input,
+                    model_callback=model_callback,
+                    conversation_history=conversation_history,
+                    callback_kwargs=model_callback_kwargs,
+                )
             )
             model_callback_kwargs = new_model_callback_kwargs
             turns.append(
@@ -495,9 +507,15 @@ class ConversationSimulator:
         callback_kwargs: Dict[str, Any],
     ) -> Tuple[str, Dict[str, Any]]:
         try:
-            res = model_callback(input, conversation_history=conversation_history, **callback_kwargs)
+            res = model_callback(
+                input,
+                conversation_history=conversation_history,
+                **callback_kwargs
+            )
         except TypeError:
-            res = model_callback(input, conversation_history=conversation_history)
+            res = model_callback(
+                input, conversation_history=conversation_history
+            )
         if type(res) is str:
             return res, {}
         elif type(res) is tuple:
@@ -512,7 +530,9 @@ class ConversationSimulator:
     ) -> Tuple[str, Dict[str, Any]]:
         try:
             res = await model_callback(
-                input, conversation_history=conversation_history, **callback_kwargs
+                input,
+                conversation_history=conversation_history,
+                **callback_kwargs
             )
         except TypeError:
             res = await model_callback(

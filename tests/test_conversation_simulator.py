@@ -14,7 +14,7 @@ user_intentions_1 = {
     "Repair for existing products": 1,
     "Picking products up because somebody died or moved into intensive care": 1,
     "Questions regarding open invoices": 1,
-    "Questions regarding the order status": 1
+    "Questions regarding the order status": 1,
 }
 user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
 user_intentions_2 = {
