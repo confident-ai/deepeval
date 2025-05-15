@@ -13,6 +13,8 @@ from deepeval.evaluate.utils import (
     validate_evaluate_inputs,
     print_test_result,
     aggregate_metric_pass_rates,
+    write_test_result_to_file,
+    aggregate_metric_pass_rates_to_file
 )
 from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
@@ -167,7 +169,6 @@ def assert_test(
         )
         raise AssertionError(f"Metrics: {failed_metrics_str} failed.")
 
-
 def evaluate(
     # without tracing
     test_cases: Optional[
@@ -195,6 +196,7 @@ def evaluate(
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     cache_config: Optional[CacheConfig] = CacheConfig(),
     error_config: Optional[ErrorConfig] = ErrorConfig(),
+    file_path: Optional[str] = None
 ) -> EvaluationResult:
     validate_evaluate_inputs(
         goldens=goldens,
@@ -236,7 +238,13 @@ def evaluate(
         if display_config.print_results:
             for test_result in test_results:
                 print_test_result(test_result, display_config.display_option)
-            aggregate_metric_pass_rates(test_results)
+                aggregate_metric_pass_rates(test_results)
+        if display_config.write_log:
+            for test_result in test_results:
+                write_test_result_to_file(test_result, display_config.display_option,file_path)
+                aggregate_metric_pass_rates_to_file(test_results,file_path)
+                
+            
 
         confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False
@@ -296,7 +304,12 @@ def evaluate(
         if display_config.print_results:
             for test_result in test_results:
                 print_test_result(test_result, display_config.display_option)
-            aggregate_metric_pass_rates(test_results)
+                aggregate_metric_pass_rates(test_results)
+        if display_config.write_log:
+            for test_result in test_results:
+                write_test_result_to_file(test_result, display_config.display_option,file_path)
+                aggregate_metric_pass_rates_to_file(test_results,file_path)
+            
 
         test_run = global_test_run_manager.get_test_run()
         test_run.hyperparameters = process_hyperparameters(hyperparameters)

@@ -331,6 +331,63 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
         print(f"  - context: {test_result.context}")
         print(f"  - retrieval context: {test_result.retrieval_context}")
 
+def write_test_result_to_file(test_result: TestResult, display: TestRunResultDisplay, file_path:str):
+    if test_result.metrics_data is None:
+        return
+
+    if (
+        display == TestRunResultDisplay.PASSING.value
+        and test_result.success is False
+    ):
+        return
+    elif display == TestRunResultDisplay.FAILING.value and test_result.success:
+        return
+
+    with open(file_path, "a", encoding="utf-8") as file:
+        file.write("\n" + "=" * 70 + "\n\n")
+        file.write("Metrics Summary\n\n")
+
+        for metric_data in test_result.metrics_data:
+            successful = True
+            if metric_data.error is not None:
+                successful = False
+            else:
+                try:
+                    if not metric_data.success:
+                        successful = False
+                except:
+                    successful = False
+
+            if not successful:
+                file.write(
+                    f"  - ❌ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, "
+                    f"strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, "
+                    f"reason: {metric_data.reason}, error: {metric_data.error})\n"
+                )
+            else:
+                file.write(
+                    f"  - ✅ {metric_data.name} (score: {metric_data.score}, threshold: {metric_data.threshold}, "
+                    f"strict: {metric_data.strict_mode}, evaluation model: {metric_data.evaluation_model}, "
+                    f"reason: {metric_data.reason}, error: {metric_data.error})\n"
+                )
+
+        file.write("\n")
+        if test_result.multimodal:
+            file.write("For multimodal test case:\n\n")
+            file.write(f"  - input: {test_result.input}\n")
+            file.write(f"  - actual output: {test_result.actual_output}\n")
+        elif test_result.conversational:
+            file.write("For conversational test case:\n\n")
+            file.write(
+                "  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full.\n"
+            )
+        else:
+            file.write("For test case:\n\n")
+            file.write(f"  - input: {test_result.input}\n")
+            file.write(f"  - actual output: {test_result.actual_output}\n")
+            file.write(f"  - expected output: {test_result.expected_output}\n")
+            file.write(f"  - context: {test_result.context}\n")
+            file.write(f"  - retrieval context: {test_result.retrieval_context}\n")
 
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_counts = {}
@@ -360,6 +417,33 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
 
     return metric_pass_rates
 
+def aggregate_metric_pass_rates_to_file(test_results: List[TestResult],file_path:str):
+    metric_counts = {}
+    metric_successes = {}
+
+    for result in test_results:
+        if result.metrics_data:
+            for metric_data in result.metrics_data:
+                metric_name = metric_data.name
+                if metric_name not in metric_counts:
+                    metric_counts[metric_name] = 0
+                    metric_successes[metric_name] = 0
+                metric_counts[metric_name] += 1
+                if metric_data.success:
+                    metric_successes[metric_name] += 1
+
+    metric_pass_rates = {
+        metric: (metric_successes[metric] / metric_counts[metric])
+        for metric in metric_counts
+    }
+    with open(file_path, "a", encoding="utf-8") as file:
+        file.write("\n" + "=" * 70 + "\n")
+        file.write("Overall Metric Pass Rates\n")
+        for metric, pass_rate in metric_pass_rates.items():
+            file.write(f"{metric}: {pass_rate:.2%} pass rate")
+        file.write("\n" + "=" * 70 + "\n")
+
+    
 
 def count_metrics_in_trace(trace: Trace) -> int:
     def count_metrics_recursive(span: BaseSpan) -> int:
