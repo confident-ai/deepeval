@@ -19,55 +19,16 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
-from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
-
-G_EVAL_PARAMS = {
-    LLMTestCaseParams.INPUT: "Input",
-    LLMTestCaseParams.ACTUAL_OUTPUT: "Actual Output",
-    LLMTestCaseParams.EXPECTED_OUTPUT: "Expected Output",
-    LLMTestCaseParams.CONTEXT: "Context",
-    LLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
-    LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
-    LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
-}
-
-
-def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
-
-    if isinstance(model, str) and model in unsupported_log_probs_gpt_models:
-        return True
-    elif (
-        isinstance(model, GPTModel)
-        and model.model_name in unsupported_log_probs_gpt_models
-    ):
-        return True
-    elif (
-        isinstance(model, AzureOpenAIModel)
-        and model.model_name in unsupported_log_probs_gpt_models
-    ):
-        return True
-
-    return False
-
-
-def construct_g_eval_params_string(
-    llm_test_case_params: List[LLMTestCaseParams],
-):
-    g_eval_params = [G_EVAL_PARAMS[param] for param in llm_test_case_params]
-
-    if len(g_eval_params) == 1:
-        g_eval_params_str = g_eval_params[0]
-    elif len(g_eval_params) == 2:
-        g_eval_params_str = " and ".join(g_eval_params)
-    else:
-        g_eval_params_str = (
-            ", ".join(g_eval_params[:-1]) + ", and " + g_eval_params[-1]
-        )
-
-    return g_eval_params_str
+from deepeval.metrics.g_eval.utils import (
+    G_EVAL_PARAMS,
+    construct_g_eval_params_string,
+    no_log_prob_support,
+    Rubric,
+    validate_and_sort_rubrics,
+)
 
 
 class GEval(BaseMetric):
@@ -77,6 +38,7 @@ class GEval(BaseMetric):
         evaluation_params: List[LLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
+        rubric: Optional[List[Rubric]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
         top_logprobs: int = 20,
@@ -105,6 +67,7 @@ class GEval(BaseMetric):
             )
 
         self.criteria = criteria
+        self.rubric = validate_and_sort_rubrics(rubric)
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
@@ -248,7 +211,7 @@ class GEval(BaseMetric):
     async def _a_evaluate(
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
-        text = self.construct_test_case_string(test_case)
+        test_case_content = self.construct_test_case_string(test_case)
 
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
@@ -257,13 +220,14 @@ class GEval(BaseMetric):
         if not self.strict_mode:
             prompt = GEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                text=text,
+                test_case_content=test_case_content,
                 parameters=g_eval_params_str,
+                rubric=self.rubric,
             )
         else:
             prompt = GEvalTemplate.generate_strict_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                text=text,
+                test_case_content=test_case_content,
                 parameters=g_eval_params_str,
             )
 
@@ -312,7 +276,7 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
-        text = self.construct_test_case_string(test_case)
+        test_case_content = self.construct_test_case_string(test_case)
 
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
@@ -321,13 +285,14 @@ class GEval(BaseMetric):
         if not self.strict_mode:
             prompt = GEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                text=text,
+                test_case_content=test_case_content,
                 parameters=g_eval_params_str,
+                rubric=self.rubric,
             )
         else:
             prompt = GEvalTemplate.generate_strict_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                text=text,
+                test_case_content=test_case_content,
                 parameters=g_eval_params_str,
             )
 

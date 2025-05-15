@@ -1,6 +1,10 @@
+from typing import List, Optional
+from deepeval.metrics.g_eval.utils import Rubric
+
+
 class GEvalTemplate:
     @staticmethod
-    def generate_evaluation_steps(parameters, criteria):
+    def generate_evaluation_steps(parameters: str, criteria: str):
         return f"""Given an evaluation criteria which outlines how you should judge the {parameters}, generate 3-4 concise evaluation steps based on the criteria below. You MUST make it clear how to evaluate {parameters} in relation to one another.
 
 Evaluation Criteria:
@@ -18,13 +22,25 @@ JSON:
 """
 
     @staticmethod
-    def generate_evaluation_results(evaluation_steps, text, parameters):
-        return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria outlined in the steps and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+    def generate_evaluation_results(
+        evaluation_steps: str,
+        test_case_content: str,
+        parameters: str,
+        rubric: Optional[List[Rubric]] = None,
+    ):
+        rubric_text = f"Rubric:\n{rubric}\n" if rubric else ""
+        dependencies = (
+            "evaluation steps and rubric" if rubric else "evaluation steps"
+        )
+
+        return f"""Given the {dependencies}, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria outlined in the steps and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
 Evaluation Steps:
 {evaluation_steps}
 
-{text}
+{rubric_text}
+
+{test_case_content}
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
@@ -40,13 +56,15 @@ JSON:
 """
 
     @staticmethod
-    def generate_strict_evaluation_results(evaluation_steps, text, parameters):
+    def generate_strict_evaluation_results(
+        evaluation_steps: str, test_case_content: str, parameters: str
+    ):
         return f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is either 1 (follows the criteria outlined in the steps) or 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
 Evaluation Steps:
 {evaluation_steps}
 
-{text}
+{test_case_content}
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.

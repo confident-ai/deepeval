@@ -774,14 +774,9 @@ class TestRunManager:
         )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
-        # # TODO: remove later
-        # if any(
-        #     test_case.trace is not None for test_case in test_run.test_cases
-        # ):
-        #     return
-
         console = Console()
         if is_confident() and self.disable_request is False:
+            test_run.guard_mllm_test_cases()
             BATCH_SIZE = 40
             CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
 
@@ -968,7 +963,6 @@ class TestRunManager:
             len(test_run.test_cases) > 0
             or len(test_run.conversational_test_cases) > 0
         ):
-            test_run.guard_mllm_test_cases()
             return self.post_test_run(test_run)
 
 

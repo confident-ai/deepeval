@@ -201,7 +201,7 @@ class BiasMetric(BaseMetric):
             opinions=self.opinions
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=BiasVerdict)
+            res, cost = self.model.generate(prompt, schema=Verdicts)
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts

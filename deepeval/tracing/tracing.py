@@ -502,7 +502,7 @@ class TraceManager:
                 except AttributeError:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
-                print(body)
+                # print(body)
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
                     api = Api()
@@ -1004,7 +1004,7 @@ class Observer:
             current_span.output = trace_manager.mask(self.result)
 
     def patch_client(self, client: Any):
- 
+
         if not isinstance(client, OpenAI):
             raise ValueError("client must be an instance of OpenAI")
 
@@ -1053,7 +1053,7 @@ class Observer:
                         model = kwargs.get("model", None)
                         if model is None:
                             raise ValueError("model not found in client")
-                        
+
                         # set model
                         current_span.model = model
 
@@ -1075,7 +1075,7 @@ class Observer:
                         except Exception as e:
                             pass
 
-                        update_current_span_attributes(
+                        update_current_span(
                             LlmAttributes(
                                 input=kwargs.get(
                                     "messages", "INPUT_MESSAGE_NOT_FOUND"

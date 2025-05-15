@@ -4,7 +4,7 @@ from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, List, Tuple, Union, Dict
 import math
 from deepeval.metrics import BaseMetric
-from deepeval.metrics.g_eval.g_eval import construct_g_eval_params_string
+from deepeval.metrics.g_eval.utils import construct_g_eval_params_string
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,

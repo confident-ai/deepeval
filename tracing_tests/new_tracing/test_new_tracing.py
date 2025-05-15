@@ -312,16 +312,24 @@ def mask_function(data):
         return censored_data
 
 
-trace_manager.configure(mask=mask_function, environment="test_environment")
+trace_manager.configure(mask=mask_function, environment="production")
 
 
 # # Gather multiple traceable tasks
 async def run_parallel_examples():
     tasks = [
-        meta_agent("1. What's the weather like in SF?"),
-        meta_agent("2. Tell me about Elon Musk."),
-        meta_agent("3. What's the weather like in SF?"),
-        meta_agent("4. Tell me about Elon Musk."),
+        meta_agent("How tall is Mount Everest?"),
+        meta_agent("What's the capital of Brazil?"),
+        meta_agent("Who won the last World Cup?"),
+        meta_agent("Explain quantum entanglement."),
+        meta_agent("What's the latest iPhone model?"),
+        meta_agent("How do I cook a perfect steak?"),
+        meta_agent("Tell me a joke about robots."),
+        meta_agent("What causes lightning?"),
+        meta_agent("Who painted the Mona Lisa?"),
+        meta_agent("What's the population of Japan?"),
+        meta_agent("How do vaccines work?"),
+        meta_agent("Recommend a good sci-fi movie."),
     ]
     await asyncio.gather(*tasks)
 
