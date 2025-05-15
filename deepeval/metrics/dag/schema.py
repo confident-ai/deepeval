@@ -7,7 +7,7 @@ class Reason(BaseModel):
 
 
 class TaskNodeOutput(BaseModel):
-    output: Union[str, list, Dict]
+    output: Union[str, list[str], dict[str, str]]
 
 
 class BinaryJudgementVerdict(BaseModel):
