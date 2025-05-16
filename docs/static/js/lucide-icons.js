@@ -39,7 +39,7 @@ function addLucideIcons() {
       window.lucide.createIcons({
         attrs: {
           stroke: 'currentColor',
-          'stroke-width': '2',
+          'stroke-width': '1.5',
           'stroke-linecap': 'round',
           'stroke-linejoin': 'round'
         }
