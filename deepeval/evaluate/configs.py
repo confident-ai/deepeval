@@ -23,6 +23,7 @@ class DisplayConfig:
     print_results: bool = True
     verbose_mode: Optional[bool] = None
     display_option: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL
+    write_log: bool = True
 
 
 @dataclass
