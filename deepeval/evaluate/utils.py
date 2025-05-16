@@ -1,5 +1,5 @@
 from typing import Optional, List, Callable, Union, Dict
-import os
+import os,time
 
 
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -331,7 +331,19 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
         print(f"  - context: {test_result.context}")
         print(f"  - retrieval context: {test_result.retrieval_context}")
 
-def write_test_result_to_file(test_result: TestResult, display: TestRunResultDisplay, file_path:str):
+def get_log_id(output_dir:str):
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    log_path = os.path.join(output_dir, f"test_run_{ts}.log")
+    return log_path
+
+def write_test_result_to_file(test_result: TestResult, display: TestRunResultDisplay, output_dir:str):
+    
+    # Determine output Directory
+    out_dir = output_dir or os.getcwd() 
+    os.makedirs(out_dir, exist_ok=True)
+    # Generate log id
+    out_file = get_log_id(out_dir)
+    
     if test_result.metrics_data is None:
         return
 
@@ -343,7 +355,7 @@ def write_test_result_to_file(test_result: TestResult, display: TestRunResultDis
     elif display == TestRunResultDisplay.FAILING.value and test_result.success:
         return
 
-    with open(file_path, "a", encoding="utf-8") as file:
+    with open(out_file, "a", encoding="utf-8") as file:
         file.write("\n" + "=" * 70 + "\n\n")
         file.write("Metrics Summary\n\n")
 
@@ -417,7 +429,14 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
 
     return metric_pass_rates
 
-def aggregate_metric_pass_rates_to_file(test_results: List[TestResult],file_path:str):
+def aggregate_metric_pass_rates_to_file(test_results: List[TestResult], output_dir:str):
+    
+    # Determine output Directory
+    out_dir = output_dir or os.getcwd() 
+    os.makedirs(out_dir, exist_ok=True)
+    # Generate log id
+    out_file = get_log_id(out_dir)
+    
     metric_counts = {}
     metric_successes = {}
 
@@ -436,7 +455,7 @@ def aggregate_metric_pass_rates_to_file(test_results: List[TestResult],file_path
         metric: (metric_successes[metric] / metric_counts[metric])
         for metric in metric_counts
     }
-    with open(file_path, "a", encoding="utf-8") as file:
+    with open(out_file, "a", encoding="utf-8") as file:
         file.write("\n" + "=" * 70 + "\n")
         file.write("Overall Metric Pass Rates\n")
         for metric, pass_rate in metric_pass_rates.items():

@@ -195,8 +195,7 @@ def evaluate(
     async_config: Optional[AsyncConfig] = AsyncConfig(),
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     cache_config: Optional[CacheConfig] = CacheConfig(),
-    error_config: Optional[ErrorConfig] = ErrorConfig(),
-    file_path: Optional[str] = None
+    error_config: Optional[ErrorConfig] = ErrorConfig()
 ) -> EvaluationResult:
     validate_evaluate_inputs(
         goldens=goldens,
@@ -239,10 +238,10 @@ def evaluate(
             for test_result in test_results:
                 print_test_result(test_result, display_config.display_option)
                 aggregate_metric_pass_rates(test_results)
-        if display_config.write_log:
+        if display_config.file_output_dir is not None:
             for test_result in test_results:
-                write_test_result_to_file(test_result, display_config.display_option,file_path)
-                aggregate_metric_pass_rates_to_file(test_results,file_path)
+                write_test_result_to_file(test_result, display_config.display_option,display_config.file_output_dir)
+                aggregate_metric_pass_rates_to_file(test_results,display_config.file_output_dir)
                 
             
 
@@ -305,10 +304,10 @@ def evaluate(
             for test_result in test_results:
                 print_test_result(test_result, display_config.display_option)
                 aggregate_metric_pass_rates(test_results)
-        if display_config.write_log:
+        if display_config.file_output_dir is not None:
             for test_result in test_results:
-                write_test_result_to_file(test_result, display_config.display_option,file_path)
-                aggregate_metric_pass_rates_to_file(test_results,file_path)
+                write_test_result_to_file(test_result, display_config.display_option,display_config.file_output_dir)
+                aggregate_metric_pass_rates_to_file(test_results,display_config.file_output_dir)
             
 
         test_run = global_test_run_manager.get_test_run()
