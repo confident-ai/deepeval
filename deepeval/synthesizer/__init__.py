@@ -1,5 +1,5 @@
 from .synthesizer import (
-    Synthesizer,
     Evolution,
     PromptEvolution,
+    Synthesizer,
 )

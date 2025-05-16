@@ -1,8 +1,8 @@
 from typing import Optional, Union
 
 from deepeval.models.base_model import (
-    DeepEvalBaseLLM,
     DeepEvalBaseEmbeddingModel,
+    DeepEvalBaseLLM,
 )
 
 
