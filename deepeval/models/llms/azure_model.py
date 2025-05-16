@@ -14,6 +14,7 @@ from deepeval.models.llms.openai_model import (
     log_retry_error,
 )
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.utils import parse_model_name
 
 retryable_exceptions = (
     openai.RateLimitError,
@@ -60,7 +61,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs
-        super().__init__(model_name)
+        super().__init__(parse_model_name(model_name))
 
     ###############################################
     # Other generate functions
@@ -76,7 +77,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
         if schema:
-            if self.actual_model_name in structured_outputs_models:
+            if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -93,7 +94,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.actual_model_name in json_mode_models:
+            if self.model_name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -139,7 +140,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
         if schema:
-            if self.actual_model_name in structured_outputs_models:
+            if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -156,7 +157,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.actual_model_name in json_mode_models:
+            if self.model_name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -253,9 +254,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(
-            self.actual_model_name, model_pricing["gpt-4o"]
-        )
+        pricing = model_pricing.get(self.model_name, model_pricing["gpt-4o"])
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost

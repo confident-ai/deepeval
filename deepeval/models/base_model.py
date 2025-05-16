@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional, List
-from deepeval.models.utils import get_actual_model_name
+from deepeval.models.utils import parse_model_name
 
 
 class DeepEvalBaseModel(ABC):
@@ -32,8 +32,7 @@ class DeepEvalBaseModel(ABC):
 
 class DeepEvalBaseLLM(ABC):
     def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = model_name
-        self.actual_model_name = get_actual_model_name(model_name)
+        self.model_name = parse_model_name(model_name)
         self.model = self.load_model(*args, **kwargs)
 
     @abstractmethod
@@ -78,8 +77,7 @@ class DeepEvalBaseLLM(ABC):
 
 class DeepEvalBaseMLLM(ABC):
     def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = model_name
-        self.actual_model_name = get_actual_model_name(model_name)
+        self.model_name = parse_model_name(model_name)
 
     @abstractmethod
     def generate(self, *args, **kwargs) -> str:
@@ -106,8 +104,7 @@ class DeepEvalBaseMLLM(ABC):
 
 class DeepEvalBaseEmbeddingModel(ABC):
     def __init__(self, model_name: Optional[str] = None, *args, **kwargs):
-        self.model_name = model_name
-        self.actual_model_name = get_actual_model_name(model_name)
+        self.model_name = parse_model_name(model_name)
 
         self.model = self.load_model(*args, **kwargs)
 
