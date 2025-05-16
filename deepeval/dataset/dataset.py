@@ -848,6 +848,7 @@ class EvaluationDataset:
         goldens = [
             Golden(
                 input=golden.input,
+                expected_output=golden.expected_output,
                 actual_output=golden.actual_output,
                 retrieval_context=golden.retrieval_context,
                 context=golden.context,
