@@ -24,8 +24,7 @@ class ConfidentLlmInputMessage(BaseModel):
 class ConfidentLlmOutput(BaseModel):
     confident_assistant_message: Optional[str] = Field(default=None, alias="gen_ai.assistant.message")
 
-class ConfidentGenAiOperationSpan(BaseModel):
-
+class BaseConfidentGenAiOperationSpan(BaseModel):
     # Standard OTel Span Info
     trace_id: str
     span_id: str
@@ -35,7 +34,9 @@ class ConfidentGenAiOperationSpan(BaseModel):
     end_time_unix_nano: int
     status_code: str # e.g., "OK", "ERROR"
     status_message: Optional[str] = None
-    
+    span_type: str
+
+class ConfidentLlmSpan(BaseConfidentGenAiOperationSpan):
     # Includes only fields relavant to LlmSpan
     # ref: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/
     confident_request_model: Optional[str] = Field(default=None, alias="gen_ai.request.model")
