@@ -1,4 +1,3 @@
-
 def to_hex_string(id_value: int | bytes, length: int = 32) -> str:
     """
     Convert a trace ID or span ID to a hex string.

@@ -30,8 +30,8 @@ class BaseConfidentGenAiOperationSpan(BaseModel):
     span_id: str
     parent_span_id: Optional[str] = None
     name: str
-    start_time_unix_nano: int
-    end_time_unix_nano: int
+    start_time_unix_nano: Optional[int] = None
+    end_time_unix_nano: Optional[int] = None
     status_code: str # e.g., "OK", "ERROR"
     status_message: Optional[str] = None
     span_type: str

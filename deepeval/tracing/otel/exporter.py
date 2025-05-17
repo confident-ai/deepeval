@@ -78,55 +78,56 @@ class DeepEvalSpanExporter(SpanExporter):
         # Extract Gen AI specific attributes from span attributes
         attributes = span.attributes or {}
 
-        # Extract model information
-        model = attributes.get("gen_ai.request.model")
-        
-        # Extract token usage information
-        input_tokens = attributes.get("gen_ai.usage.input_tokens")
-        output_tokens = attributes.get("gen_ai.usage.output_tokens")
-        
-        # Process input messages
-        input_messages = []
-        system_message = attributes.get("gen_ai.system.message")
-        user_message = attributes.get("gen_ai.user.message")
-        assistant_input_message = attributes.get("gen_ai.assistant.message") 
-        
         # Decide the span type from operation name
         # ref: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/
-        _operation_name = attributes.get("gen_ai.operation.name")
-        span_type = "custom"
-        if _operation_name in ["chat", "generate_content", "text_completion"]:
-            span_type = "llm"
+        operation_name = attributes.get("gen_ai.operation.name")
+        span_type = SpanApiType.BASE.value
+        # For LLM Spans
+        if operation_name in ["chat", "generate_content", "text_completion"]:
+            span_type = SpanApiType.LLM.value
+            # Extract model information
+            model = attributes.get("gen_ai.request.model")
             
-        # Create input messages if any exist
-        if system_message:
-            input_messages.append(ConfidentLlmInputMessage(confident_system_message=system_message))
-        if user_message:
-            input_messages.append(ConfidentLlmInputMessage(confident_user_message=user_message))
-        if assistant_input_message:
-            input_messages.append(ConfidentLlmInputMessage(confident_assistant_message=assistant_input_message))
-        
-        # Process output message
-        output_message = attributes.get("gen_ai.assistant.message")
-        llm_output = ConfidentLlmOutput(confident_assistant_message=output_message) if output_message else None
-        
-        # Create the ConfidentGenAiOperationSpan
-        return BaseConfidentGenAiOperationSpan(
-            trace_id=trace_id,
-            span_id=span_id,
-            parent_span_id=parent_span_id,
-            name=span.name,
-            start_time_unix_nano=start_time_unix_nano,
-            end_time_unix_nano=end_time_unix_nano,
-            status_code=status_code,
-            status_message=status_message,
-            span_type=span_type,
-            confident_request_model=model,
-            confident_llm_input_messages=input_messages if input_messages else None,
-            confident_llm_output=llm_output,
-            confident_usage_input_tokens=input_tokens,
-            confident_usage_output_tokens=output_tokens
-        )
+            # Extract token usage information
+            input_tokens = attributes.get("gen_ai.usage.input_tokens")
+            output_tokens = attributes.get("gen_ai.usage.output_tokens")
+            
+            # Process input messages
+            input_messages = []
+            system_message = attributes.get("gen_ai.system.message")
+            user_message = attributes.get("gen_ai.user.message")
+            assistant_input_message = attributes.get("gen_ai.assistant.message") 
+            
+                
+            # Create input messages if any exist
+            if system_message:
+                input_messages.append(ConfidentLlmInputMessage(confident_system_message=system_message))
+            if user_message:
+                input_messages.append(ConfidentLlmInputMessage(confident_user_message=user_message))
+            if assistant_input_message:
+                input_messages.append(ConfidentLlmInputMessage(confident_assistant_message=assistant_input_message))
+            
+            # Process output message
+            output_message = attributes.get("gen_ai.assistant.message")
+            llm_output = ConfidentLlmOutput(confident_assistant_message=output_message) if output_message else None
+            
+            # Create the ConfidentGenAiOperationSpan
+            return ConfidentLlmSpan(
+                trace_id=trace_id,
+                span_id=span_id,
+                parent_span_id=parent_span_id,
+                name=span.name,
+                start_time_unix_nano=start_time_unix_nano,
+                end_time_unix_nano=end_time_unix_nano,
+                status_code=status_code,
+                status_message=status_message,
+                span_type=span_type,
+                confident_request_model=model,
+                confident_llm_input_messages=input_messages if input_messages else None,
+                confident_llm_output=llm_output,
+                confident_usage_input_tokens=input_tokens,
+                confident_usage_output_tokens=output_tokens
+            )
 
         
     def convert_confident_genai_operation_spans_to_base_api_spans(self, spans: List[BaseConfidentGenAiOperationSpan]) -> List[BaseApiSpan]:
@@ -150,10 +151,10 @@ class DeepEvalSpanExporter(SpanExporter):
             # Convert timestamps from unix nano to ISO format
             start_time = to_zod_compatible_iso(
                 datetime.fromtimestamp(span.start_time_unix_nano / 1e9, tz=timezone.utc)
-            )
+            ) if span.start_time_unix_nano else ""
             end_time = to_zod_compatible_iso(
                 datetime.fromtimestamp(span.end_time_unix_nano / 1e9, tz=timezone.utc)
-            )
+            ) if span.end_time_unix_nano else ""
             
             # Create base API span with common attributes
             api_span = BaseApiSpan(
@@ -221,7 +222,7 @@ class DeepEvalSpanExporter(SpanExporter):
         traces_dict = {}
         
         for span in spans:
-            trace_uuid = span.traceUuid
+            trace_uuid = span.uuid
             if trace_uuid not in traces_dict:
                 traces_dict[trace_uuid] = {
                     'baseSpans': [],
@@ -236,27 +237,35 @@ class DeepEvalSpanExporter(SpanExporter):
                 }
             
             # Add span to appropriate list based on type
-            if span.type == SpanApiType.AGENT:
+            if span.type == SpanApiType.AGENT.value:
                 traces_dict[trace_uuid]['agentSpans'].append(span)
-            elif span.type == SpanApiType.LLM:
+            elif span.type == SpanApiType.LLM.value:
                 traces_dict[trace_uuid]['llmSpans'].append(span)
-            elif span.type == SpanApiType.RETRIEVER:
+            elif span.type == SpanApiType.RETRIEVER.value:
                 traces_dict[trace_uuid]['retrieverSpans'].append(span)
-            elif span.type == SpanApiType.TOOL:
+            elif span.type == SpanApiType.TOOL.value:
                 traces_dict[trace_uuid]['toolSpans'].append(span)
             else:  # BASE type or any other type
                 traces_dict[trace_uuid]['baseSpans'].append(span)
             
             # Track earliest start time and latest end time for the trace
-            span_start_time = span.startTime
-            span_end_time = span.endTime
+            span_start_time = span.start_time
+            span_end_time = span.end_time
             
             if span_start_time:
-                if not traces_dict[trace_uuid]['startTime'] or span_start_time < traces_dict[trace_uuid]['startTime']:
+                # Parse ISO string to datetime for comparison
+                span_start_dt = datetime.fromisoformat(span_start_time.replace('Z', '+00:00'))
+                current_start_dt = datetime.fromisoformat(traces_dict[trace_uuid]['startTime'].replace('Z', '+00:00')) if traces_dict[trace_uuid]['startTime'] else None
+                
+                if not current_start_dt or span_start_dt < current_start_dt:
                     traces_dict[trace_uuid]['startTime'] = span_start_time
             
             if span_end_time:
-                if not traces_dict[trace_uuid]['endTime'] or span_end_time > traces_dict[trace_uuid]['endTime']:
+                # Parse ISO string to datetime for comparison
+                span_end_dt = datetime.fromisoformat(span_end_time.replace('Z', '+00:00'))
+                current_end_dt = datetime.fromisoformat(traces_dict[trace_uuid]['endTime'].replace('Z', '+00:00')) if traces_dict[trace_uuid]['endTime'] else None
+                
+                if not current_end_dt or span_end_dt > current_end_dt:
                     traces_dict[trace_uuid]['endTime'] = span_end_time
         
         # Create TraceApi objects from the grouped spans
