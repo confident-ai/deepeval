@@ -222,7 +222,7 @@ class DeepEvalSpanExporter(SpanExporter):
         traces_dict = {}
         
         for span in spans:
-            trace_uuid = span.uuid
+            trace_uuid = span.trace_uuid
             if trace_uuid not in traces_dict:
                 traces_dict[trace_uuid] = {
                     'baseSpans': [],
