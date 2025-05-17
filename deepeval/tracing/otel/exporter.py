@@ -8,13 +8,18 @@ from deepeval.tracing.otel.types import (
     ConfidentLlmSpan
 )
 from typing import List, Optional, Sequence
-
 from datetime import datetime, timezone
 from deepeval.tracing.api import TraceSpanApiStatus
+from deepeval.tracing.otel.utils import to_hex_string
 from deepeval.tracing.tracing import BaseApiSpan, SpanApiType, TraceApi, to_zod_compatible_iso
+import typing
+
 
 class DeepEvalSpanExporter(SpanExporter):
-    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+    def __init__(self):
+        super().__init__()
+
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         # convert spans to confident spans
         confident_spans = [self.convert_to_confident_span(span) for span in spans]
         # convert confident spans to base api spans
@@ -54,9 +59,9 @@ class DeepEvalSpanExporter(SpanExporter):
             A ConfidentGenAiOperationSpan object or None if the span is not relevant to Gen AI operations
         """
         # Extract standard span information
-        trace_id = span.context.trace_id.hex() if span.context else None
-        span_id = span.context.span_id.hex() if span.context else None
-        parent_span_id = span.parent.span_id.hex() if span.parent else None
+        trace_id = to_hex_string(span.context.trace_id)
+        span_id = to_hex_string(span.context.span_id)
+        parent_span_id = to_hex_string(span.parent.span_id) if span.parent else None
         
         # Skip if we don't have a valid trace_id or span_id
         if not trace_id or not span_id:
@@ -72,7 +77,7 @@ class DeepEvalSpanExporter(SpanExporter):
         
         # Extract Gen AI specific attributes from span attributes
         attributes = span.attributes or {}
-        
+
         # Extract model information
         model = attributes.get("gen_ai.request.model")
         
@@ -86,6 +91,13 @@ class DeepEvalSpanExporter(SpanExporter):
         user_message = attributes.get("gen_ai.user.message")
         assistant_input_message = attributes.get("gen_ai.assistant.message") 
         
+        # Decide the span type from operation name
+        # ref: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/
+        _operation_name = attributes.get("gen_ai.operation.name")
+        span_type = "custom"
+        if _operation_name in ["chat", "generate_content", "text_completion"]:
+            span_type = "llm"
+            
         # Create input messages if any exist
         if system_message:
             input_messages.append(ConfidentLlmInputMessage(confident_system_message=system_message))
@@ -108,6 +120,7 @@ class DeepEvalSpanExporter(SpanExporter):
             end_time_unix_nano=end_time_unix_nano,
             status_code=status_code,
             status_message=status_message,
+            span_type=span_type,
             confident_request_model=model,
             confident_llm_input_messages=input_messages if input_messages else None,
             confident_llm_output=llm_output,
@@ -116,7 +129,7 @@ class DeepEvalSpanExporter(SpanExporter):
         )
 
         
-    def convert_confident_genai_operation_spans_to_base_api_spans(spans: List[BaseConfidentGenAiOperationSpan]) -> List[BaseApiSpan]:
+    def convert_confident_genai_operation_spans_to_base_api_spans(self, spans: List[BaseConfidentGenAiOperationSpan]) -> List[BaseApiSpan]:
         """
         Convert a list of OpenTelemetry GenAI Operation spans to BaseApiSpan objects.
         
@@ -193,7 +206,7 @@ class DeepEvalSpanExporter(SpanExporter):
         
         return api_spans
 
-    def aggregate_base_api_spans_to_traces(spans: List[BaseApiSpan], environment: Optional[str] = "development" ) -> List[TraceApi]:
+    def aggregate_base_api_spans_to_traces(self, spans: List[BaseApiSpan], environment: Optional[str] = "development" ) -> List[TraceApi]:
         # TODO: decide how to fetch environment from span attributes
         """
         Aggregate BaseApiSpan objects into TraceApi objects grouped by trace UUID.
