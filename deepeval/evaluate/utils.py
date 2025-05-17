@@ -331,12 +331,40 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
         print(f"  - context: {test_result.context}")
         print(f"  - retrieval context: {test_result.retrieval_context}")
 
-def get_log_id(output_dir:str):
-    ts = time.strftime("%Y%m%d_%H%M%S")
-    log_path = os.path.join(output_dir, f"test_run_{ts}.log")
-    return log_path
+
 
 def write_test_result_to_file(test_result: TestResult, display: TestRunResultDisplay, output_dir:str):
+    
+    def get_log_id(output_dir:str):
+        ts = time.strftime("%Y%m%d_%H%M%S")
+        log_path = os.path.join(output_dir, f"test_run_{ts}.log")
+        return log_path
+    
+    def aggregate_metric_pass_rates_to_file(test_results: List[TestResult]):
+        metric_counts = {}
+        metric_successes = {}
+
+        for result in test_results:
+            if result.metrics_data:
+                for metric_data in result.metrics_data:
+                    metric_name = metric_data.name
+                    if metric_name not in metric_counts:
+                        metric_counts[metric_name] = 0
+                        metric_successes[metric_name] = 0
+                    metric_counts[metric_name] += 1
+                    if metric_data.success:
+                        metric_successes[metric_name] += 1
+
+        metric_pass_rates = {
+            metric: (metric_successes[metric] / metric_counts[metric])
+            for metric in metric_counts
+        }
+        with open(out_file, "a", encoding="utf-8") as file:
+            file.write("\n" + "=" * 70 + "\n")
+            file.write("Overall Metric Pass Rates\n")
+            for metric, pass_rate in metric_pass_rates.items():
+                file.write(f"{metric}: {pass_rate:.2%} pass rate")
+            file.write("\n" + "=" * 70 + "\n")
     
     # Determine output Directory
     out_dir = output_dir or os.getcwd() 
@@ -400,7 +428,12 @@ def write_test_result_to_file(test_result: TestResult, display: TestRunResultDis
             file.write(f"  - expected output: {test_result.expected_output}\n")
             file.write(f"  - context: {test_result.context}\n")
             file.write(f"  - retrieval context: {test_result.retrieval_context}\n")
+            
+    aggregate_metric_pass_rates_to_file(test_result)
+    
+    
 
+    
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_counts = {}
     metric_successes = {}
@@ -428,40 +461,6 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     print("\n" + "=" * 70 + "\n")
 
     return metric_pass_rates
-
-def aggregate_metric_pass_rates_to_file(test_results: List[TestResult], output_dir:str):
-    
-    # Determine output Directory
-    out_dir = output_dir or os.getcwd() 
-    os.makedirs(out_dir, exist_ok=True)
-    # Generate log id
-    out_file = get_log_id(out_dir)
-    
-    metric_counts = {}
-    metric_successes = {}
-
-    for result in test_results:
-        if result.metrics_data:
-            for metric_data in result.metrics_data:
-                metric_name = metric_data.name
-                if metric_name not in metric_counts:
-                    metric_counts[metric_name] = 0
-                    metric_successes[metric_name] = 0
-                metric_counts[metric_name] += 1
-                if metric_data.success:
-                    metric_successes[metric_name] += 1
-
-    metric_pass_rates = {
-        metric: (metric_successes[metric] / metric_counts[metric])
-        for metric in metric_counts
-    }
-    with open(out_file, "a", encoding="utf-8") as file:
-        file.write("\n" + "=" * 70 + "\n")
-        file.write("Overall Metric Pass Rates\n")
-        for metric, pass_rate in metric_pass_rates.items():
-            file.write(f"{metric}: {pass_rate:.2%} pass rate")
-        file.write("\n" + "=" * 70 + "\n")
-
     
 
 def count_metrics_in_trace(trace: Trace) -> int:
