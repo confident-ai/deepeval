@@ -218,6 +218,7 @@ class Trace(BaseModel):
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
+    thread_id: Optional[str] = None
 
 
 # Create a context variable to track the current span
@@ -502,7 +503,6 @@ class TraceManager:
                 except AttributeError:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
-                # print(body)
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
                     api = Api()
@@ -670,6 +670,7 @@ class TraceManager:
             metadata=trace.metadata,
             tags=trace.tags,
             environment=self.environment,
+            threadId=trace.thread_id
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -1207,7 +1208,9 @@ def update_current_span(
 
 
 def update_current_trace(
-    tags: Optional[List[str]] = None, metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None, 
+    metadata: Optional[Dict[str, Any]] = None,
+    thread_id: Optional[str] = None
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -1216,3 +1219,5 @@ def update_current_trace(
         current_trace.tags = tags
     if metadata:
         current_trace.metadata = metadata
+    if thread_id:
+        current_trace.thread_id = thread_id
