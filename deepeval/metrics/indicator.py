@@ -236,7 +236,7 @@ async def safe_a_measure(
                 raise
     except TypeError:
         try:
-            await metric.a_measure(tc, _in_component=_in_component)
+            await metric.a_measure(tc)
         except MissingTestCaseParamsError as e:
             if skip_on_missing_params:
                 metric.skipped = True
