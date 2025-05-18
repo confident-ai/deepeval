@@ -107,3 +107,4 @@ class TraceApi(BaseModel):
     tags: Optional[List[str]] = Field(None)
     environment: Optional[str] = Field(None)
     thread_id: Optional[str] = Field(None, alias="threadId")
+    user_id: Optional[str] = Field(None, alias="userId")
