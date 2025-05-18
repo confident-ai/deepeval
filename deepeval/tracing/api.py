@@ -106,3 +106,4 @@ class TraceApi(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(None)
     tags: Optional[List[str]] = Field(None)
     environment: Optional[str] = Field(None)
+    thread_id: Optional[str] = Field(None, alias="threadId")

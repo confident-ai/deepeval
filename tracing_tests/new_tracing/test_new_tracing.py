@@ -266,7 +266,7 @@ async def meta_agent(query: str):
     """
     # print(final_response)
     update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
-    update_current_trace(metadata={"input": "input"})
+    update_current_trace(metadata={"input": "input"}, thread_id="131324ljihfsadiuyip")
 
     return final_response
 
