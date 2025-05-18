@@ -1,224 +1,175 @@
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.trace import StatusCode
-from deepeval.tracing.otel.types import (
-    BaseConfidentGenAiOperationSpan,
-    ConfidentLlmInputMessage,
-    ConfidentLlmOutput,
-    ConfidentLlmSpan
-)
-from typing import List, Optional, Sequence
+from typing import Dict, List, Optional
 from datetime import datetime, timezone
 from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.tracing.otel.utils import to_hex_string
-from deepeval.tracing.tracing import BaseApiSpan, SpanApiType, TraceApi, to_zod_compatible_iso
+from deepeval.tracing.tracing import BaseApiSpan, SpanApiType, TraceApi, to_zod_compatible_iso, trace_manager
 import typing
+import json
 
 
-class DeepEvalSpanExporter(SpanExporter):
+class ConfidentSpanExporter(SpanExporter):
     def __init__(self):
+        self.trace_manager = trace_manager
         super().__init__()
 
     def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
-        # convert spans to confident spans
-        confident_spans = [self.convert_to_confident_span(span) for span in spans]
-        # convert confident spans to base api spans
-        base_api_spans = self.convert_confident_genai_operation_spans_to_base_api_spans(confident_spans)
-        # aggregate base api spans to traces
+        base_api_spans = [self.convert_to_base_api_span(span) for span in spans]
         traces = self.aggregate_base_api_spans_to_traces(base_api_spans)
-        # return traces
-        self._post_traces(traces)
+        for trace in traces:
+            self.trace_manager.post_trace(trace)
 
         return SpanExportResult.SUCCESS
 
     def shutdown(self):
-        # Clean up resources, if any
+        # TODO: implement
         pass
 
     def force_flush(self, timeout_millis=30000):
-        # Flush any buffered data, if needed
-        return True
+        self.trace_manager.flush_traces()
     
-    def _post_traces(self, traces: List[TraceApi]):
-        for trace in traces:
-            body = trace.model_dump(
-                by_alias=True,
-                exclude_none=True,
-            )
-            print(body)
-            print("--------------------------------")
-
-    def convert_to_confident_span(self, span: ReadableSpan) -> Optional[BaseConfidentGenAiOperationSpan]:
-        """
-        Convert a ReadableSpan to a ConfidentGenAiOperationSpan.
-        
-        Args:
-            span: A ReadableSpan object from OpenTelemetry
-            
-        Returns:
-            A ConfidentGenAiOperationSpan object or None if the span is not relevant to Gen AI operations
-        """
-        # Extract standard span information
-        trace_id = to_hex_string(span.context.trace_id)
-        span_id = to_hex_string(span.context.span_id)
-        parent_span_id = to_hex_string(span.parent.span_id) if span.parent else None
-        
-        # Skip if we don't have a valid trace_id or span_id
-        if not trace_id or not span_id:
+    def convert_to_base_api_span(self, span: ReadableSpan) -> Optional[BaseApiSpan]:
+        # if span is not relevant confident spans, return None
+        if not (span.context.trace_id and span.context.span_id):
             return None
         
-        # Extract start and end times
-        start_time_unix_nano = span.start_time
-        end_time_unix_nano = span.end_time
+        uuid = to_hex_string(span.context.span_id, 16) # uuid
+        name = span.name if span.name else None # name
+        # default to success, if error, set to errored
+        status = TraceSpanApiStatus.ERRORED if span.status.status_code == StatusCode.ERROR else TraceSpanApiStatus.SUCCESS
+        trace_uuid = to_hex_string(span.context.trace_id, 32) # trace_uuid
+        parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
+        start_time = to_zod_compatible_iso(datetime.fromtimestamp(span.start_time / 1e9, tz=timezone.utc))
+        end_time = to_zod_compatible_iso(datetime.fromtimestamp(span.end_time / 1e9, tz=timezone.utc))
+        error = span.status.description if status == TraceSpanApiStatus.ERRORED else None
+        # span_test_case
+        # metrics
+        # metrics_data
         
-        # Extract status information
-        status_code = "OK" if span.status.status_code == StatusCode.OK else "ERROR"
-        status_message = span.status.description
-        
-        # Extract Gen AI specific attributes from span attributes
-        attributes = span.attributes or {}
+        base_api_span = BaseApiSpan(
+            uuid=uuid,
+            name=name,
+            status=status,
+            type=SpanApiType.BASE,
+            traceUuid=trace_uuid,
+            parentUuid=parent_uuid,
+            startTime=start_time,
+            endTime=end_time,
+            error=error,
+        )
 
-        # Decide the span type from operation name
-        # ref: https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/
-        operation_name = attributes.get("gen_ai.operation.name")
-        span_type = SpanApiType.BASE.value
-        # For LLM Spans
-        if operation_name in ["chat", "generate_content", "text_completion"]:
-            span_type = SpanApiType.LLM.value
-            # Extract model information
-            model = attributes.get("gen_ai.request.model")
-            
-            # Extract token usage information
-            input_tokens = attributes.get("gen_ai.usage.input_tokens")
-            output_tokens = attributes.get("gen_ai.usage.output_tokens")
-            
-            # Process input messages
-            input_messages = []
-            system_message = attributes.get("gen_ai.system.message")
-            user_message = attributes.get("gen_ai.user.message")
-            assistant_input_message = attributes.get("gen_ai.assistant.message") 
-            
+        _attributes = span.attributes if span.attributes else {}
                 
-            # Create input messages if any exist
-            if system_message:
-                input_messages.append(ConfidentLlmInputMessage(confident_system_message=system_message))
-            if user_message:
-                input_messages.append(ConfidentLlmInputMessage(confident_user_message=user_message))
-            if assistant_input_message:
-                input_messages.append(ConfidentLlmInputMessage(confident_assistant_message=assistant_input_message))
+        if _attributes.get("gen_ai.operation.name") in ["chat", "text_completion", "generate_content"]:
+            _llm_attributes = self._extract_llm_attributes(span, res = {})
+            base_api_span.type = SpanApiType.LLM
+            base_api_span.input = _llm_attributes.get("input")
+            base_api_span.output = _llm_attributes.get("output")
+            base_api_span.model = _llm_attributes.get("model")
+            base_api_span.input_token_count = _llm_attributes.get("input_token_count")
+            base_api_span.output_token_count = _llm_attributes.get("output_token_count")
+            base_api_span.cost_per_input_token = _llm_attributes.get("cost_per_input_token")
+            base_api_span.cost_per_output_token = _llm_attributes.get("cost_per_output_token")
+              
+        elif _attributes.get("gen_ai.operation.name") in ["execute_tool"]:
+            _tool_attributes = self._extract_tool_attributes(span, res = {})
+            base_api_span.type = SpanApiType.TOOL
+            base_api_span.input = _tool_attributes.get("input")
+            base_api_span.output = _tool_attributes.get("output")
+            base_api_span.description = _tool_attributes.get("description")
             
-            # Process output message
-            output_message = attributes.get("gen_ai.assistant.message")
-            llm_output = ConfidentLlmOutput(confident_assistant_message=output_message) if output_message else None
+        elif _attributes.get("gen_ai.operation.name") in ["create_agent", "invoke_agent"]:
+            _agent_attributes = self._extract_agent_attributes(span, res = {})
+            base_api_span.type = SpanApiType.AGENT
+            base_api_span.input = _agent_attributes.get("input")
+            base_api_span.output = _agent_attributes.get("output")
+            base_api_span.available_tools = _agent_attributes.get("available_tools")
+            base_api_span.agent_handoffs = _agent_attributes.get("agent_handoffs")
             
-            # Create the ConfidentGenAiOperationSpan
-            return ConfidentLlmSpan(
-                trace_id=trace_id,
-                span_id=span_id,
-                parent_span_id=parent_span_id,
-                name=span.name,
-                start_time_unix_nano=start_time_unix_nano,
-                end_time_unix_nano=end_time_unix_nano,
-                status_code=status_code,
-                status_message=status_message,
-                span_type=span_type,
-                confident_request_model=model,
-                confident_llm_input_messages=input_messages if input_messages else None,
-                confident_llm_output=llm_output,
-                confident_usage_input_tokens=input_tokens,
-                confident_usage_output_tokens=output_tokens
-            )
+        elif _attributes.get("gen_ai.operation.name") in ["embeddings"]:
+            _retriever_attributes = self._extract_retriever_attributes(span, res = {})
+            base_api_span.type = SpanApiType.RETRIEVER
+            base_api_span.input = _retriever_attributes.get("input") 
+            base_api_span.output = _retriever_attributes.get("output") 
+            base_api_span.top_k = _retriever_attributes.get("top_k")
+            base_api_span.chunk_size = _retriever_attributes.get("chunk_size")
+                  
+        # dump span to metadata dict
+        # todo: dump only relevant attributes
+        base_api_span.metadata = {"span": json.loads(span.to_json())}
+        return base_api_span
 
-        
-    def convert_confident_genai_operation_spans_to_base_api_spans(self, spans: List[BaseConfidentGenAiOperationSpan]) -> List[BaseApiSpan]:
-        """
-        Convert a list of OpenTelemetry GenAI Operation spans to BaseApiSpan objects.
-        
-        Args:
-            spans: List of ConfidentGenAiOperationSpan objects from OpenTelemetry
-            
-        Returns:
-            List of converted BaseApiSpan objects
-        """
-        api_spans = []
-        
-        for span in spans:
-            # Determine span type
-            span_type = SpanApiType.BASE
-            if isinstance(span, ConfidentLlmSpan):
-                span_type = SpanApiType.LLM
-            
-            # Convert timestamps from unix nano to ISO format
-            start_time = to_zod_compatible_iso(
-                datetime.fromtimestamp(span.start_time_unix_nano / 1e9, tz=timezone.utc)
-            ) if span.start_time_unix_nano else ""
-            end_time = to_zod_compatible_iso(
-                datetime.fromtimestamp(span.end_time_unix_nano / 1e9, tz=timezone.utc)
-            ) if span.end_time_unix_nano else ""
-            
-            # Create base API span with common attributes
-            api_span = BaseApiSpan(
-                uuid=span.span_id,
-                name=span.name,
-                status=TraceSpanApiStatus.SUCCESS if span.status_code == "OK" else TraceSpanApiStatus.ERRORED,
-                type=span_type,
-                traceUuid=span.trace_id,
-                parentUuid=span.parent_span_id,
-                startTime=start_time,
-                endTime=end_time,
-                error=span.status_message if span.status_code != "OK" else None
-            )
-            
-            # Add type-specific attributes
-            if isinstance(span, ConfidentLlmSpan):
-                api_span.model = span.confident_request_model
+    def _extract_llm_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
+        res["input"] = []
+        for event in span.events:
+            # input
+            if event.name in ["gen_ai.system.message", "gen_ai.user.message"]:
+                attributes = event.attributes
+                res["input"].append({"role": event.name, "content": dict(attributes)})
+            # output
+            if event.name in ["gen_ai.assistant.message", "gen_ai.choice", "gen_ai.tool.message"]:
+                res["output"] = str(event.attributes)
                 
-                # Handle input and output
-                if span.confident_llm_input_messages:
-                    if isinstance(span.confident_llm_input_messages, list):
-                        messages = []
-                        for msg in span.confident_llm_input_messages:
-                            if msg.confident_system_message:
-                                messages.append({"role": "system", "content": msg.confident_system_message})
-                            elif msg.confident_user_message:
-                                messages.append({"role": "user", "content": msg.confident_user_message})
-                            elif msg.confident_assistant_message:
-                                messages.append({"role": "assistant", "content": msg.confident_assistant_message})
-                        api_span.input = messages
-                    else:
-                        # Single message
-                        msg = span.confident_llm_input_messages
-                        if msg.confident_system_message:
-                            api_span.input = msg.confident_system_message
-                        elif msg.confident_user_message:
-                            api_span.input = msg.confident_user_message
-                        elif msg.confident_assistant_message:
-                            api_span.input = msg.confident_assistant_message
-                
-                # Set output
-                if span.confident_llm_output and span.confident_llm_output.confident_assistant_message:
-                    api_span.output = span.confident_llm_output.confident_assistant_message
-                
-                # Set token counts
-                api_span.input_token_count = span.confident_usage_input_tokens
-                api_span.output_token_count = span.confident_usage_output_tokens
-            
-            api_spans.append(api_span)
+        res["model"] = str(span.attributes.get("gen_ai.request.model"))
+        res["input_token_count"] = int(span.attributes.get("gen_ai.usage.input_tokens"))
+        res["output_token_count"] = int(span.attributes.get("gen_ai.usage.output_tokens"))
+        res["cost_per_input_token"] = float(span.attributes.get("confident.llm.cost_per_input_token"))
+        res["cost_per_output_token"] = float(span.attributes.get("confident.llm.cost_per_output_token"))
         
-        return api_spans
+        return res
+    
+    def _extract_tool_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
+        for event in span.events:
+            # input
+            if event.name in ["confident.tool.input"]:
+                res["input"] = dict(event.attributes)
+            # output
+            if event.name in ["confident.tool.output"]:
+                res["output"] = dict(event.attributes)
+        
+        res["description"] = str(span.attributes.get("gen_ai.tool.description"))
 
+        return res
+    
+    def _extract_agent_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
+        for event in span.events:
+            # input
+            if event.name in ["confident.agent.input"]:
+                res["input"] = dict(event.attributes)
+            # output
+            if event.name in ["confident.agent.output"]:
+                res["output"] = dict(event.attributes)
+        
+        available_tools = span.attributes.get("confident.agent.available_tools")
+        if isinstance(available_tools, tuple):
+            res["available_tools"] = [str(tool) for tool in available_tools]
+        
+        agent_handoffs = span.attributes.get("confident.agent.agent_handoffs")
+        if isinstance(agent_handoffs, tuple):
+            res["agent_handoffs"] = [str(handoff) for handoff in agent_handoffs]
+        
+        return res
+            
+    def _extract_retriever_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
+        for event in span.events:
+            # input
+            if event.name in ["confident.retriever.input"]:
+                res["input"] = str(event.attributes)
+
+            # output
+            if event.name in ["confident.retriever.output"]:
+                attributes = event.attributes # event attributes might not be a tuple (#TODO: check)
+                if isinstance(attributes, tuple):
+                    res["output"] = [str(attribute) for attribute in attributes]
+        
+        res["embedder"] = str(span.attributes.get("gen_ai.request.model"))
+        res["top_k"] = int(span.attributes.get("confident.retriever.top_k"))
+        res["chunk_size"] = int(span.attributes.get("confident.retriever.chunk_size"))
+        return res
+    
     def aggregate_base_api_spans_to_traces(self, spans: List[BaseApiSpan], environment: Optional[str] = "development" ) -> List[TraceApi]:
-        # TODO: decide how to fetch environment from span attributes
-        """
-        Aggregate BaseApiSpan objects into TraceApi objects grouped by trace UUID.
-        
-        Args:
-            spans: List of BaseApiSpan objects
-            
-        Returns:
-            List of TraceApi objects, each representing a complete trace
-        """
-        # Group spans by trace UUID
         traces_dict = {}
         
         for span in spans:
@@ -237,13 +188,13 @@ class DeepEvalSpanExporter(SpanExporter):
                 }
             
             # Add span to appropriate list based on type
-            if span.type == SpanApiType.AGENT.value:
+            if span.type == SpanApiType.AGENT:
                 traces_dict[trace_uuid]['agentSpans'].append(span)
-            elif span.type == SpanApiType.LLM.value:
+            elif span.type == SpanApiType.LLM:
                 traces_dict[trace_uuid]['llmSpans'].append(span)
-            elif span.type == SpanApiType.RETRIEVER.value:
+            elif span.type == SpanApiType.RETRIEVER:
                 traces_dict[trace_uuid]['retrieverSpans'].append(span)
-            elif span.type == SpanApiType.TOOL.value:
+            elif span.type == SpanApiType.TOOL:
                 traces_dict[trace_uuid]['toolSpans'].append(span)
             else:  # BASE type or any other type
                 traces_dict[trace_uuid]['baseSpans'].append(span)

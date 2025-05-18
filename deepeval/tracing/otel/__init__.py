@@ -1,5 +1,5 @@
-from .exporter import DeepEvalSpanExporter
+from .exporter import ConfidentSpanExporter
 
 __all__ = [
-    "DeepEvalSpanExporter",
+    "ConfidentSpanExporter",
 ]

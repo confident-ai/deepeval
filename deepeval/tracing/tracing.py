@@ -446,7 +446,7 @@ class TraceManager:
             else:
                 console.print(message_prefix, env_text, message)
 
-    def post_trace(self, trace: Trace) -> Optional[str]:
+    def post_trace(self, trace: Union[Trace, TraceApi]) -> Optional[str]:
         if not is_confident():
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
@@ -493,7 +493,11 @@ class TraceManager:
             nonlocal remaining_trace_request_bodies
             try:
                 # Build API object & payload
-                trace_api = self.create_trace_api(trace_obj)
+                if isinstance(trace_obj, TraceApi):
+                    trace_api = trace_obj
+                else:
+                    trace_api = self.create_trace_api(trace_obj)
+                
                 try:
                     body = trace_api.model_dump(
                         by_alias=True,
