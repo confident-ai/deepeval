@@ -51,12 +51,13 @@ correctness_metric = GEval(
 )
 ```
 
-There are **THREE** mandatory and **SIX** optional parameters required when instantiating an `GEval` class:
+There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `GEval` class:
 
-- `name`: name of metric
+- `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
 - `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
-- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `GEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
+- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `GEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`.
+- [Optional] `rubric`: a list of `Rubric`s that allows you to [confine the range](/docs/metrics-llm-evals#rubric) of the final metric score.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
@@ -90,7 +91,52 @@ evaluate(test_cases=[test_case], metrics=[correctness_metric])
 This is an example of [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals), where your LLM application is treated as a black-box.
 :::
 
-### Within nested components
+### Evaluation Steps
+
+Providing `evaluation_steps` tells `GEval` to follow your `evaluation_steps` for evaluation instead of first generating one from `criteria`, which allows for more controllable metric scores (more info [here](<(#how-is-it-calculated)>)):
+
+```python
+...
+
+correctness_metric = GEval(
+    name="Correctness",
+    evaluation_steps=[
+        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "You should also heavily penalize omission of detail",
+        "Vague language, or contradicting OPINIONS, are OK"
+    ],
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+)
+```
+
+### Rubric
+
+You can provide a list of `Rubric`s through the `rubric` argument to confine your evaluation LLM to output in specific score ranges:
+
+```python
+from deepeval.metrics.g_eval import Rubric
+...
+
+correctness_metric = GEval(
+    name="Correctness",
+    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    rubric=[
+        Rubric(score_range=(0,2), expected_outcome="Factually incorrect."),
+        Rubric(score_range=(3,6), expected_outcome="Mostly correct."),
+        Rubric(score_range=(7,9), expected_outcome="Correct but missing minor details."),
+        Rubric(score_range=(10,10), expected_outcome="100% correct."),
+    ]
+)
+```
+
+Note that `score_range` ranges from **0 - 10, inclusive** and different `Rubric`s must not have overlapping `score_range`s. You can also specify `score_range`s where the start and end values are the same to represent a single score.
+
+:::tip
+This is an optional improvement done by `deepeval` in addition to the original implementation in the `GEval` paper.
+:::
+
+### Within components
 
 You can also run `GEval` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 

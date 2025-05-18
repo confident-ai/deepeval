@@ -10,6 +10,7 @@ deepeval.login_with_confident_api_key("<your-deepeval-api-key>")
 # Initialize OpenAI client
 client = OpenAI(api_key="<your-openai-api-key>")
 
+
 @observe(type="llm", client=client)
 def generate_response(input: str) -> str:
     response = client.chat.completions.create(

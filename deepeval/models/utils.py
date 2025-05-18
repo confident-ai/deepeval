@@ -1,4 +1,7 @@
-def get_actual_model_name(model_name: str) -> str:
+from typing import Optional
+
+
+def parse_model_name(model_name: Optional[str] = None) -> str:
     """Extract base model name from provider-prefixed format.
 
     This function is useful for extracting the actual model name from a
@@ -16,10 +19,13 @@ def get_actual_model_name(model_name: str) -> str:
         The model name without provider prefix
 
     Examples:
-        get_actual_model_name("openai/gpt-4o") -> "gpt-4o"
-        get_actual_model_name("gpt-4o") -> "gpt-4o"
+        parse_model_name("openai/gpt-4o") -> "gpt-4o"
+        parse_model_name("gpt-4o") -> "gpt-4o"
     """
+    if model_name is None:
+        return None
+
     if "/" in model_name:
-        _, model_name = model_name.split("/", 1)
-        return model_name
+        _, parsed_model_name = model_name.split("/", 1)
+        return parsed_model_name
     return model_name

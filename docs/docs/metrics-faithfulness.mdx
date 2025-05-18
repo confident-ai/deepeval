@@ -73,7 +73,7 @@ There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 - [Optional] `truths_extraction_limit`: an int which when set, determines the maximum number of factual truths to extract from the `retrieval_context`. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to `None`.
 - [Optional] `evaluation_template`: a class of type `FaithfulnessTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s `FaithfulnessTemplate`.
 
-### Within nested components
+### Within components
 
 You can also run the `FaithfulnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 

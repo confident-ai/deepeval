@@ -16,7 +16,8 @@ from deepeval.metrics.dag.templates import (
     NonBinaryJudgementTemplate,
 )
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.metrics.g_eval.g_eval import G_EVAL_PARAMS, GEval
+from deepeval.metrics.g_eval.g_eval import GEval
+from deepeval.metrics.g_eval.utils import G_EVAL_PARAMS
 from deepeval.metrics.utils import copy_metrics, trimAndLoadJson
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ToolCall
 from deepeval.utils import prettify_list

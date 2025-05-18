@@ -192,7 +192,6 @@ class Prompt:
                         type=result["type"],
                         interpolation_type=result["interpolationType"],
                     )
-                    # raise Exception("test")
                 except:
                     try:
                         if fallback_to_cache:

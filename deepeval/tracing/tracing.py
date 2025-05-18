@@ -219,7 +219,8 @@ class Trace(BaseModel):
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
-
+    thread_id: Optional[str] = None
+    user_id: Optional[str] = None
 
 # Create a context variable to track the current span
 current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
@@ -494,38 +495,21 @@ class TraceManager:
             nonlocal remaining_trace_request_bodies
             with capture_send_trace():
                 try:
-                    # Build API object & payload
-                    trace_api = self.create_trace_api(trace_obj)
-                    try:
-                        body = trace_api.model_dump(
-                            by_alias=True,
-                            exclude_none=True,
-                        )
-                    except AttributeError:
-                        # Pydantic version below 2.0
-                        body = trace_api.dict(by_alias=True, exclude_none=True)
-                    # If the main thread is still alive, send now
-                    if main_thr.is_alive():
-                        api = Api()
-                        response = await api.a_send_request(
-                            method=HttpMethods.POST,
-                            endpoint=Endpoints.TRACING_ENDPOINT,
-                            body=body,
-                        )
-                        queue_size = self._trace_queue.qsize()
-                        in_flight = len(self._in_flight_tasks)
-                        status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
-                        self._print_trace_status(
-                            trace_worker_status=TraceWorkerStatus.SUCCESS,
-                            message=f"Successfully posted trace {status}",
-                            description=response["link"],
-                            environment=self.environment,
-                        )
-                    elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
-                        # Main thread gone → to be flushed
-                        remaining_trace_request_bodies.append(body)
-
-                except Exception as e:
+                    body = trace_api.model_dump(
+                        by_alias=True,
+                        exclude_none=True,
+                    )
+                except AttributeError:
+                    # Pydantic version below 2.0
+                    body = trace_api.dict(by_alias=True, exclude_none=True)
+                # If the main thread is still alive, send now
+                if main_thr.is_alive():
+                    api = Api()
+                    response = await api.a_send_request(
+                        method=HttpMethods.POST,
+                        endpoint=Endpoints.TRACING_ENDPOINT,
+                        body=body,
+                    )
                     queue_size = self._trace_queue.qsize()
                     in_flight = len(self._in_flight_tasks)
                     status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
@@ -672,6 +656,8 @@ class TraceManager:
             metadata=trace.metadata,
             tags=trace.tags,
             environment=self.environment,
+            threadId=trace.thread_id,
+            userId=trace.user_id
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -1006,7 +992,7 @@ class Observer:
             current_span.output = trace_manager.mask(self.result)
 
     def patch_client(self, client: Any):
- 
+
         if not isinstance(client, OpenAI):
             raise ValueError("client must be an instance of OpenAI")
 
@@ -1055,7 +1041,7 @@ class Observer:
                         model = kwargs.get("model", None)
                         if model is None:
                             raise ValueError("model not found in client")
-                        
+
                         # set model
                         current_span.model = model
 
@@ -1077,7 +1063,7 @@ class Observer:
                         except Exception as e:
                             pass
 
-                        update_current_span_attributes(
+                        update_current_span(
                             LlmAttributes(
                                 input=kwargs.get(
                                     "messages", "INPUT_MESSAGE_NOT_FOUND"
@@ -1209,7 +1195,10 @@ def update_current_span(
 
 
 def update_current_trace(
-    tags: Optional[List[str]] = None, metadata: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None, 
+    metadata: Optional[Dict[str, Any]] = None,
+    thread_id: Optional[str] = None,
+    user_id: Optional[str] = None
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -1218,3 +1207,7 @@ def update_current_trace(
         current_trace.tags = tags
     if metadata:
         current_trace.metadata = metadata
+    if thread_id:
+        current_trace.thread_id = thread_id
+    if user_id:
+        current_trace.user_id = user_ids

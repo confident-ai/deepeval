@@ -1,11 +1,9 @@
-# from deepeval.models.utils import get_actual_model_name
-
 import pytest
-from deepeval.models.utils import get_actual_model_name
+from deepeval.models.utils import parse_model_name
 
 
 class TestGetActualModelName:
-    """Test suite for the get_actual_model_name function."""
+    """Test suite for the parse_model_name function."""
 
     @pytest.mark.parametrize(
         "input_model_name,expected_output",
@@ -41,32 +39,32 @@ class TestGetActualModelName:
             ("anthropic/claude-2.1", "claude-2.1"),
         ],
     )
-    def test_get_actual_model_name(self, input_model_name, expected_output):
+    def test_parse_model_name(self, input_model_name, expected_output):
         """
-        Test that get_actual_model_name correctly extracts the model name
+        Test that parse_model_name correctly extracts the model name
         from various input formats.
 
         Args:
             input_model_name: The model name to process
             expected_output: The expected result after processing
         """
-        assert get_actual_model_name(input_model_name) == expected_output
+        assert parse_model_name(input_model_name) == expected_output
 
-    def test_get_actual_model_name_type_preservation(self):
+    def test_parse_model_name_type_preservation(self):
         """Test that the function preserves the string type and doesn't modify the input."""
-        result = get_actual_model_name("provider/model")
+        result = parse_model_name("provider/model")
         assert isinstance(result, str)
 
-        result = get_actual_model_name("")
+        result = parse_model_name("")
         assert isinstance(result, str)
 
-    def test_get_actual_model_name_identity(self):
+    def test_parse_model_name_identity(self):
         """Test that the function returns equal values for inputs without providers."""
         test_cases = ["gpt-4", "claude-3", "command-r", "model-with-dashes"]
         for model_name in test_cases:
-            assert get_actual_model_name(model_name) == model_name
+            assert parse_model_name(model_name) == model_name
 
-    def test_get_actual_model_name_none_value(self):
+    def test_parse_model_name_none_value(self):
         """Test that the function raises TypeError when None is passed."""
         with pytest.raises(TypeError):
-            get_actual_model_name(None)
+            parse_model_name(None)

@@ -22,6 +22,7 @@ from deepeval.dataset.api import (
     APIDataset,
     CreateDatasetHttpResponse,
     DatasetHttpResponse,
+    APIQueueDataset,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
 from deepeval.telemetry import capture_pull_dataset
@@ -635,7 +636,10 @@ class EvaluationDataset:
             )
 
     def pull(
-        self, alias: str, auto_convert_goldens_to_test_cases: bool = False
+        self,
+        alias: str,
+        finalized: bool = True,
+        auto_convert_goldens_to_test_cases: bool = False,
     ):
         with capture_pull_dataset():
             if is_confident() or self._confident_api_key is not None:
@@ -653,7 +657,10 @@ class EvaluationDataset:
                     result = api.send_request(
                         method=HttpMethods.GET,
                         endpoint=Endpoints.DATASET_ENDPOINT,
-                        params={"alias": alias},
+                        params={
+                            "alias": alias,
+                            "finalized": str(finalized).lower(),
+                        },
                     )
 
                     conversational_goldens = []
@@ -712,6 +719,47 @@ class EvaluationDataset:
                 raise Exception(
                     "Run `deepeval login` to pull dataset from Confident AI"
                 )
+
+    def queue(
+        self, alias: str, goldens: List[Golden], print_response: bool = True
+    ):
+        if len(goldens) == 0:
+            raise ValueError(
+                f"Can't queue empty list of goldens to dataset with alias: {alias} on Confident AI."
+            )
+
+        if is_confident():
+            api = Api()
+            api_dataset = APIQueueDataset(
+                alias=alias,
+                goldens=goldens,
+            )
+            try:
+                body = api_dataset.model_dump(by_alias=True, exclude_none=True)
+            except AttributeError:
+                # Pydantic version below 2.0
+                body = api_dataset.dict(by_alias=True, exclude_none=True)
+
+            api = Api()
+            result = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
+                body=body,
+            )
+            if result and print_response:
+                response = CreateDatasetHttpResponse(
+                    link=result["link"],
+                )
+                link = response.link
+                console = Console()
+                console.print(
+                    "✅ Goldens successfully queued to Confident AI! Annotate & finalized them at "
+                    f"[link={link}]{link}[/link]"
+                )
+        else:
+            raise Exception(
+                "To push dataset to Confident AI, run `deepeval login`"
+            )
 
     def generate_goldens_from_docs(
         self,
@@ -800,6 +848,7 @@ class EvaluationDataset:
         goldens = [
             Golden(
                 input=golden.input,
+                expected_output=golden.expected_output,
                 actual_output=golden.actual_output,
                 retrieval_context=golden.retrieval_context,
                 context=golden.context,

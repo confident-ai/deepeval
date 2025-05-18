@@ -85,7 +85,7 @@ There are **SEVEN** optional parameters when creating a `ContextualRecallMetric`
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `ContextualRecallTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ContextualRecallMetric` score. Defaulted to `deepeval`'s `ContextualRecallTemplate`.
 
-### Within nested components
+### Within components
 
 You can also run the `ContextualRecallMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 

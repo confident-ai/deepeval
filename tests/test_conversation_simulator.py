@@ -2,27 +2,28 @@ import asyncio
 import random
 
 from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.models import GPTModel
 
 user_profile_requirements_1 = [
     "name (first and last)",
     "phone number",
     "availabilities (between monday and friday)",
 ]
-user_intentions_1 = [
-    "Ordering new products",
-    "Repair for existing products",
-    "Picking products up because somebody died or moved into intensive care",
-    "Questions regarding open invoices",
-    "Questions regarding the order status",
-]
+user_intentions_1 = {
+    "Ordering new products": 1,
+    "Repair for existing products": 1,
+    "Picking products up because somebody died or moved into intensive care": 1,
+    "Questions regarding open invoices": 1,
+    "Questions regarding the order status": 1,
+}
 user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
-user_intentions_2 = [
-    "Seeking medical advice for a chronic condition",
-    "Booking an appointment with a specialist",
-    "Following up on test results",
-    "Requesting prescription refills",
-    "Exploring treatment options for a new diagnosis",
-]
+user_intentions_2 = {
+    # "Seeking medical advice for a chronic condition",
+    "Booking an appointment with a specialist": 1,
+    "Following up on test results": 2,
+    # "Requesting prescription refills",
+    # "Exploring treatment options for a new diagnosis",
+}
 
 
 async def test_user_profile(conversation_simulator: ConversationSimulator):
@@ -57,25 +58,37 @@ async def test_generate_conversations(
         print(("================================"))
 
 
-async def callback(prompt: str):
-    return f"OMG haha {prompt}"
+async def callback(prompt: str, conversation_history):
+    model = GPTModel()
+    # if kwargs:
+    #     print(kwargs)
+    # else:
+    #     id = random.choice([i for i in range(1, 100)])
+    #     kwargs["key"] = id
+    print(conversation_history)
+
+    res, cost = await model.a_generate(prompt)
+    return res
 
 
 async def main():
     user_profile_requirements = user_profile_requirements_2
     user_intentions = user_intentions_2
     conversational_synthesizer = ConversationSimulator(
-        user_profile_items=user_profile_requirements,
+        # user_profile_items=user_profile_requirements,
+        user_profiles=[
+            "Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."
+        ],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
+        async_mode=True,
     )
     a = conversational_synthesizer.simulate(
-        min_turns=3,
-        max_turns=5,
-        num_conversations=1,
+        min_turns=5,
+        max_turns=10,
         model_callback=callback,
+        stopping_criteria="The user has succesfully booked an appointment",
     )
-    print(a)
 
     # user_profiles = await test_user_profile(conversational_synthesizer)
     # await test_scenario(

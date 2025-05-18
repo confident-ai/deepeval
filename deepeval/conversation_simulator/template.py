@@ -139,3 +139,39 @@ class ConversationSimulatorTemplate:
         """
         )
         return prompt
+
+    @staticmethod
+    def check_conversation_completed(
+        previous_conversation: str, stopping_criteria: str
+    ) -> str:
+        prompt = textwrap.dedent(
+            f"""You are a Conversation Completion Checker.
+            Your task is to determine whether the conversation satisfies the provided stopping criteria and should be terminated.
+
+            Guidelines:
+            1. Review the entire conversation and decide if the stopping criteria have been met and the conversation has ended.
+            2. If the criteria have been met, mark the conversation as complete.
+            3. If not, mark it as incomplete and briefly describe what remains to be done.
+
+            IMPORTANT: The output must be formatted as a JSON object with two keys:
+            `is_complete` (a boolean) and `reason` (a string).
+
+            Example Stopping Criteria: "The user has succesfully reset their password."
+            Example Conversation History:
+            [
+                {{"role": "user", "content": "I forgot my password and need to reset it."}},
+                {{"role": "assistant", "content": "Sure. First, go to the login page and click 'Forgot Password'."}},
+            ]
+            Example JSON Output:
+            {{
+                "is_complete": False,
+                "reason": "The assistant explained how to forget password but ahas not confirmed that the user successfully set a new password."
+            }}
+
+            Stopping Criteria: "{stopping_criteria}"
+            Conversation History:
+            {previous_conversation}
+            JSON Output:
+            """
+        )
+        return prompt

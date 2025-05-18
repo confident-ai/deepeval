@@ -4,7 +4,6 @@ from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
 import logging
 import openai
-from deepeval.models.utils import get_actual_model_name
 
 from tenacity import (
     retry,
@@ -15,6 +14,7 @@ from tenacity import (
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.utils import parse_model_name
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -160,9 +160,8 @@ class GPTModel(DeepEvalBaseLLM):
     ):
         model_name = None
         if isinstance(model, str):
-            model_name = model
-            actual_model_name = get_actual_model_name(model_name)
-            if actual_model_name not in valid_gpt_models:
+            model_name = parse_model_name(model)
+            if model_name not in valid_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
@@ -193,7 +192,7 @@ class GPTModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
         if schema:
-            if self.actual_model_name in structured_outputs_models:
+            if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -210,7 +209,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.actual_model_name in json_mode_models:
+            if self.model_name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -252,7 +251,7 @@ class GPTModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
         if schema:
-            if self.actual_model_name in structured_outputs_models:
+            if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -269,7 +268,7 @@ class GPTModel(DeepEvalBaseLLM):
                     completion.usage.completion_tokens,
                 )
                 return structured_output, cost
-            if self.actual_model_name in json_mode_models:
+            if self.model_name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
                     model=self.model_name,
                     messages=[
@@ -380,7 +379,7 @@ class GPTModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        pricing = model_pricing.get(self.actual_model_name, model_pricing)
+        pricing = model_pricing.get(self.model_name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost

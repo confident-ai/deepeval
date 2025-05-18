@@ -63,6 +63,16 @@ html[data-theme="dark"] {
     --ifm-alert-background-color: #020617 !important;
     --ifm-alert-border-color: white !important;
   }
+
+  .alert--danger {
+    --ifm-alert-background-color: #ffeff5 !important;
+    --ifm-alert-border-color: #f30065 !important;
+  }
+
+  .alert--warning {
+    --ifm-alert-background-color: hsl(50, 100%, 90%) !important;
+    --ifm-alert-border-color: #ffdc42 !important;
+  }
 }
 
 .navbar {
@@ -71,10 +81,36 @@ html[data-theme="dark"] {
 
 .menu {
   font-weight: 400;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.131) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+html[data-theme="dark"] .menu {
+  background-image: radial-gradient(rgba(30, 29, 32, 0.131) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.menu__link {
+  font-size: 16px;
+  padding-top: 0.4rem !important;
+  padding-bottom: 0.4rem !important;
 }
 
 .menu__link--active {
   font-weight: 400 !important;
+  // background-color: white !important;
+  // border: 1px solid #710bee;
+  // border-right: 1px solid #e0e0e0;
+  // border-top-right-radius: 0;
+  // border-bottom-right-radius: 0;
+  // box-sizing: border-box;
+}
+
+.menu__link--sublist-caret:after{
+  width: 0.8rem;
+  height: 0.8rem;
+  min-width: 0.8rem;
+  background: var(--ifm-menu-link-sublist-icon) 50% / 1.7rem 1.7rem;
 }
 
 .avatar__name > a {
@@ -303,6 +339,7 @@ html[data-theme="dark"] .prism-code {
   border: 1px solid #334155;
 }
 
+
 /* Remove all the sidebar item ::before content */
 .sidebar-item-getting-started > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-llm-eval > .menu__list-item-collapsible > a::before,
@@ -314,14 +351,14 @@ html[data-theme="dark"] .prism-code {
 }
 
 /* Adjust borders for subcategories */
-.sidebar-item-getting-started > ul,
-.sidebar-item-icon-llm-eval > ul,
-.sidebar-item-icon-synthetic-data > ul,
-.sidebar-item-icon-red-teaming > ul,
-.sidebar-item-icon-benchmarks > ul,
-.sidebar-item-icon-others > ul {
+.sidebar-item-getting-started  ul,
+.sidebar-item-icon-llm-eval  ul,
+.sidebar-item-icon-synthetic-data  ul,
+.sidebar-item-icon-red-teaming  ul,
+.sidebar-item-icon-benchmarks  ul,
+.sidebar-item-icon-others ul {
   margin-left: 20px !important;
-  border-left: 1px solid #d6dbe2;
+  border-left: 1px solid #e0e0e0;
 }
 
 html[data-theme='dark'] .sidebar-item-getting-started > ul,

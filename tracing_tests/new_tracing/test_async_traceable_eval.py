@@ -205,13 +205,39 @@ goldens = [
 #     display_config=DisplayConfig(show_indicator=True),
 # )
 
-import pytest
+# import pytest
 
 
-# Assert Test
-@pytest.mark.parametrize(
-    "golden",
-    goldens,
-)
-def test_meta_agent_0(golden):
-    assert_test(golden=golden, observed_callback=meta_agent)
+# # Assert Test
+# @pytest.mark.parametrize(
+#     "golden",
+#     goldens,
+# )
+# def test_meta_agent_0(golden):
+#     assert_test(golden=golden, observed_callback=meta_agent)
+
+# # Gather multiple traceable tasks
+
+import asyncio
+
+
+async def run_parallel_examples():
+    tasks = [
+        meta_agent("How tall is Mount Everest?"),
+        meta_agent("What's the capital of Brazil?"),
+        meta_agent("Who won the last World Cup?"),
+        meta_agent("Explain quantum entanglement."),
+        meta_agent("What's the latest iPhone model?"),
+        meta_agent("How do I cook a perfect steak?"),
+        meta_agent("Tell me a joke about robots."),
+        meta_agent("What causes lightning?"),
+        meta_agent("Who painted the Mona Lisa?"),
+        meta_agent("What's the population of Japan?"),
+        meta_agent("How do vaccines work?"),
+        meta_agent("Recommend a good sci-fi movie."),
+    ]
+    await asyncio.gather(*tasks)
+
+
+# Run it
+asyncio.run(run_parallel_examples())
