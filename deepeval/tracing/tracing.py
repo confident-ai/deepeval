@@ -503,7 +503,6 @@ class TraceManager:
                 except AttributeError:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
-                # print(body)
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
                     api = Api()
@@ -1225,4 +1224,4 @@ def update_current_trace(
     if thread_id:
         current_trace.thread_id = thread_id
     if user_id:
-        current_trace.user_id = user_id
+        current_trace.user_id = user_ids
