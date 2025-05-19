@@ -171,15 +171,13 @@ def capture_evaluation_run(type: str):
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
         "feature_status.evaluation": get_feature_status(Feature.EVALUATION),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown"
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
     }
     set_last_feature(Feature.EVALUATION)
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -199,14 +197,12 @@ def capture_recommend_metrics():
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown"
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
     }
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -228,16 +224,14 @@ def capture_metric_type(
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
         "async_mode": async_mode,
-        "in_component": int(in_component)
+        "in_component": int(in_component),
     }
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -259,20 +253,18 @@ def capture_synthesizer_run(
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
         "feature_status.synthesizer": get_feature_status(Feature.SYNTHESIZER),
         "method": method,
         "max_generations": max_generations,
         "num_evolutions": num_evolutions,
-        **{f"evolution.{evol.value}": 1 for evol in evolutions}
+        **{f"evolution.{evol.value}": 1 for evol in evolutions},
     }
     set_last_feature(Feature.SYNTHESIZER)
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -292,17 +284,17 @@ def capture_conversation_simulator_run(num_conversations: int):
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
-        "feature_status.conversation_simulator": get_feature_status(Feature.CONVERSATION_SIMULATOR),
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
+        "feature_status.conversation_simulator": get_feature_status(
+            Feature.CONVERSATION_SIMULATOR
+        ),
         "num_conversations": num_conversations,
     }
     set_last_feature(Feature.CONVERSATION_SIMULATOR)
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -361,22 +353,20 @@ def capture_guardrails(guards: List[str]):
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
         "feature_status.guardrail": get_feature_status(Feature.GUARDRAIL),
-        **{f"vulnerability.{guard}": 1 for guard in guards}
+        **{f"vulnerability.{guard}": 1 for guard in guards},
     }
     set_last_feature(Feature.GUARDRAIL)
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
             span.set_attribute(property, value)
-        yield span    
+        yield span
 
 
 @contextmanager
@@ -388,18 +378,16 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
         "feature_status.benchmark": get_feature_status(Feature.BENCHMARK),
         "benchmark": benchmark,
         "num_tasks": num_tasks,
     }
     set_last_feature(Feature.BENCHMARK)
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -416,17 +404,15 @@ def capture_login_event():
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
         "last_feature": get_last_feature().value,
         "completed": True,
-        "login_prompt": LOGIN_PROMPT
+        "login_prompt": LOGIN_PROMPT,
     }
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
@@ -443,21 +429,21 @@ def capture_pull_dataset():
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
     }
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():
             span.set_attribute(property, value)
         yield span
 
+
 # track metrics that are components and metrics that aren't components
+
 
 # number of traces
 @contextmanager
@@ -469,14 +455,12 @@ def capture_send_trace():
         "environment": IS_RUNNING_IN_JUPYTER,
         "user.status": get_status(),
         "user.unique_id": get_unique_id(),
-        "user.public_ip": anonymous_public_ip if anonymous_public_ip else "Unknown",
+        "user.public_ip": (
+            anonymous_public_ip if anonymous_public_ip else "Unknown"
+        ),
     }
     # capture posthog
-    posthog.capture(
-        distinct_id=distinct_id,
-        event=event,
-        properties=properties
-    )
+    posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
     # capture new relic
     with tracer.start_as_current_span(event) as span:
         for property, value in properties.items():

@@ -37,10 +37,14 @@ def metric_progress_indicator(
     total: int = 9999,
     transient: bool = True,
     _show_indicator: bool = True,
-    _in_component: bool = False
+    _in_component: bool = False,
 ):
     captured_async_mode = False if async_mode == None else async_mode
-    with capture_metric_type(metric.__name__, async_mode=captured_async_mode, in_component=_in_component):
+    with capture_metric_type(
+        metric.__name__,
+        async_mode=captured_async_mode,
+        in_component=_in_component,
+    ):
         console = Console(file=sys.stderr)  # Direct output to standard error
         if _show_indicator:
             with Progress(
@@ -87,7 +91,11 @@ async def measure_metric_task(
             finish_text = "Read from Cache"
         else:
             try:
-                await metric.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
+                await metric.a_measure(
+                    test_case,
+                    _show_indicator=False,
+                    _in_component=_in_component,
+                )
                 finish_text = "Done"
             except MissingTestCaseParamsError as e:
                 if skip_on_missing_params:
@@ -102,7 +110,9 @@ async def measure_metric_task(
                         raise
             except TypeError:
                 try:
-                    await metric.a_measure(test_case, _in_component=_in_component)
+                    await metric.a_measure(
+                        test_case, _in_component=_in_component
+                    )
                     finish_text = "Done"
                 except MissingTestCaseParamsError as e:
                     if skip_on_missing_params:
@@ -221,7 +231,9 @@ async def safe_a_measure(
     _in_component: bool = False,
 ):
     try:
-        await metric.a_measure(tc, _show_indicator=False, _in_component=_in_component)
+        await metric.a_measure(
+            tc, _show_indicator=False, _in_component=_in_component
+        )
         if pbar_eval:
             pbar_eval.update(1)
     except MissingTestCaseParamsError as e:

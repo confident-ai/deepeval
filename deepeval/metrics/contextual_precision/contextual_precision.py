@@ -54,18 +54,24 @@ class ContextualPrecisionMetric(BaseMetric):
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         _show_indicator: bool = True,
-        _in_component: bool = False
+        _in_component: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):
             test_case = test_case.turns[-1]
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self, _show_indicator=_show_indicator, _in_component=_in_component):
+        with metric_progress_indicator(
+            self, _show_indicator=_show_indicator, _in_component=_in_component
+        ):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
+                    self.a_measure(
+                        test_case,
+                        _show_indicator=False,
+                        _in_component=_in_component,
+                    )
                 )
             else:
                 self.verdicts: List[ContextualPrecisionVerdict] = (

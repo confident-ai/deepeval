@@ -67,7 +67,11 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
+                    self.a_measure(
+                        test_case,
+                        _show_indicator=False,
+                        _in_component=_in_component,
+                    )
                 )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)

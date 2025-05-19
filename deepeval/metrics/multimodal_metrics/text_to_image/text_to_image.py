@@ -42,16 +42,25 @@ class TextToImageMetric(BaseMultimodalMetric):
         self.verbose_mode = verbose_mode
 
     def measure(
-        self, test_case: MLLMTestCase, _show_indicator: bool = True, _in_component: bool = False
+        self,
+        test_case: MLLMTestCase,
+        _show_indicator: bool = True,
+        _in_component: bool = False,
     ) -> float:
         check_mllm_test_case_params(test_case, required_params, 0, 1, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self, _show_indicator=_show_indicator, _in_component=_in_component):
+        with metric_progress_indicator(
+            self, _show_indicator=_show_indicator, _in_component=_in_component
+        ):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
+                    self.a_measure(
+                        test_case,
+                        _show_indicator=False,
+                        _in_component=_in_component,
+                    )
                 )
             else:
                 input_texts, _ = self.separate_images_from_text(test_case.input)
