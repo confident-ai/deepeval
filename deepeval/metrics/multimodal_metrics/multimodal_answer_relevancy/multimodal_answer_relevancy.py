@@ -45,16 +45,17 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
         self,
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
+        _in_component: bool = False,
     ) -> float:
         check_mllm_test_case_params(
             test_case, self._required_params, None, None, self
         )
         self.evaluation_cost = 0 if self.using_native_model else None
-        with metric_progress_indicator(self, _show_indicator=_show_indicator):
+        with metric_progress_indicator(self, _show_indicator=_show_indicator, _in_component=_in_component):
             if self.async_mode:
                 loop = get_or_create_event_loop()
                 loop.run_until_complete(
-                    self.a_measure(test_case, _show_indicator=False)
+                    self.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
                 )
             else:
                 self.statements: List[str] = self._generate_statements(
@@ -81,6 +82,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
         self,
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
+        _in_component: bool = False,
     ) -> float:
         check_mllm_test_case_params(
             test_case, self._required_params, None, None, self
@@ -88,7 +90,7 @@ class MultimodalAnswerRelevancyMetric(BaseMultimodalMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
+            self, async_mode=True, _show_indicator=_show_indicator, _in_component=_in_component
         ):
             self.statements: List[str] = await self._a_generate_statements(
                 test_case.actual_output

@@ -34,12 +34,13 @@ def format_metric_description(
 def metric_progress_indicator(
     metric: BaseMetric,
     async_mode: Optional[bool] = None,
-    _show_indicator: bool = True,
     total: int = 9999,
     transient: bool = True,
+    _show_indicator: bool = True,
+    _in_component: bool = False
 ):
     captured_async_mode = False if async_mode == None else async_mode
-    with capture_metric_type(metric.__name__, async_mode=captured_async_mode):
+    with capture_metric_type(metric.__name__, async_mode=captured_async_mode, in_component=_in_component):
         console = Console(file=sys.stderr)  # Direct output to standard error
         if _show_indicator:
             with Progress(
@@ -65,6 +66,7 @@ async def measure_metric_task(
     cached_test_case: Union[CachedTestCase, None],
     ignore_errors: bool,
     skip_on_missing_params: bool,
+    _in_component: bool = False,
 ):
     while not progress.finished:
         start_time = time.perf_counter()
@@ -85,7 +87,7 @@ async def measure_metric_task(
             finish_text = "Read from Cache"
         else:
             try:
-                await metric.a_measure(test_case, _show_indicator=False)
+                await metric.a_measure(test_case, _show_indicator=False, _in_component=_in_component)
                 finish_text = "Done"
             except MissingTestCaseParamsError as e:
                 if skip_on_missing_params:
@@ -100,7 +102,7 @@ async def measure_metric_task(
                         raise
             except TypeError:
                 try:
-                    await metric.a_measure(test_case)
+                    await metric.a_measure(test_case, _in_component=_in_component)
                     finish_text = "Done"
                 except MissingTestCaseParamsError as e:
                     if skip_on_missing_params:
@@ -141,6 +143,7 @@ async def measure_metrics_with_indicator(
     skip_on_missing_params: bool,
     show_indicator: bool,
     pbar_eval: Optional[tqdm_asyncio] = None,
+    _in_component: bool = False,
 ):
     if show_indicator:
         with Progress(
@@ -165,6 +168,7 @@ async def measure_metrics_with_indicator(
                         cached_test_case,
                         ignore_errors,
                         skip_on_missing_params,
+                        _in_component=_in_component,
                     )
                 )
             await asyncio.gather(*tasks)
@@ -201,6 +205,7 @@ async def measure_metrics_with_indicator(
                         ignore_errors,
                         skip_on_missing_params,
                         pbar_eval,
+                        _in_component=_in_component,
                     )
                 )
 
@@ -213,9 +218,10 @@ async def safe_a_measure(
     ignore_errors: bool,
     skip_on_missing_params: bool,
     pbar_eval: Optional[tqdm_asyncio] = None,
+    _in_component: bool = False,
 ):
     try:
-        await metric.a_measure(tc, _show_indicator=False)
+        await metric.a_measure(tc, _show_indicator=False, _in_component=_in_component)
         if pbar_eval:
             pbar_eval.update(1)
     except MissingTestCaseParamsError as e:

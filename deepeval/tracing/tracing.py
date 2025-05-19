@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.utils import (
     Environment,
     validate_environment,
@@ -493,9 +494,7 @@ class TraceManager:
 
         async def _a_send_trace(trace_obj):
             nonlocal remaining_trace_request_bodies
-            try:
-                # Build API object & payload
-                trace_api = self.create_trace_api(trace_obj)
+            with capture_send_trace():
                 try:
                     body = trace_api.model_dump(
                         by_alias=True,
@@ -516,28 +515,14 @@ class TraceManager:
                     in_flight = len(self._in_flight_tasks)
                     status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
                     self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.SUCCESS,
-                        message=f"Successfully posted trace {status}",
-                        description=response["link"],
-                        environment=self.environment,
+                        trace_worker_status=TraceWorkerStatus.FAILURE,
+                        message=f"Error posting trace {status}",
+                        description=str(e),
                     )
-                elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
-                    # Main thread gone → to be flushed
-                    remaining_trace_request_bodies.append(body)
-
-            except Exception as e:
-                queue_size = self._trace_queue.qsize()
-                in_flight = len(self._in_flight_tasks)
-                status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
-                self._print_trace_status(
-                    trace_worker_status=TraceWorkerStatus.FAILURE,
-                    message=f"Error posting trace {status}",
-                    description=str(e),
-                )
-            finally:
-                task = asyncio.current_task()
-                if task:
-                    self._in_flight_tasks.discard(task)
+                finally:
+                    task = asyncio.current_task()
+                    if task:
+                        self._in_flight_tasks.discard(task)
 
         async def async_worker():
             # Continue while user code is running or work remains
@@ -592,27 +577,28 @@ class TraceManager:
             message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)",
         )
         for body in remaining_trace_request_bodies:
-            try:
-                api = Api()
-                resp = api.send_request(
-                    method=HttpMethods.POST,
-                    endpoint=Endpoints.TRACING_ENDPOINT,
-                    body=body,
-                )
-                qs = self._trace_queue.qsize()
-                self._print_trace_status(
-                    trace_worker_status=TraceWorkerStatus.SUCCESS,
-                    message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                    description=resp["link"],
-                    environment=self.environment,
-                )
-            except Exception as e:
-                qs = self._trace_queue.qsize()
-                self._print_trace_status(
-                    trace_worker_status=TraceWorkerStatus.FAILURE,
-                    message="Error flushing remaining trace(s)",
-                    description=str(e),
-                )
+            with capture_send_trace():
+                try:
+                    api = Api()
+                    resp = api.send_request(
+                        method=HttpMethods.POST,
+                        endpoint=Endpoints.TRACING_ENDPOINT,
+                        body=body,
+                    )
+                    qs = self._trace_queue.qsize()
+                    self._print_trace_status(
+                        trace_worker_status=TraceWorkerStatus.SUCCESS,
+                        message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
+                        description=resp["link"],
+                        environment=self.environment,
+                    )
+                except Exception as e:
+                    qs = self._trace_queue.qsize()
+                    self._print_trace_status(
+                        trace_worker_status=TraceWorkerStatus.FAILURE,
+                        message="Error flushing remaining trace(s)",
+                        description=str(e),
+                    )
 
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
