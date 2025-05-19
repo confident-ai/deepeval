@@ -494,7 +494,9 @@ class TraceManager:
 
         async def _a_send_trace(trace_obj):
             nonlocal remaining_trace_request_bodies
-            with capture_send_trace():
+            try:
+                # Build API object & payload
+                trace_api = self.create_trace_api(trace_obj)
                 try:
                     body = trace_api.model_dump(
                         by_alias=True,
@@ -515,14 +517,28 @@ class TraceManager:
                     in_flight = len(self._in_flight_tasks)
                     status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
                     self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.FAILURE,
-                        message=f"Error posting trace {status}",
-                        description=str(e),
+                        trace_worker_status=TraceWorkerStatus.SUCCESS,
+                        message=f"Successfully posted trace {status}",
+                        description=response["link"],
+                        environment=self.environment,
                     )
-                finally:
-                    task = asyncio.current_task()
-                    if task:
-                        self._in_flight_tasks.discard(task)
+                elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
+                    # Main thread gone → to be flushed
+                    remaining_trace_request_bodies.append(body)
+
+            except Exception as e:
+                queue_size = self._trace_queue.qsize()
+                in_flight = len(self._in_flight_tasks)
+                status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
+                self._print_trace_status(
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                    message=f"Error posting trace {status}",
+                    description=str(e),
+                )
+            finally:
+                task = asyncio.current_task()
+                if task:
+                    self._in_flight_tasks.discard(task)
 
         async def async_worker():
             # Continue while user code is running or work remains
@@ -1211,4 +1227,4 @@ def update_current_trace(
     if thread_id:
         current_trace.thread_id = thread_id
     if user_id:
-        current_trace.user_id = user_ids
+        current_trace.user_id = user_id
