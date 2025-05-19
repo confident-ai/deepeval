@@ -221,6 +221,8 @@ class Trace(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
     user_id: Optional[str] = None
+    input: Optional[Any] = None
+    output: Optional[Any] = None
 
 
 # Create a context variable to track the current span
@@ -675,6 +677,8 @@ class TraceManager:
             environment=self.environment,
             threadId=trace.thread_id,
             userId=trace.user_id,
+            input=trace.input,
+            output=trace.output
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -1216,6 +1220,8 @@ def update_current_trace(
     metadata: Optional[Dict[str, Any]] = None,
     thread_id: Optional[str] = None,
     user_id: Optional[str] = None,
+    input: Optional[Any] = None,
+    output: Optional[Any] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -1228,3 +1234,7 @@ def update_current_trace(
         current_trace.thread_id = thread_id
     if user_id:
         current_trace.user_id = user_id
+    if input:
+        current_trace.input = input
+    if output:
+        current_trace.output = input
