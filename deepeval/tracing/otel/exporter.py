@@ -19,7 +19,7 @@ class ConfidentSpanExporter(SpanExporter):
         base_api_spans = [self.convert_to_base_api_span(span) for span in spans]
         traces = self.aggregate_base_api_spans_to_traces(base_api_spans)
         for trace in traces:
-            self.trace_manager.post_trace(trace)
+            self.trace_manager.post_trace_api(trace)
 
         return SpanExportResult.SUCCESS
 
