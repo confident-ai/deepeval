@@ -284,6 +284,7 @@ class TraceManager:
                 message=f"INTERRUPTED: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
             )
+            
         sys.exit(0)
 
     def _warn_on_exit(self):
@@ -678,7 +679,7 @@ class TraceManager:
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,
-            output=trace.output,
+            output=trace.output
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
