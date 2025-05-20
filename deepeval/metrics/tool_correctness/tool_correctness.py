@@ -254,6 +254,8 @@ class ToolCorrectnessMetric(BaseMetric):
 
     # For matching input parameters
     def _compare_dicts(self, dict1: Dict, dict2: Dict):
+        if dict1 == dict2:
+            return 1.0
         if self.should_exact_match:
             return 1.0 if dict1 == dict2 else 0.0
         match_score = 0
