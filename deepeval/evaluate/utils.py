@@ -1,5 +1,5 @@
 from typing import Optional, List, Callable, Union, Dict
-import os,time
+import os, time
 
 
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -332,14 +332,15 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
         print(f"  - retrieval context: {test_result.retrieval_context}")
 
 
+def write_test_result_to_file(
+    test_result: TestResult, display: TestRunResultDisplay, output_dir: str
+):
 
-def write_test_result_to_file(test_result: TestResult, display: TestRunResultDisplay, output_dir:str):
-    
-    def get_log_id(output_dir:str):
+    def get_log_id(output_dir: str):
         ts = time.strftime("%Y%m%d_%H%M%S")
         log_path = os.path.join(output_dir, f"test_run_{ts}.log")
         return log_path
-    
+
     def aggregate_metric_pass_rates_to_file(test_results: List[TestResult]):
         metric_counts = {}
         metric_successes = {}
@@ -365,13 +366,13 @@ def write_test_result_to_file(test_result: TestResult, display: TestRunResultDis
             for metric, pass_rate in metric_pass_rates.items():
                 file.write(f"{metric}: {pass_rate:.2%} pass rate")
             file.write("\n" + "=" * 70 + "\n")
-    
+
     # Determine output Directory
-    out_dir = output_dir or os.getcwd() 
+    out_dir = output_dir or os.getcwd()
     os.makedirs(out_dir, exist_ok=True)
     # Generate log id
     out_file = get_log_id(out_dir)
-    
+
     if test_result.metrics_data is None:
         return
 
@@ -427,13 +428,13 @@ def write_test_result_to_file(test_result: TestResult, display: TestRunResultDis
             file.write(f"  - actual output: {test_result.actual_output}\n")
             file.write(f"  - expected output: {test_result.expected_output}\n")
             file.write(f"  - context: {test_result.context}\n")
-            file.write(f"  - retrieval context: {test_result.retrieval_context}\n")
-            
-    aggregate_metric_pass_rates_to_file(test_result)
-    
-    
+            file.write(
+                f"  - retrieval context: {test_result.retrieval_context}\n"
+            )
 
-    
+    aggregate_metric_pass_rates_to_file(test_result)
+
+
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     metric_counts = {}
     metric_successes = {}
@@ -461,7 +462,7 @@ def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
     print("\n" + "=" * 70 + "\n")
 
     return metric_pass_rates
-    
+
 
 def count_metrics_in_trace(trace: Trace) -> int:
     def count_metrics_recursive(span: BaseSpan) -> int:

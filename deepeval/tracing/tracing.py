@@ -678,7 +678,7 @@ class TraceManager:
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,
-            output=trace.output
+            output=trace.output,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:

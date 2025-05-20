@@ -42,7 +42,9 @@ def check_if_valid_file(test_file_or_directory: str):
 
 
 # Allow extra args and ignore unknown options allow extra args to be passed to pytest
-@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+@app.command(
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def run(
     ctx: typer.Context,
     test_file_or_directory: str,
