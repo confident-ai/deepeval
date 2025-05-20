@@ -1237,4 +1237,4 @@ def update_current_trace(
     if input:
         current_trace.input = input
     if output:
-        current_trace.output = input
+        current_trace.output = output
