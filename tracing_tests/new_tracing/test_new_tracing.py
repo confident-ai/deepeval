@@ -271,6 +271,10 @@ async def meta_agent(query: str):
         thread_id="131324ljihfsadiuyip",
         user_id="111",
     )
+    update_current_trace(
+        input=query,
+        output=research_info,
+    )
 
     return final_response
 
