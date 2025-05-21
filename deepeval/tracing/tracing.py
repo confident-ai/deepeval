@@ -452,6 +452,42 @@ class TraceManager:
             else:
                 console.print(message_prefix, env_text, message)
 
+    def _should_sample_trace(self) -> bool:
+        random_number = random.random()
+        if random_number > self.sampling_rate:
+            rate_str = f"{self.sampling_rate:.2f}"
+            self._print_trace_status(
+                message=f"Skipped posting trace due to sampling rate ({rate_str})",
+                trace_worker_status=TraceWorkerStatus.SUCCESS,
+            )
+            return False
+        
+        return True
+    
+    def _ensure_worker_thread_running(self):
+        if self._worker_thread is None or not self._worker_thread.is_alive():
+            self._worker_thread = threading.Thread(
+                target=self._process_trace_queue,
+                daemon=self._daemon,
+            )
+            self._worker_thread.start()
+    
+    def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
+        if not is_confident():
+            self._print_trace_status(
+                message="No Confident AI API key found. Skipping trace posting.",
+                trace_worker_status=TraceWorkerStatus.FAILURE,
+            )
+            return None
+        
+        if not self._should_sample_trace():
+            return None
+        
+        self._ensure_worker_thread_running()
+        self._trace_queue.put(trace_api)
+        
+        return "ok"
+    
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             self._print_trace_status(
@@ -460,25 +496,14 @@ class TraceManager:
             )
             return None
 
-        random_number = random.random()
-        if random_number > self.sampling_rate:
-            rate_str = f"{self.sampling_rate:.2f}"
-            self._print_trace_status(
-                message=f"Skipped posting trace due to sampling rate ({rate_str})",
-                trace_worker_status=TraceWorkerStatus.SUCCESS,
-            )
+        if not self._should_sample_trace():
             return None
 
         # Add the trace to the queue
         self._trace_queue.put(trace)
 
         # Start the worker thread if it's not already running
-        if self._worker_thread is None or not self._worker_thread.is_alive():
-            self._worker_thread = threading.Thread(
-                target=self._process_trace_queue,
-                daemon=self._daemon,
-            )
-            self._worker_thread.start()
+        self._ensure_worker_thread_running()
 
         return "ok"
 
@@ -499,7 +524,11 @@ class TraceManager:
             nonlocal remaining_trace_request_bodies
             try:
                 # Build API object & payload
-                trace_api = self.create_trace_api(trace_obj)
+                if isinstance(trace_obj, TraceApi):
+                    trace_api = trace_obj
+                else:
+                    trace_api = self.create_trace_api(trace_obj)
+                
                 try:
                     body = trace_api.model_dump(
                         by_alias=True,

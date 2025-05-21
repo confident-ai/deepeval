@@ -92,6 +92,7 @@ class BaseApiSpan(BaseModel):
 
     class Config:
         use_enum_values = True
+        validate_assignment = True
 
 
 class TraceApi(BaseModel):
