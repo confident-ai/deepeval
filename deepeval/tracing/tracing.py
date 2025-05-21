@@ -284,7 +284,7 @@ class TraceManager:
                 message=f"INTERRUPTED: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
             )
-            
+
         sys.exit(0)
 
     def _warn_on_exit(self):
@@ -461,9 +461,9 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.SUCCESS,
             )
             return False
-        
+
         return True
-    
+
     def _ensure_worker_thread_running(self):
         if self._worker_thread is None or not self._worker_thread.is_alive():
             self._worker_thread = threading.Thread(
@@ -471,7 +471,7 @@ class TraceManager:
                 daemon=self._daemon,
             )
             self._worker_thread.start()
-    
+
     def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
         if not is_confident():
             self._print_trace_status(
@@ -479,15 +479,15 @@ class TraceManager:
                 trace_worker_status=TraceWorkerStatus.FAILURE,
             )
             return None
-        
+
         if not self._should_sample_trace():
             return None
-        
+
         self._ensure_worker_thread_running()
         self._trace_queue.put(trace_api)
-        
+
         return "ok"
-    
+
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not is_confident():
             self._print_trace_status(
@@ -528,7 +528,7 @@ class TraceManager:
                     trace_api = trace_obj
                 else:
                     trace_api = self.create_trace_api(trace_obj)
-                
+
                 try:
                     body = trace_api.model_dump(
                         by_alias=True,
@@ -708,7 +708,7 @@ class TraceManager:
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,
-            output=trace.output
+            output=trace.output,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
