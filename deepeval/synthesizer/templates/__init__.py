@@ -1,3 +1,3 @@
-from .template import SynthesizerTemplate, EvolutionTemplate, FilterTemplate
-from .template_prompt import PromptSynthesizerTemplate, PromptEvolutionTemplate
+from .template import EvolutionTemplate, FilterTemplate, SynthesizerTemplate
 from .template_extraction import ExtractionTemplate
+from .template_prompt import PromptEvolutionTemplate, PromptSynthesizerTemplate
