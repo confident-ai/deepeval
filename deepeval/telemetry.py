@@ -178,7 +178,9 @@ def capture_evaluation_run(type: str):
         }
         set_last_feature(Feature.EVALUATION)
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -204,7 +206,9 @@ def capture_recommend_metrics():
             ),
         }
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -234,7 +238,9 @@ def capture_metric_type(
             "in_component": int(in_component),
         }
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -260,7 +266,9 @@ def capture_synthesizer_run(
             "user.public_ip": (
                 anonymous_public_ip if anonymous_public_ip else "Unknown"
             ),
-            "feature_status.synthesizer": get_feature_status(Feature.SYNTHESIZER),
+            "feature_status.synthesizer": get_feature_status(
+                Feature.SYNTHESIZER
+            ),
             "method": method,
             "max_generations": max_generations,
             "num_evolutions": num_evolutions,
@@ -268,7 +276,9 @@ def capture_synthesizer_run(
         }
         set_last_feature(Feature.SYNTHESIZER)
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -299,7 +309,9 @@ def capture_conversation_simulator_run(num_conversations: int):
         }
         set_last_feature(Feature.CONVERSATION_SIMULATOR)
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -370,7 +382,9 @@ def capture_guardrails(guards: List[str]):
         }
         set_last_feature(Feature.GUARDRAIL)
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -399,7 +413,9 @@ def capture_benchmark_run(benchmark: str, num_tasks: int):
         }
         set_last_feature(Feature.BENCHMARK)
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -427,7 +443,9 @@ def capture_login_event():
             "login_prompt": LOGIN_PROMPT,
         }
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -452,7 +470,9 @@ def capture_pull_dataset():
             ),
         }
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
@@ -481,7 +501,9 @@ def capture_send_trace():
             ),
         }
         # capture posthog
-        posthog.capture(distinct_id=distinct_id, event=event, properties=properties)
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
         # capture new relic
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
