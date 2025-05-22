@@ -120,9 +120,12 @@ class HellaSwag(DeepEvalBaseBenchmark):
                                 score,
                             )
 
-                task_accuracy = (
-                    task_correct_predictions / task_total_predictions
-                )
+                if task_total_predictions == 0:
+                    task_accuracy = 0
+                else:
+                    task_accuracy = (
+                        task_correct_predictions / task_total_predictions
+                    )
                 print(
                     f"HellaSwag Task Accuracy (task={task.value}): {task_accuracy}"
                 )
