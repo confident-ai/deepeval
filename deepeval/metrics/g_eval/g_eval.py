@@ -98,7 +98,6 @@ class GEval(BaseMetric):
                 self.reason = reason
                 # Normalizing to rubric min/max range -> 0/1
                 if self.rubric:
-                    print("Normalizing score based on rubric")
                     self.score = float(g_score) - self.rubric[0].score_range[0]
                     self.score /= (self.rubric[-1].score_range[1] - self.rubric[0].score_range[0])
                 else:
@@ -149,7 +148,6 @@ class GEval(BaseMetric):
 
             # Normalizing to rubric min/max range -> 0/1
             if self.rubric:
-                print("Normalizing score based on rubric")
                 g_score = float(g_score) - self.rubric[0].score_range[0]
                 g_score /= (self.rubric[-1].score_range[1] - self.rubric[0].score_range[0])
             else:
