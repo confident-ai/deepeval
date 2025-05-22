@@ -1,5 +1,5 @@
-from deepeval.integrations.integrations import (
-    captured_data,
-    Frameworks,
-    auto_eval_state,
-)
+# from deepeval.integrations.integrations import (
+#     captured_data,
+#     Frameworks,
+#     auto_eval_state,
+# )
