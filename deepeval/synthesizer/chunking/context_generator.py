@@ -7,6 +7,10 @@ import asyncio
 import random
 import math
 import os
+import atexit
+import gc
+import time
+import sys
 
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
@@ -16,6 +20,49 @@ from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.synthesizer.templates.template import FilterTemplate
 
+
+
+# Monkey patch shutil.rmtree to handle locked files better on Windows
+original_rmtree = shutil.rmtree
+
+def safe_rmtree(path, *args, **kwargs):
+    """Safe version of rmtree with retries for Windows file locks"""
+    if not os.path.exists(path):
+        return
+        
+    print(f"Safe delete: {path}")
+    for attempt in range(3):
+        try:
+            # Force garbage collection to release file handles
+            gc.collect()
+            time.sleep(1)
+            
+            # For Windows, attempt to remove file attributes that might prevent deletion
+            if sys.platform == 'win32':
+                os.system(f'attrib -r -s -h "{path}\\*" /s /d')
+                
+            # Try the original rmtree with ignore_errors=True
+            kwargs['ignore_errors'] = True
+            original_rmtree(path, *args, **kwargs)
+            print(f"Successfully deleted {path}")
+            return
+        except Exception as e:
+            print(f"Delete attempt {attempt+1} failed: {e}")
+            time.sleep(2)
+    
+    print(f"Warning: Unable to delete {path} after multiple attempts")
+
+# Apply the monkey patch
+shutil.rmtree = safe_rmtree
+
+# Function to force close ChromaDB connections
+def close_chroma_clients():
+    print("Forcing release of ChromaDB connections...")
+    gc.collect()
+    time.sleep(1)
+
+# Register cleanup function
+atexit.register(close_chroma_clients)
 
 class ContextScore(BaseModel):
     clarity: float
