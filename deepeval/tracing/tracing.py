@@ -919,7 +919,7 @@ class Observer:
                     if span.trace_uuid == current_span.trace_uuid
                 ]
 
-                if not other_active_spans:  
+                if not other_active_spans:
                     trace_manager.end_trace(current_span.trace_uuid)
                     current_trace_context.set(None)
 
