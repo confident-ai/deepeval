@@ -185,10 +185,12 @@ async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
     # return documents
 
 
-@observe("CustomLLM")
+@observe("CustomLLM", metrics=["Answer Relevancy"])
 async def custom_generate(prompt: str, model: str = "custom-model"):
     # print(final_response)
-    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
+    update_current_span(
+        metadata={"user_id": "11111", "date": "1/1/11"}
+    )
     response = f"Custom response for: {prompt}"
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -251,6 +253,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+    metrics=["Answer Relevancy"]
 )
 async def meta_agent(query: str):
     # print(query)
@@ -265,15 +268,20 @@ async def meta_agent(query: str):
     Custom Analysis: {custom_info}
     """
     # print(final_response)
-    update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
+    update_current_span(
+        metadata={"user_id": "11111", "date": "1/1/11"}, 
+        test_case = LLMTestCase(
+            input="What is this again?",
+            actual_output="this is a latte",
+            expected_output="this is a mocha",
+            retrieval_context=["I love coffee"],
+            context=["I love coffee"]
+        )
+    )
     update_current_trace(
         metadata={"input": "input"},
         thread_id="131324ljihfsadiuyip",
         user_id="111",
-    )
-    update_current_trace(
-        input=query,
-        output=research_info,
     )
 
     return final_response

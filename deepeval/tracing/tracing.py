@@ -908,6 +908,10 @@ class Observer:
                 current_span_context.set(None)
         else:
             current_trace = current_trace_context.get()
+            if current_trace.input is None:
+                current_trace.input = self.function_kwargs
+            if current_trace.output is None:
+                current_trace.output = self.result
             if current_trace and current_trace.uuid == current_span.trace_uuid:
                 other_active_spans = [
                     span
@@ -915,7 +919,7 @@ class Observer:
                     if span.trace_uuid == current_span.trace_uuid
                 ]
 
-                if not other_active_spans:
+                if not other_active_spans:  
                     trace_manager.end_trace(current_span.trace_uuid)
                     current_trace_context.set(None)
 
