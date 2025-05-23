@@ -16,7 +16,6 @@ import inspect
 import asyncio
 import random
 import atexit
-import signal
 import queue
 import uuid
 import sys
@@ -272,20 +271,6 @@ class TraceManager:
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
-        signal.signal(signal.SIGINT, self._on_signal)
-        signal.signal(signal.SIGTERM, self._on_signal)
-
-    def _on_signal(self, signum, frame):
-        queue_size = self._trace_queue.qsize()
-        in_flight = len(self._in_flight_tasks)
-        remaining_tasks = queue_size + in_flight
-        if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES" and remaining_tasks > 0:
-            self._print_trace_status(
-                message=f"INTERRUPTED: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
-                trace_worker_status=TraceWorkerStatus.WARNING,
-            )
-
-        sys.exit(0)
 
     def _warn_on_exit(self):
         queue_size = self._trace_queue.qsize()
