@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-    <a href="https://discord.com/invite/a3K9c8GRGt">
-        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/a3K9c8GRGt?style=flat">
+    <a href="https://discord.gg/3SEyvpgu2f">
+        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/3SEyvpgu2f?style=flat">
     </a>
 </p>
 
