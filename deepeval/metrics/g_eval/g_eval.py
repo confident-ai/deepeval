@@ -96,7 +96,12 @@ class GEval(BaseMetric):
                     test_case, _additional_context=_additional_context
                 )
                 self.reason = reason
-                self.score = float(g_score) / 10
+                # Normalizing to rubric min/max range -> 0/1
+                if self.rubric:
+                    self.score = float(g_score) - self.rubric[0].score_range[0]
+                    self.score /= (self.rubric[-1].score_range[1] - self.rubric[0].score_range[0])
+                else:
+                    self.score = float(g_score) / 10
                 self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
@@ -140,8 +145,15 @@ class GEval(BaseMetric):
                 test_case, _additional_context=_additional_context
             )
             self.reason = reason
+
+            # Normalizing to rubric min/max range -> 0/1
+            if self.rubric:
+                g_score = float(g_score) - self.rubric[0].score_range[0]
+                g_score /= (self.rubric[-1].score_range[1] - self.rubric[0].score_range[0])
+            else:
+                g_score = float(g_score) / 10
             self.score = (
-                float(g_score) / 10 if not self.strict_mode else int(g_score)
+                g_score if not self.strict_mode else int(g_score)
             )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
