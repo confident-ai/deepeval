@@ -295,7 +295,7 @@ class TraceManager:
         mask: Optional[Callable] = None,
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
-        confident_api_key: Optional[str] = None
+        confident_api_key: Optional[str] = None,
     ) -> None:
         if mask is not None:
             self.custom_mask_fn = mask
