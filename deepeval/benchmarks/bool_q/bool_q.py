@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-import pandas as pd
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -20,6 +19,7 @@ class BoolQ(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 5, "BoolQ only supports n_shots <= 5"
         assert n_problems <= 3270, "BoolQ only supports n_problems <= 3270"
@@ -38,6 +38,8 @@ class BoolQ(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("BoolQ", self.n_problems):
             overall_correct_predictions = 0
             overall_total_predictions = self.n_problems

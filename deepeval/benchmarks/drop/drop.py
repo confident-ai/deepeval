@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-import pandas as pd
 from tqdm import tqdm
 from typing import Union
 
@@ -29,6 +28,7 @@ class DROP(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 5, "DROP only supports n_shots <= 5"
         super().__init__(**kwargs)
@@ -46,6 +46,8 @@ class DROP(DeepEvalBaseBenchmark):
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
     ) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("DROP", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

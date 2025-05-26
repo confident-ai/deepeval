@@ -1,6 +1,5 @@
 from typing import List, Optional, Dict
 from tqdm import tqdm
-import pandas as pd
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -23,6 +22,7 @@ class MathQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 5, "MathQA only supports n_shots <= 5"
         super().__init__(**kwargs)
@@ -46,6 +46,8 @@ class MathQA(DeepEvalBaseBenchmark):
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
     ) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("MathQA", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

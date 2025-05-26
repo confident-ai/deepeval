@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-import pandas as pd
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -18,6 +17,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         super().__init__(**kwargs)
         self.tasks: List[HumanEvalTask] = (
@@ -34,6 +34,8 @@ class HumanEval(DeepEvalBaseBenchmark):
         self.verbose_mode: bool = (False,)
 
     def evaluate(self, model: DeepEvalBaseLLM, k: int) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("HumanEval", len(self.tasks)):
             assert self.n >= k
             overall_correct_predictions = 0

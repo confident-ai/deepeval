@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional
 from tqdm import tqdm
-import pandas as pd
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -23,6 +22,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 15, "HellaSwag only supports n_shots <= 15."
         super().__init__(**kwargs)
@@ -47,6 +47,8 @@ class HellaSwag(DeepEvalBaseBenchmark):
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
     ) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("HellaSwag", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

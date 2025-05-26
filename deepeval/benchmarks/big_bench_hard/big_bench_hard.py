@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-import pandas as pd
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -56,6 +55,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 3, "BBH only supports n_shots <= 3"
         super().__init__(**kwargs)
@@ -78,6 +78,8 @@ class BigBenchHard(DeepEvalBaseBenchmark):
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
     ) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("Big Bench Hard", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

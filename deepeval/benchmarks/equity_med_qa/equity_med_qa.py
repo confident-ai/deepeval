@@ -1,7 +1,5 @@
 from typing import List, Optional, Dict, Union
 from tqdm import tqdm
-import pandas as pd
-
 
 from deepeval.dataset import Golden
 from deepeval.test_case import LLMTestCase
@@ -22,6 +20,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         super().__init__(**kwargs)
         self.tasks: List[EquityMedQATask] = (
@@ -36,6 +35,8 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         )
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("EquityMedQA", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

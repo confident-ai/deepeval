@@ -1,6 +1,5 @@
 from typing import List, Optional, Dict, Union
 from tqdm import tqdm
-import pandas as pd
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -24,6 +23,7 @@ class SQuAD(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 5, "SQuAD only supports n_shots <= 5"
         super().__init__(**kwargs)
@@ -46,6 +46,8 @@ class SQuAD(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("SQuAD", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

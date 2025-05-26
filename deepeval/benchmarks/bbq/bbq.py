@@ -1,5 +1,4 @@
 from typing import List, Optional, Dict
-import pandas as pd
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -22,6 +21,7 @@ class BBQ(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         assert n_shots <= 5, "BBQ only supports n_shots <= 5"
         super().__init__(**kwargs)
@@ -40,6 +40,8 @@ class BBQ(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("BBQ", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0

@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional
 from tqdm import tqdm
-import pandas as pd
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
@@ -31,6 +30,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
         from datasets import Dataset
 
         super().__init__(**kwargs)
@@ -55,6 +55,8 @@ class TruthfulQA(DeepEvalBaseBenchmark):
     def evaluate(
         self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
     ) -> Dict:
+        import pandas as pd
+
         with capture_benchmark_run("TruthfulQA", len(self.tasks)):
             overall_correct_predictions = 0
             overall_total_predictions = 0
@@ -273,6 +275,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self, task: TruthfulQATask, mode: TruthfulQAMode
     ) -> List[Golden]:
         from datasets import load_dataset, Dataset
+        import pandas as pd
 
         # Load full dataset
         if self.mc_dataset is None:
