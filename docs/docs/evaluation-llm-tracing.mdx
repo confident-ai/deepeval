@@ -106,7 +106,7 @@ Although the `metrics` parameter is optional, to run a component-level evaluatio
 If you simply decorate your LLM application with `@observe` and don't supply any arguments, nothing will happen at all.
 
 :::info
-The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://documentation.confident-ai.com/llm-observability/llm-tracing), which is also possibler when running end-to-end evaluations.
+The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://documentation.confident-ai.com/llm-tracing/introduction), which is also possibler when running end-to-end evaluations.
 :::
 
 ## Full Example
@@ -212,11 +212,11 @@ Notice that without tracing, creating evaluation-ready `LLMTestCase`s is complic
 LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI, it enables more advanced features like end-to-end debugging.
 :::
 
-Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/llm-observability/llm-tracing), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
+Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
 
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/observability:llm-tracing.mp4"
-  confidentUrl="/llm-observability/llm-tracing"
+  confidentUrl="/llm-tracing/introduction"
   label="Learn how to setup LLM tracing for Confident AI"
 />
 
@@ -228,7 +228,7 @@ For simplicity, we always recommend **custom spans** unless needed otherwise, si
 - This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
 - Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/llm-observability/llm-tracing)
+To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/llm-tracing/introduction)
 
 ### Verbose logs
 

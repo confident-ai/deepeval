@@ -63,7 +63,7 @@ When you run an evaluation using the `evaluate()` function or `deepeval test run
 
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:testing-reports.mp4"
-  confidentUrl="/llm-evaluation/testing-reports"
+  confidentUrl="/llm-evaluation/evaluation-features/testing-reports"
   label="Run Evaluations on Confident AI"
 />
 
@@ -173,7 +173,7 @@ Metrics in `deepeval` are categorized by whether they require ground truth for e
 For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `actual_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
 
 :::note
-By definition, [online metrics used in production](https://documentation.confident-ai.com/llm-observability/online-metrics) **cannot** be reference-based.
+By definition, [online metrics used in production](https://documentation.confident-ai.com/llm-tracing/tracing-features/online-evaluation) **cannot** be reference-based.
 :::
 
 ## Choosing Your Metrics

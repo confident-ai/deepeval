@@ -93,7 +93,7 @@ You can run end-to-end LLM evaluations in either:
 - **CI/CD pipelines** using `deepeval test run`, or
 - **Python scripts** using the `evaluate()` function
 
-Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/llm-evaluation/testing-reports)
+Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://documentation.confident-ai.com/llm-evaluation/evaluation-features/testing-reports)
 
 ### Use `evaluate()` in Python scripts
 
@@ -138,7 +138,7 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 ### Use `deepeval test run` in CI/CD pipelines
 
 :::caution
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://documentation.confident-ai.com/llm-evaluation/unit-testing-in-cicd)).
+The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://documentation.confident-ai.com/llm-evaluation/evaluation-features/unit-testing-in-cicd)).
 :::
 
 `deepeval` allows you to unit-test in CI/CD pipelines using the `deepeval test run` command as if you're using Pytest via `deepeval`'s Pytest integration.
