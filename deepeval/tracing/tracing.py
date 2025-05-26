@@ -260,6 +260,7 @@ class TraceManager:
         self.evaluating = False
 
         # trace manager attributes
+        self.confident_api_key = None
         self.custom_mask_fn: Optional[Callable] = None
         self.environment = os.environ.get(
             CONFIDENT_TRACE_ENVIRONMENT, Environment.DEVELOPMENT.value
@@ -294,6 +295,7 @@ class TraceManager:
         mask: Optional[Callable] = None,
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
+        confident_api_key: Optional[str] = None
     ) -> None:
         if mask is not None:
             self.custom_mask_fn = mask
@@ -303,6 +305,8 @@ class TraceManager:
         if sampling_rate is not None:
             validate_sampling_rate(sampling_rate)
             self.sampling_rate = sampling_rate
+        if confident_api_key is not None:
+            self.confident_api_key = confident_api_key
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -524,7 +528,7 @@ class TraceManager:
                     body = trace_api.dict(by_alias=True, exclude_none=True)
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
-                    api = Api()
+                    api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACING_ENDPOINT,
@@ -612,7 +616,7 @@ class TraceManager:
         for body in remaining_trace_request_bodies:
             with capture_send_trace():
                 try:
-                    api = Api()
+                    api = Api(api_key=self.confident_api_key)
                     resp = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACING_ENDPOINT,
