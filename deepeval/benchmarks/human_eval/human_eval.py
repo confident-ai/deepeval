@@ -8,6 +8,39 @@ from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
 from deepeval.telemetry import capture_benchmark_run
 
 
+
+def secure_exec(code_str, global_vars=None, local_vars=None):
+    """Securely execute code with restricted globals and locals."""
+    if global_vars is None:
+        global_vars = {}
+    if local_vars is None:
+        local_vars = {}
+    
+    # Create a restricted globals dictionary with only safe built-ins
+    safe_globals = {
+        '__builtins__': {
+            'abs': abs, 'all': all, 'any': any, 'bin': bin, 'bool': bool,
+            'chr': chr, 'dict': dict, 'enumerate': enumerate, 'filter': filter,
+            'float': float, 'hex': hex, 'int': int, 'len': len, 'list': list,
+            'map': map, 'max': max, 'min': min, 'oct': oct, 'ord': ord,
+            'pow': pow, 'range': range, 'reversed': reversed, 'round': round,
+            'set': set, 'sorted': sorted, 'str': str, 'sum': sum, 'tuple': tuple,
+            'zip': zip, 'Exception': Exception, 'ValueError': ValueError,
+            'TypeError': TypeError, 'IndexError': IndexError, 'KeyError': KeyError,
+        }
+    }
+    safe_globals.update(global_vars)
+    
+    try:
+        # Compile the code first to validate syntax
+        compiled_code = compile(code_str, '<string>', 'exec')
+        # Execute with restricted environment
+        secure_exec(compiled_code, safe_globals, local_vars)
+        return local_vars
+    except Exception as e:
+        raise e
+
+
 class HumanEval(DeepEvalBaseBenchmark):
     def __init__(
         self,
@@ -122,8 +155,8 @@ class HumanEval(DeepEvalBaseBenchmark):
             c = 0
             for function in functions:
                 try:
-                    exec(function)
-                    exec(golden.expected_output)
+                    secure_exec(function)
+                    secure_exec(golden.expected_output)
                     c += 1
                 except AssertionError as e:
                     pass
