@@ -20,6 +20,35 @@ class ToolCallParams(Enum):
     OUTPUT = "output"
 
 
+def _make_hashable(obj):
+    """
+    Convert an object to a hashable representation recursively.
+    
+    Args:
+        obj: The object to make hashable
+        
+    Returns:
+        A hashable representation of the object
+    """
+    if obj is None:
+        return None
+    elif isinstance(obj, dict):
+        # Convert dict to tuple of sorted key-value pairs
+        return tuple(sorted((k, _make_hashable(v)) for k, v in obj.items()))
+    elif isinstance(obj, (list, tuple)):
+        # Convert list/tuple to tuple of hashable elements
+        return tuple(_make_hashable(item) for item in obj)
+    elif isinstance(obj, set):
+        # Convert set to frozenset of hashable elements
+        return frozenset(_make_hashable(item) for item in obj)
+    elif isinstance(obj, frozenset):
+        # Handle frozenset that might contain unhashable elements
+        return frozenset(_make_hashable(item) for item in obj)
+    else:
+        # For primitive hashable types (str, int, float, bool, etc.)
+        return obj
+
+
 class ToolCall(BaseModel):
     name: str
     description: Optional[str] = None
@@ -39,18 +68,25 @@ class ToolCall(BaseModel):
         )
 
     def __hash__(self):
+        """
+        Generate a hash for the ToolCall instance.
+        
+        This method handles complex input parameters and outputs that may contain
+        unhashable types like lists, dicts, and nested structures.
+        
+        Returns:
+            int: Hash value for this ToolCall instance
+        """
+        # Handle input_parameters
         input_params = (
             self.input_parameters if self.input_parameters is not None else {}
         )
-        output_hashable = self.output
-        if isinstance(self.output, dict):
-            output_hashable = frozenset(self.output.items())
-        elif isinstance(self.output, list):
-            output_hashable = frozenset(self.output)
+        input_params_hashable = _make_hashable(input_params)
+        
+        # Handle output - use the new helper function instead of manual handling
+        output_hashable = _make_hashable(self.output)
 
-        return hash(
-            (self.name, frozenset(input_params.items()), output_hashable)
-        )
+        return hash((self.name, input_params_hashable, output_hashable))
 
     def __repr__(self):
         fields = []
@@ -146,3 +182,4 @@ class LLMTestCase:
                 raise TypeError(
                     "'expected_tools' must be None or a list of `ToolCall`"
                 )
+
