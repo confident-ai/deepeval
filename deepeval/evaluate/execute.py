@@ -1216,17 +1216,6 @@ async def a_execute_span_test_case(
     pbar_eval: Optional[tqdm_asyncio],
     _use_bar_indicator: bool,
 ):
-    if span.metrics is None:
-        return
-    if span.llm_test_case is None:
-        raise ValueError(
-            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
-        )
-
-    show_metrics_indicator = show_indicator and not _use_bar_indicator
-    metrics: List[BaseMetric] = span.metrics
-    test_case: LLMTestCase = span.llm_test_case
-
     api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
     if isinstance(span, AgentSpan):
         trace_api.agent_spans.append(api_span)
@@ -1238,6 +1227,18 @@ async def a_execute_span_test_case(
         trace_api.tool_spans.append(api_span)
     else:
         trace_api.base_spans.append(api_span)
+
+    if span.metrics is None:
+        return
+    if span.llm_test_case is None:
+        raise ValueError(
+            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
+        )
+
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+    metrics: List[BaseMetric] = span.metrics
+    test_case: LLMTestCase = span.llm_test_case
+
 
     for metric in metrics:
         metric.skipped = False
