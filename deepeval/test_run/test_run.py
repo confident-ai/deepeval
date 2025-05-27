@@ -888,11 +888,12 @@ class TestRunManager:
 
             return link
         else:
-            console.print(
-                "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval login'[/bold] to save and analyze evaluation results on Confident AI.\n",
-                LOGIN_PROMPT,
-                "\n",
-            )
+            pass
+            # console.print(
+            #     "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval login'[/bold] to save and analyze evaluation results on Confident AI.\n",
+            #     LOGIN_PROMPT,
+            #     "\n",
+            # )
 
     def save_test_run_locally(self):
         local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
