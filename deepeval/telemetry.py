@@ -44,7 +44,7 @@ if os.path.exists(TELEMETRY_DATA_FILE):
 if os.path.exists(".deepeval-cache.json"):
     os.rename(".deepeval-cache.json", f"{HIDDEN_DIR}/.deepeval-cache.json")
 
-if os.path.exists("temp_test_run_data.json"):
+if os.path.exists(".temp_test_run_data.json"):
     os.rename(
         ".temp_test_run_data.json", f"{HIDDEN_DIR}/.temp_test_run_data.json"
     )
