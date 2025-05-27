@@ -23,10 +23,10 @@ class ToolCallParams(Enum):
 def _make_hashable(obj):
     """
     Convert an object to a hashable representation recursively.
-    
+
     Args:
         obj: The object to make hashable
-        
+
     Returns:
         A hashable representation of the object
     """
@@ -70,10 +70,10 @@ class ToolCall(BaseModel):
     def __hash__(self):
         """
         Generate a hash for the ToolCall instance.
-        
+
         This method handles complex input parameters and outputs that may contain
         unhashable types like lists, dicts, and nested structures.
-        
+
         Returns:
             int: Hash value for this ToolCall instance
         """
@@ -82,7 +82,7 @@ class ToolCall(BaseModel):
             self.input_parameters if self.input_parameters is not None else {}
         )
         input_params_hashable = _make_hashable(input_params)
-        
+
         # Handle output - use the new helper function instead of manual handling
         output_hashable = _make_hashable(self.output)
 
@@ -182,4 +182,3 @@ class LLMTestCase:
                 raise TypeError(
                     "'expected_tools' must be None or a list of `ToolCall`"
                 )
-
