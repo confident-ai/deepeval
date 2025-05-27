@@ -123,7 +123,6 @@ class GSM8K(DeepEvalBaseBenchmark):
     def _extract_prediction_from_response(self, res) -> str:
         """
         Extract prediction from model response, handling various response types.
-        This fixes the AttributeError: 'tuple' object has no attribute 'answer' issue.
         """
         # Case 1: Response has .answer attribute (NumberSchema case)
         if hasattr(res, 'answer'):
