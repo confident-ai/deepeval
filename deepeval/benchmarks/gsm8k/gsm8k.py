@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -52,7 +52,10 @@ class GSM8K(DeepEvalBaseBenchmark):
             for idx, golden in enumerate(
                 tqdm(goldens, desc=f"Processing {self.n_problems} problems")
             ):
-                prediction, score = self.predict(model, golden).values()
+                result = self.predict(model, golden)
+                prediction = result["prediction"]
+                score = result["score"]
+                
                 if score:
                     overall_correct_predictions += 1
                 predictions_row.append(
@@ -94,14 +97,17 @@ class GSM8K(DeepEvalBaseBenchmark):
         )
 
         # Enforced model generation
+        prediction = None
         try:
             res: NumberSchema = model.generate(
                 prompt=prompt, schema=NumberSchema
             )
-            prediction = str(res.answer)
-        except TypeError:
+            prediction = self._extract_prediction_from_response(res)
+        except (TypeError, AttributeError) as e:
+            
             prompt += f"\n\n{self.confinement_instructions}"
-            prediction = model.generate(prompt)
+            res = model.generate(prompt)
+            prediction = self._extract_prediction_from_response(res)
 
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
@@ -113,6 +119,74 @@ class GSM8K(DeepEvalBaseBenchmark):
         )
 
         return {"prediction": prediction, "score": score}
+
+    def _extract_prediction_from_response(self, res) -> str:
+        """
+        Extract prediction from model response, handling various response types.
+        This fixes the AttributeError: 'tuple' object has no attribute 'answer' issue.
+        """
+        # Case 1: Response has .answer attribute (NumberSchema case)
+        if hasattr(res, 'answer'):
+            return str(res.answer)
+        
+        # Case 2: Response is a tuple 
+        elif isinstance(res, tuple):
+            return self._extract_from_tuple(res)
+        
+        # Case 3: Response is a string
+        elif isinstance(res, str):
+            return res
+        
+        # Case 4: Response has .text or .content attribute
+        elif hasattr(res, 'text'):
+            return str(res.text)
+        elif hasattr(res, 'content'):
+            return str(res.content)
+        
+        # Case 5: Response is a dict
+        elif isinstance(res, dict):
+            return self._extract_from_dict(res)
+        
+        # Case 6: Fallback - convert to string
+        else:
+            return str(res)
+    
+    def _extract_from_tuple(self, res: tuple) -> str:
+        """Extract prediction from tuple response."""
+        if len(res) == 0:
+            return ""
+        first_elem = res[0]
+        
+        if hasattr(first_elem, 'answer'):
+            return str(first_elem.answer)
+        elif hasattr(first_elem, 'text'):
+            return str(first_elem.text)
+        elif hasattr(first_elem, 'content'):
+            return str(first_elem.content)
+        elif len(res) > 1 and res[1] is not None:
+            second_elem = res[1]
+            if hasattr(second_elem, 'answer'):
+                return str(second_elem.answer)
+            else:
+                return str(second_elem)
+        
+        else:
+            return str(first_elem)
+    
+    def _extract_from_dict(self, res: dict) -> str:
+        """Extract prediction from dictionary response."""
+        # Common keys that might contain the answer
+        possible_keys = ['answer', 'text', 'content', 'response', 'output', 'result']
+        
+        for key in possible_keys:
+            if key in res:
+                return str(res[key])
+
+        for value in res.values():
+            if value is not None and str(value).strip():
+                return str(value)
+        
+        return str(res)
 
     def load_benchmark_dataset(self) -> List[Golden]:
         from datasets import load_dataset
