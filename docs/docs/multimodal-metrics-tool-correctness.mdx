@@ -46,8 +46,10 @@ test_case = MLLMTestCase(
 
 metric = MultimodalToolCorrectnessMetric()
 metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+print(metric.score, metric.reason)
+
+# or evaluate test cases in bulk
+evaluate([test_case], [metric])
 ```
 
 There are **SEVEN** optional parameters when creating a `MultimodalToolCorrectnessMetric`:
