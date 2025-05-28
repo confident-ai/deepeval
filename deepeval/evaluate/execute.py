@@ -886,7 +886,7 @@ def execute_agentic_test_cases(
                         trace_api.tool_spans.append(api_span)
                     else:
                         trace_api.base_spans.append(api_span)
-                    
+
                     for child in span.children:
                         dfs(child, pbar_eval)
 
@@ -1239,7 +1239,6 @@ async def a_execute_span_test_case(
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     metrics: List[BaseMetric] = span.metrics
     test_case: LLMTestCase = span.llm_test_case
-
 
     for metric in metrics:
         metric.skipped = False

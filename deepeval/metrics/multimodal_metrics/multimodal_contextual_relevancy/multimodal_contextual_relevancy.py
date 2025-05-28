@@ -24,7 +24,7 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
     _required_params: List[MLLMTestCaseParams] = [
         MLLMTestCaseParams.INPUT,
         MLLMTestCaseParams.ACTUAL_OUTPUT,
-        MLLMTestCaseParams.CONTEXT,
+        MLLMTestCaseParams.RETRIEVAL_CONTEXT,
     ]
 
     def __init__(
