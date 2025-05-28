@@ -108,7 +108,7 @@ The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of claims.
 You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
 ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
 Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
-Claims that is not backed up due to a lack of information/is not mentioned in the retrieval contexts MUST be answered 'idk', otherwise I WILL DIE.
+Claims that are not backed up by the retrieval context or are not mentioned in it MUST be answered 'idk'.
 **
 
 Retrieval Contexts:
