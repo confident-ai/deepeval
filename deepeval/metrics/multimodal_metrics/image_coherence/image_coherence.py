@@ -178,8 +178,8 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                 # Append contexts immediately
                 self.contexts_above.append(context_above)
                 self.contexts_below.append(context_below)
-            results = await asyncio.gather(*tasks)
 
+            results = await asyncio.gather(*tasks)
             for score, reason in results:
                 score = score / 10
                 self.scores.append(score)
