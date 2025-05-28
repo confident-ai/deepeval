@@ -79,6 +79,8 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
                     score, reason = self.evaluate_image_coherence(
                         image, context_above, context_below
                     )
+                    if isinstance(score, list):
+                        score = sum(score) / len(score)
                     score = score / 10
                     self.contexts_above.append(context_above)
                     self.contexts_below.append(context_below)
@@ -181,6 +183,8 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
 
             results = await asyncio.gather(*tasks)
             for score, reason in results:
+                if isinstance(score, list):
+                    score = sum(score) / len(score)
                 score = score / 10
                 self.scores.append(score)
                 self.reasons.append(reason)
