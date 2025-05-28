@@ -185,7 +185,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 )
                 prediction = str(res.answer)
 
-        except TypeError:
+        except (TypeError, ValueError, AttributeError):
             prompt += self.confinement_instructions_dict[mode]
             prediction = model.generate(prompt)
 
@@ -233,7 +233,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                 )
                 predictions = [str(res.answer) for res in responses]
 
-        except TypeError:
+        except (TypeError, ValueError, AttributeError):
             if mode == TruthfulQAMode.MC1:
                 prompts = [
                     prompt

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "3.0.1"
+version = "2.9.6"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -44,6 +44,8 @@ grpcio = "^1.67.1"
 anthropic = "^0.49.0"
 google-genai = "^1.9.0"
 posthog = "^3.23.0"
+pandas = "^2.2.3"
+datasets = "^3.6.0"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
