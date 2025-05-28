@@ -886,6 +886,10 @@ def execute_agentic_test_cases(
                         trace_api.tool_spans.append(api_span)
                     else:
                         trace_api.base_spans.append(api_span)
+                    
+                    for child in span.children:
+                        dfs(child, pbar_eval)
+
                     if span.metrics == None or span.llm_test_case == None:
                         return
 
@@ -944,9 +948,6 @@ def execute_agentic_test_cases(
                         api_test_case.update_status(metric_data.success)
                         if pbar_eval is not None:
                             pbar_eval.update(1)
-
-                    for child in span.children:
-                        dfs(child, pbar_eval)
 
                 if pbar is not None:
                     pbar_eval = tqdm(
