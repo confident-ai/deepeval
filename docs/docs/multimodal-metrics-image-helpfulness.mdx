@@ -58,8 +58,7 @@ test_case = MLLMTestCase(
 )
 
 metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+print(metric.score, metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])

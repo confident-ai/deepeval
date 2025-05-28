@@ -35,7 +35,7 @@ from deepeval import evaluate
 from deepeval.metrics import MultimodalAnswerRelevancyMetric
 from deepeval.test_case import MLLMTestCase, MLLMImage
 
-metric = AnswerRelevancyMetric()
+metric = MultimodalAnswerRelevancyMetric()
 test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
     actual_output=[
@@ -45,8 +45,7 @@ test_case = MLLMTestCase(
 )
 
 metric.measure(test_case)
-print(metric.score)
-print(metric.reason)
+print(metric.score, metric.reason)
 
 # or evaluate test cases in bulk
 evaluate([test_case], [metric])
