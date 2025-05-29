@@ -450,13 +450,12 @@ class ContextGenerator:
 
             # Query for similar chunks
             similar_chunks = collection.query(
-                self.embedder.embed_text(random_chunk), n_results=context_size
+                await self.embedder.a_embed_text(random_chunk), n_results=context_size
             )
 
             # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-
                 # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
