@@ -1119,7 +1119,7 @@ class Observer:
                             pass
 
                         update_current_span(
-                            LlmAttributes(
+                            attributes = LlmAttributes(
                                 input=kwargs.get(
                                     "messages", "INPUT_MESSAGE_NOT_FOUND"
                                 ),
