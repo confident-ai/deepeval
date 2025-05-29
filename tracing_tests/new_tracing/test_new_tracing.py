@@ -9,6 +9,7 @@ from deepeval.tracing import (
     trace_manager,
 )
 import random
+from deepeval.metrics import AnswerRelevancyMetric
 from asyncio import sleep
 
 #######################################################
@@ -282,7 +283,7 @@ async def meta_agent(query: str):
         user_id="111",
     )
 
-    return final_response
+    return LLMTestCase(input="..", actual_output=final_response)
 
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -349,4 +350,19 @@ async def run_parallel_examples():
 
 
 # Run it
-asyncio.run(run_parallel_examples())
+# asyncio.run(run_parallel_examples())
+
+
+@observe()
+async def run_customizations_agent(input_items, context=None):
+    @observe()
+    async def run_customizations_agent_again(input_items, context=None):
+        return LLMTestCase(input="input_items", actual_output="context")
+
+    result = await run_customizations_agent_again(input_items, context)
+    return AnswerRelevancyMetric()
+
+
+asyncio.run(
+    run_customizations_agent(input_items=["item1", "item2"], context="context")
+)

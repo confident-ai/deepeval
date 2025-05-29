@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.utils import (
     Environment,
+    make_json_serializable,
     validate_environment,
     validate_sampling_rate,
 )
@@ -154,8 +155,8 @@ class BaseSpan(BaseModel):
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
     name: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
-    input: Optional[Union[str, Dict, list]] = None
-    output: Optional[Union[str, Dict, list]] = None
+    input: Optional[Any] = None
+    output: Optional[Any] = None
     error: Optional[str] = None
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[Union[List[str], List[BaseMetric]]] = None
@@ -281,7 +282,7 @@ class TraceManager:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
                 trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES to flush remaining traces to Confident AI.",
+                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES as an environment variable to flush remaining traces to Confident AI.",
             )
 
     def mask(self, data: Any):
@@ -436,7 +437,11 @@ class TraceManager:
 
             if description:
                 console.print(
-                    message_prefix, env_text, message + ":", description
+                    message_prefix,
+                    env_text,
+                    message + ":",
+                    description,
+                    f"\nTo disable dev logging, set {CONFIDENT_TRACE_VERBOSE}=NO as an environment variable.",
                 )
             else:
                 console.print(message_prefix, env_text, message)
@@ -527,6 +532,7 @@ class TraceManager:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
                 # If the main thread is still alive, send now
+                body = make_json_serializable(body)
                 if main_thr.is_alive():
                     api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
@@ -901,6 +907,11 @@ class Observer:
             current_span.status = TraceSpanStatus.SUCCESS
 
         self.update_span_attributes(current_span)
+        if current_span.input is None:
+            current_span.input = self.function_kwargs
+        if current_span.output is None:
+            current_span.output = self.result
+
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:
             parent_span = trace_manager.get_span_by_uuid(

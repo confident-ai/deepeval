@@ -58,8 +58,8 @@ class BaseApiSpan(BaseModel):
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
     metadata: Optional[Dict[str, Any]] = None
-    input: Optional[Union[Dict, list, str]] = None
-    output: Optional[Union[Dict, list, str]] = None
+    input: Optional[Any] = Field(None)
+    output: Optional[Any] = Field(None)
     error: Optional[str] = None
 
     # agents

@@ -20,3 +20,19 @@ def validate_sampling_rate(sampling_rate: float):
         raise ValueError(
             f"Invalid sampling rate: {sampling_rate}. Please use a value between 0 and 1"
         )
+
+
+def make_json_serializable(obj):
+    if isinstance(obj, (str, int, float, bool)) or obj is None:
+        return obj
+    if isinstance(obj, (list, tuple, set)):
+        return [make_json_serializable(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: make_json_serializable(v) for k, v in obj.items()}
+    if hasattr(obj, "__dict__"):
+        return {
+            key: make_json_serializable(value)
+            for key, value in vars(obj).items()
+            if not key.startswith("_")  # optional: exclude private attrs
+        }
+    return str(obj)
