@@ -450,7 +450,8 @@ class ContextGenerator:
 
             # Query for similar chunks
             similar_chunks = collection.query(
-                await self.embedder.a_embed_text(random_chunk), n_results=context_size
+                await self.embedder.a_embed_text(random_chunk),
+                n_results=context_size,
             )
 
             # Disregard repeated chunks and chunks that don't pass the similarity threshold
