@@ -27,8 +27,8 @@ retryable_exceptions = (
 class AzureOpenAIModel(DeepEvalBaseLLM):
     def __init__(
         self,
-        model_name: Optional[str] = None,
         deployment_name: Optional[str] = None,
+        model_name: Optional[str] = None,
         azure_openai_api_key: Optional[str] = None,
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
@@ -79,7 +79,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.deployment_name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -96,7 +96,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 return structured_output, cost
             if self.model_name in json_mode_models:
                 completion = client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.deployment_name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -113,7 +113,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
 
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.deployment_name,
             messages=[
                 {"role": "user", "content": prompt},
             ],
@@ -142,7 +142,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if schema:
             if self.model_name in structured_outputs_models:
                 completion = await client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.deployment_name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -159,7 +159,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 return structured_output, cost
             if self.model_name in json_mode_models:
                 completion = await client.beta.chat.completions.parse(
-                    model=self.model_name,
+                    model=self.deployment_name,
                     messages=[
                         {"role": "user", "content": prompt},
                     ],
@@ -176,7 +176,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 return schema.model_validate(json_output), cost
 
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.deployment_name,
             messages=[
                 {"role": "user", "content": prompt},
             ],
@@ -210,7 +210,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=False)
         completion = client.chat.completions.create(
-            model=self.model_name,
+            model=self.deployment_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
@@ -236,7 +236,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Generate completion
         client = self.load_model(async_mode=True)
         completion = await client.chat.completions.create(
-            model=self.model_name,
+            model=self.deployment_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
             logprobs=True,
