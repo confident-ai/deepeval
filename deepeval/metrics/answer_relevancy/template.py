@@ -22,7 +22,7 @@ Our new laptop model features a high-resolution Retina display for crystal-clear
 ===== END OF EXAMPLE ======
         
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "statements" key mapping to a list of strings. No words or explanation is needed.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the "statements" key mapping to a list of strings. No words or explanation are needed. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
 **
 
 Text:
@@ -41,10 +41,11 @@ Provide a 'reason' ONLY if the answer is 'no'.
 The provided statements are statements made in the actual output.
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key mapping to a list of JSON objects.
+IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'verdicts' key mapping to a list of JSON objects. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
 Example input: 
 What features does the new laptop have?
 
+Example:
 Example statements: 
 [
     "The new laptop model has a high-resolution Retina display.",
@@ -81,6 +82,7 @@ Example JSON:
         }}
     ]  
 }}
+===== END OF EXAMPLE ======
 
 Since you are going to generate a verdict for each statement, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of `statements`.
 **          
@@ -104,12 +106,16 @@ If there is nothing irrelevant, just say something positive with an upbeat encou
 
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
+
+Example:
 Example JSON:
 {{
     "reason": "The score is <answer_relevancy_score> because <your_reason>."
 }}
+===== END OF EXAMPLE ======
 **
+
 
 Answer Relevancy Score:
 {score}
