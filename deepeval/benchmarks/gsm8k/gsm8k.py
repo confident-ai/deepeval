@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -52,7 +52,10 @@ class GSM8K(DeepEvalBaseBenchmark):
             for idx, golden in enumerate(
                 tqdm(goldens, desc=f"Processing {self.n_problems} problems")
             ):
-                prediction, score = self.predict(model, golden).values()
+                result = self.predict(model, golden)
+                prediction = result["prediction"]
+                score = result["score"]
+                
                 if score:
                     overall_correct_predictions += 1
                 predictions_row.append(
@@ -94,14 +97,17 @@ class GSM8K(DeepEvalBaseBenchmark):
         )
 
         # Enforced model generation
+        prediction = None
         try:
             res: NumberSchema = model.generate(
                 prompt=prompt, schema=NumberSchema
             )
-            prediction = str(res.answer)
-        except TypeError:
+            prediction = self._extract_prediction_from_response(res)
+        except (TypeError, AttributeError) as e:
+            
             prompt += f"\n\n{self.confinement_instructions}"
-            prediction = model.generate(prompt)
+            res = model.generate(prompt)
+            prediction = self._extract_prediction_from_response(res)
 
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
@@ -113,6 +119,29 @@ class GSM8K(DeepEvalBaseBenchmark):
         )
 
         return {"prediction": prediction, "score": score}
+
+    def _extract_prediction_from_response(self, res) -> str:
+        """
+        Extract prediction from model response, handling various response types.
+        """
+        # Case 1: Response has .answer attribute (NumberSchema case)
+        if hasattr(res, 'answer'):
+            return str(res.answer)
+        
+        # Case 2: Response is a tuple 
+        elif isinstance(res, tuple):
+            return self._extract_from_tuple(res)
+        
+        else:
+            return str(res)
+    
+    def _extract_from_tuple(self, res: tuple) -> str:
+        """Extract prediction from tuple response."""
+        if len(res) == 0:
+            return ""
+        first_elem = res[0]
+        if hasattr(first_elem, 'answer'):
+            return str(first_elem.answer)
 
     def load_benchmark_dataset(self) -> List[Golden]:
         from datasets import load_dataset
