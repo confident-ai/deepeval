@@ -9,7 +9,7 @@ import typer
 from enum import Enum
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.recommend import app as recommend_app
-from deepeval.telemetry import capture_login_event, get_logged_in_with
+from deepeval.telemetry import capture_login_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
 
