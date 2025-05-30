@@ -4,7 +4,7 @@ from typing import List
 class AnswerRelevancyTemplate:
     @staticmethod
     def generate_statements(actual_output: str):
-        return f"""Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can also be considered as statements.
+        return f"""Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can be considered as statements, but only if outside of a coherent statement.
 
 Example:
 Example text: 
