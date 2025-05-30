@@ -142,6 +142,8 @@ class ConfidentSpanExporter(SpanExporter):
         # dump span to metadata dict
         # todo: dump only relevant attributes
         base_api_span.metadata = {"span": json.loads(span.to_json())}
+        
+        print(type(base_api_span.metadata))
         return base_api_span
 
     def _extract_llm_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
@@ -151,7 +153,7 @@ class ConfidentSpanExporter(SpanExporter):
             if event.name in ["gen_ai.system.message", "gen_ai.user.message"]:
                 attributes = event.attributes
                 res["input"].append(
-                    {"role": event.name, "content": dict(attributes)}
+                    {"role": event.name, "content": dict(attributes) if attributes is not None else {}}
                 )
             # output
             if event.name in [
@@ -161,19 +163,20 @@ class ConfidentSpanExporter(SpanExporter):
             ]:
                 res["output"] = str(event.attributes)
 
-        res["model"] = str(span.attributes.get("gen_ai.request.model"))
-        res["input_token_count"] = int(
-            span.attributes.get("gen_ai.usage.input_tokens")
-        )
-        res["output_token_count"] = int(
-            span.attributes.get("gen_ai.usage.output_tokens")
-        )
-        res["cost_per_input_token"] = float(
-            span.attributes.get("confident.llm.cost_per_input_token")
-        )
-        res["cost_per_output_token"] = float(
-            span.attributes.get("confident.llm.cost_per_output_token")
-        )
+        model = span.attributes.get("gen_ai.request.model")
+        res["model"] = str(model) if model is not None else None
+
+        input_tokens = span.attributes.get("gen_ai.usage.input_tokens")
+        res["input_token_count"] = int(input_tokens) if input_tokens is not None else None
+
+        output_tokens = span.attributes.get("gen_ai.usage.output_tokens")
+        res["output_token_count"] = int(output_tokens) if output_tokens is not None else None
+
+        cost_per_input = span.attributes.get("confident.llm.cost_per_input_token")
+        res["cost_per_input_token"] = float(cost_per_input) if cost_per_input is not None else None
+
+        cost_per_output = span.attributes.get("confident.llm.cost_per_output_token")
+        res["cost_per_output_token"] = float(cost_per_output) if cost_per_output is not None else None
 
         return res
 
@@ -181,12 +184,13 @@ class ConfidentSpanExporter(SpanExporter):
         for event in span.events:
             # input
             if event.name in ["confident.tool.input"]:
-                res["input"] = dict(event.attributes)
+                res["input"] = dict(event.attributes) if event.attributes is not None else {}
             # output
             if event.name in ["confident.tool.output"]:
-                res["output"] = dict(event.attributes)
+                res["output"] = dict(event.attributes) if event.attributes is not None else {}
 
-        res["description"] = str(span.attributes.get("gen_ai.tool.description"))
+        description = span.attributes.get("gen_ai.tool.description")
+        res["description"] = str(description) if description is not None else None
 
         return res
 
@@ -194,10 +198,10 @@ class ConfidentSpanExporter(SpanExporter):
         for event in span.events:
             # input
             if event.name in ["confident.agent.input"]:
-                res["input"] = dict(event.attributes)
+                res["input"] = dict(event.attributes) if event.attributes is not None else {}
             # output
             if event.name in ["confident.agent.output"]:
-                res["output"] = dict(event.attributes)
+                res["output"] = dict(event.attributes) if event.attributes is not None else {}
 
         available_tools = span.attributes.get("confident.agent.available_tools")
         if isinstance(available_tools, tuple):
@@ -226,10 +230,10 @@ class ConfidentSpanExporter(SpanExporter):
                     res["output"] = [str(attribute) for attribute in attributes]
 
         res["embedder"] = str(span.attributes.get("gen_ai.request.model"))
-        res["top_k"] = int(span.attributes.get("confident.retriever.top_k"))
-        res["chunk_size"] = int(
-            span.attributes.get("confident.retriever.chunk_size")
-        )
+        top_k = span.attributes.get("confident.retriever.top_k")
+        res["top_k"] = int(top_k) if top_k is not None else None
+        chunk_size = span.attributes.get("confident.retriever.chunk_size")
+        res["chunk_size"] = int(chunk_size) if chunk_size is not None else None
         return res
 
     def aggregate_base_api_spans_to_traces(
