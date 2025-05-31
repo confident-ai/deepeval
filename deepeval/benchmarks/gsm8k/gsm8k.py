@@ -106,7 +106,7 @@ class GSM8K(DeepEvalBaseBenchmark):
             elif isinstance(res, NumberSchema):
                 prediction = str(res.answer)
             else:
-                raise TypeError # Much eaiser to just add confinement instructions
+                raise TypeError  # Much eaiser to just add confinement instructions
         except (TypeError, AttributeError):
             prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
