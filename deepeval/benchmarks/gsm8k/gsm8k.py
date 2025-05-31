@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union, Tuple, Any
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -95,11 +95,19 @@ class GSM8K(DeepEvalBaseBenchmark):
 
         # Enforced model generation
         try:
-            res: NumberSchema = model.generate(
+            res: Union[NumberSchema, Tuple[Any]] = model.generate(
                 prompt=prompt, schema=NumberSchema
             )
-            prediction = str(res.answer)
-        except TypeError:
+            if isinstance(res, tuple):
+                if len(res) == 1:
+                    res = res[0]
+                else:
+                    raise TypeError
+            elif isinstance(res, NumberSchema):
+                prediction = str(res.answer)
+            else:
+                raise TypeError # Much eaiser to just add confinement instructions
+        except (TypeError, AttributeError):
             prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
 
