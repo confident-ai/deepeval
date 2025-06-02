@@ -24,6 +24,7 @@ import os
 from openai import OpenAI
 from pydantic import BaseModel, Field
 from rich.console import Console
+from rich.progress import Progress
 
 
 from deepeval.constants import (
@@ -160,6 +161,9 @@ class BaseSpan(BaseModel):
     error: Optional[str] = None
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[Union[List[str], List[BaseMetric]]] = None
+    # Don't serialize these
+    progress: Optional[Progress] = Field(None, exclude=True)
+    pbar_callback_id: Optional[int] = Field(None, exclude=True)
 
     class Config:
         arbitrary_types_allowed = True
@@ -341,7 +345,7 @@ class TraceManager:
             if not self.evaluating:
                 self.post_trace(trace)
             else:
-                print(f"Ending trace: {trace.root_spans}")
+                # print(f"Ending trace: {trace.root_spans}")
                 trace.root_spans = [trace.root_spans[0].children[0]]
                 for root_span in trace.root_spans:
                     root_span.parent_uuid = None
@@ -826,6 +830,8 @@ class Observer:
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
         client: Optional[Any] = None,
+        _progress: Optional[Progress] = None,
+        _pbar_callback_id: Optional[int] = None,
         **kwargs,
     ):
         self.start_time: float
@@ -849,6 +855,8 @@ class Observer:
             self.name if span_type is None else span_type
         )
         self.client = client
+        self._progress = _progress
+        self._pbar_callback_id = _pbar_callback_id
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
@@ -881,8 +889,15 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
-        # print("Enter span instance: ", span_instance)
-        # print("\n" * 10)
+        
+        if parent_span and parent_span.progress is not None and parent_span.pbar_callback_id is not None:
+            self._progress = parent_span.progress
+            self._pbar_callback_id = parent_span.pbar_callback_id
+            
+        if self._progress is not None and self._pbar_callback_id is not None:
+            span_instance.progress = self._progress
+            span_instance.pbar_callback_id = self._pbar_callback_id
+        
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -939,6 +954,9 @@ class Observer:
                     current_trace_context.set(None)
 
             current_span_context.set(None)
+            
+        if self._progress is not None and self._pbar_callback_id is not None:
+            self._progress.update(self._pbar_callback_id, advance=1)
 
     def create_span_instance(self):
         """Create a span instance based on the span type."""
