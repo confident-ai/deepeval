@@ -2,7 +2,7 @@ import pytest
 from deepeval.models.utils import parse_model_name
 
 
-class TestGetActualModelName:
+class TestParseModelName:
     """Test suite for the parse_model_name function."""
 
     @pytest.mark.parametrize(
@@ -12,28 +12,23 @@ class TestGetActualModelName:
             ("openai/gpt-4o", "gpt-4o"),
             ("anthropic/claude-3-opus", "claude-3-opus"),
             ("cohere/command", "command"),
+
             # No provider prefix
             ("gpt-4o", "gpt-4o"),
             ("claude-3-sonnet", "claude-3-sonnet"),
+
             # Edge cases
-            ("", ""),  # Empty string
-            ("/", ""),  # Just a slash
-            ("openai/", ""),  # Provider with no model
-            (
-                "//model",
-                "/model",
-            ),  # Multiple slashes at start - splits only on first slash
-            (
-                "provider/model/version",
-                "model/version",
-            ),  # Multiple slashes in name
-            (
-                "provider/model-name/with/slashes",
-                "model-name/with/slashes",
-            ),  # Multiple slashes
+            ("", ""),                    # Empty string
+            ("/", ""),                  # Just a slash
+            ("openai/", ""),           # Provider with no model
+            ("//model", "/model"),     # Double slashes
+            ("provider/model/version", "model/version"),  # Nested paths
+            ("provider/model-name/with/slashes", "model-name/with/slashes"),
+
             # Mixed case and special characters
-            ("OpenAI/GPT-4o", "GPT-4o"),
-            ("custom-provider/model-123_test", "model-123_test"),
+            ("OpenAI/GPT-4o", "GPT-4o"),  # Uppercase provider
+            ("custom-provider/model-123_test", "custom-provider/model-123_test"),
+
             # Numerical and versioned names
             ("openai/gpt-3.5-turbo", "gpt-3.5-turbo"),
             ("anthropic/claude-2.1", "claude-2.1"),
@@ -43,10 +38,6 @@ class TestGetActualModelName:
         """
         Test that parse_model_name correctly extracts the model name
         from various input formats.
-
-        Args:
-            input_model_name: The model name to process
-            expected_output: The expected result after processing
         """
         assert parse_model_name(input_model_name) == expected_output
 
@@ -65,6 +56,11 @@ class TestGetActualModelName:
             assert parse_model_name(model_name) == model_name
 
     def test_parse_model_name_none_value(self):
-        """Test that the function raises TypeError when None is passed."""
-        with pytest.raises(TypeError):
-            parse_model_name(None)
+        """Test that the function returns None when None is passed."""
+        assert parse_model_name(None) is None
+
+    def test_preserve_custom_and_local_model_paths(self):
+        """Ensure that local/custom provider model names are preserved."""
+        assert parse_model_name("local/llama-3") == "local/llama-3"
+        assert parse_model_name("custom/model") == "custom/model"
+        assert parse_model_name("mymodels/awesome-llm") == "mymodels/awesome-llm"
