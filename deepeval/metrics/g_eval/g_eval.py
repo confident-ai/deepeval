@@ -348,7 +348,7 @@ class GEval(BaseMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success
