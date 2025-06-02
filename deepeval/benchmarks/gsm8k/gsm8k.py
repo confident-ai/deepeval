@@ -55,7 +55,7 @@ class GSM8K(DeepEvalBaseBenchmark):
                 result = self.predict(model, golden)
                 prediction = result["prediction"]
                 score = result["score"]
-                
+
                 if score:
                     overall_correct_predictions += 1
                 predictions_row.append(
@@ -104,7 +104,7 @@ class GSM8K(DeepEvalBaseBenchmark):
             )
             prediction = self._extract_prediction_from_response(res)
         except (TypeError, AttributeError) as e:
-            
+
             prompt += f"\n\n{self.confinement_instructions}"
             res = model.generate(prompt)
             prediction = self._extract_prediction_from_response(res)
@@ -125,22 +125,22 @@ class GSM8K(DeepEvalBaseBenchmark):
         Extract prediction from model response, handling various response types.
         """
         # Case 1: Response has .answer attribute (NumberSchema case)
-        if hasattr(res, 'answer'):
+        if hasattr(res, "answer"):
             return str(res.answer)
-        
-        # Case 2: Response is a tuple 
+
+        # Case 2: Response is a tuple
         elif isinstance(res, tuple):
             return self._extract_from_tuple(res)
-        
+
         else:
             return str(res)
-    
+
     def _extract_from_tuple(self, res: tuple) -> str:
         """Extract prediction from tuple response."""
         if len(res) == 0:
             return ""
         first_elem = res[0]
-        if hasattr(first_elem, 'answer'):
+        if hasattr(first_elem, "answer"):
             return str(first_elem.answer)
 
     def load_benchmark_dataset(self) -> List[Golden]:
