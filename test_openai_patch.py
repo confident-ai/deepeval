@@ -1,17 +1,18 @@
 import time
-
 from openai import OpenAI
 
 import deepeval
-from deepeval.tracing import observe
+from deepeval.tracing import observe, trace_manager
 
 deepeval.login_with_confident_api_key("<your-deepeval-api-key>")
 
 # Initialize OpenAI client
 client = OpenAI(api_key="<your-openai-api-key>")
 
+trace_manager.configure(openai_client=client)
 
-@observe(type="llm", client=client)
+
+@observe()
 def generate_response(input: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o-mini",  # or your preferred model
