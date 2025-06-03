@@ -8,7 +8,6 @@ from tqdm import tqdm
 
 from deepeval.tracing.tracing import (
     Observer,
-    get_current_trace,
     trace_manager,
     Trace,
     BaseSpan,
@@ -19,6 +18,7 @@ from deepeval.tracing.tracing import (
     perf_counter_to_datetime,
     to_zod_compatible_iso,
 )
+from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.api import (
     TraceApi,
     BaseApiSpan,
@@ -818,7 +818,7 @@ def execute_agentic_test_cases(
                         loop.run_until_complete(observed_callback(golden.input))
                     else:
                         observed_callback(golden.input)
-                    current_trace: Trace = get_current_trace()
+                    current_trace: Trace = current_trace_context.get()
 
                 if pbar_callback is not None:
                     pbar_callback.update(1)
@@ -1117,7 +1117,7 @@ async def a_execute_agentic_test_case(
             await observed_callback(golden.input)
         else:
             observed_callback(golden.input)
-        current_trace: Trace = get_current_trace()
+        current_trace: Trace = current_trace_context.get()
 
     if pbar_callback is not None:
         pbar_callback.update(1)
