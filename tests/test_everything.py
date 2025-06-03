@@ -283,7 +283,27 @@ def test_everything_2():
 # prompt = Prompt(alias="First Prompt")
 # prompt.pull()
 
-
 # @deepeval.log_hyperparameters
 # def hyperparameters():
 #     return {"temperature": 1, "model": "gpt-4", "Prompt": prompt}
+
+metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
+metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
+metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
+metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
+metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
+metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
+metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
+metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)  
+
+test_case = LLMTestCase(
+    input="What is this again?",
+    actual_output="this is a latte",
+    expected_output="this is a mocha",
+    retrieval_context=["I love coffee"],
+    context=["I love coffee"],
+)
+
+from deepeval import evaluate
+
+evaluate([test_case] * 10, [metric2, metric3, metric4, metric5, metric6, metric7, metric8, metric9])

@@ -1,10 +1,8 @@
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn, TaskProgressColumn
 from typing import Callable, List, Optional, Union, Any, Awaitable
-from tqdm.asyncio import tqdm_asyncio
 from rich.console import Console
 from rich.theme import Theme
 from copy import deepcopy
-from tqdm import tqdm
 import inspect
 import asyncio
 import time
@@ -358,17 +356,23 @@ def execute_test_cases(
                 test_result = create_test_result(api_test_case)
                 test_results.append(test_result)
 
-                if pbar is not None:
-                    pbar.update(1)
+                if progress is not None and pbar_id is not None:
+                    progress.update(pbar_id, advance=1)
+                    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+                    if task_obj.finished:
+                        progress.remove_task(pbar_id)
 
     if show_indicator and _use_bar_indicator:
-        with tqdm(
-            desc=f"Evaluating {len(test_cases)} test case(s) sequentially",
-            unit="test case",
-            total=len(test_cases),
-            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
-        ) as pbar:
-            evaluate_test_cases(pbar)
+        progress = Progress(
+            TextColumn("{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=custom_console,
+        )
+        with progress:
+            pbar_id = progress.add_task(f"Evaluating {len(test_cases)} test case(s) sequentially", total=len(test_cases))
+            evaluate_test_cases(progress=progress, pbar_id=pbar_id)
     else:
         evaluate_test_cases()
 
@@ -428,17 +432,23 @@ async def a_execute_test_cases(
     tasks = []
 
     if show_indicator and _use_bar_indicator:
-        with tqdm_asyncio(
-            desc=f"Evaluating {len(test_cases)} test case(s) in parallel",
-            unit="test case",
-            total=len(test_cases),
-            bar_format="{desc}: |{bar}|{percentage:3.0f}% ({n_fmt}/{total_fmt}) [Time Taken: {elapsed}, {rate_fmt}{postfix}]",
-        ) as pbar:
+        progress = Progress(
+            TextColumn("{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=custom_console,
+        )
+        pbar_id = progress.add_task(f"Evaluating {len(test_cases)} test case(s) in parallel", total=len(test_cases))
+        with progress:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
                     if isinstance(test_case, LLMTestCase):
                         if len(llm_metrics) == 0:
-                            pbar.update(1)
+                            progress.update(pbar_id, advance=1)
+                            task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+                            if task_obj.finished:
+                                progress.remove_task(pbar_id)
                             continue
 
                         llm_test_case_counter += 1
@@ -459,7 +469,8 @@ async def a_execute_test_cases(
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
-                            pbar=pbar,
+                            progress=progress,
+                            pbar_id=pbar_id,
                         )
                         tasks.append(asyncio.create_task(task))
 
@@ -480,7 +491,8 @@ async def a_execute_test_cases(
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
-                            pbar=pbar,
+                            progress=progress,
+                            pbar_id=pbar_id,
                         )
                         tasks.append(asyncio.create_task(task))
 
@@ -499,7 +511,8 @@ async def a_execute_test_cases(
                             show_indicator=show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
-                            pbar=pbar,
+                            progress=progress,
+                            pbar_id=pbar_id,
                         )
                         tasks.append(asyncio.create_task(task))
 
@@ -595,7 +608,8 @@ async def a_execute_llm_test_cases(
     show_indicator: bool,
     _use_bar_indicator: bool,
     _is_assert_test: bool,
-    pbar: Optional[tqdm_asyncio] = None,
+    progress: Optional[Progress] = None,
+    pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
@@ -671,8 +685,11 @@ async def a_execute_llm_test_cases(
 
     test_results.append(create_test_result(api_test_case))
 
-    if pbar is not None:
-        pbar.update(1)
+    if progress is not None and pbar_id is not None:
+        progress.update(pbar_id, advance=1)
+        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+        if task_obj.finished:
+            progress.remove_task(pbar_id)
 
 
 async def a_execute_mllm_test_cases(
@@ -686,7 +703,8 @@ async def a_execute_mllm_test_cases(
     show_indicator: bool,
     _use_bar_indicator: bool,
     _is_assert_test: bool,
-    pbar: Optional[tqdm_asyncio] = None,
+    progress: Optional[Progress] = None,
+    pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
@@ -721,8 +739,11 @@ async def a_execute_mllm_test_cases(
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
 
-    if pbar is not None:
-        pbar.update(1)
+    if progress is not None and pbar_id is not None:
+        progress.update(pbar_id, advance=1)
+        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+        if task_obj.finished:
+            progress.remove_task(pbar_id)
 
 
 async def a_execute_conversational_test_cases(
@@ -738,7 +759,8 @@ async def a_execute_conversational_test_cases(
     show_indicator: bool,
     _use_bar_indicator: bool,
     _is_assert_test: bool,
-    pbar: Optional[tqdm_asyncio] = None,
+    progress: Optional[Progress] = None,
+    pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
@@ -776,8 +798,11 @@ async def a_execute_conversational_test_cases(
 
     test_results.append(create_test_result(api_test_case))
 
-    if pbar is not None:
-        pbar.update(1)
+    if progress is not None and pbar_id is not None:
+        progress.update(pbar_id, advance=1)
+        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+        if task_obj.finished:
+            progress.remove_task(pbar_id)
 
 
 def execute_agentic_test_cases(
