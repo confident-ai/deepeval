@@ -237,8 +237,7 @@ async def safe_a_measure(
         await metric.a_measure(
             tc, _show_indicator=False, _in_component=_in_component
         )
-        if pbar_eval_id is not None:
-            progress.update(pbar_eval_id, advance=1)
+        update_and_remove_pbar(progress, pbar_eval_id)
     except MissingTestCaseParamsError as e:
         if skip_on_missing_params:
             metric.skipped = True
@@ -268,3 +267,16 @@ async def safe_a_measure(
             metric.success = False  # Assuming you want to set success to False
         else:
             raise
+
+
+def update_and_remove_pbar(
+    progress: Optional[Progress], 
+    pbar_id: Optional[int],
+    advance: int = 1
+):
+    if progress is None or pbar_id is None:
+        return
+    progress.update(pbar_id, advance=advance)
+    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+    if task_obj.finished:
+        progress.remove_task(pbar_id)

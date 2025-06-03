@@ -115,7 +115,11 @@ def execute_test_cases(
         llm_test_case_count = -1
         conversational_test_case_count = -1
         show_metric_indicator = show_indicator and not _use_bar_indicator
-        for test_case in test_cases:
+        for i, test_case in enumerate(test_cases):
+            pbar_test_case_id = progress.add_task(
+                f"    🎯 Evaluating test case #{i}", 
+                total=len(metrics)
+            )
             with capture_evaluation_run("test case"):
                 for metric in metrics:
                     metric.error = None  # Reset metric error
@@ -206,6 +210,7 @@ def execute_test_cases(
                             new_cached_test_case.cached_metrics_data.append(
                                 updated_cached_metric_data
                             )
+                        update_and_remove_pbar(progress, pbar_test_case_id)
 
                     test_end_time = time.perf_counter()
                     if read_all_metrics_from_cache:
@@ -280,6 +285,7 @@ def execute_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_test_case.update_metric_data(metric_data)
+                        update_and_remove_pbar(progress, pbar_test_case_id)
 
                     test_end_time = time.perf_counter()
                     if len(mllm_metrics) > 0:
@@ -342,9 +348,9 @@ def execute_test_cases(
                                 metric.success = False
                             else:
                                 raise
-
                         metric_data = create_metric_data(metric)
                         api_test_case.update_metric_data(metric_data)
+                        update_and_remove_pbar(progress, pbar_test_case_id)
 
                     test_end_time = time.perf_counter()
                     run_duration = test_end_time - test_start_time
@@ -355,12 +361,7 @@ def execute_test_cases(
 
                 test_result = create_test_result(api_test_case)
                 test_results.append(test_result)
-
-                if progress is not None and pbar_id is not None:
-                    progress.update(pbar_id, advance=1)
-                    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-                    if task_obj.finished:
-                        progress.remove_task(pbar_id)
+                update_and_remove_pbar(progress, pbar_id)
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(
@@ -445,10 +446,7 @@ async def a_execute_test_cases(
                 with capture_evaluation_run("test case"):
                     if isinstance(test_case, LLMTestCase):
                         if len(llm_metrics) == 0:
-                            progress.update(pbar_id, advance=1)
-                            task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-                            if task_obj.finished:
-                                progress.remove_task(pbar_id)
+                            update_and_remove_pbar(progress, pbar_id)
                             continue
 
                         llm_test_case_counter += 1
@@ -611,6 +609,7 @@ async def a_execute_llm_test_cases(
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
+    pbar_test_case_id = progress.add_task(f"    🎯 Evaluating test case #{count}", total=len(metrics))
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
     cached_test_case = None
@@ -638,6 +637,8 @@ async def a_execute_llm_test_cases(
         skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
+        pbar_eval_id=pbar_test_case_id,
+        progress=progress,
     )
 
     for metric in metrics:
@@ -684,12 +685,7 @@ async def a_execute_llm_test_cases(
     )
 
     test_results.append(create_test_result(api_test_case))
-
-    if progress is not None and pbar_id is not None:
-        progress.update(pbar_id, advance=1)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_id)
+    update_and_remove_pbar(progress, pbar_id)
 
 
 async def a_execute_mllm_test_cases(
@@ -707,6 +703,7 @@ async def a_execute_mllm_test_cases(
     pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
+    pbar_test_case_id = progress.add_task(f"    🎯 Evaluating test case #{count}", total=len(metrics))
 
     for metric in metrics:
         metric.skipped = False
@@ -723,6 +720,8 @@ async def a_execute_mllm_test_cases(
         skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
+        pbar_eval_id=pbar_test_case_id,
+        progress=progress,
     )
     for metric in metrics:
         if metric.skipped:
@@ -738,12 +737,7 @@ async def a_execute_mllm_test_cases(
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
-
-    if progress is not None and pbar_id is not None:
-        progress.update(pbar_id, advance=1)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_id)
+    update_and_remove_pbar(progress, pbar_id)
 
 
 async def a_execute_conversational_test_cases(
@@ -763,6 +757,7 @@ async def a_execute_conversational_test_cases(
     pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
+    pbar_test_case_id = progress.add_task(f"    🎯 Evaluating test case #{count}", total=len(metrics))
 
     for metric in metrics:
         metric.skipped = False
@@ -780,6 +775,8 @@ async def a_execute_conversational_test_cases(
         skip_on_missing_params=skip_on_missing_params,
         ignore_errors=ignore_errors,
         show_indicator=show_metrics_indicator,
+        pbar_eval_id=pbar_test_case_id,
+        progress=progress,
     )
     for metric in metrics:
         if metric.skipped:
@@ -797,13 +794,8 @@ async def a_execute_conversational_test_cases(
     test_run_manager.update_test_run(api_test_case, test_case)
 
     test_results.append(create_test_result(api_test_case))
-
-    if progress is not None and pbar_id is not None:
-        progress.update(pbar_id, advance=1)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_id)
-
+    update_and_remove_pbar(progress, pbar_id)
+    
 
 def execute_agentic_test_cases(
     goldens: List[Golden],
@@ -856,16 +848,8 @@ def execute_agentic_test_cases(
                         observed_callback(golden.input)
                     current_trace: Trace = get_current_trace()
                 
-                if pbar_tags_id is not None:
-                    progress.update(pbar_tags_id, advance=total_tags)
-                    task_obj = next(t for t in progress.tasks if t.id == pbar_tags_id)
-                    if task_obj.finished:
-                        progress.remove_task(pbar_tags_id)
-                if pbar_id is not None:
-                    progress.update(pbar_id, advance=1)
-                    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-                    if task_obj.finished:
-                        progress.remove_task(pbar_id)
+                update_and_remove_pbar(progress, pbar_tags_id, advance=total_tags)
+                update_and_remove_pbar(progress, pbar_id)
 
                 # Create empty trace api for llm api test case
                 trace_api = TraceApi(
@@ -994,8 +978,7 @@ def execute_agentic_test_cases(
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_status(metric_data.success)
-                        if pbar_eval_id is not None:
-                            progress.update(pbar_eval_id, advance=1)
+                        update_and_remove_pbar(progress, pbar_eval_id)
 
                 if progress is not None:
                     pbar_eval_id = progress.add_task( 
@@ -1015,17 +998,8 @@ def execute_agentic_test_cases(
                 test_run_manager.update_test_run(api_test_case, test_case)
                 test_results.append(create_test_result(api_test_case))
 
-                if pbar_eval_id is not None:
-                    progress.update(pbar_eval_id, advance=1)
-                    task_obj = next(t for t in progress.tasks if t.id == pbar_eval_id)
-                    if task_obj.finished:
-                        progress.remove_task(pbar_eval_id)
-
-                if pbar_id is not None:
-                    progress.update(pbar_id, advance=1)
-                    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-                    if task_obj.finished:
-                        progress.remove_task(pbar_id)
+                update_and_remove_pbar(progress, pbar_eval_id)
+                update_and_remove_pbar(progress, pbar_id)
 
 
     if show_indicator and _use_bar_indicator:
@@ -1169,16 +1143,8 @@ async def a_execute_agentic_test_case(
             observed_callback(golden.input)
         current_trace: Trace = get_current_trace()
 
-    if pbar_tags_id is not None:
-        progress.update(pbar_tags_id, advance=total_tags)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_tags_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_tags_id)
-    if pbar_id is not None:
-        progress.update(pbar_id, advance=1)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_id)
+    update_and_remove_pbar(progress, pbar_tags_id, advance=total_tags)
+    update_and_remove_pbar(progress, pbar_id)
 
     # run evals through DFS
     trace_api = TraceApi(
@@ -1258,17 +1224,8 @@ async def a_execute_agentic_test_case(
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
 
-    if pbar_eval_id is not None:
-        progress.update(pbar_eval_id, advance=1)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_eval_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_eval_id)
-
-    if pbar_id is not None:
-        progress.update(pbar_id, advance=1)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_id)
+    update_and_remove_pbar(progress, pbar_eval_id)
+    update_and_remove_pbar(progress, pbar_id)
             
 async def a_execute_span_test_case(
     span: BaseSpan,
@@ -1344,3 +1301,17 @@ def count_observe_decorators_in_module(func: Callable) -> int:
                 if isinstance(deco, ast.Call) and getattr(deco.func, "id", "") == "observe":
                     count += 1
     return count
+
+
+def update_and_remove_pbar(
+    progress: Optional[Progress], 
+    pbar_id: Optional[int],
+    advance: int = 1
+):
+    if progress is None or pbar_id is None:
+        return
+    progress.update(pbar_id, advance=advance)
+    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+    if task_obj.finished:
+        progress.remove_task(pbar_id)
+        
