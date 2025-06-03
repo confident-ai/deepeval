@@ -14,7 +14,6 @@ from deepeval.models.llms.openai_model import (
     log_retry_error,
 )
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name
 
 retryable_exceptions = (
     openai.RateLimitError,
@@ -61,7 +60,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # args and kwargs will be passed to the underlying model, in load_model function
         self.args = args
         self.kwargs = kwargs
-        super().__init__(parse_model_name(model_name))
+        super().__init__(model_name)
 
     ###############################################
     # Other generate functions
