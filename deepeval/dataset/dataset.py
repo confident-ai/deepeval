@@ -34,7 +34,7 @@ from deepeval.test_case import (
 )
 from deepeval.utils import convert_keys_to_snake_case, is_confident
 
-valid_file_types = ["csv", "json"]
+valid_file_types = ["csv", "json", "jsonl"]
 
 
 def validate_test_case_type(
@@ -65,9 +65,7 @@ class EvaluationDataset:
 
     def __init__(
         self,
-        test_cases: List[
-            Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
-        ] = [],
+        test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]] = [],
         goldens: List[Golden] = [],
         conversational_goldens: List[ConversationalGolden] = [],
     ):
@@ -117,9 +115,7 @@ class EvaluationDataset:
     @test_cases.setter
     def test_cases(
         self,
-        test_cases: List[
-            Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
-        ],
+        test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
     ):
         if not isinstance(test_cases, list):
             raise TypeError("'test_cases' must be a list")
@@ -237,9 +233,7 @@ class EvaluationDataset:
 
         def get_column_data(df: pd.DataFrame, col_name: str, default=None):
             return (
-                df[col_name].values
-                if col_name in df.columns
-                else [default] * len(df)
+                df[col_name].values if col_name in df.columns else [default] * len(df)
             )
 
         df = pd.read_csv(file_path)
@@ -248,9 +242,7 @@ class EvaluationDataset:
 
         inputs = get_column_data(df, input_col_name)
         actual_outputs = get_column_data(df, actual_output_col_name)
-        expected_outputs = get_column_data(
-            df, expected_output_col_name, default=None
-        )
+        expected_outputs = get_column_data(df, expected_output_col_name, default=None)
         contexts = [
             context.split(context_col_delimiter) if context else []
             for context in get_column_data(df, context_col_name, default="")
@@ -272,8 +264,7 @@ class EvaluationDataset:
             if tools_called_json:
                 try:
                     parsed_tools = [
-                        ToolCall(**tool)
-                        for tool in trimAndLoadJson(tools_called_json)
+                        ToolCall(**tool) for tool in trimAndLoadJson(tools_called_json)
                     ]
                     tools_called.append(parsed_tools)
                 except ValueError as e:
@@ -380,10 +371,7 @@ class EvaluationDataset:
 
         # Process each JSON object
         for json_obj in json_list:
-            if (
-                input_key_name not in json_obj
-                or actual_output_key_name not in json_obj
-            ):
+            if input_key_name not in json_obj or actual_output_key_name not in json_obj:
                 raise ValueError(
                     "Required fields are missing in one or more JSON objects"
                 )
@@ -436,9 +424,7 @@ class EvaluationDataset:
 
         def get_column_data(df: pd.DataFrame, col_name: str, default=None):
             return (
-                df[col_name].values
-                if col_name in df.columns
-                else [default] * len(df)
+                df[col_name].values if col_name in df.columns else [default] * len(df)
             )
 
         df = (
@@ -448,12 +434,8 @@ class EvaluationDataset:
         )
 
         inputs = get_column_data(df, input_col_name)
-        actual_outputs = get_column_data(
-            df, actual_output_col_name, default=None
-        )
-        expected_outputs = get_column_data(
-            df, expected_output_col_name, default=None
-        )
+        actual_outputs = get_column_data(df, actual_output_col_name, default=None)
+        expected_outputs = get_column_data(df, expected_output_col_name, default=None)
         contexts = [
             context.split(context_col_delimiter) if context else []
             for context in get_column_data(df, context_col_name, default="")
@@ -469,21 +451,11 @@ class EvaluationDataset:
             )
         ]
         tools_called = [
-            (
-                tool_called.split(tools_called_col_delimiter)
-                if tool_called
-                else []
-            )
-            for tool_called in get_column_data(
-                df, tools_called_col_name, default=""
-            )
+            (tool_called.split(tools_called_col_delimiter) if tool_called else [])
+            for tool_called in get_column_data(df, tools_called_col_name, default="")
         ]
         expected_tools = [
-            (
-                expected_tool.split(expected_tools_col_delimiter)
-                if expected_tool
-                else []
-            )
+            (expected_tool.split(expected_tools_col_delimiter) if expected_tool else [])
             for expected_tool in get_column_data(
                 df, expected_tools_col_name, default=""
             )
@@ -631,9 +603,7 @@ class EvaluationDataset:
                 )
                 webbrowser.open(link)
         else:
-            raise Exception(
-                "To push dataset to Confident AI, run `deepeval login`"
-            )
+            raise Exception("To push dataset to Confident AI, run `deepeval login`")
 
     def pull(
         self,
@@ -669,9 +639,7 @@ class EvaluationDataset:
                     ):
                         if "goldens" in cg:
                             cg["turns"] = cg.pop("goldens")
-                        conversational_goldens.append(
-                            ConversationalGolden(**cg)
-                        )
+                        conversational_goldens.append(ConversationalGolden(**cg))
 
                     response = DatasetHttpResponse(
                         goldens=convert_keys_to_snake_case(result["goldens"]),
@@ -702,9 +670,7 @@ class EvaluationDataset:
                         )
                     else:
                         self.goldens = response.goldens
-                        self.conversational_goldens = (
-                            response.conversational_goldens
-                        )
+                        self.conversational_goldens = response.conversational_goldens
                         for golden in self.goldens:
                             golden._dataset_alias = alias
                             golden._dataset_id = response.datasetId
@@ -720,9 +686,7 @@ class EvaluationDataset:
                     "Run `deepeval login` to pull dataset from Confident AI"
                 )
 
-    def queue(
-        self, alias: str, goldens: List[Golden], print_response: bool = True
-    ):
+    def queue(self, alias: str, goldens: List[Golden], print_response: bool = True):
         if len(goldens) == 0:
             raise ValueError(
                 f"Can't queue empty list of goldens to dataset with alias: {alias} on Confident AI."
@@ -757,9 +721,7 @@ class EvaluationDataset:
                     f"[link={link}]{link}[/link]"
                 )
         else:
-            raise Exception(
-                "To push dataset to Confident AI, run `deepeval login`"
-            )
+            raise Exception("To push dataset to Confident AI, run `deepeval login`")
 
     def generate_goldens_from_docs(
         self,
@@ -778,9 +740,7 @@ class EvaluationDataset:
             assert isinstance(synthesizer, Synthesizer)
 
         if context_construction_config is not None:
-            assert isinstance(
-                context_construction_config, ContextConstructionConfig
-            )
+            assert isinstance(context_construction_config, ContextConstructionConfig)
 
         self.goldens.extend(
             synthesizer.generate_goldens_from_docs(
@@ -836,7 +796,7 @@ class EvaluationDataset:
 
     def save_as(
         self,
-        file_type: Literal["json", "csv"],
+        file_type: Literal["json", "csv", "jsonl"],
         directory: str,
         include_test_cases: bool = False,
     ) -> str:
@@ -889,9 +849,7 @@ class EvaluationDataset:
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
 
         elif file_type == "csv":
-            with open(
-                full_file_path, "w", newline="", encoding="utf-8"
-            ) as file:
+            with open(full_file_path, "w", newline="", encoding="utf-8") as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     [
@@ -910,9 +868,7 @@ class EvaluationDataset:
                         else None
                     )
                     context = (
-                        "|".join(golden.context)
-                        if golden.context is not None
-                        else None
+                        "|".join(golden.context) if golden.context is not None else None
                     )
                     writer.writerow(
                         [
@@ -924,6 +880,18 @@ class EvaluationDataset:
                             golden.source_file,
                         ]
                     )
+        elif file_type == "jsonl":
+            with open(full_file_path, "w", encoding="utf-8") as file:
+                for golden in goldens:
+                    record = {
+                        "input": golden.input,
+                        "actual_output": golden.actual_output,
+                        "expected_output": golden.expected_output,
+                        "retrieval_context": golden.retrieval_context,
+                        "context": golden.context,
+                        "source_file": golden.source_file,
+                    }
+                    file.write(json.dumps(record, ensure_ascii=False) + "\n")
 
         print(f"Evaluation dataset saved at {full_file_path}!")
         return full_file_path

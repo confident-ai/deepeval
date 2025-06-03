@@ -169,9 +169,7 @@ scenarios = [
 # #########################################################
 
 
-async def test_context_generator(
-    load_docs_function: Callable, is_async: bool = False
-):
+async def test_context_generator(load_docs_function: Callable, is_async: bool = False):
     start_time = time.time()
     if is_async:
         loaded_docs = await load_docs_function()
@@ -365,6 +363,8 @@ def test_save_goldens(synthesizer: Synthesizer, file_type: str):
         synthesizer.save_as("csv", "./goldens")
     elif file_type == "json":
         synthesizer.save_as("json", "./goldens")
+    elif file_type == "jsonl":
+        synthesizer.save_as("jsonl", "./goldens")
 
 
 @pytest.fixture
