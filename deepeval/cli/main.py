@@ -80,10 +80,15 @@ def login(
         # Look for pattern: confident_ai_{region}_
         parts = key.split('_')
         if len(parts) >= 3 and parts[0] == 'confident' and parts[1] == 'ai':
-            return parts[2]
-    
+            region = parts[2].upper()
+            # Check if region is supported
+            try:
+                Regions(region)
+                return region
+            except ValueError:
+                return None
+        
         return None
-    
     with capture_login_event() as span:
         # Use the confident_api_key if it is provided, otherwise proceed with existing logic
         try:
