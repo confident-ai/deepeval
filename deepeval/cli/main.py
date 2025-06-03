@@ -72,6 +72,18 @@ def login(
         help="Use the existing API key stored in the key file if present.",
     ),
 ):
+    def extract_region_from_api_key(key: str) -> Optional[str]:
+        """Extract the region from the API key, if it's present (e.g. starts with 'confident_ai_{region}_')."""
+        if not key:
+            return None
+        
+        # Look for pattern: confident_ai_{region}_
+        parts = key.split('_')
+        if len(parts) >= 3 and parts[0] == 'confident' and parts[1] == 'ai':
+            return parts[2]
+    
+        return None
+    
     with capture_login_event() as span:
         # Use the confident_api_key if it is provided, otherwise proceed with existing logic
         try:
@@ -114,6 +126,11 @@ def login(
                             print(
                                 "API Key cannot be empty. Please try again.\n"
                             )
+             # Extract region from API key
+            region = extract_region_from_api_key(api_key)
+            if region:
+                # Store region if needed
+                KEY_FILE_HANDLER.write_key(KeyValues.CONFIDENT_REGION, region.upper())
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
             span.set_attribute("completed", False)
