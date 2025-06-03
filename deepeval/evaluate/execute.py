@@ -116,7 +116,8 @@ def execute_test_cases(
         conversational_test_case_count = -1
         show_metric_indicator = show_indicator and not _use_bar_indicator
         for i, test_case in enumerate(test_cases):
-            pbar_test_case_id = progress.add_task(
+            pbar_test_case_id = add_pbar_task(
+                progress,
                 f"    🎯 Evaluating test case #{i}", 
                 total=len(metrics)
             )
@@ -372,7 +373,11 @@ def execute_test_cases(
             console=custom_console,
         )
         with progress:
-            pbar_id = progress.add_task(f"Evaluating {len(test_cases)} test case(s) sequentially", total=len(test_cases))
+            pbar_id = add_pbar_task(
+                progress,
+                f"Evaluating {len(test_cases)} test case(s) sequentially",
+                total=len(test_cases),
+            )
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
     else:
         evaluate_test_cases()
@@ -440,7 +445,11 @@ async def a_execute_test_cases(
             TimeElapsedColumn(),
             console=custom_console,
         )
-        pbar_id = progress.add_task(f"Evaluating {len(test_cases)} test case(s) in parallel", total=len(test_cases))
+        pbar_id = add_pbar_task(
+            progress,
+            f"Evaluating {len(test_cases)} test case(s) in parallel",
+            total=len(test_cases),
+        )
         with progress:
             for test_case in test_cases:
                 with capture_evaluation_run("test case"):
@@ -609,7 +618,11 @@ async def a_execute_llm_test_cases(
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
-    pbar_test_case_id = progress.add_task(f"    🎯 Evaluating test case #{count}", total=len(metrics))
+    pbar_test_case_id = add_pbar_task(
+        progress,
+        f"    🎯 Evaluating test case #{count}",
+        total=len(metrics),
+    )
     show_metrics_indicator = show_indicator and not _use_bar_indicator
 
     cached_test_case = None
@@ -703,7 +716,11 @@ async def a_execute_mllm_test_cases(
     pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
-    pbar_test_case_id = progress.add_task(f"    🎯 Evaluating test case #{count}", total=len(metrics))
+    pbar_test_case_id = add_pbar_task(
+        progress,
+        f"    🎯 Evaluating test case #{count}",
+        total=len(metrics),
+    )
 
     for metric in metrics:
         metric.skipped = False
@@ -757,7 +774,11 @@ async def a_execute_conversational_test_cases(
     pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
-    pbar_test_case_id = progress.add_task(f"    🎯 Evaluating test case #{count}", total=len(metrics))
+    pbar_test_case_id = add_pbar_task(
+        progress,
+        f"    🎯 Evaluating test case #{count}",
+        total=len(metrics),
+    )
 
     for metric in metrics:
         metric.skipped = False
@@ -831,14 +852,12 @@ def execute_agentic_test_cases(
         for golden in goldens:
             with capture_evaluation_run("golden"):
                 count += 1
-
-                pbar_tags_id = None
                 total_tags = count_observe_decorators_in_module(observed_callback)
-                if progress is not None:
-                    pbar_tags_id = progress.add_task(
-                        f"     ⚡ Invoking traceable callback (golden #{count})",
-                        total=total_tags,
-                    )
+                pbar_tags_id = add_pbar_task(
+                    progress,
+                    f"     ⚡ Invoking traceable callback (golden #{count})",
+                    total=total_tags,
+                )
 
                 with Observer("custom", func_name="Test Wrapper", _progress=progress, _pbar_callback_id=pbar_tags_id):
                     if asyncio.iscoroutinefunction(observed_callback):
@@ -980,14 +999,12 @@ def execute_agentic_test_cases(
                         api_test_case.update_status(metric_data.success)
                         update_and_remove_pbar(progress, pbar_eval_id)
 
-                if progress is not None:
-                    pbar_eval_id = progress.add_task( 
-                        f"     🎯 Evaluating span metrics (golden #{count})",
-                        total=count_metrics_in_trace(trace=current_trace),
-                    ) 
-                else:
-                    pbar_eval_id = None
-
+                pbar_eval_id = add_pbar_task(
+                    progress,
+                    f"     🎯 Evaluating span metrics (golden #{count})",
+                    total=count_metrics_in_trace(trace=current_trace),
+                )
+                
                 start_time = time.perf_counter()
                 dfs(current_trace.root_spans[0], progress, pbar_eval_id)
                 end_time = time.perf_counter()
@@ -1011,7 +1028,7 @@ def execute_agentic_test_cases(
             console=custom_console,
         )
         with progress:
-            pbar_id = progress.add_task(f"Evaluating {len(goldens)} goldens(s) sequentially", total=len(goldens)*2)
+            pbar_id = add_pbar_task(progress, f"Evaluating {len(goldens)} goldens(s) sequentially", total=len(goldens)*2)
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
     else:
         evaluate_test_cases()
@@ -1061,7 +1078,7 @@ async def a_execute_agentic_test_cases(
             console=custom_console,
         )
         with progress:
-            pbar_id = progress.add_task("Overall: Evaluating goldens", total=len(goldens) * 2)
+            pbar_id = add_pbar_task(progress, "Overall: Evaluating goldens", total=len(goldens) * 2)
             for golden in goldens:
                 with capture_evaluation_run("golden"):
                     count += 1
@@ -1127,13 +1144,12 @@ async def a_execute_agentic_test_case(
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
-    pbar_tags_id = None
     total_tags = count_observe_decorators_in_module(observed_callback)
-    if progress is not None:
-        pbar_tags_id = progress.add_task(
-            f"     ⚡ Invoking traceable callback (golden #{count})",
-            total=total_tags,
-        )
+    pbar_tags_id = add_pbar_task(
+        progress,
+        f"     ⚡ Invoking traceable callback (golden #{count})",
+        total=total_tags,
+    )
     
     # Call callback and extract trace
     with Observer("custom", func_name="Test Wrapper", _progress=progress, _pbar_callback_id=pbar_tags_id):
@@ -1170,13 +1186,11 @@ async def a_execute_agentic_test_case(
         ),
     )
 
-    if progress is not None:
-        pbar_eval_id = progress.add_task(
-            f"     🎯 Evaluating span metrics (golden #{count})",
-            total=count_metrics_in_trace(trace=current_trace),
-        )
-    else:
-        pbar_eval_id = None
+    pbar_eval_id = add_pbar_task(
+        progress,
+        f"     🎯 Evaluating span metrics (golden #{count})",
+        total=count_metrics_in_trace(trace=current_trace),
+    )
 
     test_case = LLMTestCase(
         input=golden.input,
@@ -1302,6 +1316,17 @@ def count_observe_decorators_in_module(func: Callable) -> int:
                     count += 1
     return count
 
+def add_pbar_task(
+    progress: Optional[Progress], 
+    description: str,
+    total: int = 1
+):
+    if progress is None:
+        return None
+    return progress.add_task(
+        description,
+        total=total
+    )
 
 def update_and_remove_pbar(
     progress: Optional[Progress], 
