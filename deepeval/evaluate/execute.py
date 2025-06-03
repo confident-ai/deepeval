@@ -111,7 +111,7 @@ def execute_test_cases(
 
     test_results: List[TestResult] = []
 
-    def evaluate_test_cases(pbar: Optional[tqdm] = None):
+    def evaluate_test_cases(progress: Optional[Progress] = None, pbar_id: Optional[str] = None):
         llm_test_case_count = -1
         conversational_test_case_count = -1
         show_metric_indicator = show_indicator and not _use_bar_indicator
