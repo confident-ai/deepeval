@@ -37,30 +37,16 @@ def synthesizer_progress_context(
     evolutions: Dict,
     embedder: Optional[str] = None,
     max_generations: str = None,
-    progress_bar: Optional[tqdm.std.tqdm] = None,
     async_mode: bool = False,
-) -> Generator[Optional[tqdm.std.tqdm], None, None]:
+) -> Generator[str, None, None]:
     with capture_synthesizer_run(
         method, max_generations, num_evolutions, evolutions
     ):
         if embedder is None:
-            description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model}, method={method})"
+            description = f"✨ Generating up to {max_generations} goldens" # using DeepEval (using {evaluation_model}, method={method}, async={async_mode})
         else:
-            description = f"✨ Generating up to {max_generations} goldens using DeepEval (using {evaluation_model} and {embedder}, method={method})"
-
-        if not progress_bar:
-            if async_mode:
-                with async_tqdm_bar(
-                    total=max_generations, desc=description, file=sys.stderr
-                ) as progress_bar:
-                    yield progress_bar
-            else:
-                with tqdm_bar(
-                    total=max_generations, desc=description, file=sys.stderr
-                ) as progress_bar:
-                    yield progress_bar
-        else:
-            yield progress_bar
+            description = f"✨ Generating up to {max_generations} goldens" #  using DeepEval (using {evaluation_model} and {embedder}, method={method}, async={async_mode})
+        yield description
 
 
 @contextmanager

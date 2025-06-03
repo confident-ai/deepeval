@@ -1,72 +1,89 @@
-import shutil
 from typing import List, Tuple, Dict, Optional, Union
-from tqdm.asyncio import tqdm_asyncio
-from tqdm import tqdm as tqdm_bar
+from rich.progress import Progress
 from pydantic import BaseModel
 import asyncio
+import shutil
 import random
-import math
-import os
 import atexit
-import gc
 import time
+import math
 import sys
+import os
+import gc
 
+
+from deepeval.synthesizer.utils import print_synthesizer_status, SynthesizerStatus
+from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
+from deepeval.metrics.utils import trimAndLoadJson, initialize_model
+from deepeval.synthesizer.templates.template import FilterTemplate
 from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseLLM,
 )
-from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
-from deepeval.metrics.utils import trimAndLoadJson, initialize_model
-from deepeval.synthesizer.templates.template import FilterTemplate
-
 
 # Monkey patch shutil.rmtree to handle locked files better on Windows
 original_rmtree = shutil.rmtree
 
-
-def safe_rmtree(path, *args, **kwargs):
+def safe_rmtree(
+    path,
+    progress: Optional[Progress] = None,
+    *args,
+    **kwargs,
+):
     """Safe version of rmtree with retries for Windows file locks"""
     if not os.path.exists(path):
         return
-
-    print(f"Safe delete: {path}")
-    for attempt in range(3):
+    for _ in range(3):
         try:
-            # Force garbage collection to release file handles
             gc.collect()
             time.sleep(1)
-
-            # For Windows, attempt to remove file attributes that might prevent deletion
             if sys.platform == "win32":
                 os.system(f'attrib -r -s -h "{path}\\*" /s /d')
-
-            # Try the original rmtree with ignore_errors=True
             kwargs["ignore_errors"] = True
             original_rmtree(path, *args, **kwargs)
-            print(f"Successfully deleted {path}")
+            print_synthesizer_status(
+                SynthesizerStatus.SUCCESS,
+                "Successfully deleted",
+                path,
+            )
             return
         except Exception as e:
-            print(f"Delete attempt {attempt+1} failed: {e}")
+            print_synthesizer_status(
+                SynthesizerStatus.WARNING,
+                "Delete attempt failed",
+                f"{e}",
+            )
             time.sleep(2)
-
-    print(f"Warning: Unable to delete {path} after multiple attempts")
-
-
-# Apply the monkey patch
-shutil.rmtree = safe_rmtree
+    print_synthesizer_status(
+        SynthesizerStatus.FAILURE,
+        "Unable to delete",
+        path,
+    )
 
 
 # Function to force close ChromaDB connections
+# _uncaught_exception = False
+
+# def _custom_excepthook(exc_type, exc_value, tb):
+#     global _uncaught_exception
+#     _uncaught_exception = True
+#     sys.__excepthook__(exc_type, exc_value, tb)
+# sys.excepthook = _custom_excepthook
+
 def close_chroma_clients():
-    print("Forcing release of ChromaDB connections...")
+    # if _uncaught_exception:
+    #     return
+    # sys.stdout.write("\033[F")
+    # print_synthesizer_status(
+    #     SynthesizerStatus.SUCCESS,
+    #     "Forcing release of ChromaDB connections...\n",
+    # )
     gc.collect()
     time.sleep(1)
 
-
-# Register cleanup function
+# Register cleanup function and apply monkey patch
 atexit.register(close_chroma_clients)
-
+shutil.rmtree = safe_rmtree
 
 class ContextScore(BaseModel):
     clarity: float
@@ -126,6 +143,8 @@ class ContextGenerator:
         min_contexts_per_source_file: int,
         max_context_size: int = 3,
         min_context_size: int = 1,
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
@@ -139,17 +158,27 @@ class ContextGenerator:
             contexts = []
             source_files = []
 
+            pbar_load_docs_id = progress.add_task(
+                "       📚 Loading Documents",
+                total=len(self.document_paths),
+            )
+            pbar_chunk_id = progress.add_task(
+                "       🍫 Chunking Documents",
+                total=len(self.document_paths),
+            )
+            pbar_generation_id = progress.add_task(
+                "       🧩 Generating Contexts",
+                total=1
+            )
+
             # Load the source files and create document chunkers for each file
             source_file_to_chunker_map: Dict[str, DocumentChunker] = (
-                self._load_docs()
+                self._load_docs(progress=progress, pbar_id=pbar_id, pbar_load_docs_id=pbar_load_docs_id)
             )
 
             # Chunk each file into a chroma collection of chunks
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
-            for key, chunker in tqdm_bar(
-                source_file_to_chunker_map.items(),
-                "✨ 📚 ✨ Chunking Documents",
-            ):
+            for key, chunker in source_file_to_chunker_map.items():
                 collection = chunker.chunk_doc(
                     self.chunk_size, self.chunk_overlap
                 )
@@ -157,6 +186,8 @@ class ContextGenerator:
                     min_contexts_per_source_file, collection
                 )
                 source_files_to_chunk_collections_map[key] = collection
+                self.update_and_remove_pbar(progress, pbar_chunk_id)
+                self.update_and_remove_pbar(progress, pbar_id)
 
             # Initialize progress bar for context generation
             num_contexts = sum(
@@ -167,11 +198,7 @@ class ContextGenerator:
                 collection.count()
                 for _, collection in source_files_to_chunk_collections_map.items()
             )
-            generation_p_bar = tqdm_bar(
-                total=self.max_retries * num_contexts,
-                desc="✨ 🧩 ✨ Generating Contexts",
-                leave=True,
-            )
+            progress.update(pbar_generation_id, total=self.max_retries * num_contexts, completed=0)
 
             # Generate contexts for each source file
             for (
@@ -180,26 +207,33 @@ class ContextGenerator:
             ) in source_files_to_chunk_collections_map.items():
                 self.validate_context_size(min_context_size, path, collection)
                 max_context_size = min(max_context_size, collection.count())
+                num_context_per_source_file = min(max_contexts_per_source_file, collection.count())
+                pbar_filling_id = progress.add_task(
+                    "       🫗 Filling Contexts",
+                    total=(max_context_size - 1) * num_context_per_source_file,
+                )   
                 contexts_per_source_file, scores_per_source_file = (
                     self._generate_contexts_per_source_file(
                         path=path,
-                        n_contexts_per_source_file=min(
-                            max_contexts_per_source_file, collection.count()
-                        ),
+                        n_contexts_per_source_file=num_context_per_source_file,
                         context_size=max_context_size,
                         similarity_threshold=self.similarity_threshold,
-                        generation_p_bar=generation_p_bar,
+                        progress=progress,
+                        pbar_generation_id=pbar_generation_id,
+                        pbar_filling_id=pbar_filling_id,
                         source_files_to_collections_map=source_files_to_chunk_collections_map,
                     )
                 )
                 contexts.extend(contexts_per_source_file)
                 scores.extend(scores_per_source_file)
                 source_files.extend([path] * len(contexts_per_source_file))
-            generation_p_bar.close()
+                self.update_and_remove_pbar(progress, pbar_id)
 
             if self.not_enough_chunks:
-                print(
-                    f"Not enough available chunks in smallest document to evaluate chunk quality using the filter threshold: {self.filter_threshold}."
+                print_synthesizer_status(
+                    SynthesizerStatus.WARNING,
+                    "Filtering not applied",
+                    f"Nnot enough chunks in smallest document",
                 )
 
             return contexts, source_files, scores
@@ -215,6 +249,8 @@ class ContextGenerator:
         min_contexts_per_source_file: int,
         max_context_size: int = 3,
         min_context_size: int = 1,
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
@@ -229,14 +265,31 @@ class ContextGenerator:
             source_files = []
 
             # Check if chunk_size and max_context_size is valid for document lengths
+            pbar_load_docs_id = progress.add_task(
+                "       📚 Loading Documents",
+                total=len(self.document_paths),
+            )
+            pbar_chunk_id = progress.add_task(
+                "       🍫 Chunking Documents",
+                total=len(self.document_paths),
+            )
+            pbar_generation_id = progress.add_task(
+                "       🧩 Generating Contexts",
+                total=1
+            )
+            
             source_file_to_chunker_map: Dict[str, DocumentChunker] = (
-                await self._a_load_docs()
+                await self._a_load_docs(progress, pbar_load_docs_id, pbar_id)
             )
 
             # Chunk each file into a chroma collection of chunks
-            source_files_to_chunk_collections_map: Dict[str, Collection] = {}
-
-            async def a_chunk_and_store(key, chunker: DocumentChunker):
+            async def a_chunk_and_store(
+                key, 
+                chunker: DocumentChunker, 
+                progress: Progress, 
+                pbar_chunk_id: int, 
+                pbar_id: int,
+            ):
                 collection = await chunker.a_chunk_doc(
                     self.chunk_size, self.chunk_overlap
                 )
@@ -244,14 +297,15 @@ class ContextGenerator:
                     min_contexts_per_source_file, collection
                 )
                 source_files_to_chunk_collections_map[key] = collection
-
+                self.update_and_remove_pbar(progress, pbar_chunk_id)
+                self.update_and_remove_pbar(progress, pbar_id)
+            
+            source_files_to_chunk_collections_map: Dict[str, Collection] = {}
             tasks = [
-                a_chunk_and_store(key, chunker)
+                a_chunk_and_store(key, chunker, progress, pbar_chunk_id, pbar_id)
                 for key, chunker in source_file_to_chunker_map.items()
             ]
-            await tqdm_asyncio.gather(
-                *tasks, desc="✨ 📚 ✨ Chunking Documents"
-            )
+            await asyncio.gather(*tasks)
 
             # Initialize progress bar for context generation
             num_contexts = sum(
@@ -262,11 +316,7 @@ class ContextGenerator:
                 collection.count()
                 for _, collection in source_files_to_chunk_collections_map.items()
             )
-            generation_p_bar = tqdm_bar(
-                total=self.max_retries * num_contexts,
-                desc="✨ 🧩 ✨ Generating Contexts",
-                leave=True,
-            )
+            progress.update(pbar_generation_id, total=self.max_retries * num_contexts, completed=0)
 
             # Generate contexts for each source file
             tasks = []
@@ -276,12 +326,15 @@ class ContextGenerator:
             ) in source_files_to_chunk_collections_map.items():
                 self.validate_context_size(min_context_size, path, collection)
                 max_context_size = min(max_context_size, collection.count())
+                n_contexts_per_source_file = min(max_contexts_per_source_file, collection.count())
                 tasks.append(
                     self._a_process_document_async(
                         path,
-                        min(max_contexts_per_source_file, collection.count()),
+                        n_contexts_per_source_file,
                         max_context_size,
-                        generation_p_bar,
+                        progress,
+                        pbar_generation_id,
+                        pbar_id,
                         source_files_to_chunk_collections_map,
                     )
                 )
@@ -292,11 +345,12 @@ class ContextGenerator:
                 scores.extend(scores_per_doc)
                 for _ in contexts_per_doc:
                     source_files.append(path)
-            generation_p_bar.close()
 
             if self.not_enough_chunks:
-                print(
-                    f"Not enough available chunks in smallest document to evaluate chunk quality using the filter threshold: {self.filter_threshold}."
+                print_synthesizer_status(
+                    SynthesizerStatus.WARNING,
+                    "Filtering not applied",
+                    "Not enough chunks in smallest document"
                 )
 
             return contexts, source_files, scores
@@ -310,19 +364,28 @@ class ContextGenerator:
         path: str,
         num_context_per_source_file: int,
         max_context_size: int,
-        generation_p_bar: tqdm_bar,
+        progress: Progress,
+        pbar_generation_id: int,
+        pbar_id: int,
         source_files_to_collections_map: Dict,
     ):
+        pbar_filling_id = progress.add_task(
+            "       🫗 Filling Contexts",
+            total=(max_context_size - 1) * num_context_per_source_file,
+        )
         contexts_per_doc, scores_per_doc = (
             await self._a_get_n_random_contexts_per_source_file(
                 path=path,
                 n_contexts_per_source_file=num_context_per_source_file,
                 context_size=max_context_size,
                 similarity_threshold=self.similarity_threshold,
-                generation_p_bar=generation_p_bar,
+                progress=progress,
+                pbar_generation_id=pbar_generation_id,
+                pbar_filling_id=pbar_filling_id,
                 source_files_to_collections_map=source_files_to_collections_map,
             )
         )
+        self.update_and_remove_pbar(progress, pbar_id)
         return path, contexts_per_doc, scores_per_doc
 
     #########################################################
@@ -335,7 +398,9 @@ class ContextGenerator:
         n_contexts_per_source_file: int,
         context_size: int,
         similarity_threshold: float,
-        generation_p_bar: tqdm_bar,
+        progress: Progress,
+        pbar_generation_id: int,
+        pbar_filling_id: int,
         source_files_to_collections_map: Dict,
     ):
         assert (
@@ -346,45 +411,40 @@ class ContextGenerator:
             0 <= similarity_threshold <= 1
         ), "similarity_threshold must be between 0 and 1."
 
-        # Initialize lists for scores, contexts
         contexts = []
         scores = []
         num_query_docs = 0
         collection = source_files_to_collections_map[path]
-
-        # Sample n random chunks from each doc (each random chunk is the first chunk in each context)
-        filling_p_bar = tqdm_bar(
-            total=(context_size - 1) * n_contexts_per_source_file,
-            desc="  ✨ 🫗 ✨ Filling Contexts",
-            leave=False,
-        )
         random_chunks, scores = self._get_n_random_chunks_per_source_file(
             path,
             n_contexts_per_source_file,
-            generation_p_bar,
+            progress,
+            pbar_generation_id,
             source_files_to_collections_map,
         )
 
+        if context_size <= 1:
+            print("Context size is less than 1")
+            self.update_and_remove_pbar(progress, pbar_filling_id)
+            return random_chunks, scores
+
         # Find similar chunks for each context
         for random_chunk in random_chunks:
-            # Create context
             context = [random_chunk]
-
-            # Disregard empty chunks
             if not random_chunk.strip():
-                filling_p_bar.update(context_size - 1)
+                self.update_and_remove_pbar(progress, pbar_filling_id, context_size - 1)
                 continue
 
-            # Query for similar chunks
             similar_chunks = collection.query(
                 self.embedder.embed_text(random_chunk), n_results=context_size
             )
-
-            # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
+            if len(similar_chunk_texts) <= 1:
+                self.update_and_remove_pbar(progress, pbar_filling_id, context_size - 1)
+                continue
+            else:
+                similar_chunk_texts = similar_chunk_texts[1:]
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-
-                # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
                 )
@@ -393,9 +453,7 @@ class ContextGenerator:
                     and similar_chunk_similarity_score > similarity_threshold
                 ):
                     context.append(similar_chunk_text)
-                if j != 0:
-                    filling_p_bar.update(1)
-
+                self.update_and_remove_pbar(progress, pbar_filling_id)
             contexts.append(context)
 
         return contexts, scores
@@ -406,7 +464,9 @@ class ContextGenerator:
         n_contexts_per_source_file: int,
         context_size: int,
         similarity_threshold: float,
-        generation_p_bar: tqdm_bar,
+        progress: Progress,
+        pbar_generation_id: int,
+        pbar_filling_id: int,
         source_files_to_collections_map: Dict,
     ):
         assert (
@@ -422,42 +482,39 @@ class ContextGenerator:
         scores = []
         num_query_docs = 0
         collection = source_files_to_collections_map[path]
-
-        # Sample n random chunks from each doc (each random chunk is the first chunk in each context)
-        filling_p_bar = tqdm_bar(
-            total=(context_size - 1) * n_contexts_per_source_file,
-            desc="  ✨ 🫗 ✨ Filling Contexts",
-            leave=False,
-        )
         random_chunks, scores = (
             await self._a_get_n_random_chunks_per_source_file(
                 path,
                 n_contexts_per_source_file,
-                generation_p_bar,
+                progress,
+                pbar_generation_id,
                 source_files_to_collections_map,
             )
         )
 
+        if context_size <= 1:
+            self.update_and_remove_pbar(progress, pbar_filling_id)
+            return random_chunks, scores
+
         # Find similar chunks for each context
         for random_chunk in random_chunks:
-            # Create context
             context = [random_chunk]
-
-            # Disregard empty chunks
             if not random_chunk.strip():
-                filling_p_bar.update(context_size - 1)
+                self.update_and_remove_pbar(progress, pbar_filling_id, context_size - 1)
                 continue
 
-            # Query for similar chunks
             similar_chunks = collection.query(
                 await self.embedder.a_embed_text(random_chunk),
                 n_results=context_size,
             )
-
-            # Disregard repeated chunks and chunks that don't pass the similarity threshold
             similar_chunk_texts = similar_chunks["documents"][num_query_docs]
+            if len(similar_chunk_texts) <= 1:
+                self.update_and_remove_pbar(progress, pbar_filling_id, context_size - 1)
+                continue
+            else:
+                similar_chunk_texts = similar_chunk_texts[1:]
+
             for j, similar_chunk_text in enumerate(similar_chunk_texts):
-                # Calculate chunk similarity score
                 similar_chunk_similarity_score = (
                     1 - similar_chunks["distances"][num_query_docs][j]
                 )
@@ -466,9 +523,7 @@ class ContextGenerator:
                     and similar_chunk_similarity_score > similarity_threshold
                 ):
                     context.append(similar_chunk_text)
-                if j != 0:
-                    filling_p_bar.update(1)
-
+                self.update_and_remove_pbar(progress, pbar_filling_id)
             contexts.append(context)
 
         return contexts, scores
@@ -481,7 +536,8 @@ class ContextGenerator:
         self,
         path: str,
         n_chunks: int,
-        p_bar: tqdm_bar,
+        progress: Progress,
+        pbar_generation_id: int,
         source_files_to_collections_map: Dict,
     ) -> Tuple[List[str], List[float]]:
         collection = source_files_to_collections_map[path]
@@ -506,7 +562,7 @@ class ContextGenerator:
             for chunk in chunks:
                 score = self.evaluate_chunk(chunk)
                 scores.append(score)
-                p_bar.update(self.max_retries)
+                self.update_and_remove_pbar(progress, pbar_generation_id, self.max_retries)
             return chunks, scores
 
         # Evaluate sampled chunks
@@ -516,12 +572,12 @@ class ContextGenerator:
         for chunk in chunks:
             score = self.evaluate_chunk(chunk)
             if score > self.filter_threshold:
-                p_bar.update(self.max_retries - retry_count)
+                self.update_and_remove_pbar(progress, pbar_generation_id, self.max_retries - retry_count)
                 evaluated_chunks.append(chunk)
                 scores.append(score)
                 retry_count = 0
             else:
-                p_bar.update(1)
+                self.update_and_remove_pbar(progress, pbar_generation_id)
                 retry_count += 1
                 if retry_count == self.max_retries:
                     evaluated_chunks.append(chunk)
@@ -535,7 +591,8 @@ class ContextGenerator:
         self,
         path: str,
         n_chunks: int,
-        p_bar: tqdm_bar,
+        progress: Progress,
+        pbar_generation_id: int,
         source_files_to_collections_map: Dict,
     ) -> Tuple[List[str], List[float]]:
         collection = source_files_to_collections_map[path]
@@ -558,7 +615,7 @@ class ContextGenerator:
             self.not_enough_chunks = True
 
             async def update_and_evaluate(chunk):
-                p_bar.update(self.max_retries)
+                self.update_and_remove_pbar(progress, pbar_generation_id, self.max_retries)
                 return await self.a_evaluate_chunk(chunk)
 
             scores = await asyncio.gather(
@@ -569,14 +626,14 @@ class ContextGenerator:
         # Evaluate sampled chunks
         async def a_evaluate_chunk_and_update(chunk):
             score = await self.a_evaluate_chunk(chunk)
-            p_bar.update(1)
+            self.update_and_remove_pbar(progress, pbar_generation_id)
             return score
 
         tasks = [a_evaluate_chunk_and_update(chunk) for chunk in chunks]
         scores = await asyncio.gather(*tasks)
         chunk_score_pairs = list(zip(chunks, scores))
         chunk_score_pairs.sort(key=lambda x: x[1], reverse=True)
-        best_chunks = [pair[0] for pair in chunk_score_pairs[:n_chunks]]
+        best_chunks = [pair[0] for pair in chunk_score_pairs[:n_chunks]] 
         best_scores = [pair[1] for pair in chunk_score_pairs[:n_chunks]]
 
         return best_chunks, best_scores
@@ -650,7 +707,7 @@ class ContextGenerator:
         if collection_size < min_context_size:
             error_message = [
                 f"{path} has {collection_size} chunks, which is less than the minimum context size of {min_context_size}",
-                f"Adjust the `min_context_length` to no more than {collection_size}.",
+                f"Adjust the `min_context_length` to no more than {collection_size}, or reduce `chunk_size`.",
             ]
             raise ValueError("\n".join(error_message))
 
@@ -729,22 +786,54 @@ class ContextGenerator:
     ### Loading documents and chunkers ######################
     #########################################################
 
-    def _load_docs(self):
+    def _load_docs(
+        self,
+        progress: Progress,
+        pbar_load_docs_id: int,
+        pbar_id: int,
+    ):
         doc_to_chunker_map = {}
-        for path in tqdm_bar(self.document_paths, "✨ 🚀 ✨ Loading Documents"):
+        for path in self.document_paths:
             doc_chunker = DocumentChunker(self.embedder)
             doc_chunker.load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
+            self.update_and_remove_pbar(progress, pbar_load_docs_id)
+            self.update_and_remove_pbar(progress, pbar_id)
         return doc_to_chunker_map
 
-    async def _a_load_docs(self):
+    async def _a_load_docs(
+        self,
+        progress: Progress,
+        pbar_load_docs_id: int,
+        pbar_id: int,
+    ):
         doc_to_chunker_map = {}
-
-        async def a_process_document(path):
+        
+        async def a_process_document(
+            path: str,
+            progress: Progress,
+            pbar_load_docs_id: int,
+            pbar_id: int,
+        ):
             doc_chunker = DocumentChunker(self.embedder)
             await doc_chunker.a_load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
+            self.update_and_remove_pbar(progress, pbar_load_docs_id)
+            self.update_and_remove_pbar(progress, pbar_id)
 
-        tasks = [a_process_document(path) for path in self.document_paths]
-        await tqdm_asyncio.gather(*tasks, desc="✨ 🚀 ✨ Loading Documents")
+        tasks = [a_process_document(path, progress, pbar_load_docs_id, pbar_id) for path in self.document_paths]
+        await asyncio.gather(*tasks)
+        
         return doc_to_chunker_map
+
+    def update_and_remove_pbar(
+        self, 
+        progress: Progress, 
+        pbar_id: int,
+        advance: int = 1
+    ):
+        progress.update(pbar_id, advance=advance)
+        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+        if task_obj.finished:
+            progress.remove_task(pbar_id)
+            
