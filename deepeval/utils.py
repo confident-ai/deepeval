@@ -15,6 +15,8 @@ import asyncio
 import nest_asyncio
 import uuid
 from pydantic import BaseModel
+from rich.progress import Progress
+from rich.console import Console, Theme
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
@@ -478,3 +480,32 @@ def clean_nested_dict(data):
         return data.replace("\x00", "")
     else:
         return data
+
+def update_pbar(
+    progress: Optional[Progress], 
+    pbar_id: Optional[int],
+    advance: int = 1,
+    advance_to_end: bool = False,
+):
+    if progress is None or pbar_id is None:
+        return
+    advance = progress.tasks[pbar_id].remaining if advance_to_end else advance
+    progress.update(pbar_id, advance=advance)
+    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
+    if task_obj.finished:
+        progress.remove_task(pbar_id)
+
+def add_pbar(
+    progress: Optional[Progress], 
+    description: str,
+    total: int = 1
+):
+    if progress is None:
+        return None
+    return progress.add_task(
+        description,
+        total=total
+    )
+
+my_theme = Theme({"progress.elapsed": "cyan"})
+custom_console = Console(theme=my_theme)

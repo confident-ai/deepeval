@@ -1,17 +1,22 @@
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from tqdm.asyncio import tqdm as async_tqdm_bar
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    BarColumn,
+    TaskProgressColumn,
+    TimeElapsedColumn,
+)
 from typing import Optional, Generator
 from contextlib import contextmanager
-from tqdm import tqdm as tqdm_bar
 from rich.console import Console
-from typing import Dict
-import tqdm
+from typing import Dict, Tuple
 import sys
 
 from deepeval.telemetry import (
     capture_synthesizer_run,
     capture_conversation_simulator_run,
 )
+from deepeval.utils import custom_console
 
 
 @contextmanager
@@ -54,21 +59,23 @@ def conversation_simulator_progress_context(
     simulator_model: str,
     num_conversations: int,
     async_mode: bool = False,
-    progress_bar: Optional[tqdm.std.tqdm] = None,
-) -> Generator[Optional[tqdm.std.tqdm], None, None]:
+    progress: Optional[Progress] = None,
+    pbar_id: Optional[int] = None,
+    long_description: bool = False,
+) -> Generator[Tuple[Progress, int], None, None]:
     with capture_conversation_simulator_run(num_conversations):
-        description = f"🪄 Simulating {num_conversations} conversational test case(s) using DeepEval (using {simulator_model})"
-
-        if not progress_bar:
-            if async_mode:
-                with async_tqdm_bar(
-                    total=num_conversations, desc=description, file=sys.stderr
-                ) as progress_bar:
-                    yield progress_bar
-            else:
-                with tqdm_bar(
-                    total=num_conversations, desc=description, file=sys.stderr
-                ) as progress_bar:
-                    yield progress_bar
+        if progress is not None and pbar_id is not None:
+            yield progress, pbar_id
         else:
-            yield progress_bar
+            description = f"🪄 Simulating {num_conversations} conversational test case(s)"
+            if long_description:
+                description += f"(using {simulator_model}, async={async_mode})"
+            progress = Progress(
+                TextColumn("{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                console=custom_console,
+            )
+            pbar_id = progress.add_task(description=description, total=num_conversations)
+            yield progress, pbar_id
