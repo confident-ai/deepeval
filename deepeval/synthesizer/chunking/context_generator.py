@@ -398,7 +398,7 @@ class ContextGenerator:
         collection = source_files_to_collections_map[path]
         random_chunks, scores = self._get_n_random_chunks_per_source_file(
             path=path,
-            n_contexts_per_source_file=n_contexts_per_source_file,
+            n_chunks=n_contexts_per_source_file,
             source_files_to_collections_map=source_files_to_collections_map,
             progress=progress,
             pbar_generate_contexts_id=pbar_generate_contexts_id,

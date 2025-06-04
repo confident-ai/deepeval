@@ -65,9 +65,7 @@ from deepeval.evaluate.utils import (
     create_api_test_case,
     count_metrics_in_trace,
 )
-
-my_theme = Theme({"progress.elapsed": "cyan"})
-custom_console = Console(theme=my_theme)
+from deepeval.utils import add_pbar, update_pbar, custom_console    
 
 def execute_test_cases(
     test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
@@ -116,7 +114,7 @@ def execute_test_cases(
         conversational_test_case_count = -1
         show_metric_indicator = show_indicator and not _use_bar_indicator
         for i, test_case in enumerate(test_cases):
-            pbar_test_case_id = add_pbar_task(
+            pbar_test_case_id = add_pbar(
                 progress,
                 f"    🎯 Evaluating test case #{i}", 
                 total=len(metrics)
@@ -211,7 +209,7 @@ def execute_test_cases(
                             new_cached_test_case.cached_metrics_data.append(
                                 updated_cached_metric_data
                             )
-                        update_and_remove_pbar(progress, pbar_test_case_id)
+                        update_pbar(progress, pbar_test_case_id)
 
                     test_end_time = time.perf_counter()
                     if read_all_metrics_from_cache:
@@ -286,7 +284,7 @@ def execute_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_test_case.update_metric_data(metric_data)
-                        update_and_remove_pbar(progress, pbar_test_case_id)
+                        update_pbar(progress, pbar_test_case_id)
 
                     test_end_time = time.perf_counter()
                     if len(mllm_metrics) > 0:
@@ -351,7 +349,7 @@ def execute_test_cases(
                                 raise
                         metric_data = create_metric_data(metric)
                         api_test_case.update_metric_data(metric_data)
-                        update_and_remove_pbar(progress, pbar_test_case_id)
+                        update_pbar(progress, pbar_test_case_id)
 
                     test_end_time = time.perf_counter()
                     run_duration = test_end_time - test_start_time
@@ -362,7 +360,7 @@ def execute_test_cases(
 
                 test_result = create_test_result(api_test_case)
                 test_results.append(test_result)
-                update_and_remove_pbar(progress, pbar_id)
+                update_pbar(progress, pbar_id)
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(
@@ -373,7 +371,7 @@ def execute_test_cases(
             console=custom_console,
         )
         with progress:
-            pbar_id = add_pbar_task(
+            pbar_id = add_pbar(
                 progress,
                 f"Evaluating {len(test_cases)} test case(s) sequentially",
                 total=len(test_cases),
@@ -445,7 +443,7 @@ async def a_execute_test_cases(
             TimeElapsedColumn(),
             console=custom_console,
         )
-        pbar_id = add_pbar_task(
+        pbar_id = add_pbar(
             progress,
             f"Evaluating {len(test_cases)} test case(s) in parallel",
             total=len(test_cases),
@@ -455,7 +453,7 @@ async def a_execute_test_cases(
                 with capture_evaluation_run("test case"):
                     if isinstance(test_case, LLMTestCase):
                         if len(llm_metrics) == 0:
-                            update_and_remove_pbar(progress, pbar_id)
+                            update_pbar(progress, pbar_id)
                             continue
 
                         llm_test_case_counter += 1
@@ -618,7 +616,7 @@ async def a_execute_llm_test_cases(
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
-    pbar_test_case_id = add_pbar_task(
+    pbar_test_case_id = add_pbar(
         progress,
         f"    🎯 Evaluating test case #{count}",
         total=len(metrics),
@@ -698,7 +696,7 @@ async def a_execute_llm_test_cases(
     )
 
     test_results.append(create_test_result(api_test_case))
-    update_and_remove_pbar(progress, pbar_id)
+    update_pbar(progress, pbar_id)
 
 
 async def a_execute_mllm_test_cases(
@@ -716,7 +714,7 @@ async def a_execute_mllm_test_cases(
     pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
-    pbar_test_case_id = add_pbar_task(
+    pbar_test_case_id = add_pbar(
         progress,
         f"    🎯 Evaluating test case #{count}",
         total=len(metrics),
@@ -754,7 +752,7 @@ async def a_execute_mllm_test_cases(
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
-    update_and_remove_pbar(progress, pbar_id)
+    update_pbar(progress, pbar_id)
 
 
 async def a_execute_conversational_test_cases(
@@ -774,7 +772,7 @@ async def a_execute_conversational_test_cases(
     pbar_id: Optional[int] = None,
 ):
     show_metrics_indicator = show_indicator and not _use_bar_indicator
-    pbar_test_case_id = add_pbar_task(
+    pbar_test_case_id = add_pbar(
         progress,
         f"    🎯 Evaluating test case #{count}",
         total=len(metrics),
@@ -815,7 +813,7 @@ async def a_execute_conversational_test_cases(
     test_run_manager.update_test_run(api_test_case, test_case)
 
     test_results.append(create_test_result(api_test_case))
-    update_and_remove_pbar(progress, pbar_id)
+    update_pbar(progress, pbar_id)
     
 
 def execute_agentic_test_cases(
@@ -853,7 +851,7 @@ def execute_agentic_test_cases(
             with capture_evaluation_run("golden"):
                 count += 1
                 total_tags = count_observe_decorators_in_module(observed_callback)
-                pbar_tags_id = add_pbar_task(
+                pbar_tags_id = add_pbar(
                     progress,
                     f"     ⚡ Invoking traceable callback (golden #{count})",
                     total=total_tags,
@@ -867,8 +865,8 @@ def execute_agentic_test_cases(
                         observed_callback(golden.input)
                     current_trace: Trace = get_current_trace()
                 
-                update_and_remove_pbar(progress, pbar_tags_id, advance=total_tags)
-                update_and_remove_pbar(progress, pbar_id)
+                update_pbar(progress, pbar_tags_id, advance=total_tags)
+                update_pbar(progress, pbar_id)
 
                 # Create empty trace api for llm api test case
                 trace_api = TraceApi(
@@ -997,9 +995,9 @@ def execute_agentic_test_cases(
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_status(metric_data.success)
-                        update_and_remove_pbar(progress, pbar_eval_id)
+                        update_pbar(progress, pbar_eval_id)
 
-                pbar_eval_id = add_pbar_task(
+                pbar_eval_id = add_pbar(
                     progress,
                     f"     🎯 Evaluating span metrics (golden #{count})",
                     total=count_metrics_in_trace(trace=current_trace),
@@ -1015,8 +1013,8 @@ def execute_agentic_test_cases(
                 test_run_manager.update_test_run(api_test_case, test_case)
                 test_results.append(create_test_result(api_test_case))
 
-                update_and_remove_pbar(progress, pbar_eval_id)
-                update_and_remove_pbar(progress, pbar_id)
+                update_pbar(progress, pbar_eval_id)
+                update_pbar(progress, pbar_id)
 
 
     if show_indicator and _use_bar_indicator:
@@ -1028,7 +1026,7 @@ def execute_agentic_test_cases(
             console=custom_console,
         )
         with progress:
-            pbar_id = add_pbar_task(progress, f"Evaluating {len(goldens)} goldens(s) sequentially", total=len(goldens)*2)
+            pbar_id = add_pbar(progress, f"Evaluating {len(goldens)} goldens(s) sequentially", total=len(goldens)*2)
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
     else:
         evaluate_test_cases()
@@ -1078,7 +1076,7 @@ async def a_execute_agentic_test_cases(
             console=custom_console,
         )
         with progress:
-            pbar_id = add_pbar_task(progress, "Overall: Evaluating goldens", total=len(goldens) * 2)
+            pbar_id = add_pbar(progress, "Overall: Evaluating goldens", total=len(goldens) * 2)
             for golden in goldens:
                 with capture_evaluation_run("golden"):
                     count += 1
@@ -1145,7 +1143,7 @@ async def a_execute_agentic_test_case(
     pbar_id: Optional[int] = None,
 ):
     total_tags = count_observe_decorators_in_module(observed_callback)
-    pbar_tags_id = add_pbar_task(
+    pbar_tags_id = add_pbar(
         progress,
         f"     ⚡ Invoking traceable callback (golden #{count})",
         total=total_tags,
@@ -1159,8 +1157,8 @@ async def a_execute_agentic_test_case(
             observed_callback(golden.input)
         current_trace: Trace = get_current_trace()
 
-    update_and_remove_pbar(progress, pbar_tags_id, advance=total_tags)
-    update_and_remove_pbar(progress, pbar_id)
+    update_pbar(progress, pbar_tags_id, advance=total_tags)
+    update_pbar(progress, pbar_id)
 
     # run evals through DFS
     trace_api = TraceApi(
@@ -1186,7 +1184,7 @@ async def a_execute_agentic_test_case(
         ),
     )
 
-    pbar_eval_id = add_pbar_task(
+    pbar_eval_id = add_pbar(
         progress,
         f"     🎯 Evaluating span metrics (golden #{count})",
         total=count_metrics_in_trace(trace=current_trace),
@@ -1238,8 +1236,8 @@ async def a_execute_agentic_test_case(
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
 
-    update_and_remove_pbar(progress, pbar_eval_id)
-    update_and_remove_pbar(progress, pbar_id)
+    update_pbar(progress, pbar_eval_id)
+    update_pbar(progress, pbar_id)
             
 async def a_execute_span_test_case(
     span: BaseSpan,
@@ -1315,28 +1313,3 @@ def count_observe_decorators_in_module(func: Callable) -> int:
                 if isinstance(deco, ast.Call) and getattr(deco.func, "id", "") == "observe":
                     count += 1
     return count
-
-def add_pbar_task(
-    progress: Optional[Progress], 
-    description: str,
-    total: int = 1
-):
-    if progress is None:
-        return None
-    return progress.add_task(
-        description,
-        total=total
-    )
-
-def update_and_remove_pbar(
-    progress: Optional[Progress], 
-    pbar_id: Optional[int],
-    advance: int = 1
-):
-    if progress is None or pbar_id is None:
-        return
-    progress.update(pbar_id, advance=advance)
-    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-    if task_obj.finished:
-        progress.remove_task(pbar_id)
-        

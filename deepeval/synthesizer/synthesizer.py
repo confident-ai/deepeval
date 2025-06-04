@@ -1,4 +1,3 @@
-from struct import pack_into
 from typing import List, Optional, Union, Tuple, Dict, Literal
 from rich.progress import (
     Progress,
@@ -19,6 +18,7 @@ from rich import print
 import tqdm
 import csv
 import os
+from contextlib import nullcontext
 
 from deepeval.utils import get_or_create_event_loop, is_confident
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
@@ -60,6 +60,7 @@ from deepeval.dataset.api import (
     CreateDatasetHttpResponse,
 )
 from deepeval.synthesizer.utils import print_synthesizer_status, SynthesizerStatus
+from deepeval.utils import update_pbar, add_pbar 
 
 valid_file_types = ["csv", "json"]
 
@@ -147,7 +148,6 @@ class Synthesizer:
                 )
             )
         else:
-            # Generate contexts from provided docs
             context_generator = ContextGenerator(
                 document_paths=document_paths,
                 encoding=context_construction_config.encoding,
@@ -160,15 +160,18 @@ class Synthesizer:
                 max_retries=context_construction_config.max_retries,
             )
             total_goldens = context_construction_config.max_contexts_per_document * max_goldens_per_context * len(document_paths)
-            progress = self.create_progress()
-            with progress:
-                pbar_id = progress.add_task(
-                f"Generating up to {total_goldens} goldens",
-                    total= (
-                        len(document_paths) * 3 # loading documents + chunking them + generating contexts
-                        + total_goldens * 2 # generating goldens
-                    ) 
-                )
+
+            with synthesizer_progress_context(
+                method="docs",
+                evaluation_model=self.model.get_model_name(),
+                num_evolutions=self.evolution_config.num_evolutions,
+                evolutions=self.evolution_config.evolutions,
+                embedder=context_construction_config.embedder.get_model_name(),
+                max_generations=total_goldens,
+                pbar_total=len(document_paths) * 3 + total_goldens * 2,
+            ) as (progress, pbar_id), progress:
+
+                # Generate contexts
                 contexts, source_files, context_scores = (
                     context_generator.generate_contexts(
                         max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
@@ -179,9 +182,6 @@ class Synthesizer:
                         pbar_id=pbar_id,
                     )
                 )
-                advance = max(total_goldens - len(contexts) * max_goldens_per_context * len(document_paths), 0)
-                if advance > 1:
-                    self.update_and_remove_pbar(progress, pbar_id, advance)
                 if self.synthesis_cost:
                     self.synthesis_cost += context_generator.total_cost
                 print_synthesizer_status(
@@ -189,33 +189,27 @@ class Synthesizer:
                     "Context Construction",
                     f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks."
                 )
+                advance = max(total_goldens - len(contexts) * max_goldens_per_context * len(document_paths), 0)
+                update_pbar(progress, pbar_id, advance) if advance else None # prevent pbar removal error if advance is 0
 
-                # Generate goldens from generated contexts
-                with synthesizer_progress_context(
-                    method="docs",
-                    num_evolutions=self.evolution_config.num_evolutions,
-                    evolutions=self.evolution_config.evolutions,
-                    evaluation_model=self.model.get_model_name(),
-                    embedder=context_construction_config.embedder.get_model_name(),
-                    max_generations=len(contexts) * max_goldens_per_context,
-                ):
-                    goldens = self.generate_goldens_from_contexts(
-                        contexts,
-                        include_expected_output,
-                        max_goldens_per_context,
-                        source_files,
-                        _context_scores=context_scores,
-                        _progress=progress,
-                        _pbar_generation_id=pbar_id,
-                        _send_data=False,
-                        _reset_cost=False,
-                    )
-
+                # Generate goldens from contexts
+                goldens = self.generate_goldens_from_contexts(
+                    contexts=contexts,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    _context_scores=context_scores,
+                    _progress=progress,
+                    _pbar_id=pbar_id,
+                    _send_data=False,
+                    _reset_cost=False,
+                )
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
                 if _send_data == True:
                     pass
-                return goldens
+                 
+        return goldens
 
     async def a_generate_goldens_from_docs(
         self,
@@ -232,7 +226,6 @@ class Synthesizer:
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
 
-        # Generate contexts from provided docs
         context_generator = ContextGenerator(
             document_paths=document_paths,
             encoding=context_construction_config.encoding,
@@ -244,17 +237,19 @@ class Synthesizer:
             similarity_threshold=context_construction_config.context_similarity_threshold,
             max_retries=context_construction_config.max_retries,
         )
-
         total_goldens = context_construction_config.max_contexts_per_document * max_goldens_per_context * len(document_paths)
-        progress = self.create_progress()
-        with progress:
-            pbar_id = progress.add_task(
-            f"Generating up to {total_goldens} goldens",
-                total= (
-                len(document_paths) * 3 # loading documents + chunking them + generating contexts
-                + total_goldens * 2 # generating goldens
-            ) 
-            )
+
+        with synthesizer_progress_context(
+            method="docs",
+            evaluation_model=self.model.get_model_name(),
+            num_evolutions=self.evolution_config.num_evolutions,
+            evolutions=self.evolution_config.evolutions,
+            embedder=context_construction_config.embedder.get_model_name(),
+            max_generations=total_goldens,
+            pbar_total=len(document_paths) * 3 + total_goldens * 2,
+        ) as (progress, pbar_id), progress:
+
+            # Generate contexts
             contexts, source_files, context_scores = (
                 await context_generator.a_generate_contexts(
                     max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
@@ -265,9 +260,6 @@ class Synthesizer:
                     pbar_id=pbar_id,
                 )
             )
-            advance = max(total_goldens - len(contexts) * max_goldens_per_context * len(document_paths), 0)
-            if advance > 1:
-                self.update_and_remove_pbar(progress, pbar_id, advance)
             if self.synthesis_cost:
                 self.synthesis_cost += context_generator.total_cost
             print_synthesizer_status(
@@ -275,24 +267,20 @@ class Synthesizer:
                 "Context Construction",
                 f"Utilizing {len(set(chain.from_iterable(contexts)))} out of {context_generator.total_chunks} chunks."
             )
-            with synthesizer_progress_context(
-                method="docs",
-                num_evolutions=self.evolution_config.num_evolutions,
-                evolutions=self.evolution_config.evolutions,
-                evaluation_model=self.model.get_model_name(),
-                embedder=context_construction_config.embedder.get_model_name(),
-                max_generations=len(contexts) * max_goldens_per_context,
-            ):
-                goldens = await self.a_generate_goldens_from_contexts(
-                    contexts=contexts,
-                    include_expected_output=include_expected_output,
-                    max_goldens_per_context=max_goldens_per_context,
-                    source_files=source_files,
-                    _context_scores=context_scores,
-                    _progress=progress,
-                    _pbar_generation_id=pbar_id,
-                    _reset_cost=False,
-                )
+            advance = max(total_goldens - len(contexts) * max_goldens_per_context * len(document_paths), 0)
+            update_pbar(progress, pbar_id, advance) if advance else None # prevent pbar removal error if advance is 0
+
+            # Generate goldens from contexts
+            goldens = await self.a_generate_goldens_from_contexts(
+                contexts=contexts,
+                include_expected_output=include_expected_output,
+                max_goldens_per_context=max_goldens_per_context,
+                source_files=source_files,
+                _context_scores=context_scores,
+                _progress=progress,
+                _pbar_id=pbar_id,
+                _reset_cost=False,
+            )
             self.synthetic_goldens.extend(goldens)
             if _reset_cost and self.cost_tracking and self.using_native_model:
                 print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -310,13 +298,12 @@ class Synthesizer:
         source_files: Optional[List[str]] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
-        _pbar_generation_id: Optional[int] = None,
+        _pbar_id: Optional[int] = None,
         _send_data: bool = True,
         _reset_cost: bool = True,
     ) -> List[Golden]:
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
-        # Initialize Goldens as an empty list
         goldens: List[Golden] = []
 
         if self.async_mode:
@@ -332,13 +319,7 @@ class Synthesizer:
                 )
             )
         else:
-            progress = _progress or self.create_progress()
-            pbar_generation_id = _pbar_generation_id if _pbar_generation_id is not None else progress.add_task(
-                f"Generating up to {len(contexts) * max_goldens_per_context} goldens",
-                total=len(contexts)*max_goldens_per_context + len(contexts), 
-            )
-            with progress:
-                with synthesizer_progress_context(
+            with synthesizer_progress_context(
                     method="default",
                     num_evolutions=self.evolution_config.num_evolutions,
                     evolutions=self.evolution_config.evolutions,
@@ -346,11 +327,14 @@ class Synthesizer:
                     embedder=None,
                     max_generations=len(contexts) * max_goldens_per_context,
                     async_mode=False,
-                ):
+                    progress=_progress,
+                    pbar_id=_pbar_id,
+                    pbar_total=len(contexts) * (max_goldens_per_context + 1)
+                ) as (progress, pbar_id), (progress if _progress is None else nullcontext()):
+
                     for i, context in enumerate(contexts):
-                        pbar_generate_inputs_id = progress.add_task(
-                            f"      ⚡ Generating inputs (context #{i})",
-                            total=2,
+                        pbar_generate_inputs_id = add_pbar(
+                            progress, f"      ⚡ Generating inputs (context #{i})", total=2
                         )
 
                         # Generate inputs
@@ -362,7 +346,7 @@ class Synthesizer:
                             input_format=self.styling_config.input_format,
                         )
                         synthetic_inputs = self._generate_inputs(prompt)
-                        self.update_and_remove_pbar(progress, pbar_generate_inputs_id)
+                        update_pbar(progress, pbar_generate_inputs_id)
 
                         # Qualify inputs
                         qualified_synthetic_inputs: List[SyntheticData]
@@ -370,12 +354,13 @@ class Synthesizer:
                         qualified_synthetic_inputs, scores = self._rewrite_inputs(
                             context, synthetic_inputs
                         )
-                        self.update_and_remove_pbar(progress, pbar_generate_inputs_id)
-                        self.update_and_remove_pbar(progress, pbar_generation_id)
+                        update_pbar(progress, pbar_generate_inputs_id)
+                        update_pbar(progress, pbar_id)
                     
                         for j, data in enumerate(qualified_synthetic_inputs):
                             should_style = self.styling_config.input_format or self.styling_config.scenario or self.styling_config.task
-                            pbar_evolve_id = progress.add_task(
+                            pbar_evolve_input_id = add_pbar(
+                                progress,
                                 f"      🧬 Evolving inputs (golden #{i * len(qualified_synthetic_inputs) + j})",
                                 total=self.evolution_config.num_evolutions + 
                                 (1 if should_style else 0) + 
@@ -389,7 +374,7 @@ class Synthesizer:
                                 num_evolutions=self.evolution_config.num_evolutions,
                                 evolutions=self.evolution_config.evolutions,
                                 progress=progress,
-                                pbar_evolve_id=pbar_evolve_id,
+                                pbar_evolve_input_id=pbar_evolve_input_id,
                             )
 
                             if should_style:
@@ -399,8 +384,7 @@ class Synthesizer:
                                     scenario=self.styling_config.scenario,
                                     task=self.styling_config.task,
                                 )
-                                self.update_and_remove_pbar(progress, pbar_evolve_id)
-
+                                update_pbar(progress, pbar_evolve_input_id)
                                 res: SyntheticData = self._generate_schema(
                                     prompt,
                                     SyntheticData,
@@ -437,12 +421,14 @@ class Synthesizer:
                                 )
                                 res = self._generate(prompt)
                                 golden.expected_output = res
-                                self.update_and_remove_pbar(progress, pbar_evolve_id)
+                                update_pbar(progress, pbar_evolve_input_id)
+
                             goldens.append(golden)
-                            self.update_and_remove_pbar(progress, pbar_generation_id)
-                        advance = min(max_goldens_per_context - len(qualified_synthetic_inputs), 0)
-                        if advance > 0:
-                            self.update_and_remove_pbar(progress, pbar_generation_id, advance=advance)
+                            update_pbar(progress, pbar_id)
+
+                        # Add remaining progress if not enough goldens generated
+                        advance = max(max_goldens_per_context - len(qualified_synthetic_inputs), 0)
+                        update_pbar(progress, pbar_id, advance) if advance else None # prevent pbar removal error if advance is 0
 
         # Wrap-up Synthesis
         self.synthetic_goldens.extend(goldens)
@@ -460,13 +446,14 @@ class Synthesizer:
         source_files: Optional[List[str]] = None,
         _context_scores: Optional[List[float]] = None,
         _progress: Optional[Progress] = None,
-        _pbar_generation_id: Optional[int] = None,
+        _pbar_id: Optional[int] = None,
         _reset_cost: bool = True,
     ) -> List[Golden]:
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
+
         with synthesizer_progress_context(
             method="default",
             num_evolutions=self.evolution_config.num_evolutions,
@@ -475,32 +462,29 @@ class Synthesizer:
             embedder=None,
             max_generations=len(contexts) * max_goldens_per_context,
             async_mode=True,
-        ):
-            progress = _progress or self.create_progress()
-            pbar_generation_id = _pbar_generation_id if _pbar_generation_id is not None else progress.add_task(
-                f"Generating up to {len(contexts) * max_goldens_per_context} goldens",
-                total=len(contexts)*max_goldens_per_context + len(contexts), 
-            )
-            
-            with progress:
-                tasks = [
-                    self.task_wrapper(
-                        semaphore,
-                        self._a_generate_from_context,
-                        semaphore=semaphore,
-                        context=context,
-                        goldens=goldens,
-                        include_expected_output=include_expected_output,
-                        max_goldens_per_context=max_goldens_per_context,
-                        source_files=source_files,
-                        index=index,
-                        progress=progress,
-                        pbar_generation_id=pbar_generation_id,
-                        context_scores=_context_scores,
-                    )
-                    for index, context in enumerate(contexts)
-                ]
-                await asyncio.gather(*tasks)
+            pbar_id=_pbar_id,
+            pbar_total=len(contexts) * (max_goldens_per_context + 1),
+            progress=_progress,
+        ) as (progress, pbar_id), (progress if _progress is None else nullcontext()):
+
+            tasks = [
+                self.task_wrapper(
+                    semaphore,
+                    self._a_generate_from_context,
+                    semaphore=semaphore,
+                    context=context,
+                    goldens=goldens,
+                    include_expected_output=include_expected_output,
+                    max_goldens_per_context=max_goldens_per_context,
+                    source_files=source_files,
+                    index=index,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    context_scores=_context_scores,
+                )
+                for index, context in enumerate(contexts)
+            ]
+            await asyncio.gather(*tasks)
 
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
@@ -515,11 +499,12 @@ class Synthesizer:
         max_goldens_per_context: int,
         source_files: Optional[List[str]],
         index: int,
-        progress: Progress,
-        pbar_generation_id: int,
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None,
         context_scores: Optional[List[float]] = None,
     ):
-        pbar_generate_inputs_id = progress.add_task(
+        pbar_generate_inputs_id = add_pbar(
+            progress,
             f"      ⚡ Generating inputs (context #{index})",
             total=2,
         )
@@ -532,10 +517,8 @@ class Synthesizer:
             task=self.styling_config.task,
             input_format=self.styling_config.input_format,
         )
-        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
-            prompt
-        )
-        self.update_and_remove_pbar(progress, pbar_generate_inputs_id)
+        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(prompt)
+        update_pbar(progress, pbar_generate_inputs_id)
 
         # Qualify inputs
         qualified_synthetic_inputs: List[SyntheticData]
@@ -543,20 +526,19 @@ class Synthesizer:
         qualified_synthetic_inputs, scores = await self._a_rewrite_inputs(
             context, synthetic_inputs
         )
-        self.update_and_remove_pbar(progress, pbar_generate_inputs_id)
-        self.update_and_remove_pbar(progress, pbar_generation_id)
+        update_pbar(progress, pbar_generate_inputs_id)
+        update_pbar(progress, pbar_id)
         
-
         # Helper function to process each input in parallel
         async def process_input(
             data_index: int, 
             context_index: int, 
             data: SyntheticData, 
-            progress: Progress
+            progress: Optional[Progress] = None,
         ):
-
             should_style = self.styling_config.input_format or self.styling_config.scenario or self.styling_config.task
-            task_id = progress.add_task(
+            pbar_evolve_input_id = add_pbar(
+                progress,
                 f"      🧬 Evolving inputs (golden #{context_index * len(qualified_synthetic_inputs) + data_index})",
                 total=self.evolution_config.num_evolutions + 
                 (1 if should_style else 0) + 
@@ -570,7 +552,7 @@ class Synthesizer:
                 num_evolutions=self.evolution_config.num_evolutions,
                 evolutions=self.evolution_config.evolutions,
                 progress=progress,
-                pbar_evolve_id=task_id
+                pbar_evolve_input_id=pbar_evolve_input_id,
             )
 
             if should_style:
@@ -586,7 +568,7 @@ class Synthesizer:
                     self.model,
                 )
                 evolved_input = res.input
-                self.update_and_remove_pbar(progress, task_id)
+                update_pbar(progress, pbar_evolve_input_id)
 
             # Generate expected output
             expected_output = None
@@ -597,7 +579,7 @@ class Synthesizer:
                     expected_output_format=self.styling_config.expected_output_format,
                 )
                 expected_output = await self._a_generate(expected_output_prompt)
-                self.update_and_remove_pbar(progress, task_id)
+                update_pbar(progress, pbar_evolve_input_id)
 
             # Create Golden
             golden = Golden(
@@ -619,7 +601,7 @@ class Synthesizer:
             )
             
             # Update progress bar
-            self.update_and_remove_pbar(progress, pbar_generation_id)
+            update_pbar(progress, pbar_id)
             return golden
         
         # Process all inputs in parallel using asyncio.gather
@@ -631,8 +613,8 @@ class Synthesizer:
             ) 
             for i, data in enumerate(qualified_synthetic_inputs)
         ]
-        advance = min(max_goldens_per_context - len(qualified_synthetic_inputs),0)
-        self.update_and_remove_pbar(progress, pbar_generation_id, advance=advance)
+        advance = max(max_goldens_per_context - len(qualified_synthetic_inputs), 0)
+        update_pbar(progress, pbar_id, advance) if advance else None # prevent pbar removal error if advance is 0
         results = await asyncio.gather(*tasks)
         goldens.extend(results)
 
@@ -701,64 +683,60 @@ class Synthesizer:
         )
         goldens: List[Golden] = []
 
-        progress = self.create_progress()
-        pbar_id = progress.add_task(
-            f"Generating up to {num_goldens} goldens",
-            total=num_goldens + 1,
-        )
-        with progress:
-            with synthesizer_progress_context(
-                method="Scratch",
-                num_evolutions=self.evolution_config.num_evolutions,
-                evolutions=transformed_evolutions,
-                evaluation_model=self.model.get_model_name(),
-                embedder=None,
-                max_generations=num_goldens,
-                async_mode=True,
-            ):
-                # Generate inputs
-                prompt = PromptSynthesizerTemplate.generate_synthetic_prompts(
-                    scenario=self.styling_config.scenario,
-                    task=self.styling_config.task,
-                    input_format=self.styling_config.input_format,
-                    num_goldens=num_goldens,
+        with synthesizer_progress_context(
+            method="Scratch",
+            num_evolutions=self.evolution_config.num_evolutions,
+            evolutions=transformed_evolutions,
+            evaluation_model=self.model.get_model_name(),
+            embedder=None,
+            max_generations=num_goldens,
+            async_mode=True,
+            pbar_total=num_goldens + 1,
+        ) as (progress, pbar_id), progress:
+
+            # Generate inputs
+            prompt = PromptSynthesizerTemplate.generate_synthetic_prompts(
+                scenario=self.styling_config.scenario,
+                task=self.styling_config.task,
+                input_format=self.styling_config.input_format,
+                num_goldens=num_goldens,
+            )
+            synthetic_data = self._generate_inputs(prompt)
+            update_pbar(progress, pbar_id)
+
+            # Evolve inputs
+            async def evolve_input(i, data: SyntheticData):
+                pbar_evolve_input_id = add_pbar(
+                    progress,
+                    f"      🧬 Evolving inputs (golden #{i})",
+                    total=self.evolution_config.num_evolutions,
                 )
-                synthetic_data = self._generate_inputs(prompt)
-                self.update_and_remove_pbar(progress, pbar_id)
+                evolved_prompts = await self.task_wrapper(
+                    semaphore,
+                    self._a_evolve_input,
+                    input=data.input,
+                    num_evolutions=self.evolution_config.num_evolutions,
+                    evolutions=transformed_evolutions,
+                    progress=progress,
+                    pbar_evolve_input_id=pbar_evolve_input_id,
+                )
+                update_pbar(progress, pbar_id)
+                return evolved_prompts
+            tasks = [
+                evolve_input(i, data)
+                for i, data in enumerate(synthetic_data)
+            ]
+            evolved_prompts_list = await asyncio.gather(*tasks)
 
-                # Evolve inputs
-                async def evolve_input(i, data: SyntheticData):
-                    pbar_evolve_id = progress.add_task(
-                        f"      🧬 Evolving inputs (golden #{i})",
-                        total=self.evolution_config.num_evolutions,
-                    )
-                    evolved_prompts = await self.task_wrapper(
-                        semaphore,
-                        self._a_evolve_input,
-                        input=data.input,
-                        num_evolutions=self.evolution_config.num_evolutions,
-                        evolutions=transformed_evolutions,
-                        progress=progress,
-                        pbar_evolve_id=pbar_evolve_id,
-                    )
-                    self.update_and_remove_pbar(progress, pbar_id)
-                    return evolved_prompts
-
-                tasks = [
-                    evolve_input(i, data)
-                    for i, data in enumerate(synthetic_data)
-                ]
-                evolved_prompts_list = await asyncio.gather(*tasks)
-
-                # Synthesize Goldens
-                goldens = [
-                    Golden(
-                        input=evolved_prompt,
-                        additional_metadata={"evolutions": evolutions},
-                    )
-                    for evolved_prompt, evolutions in evolved_prompts_list
-                ]
-                return goldens
+            # Synthesize Goldens
+            goldens = [
+                Golden(
+                    input=evolved_prompt,
+                    additional_metadata={"evolutions": evolutions},
+                )
+                for evolved_prompt, evolutions in evolved_prompts_list
+            ]
+            return goldens
 
     def generate_goldens_from_scratch(
         self,
@@ -789,12 +767,6 @@ class Synthesizer:
                 )
             )
         else:
-            progress = self.create_progress()
-            pbar_id = progress.add_task(
-                f"Generating up to {num_goldens} goldens",
-                total=num_goldens + 1,
-            )
-            with progress:
                 with synthesizer_progress_context(
                     method="Scratch",
                     num_evolutions=self.evolution_config.num_evolutions,
@@ -803,7 +775,8 @@ class Synthesizer:
                     embedder=None,
                     max_generations=num_goldens,
                     async_mode=False,
-                ):
+                    pbar_total=num_goldens + 1,
+                ) as (progress, pbar_id), progress:
 
                     # Generate inputs
                     prompt = PromptSynthesizerTemplate.generate_synthetic_prompts(
@@ -813,11 +786,12 @@ class Synthesizer:
                         num_goldens=num_goldens,
                     )
                     synthetic_data = self._generate_inputs(prompt)
-                    self.update_and_remove_pbar(progress, pbar_id)
+                    update_pbar(progress, pbar_id)
 
                     # Evolve inputs
                     for i, data in enumerate(synthetic_data):
-                        pbar_evolve_id = progress.add_task(
+                        pbar_evolve_input_id = add_pbar(
+                            progress,
                             f"      🧬 Evolving inputs (golden #{i})",
                             total=self.evolution_config.num_evolutions,
                         )
@@ -826,9 +800,9 @@ class Synthesizer:
                             num_evolutions=self.evolution_config.num_evolutions,
                             evolutions=transformed_evolutions,
                             progress=progress,
-                            pbar_evolve_id=pbar_evolve_id,
+                            pbar_evolve_input_id=pbar_evolve_input_id,
                         )
-                        self.update_and_remove_pbar(progress, pbar_id)
+                        update_pbar(progress, pbar_id)
 
                     # Synthesize Goldens
                     golden = Golden(
@@ -1092,7 +1066,7 @@ class Synthesizer:
         evolutions: Dict[Union[Evolution, PromptEvolution], float],
         context: Optional[List[str]] = None,
         progress: Optional[Progress] = None,
-        pbar_evolve_id: Optional[int] = None,
+        pbar_evolve_input_id: Optional[int] = None,
     ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
         evolved_input = input
         evolutions_used = []
@@ -1115,7 +1089,7 @@ class Synthesizer:
             evolutions_used.append(evolution_type.value)
 
             # Update Progress
-            self.update_and_remove_pbar(progress, pbar_evolve_id)
+            update_pbar(progress, pbar_evolve_input_id)
 
         return evolved_input, evolutions_used
 
@@ -1126,7 +1100,7 @@ class Synthesizer:
         evolutions: Dict[Union[Evolution, PromptEvolution], float],
         context: Optional[List[str]] = None,
         progress: Optional[Progress] = None,
-        pbar_evolve_id: Optional[int] = None,
+        pbar_evolve_input_id: Optional[int] = None,
     ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
         evolved_input = input
         evolutions_used = []
@@ -1149,7 +1123,7 @@ class Synthesizer:
             evolutions_used.append(evolution_type.value)
 
             # Update Progress
-            self.update_and_remove_pbar(progress, pbar_evolve_id)
+            update_pbar(progress, pbar_evolve_input_id)
 
         return evolved_input, evolutions_used
 
@@ -1451,32 +1425,3 @@ class Synthesizer:
             print(f"Synthetic goldens saved at {full_file_path}!")
 
         return full_file_path
-
-    #############################################################
-    # Progress
-    #############################################################
-
-    def create_progress(
-        self,
-    ):
-        return Progress(
-            TextColumn("{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            console=custom_console,
-        )
-
-    def update_and_remove_pbar(
-        self, 
-        progress: Optional[Progress], 
-        pbar_id: Optional[int],
-        advance: int = 1
-    ):
-        if progress is None or pbar_id is None:
-            return
-        progress.update(pbar_id, advance=advance)
-        task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-        if task_obj.finished:
-            progress.remove_task(pbar_id)
-            
