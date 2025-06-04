@@ -448,6 +448,7 @@ class Synthesizer:
                         advance = max(max_goldens_per_context - len(qualified_synthetic_inputs), 0)
                         remove_pbars(progress, [pbar_generate_goldens_id, pbar_generate_inputs_id] + pbar_evolve_input_ids)
                         update_pbar(progress, pbar_id, advance, remove=False) if advance else None # prevent pbar removal error if advance is 0
+                    remove_pbars(progress, [pbar_id]) if _progress is None else None
 
         # Wrap-up Synthesis
         self.synthetic_goldens.extend(goldens)
@@ -504,7 +505,8 @@ class Synthesizer:
                 for index, context in enumerate(contexts)
             ]
             await asyncio.gather(*tasks)
-
+            remove_pbars(progress, [pbar_id]) if _progress is None else None
+            
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
         return goldens
@@ -550,6 +552,7 @@ class Synthesizer:
         )
         update_pbar(progress, pbar_generate_inputs_id, remove=False)
         update_pbar(progress, pbar_generate_goldens_id, remove=False)
+        update_pbar(progress, pbar_id, remove=False)
         
         # Helper function to process each input in parallel
         async def process_input(
