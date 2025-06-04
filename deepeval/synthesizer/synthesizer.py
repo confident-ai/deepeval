@@ -395,6 +395,7 @@ class Synthesizer:
                                 evolutions=self.evolution_config.evolutions,
                                 progress=progress,
                                 pbar_evolve_input_id=pbar_evolve_input_ids[j],
+                                remove_pbar=False,
                             )
 
                             if should_style:
@@ -574,6 +575,7 @@ class Synthesizer:
                 evolutions=self.evolution_config.evolutions,
                 progress=progress,
                 pbar_evolve_input_id=pbar_evolve_input_ids[index],
+                remove_pbar=False,
             )
 
             if should_style:
@@ -1087,6 +1089,7 @@ class Synthesizer:
         context: Optional[List[str]] = None,
         progress: Optional[Progress] = None,
         pbar_evolve_input_id: Optional[int] = None,
+        remove_pbar: bool = True,
     ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
         evolved_input = input
         evolutions_used = []
@@ -1109,7 +1112,7 @@ class Synthesizer:
             evolutions_used.append(evolution_type.value)
 
             # Update Progress
-            update_pbar(progress, pbar_evolve_input_id, remove=False)
+            update_pbar(progress, pbar_evolve_input_id, remove=remove_pbar)
 
         return evolved_input, evolutions_used
 
@@ -1121,6 +1124,7 @@ class Synthesizer:
         context: Optional[List[str]] = None,
         progress: Optional[Progress] = None,
         pbar_evolve_input_id: Optional[int] = None,
+        remove_pbar: bool = True,
     ) -> Tuple[str, List[Union[Evolution, PromptEvolution]]]:
         evolved_input = input
         evolutions_used = []
@@ -1143,7 +1147,7 @@ class Synthesizer:
             evolutions_used.append(evolution_type.value)
 
             # Update Progress
-            update_pbar(progress, pbar_evolve_input_id, remove=False)
+            update_pbar(progress, pbar_evolve_input_id, remove=remove_pbar)
 
         return evolved_input, evolutions_used
 
