@@ -211,10 +211,10 @@ class Synthesizer:
                 remove_pbars(
                     progress, 
                     [
-                        pbar_id, 
-                        context_generator.pbar_load_docs_id, 
+                        context_generator.pbar_generate_contexts_id,
                         context_generator.pbar_chunk_docs_id, 
-                        context_generator.pbar_generate_contexts_id
+                        context_generator.pbar_load_docs_id, 
+                        pbar_id, 
                     ]
                 )
         
@@ -351,9 +351,13 @@ class Synthesizer:
                 ) as (progress, pbar_id), (progress if _progress is None else nullcontext()):
 
                     for i, context in enumerate(contexts):
-                        pbar_generate_inputs_id = add_pbar(
-                            progress, f"      ⚡ Generating inputs (context #{i})", total=2
-                        )
+                        should_style = self.styling_config.input_format or self.styling_config.scenario or self.styling_config.task
+                        total_evolve = self.evolution_config.num_evolutions + (1 if should_style else 0) + (1 if include_expected_output else 0)
+                        pbar_generate_goldens_id = add_pbar(progress, f"\t⚡ Generating goldens from context #{i}", total=2 + total_evolve)
+                        pbar_generate_inputs_id = add_pbar(progress, f"\t\t💡 Generating {max_goldens_per_context} input(s)", total=2)
+                        pbar_evolve_input_ids = []
+                        for i in range(max_goldens_per_context):
+                            pbar_evolve_input_ids.append(add_pbar(progress, f"\t\t🧬 Evolving input #{i}", total=total_evolve))
 
                         # Generate inputs
                         prompt = SynthesizerTemplate.generate_synthetic_inputs(
@@ -364,7 +368,8 @@ class Synthesizer:
                             input_format=self.styling_config.input_format,
                         )
                         synthetic_inputs = self._generate_inputs(prompt)
-                        update_pbar(progress, pbar_generate_inputs_id)
+                        update_pbar(progress, pbar_generate_inputs_id, remove=False)
+                        update_pbar(progress, pbar_generate_goldens_id, remove=False)
 
                         # Qualify inputs
                         qualified_synthetic_inputs: List[SyntheticData]
@@ -372,18 +377,10 @@ class Synthesizer:
                         qualified_synthetic_inputs, scores = self._rewrite_inputs(
                             context, synthetic_inputs
                         )
-                        update_pbar(progress, pbar_generate_inputs_id)
-                        update_pbar(progress, pbar_id)
+                        update_pbar(progress, pbar_generate_inputs_id, remove=False)
+                        update_pbar(progress, pbar_generate_goldens_id, remove=False)
                     
                         for j, data in enumerate(qualified_synthetic_inputs):
-                            should_style = self.styling_config.input_format or self.styling_config.scenario or self.styling_config.task
-                            pbar_evolve_input_id = add_pbar(
-                                progress,
-                                f"      🧬 Evolving inputs (golden #{i * len(qualified_synthetic_inputs) + j})",
-                                total=self.evolution_config.num_evolutions + 
-                                (1 if should_style else 0) + 
-                                (1 if include_expected_output else 0),
-                            )
 
                             # Evolve input
                             evolved_input, evolutions_used = self._evolve_input(
@@ -392,7 +389,7 @@ class Synthesizer:
                                 num_evolutions=self.evolution_config.num_evolutions,
                                 evolutions=self.evolution_config.evolutions,
                                 progress=progress,
-                                pbar_evolve_input_id=pbar_evolve_input_id,
+                                pbar_evolve_input_id=pbar_evolve_input_ids[j],
                             )
 
                             if should_style:
@@ -402,7 +399,8 @@ class Synthesizer:
                                     scenario=self.styling_config.scenario,
                                     task=self.styling_config.task,
                                 )
-                                update_pbar(progress, pbar_evolve_input_id)
+                                update_pbar(progress, pbar_evolve_input_ids[j], remove=False)
+                                update_pbar(progress, pbar_generate_goldens_id, remove=False)
                                 res: SyntheticData = self._generate_schema(
                                     prompt,
                                     SyntheticData,
@@ -439,14 +437,17 @@ class Synthesizer:
                                 )
                                 res = self._generate(prompt)
                                 golden.expected_output = res
-                                update_pbar(progress, pbar_evolve_input_id)
+                                update_pbar(progress, pbar_evolve_input_ids[j], remove=False)
+                                update_pbar(progress, pbar_generate_goldens_id, remove=False)
 
                             goldens.append(golden)
-                            update_pbar(progress, pbar_id)
+                            update_pbar(progress, pbar_id, remove=False)
+                            
 
                         # Add remaining progress if not enough goldens generated
                         advance = max(max_goldens_per_context - len(qualified_synthetic_inputs), 0)
-                        update_pbar(progress, pbar_id, advance) if advance else None # prevent pbar removal error if advance is 0
+                        remove_pbars(progress, [pbar_generate_goldens_id, pbar_generate_inputs_id] + pbar_evolve_input_ids)
+                        update_pbar(progress, pbar_id, advance, remove=False) if advance else None # prevent pbar removal error if advance is 0
 
         # Wrap-up Synthesis
         self.synthetic_goldens.extend(goldens)
