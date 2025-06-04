@@ -95,7 +95,9 @@ class Synthesizer:
             else FiltrationConfig(critic_model=self.model)
         )
         self.evolution_config = (
-            evolution_config if evolution_config is not None else EvolutionConfig()
+            evolution_config
+            if evolution_config is not None
+            else EvolutionConfig()
         )
         self.styling_config = (
             styling_config if styling_config is not None else StylingConfig()
@@ -347,7 +349,9 @@ class Synthesizer:
                             input=evolved_input,
                             context=context,
                             source_file=(
-                                source_files[i] if source_files is not None else None
+                                source_files[i]
+                                if source_files is not None
+                                else None
                             ),
                             additional_metadata={
                                 "evolutions": evolutions_used,
@@ -443,7 +447,9 @@ class Synthesizer:
             task=self.styling_config.task,
             input_format=self.styling_config.input_format,
         )
-        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(prompt)
+        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
+            prompt
+        )
 
         # Qualify inputs
         qualified_synthetic_inputs: List[SyntheticData]
@@ -494,7 +500,9 @@ class Synthesizer:
                 input=evolved_input,
                 context=context,
                 expected_output=expected_output,
-                source_file=(source_files[index] if source_files is not None else None),
+                source_file=(
+                    source_files[index] if source_files is not None else None
+                ),
                 additional_metadata={
                     "evolutions": evolutions_used,
                     "synthetic_input_quality": scores[i],
@@ -523,7 +531,9 @@ class Synthesizer:
         prompt = SynthesizerTemplate.generate_text2sql_inputs(
             context=context, max_goldens_per_context=max_goldens_per_context
         )
-        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(prompt)
+        synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
+            prompt
+        )
         for data in synthetic_inputs:
             # Generate expected output
             expected_output = None
@@ -735,7 +745,9 @@ class Synthesizer:
 
             # Extract styles from goldens if not already set
             if self.set_styling_config == False:
-                example_inputs = random.sample([golden.input for golden in goldens], 10)
+                example_inputs = random.sample(
+                    [golden.input for golden in goldens], 10
+                )
                 styling_prompt = (
                     ExtractionTemplate.extract_prompt_structure_from_inputs(
                         example_inputs
@@ -780,15 +792,21 @@ class Synthesizer:
 
         # Extract styles from goldens if not already set
         if self.set_styling_config == False:
-            example_inputs = random.sample([golden.input for golden in goldens], 10)
-            styling_prompt = ExtractionTemplate.extract_prompt_structure_from_inputs(
-                example_inputs
+            example_inputs = random.sample(
+                [golden.input for golden in goldens], 10
+            )
+            styling_prompt = (
+                ExtractionTemplate.extract_prompt_structure_from_inputs(
+                    example_inputs
+                )
             )
             styles = await self._a_generate_schema(
                 styling_prompt, PromptStyling, self.model
             )
             styles_json = json.loads(styles.model_dump_json())
-            styling_config = StylingConfig(**styles_json, expected_output_format=None)
+            styling_config = StylingConfig(
+                **styles_json, expected_output_format=None
+            )
             self.styling_config = styling_config
 
         # Generate goldens from scratch or from contexts if available
@@ -834,14 +852,19 @@ class Synthesizer:
             input = item.input
             for _ in range(self.filtration_config.max_quality_retries):
                 # Evaluate synthetically generated inputs
-                evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(input)
+                evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
+                    input
+                )
                 feedback_res: InputFeedback = await self._a_generate_schema(
                     evaluation_prompt,
                     InputFeedback,
                     self.filtration_config.critic_model,
                 )
                 feedback, score = feedback_res.feedback, feedback_res.score
-                if score >= self.filtration_config.synthetic_input_quality_threshold:
+                if (
+                    score
+                    >= self.filtration_config.synthetic_input_quality_threshold
+                ):
                     break
 
                 # Rewrite input if score below threshold
@@ -872,14 +895,19 @@ class Synthesizer:
             input = item.input
             for _ in range(self.filtration_config.max_quality_retries):
                 # Evaluate synthetically generated inputs
-                evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(input)
+                evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
+                    input
+                )
                 feedback_res: InputFeedback = self._generate_schema(
                     evaluation_prompt,
                     InputFeedback,
                     self.filtration_config.critic_model,
                 )
                 feedback, score = feedback_res.feedback, feedback_res.score
-                if score >= self.filtration_config.synthetic_input_quality_threshold:
+                if (
+                    score
+                    >= self.filtration_config.synthetic_input_quality_threshold
+                ):
                     break
 
                 # Rewrite input if score below threshold
@@ -1048,7 +1076,9 @@ class Synthesizer:
             return res
         else:
             try:
-                res: Response = await self.model.a_generate(prompt, schema=Response)
+                res: Response = await self.model.a_generate(
+                    prompt, schema=Response
+                )
                 return res.response
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -1093,7 +1123,9 @@ class Synthesizer:
             # Handle metadata
             if metadata is not None:
                 evolutions = metadata.get("evolutions", None)
-                synthetic_input_quality = metadata.get("synthetic_input_quality", None)
+                synthetic_input_quality = metadata.get(
+                    "synthetic_input_quality", None
+                )
                 context_quality = metadata.get("context_quality", None)
             else:
                 evolutions = None
@@ -1147,7 +1179,9 @@ class Synthesizer:
                 goldens = self.synthetic_goldens
                 api_dataset = APIDataset(alias=alias, goldens=goldens)
                 try:
-                    body = api_dataset.model_dump(by_alias=True, exclude_none=True)
+                    body = api_dataset.model_dump(
+                        by_alias=True, exclude_none=True
+                    )
                 except AttributeError:
                     body = api_dataset.dict(by_alias=True, exclude_none=True)
                 api = Api()
@@ -1214,7 +1248,9 @@ class Synthesizer:
                 "No synthetic goldens found. Please generate goldens before saving goldens."
             )
 
-        base_name = file_name or datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_name = file_name or datetime.datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
         new_filename = f"{base_name}.{file_type}"
 
         os.makedirs(directory, exist_ok=True)
@@ -1234,7 +1270,9 @@ class Synthesizer:
                 ]
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
         elif file_type == "csv":
-            with open(full_file_path, "w", newline="", encoding="utf-8") as file:
+            with open(
+                full_file_path, "w", newline="", encoding="utf-8"
+            ) as file:
                 writer = csv.writer(file)
                 writer.writerow(
                     [
