@@ -52,7 +52,7 @@ from deepeval.dataset.api import (
     CreateDatasetHttpResponse,
 )
 
-valid_file_types = ["csv", "json"]
+valid_file_types = ["csv", "json", "jsonl"]
 
 evolution_map = {
     "Reasoning": EvolutionTemplate.reasoning_evolution,
@@ -216,13 +216,15 @@ class Synthesizer:
             similarity_threshold=context_construction_config.context_similarity_threshold,
             max_retries=context_construction_config.max_retries,
         )
-        contexts, source_files, context_scores = (
-            await context_generator.a_generate_contexts(
-                max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
-                min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
-                max_context_size=context_construction_config.max_context_length,
-                min_context_size=context_construction_config.min_context_length,
-            )
+        (
+            contexts,
+            source_files,
+            context_scores,
+        ) = await context_generator.a_generate_contexts(
+            max_contexts_per_source_file=context_construction_config.max_contexts_per_document,
+            min_contexts_per_source_file=context_construction_config.min_contexts_per_document,
+            max_context_size=context_construction_config.max_context_length,
+            min_context_size=context_construction_config.min_context_length,
         )
         if self.synthesis_cost:
             self.synthesis_cost += context_generator.total_cost
@@ -297,7 +299,6 @@ class Synthesizer:
                 async_mode=False,
             ) as progress_bar:
                 for i, context in enumerate(contexts):
-
                     # Generate inputs
                     prompt = SynthesizerTemplate.generate_synthetic_inputs(
                         context=context,
@@ -315,7 +316,6 @@ class Synthesizer:
                         context, synthetic_inputs
                     )
                     for j, data in enumerate(qualified_synthetic_inputs):
-
                         # Evolve input
                         evolved_input, evolutions_used = self._evolve_input(
                             input=data.input,
@@ -458,7 +458,6 @@ class Synthesizer:
             context, synthetic_inputs
         )
         for i, data in enumerate(qualified_synthetic_inputs):
-
             # Evolve input
             evolved_input, evolutions_used = await self._a_evolve_input(
                 input=data.input,
@@ -536,7 +535,6 @@ class Synthesizer:
             prompt
         )
         for data in synthetic_inputs:
-
             # Generate expected output
             expected_output = None
             if include_expected_output:
@@ -592,7 +590,6 @@ class Synthesizer:
             progress_bar=None,
             async_mode=True,
         ) as progress_bar:
-
             # Generate inputs
             prompt = PromptSynthesizerTemplate.generate_synthetic_prompts(
                 scenario=self.styling_config.scenario,
@@ -665,7 +662,6 @@ class Synthesizer:
                 progress_bar=None,
                 async_mode=False,
             ) as progress_bar:
-
                 # Generate inputs
                 prompt = PromptSynthesizerTemplate.generate_synthetic_prompts(
                     scenario=self.styling_config.scenario,
@@ -728,7 +724,6 @@ class Synthesizer:
         max_goldens_per_golden: int = 2,
         include_expected_output: bool = True,
     ) -> List[Golden]:
-
         if self.async_mode:
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
@@ -850,14 +845,12 @@ class Synthesizer:
         context: List[str],
         inputs: List[SyntheticData],
     ) -> Tuple[List[SyntheticData], List[float]]:
-
         # Evaluate input quality
         scores = []
         filtered_inputs = []
         for item in inputs:
             input = item.input
             for _ in range(self.filtration_config.max_quality_retries):
-
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
                     input
@@ -895,14 +888,12 @@ class Synthesizer:
         context: List[str],
         inputs: List[SyntheticData],
     ) -> Tuple[List[SyntheticData], List[float]]:
-
         # Evaluate input quality
         scores = []
         filtered_inputs = []
         for item in inputs:
             input = item.input
             for _ in range(self.filtration_config.max_quality_retries):
-
                 # Evaluate synthetically generated inputs
                 evaluation_prompt = FilterTemplate.evaluate_synthetic_inputs(
                     input
@@ -1216,7 +1207,7 @@ class Synthesizer:
 
     def save_as(
         self,
-        file_type: Literal["json", "csv"],
+        file_type: Literal["json", "csv", "jsonl"],
         directory: str,
         file_name: Optional[str] = None,
         quiet: bool = False,
@@ -1240,8 +1231,9 @@ class Synthesizer:
         """
         if str(file_type).lower() not in valid_file_types:
             raise ValueError(
-                "Invalid file type. Available file types to save as: "
-                ", ".join(type for type in valid_file_types)
+                "Invalid file type. Available file types to save as: , ".join(
+                    type for type in valid_file_types
+                )
             )
 
         if file_name and "." in file_name:
@@ -1301,6 +1293,17 @@ class Synthesizer:
                             golden.source_file,
                         ]
                     )
+        elif file_type == "jsonl":
+            with open(full_file_path, "w", encoding="utf-8") as file:
+                for golden in self.synthetic_goldens:
+                    record = {
+                        "input": golden.input,
+                        "actual_output": golden.actual_output,
+                        "expected_output": golden.expected_output,
+                        "context": golden.context,
+                        "source_file": golden.source_file,
+                    }
+                    file.write(json.dumps(record, ensure_ascii=False) + "\n")
         if not quiet:
             print(f"Synthetic goldens saved at {full_file_path}!")
 
