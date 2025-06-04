@@ -154,8 +154,9 @@ class ContextGenerator:
 
             # Load the source files and create document chunkers for each file
             source_file_to_chunker_map: Dict[str, DocumentChunker] = (
-                self._load_docs(progress, pbar_id, pbar_load_docs_id)
+                self._load_docs(progress, pbar_load_docs_id)
             )
+            update_pbar(progress, pbar_id, remove=False)
 
             # Chunk each file into a chroma collection of chunks
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
@@ -168,7 +169,7 @@ class ContextGenerator:
                 )
                 source_files_to_chunk_collections_map[key] = collection
                 update_pbar(progress, pbar_chunk_docs_id, remove=False)
-                update_pbar(progress, pbar_id, remove=False)
+            update_pbar(progress, pbar_id, remove=False)
 
             # Initialize progress bar for context generation
             num_contexts = sum(
@@ -205,8 +206,8 @@ class ContextGenerator:
                 contexts.extend(contexts_per_source_file)
                 scores.extend(scores_per_source_file)
                 source_files.extend([path] * len(contexts_per_source_file))
-                update_pbar(progress, pbar_id, remove=False)
             update_pbar(progress, pbar_generate_contexts_id, advance_to_end=True, remove=False)
+            update_pbar(progress, pbar_id, remove=False)
             remove_pbars(progress, self.pbar_filling_contexts_ids)
 
             if self.not_enough_chunks:
@@ -259,16 +260,16 @@ class ContextGenerator:
             self.pbar_generate_contexts_id = pbar_generate_contexts_id
 
             source_file_to_chunker_map: Dict[str, DocumentChunker] = (
-                await self._a_load_docs(progress, pbar_load_docs_id, pbar_id)
+                await self._a_load_docs(progress, pbar_load_docs_id)
             )
+            update_pbar(progress, pbar_id, remove=False)
 
             # Chunk each file into a chroma collection of chunks
             async def a_chunk_and_store(
                 key, 
                 chunker: DocumentChunker, 
                 progress: Optional[Progress] = None, 
-                pbar_chunk_docs_id: Optional[int] = None, 
-                pbar_id: Optional[int] = None,
+                pbar_chunk_docs_id: Optional[int] = None,
             ):
                 collection = await chunker.a_chunk_doc(
                     self.chunk_size, self.chunk_overlap
@@ -278,14 +279,14 @@ class ContextGenerator:
                 )
                 source_files_to_chunk_collections_map[key] = collection
                 update_pbar(progress, pbar_chunk_docs_id, remove=False)
-                update_pbar(progress, pbar_id, remove=False)
             
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
             tasks = [
-                a_chunk_and_store(key, chunker, progress, pbar_chunk_docs_id, pbar_id)
+                a_chunk_and_store(key, chunker, progress, pbar_chunk_docs_id)
                 for key, chunker in source_file_to_chunker_map.items()
             ]
             await asyncio.gather(*tasks)
+            update_pbar(progress, pbar_id, remove=False)
 
             # Initialize progress bar for context generation
             num_contexts = sum(
@@ -317,12 +318,12 @@ class ContextGenerator:
                         source_files_to_collections_map=source_files_to_chunk_collections_map,
                         progress=progress,
                         pbar_generate_contexts_id=pbar_generate_contexts_id,
-                        pbar_id=pbar_id,
                     )
                 )
 
             results = await asyncio.gather(*tasks)
             update_pbar(progress, pbar_generate_contexts_id, advance_to_end=True, remove=False)
+            update_pbar(progress, pbar_id, remove=False)
             remove_pbars(progress, self.pbar_filling_contexts_ids)
             for path, contexts_per_doc, scores_per_doc in results:
                 contexts.extend(contexts_per_doc)
@@ -351,7 +352,6 @@ class ContextGenerator:
         source_files_to_collections_map: Dict,
         progress: Optional[Progress] = None,
         pbar_generate_contexts_id: Optional[int] = None,
-        pbar_id: Optional[int] = None,
     ):
         contexts_per_doc, scores_per_doc = (
             await self._a_get_n_random_contexts_per_source_file(
@@ -364,7 +364,6 @@ class ContextGenerator:
                 pbar_generate_contexts_id=pbar_generate_contexts_id,
             )
         )
-        update_pbar(progress, pbar_id, remove=False)
         return path, contexts_per_doc, scores_per_doc
 
     #########################################################
@@ -782,7 +781,6 @@ class ContextGenerator:
         self,
         progress: Optional[Progress] = None,
         pbar_load_docs_id: Optional[int] = None,
-        pbar_id: Optional[int] = None,
     ):
         doc_to_chunker_map = {}
         for path in self.document_paths:
@@ -790,14 +788,12 @@ class ContextGenerator:
             doc_chunker.load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
             update_pbar(progress, pbar_load_docs_id, remove=False)
-            update_pbar(progress, pbar_id, remove=False)
         return doc_to_chunker_map
 
     async def _a_load_docs(
         self,
         progress: Optional[Progress] = None,
         pbar_load_docs_id: Optional[int] = None,
-        pbar_id: Optional[int] = None,
     ):
         doc_to_chunker_map = {}
         
@@ -805,14 +801,12 @@ class ContextGenerator:
             path: str,
             progress: Optional[Progress] = None,
             pbar_load_docs_id: Optional[int] = None,
-            pbar_id: Optional[int] = None,
         ):
             doc_chunker = DocumentChunker(self.embedder)
             await doc_chunker.a_load_doc(path, self.encoding)
             doc_to_chunker_map[path] = doc_chunker
             update_pbar(progress, pbar_load_docs_id, remove=False)
-            update_pbar(progress, pbar_id, remove=False)
 
-        tasks = [a_process_document(path, progress, pbar_load_docs_id, pbar_id) for path in self.document_paths]
+        tasks = [a_process_document(path, progress, pbar_load_docs_id) for path in self.document_paths]
         await asyncio.gather(*tasks)
         return doc_to_chunker_map
