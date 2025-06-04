@@ -54,7 +54,7 @@ def synthesizer_progress_context(
         if progress is not None and pbar_id is not None:
             yield progress, pbar_id
         else:
-            description = f"✨ Generating up to {max_generations} goldens (method={method})"
+            description = f"✨ Generating up to {max_generations} goldens (method={method}, evolutions={num_evolutions})"
             if long_description:
                 if embedder is None:
                     description += f", using {evaluation_model}, async={async_mode}"

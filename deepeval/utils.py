@@ -486,13 +486,14 @@ def update_pbar(
     pbar_id: Optional[int],
     advance: int = 1,
     advance_to_end: bool = False,
+    remove: bool = True,
 ):
     if progress is None or pbar_id is None:
         return
     advance = progress.tasks[pbar_id].remaining if advance_to_end else advance
     progress.update(pbar_id, advance=advance)
     task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-    if task_obj.finished:
+    if task_obj.finished and remove:
         progress.remove_task(pbar_id)
 
 def add_pbar(
@@ -506,6 +507,18 @@ def add_pbar(
         description,
         total=total
     )
+
+def remove_pbars(
+    progress: Optional[Progress], 
+    pbar_ids: List[int],
+    cascade: bool = True
+):
+    if progress is None:
+        return
+    for pbar_id in pbar_ids:
+        if cascade:
+            time.sleep(0.1)
+        progress.remove_task(pbar_id)
 
 my_theme = Theme({"progress.elapsed": "cyan"})
 custom_console = Console(theme=my_theme)
