@@ -5,7 +5,7 @@ import asyncio
 import random
 import json
 
-from deepeval.utils import get_or_create_event_loop, update_pbar, add_pbar
+from deepeval.utils import get_or_create_event_loop, update_pbar, add_pbar, remove_pbars
 from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.conversation_simulator.template import (
@@ -115,6 +115,7 @@ class ConversationSimulator:
                     )
 
                 self.simulated_conversations = conversational_test_cases
+            remove_pbars(progress, [pbar_id])
 
         return self.simulated_conversations
 
@@ -234,15 +235,34 @@ class ConversationSimulator:
         pbar_id: Optional[int] = None,
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
-        pbar_single_conversation_id = add_pbar(
+
+        # determine pbar length
+        pbar_conversation_length = 2
+        pbar_turns_length = (num_turns - 1) * (3 if stopping_criteria is not None else 2) + 2
+        pbar_generating_scenario_length = 2
+
+        # add pbar
+        pbar_conversation_id = add_pbar(
             progress,
-            f"      Setting scene  (test case #{conversation_index})",
-            total=2,
+            f"\t⚡ Generating test case #{conversation_index}",
+            total=pbar_conversation_length,
         )
+        pbar_generating_scenario_id = add_pbar(
+            progress,
+            f"\t\t🖼️  Setting scenario",
+            total=pbar_generating_scenario_length,
+        )
+        pbar_turns_id = add_pbar(
+            progress,
+            f"\t\t💬 Simulating conversation",
+            total=pbar_turns_length,
+        )
+
         user_profile = self._simulate_user_profile()
-        update_pbar(progress, pbar_single_conversation_id)
+        update_pbar(progress, pbar_generating_scenario_id, remove=False)
         scenario = self._simulate_scenario(user_profile, intent)
-        update_pbar(progress, pbar_single_conversation_id)
+        update_pbar(progress, pbar_generating_scenario_id, remove=False)
+        update_pbar(progress, pbar_conversation_id, remove=False)
         additional_metadata = {
             "User Profile": user_profile,
             "User Intent": intent,
@@ -253,11 +273,6 @@ class ConversationSimulator:
         user_input = None
         conversation_history = None
 
-        pbar_single_conversation_id = add_pbar(
-            progress,
-            f"      Simulating conversation (test case #{conversation_index})",
-            total=(num_turns - 1) * (3 if stopping_criteria is not None else 2) + 2,
-        )
         for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 # Add optional opening message from chatbot
@@ -270,7 +285,7 @@ class ConversationSimulator:
                 user_input = self._simulate_first_user_input(
                     scenario, user_profile
                 )
-                update_pbar(progress, pbar_single_conversation_id)
+                update_pbar(progress, pbar_turns_id, remove=False)
             else:
                 # Generate next user input based on conversation so far
                 conversation_history = self._format_conversational_turns(turns)
@@ -301,10 +316,10 @@ class ConversationSimulator:
                             data = trimAndLoadJson(res, self)
                             is_complete = data["is_complete"]
                     if is_complete:
-                        update_pbar(progress, pbar_single_conversation_id, advance_to_end=True)
+                        update_pbar(progress, pbar_turns_id, advance_to_end=True, remove=False)
                         break
                     else:
-                        update_pbar(progress, pbar_single_conversation_id)
+                        update_pbar(progress, pbar_turns_id, remove=False)
 
                 # Generate next user input
                 prompt = ConversationSimulatorTemplate.generate_next_user_input(
@@ -327,7 +342,7 @@ class ConversationSimulator:
                         res = self.simulator_model.generate(prompt)
                         data = trimAndLoadJson(res, self)
                         user_input = data["simulated_input"]
-                update_pbar(progress, pbar_single_conversation_id)
+                update_pbar(progress, pbar_turns_id, remove=False)
 
             actual_output, new_model_callback_kwargs = (
                 self._generate_chatbot_response(
@@ -337,7 +352,7 @@ class ConversationSimulator:
                     callback_kwargs=model_callback_kwargs,
                 )
             )
-            update_pbar(progress, pbar_single_conversation_id)
+            update_pbar(progress, pbar_turns_id, remove=False)
             model_callback_kwargs = new_model_callback_kwargs
             turns.append(
                 LLMTestCase(
@@ -347,7 +362,10 @@ class ConversationSimulator:
                 )
             )
 
-        update_pbar(progress, pbar_id)
+        update_pbar(progress, pbar_conversation_id, remove=False)
+        update_pbar(progress, pbar_id, remove=False)
+        remove_pbars(progress, [pbar_conversation_id, pbar_generating_scenario_id, pbar_turns_id])
+
         return ConversationalTestCase(
             turns=turns, additional_metadata=additional_metadata
         )
@@ -434,15 +452,34 @@ class ConversationSimulator:
         pbar_id: Optional[int] = None,
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
-        pbar_single_conversation_id = add_pbar(
+        
+        # determine pbar length
+        pbar_conversation_length = 2
+        pbar_turns_length = (num_turns - 1) * (3 if stopping_criteria is not None else 2) + 2
+        pbar_generating_scenario_length = 2
+
+        # add pbar
+        pbar_conversation_id = add_pbar(
             progress,
-            f"      Setting scene (test case #{conversation_index})",
-            total=2,
+            f"\t⚡ Generating test case #{conversation_index}",
+            total=pbar_conversation_length,
         )
+        pbar_generating_scenario_id = add_pbar(
+            progress,
+            f"\t\t🖼️  Setting scenario",
+            total=pbar_generating_scenario_length,
+        )
+        pbar_turns_id = add_pbar(
+            progress,
+            f"\t\t💬 Simulating conversation",
+            total=pbar_turns_length,
+        )
+            
         user_profile = await self._a_simulate_user_profile()
-        update_pbar(progress, pbar_single_conversation_id)
+        update_pbar(progress, pbar_generating_scenario_id, remove=False)
         scenario = await self._a_simulate_scenario(user_profile, intent)
-        update_pbar(progress, pbar_single_conversation_id)
+        update_pbar(progress, pbar_generating_scenario_id, remove=False)
+        update_pbar(progress, pbar_conversation_id, remove=False)
         additional_metadata = {
             "User Profile": user_profile,
             "User Intent": intent,
@@ -453,11 +490,6 @@ class ConversationSimulator:
         user_input = None
         conversation_history = None
 
-        pbar_single_conversation_id = add_pbar(
-            progress,
-            f"      Generating conversation (test case #{conversation_index})",
-            total=(num_turns - 1) * (3 if stopping_criteria is not None else 2) + 2,
-        )
         for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 turns.append(
@@ -467,7 +499,7 @@ class ConversationSimulator:
                 user_input = await self._a_simulate_first_user_input(
                     scenario, user_profile
                 )
-                update_pbar(progress, pbar_single_conversation_id)
+                update_pbar(progress, pbar_turns_id)
                 
             else:
                 # Generate next user input based on conversation so far
@@ -499,10 +531,10 @@ class ConversationSimulator:
                             data = trimAndLoadJson(res, self)
                             is_complete = data["is_complete"]
                     if is_complete:
-                        update_pbar(progress, pbar_single_conversation_id, advance_to_end=True)
+                        update_pbar(progress, pbar_turns_id, advance_to_end=True, remove=False)
                         break
                     else:
-                        update_pbar(progress, pbar_single_conversation_id)
+                        update_pbar(progress, pbar_turns_id, remove=False)
                     
                 prompt = ConversationSimulatorTemplate.generate_next_user_input(
                     scenario, user_profile, conversation_history, self.language
@@ -525,7 +557,7 @@ class ConversationSimulator:
                         res = await self.simulator_model.a_generate(prompt)
                         data = trimAndLoadJson(res, self)
                         user_input = data["simulated_input"]
-                update_pbar(progress, pbar_single_conversation_id)
+                update_pbar(progress, pbar_turns_id, remove=False)
 
                 user_input = res.simulated_input
 
@@ -537,7 +569,7 @@ class ConversationSimulator:
                     callback_kwargs=model_callback_kwargs,
                 )
             )
-            update_pbar(progress, pbar_single_conversation_id)
+            update_pbar(progress, pbar_turns_id, remove=False)
             model_callback_kwargs = new_model_callback_kwargs
             turns.append(
                 LLMTestCase(
@@ -547,7 +579,9 @@ class ConversationSimulator:
                 )
             )
 
-        update_pbar(progress, pbar_id)
+        update_pbar(progress, pbar_conversation_id, remove=False) 
+        update_pbar(progress, pbar_id, remove=False)
+        remove_pbars(progress, [pbar_turns_id, pbar_conversation_id, pbar_generating_scenario_id])
 
         return ConversationalTestCase(
             turns=turns, additional_metadata=additional_metadata
