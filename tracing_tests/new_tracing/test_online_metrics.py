@@ -6,6 +6,7 @@ from deepeval.tracing import (
 )
 import asyncio
 
+
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
@@ -31,7 +32,7 @@ async def meta_agent(query: str):
             retrieval_context=["I love coffee"],
             context=["I love coffee"],
             tools_called=[ToolCall(name="test")],
-            expected_tools=[ToolCall(name="test")]
+            expected_tools=[ToolCall(name="test")],
         ),
     )
     update_current_trace(
@@ -41,6 +42,7 @@ async def meta_agent(query: str):
     )
     print("query")
     return query
+
 
 async def run_parallel_examples():
     tasks = [
@@ -58,4 +60,6 @@ async def run_parallel_examples():
         # meta_agent("Recommend a good sci-fi movie."),
     ]
     await asyncio.gather(*tasks)
+
+
 asyncio.run(run_parallel_examples())
