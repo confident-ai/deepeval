@@ -290,7 +290,7 @@ class TraceManager:
             self._worker_thread.start()
 
     def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
-        if not is_confident():
+        if not is_confident() and self.confident_api_key is None:
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
                 trace_worker_status=TraceWorkerStatus.FAILURE,
