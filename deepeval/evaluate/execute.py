@@ -1013,7 +1013,6 @@ def execute_agentic_test_cases(
                 test_run_manager.update_test_run(api_test_case, test_case)
                 test_results.append(create_test_result(api_test_case))
 
-                update_pbar(progress, pbar_eval_id)
                 update_pbar(progress, pbar_id)
 
 
@@ -1236,7 +1235,6 @@ async def a_execute_agentic_test_case(
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
 
-    update_pbar(progress, pbar_eval_id)
     update_pbar(progress, pbar_id)
             
 async def a_execute_span_test_case(
