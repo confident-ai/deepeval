@@ -518,10 +518,10 @@ def remove_pbars(
 my_theme = Theme(
     {
         "bar.complete": "#11ff00",
-        "progress.percentage": "#5703ff",
+        "progress.percentage": "#00e5ff",
         # "progress.data.speed": "#00FF00",
         # "progress.remaining": "#00FF00",
-        "progress.elapsed": "#00e5ff",
+        "progress.elapsed": "#5703ff",
     }
 )
 custom_console = Console(theme=my_theme)

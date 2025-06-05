@@ -13,9 +13,10 @@ from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *
 from deepeval.confident import confident_evaluate
 
-# import os
-# os.environ['GRPC_VERBOSITY'] = 'ERROR'
-# os.environ['GRPC_TRACE'] = ''
+
+if os.getenv("DEEPEVAL_GRPC_LOGGING") != "YES":
+    os.environ["GRPC_VERBOSITY"] = "ERROR"
+    os.environ["GRPC_TRACE"] = ""
 
 __all__ = [
     "login_with_confident_api_key",

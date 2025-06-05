@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from rich import print
 import webbrowser
@@ -126,6 +127,17 @@ def login(
             )
         except:
             span.set_attribute("completed", False)
+
+
+@app.command()
+def logout():
+    KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
+    print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
+
+
+@app.command(name="enable-grpc-logging")
+def enable_grpc_logging():
+    os.environ["DEEPEVAL_GRPC_LOGGING"] = "YES"
 
 
 @app.command(name="set-azure-openai")

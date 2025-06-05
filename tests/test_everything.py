@@ -86,7 +86,7 @@ being composed mostly of rock and metal.
 """
 
 strict_mode = False
-verbose_mode = True
+verbose_mode = False
 
 from pydantic import BaseModel
 
@@ -98,7 +98,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,

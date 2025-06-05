@@ -879,7 +879,7 @@ def execute_agentic_test_cases(
                         loop.run_until_complete(observed_callback(golden.input))
                     else:
                         observed_callback(golden.input)
-                    current_trace: Trace = get_current_trace()
+                    current_trace: Trace = current_trace_context.get()
 
                 update_pbar(progress, pbar_tags_id, advance=total_tags)
                 update_pbar(progress, pbar_id)
@@ -1095,7 +1095,9 @@ async def a_execute_agentic_test_cases(
         )
         with progress:
             pbar_id = add_pbar(
-                progress, "Overall: Evaluating goldens", total=len(goldens) * 2
+                progress,
+                "Running Component-Level Evals",
+                total=len(goldens) * 2,
             )
             for golden in goldens:
                 with capture_evaluation_run("golden"):
