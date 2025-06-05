@@ -705,15 +705,19 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
-        
-        if parent_span and parent_span.progress is not None and parent_span.pbar_callback_id is not None:
+
+        if (
+            parent_span
+            and parent_span.progress is not None
+            and parent_span.pbar_callback_id is not None
+        ):
             self._progress = parent_span.progress
             self._pbar_callback_id = parent_span.pbar_callback_id
-            
+
         if self._progress is not None and self._pbar_callback_id is not None:
             span_instance.progress = self._progress
             span_instance.pbar_callback_id = self._pbar_callback_id
-        
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -770,7 +774,7 @@ class Observer:
                     current_trace_context.set(None)
 
             current_span_context.set(None)
-            
+
         if self._progress is not None and self._pbar_callback_id is not None:
             self._progress.update(self._pbar_callback_id, advance=1)
 

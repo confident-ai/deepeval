@@ -57,7 +57,9 @@ def synthesizer_progress_context(
             description = f"✨ Generating up to {max_generations} goldens (method={method}, evolutions={num_evolutions})"
             if long_description:
                 if embedder is None:
-                    description += f", using {evaluation_model}, async={async_mode}"
+                    description += (
+                        f", using {evaluation_model}, async={async_mode}"
+                    )
                 else:
                     description += f", using {evaluation_model} and {embedder}, async={async_mode}"
             progress = Progress(
@@ -87,7 +89,9 @@ def conversation_simulator_progress_context(
         if progress is not None and pbar_id is not None:
             yield progress, pbar_id
         else:
-            description = f"🪄 Simulating {num_conversations} conversational test case(s)"
+            description = (
+                f"🪄 Simulating {num_conversations} conversational test case(s)"
+            )
             if long_description:
                 description += f"(using {simulator_model}, async={async_mode})"
             progress = Progress(
@@ -97,5 +101,7 @@ def conversation_simulator_progress_context(
                 TimeElapsedColumn(),
                 console=custom_console,
             )
-            pbar_id = progress.add_task(description=description, total=num_conversations)
+            pbar_id = progress.add_task(
+                description=description, total=num_conversations
+            )
             yield progress, pbar_id

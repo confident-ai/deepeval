@@ -19,7 +19,7 @@ user_intentions_1 = {
 user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
 user_intentions_2 = {
     # "Seeking medical advice for a chronic condition",
-    "Booking an appointment with a specialist":1,
+    "Booking an appointment with a specialist": 1,
     "Following up on test results": 1,
     # "Requesting prescription refills",
     # "Exploring treatment options for a new diagnosis",
@@ -63,10 +63,12 @@ async def a_callback(prompt: str, conversation_history):
     res, _ = await model.a_generate(prompt)
     return res
 
+
 def callback(prompt: str, conversation_history):
     model = GPTModel()
     res, _ = model.generate(prompt)
     return res
+
 
 async def main():
     user_intentions = user_intentions_2

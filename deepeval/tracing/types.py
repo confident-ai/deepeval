@@ -1,6 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
+from rich.progress import Progress
 
 from deepeval.tracing.attributes import (
     AgentAttributes,
@@ -46,6 +47,10 @@ class BaseSpan(BaseModel):
     error: Optional[str] = None
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[Union[List[str], List[BaseMetric]]] = None
+
+    # Don't serialize these
+    progress: Optional[Progress] = Field(None, exclude=True)
+    pbar_callback_id: Optional[int] = Field(None, exclude=True)
 
     class Config:
         arbitrary_types_allowed = True
