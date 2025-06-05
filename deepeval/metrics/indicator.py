@@ -16,7 +16,7 @@ from deepeval.metrics import (
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
-
+from deepeval.utils import update_pbar
 
 def format_metric_description(
     metric: Union[BaseMetric, BaseConversationalMetric],
@@ -152,7 +152,8 @@ async def measure_metrics_with_indicator(
     ignore_errors: bool,
     skip_on_missing_params: bool,
     show_indicator: bool,
-    pbar_eval: Optional[tqdm_asyncio] = None,
+    progress: Optional[Progress] = None,
+    pbar_eval_id: Optional[int] = None,
     _in_component: bool = False,
 ):
     if show_indicator:
@@ -214,7 +215,8 @@ async def measure_metrics_with_indicator(
                         test_case,
                         ignore_errors,
                         skip_on_missing_params,
-                        pbar_eval,
+                        progress=progress,
+                        pbar_eval_id=pbar_eval_id,
                         _in_component=_in_component,
                     )
                 )
@@ -227,15 +229,15 @@ async def safe_a_measure(
     tc: Union[LLMTestCase, MLLMTestCase, ConversationalTestCase],
     ignore_errors: bool,
     skip_on_missing_params: bool,
-    pbar_eval: Optional[tqdm_asyncio] = None,
+    progress: Optional[Progress] = None,
+    pbar_eval_id: Optional[int] = None,
     _in_component: bool = False,
 ):
     try:
         await metric.a_measure(
             tc, _show_indicator=False, _in_component=_in_component
         )
-        if pbar_eval:
-            pbar_eval.update(1)
+        update_pbar(progress, pbar_eval_id)
     except MissingTestCaseParamsError as e:
         if skip_on_missing_params:
             metric.skipped = True

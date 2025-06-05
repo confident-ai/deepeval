@@ -19,8 +19,8 @@ user_intentions_1 = {
 user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
 user_intentions_2 = {
     # "Seeking medical advice for a chronic condition",
-    "Booking an appointment with a specialist": 1,
-    "Following up on test results": 2,
+    "Booking an appointment with a specialist":1,
+    "Following up on test results": 1,
     # "Requesting prescription refills",
     # "Exploring treatment options for a new diagnosis",
 }
@@ -58,34 +58,30 @@ async def test_generate_conversations(
         print(("================================"))
 
 
-async def callback(prompt: str, conversation_history):
+async def a_callback(prompt: str, conversation_history):
     model = GPTModel()
-    # if kwargs:
-    #     print(kwargs)
-    # else:
-    #     id = random.choice([i for i in range(1, 100)])
-    #     kwargs["key"] = id
-    print(conversation_history)
-
-    res, cost = await model.a_generate(prompt)
+    res, _ = await model.a_generate(prompt)
     return res
 
+def callback(prompt: str, conversation_history):
+    model = GPTModel()
+    res, _ = model.generate(prompt)
+    return res
 
 async def main():
-    user_profile_requirements = user_profile_requirements_2
     user_intentions = user_intentions_2
     conversational_synthesizer = ConversationSimulator(
-        # user_profile_items=user_profile_requirements,
+        # user_profile_items=user_profile_requirements_2,
         user_profiles=[
             "Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."
         ],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
-        async_mode=True,
+        async_mode=False,
     )
-    a = conversational_synthesizer.simulate(
-        min_turns=5,
-        max_turns=10,
+    conversational_synthesizer.simulate(
+        min_turns=2,
+        max_turns=4,
         model_callback=callback,
         stopping_criteria="The user has succesfully booked an appointment",
     )

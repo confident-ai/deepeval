@@ -80,7 +80,7 @@ sql_context = [
     [table1, table2, table3, table4],
     [table1, table2, table3, table4],
 ]
-document_paths = [file_path1, file_path2, file_path3]
+document_paths = [file_path1, file_path2, file_path3]  # file_path2, file_path3
 
 
 #########################################################
@@ -236,19 +236,28 @@ synthesizer = Synthesizer(
 def test_generate_goldens_from_contexts(synthesizer: Synthesizer):
     start_time = time.time()
     goldens = synthesizer.generate_goldens_from_contexts(
-        max_goldens_per_context=2,
+        max_goldens_per_context=1,
         contexts=sql_context,
         _send_data=False,
     )
-    end_time = time.time()
-    duration = end_time - start_time
-    print("Generated goldens:", len(goldens))
-    print(f"Time taken: {duration} seconds")
-    print(synthesizer.to_pandas())
+    # print(goldens)
+    # print("=======\n" * 10)
+    # print(synthesizer.synthetic_goldens)
+    # end_time = time.time()
+    # duration = end_time - start_time
+    # print(synthesizer.to_pandas())
 
 
-# synthesizer_sync = Synthesizer(async_mode=False)
-# synthesizer_async = Synthesizer(async_mode=True)
+evolution_config = EvolutionConfig(
+    num_evolutions=2,
+    evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
+)
+synthesizer_sync = Synthesizer(
+    async_mode=False, evolution_config=evolution_config
+)
+synthesizer_async = Synthesizer(
+    async_mode=True, evolution_config=evolution_config
+)
 # test_generate_goldens_from_contexts(synthesizer_sync)
 # test_generate_goldens_from_contexts(synthesizer_async)
 
@@ -266,19 +275,19 @@ def test_generate_goldens_from_docs(synthesizer: Synthesizer):
         context_construction_config=ContextConstructionConfig(
             max_contexts_per_document=2,
             min_contexts_per_document=1,
-            chunk_size=1024,
-            max_context_length=3,
-            min_context_length=1,
+            chunk_size=100,
+            max_context_length=5,
+            min_context_length=3,
         ),
         _send_data=False,
     )
-    end_time = time.time()
-    duration = end_time - start_time
-    print("Generated goldens from docs:", goldens[0])
-    print(goldens[0].additional_metadata)
-    print(f"Time taken: {duration} seconds")
-    print(synthesizer.to_pandas())
-    synthesizer.push("Test Dataset 3")
+    # end_time = time.time()
+    # duration = end_time - start_time
+    # print("Generated goldens from docs:", goldens[0])
+    # print(goldens[0].additional_metadata)
+    # print(f"Time taken: {duration} seconds")
+    # # print(synthesizer.to_pandas())
+    # synthesizer.push("Test Dataset 3")
 
 
 from custom_judge import JSONCustomModel, CustomModel
@@ -287,8 +296,8 @@ model = CustomModel()
 synthesizer_sync = Synthesizer(async_mode=False)
 synthesizer_async = Synthesizer(async_mode=True, max_concurrent=3)
 
-test_generate_goldens_from_docs(synthesizer_sync)
-test_generate_goldens_from_docs(synthesizer_async)
+# test_generate_goldens_from_docs(synthesizer_sync)
+# test_generate_goldens_from_docs(synthesizer_async)
 
 #########################################################
 ### Generate Goldens From Scratch #######################
@@ -297,18 +306,18 @@ test_generate_goldens_from_docs(synthesizer_async)
 
 def test_generate_generate_goldens_from_scratch(synthesizer: Synthesizer):
     start_time = time.time()
-    goldens = synthesizer.generate_goldens_from_scratch(
+    synthesizer.generate_goldens_from_scratch(
         num_goldens=5,
     )
+    # print(goldens)
+    # print("=======\n" * 10)
+    # print(synthesizer.synthetic_goldens)
     end_time = time.time()
     duration = end_time - start_time
-    print("Generated goldens from scratch:", len(goldens))
-    print(f"Time taken: {duration} seconds")
-    print(synthesizer.to_pandas())
+    # print(f"Time taken: {duration} seconds")
+    # print(synthesizer.to_pandas())
 
 
-# synthesizer_sync = Synthesizer(async_mode=False)
-# synthesizer_async = Synthesizer(async_mode=True)
 # test_generate_generate_goldens_from_scratch(synthesizer_sync)
 # test_generate_generate_goldens_from_scratch(synthesizer_async)
 
@@ -471,6 +480,26 @@ def test_synthesis_costs(synthesizer: Synthesizer):
 ### Test Everything #####################################
 #########################################################
 
-# test_generate_goldens_from_contexts(synthesizer)
-# test_generate_goldens_from_docs(synthesizer)
-# test_generate_generate_goldens_from_scratch(synthesizer)
+styling_config = StylingConfig(
+    scenario="red-teaming prompts",
+    task="elicit discriminatory responses from LLMs",
+    input_format="string less than 15 words",
+)
+evolution_config = EvolutionConfig(
+    num_evolutions=3,
+    evolutions={Evolution.COMPARATIVE: 0.2, Evolution.HYPOTHETICAL: 0.8},
+)
+synthesizer_sync = Synthesizer(
+    async_mode=False,
+    styling_config=styling_config,
+    evolution_config=evolution_config,
+)
+synthesizer_async = Synthesizer(
+    async_mode=True,
+    styling_config=styling_config,
+    evolution_config=evolution_config,
+)
+synthesizer = synthesizer_sync
+test_generate_goldens_from_contexts(synthesizer)
+test_generate_goldens_from_docs(synthesizer)
+test_generate_generate_goldens_from_scratch(synthesizer)
