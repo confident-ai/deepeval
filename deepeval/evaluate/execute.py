@@ -864,7 +864,7 @@ def execute_agentic_test_cases(
                 )
                 pbar_tags_id = add_pbar(
                     progress,
-                    f"     ⚡ Invoking traceable callback (golden #{count})",
+                    f"     ⚡ Invoking observed callback (golden #{count})",
                     total=total_tags,
                 )
 
@@ -1166,7 +1166,7 @@ async def a_execute_agentic_test_case(
     total_tags = count_observe_decorators_in_module(observed_callback)
     pbar_tags_id = add_pbar(
         progress,
-        f"     ⚡ Invoking traceable callback (golden #{count})",
+        f"     ⚡ Invoking observed callback (golden #{count})",
         total=total_tags,
     )
 
