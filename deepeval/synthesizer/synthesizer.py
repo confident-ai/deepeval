@@ -810,7 +810,7 @@ class Synthesizer:
             async def evolve_input(i, data: SyntheticData):
                 pbar_evolve_input_id = add_pbar(
                     progress,
-                    f"      🧬 Evolving inputs (golden #{i})",
+                    f"      🧬 Evolving inputs (#{i})",
                     total=self.evolution_config.num_evolutions,
                 )
                 evolved_prompts = await self.task_wrapper(
@@ -894,7 +894,7 @@ class Synthesizer:
                 for i, data in enumerate(synthetic_data):
                     pbar_evolve_input_id = add_pbar(
                         progress,
-                        f"      🧬 Evolving inputs (golden #{i})",
+                        f"      🧬 Evolving inputs (#{i})",
                         total=self.evolution_config.num_evolutions,
                     )
                     evolved_prompt, evolutions_used = self._evolve_input(

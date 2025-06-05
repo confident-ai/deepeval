@@ -515,5 +515,13 @@ def remove_pbars(
         progress.remove_task(pbar_id)
 
 
-my_theme = Theme({"progress.elapsed": "cyan"})
+my_theme = Theme(
+    {
+        "bar.complete": "#11ff00",
+        "progress.percentage": "#5703ff",
+        # "progress.data.speed": "#00FF00",
+        # "progress.remaining": "#00FF00",
+        "progress.elapsed": "#00e5ff",
+    }
+)
 custom_console = Console(theme=my_theme)

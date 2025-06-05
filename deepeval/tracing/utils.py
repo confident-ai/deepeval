@@ -7,6 +7,7 @@ class Environment(Enum):
     PRODUCTION = "production"
     DEVELOPMENT = "development"
     STAGING = "staging"
+    TESTING = "testing"
 
 
 def validate_environment(environment: str):

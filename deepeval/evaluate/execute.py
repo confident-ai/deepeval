@@ -864,7 +864,7 @@ def execute_agentic_test_cases(
                 )
                 pbar_tags_id = add_pbar(
                     progress,
-                    f"     ⚡ Invoking observed callback (golden #{count})",
+                    f"     ⚡ Invoking observed callback (#{count})",
                     total=total_tags,
                 )
 
@@ -1015,7 +1015,7 @@ def execute_agentic_test_cases(
 
                 pbar_eval_id = add_pbar(
                     progress,
-                    f"     🎯 Evaluating span metrics (golden #{count})",
+                    f"     🎯 Evaluating component(s) (#{count})",
                     total=count_metrics_in_trace(trace=current_trace),
                 )
 
@@ -1166,7 +1166,7 @@ async def a_execute_agentic_test_case(
     total_tags = count_observe_decorators_in_module(observed_callback)
     pbar_tags_id = add_pbar(
         progress,
-        f"     ⚡ Invoking observed callback (golden #{count})",
+        f"     ⚡ Invoking observed callback (#{count})",
         total=total_tags,
     )
 
@@ -1212,7 +1212,7 @@ async def a_execute_agentic_test_case(
 
     pbar_eval_id = add_pbar(
         progress,
-        f"     🎯 Evaluating span metrics (golden #{count})",
+        f"     🎯 Evaluating component(s) (#{count})",
         total=count_metrics_in_trace(trace=current_trace),
     )
 

@@ -164,6 +164,7 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 # print(f"Ending trace: {trace.root_spans}")
+                self.environment = Environment.TESTING
                 trace.root_spans = [trace.root_spans[0].children[0]]
                 for root_span in trace.root_spans:
                     root_span.parent_uuid = None
