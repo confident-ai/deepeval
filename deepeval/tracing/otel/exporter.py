@@ -151,7 +151,12 @@ class ConfidentSpanExporter(SpanExporter):
             if event.name in ["gen_ai.system.message", "gen_ai.user.message"]:
                 attributes = event.attributes
                 res["input"].append(
-                    {"role": event.name, "content": dict(attributes) if attributes is not None else {}}
+                    {
+                        "role": event.name,
+                        "content": (
+                            dict(attributes) if attributes is not None else {}
+                        ),
+                    }
                 )
             # output
             if event.name in [
@@ -165,16 +170,28 @@ class ConfidentSpanExporter(SpanExporter):
         res["model"] = str(model) if model is not None else None
 
         input_tokens = span.attributes.get("gen_ai.usage.input_tokens")
-        res["input_token_count"] = int(input_tokens) if input_tokens is not None else None
+        res["input_token_count"] = (
+            int(input_tokens) if input_tokens is not None else None
+        )
 
         output_tokens = span.attributes.get("gen_ai.usage.output_tokens")
-        res["output_token_count"] = int(output_tokens) if output_tokens is not None else None
+        res["output_token_count"] = (
+            int(output_tokens) if output_tokens is not None else None
+        )
 
-        cost_per_input = span.attributes.get("confident.llm.cost_per_input_token")
-        res["cost_per_input_token"] = float(cost_per_input) if cost_per_input is not None else None
+        cost_per_input = span.attributes.get(
+            "confident.llm.cost_per_input_token"
+        )
+        res["cost_per_input_token"] = (
+            float(cost_per_input) if cost_per_input is not None else None
+        )
 
-        cost_per_output = span.attributes.get("confident.llm.cost_per_output_token")
-        res["cost_per_output_token"] = float(cost_per_output) if cost_per_output is not None else None
+        cost_per_output = span.attributes.get(
+            "confident.llm.cost_per_output_token"
+        )
+        res["cost_per_output_token"] = (
+            float(cost_per_output) if cost_per_output is not None else None
+        )
 
         return res
 
@@ -182,13 +199,23 @@ class ConfidentSpanExporter(SpanExporter):
         for event in span.events:
             # input
             if event.name in ["confident.tool.input"]:
-                res["input"] = dict(event.attributes) if event.attributes is not None else {}
+                res["input"] = (
+                    dict(event.attributes)
+                    if event.attributes is not None
+                    else {}
+                )
             # output
             if event.name in ["confident.tool.output"]:
-                res["output"] = dict(event.attributes) if event.attributes is not None else {}
+                res["output"] = (
+                    dict(event.attributes)
+                    if event.attributes is not None
+                    else {}
+                )
 
         description = span.attributes.get("gen_ai.tool.description")
-        res["description"] = str(description) if description is not None else None
+        res["description"] = (
+            str(description) if description is not None else None
+        )
 
         return res
 
@@ -196,10 +223,18 @@ class ConfidentSpanExporter(SpanExporter):
         for event in span.events:
             # input
             if event.name in ["confident.agent.input"]:
-                res["input"] = dict(event.attributes) if event.attributes is not None else {}
+                res["input"] = (
+                    dict(event.attributes)
+                    if event.attributes is not None
+                    else {}
+                )
             # output
             if event.name in ["confident.agent.output"]:
-                res["output"] = dict(event.attributes) if event.attributes is not None else {}
+                res["output"] = (
+                    dict(event.attributes)
+                    if event.attributes is not None
+                    else {}
+                )
 
         available_tools = span.attributes.get("confident.agent.available_tools")
         if isinstance(available_tools, tuple):

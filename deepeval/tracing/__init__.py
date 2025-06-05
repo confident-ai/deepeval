@@ -1,11 +1,9 @@
-from .tracing import (
-    observe,
-    update_current_span,
-    update_current_trace,
+from .context import update_current_span, update_current_trace
+from .attributes import (
     LlmAttributes,
     RetrieverAttributes,
     ToolAttributes,
     AgentAttributes,
-    get_current_trace,
-    trace_manager,
 )
+from .types import BaseSpan, Trace
+from .tracing import observe, trace_manager

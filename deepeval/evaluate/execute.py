@@ -10,7 +10,6 @@ import ast
 
 from deepeval.tracing.tracing import (
     Observer,
-    get_current_trace,
     trace_manager,
     Trace,
     BaseSpan,
@@ -21,6 +20,7 @@ from deepeval.tracing.tracing import (
     perf_counter_to_datetime,
     to_zod_compatible_iso,
 )
+from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.api import (
     TraceApi,
     BaseApiSpan,
@@ -1155,7 +1155,7 @@ async def a_execute_agentic_test_case(
             await observed_callback(golden.input)
         else:
             observed_callback(golden.input)
-        current_trace: Trace = get_current_trace()
+        current_trace: Trace = current_trace_context.get()
 
     update_pbar(progress, pbar_tags_id, advance=total_tags)
     update_pbar(progress, pbar_id)

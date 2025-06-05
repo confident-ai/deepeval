@@ -37,7 +37,7 @@ class MetricData(BaseModel):
 class SpanTestCase(BaseModel):
     input: str
     actual_output: str = Field(alias="actualOutput")
-    expected_output: Optional[str] = Field(None, lias="expectedOutput")
+    expected_output: Optional[str] = Field(None, alias="expectedOutput")
     retrieval_context: Optional[List[str]] = Field(
         None, alias="retrievalContext"
     )
