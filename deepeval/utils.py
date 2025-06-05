@@ -481,8 +481,9 @@ def clean_nested_dict(data):
     else:
         return data
 
+
 def update_pbar(
-    progress: Optional[Progress], 
+    progress: Optional[Progress],
     pbar_id: Optional[int],
     advance: int = 1,
     advance_to_end: bool = False,
@@ -496,22 +497,15 @@ def update_pbar(
     if task_obj.finished and remove:
         progress.remove_task(pbar_id)
 
-def add_pbar(
-    progress: Optional[Progress], 
-    description: str,
-    total: int = 1
-):
+
+def add_pbar(progress: Optional[Progress], description: str, total: int = 1):
     if progress is None:
         return None
-    return progress.add_task(
-        description,
-        total=total
-    )
+    return progress.add_task(description, total=total)
+
 
 def remove_pbars(
-    progress: Optional[Progress], 
-    pbar_ids: List[int],
-    cascade: bool = True
+    progress: Optional[Progress], pbar_ids: List[int], cascade: bool = True
 ):
     if progress is None:
         return
@@ -520,5 +514,14 @@ def remove_pbars(
             time.sleep(0.1)
         progress.remove_task(pbar_id)
 
-my_theme = Theme({"progress.elapsed": "cyan"})
+
+my_theme = Theme(
+    {
+        "bar.complete": "#11ff00",
+        "progress.percentage": "#5703ff",
+        # "progress.data.speed": "#00FF00",
+        # "progress.remaining": "#00FF00",
+        "progress.elapsed": "#00e5ff",
+    }
+)
 custom_console = Console(theme=my_theme)

@@ -374,6 +374,8 @@ def test_save_goldens(synthesizer: Synthesizer, file_type: str):
         synthesizer.save_as("csv", "./goldens")
     elif file_type == "json":
         synthesizer.save_as("json", "./goldens")
+    elif file_type == "jsonl":
+        synthesizer.save_as("jsonl", "./goldens")
 
 
 @pytest.fixture

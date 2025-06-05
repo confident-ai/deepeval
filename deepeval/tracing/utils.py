@@ -1,10 +1,13 @@
+from datetime import datetime, timezone
 from enum import Enum
+from time import perf_counter
 
 
 class Environment(Enum):
     PRODUCTION = "production"
     DEVELOPMENT = "development"
     STAGING = "staging"
+    TESTING = "testing"
 
 
 def validate_environment(environment: str):
@@ -36,3 +39,31 @@ def make_json_serializable(obj):
             if not key.startswith("_")  # optional: exclude private attrs
         }
     return str(obj)
+
+
+def to_zod_compatible_iso(dt: datetime) -> str:
+    return (
+        dt.astimezone(timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
+
+
+def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
+    """
+    Convert a perf_counter value to a datetime object.
+
+    Args:
+        perf_counter_value: A float value from perf_counter()
+
+    Returns:
+        A datetime object representing the current time
+    """
+    # Get the current time
+    current_time = datetime.now(timezone.utc)
+    # Calculate the time difference in seconds
+    time_diff = current_time.timestamp() - perf_counter()
+    # Convert perf_counter value to a real timestamp
+    timestamp = time_diff + perf_counter_value
+    # Return as a datetime object
+    return datetime.fromtimestamp(timestamp, tz=timezone.utc)

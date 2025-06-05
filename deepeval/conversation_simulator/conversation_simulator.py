@@ -5,7 +5,12 @@ import asyncio
 import random
 import json
 
-from deepeval.utils import get_or_create_event_loop, update_pbar, add_pbar, remove_pbars
+from deepeval.utils import (
+    get_or_create_event_loop,
+    update_pbar,
+    add_pbar,
+    remove_pbars,
+)
 from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.conversation_simulator.template import (
@@ -67,7 +72,7 @@ class ConversationSimulator:
             num_conversations=total_conversations,
             async_mode=self.async_mode,
         ) as (progress, pbar_id), progress:
-        
+
             if self.async_mode:
                 if not inspect.iscoroutinefunction(model_callback):
                     raise TypeError(
@@ -110,9 +115,7 @@ class ConversationSimulator:
                             pbar_id=pbar_id,
                         )
                     )
-                    conversational_test_cases.append(
-                        conversational_test_case
-                    )
+                    conversational_test_cases.append(conversational_test_case)
 
                 self.simulated_conversations = conversational_test_cases
             remove_pbars(progress, [pbar_id])
@@ -238,7 +241,9 @@ class ConversationSimulator:
 
         # determine pbar length
         pbar_conversation_length = 2
-        pbar_turns_length = (num_turns - 1) * (3 if stopping_criteria is not None else 2) + 2
+        pbar_turns_length = (num_turns - 1) * (
+            3 if stopping_criteria is not None else 2
+        ) + 2
         pbar_generating_scenario_length = 2
 
         # add pbar
@@ -316,7 +321,12 @@ class ConversationSimulator:
                             data = trimAndLoadJson(res, self)
                             is_complete = data["is_complete"]
                     if is_complete:
-                        update_pbar(progress, pbar_turns_id, advance_to_end=True, remove=False)
+                        update_pbar(
+                            progress,
+                            pbar_turns_id,
+                            advance_to_end=True,
+                            remove=False,
+                        )
                         break
                     else:
                         update_pbar(progress, pbar_turns_id, remove=False)
@@ -364,7 +374,10 @@ class ConversationSimulator:
 
         update_pbar(progress, pbar_conversation_id, remove=False)
         update_pbar(progress, pbar_id, remove=False)
-        remove_pbars(progress, [pbar_conversation_id, pbar_generating_scenario_id, pbar_turns_id])
+        remove_pbars(
+            progress,
+            [pbar_conversation_id, pbar_generating_scenario_id, pbar_turns_id],
+        )
 
         return ConversationalTestCase(
             turns=turns, additional_metadata=additional_metadata
@@ -452,10 +465,12 @@ class ConversationSimulator:
         pbar_id: Optional[int] = None,
     ) -> ConversationalTestCase:
         num_turns = random.randint(min_turns, max_turns)
-        
+
         # determine pbar length
         pbar_conversation_length = 2
-        pbar_turns_length = (num_turns - 1) * (3 if stopping_criteria is not None else 2) + 2
+        pbar_turns_length = (num_turns - 1) * (
+            3 if stopping_criteria is not None else 2
+        ) + 2
         pbar_generating_scenario_length = 2
 
         # add pbar
@@ -474,7 +489,7 @@ class ConversationSimulator:
             f"\t\t💬 Simulating conversation",
             total=pbar_turns_length,
         )
-            
+
         user_profile = await self._a_simulate_user_profile()
         update_pbar(progress, pbar_generating_scenario_id, remove=False)
         scenario = await self._a_simulate_scenario(user_profile, intent)
@@ -500,7 +515,7 @@ class ConversationSimulator:
                     scenario, user_profile
                 )
                 update_pbar(progress, pbar_turns_id)
-                
+
             else:
                 # Generate next user input based on conversation so far
                 conversation_history = self._format_conversational_turns(turns)
@@ -531,11 +546,16 @@ class ConversationSimulator:
                             data = trimAndLoadJson(res, self)
                             is_complete = data["is_complete"]
                     if is_complete:
-                        update_pbar(progress, pbar_turns_id, advance_to_end=True, remove=False)
+                        update_pbar(
+                            progress,
+                            pbar_turns_id,
+                            advance_to_end=True,
+                            remove=False,
+                        )
                         break
                     else:
                         update_pbar(progress, pbar_turns_id, remove=False)
-                    
+
                 prompt = ConversationSimulatorTemplate.generate_next_user_input(
                     scenario, user_profile, conversation_history, self.language
                 )
@@ -579,9 +599,12 @@ class ConversationSimulator:
                 )
             )
 
-        update_pbar(progress, pbar_conversation_id, remove=False) 
+        update_pbar(progress, pbar_conversation_id, remove=False)
         update_pbar(progress, pbar_id, remove=False)
-        remove_pbars(progress, [pbar_turns_id, pbar_conversation_id, pbar_generating_scenario_id])
+        remove_pbars(
+            progress,
+            [pbar_turns_id, pbar_conversation_id, pbar_generating_scenario_id],
+        )
 
         return ConversationalTestCase(
             turns=turns, additional_metadata=additional_metadata
@@ -602,7 +625,7 @@ class ConversationSimulator:
             res = model_callback(
                 input,
                 conversation_history=conversation_history,
-                **callback_kwargs
+                **callback_kwargs,
             )
         except TypeError:
             res = model_callback(
@@ -624,7 +647,7 @@ class ConversationSimulator:
             res = await model_callback(
                 input,
                 conversation_history=conversation_history,
-                **callback_kwargs
+                **callback_kwargs,
             )
         except TypeError:
             res = await model_callback(

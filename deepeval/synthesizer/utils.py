@@ -8,10 +8,12 @@ GREEN = "\033[32m"
 RED = "\033[31m"
 YELLOW = "\033[33m"
 
+
 class SynthesizerStatus(Enum):
     SUCCESS = "success"
     FAILURE = "failure"
     WARNING = "warning"
+
 
 def print_synthesizer_status(
     trace_worker_status: SynthesizerStatus,

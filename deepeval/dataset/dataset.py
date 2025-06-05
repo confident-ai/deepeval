@@ -34,7 +34,7 @@ from deepeval.test_case import (
 )
 from deepeval.utils import convert_keys_to_snake_case, is_confident
 
-valid_file_types = ["csv", "json"]
+valid_file_types = ["csv", "json", "jsonl"]
 
 
 def validate_test_case_type(
@@ -836,7 +836,7 @@ class EvaluationDataset:
 
     def save_as(
         self,
-        file_type: Literal["json", "csv"],
+        file_type: Literal["json", "csv", "jsonl"],
         directory: str,
         include_test_cases: bool = False,
     ) -> str:
@@ -924,6 +924,18 @@ class EvaluationDataset:
                             golden.source_file,
                         ]
                     )
+        elif file_type == "jsonl":
+            with open(full_file_path, "w", encoding="utf-8") as file:
+                for golden in goldens:
+                    record = {
+                        "input": golden.input,
+                        "actual_output": golden.actual_output,
+                        "expected_output": golden.expected_output,
+                        "retrieval_context": golden.retrieval_context,
+                        "context": golden.context,
+                        "source_file": golden.source_file,
+                    }
+                    file.write(json.dumps(record, ensure_ascii=False) + "\n")
 
         print(f"Evaluation dataset saved at {full_file_path}!")
         return full_file_path

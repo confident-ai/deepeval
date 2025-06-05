@@ -1,16 +1,5 @@
 from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
-from deepeval.telemetry import capture_send_trace
-from deepeval.tracing.utils import (
-    Environment,
-    make_json_serializable,
-    validate_environment,
-    validate_sampling_rate,
-)
-from deepeval.utils import dataclass_to_dict, is_confident
-from datetime import datetime, timezone
-from contextvars import ContextVar
 from time import perf_counter
-from enum import Enum
 import threading
 import functools
 import inspect
@@ -19,10 +8,8 @@ import random
 import atexit
 import queue
 import uuid
-import sys
 import os
 from openai import OpenAI
-from pydantic import BaseModel, Field
 from rich.console import Console
 from rich.progress import Progress
 
@@ -34,217 +21,45 @@ from deepeval.constants import (
     CONFIDENT_TRACE_ENVIRONMENT,
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from pydantic import BaseModel, Field
-from deepeval.prompt import Prompt
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
     SpanTestCase,
     TraceApi,
 )
-from rich.console import Console
-
-
-def to_zod_compatible_iso(dt: datetime) -> str:
-    return (
-        dt.astimezone(timezone.utc)
-        .isoformat(timespec="milliseconds")
-        .replace("+00:00", "Z")
-    )
-
-
-def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
-    """
-    Convert a perf_counter value to a datetime object.
-
-    Args:
-        perf_counter_value: A float value from perf_counter()
-
-    Returns:
-        A datetime object representing the current time
-    """
-    # Get the current time
-    current_time = datetime.now(timezone.utc)
-    # Calculate the time difference in seconds
-    time_diff = current_time.timestamp() - perf_counter()
-    # Convert perf_counter value to a real timestamp
-    timestamp = time_diff + perf_counter_value
-    # Return as a datetime object
-    return datetime.fromtimestamp(timestamp, tz=timezone.utc)
-
-
-class TraceWorkerStatus(Enum):
-    SUCCESS = "success"
-    FAILURE = "failure"
-    WARNING = "warning"
-
-
-class SpanType(Enum):
-    AGENT = "agent"
-    LLM = "llm"
-    RETRIEVER = "retriever"
-    TOOL = "tool"
-
-
-class TraceSpanStatus(Enum):
-    SUCCESS = "SUCCESS"
-    ERRORED = "ERRORED"
-    IN_PROGRESS = "IN_PROGRESS"
-
-
-class AgentAttributes(BaseModel):
-    # input
-    input: Union[str, Dict, list]
-    # output
-    output: Union[str, Dict, list]
-
-
-class LlmAttributes(BaseModel):
-    # input
-    input: Union[str, List[Dict[str, Any]]]
-    # output
-    output: str
-    prompt: Optional[Prompt] = None
-
-    # Optional variables
-    input_token_count: Optional[int] = Field(
-        None, serialization_alias="inputTokenCount"
-    )
-    output_token_count: Optional[int] = Field(
-        None, serialization_alias="outputTokenCount"
-    )
-
-    model_config = {"arbitrary_types_allowed": True}
-
-
-class RetrieverAttributes(BaseModel):
-    # input
-    embedding_input: str = Field(serialization_alias="embeddingInput")
-    # output
-    retrieval_context: List[str] = Field(serialization_alias="retrievalContext")
-
-    # Optional variables
-    top_k: Optional[int] = Field(None, serialization_alias="topK")
-    chunk_size: Optional[int] = Field(None, serialization_alias="chunkSize")
-
-
-# Don't have to call this manually, will be taken as input and output of function
-# Can be overridden by user
-class ToolAttributes(BaseModel):
-    # input
-    input_parameters: Optional[Dict[str, Any]] = Field(
-        None, serialization_alias="inputParameters"
-    )
-    # output
-    output: Optional[Any] = None
-
-
-########################################################
-### Trace Types #######################################
-########################################################
-
-
-class BaseSpan(BaseModel):
-    uuid: str
-    status: TraceSpanStatus
-    children: List["BaseSpan"]
-    trace_uuid: str = Field(serialization_alias="traceUuid")
-    parent_uuid: Optional[str] = Field(None, serialization_alias="parentUuid")
-    start_time: float = Field(serialization_alias="startTime")
-    end_time: Union[float, None] = Field(None, serialization_alias="endTime")
-    name: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-    input: Optional[Any] = None
-    output: Optional[Any] = None
-    error: Optional[str] = None
-    llm_test_case: Optional[LLMTestCase] = None
-    metrics: Optional[Union[List[str], List[BaseMetric]]] = None
-    # Don't serialize these
-    progress: Optional[Progress] = Field(None, exclude=True)
-    pbar_callback_id: Optional[int] = Field(None, exclude=True)
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class AgentSpan(BaseSpan):
-    name: str
-    available_tools: List[str] = []
-    agent_handoffs: List[str] = []
-    attributes: Optional[AgentAttributes] = None
-
-    def set_attributes(self, attributes: AgentAttributes):
-        self.attributes = attributes
-
-
-class LlmSpan(BaseSpan):
-    model: Optional[str] = None
-    attributes: Optional[LlmAttributes] = None
-    cost_per_input_token: Optional[float] = Field(
-        None, serialization_alias="costPerInputToken"
-    )
-    cost_per_output_token: Optional[float] = Field(
-        None, serialization_alias="costPerOutputToken"
-    )
-
-    def set_attributes(self, attributes: LlmAttributes):
-        self.attributes = attributes
-
-
-class RetrieverSpan(BaseSpan):
-    embedder: str
-    attributes: Optional[RetrieverAttributes] = None
-
-    def set_attributes(self, attributes: RetrieverAttributes):
-        self.attributes = attributes
-
-
-class ToolSpan(BaseSpan):
-    name: str  # Required name for ToolSpan
-    attributes: Optional[ToolAttributes] = None
-    description: Optional[str] = None
-
-    def set_attributes(self, attributes: ToolAttributes):
-        self.attributes = attributes
-
-
-Attributes = Union[
-    AgentAttributes, LlmAttributes, RetrieverAttributes, ToolAttributes
-]
-
-
-class Trace(BaseModel):
-    uuid: str = Field(serialization_alias="uuid")
-    status: TraceSpanStatus
-    root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
-    start_time: float = Field(serialization_alias="startTime")
-    end_time: Union[float, None] = Field(None, serialization_alias="endTime")
-    tags: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
-    thread_id: Optional[str] = None
-    user_id: Optional[str] = None
-    input: Optional[Any] = None
-    output: Optional[Any] = None
-
-
-# Create a context variable to track the current span
-current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
-    "current_span", default=None
+from deepeval.telemetry import capture_send_trace
+from deepeval.tracing.attributes import (
+    AgentAttributes,
+    Attributes,
+    LlmAttributes,
+    RetrieverAttributes,
+    ToolAttributes,
 )
-
-# Create a context variable to track the current trace
-current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
-    "current_trace", default=None
+from deepeval.tracing.patchers import patch_openai_client
+from deepeval.tracing.types import (
+    AgentSpan,
+    BaseSpan,
+    LlmSpan,
+    RetrieverSpan,
+    SpanType,
+    ToolSpan,
+    Trace,
+    TraceSpanStatus,
+    TraceWorkerStatus,
 )
+from deepeval.tracing.utils import (
+    Environment,
+    make_json_serializable,
+    perf_counter_to_datetime,
+    to_zod_compatible_iso,
+    validate_environment,
+    validate_sampling_rate,
+)
+from deepeval.utils import dataclass_to_dict, is_confident
+from deepeval.tracing.context import current_span_context, current_trace_context
 
 
-def get_current_trace():
-    return current_trace_context.get()
-
-
-# Simple stack implementation for traces and spans
 class TraceManager:
     def __init__(self):
         self.traces: List[Trace] = []
@@ -301,6 +116,7 @@ class TraceManager:
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
         confident_api_key: Optional[str] = None,
+        openai_client: Optional[OpenAI] = None,
     ) -> None:
         if mask is not None:
             self.custom_mask_fn = mask
@@ -312,6 +128,8 @@ class TraceManager:
             self.sampling_rate = sampling_rate
         if confident_api_key is not None:
             self.confident_api_key = confident_api_key
+        if openai_client is not None:
+            patch_openai_client(openai_client)
 
     def start_new_trace(self) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -346,6 +164,7 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 # print(f"Ending trace: {trace.root_spans}")
+                self.environment = Environment.TESTING
                 trace.root_spans = [trace.root_spans[0].children[0]]
                 for root_span in trace.root_spans:
                     root_span.parent_uuid = None
@@ -471,7 +290,7 @@ class TraceManager:
             self._worker_thread.start()
 
     def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
-        if not is_confident():
+        if not is_confident() and self.confident_api_key is None:
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
                 trace_worker_status=TraceWorkerStatus.FAILURE,
@@ -860,8 +679,6 @@ class Observer:
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
-        if self.client:
-            self.patch_client(self.client)
         self.start_time = perf_counter()
 
         # Get the current span from the context
@@ -872,7 +689,7 @@ class Observer:
             self.parent_uuid = parent_span.uuid
             self.trace_uuid = parent_span.trace_uuid
         else:
-            current_trace = get_current_trace()
+            current_trace = current_trace_context.get()
             if current_trace:
                 self.trace_uuid = current_trace.uuid
             else:
@@ -889,15 +706,19 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
-        
-        if parent_span and parent_span.progress is not None and parent_span.pbar_callback_id is not None:
+
+        if (
+            parent_span
+            and parent_span.progress is not None
+            and parent_span.pbar_callback_id is not None
+        ):
             self._progress = parent_span.progress
             self._pbar_callback_id = parent_span.pbar_callback_id
-            
+
         if self._progress is not None and self._pbar_callback_id is not None:
             span_instance.progress = self._progress
             span_instance.pbar_callback_id = self._pbar_callback_id
-        
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -954,7 +775,7 @@ class Observer:
                     current_trace_context.set(None)
 
             current_span_context.set(None)
-            
+
         if self._progress is not None and self._pbar_callback_id is not None:
             self._progress.update(self._pbar_callback_id, advance=1)
 
@@ -1064,96 +885,6 @@ class Observer:
             current_span.input = trace_manager.mask(self.function_kwargs)
             current_span.output = trace_manager.mask(self.result)
 
-    def patch_client(self, client: Any):
-
-        if not isinstance(client, OpenAI):
-            raise ValueError("client must be an instance of OpenAI")
-
-        original_methods = {}
-
-        # patches these methods
-        methods_to_patch = [
-            "chat.completions.create",
-            "beta.chat.completions.parse",
-        ]
-
-        for method_path in methods_to_patch:
-            # Split the path into components
-            parts = method_path.split(".")
-            current_obj = client
-
-            # Navigate to the parent object
-            for part in parts[:-1]:
-                if not hasattr(current_obj, part):
-                    print(
-                        f"Warning: Cannot find {part} in the path {method_path}"
-                    )
-                    continue
-                current_obj = getattr(current_obj, part)
-
-            method_name = parts[-1]
-            if not hasattr(current_obj, method_name):
-                print(
-                    f"Warning: Cannot find method {method_name} in the path {method_path}"
-                )
-                continue
-
-            method = getattr(current_obj, method_name)
-
-            if callable(method) and not isinstance(method, type):
-                original_methods[method_path] = method
-
-                # Capture the current 'method' using a default argument
-                @functools.wraps(method)
-                def wrapped_method(*args, original_method=method, **kwargs):
-                    current_span = current_span_context.get()
-                    # call the original method using the captured default argument
-                    response = original_method(*args, **kwargs)
-                    if isinstance(current_span, LlmSpan):
-                        # extract model
-                        model = kwargs.get("model", None)
-                        if model is None:
-                            raise ValueError("model not found in client")
-
-                        # set model
-                        current_span.model = model
-
-                        # extract output message
-                        output = None
-                        try:
-                            output = response.choices[0].message.content
-                        except Exception as e:
-                            pass
-
-                        # extract input output token counts
-                        input_token_count = None
-                        output_token_count = None
-                        try:
-                            input_token_count = response.usage.prompt_tokens
-                            output_token_count = (
-                                response.usage.completion_tokens
-                            )
-                        except Exception as e:
-                            pass
-
-                        update_current_span(
-                            attributes=LlmAttributes(
-                                input=kwargs.get(
-                                    "messages", "INPUT_MESSAGE_NOT_FOUND"
-                                ),
-                                output=(
-                                    output
-                                    if output
-                                    else "OUTPUT_MESSAGE_NOT_FOUND"
-                                ),
-                                input_token_count=input_token_count,
-                                output_token_count=output_token_count,
-                            )
-                        )
-                    return response
-
-                setattr(current_obj, method_name, wrapped_method)
-
 
 ########################################################
 ### Decorator ##########################################
@@ -1249,44 +980,3 @@ def observe(
         return decorator(_func)
 
     return decorator
-
-
-def update_current_span(
-    test_case: Optional[LLMTestCase] = None,
-    attributes: Optional[Attributes] = None,
-    metadata: Optional[Dict[str, Any]] = None,
-):
-    current_span = current_span_context.get()
-    if not current_span:
-        return
-    if attributes:
-        current_span.set_attributes(attributes)
-    if test_case:
-        current_span.llm_test_case = test_case
-    if metadata:
-        current_span.metadata = metadata
-
-
-def update_current_trace(
-    tags: Optional[List[str]] = None,
-    metadata: Optional[Dict[str, Any]] = None,
-    thread_id: Optional[str] = None,
-    user_id: Optional[str] = None,
-    input: Optional[Any] = None,
-    output: Optional[Any] = None,
-):
-    current_trace = current_trace_context.get()
-    if not current_trace:
-        return
-    if tags:
-        current_trace.tags = tags
-    if metadata:
-        current_trace.metadata = metadata
-    if thread_id:
-        current_trace.thread_id = thread_id
-    if user_id:
-        current_trace.user_id = user_id
-    if input:
-        current_trace.input = input
-    if output:
-        current_trace.output = output

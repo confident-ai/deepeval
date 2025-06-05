@@ -18,6 +18,7 @@ from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
 from deepeval.utils import update_pbar
 
+
 def format_metric_description(
     metric: Union[BaseMetric, BaseConversationalMetric],
     async_mode: Optional[bool] = None,
