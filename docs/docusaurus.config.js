@@ -9,7 +9,7 @@ module.exports = {
     [
       "posthog-docusaurus",
       {
-        apiKey: "phc_xuPeotBDIsi9uNBRS1ZqFD24IaOTx6lmt4ZCLfOnaee",
+        apiKey: process.env.ALGOLIA_API_KEY || "",
         appUrl: "https://us.i.posthog.com",
         enableInDevelopment: false,
       },
@@ -193,9 +193,9 @@ module.exports = {
         ],
       },
       algolia: {
-        appId: "7U9PQIW1ZA",
-        apiKey: "fb799aeac8bcd0f6b9e0e233a385ad33",
-        indexName: "confident-ai",
+        appId: process.env.ALGOLIA_APP_ID || "",
+        apiKey: process.env.ALGOLIA_API_KEY || "",
+        indexName: process.env.ALGOLIA_INDEX_NAME || "docs",
         contextualSearch: true,
       },
       colorMode: {
