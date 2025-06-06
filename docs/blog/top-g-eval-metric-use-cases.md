@@ -3,7 +3,7 @@ title: Top 5 G-Eval Metric Use Cases in DeepEval
 description: DeepEval is one of the top providers of G-Eval and in this article we'll share how to use it in the best possible way.
 slug: top-5-geval-use-cases
 authors: [kritinv]
-date: 2025-04-22
+date: 2025-05-29
 hide_table_of_contents: false
 image: https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:top-g-eval-use-cases-cover.jpg
 ---
