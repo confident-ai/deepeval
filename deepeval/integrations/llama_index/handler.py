@@ -26,7 +26,7 @@ class LLamaIndexEventHandler(BaseEventHandler):
     def handle(self, event: BaseEvent, **kwargs) -> Any:
         """Logic for handling event."""
         _event_dict = event.dict()
-        _fallback_json = json.loads(json.dumps(_event_dict, default=serialize, indent=4))
+        _fallback_json_string = json.loads(json.dumps(_event_dict, default=serialize, indent=4))
 
         _base_api_span = BaseApiSpan(
             uuid=_event_dict["id_"],
@@ -36,11 +36,11 @@ class LLamaIndexEventHandler(BaseEventHandler):
             traceUuid=_event_dict["id_"],
             startTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
             endTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
-            #metadata=_fallback_json
+            metadata=_fallback_json_string
         )
 
         _trace_api = TraceApi(
-            uuid=_event_dict["id_"]+"-llama-index",
+            uuid="trace_"+_event_dict["id_"],
             baseSpans=[_base_api_span],
             agentSpans=[],
             llmSpans=[],
@@ -48,9 +48,6 @@ class LLamaIndexEventHandler(BaseEventHandler):
             toolSpans=[],
             startTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
             endTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
-            #metadata=_fallback_json
             environment="development"
         )
         trace_manager.post_trace_api(_trace_api)
-
-my_event_handler = LLamaIndexEventHandler()
