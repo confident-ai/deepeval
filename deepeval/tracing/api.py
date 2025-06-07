@@ -4,8 +4,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.tracing.tracing import current_trace_context
-
+from deepeval.tracing.context import current_trace_context
 
 class SpanApiType(Enum):
     BASE = "base"
