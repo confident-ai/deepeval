@@ -1042,7 +1042,7 @@ def execute_agentic_test_cases(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Evaluating {len(goldens)} goldens(s) sequentially",
+                f"Running Component-Level Evals (sync)",
                 total=len(goldens) * 2,
             )
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
@@ -1095,7 +1095,7 @@ async def a_execute_agentic_test_cases(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                "Running Component-Level Evals",
+                "Running Component-Level Evals (async)",
                 total=len(goldens) * 2,
             )
             for golden in goldens:

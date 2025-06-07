@@ -13,8 +13,11 @@ from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
-from deepeval.utils import is_confident
-from deepeval.test_run.test_run import global_test_run_manager
+from deepeval.utils import delete_file_if_exists, is_confident
+from deepeval.test_run.test_run import (
+    LATEST_TEST_RUN_FILE_PATH,
+    global_test_run_manager,
+)
 import pyfiglet
 
 
@@ -142,6 +145,7 @@ def login(
 @app.command()
 def logout():
     KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
+    delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
     print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
 
@@ -190,11 +194,11 @@ def upload_and_open_link():
                 else:
                     print("❌ API Key cannot be empty. Please try again.\n")
 
-            print(f"📤 Uploading test run to Confident AI...")
-            global_test_run_manager.post_test_run(last_test_run_data)
+        print(f"📤 Uploading test run to Confident AI...")
+        global_test_run_manager.post_test_run(last_test_run_data)
     else:
         print(
-            "❌ No tests found. Run 'deepeval login' + an evaluation to get started 🚀."
+            "❌ No test run found in cache. Run 'deepeval login' + an evaluation to get started 🚀."
         )
 
 

@@ -614,7 +614,7 @@ class TestRunManager:
             success_rate = (
                 round((100 * pass_count) / (pass_count + fail_count), 2)
                 if pass_count + fail_count > 0
-                else "Cannot display metrics for component-level evals, please login to Confident AI to see results."
+                else "Cannot display metrics for component-level evals, please run 'deepeval view' to see results on Confident AI."
             )
             table.add_row(
                 test_case_name,
