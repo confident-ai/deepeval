@@ -23,7 +23,7 @@ from deepeval.metrics.dag import (
 )
 from deepeval.metrics import DAGMetric, GEval
 from deepeval import assert_test
-from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
+from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -178,12 +178,13 @@ goldens = [
 ]
 
 # # Run Async
-evaluate(
-    goldens=goldens,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True),
-    display_config=DisplayConfig(show_indicator=False),
-)
+# evaluate(
+#     goldens=goldens,
+#     observed_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=True),
+#     cache_config=CacheConfig(write_cache=False),
+#     # display_config=DisplayConfig(show_indicator=False),
+# )
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,

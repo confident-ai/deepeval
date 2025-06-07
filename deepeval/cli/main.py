@@ -13,10 +13,12 @@ from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
-
-
-PROD = "https://app.confident-ai.com"
-LOCAL = "http://localhost:3000"
+from deepeval.utils import delete_file_if_exists, is_confident
+from deepeval.test_run.test_run import (
+    LATEST_TEST_RUN_FILE_PATH,
+    global_test_run_manager,
+)
+from deepeval.cli.utils import render_login_message, upload_and_open_link, PROD
 
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
@@ -86,8 +88,7 @@ def login(
             if confident_api_key:
                 api_key = confident_api_key
             else:
-                """Login to the DeepEval platform."""
-                print("Welcome to :sparkles:[bold]DeepEval[/bold]:sparkles:!")
+                render_login_message()
 
                 # Start the pairing server
                 port = find_available_port()
@@ -101,19 +102,18 @@ def login(
 
                 # Open web url
                 login_url = f"{PROD}/pair?code={pairing_code}&port={port}"
-                print(
-                    f"Login and grab your API key here: [link={login_url}]{login_url}[/link] "
-                )
                 webbrowser.open(login_url)
-
+                print(
+                    f"(open this link if your browser did not opend: [link={PROD}]{PROD}[/link])"
+                )
                 if api_key == "":
                     while True:
-                        api_key = input("Paste your API Key: ").strip()
+                        api_key = input(f"🔐 Enter your API Key: ").strip()
                         if api_key:
                             break
                         else:
                             print(
-                                "API Key cannot be empty. Please try again.\n"
+                                "❌ API Key cannot be empty. Please try again.\n"
                             )
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
@@ -132,7 +132,21 @@ def login(
 @app.command()
 def logout():
     KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
+    delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
     print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
+
+
+@app.command()
+def view():
+    if is_confident():
+        last_test_run_link = global_test_run_manager.get_latest_test_run_link()
+        if last_test_run_link:
+            print(f"🔗 View test run: {last_test_run_link}")
+            webbrowser.open(last_test_run_link)
+        else:
+            upload_and_open_link()
+    else:
+        upload_and_open_link()
 
 
 @app.command(name="enable-grpc-logging")

@@ -205,6 +205,7 @@ def evaluate(
     )
     if goldens and observed_callback:
         global_test_run_manager.reset()
+        # global_test_run_manager.save_to_disk = True
         start_time = time.perf_counter()
         with capture_evaluation_run("traceable evaluate()"):
             if async_config.run_async:
@@ -220,6 +221,7 @@ def evaluate(
                         throttle_value=async_config.throttle_value,
                         identifier=identifier,
                         max_concurrent=async_config.max_concurrent,
+                        save_to_disk=cache_config.write_cache,
                     )
                 )
             else:
@@ -231,6 +233,7 @@ def evaluate(
                     show_indicator=display_config.show_indicator,
                     skip_on_missing_params=error_config.skip_on_missing_params,
                     identifier=identifier,
+                    save_to_disk=cache_config.write_cache,
                 )
         end_time = time.perf_counter()
         run_duration = end_time - start_time
