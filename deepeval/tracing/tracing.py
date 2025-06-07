@@ -140,7 +140,7 @@ class TraceManager:
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=perf_counter(),
             end_time=None,
-            # metadata=None,
+            confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)

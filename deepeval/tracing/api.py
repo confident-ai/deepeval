@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import current_trace_context
+from deepeval.utils import is_confident
 
 class SpanApiType(Enum):
     BASE = "base"
@@ -114,46 +115,20 @@ class TraceApi(BaseModel):
     output: Optional[Any] = Field(None)
 
 
-class RunTraceMetricApi(BaseModel):
-    metric_collection: str = Field(alias="metricCollection")
-    trace_uuid: str = Field(alias="traceUuid")
-
-
 class RunThreadMetricApi(BaseModel):
     thread_id: str = Field(alias="threadId")
     metric_collection: str = Field(alias="metricCollection")
 
 
-def run_trace_metrics(metricCollection: str):
+def evaluate_thread(thread_id: str, metric_collection: str):
     trace = current_trace_context.get()
-    if trace is None:
+    api_key = trace.confident_api_key
+    if not api_key and not is_confident():
         return
 
-    run_trace_metric_api = RunTraceMetricApi(
-        metricCollection=metricCollection,
-        traceUuid=trace.uuid,
-    )
-    try:
-        body = run_trace_metric_api.model_dump(
-            by_alias=True,
-            exclude_none=True,
-        )
-    except AttributeError:
-        # Pydantic version below 2.0
-        body = run_trace_metric_api.dict(by_alias=True, exclude_none=True)
-
-    api = Api()
-    api.send_request(
-        method=HttpMethods.POST,
-        endpoint=Endpoints.TRACE_METRICS_ENDPOINT,
-        body=body,
-    )
-
-
-def run_thread_metrics(thread_id: str, metricCollection: str):
     run_thread_metric_api = RunThreadMetricApi(
         threadId=thread_id,
-        metricCollection=metricCollection,
+        metricCollection=metric_collection,
     )
     try:
         body = run_thread_metric_api.model_dump(
@@ -164,7 +139,7 @@ def run_thread_metrics(thread_id: str, metricCollection: str):
         # Pydantic version below 2.0
         body = run_thread_metric_api.dict(by_alias=True, exclude_none=True)
 
-    api = Api()
+    api = Api(api_key=api_key)
     api.send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.THREAD_METRICS_ENDPOINT,

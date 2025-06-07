@@ -109,3 +109,6 @@ class Trace(BaseModel):
     user_id: Optional[str] = None
     input: Optional[Any] = None
     output: Optional[Any] = None
+
+    # Don't serialize these
+    confident_api_key: Optional[str] = Field(None, exclude=True)
