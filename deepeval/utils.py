@@ -362,6 +362,7 @@ def class_to_dict(instance: Any) -> Any:
 
 
 def delete_file_if_exists(file_path):
+    print(f"Deleting file: {file_path}")
     try:
         if os.path.exists(file_path):
             os.remove(file_path)

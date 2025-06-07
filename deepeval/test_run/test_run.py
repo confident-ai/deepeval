@@ -31,7 +31,11 @@ from deepeval.utils import (
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR
 
-TEMP_FILE_NAME = f"{HIDDEN_DIR}/.temp_test_run_data.json"
+TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
+LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
+LATEST_TEST_RUN_DATA_KEY = "testRunData"
+LATEST_TEST_RUN_LINK_KEY = "testRunLink"
+console = Console()
 
 
 class TestRunResultDisplay(Enum):
@@ -442,13 +446,13 @@ class TestRunEncoder(json.JSONEncoder):
 class TestRunManager:
     def __init__(self):
         self.test_run = None
-        self.temp_file_name = TEMP_FILE_NAME
+        self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
         self.disable_request = False
 
     def reset(self):
         self.test_run = None
-        self.temp_file_name = TEMP_FILE_NAME
+        self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
         self.disable_request = False
 
@@ -474,7 +478,7 @@ class TestRunManager:
         self.set_test_run(test_run)
 
         if self.save_to_disk:
-            self.save_test_run()
+            self.save_test_run(self.temp_file_path)
 
     def get_test_run(self, identifier: Optional[str] = None):
         if self.test_run is None:
@@ -483,7 +487,7 @@ class TestRunManager:
         if self.save_to_disk:
             try:
                 with portalocker.Lock(
-                    self.temp_file_name,
+                    self.temp_file_path,
                     mode="r",
                     flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
                 ) as file:
@@ -497,16 +501,33 @@ class TestRunManager:
 
         return self.test_run
 
-    def save_test_run(self):
+    def save_test_run(self, path: str, save_under_key: Optional[str] = None):
         if self.save_to_disk:
             try:
-                with portalocker.Lock(self.temp_file_name, mode="w") as file:
-                    self.test_run = self.test_run.save(file)
+                with portalocker.Lock(path, mode="w") as file:
+                    if save_under_key:
+                        try:
+                            test_run_data = self.test_run.model_dump(
+                                by_alias=True, exclude_none=True
+                            )
+                        except AttributeError:
+                            # Pydantic version below 2.0
+                            test_run_data = self.test_run.dict(
+                                by_alias=True, exclude_none=True
+                            )
+                        wrapper_data = {save_under_key: test_run_data}
+                        json.dump(wrapper_data, file, cls=TestRunEncoder)
+                    else:
+                        self.test_run.save(file)
             except portalocker.exceptions.LockException:
-                print(
-                    "In save_test_run, Error saving test run to disk",
-                    file=sys.stderr,
-                )
+                pass
+
+    def save_final_test_run_link(self, link: str):
+        try:
+            with portalocker.Lock(LATEST_TEST_RUN_FILE_PATH, mode="w") as file:
+                json.dump({LATEST_TEST_RUN_LINK_KEY: link}, file)
+        except portalocker.exceptions.LockException:
+            pass
 
     def update_test_run(
         self,
@@ -523,7 +544,7 @@ class TestRunManager:
         if self.save_to_disk:
             try:
                 with portalocker.Lock(
-                    self.temp_file_name,
+                    self.temp_file_path,
                     mode="r+",
                     flags=portalocker.LOCK_EX,
                 ) as file:
@@ -774,125 +795,122 @@ class TestRunManager:
         )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
-        console = Console()
-        if is_confident() and self.disable_request is False:
-            test_run.guard_mllm_test_cases()
-            BATCH_SIZE = 40
-            CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
+        if (
+            len(test_run.test_cases) == 0
+            and len(test_run.conversational_test_cases) == 0
+        ):
+            print("No test cases found, unable to upload to Confident AI.")
+            return
 
-            initial_batch = test_run.test_cases[:BATCH_SIZE]
-            remaining_test_cases = test_run.test_cases[BATCH_SIZE:]
+        test_run.guard_mllm_test_cases()
+        BATCH_SIZE = 40
+        CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
 
-            initial_conversational_batch = test_run.conversational_test_cases[
-                :CONVERSATIONAL_BATCH_SIZE
-            ]
-            remaining_conversational_test_cases = (
-                test_run.conversational_test_cases[CONVERSATIONAL_BATCH_SIZE:]
+        initial_batch = test_run.test_cases[:BATCH_SIZE]
+        remaining_test_cases = test_run.test_cases[BATCH_SIZE:]
+
+        initial_conversational_batch = test_run.conversational_test_cases[
+            :CONVERSATIONAL_BATCH_SIZE
+        ]
+        remaining_conversational_test_cases = (
+            test_run.conversational_test_cases[CONVERSATIONAL_BATCH_SIZE:]
+        )
+
+        if (
+            len(remaining_test_cases) > 0
+            or len(remaining_conversational_test_cases) > 0
+        ):
+            console.print(
+                "Sending a large test run to Confident, this might take a bit longer than usual..."
             )
 
-            if (
-                len(remaining_test_cases) > 0
-                or len(remaining_conversational_test_cases) > 0
-            ):
-                console.print(
-                    "Sending a large test run to Confident, this might take a bit longer than usual..."
-                )
+        ####################
+        ### POST REQUEST ###
+        ####################
+        test_run.test_cases = initial_batch
+        test_run.conversational_test_cases = initial_conversational_batch
+        try:
+            body = test_run.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = test_run.dict(by_alias=True, exclude_none=True)
 
-            ####################
-            ### POST REQUEST ###
-            ####################
-            test_run.test_cases = initial_batch
-            test_run.conversational_test_cases = initial_conversational_batch
+        # return
+        api = Api()
+        result = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.TEST_RUN_ENDPOINT,
+            body=body,
+        )
+
+        response = TestRunHttpResponse(
+            testRunId=result["testRunId"],
+            projectId=result["projectId"],
+            link=result["link"],
+        )
+        link = response.link
+        ################################################
+        ### Send the remaining test cases in batches ###
+        ################################################
+        max_iterations = (
+            max(
+                len(remaining_test_cases),
+                len(remaining_conversational_test_cases),
+            )
+            // CONVERSATIONAL_BATCH_SIZE
+        )
+        for i in range(0, max_iterations + 1):
+            test_case_index = (
+                i * CONVERSATIONAL_BATCH_SIZE * 3
+            )  # Multiply by 3 to match the conversational batch step
+            test_case_batch = remaining_test_cases[
+                test_case_index : test_case_index + BATCH_SIZE
+            ]
+
+            # Adjusting for conversational_test_cases
+            conversational_index = i * CONVERSATIONAL_BATCH_SIZE
+            conversational_batch = remaining_conversational_test_cases[
+                conversational_index : conversational_index
+                + CONVERSATIONAL_BATCH_SIZE
+            ]
+
+            if len(test_case_batch) == 0 and len(conversational_batch) == 0:
+                break
+
+            remaining_test_run = RemainingTestRun(
+                testRunId=response.testRunId,
+                testCases=test_case_batch,
+                conversationalTestCases=conversational_batch,
+            )
+
+            body = None
             try:
-                body = test_run.model_dump(by_alias=True, exclude_none=True)
+                body = remaining_test_run.model_dump(
+                    by_alias=True, exclude_none=True
+                )
             except AttributeError:
                 # Pydantic version below 2.0
-                body = test_run.dict(by_alias=True, exclude_none=True)
+                body = remaining_test_run.dict(by_alias=True, exclude_none=True)
 
-            # return
-            api = Api()
-            result = api.send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.TEST_RUN_ENDPOINT,
-                body=body,
-            )
-
-            response = TestRunHttpResponse(
-                testRunId=result["testRunId"],
-                projectId=result["projectId"],
-                link=result["link"],
-            )
-            link = response.link
-            ################################################
-            ### Send the remaining test cases in batches ###
-            ################################################
-            max_iterations = (
-                max(
-                    len(remaining_test_cases),
-                    len(remaining_conversational_test_cases),
+            try:
+                result = api.send_request(
+                    method=HttpMethods.PUT,
+                    endpoint=Endpoints.TEST_RUN_ENDPOINT,
+                    body=body,
                 )
-                // CONVERSATIONAL_BATCH_SIZE
-            )
-            for i in range(0, max_iterations + 1):
-                test_case_index = (
-                    i * CONVERSATIONAL_BATCH_SIZE * 3
-                )  # Multiply by 3 to match the conversational batch step
-                test_case_batch = remaining_test_cases[
-                    test_case_index : test_case_index + BATCH_SIZE
-                ]
+            except Exception as e:
+                message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
+                raise Exception(message) from e
 
-                # Adjusting for conversational_test_cases
-                conversational_index = i * CONVERSATIONAL_BATCH_SIZE
-                conversational_batch = remaining_conversational_test_cases[
-                    conversational_index : conversational_index
-                    + CONVERSATIONAL_BATCH_SIZE
-                ]
+        console.print(
+            "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
+            f"[link={link}]{link}[/link]."
+        )
+        self.save_final_test_run_link(link)
 
-                if len(test_case_batch) == 0 and len(conversational_batch) == 0:
-                    break
-
-                remaining_test_run = RemainingTestRun(
-                    testRunId=response.testRunId,
-                    testCases=test_case_batch,
-                    conversationalTestCases=conversational_batch,
-                )
-
-                body = None
-                try:
-                    body = remaining_test_run.model_dump(
-                        by_alias=True, exclude_none=True
-                    )
-                except AttributeError:
-                    # Pydantic version below 2.0
-                    body = remaining_test_run.dict(
-                        by_alias=True, exclude_none=True
-                    )
-
-                try:
-                    result = api.send_request(
-                        method=HttpMethods.PUT,
-                        endpoint=Endpoints.TEST_RUN_ENDPOINT,
-                        body=body,
-                    )
-                except Exception as e:
-                    message = f"Unexpected error when sending some test cases. Incomplete test run available at {link}"
-                    raise Exception(message) from e
-
-            console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! View results on "
-                f"[link={link}]{link}[/link]."
-            )
-
-            if is_in_ci_env() == False:
-                webbrowser.open(link)
-
-            return link
-        else:
-            console.print(
-                "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval login'[/bold] to save and analyze evaluation results on Confident AI.\n",
-                LOGIN_PROMPT,
-                "\n",
-            )
+        if is_in_ci_env() == False:
+            webbrowser.open(link)
+        return link
 
     def save_test_run_locally(self):
         local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
@@ -900,7 +918,7 @@ class TestRunManager:
             new_test_filename = datetime.datetime.now().strftime(
                 "%Y%m%d_%H%M%S"
             )
-            os.rename(self.temp_file_name, new_test_filename)
+            os.rename(self.temp_file_path, new_test_filename)
             if not os.path.exists(local_folder):
                 os.mkdir(local_folder)
                 shutil.copy(new_test_filename, local_folder)
@@ -923,20 +941,20 @@ class TestRunManager:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
-            delete_file_if_exists(self.temp_file_name)
+            delete_file_if_exists(self.temp_file_path)
             return
         elif (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
         ):
             print("No test cases found, please try again.")
-            delete_file_if_exists(self.temp_file_name)
+            delete_file_if_exists(self.temp_file_path)
             return
 
         valid_scores = test_run.construct_metrics_scores()
         if valid_scores == 0:
             print("All metrics errored for all test cases, please try again.")
-            delete_file_if_exists(self.temp_file_name)
+            delete_file_if_exists(self.temp_file_path)
             delete_file_if_exists(
                 global_test_run_cache_manager.temp_cache_file_name
             )
@@ -957,13 +975,41 @@ class TestRunManager:
             self.display_results_table(test_run, display)
 
         self.save_test_run_locally()
-        delete_file_if_exists(self.temp_file_name)
-
-        if (
-            len(test_run.test_cases) > 0
-            or len(test_run.conversational_test_cases) > 0
-        ):
+        delete_file_if_exists(self.temp_file_path)
+        if is_confident() and self.disable_request is False:
             return self.post_test_run(test_run)
+        else:
+            self.save_test_run(
+                LATEST_TEST_RUN_FILE_PATH,
+                save_under_key=LATEST_TEST_RUN_DATA_KEY,
+            )
+            console.print(
+                "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval view'[/bold] to analyze, debug, and save evaluation results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n",
+                # LOGIN_PROMPT,
+                # "\n",
+            )
+
+    def get_latest_test_run_data(self) -> Optional[TestRun]:
+        try:
+            if os.path.exists(LATEST_TEST_RUN_FILE_PATH):
+                with open(LATEST_TEST_RUN_FILE_PATH, "r") as file:
+                    data = json.load(file)
+                    return TestRun.model_validate(
+                        data[LATEST_TEST_RUN_DATA_KEY]
+                    )
+        except (FileNotFoundError, json.JSONDecodeError, Exception):
+            pass
+        return None
+
+    def get_latest_test_run_link(self) -> Optional[str]:
+        try:
+            if os.path.exists(LATEST_TEST_RUN_FILE_PATH):
+                with open(LATEST_TEST_RUN_FILE_PATH, "r") as file:
+                    data = json.load(file)
+                    return data[LATEST_TEST_RUN_LINK_KEY]
+        except (FileNotFoundError, json.JSONDecodeError, Exception):
+            pass
+        return None
 
 
 global_test_run_manager = TestRunManager()

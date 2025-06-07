@@ -1078,7 +1078,6 @@ async def a_execute_agentic_test_cases(
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = save_to_disk
     test_run_manager.get_test_run(identifier=identifier)
-
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
     test_results: List[TestResult] = []

@@ -13,6 +13,9 @@ from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
+from deepeval.utils import is_confident
+from deepeval.test_run.test_run import global_test_run_manager
+import pyfiglet
 
 
 PROD = "https://app.confident-ai.com"
@@ -87,7 +90,15 @@ def login(
                 api_key = confident_api_key
             else:
                 """Login to the DeepEval platform."""
-                print("Welcome to :sparkles:[bold]DeepEval[/bold]:sparkles:!")
+                print(
+                    f"🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the DeepEval cloud platform 🏡❤️"
+                )
+                print("")
+                print(
+                    pyfiglet.Figlet(font="big_money-ne").renderText(
+                        "DeepEval Cloud"
+                    )
+                )
 
                 # Start the pairing server
                 port = find_available_port()
@@ -101,19 +112,18 @@ def login(
 
                 # Open web url
                 login_url = f"{PROD}/pair?code={pairing_code}&port={port}"
-                print(
-                    f"Login and grab your API key here: [link={login_url}]{login_url}[/link] "
-                )
                 webbrowser.open(login_url)
-
+                print(
+                    f"(open this link if your browser did not opend: [link={PROD}]{PROD}[/link])"
+                )
                 if api_key == "":
                     while True:
-                        api_key = input("Paste your API Key: ").strip()
+                        api_key = input(f"🔐 Enter your API Key: ").strip()
                         if api_key:
                             break
                         else:
                             print(
-                                "API Key cannot be empty. Please try again.\n"
+                                "❌ API Key cannot be empty. Please try again.\n"
                             )
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
@@ -133,6 +143,59 @@ def login(
 def logout():
     KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
     print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
+
+
+@app.command()
+def view():
+    if is_confident():
+        last_test_run_link = global_test_run_manager.get_latest_test_run_link()
+        if last_test_run_link:
+            print(f"🔗 View test run: {last_test_run_link}")
+            webbrowser.open(last_test_run_link)
+        else:
+            upload_and_open_link()
+    else:
+        upload_and_open_link()
+
+
+def upload_and_open_link():
+    last_test_run_data = global_test_run_manager.get_latest_test_run_data()
+    if last_test_run_data:
+        confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+        if confident_api_key == "" or confident_api_key is None:
+            print(
+                f"🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the DeepEval cloud platform 🏡❤️"
+            )
+            print("")
+            print(
+                pyfiglet.Figlet(font="big_money-ne").renderText(
+                    "DeepEval Cloud"
+                )
+            )
+
+            print(
+                f"🔑 You'll need to get an API key at [link={PROD}]{PROD}[/link] to view your results (free)"
+            )
+            webbrowser.open(PROD)
+            while True:
+                confident_api_key = input("🔐 Enter your API Key: ").strip()
+                if confident_api_key:
+                    KEY_FILE_HANDLER.write_key(
+                        KeyValues.API_KEY, confident_api_key
+                    )
+                    print(
+                        "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
+                    )
+                    break
+                else:
+                    print("❌ API Key cannot be empty. Please try again.\n")
+
+            print(f"📤 Uploading test run to Confident AI...")
+            global_test_run_manager.post_test_run(last_test_run_data)
+    else:
+        print(
+            "❌ No tests found. Run 'deepeval login' + an evaluation to get started 🚀."
+        )
 
 
 @app.command(name="enable-grpc-logging")

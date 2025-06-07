@@ -10,6 +10,9 @@ class KeyValues(Enum):
     # Confident AI
     API_KEY = "api_key"
     CONFIDENT_REGION = "confident_region"
+    # Cache
+    LAST_TEST_RUN_LINK = "last_test_run_link"
+    LAST_TEST_RUN_DATA = "last_test_run_data"
     # Azure Open AI
     AZURE_OPENAI_API_KEY = "AZURE_OPENAI_API_KEY"
     AZURE_OPENAI_ENDPOINT = "AZURE_OPENAI_ENDPOINT"

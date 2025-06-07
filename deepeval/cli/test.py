@@ -2,12 +2,11 @@ import time
 import pytest
 import typer
 import os
-import json
 import sys
 from typing_extensions import Annotated
 from typing import Optional
 
-from deepeval.test_run import global_test_run_manager, TEMP_FILE_NAME
+from deepeval.test_run import global_test_run_manager, TEMP_FILE_PATH
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
@@ -114,7 +113,7 @@ def run(
     ),
 ):
     """Run a test"""
-    delete_file_if_exists(TEMP_FILE_NAME)
+    delete_file_if_exists(TEMP_FILE_PATH)
     delete_file_if_exists(TEMP_CACHE_FILE_NAME)
     check_if_valid_file(test_file_or_directory)
     set_is_running_deepeval(True)
