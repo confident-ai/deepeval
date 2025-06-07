@@ -838,6 +838,7 @@ class EvaluationDataset:
         self,
         file_type: Literal["json", "csv", "jsonl"],
         directory: str,
+        file_name: Optional[str] = None,
         include_test_cases: bool = False,
     ) -> str:
         if file_type not in valid_file_types:
@@ -865,8 +866,10 @@ class EvaluationDataset:
             )
 
         new_filename = (
-            datetime.datetime.now().strftime("%Y%m%d_%H%M%S") + f".{file_type}"
-        )
+            datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            if file_name is None
+            else file_name
+        ) + f".{file_type}"
 
         if not os.path.exists(directory):
             os.makedirs(directory)

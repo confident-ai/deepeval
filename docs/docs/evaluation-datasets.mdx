@@ -173,10 +173,11 @@ You can save your dataset locally to either a CSV or JSON file by using the `sav
 dataset.save_as(file_type="csv", directory="./deepeval-test-dataset", include_test_cases=True)
 ```
 
-There are **TWO** mandatory and **ONE** optional parameter when calling the `save_as()` method:
+There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
 
 - `file_type`: a string of either `"csv"` or `"json"` and specifies which file format to save `Golden`s in.
 - `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
+- `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
 - `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
 
 :::note

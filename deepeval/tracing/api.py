@@ -7,6 +7,7 @@ from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import current_trace_context
 from deepeval.utils import is_confident
 
+
 class SpanApiType(Enum):
     BASE = "base"
     AGENT = "agent"
