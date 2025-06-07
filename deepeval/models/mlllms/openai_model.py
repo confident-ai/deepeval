@@ -14,7 +14,6 @@ from tenacity import (
 
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
-from deepeval.models.utils import parse_model_name
 
 retryable_exceptions = (
     openai.RateLimitError,
@@ -87,7 +86,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     ):
         model_name = None
         if isinstance(model, str):
-            model_name = parse_model_name(model)
+            model_name = model
             if model_name not in valid_multimodal_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available Multimodal GPT models: {', '.join(model for model in valid_multimodal_gpt_models)}"

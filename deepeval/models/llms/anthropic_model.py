@@ -5,7 +5,6 @@ import os
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name
 
 model_pricing = {
     "claude-3-7-sonnet-latest": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
@@ -25,7 +24,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         temperature: float = 0,
         _anthropic_api_key: Optional[str] = None,
     ):
-        model_name = parse_model_name(model)
+        model_name = model
         self._anthropic_api_key = _anthropic_api_key
 
         if temperature < 0:

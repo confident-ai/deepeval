@@ -14,7 +14,6 @@ from tenacity import (
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.models.utils import parse_model_name
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -160,7 +159,7 @@ class GPTModel(DeepEvalBaseLLM):
     ):
         model_name = None
         if isinstance(model, str):
-            model_name = parse_model_name(model)
+            model_name = model
             if model_name not in valid_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
