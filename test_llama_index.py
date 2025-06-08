@@ -1,3 +1,4 @@
+import os
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.llms.openai import OpenAI
@@ -7,7 +8,10 @@ import time
 import llama_index.core.instrumentation as instrument
 
 import deepeval
-deepeval.login_with_confident_api_key("<your-confident-api-key>")
+from deepeval.tracing.tracing import observe
+deepeval.login_with_confident_api_key("<confident_api_key>")
+
+os.environ["OPENAI_API_KEY"] = "<openai_api_key>"
 
 dispatcher = instrument.get_dispatcher()
 dispatcher.add_event_handler(LLamaIndexEventHandler())
@@ -38,15 +42,14 @@ agent = FunctionAgent(
 
 
 # Now we can ask questions about the documents or do calculations
+@observe()
 async def main():
     response = await agent.run(
         "What did the author do in college? Also, what's 7 * 8?"
     )
     print(response)
 
-    time.sleep(40) # wait for queue to be processed
-
-
 # Run the agent
 if __name__ == "__main__":
     asyncio.run(main())
+    time.sleep(10) # wait for queue to be processed

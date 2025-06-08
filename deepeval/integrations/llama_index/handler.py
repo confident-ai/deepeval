@@ -1,14 +1,17 @@
 from datetime import datetime, timezone
 import json
 from typing import Any
+import uuid
 from llama_index.core.instrumentation.event_handlers.base import (
     BaseEventHandler,
     BaseEvent
 )
 
 from deepeval.tracing.api import BaseApiSpan, SpanApiType, TraceApi, TraceSpanApiStatus
+from deepeval.tracing.types import BaseSpan, TraceSpanStatus
 from deepeval.tracing.utils import to_zod_compatible_iso
 from deepeval.tracing import trace_manager
+from deepeval.tracing.context import current_span_context, current_trace_context
 
 def serialize(obj):
     if hasattr(obj, '__dict__'):
@@ -25,29 +28,40 @@ class LLamaIndexEventHandler(BaseEventHandler):
 
     def handle(self, event: BaseEvent, **kwargs) -> Any:
         """Logic for handling event."""
-        _event_dict = event.dict()
-        _fallback_json_string = json.loads(json.dumps(_event_dict, default=serialize, indent=4))
+        
+        # Get the current span from the context
+        parent_span = current_span_context.get()
 
-        _base_api_span = BaseApiSpan(
-            uuid=_event_dict["id_"],
-            name=_event_dict["class_name"],
-            status=TraceSpanApiStatus.SUCCESS,
-            type=SpanApiType.BASE,
-            traceUuid=_event_dict["id_"],
-            startTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
-            endTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
-            metadata=_fallback_json_string
+        # mandatory fields
+        parent_uuid = None
+        trace_uuid = None
+
+        # Determine trace_uuid and parent_uuid before creating the span instance
+        if parent_span:
+            parent_uuid = parent_span.uuid
+            trace_uuid = parent_span.trace_uuid
+        
+        # Generate UUIDs if they are not available
+        if parent_uuid is None or trace_uuid is None:
+            # TODO: Implement for more use cases where parent_uuid and trace_uuid are not available
+            pass
+
+        event_dict = event.dict()
+        
+        # TODO: Map the values with relevant attributes
+        fallback_json = json.loads(json.dumps(event_dict, default=serialize, indent=4))
+        
+        base_span = BaseSpan(
+            uuid=event_dict["id_"],
+            status=TraceSpanStatus.SUCCESS, # TODO: Add more statuses
+            children=[],
+            trace_uuid=trace_uuid,
+            parent_uuid=parent_uuid,
+            start_time=event_dict["timestamp"].timestamp(),
+            end_time=event_dict["timestamp"].timestamp(),
+            name=event_dict["class_name"],
+            metadata=fallback_json
         )
 
-        _trace_api = TraceApi(
-            uuid="trace_"+_event_dict["id_"],
-            baseSpans=[_base_api_span],
-            agentSpans=[],
-            llmSpans=[],
-            retrieverSpans=[],
-            toolSpans=[],
-            startTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
-            endTime=to_zod_compatible_iso(datetime.fromtimestamp(int(_event_dict["timestamp"].timestamp()) / 1e9, tz=timezone.utc)),
-            environment="development"
-        )
-        trace_manager.post_trace_api(_trace_api)
+        trace_manager.add_span_to_trace(base_span)
+        
