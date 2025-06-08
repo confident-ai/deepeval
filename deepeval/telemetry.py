@@ -454,6 +454,36 @@ def capture_login_event():
 
 
 @contextmanager
+def capture_view_event():
+    if telemetry_opt_out():
+        yield
+    else:
+        event = "View"
+        distinct_id = get_unique_id()
+        properties = {
+            "logged_in_with": get_logged_in_with(),
+            "environment": IS_RUNNING_IN_JUPYTER,
+            "user.status": get_status(),
+            "user.unique_id": get_unique_id(),
+            "user.public_ip": (
+                anonymous_public_ip if anonymous_public_ip else "Unknown"
+            ),
+            "last_feature": get_last_feature().value,
+            "completed": True,
+            "login_prompt": LOGIN_PROMPT,
+        }
+        # capture posthog
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
+        # capture new relic
+        with tracer.start_as_current_span(event) as span:
+            for property, value in properties.items():
+                span.set_attribute(property, value)
+            yield span
+
+
+@contextmanager
 def capture_pull_dataset():
     if telemetry_opt_out():
         yield

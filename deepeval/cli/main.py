@@ -10,7 +10,7 @@ import typer
 from enum import Enum
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.cli.recommend import app as recommend_app
-from deepeval.telemetry import capture_login_event
+from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
 from deepeval.utils import delete_file_if_exists, is_confident
@@ -117,7 +117,7 @@ def login(
                             )
 
             KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-            span.set_attribute("completed", False)
+            span.set_attribute("completed", True)
 
             print(
                 "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
@@ -138,15 +138,18 @@ def logout():
 
 @app.command()
 def view():
-    if is_confident():
-        last_test_run_link = global_test_run_manager.get_latest_test_run_link()
-        if last_test_run_link:
-            print(f"🔗 View test run: {last_test_run_link}")
-            webbrowser.open(last_test_run_link)
+    with capture_view_event() as span:
+        if is_confident():
+            last_test_run_link = (
+                global_test_run_manager.get_latest_test_run_link()
+            )
+            if last_test_run_link:
+                print(f"🔗 View test run: {last_test_run_link}")
+                webbrowser.open(last_test_run_link)
+            else:
+                upload_and_open_link(_span=span)
         else:
-            upload_and_open_link()
-    else:
-        upload_and_open_link()
+            upload_and_open_link(_span=span)
 
 
 @app.command(name="enable-grpc-logging")

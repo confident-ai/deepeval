@@ -1,10 +1,13 @@
 from rich import print
 import webbrowser
+import pyfiglet
+from typing import Optional
+from opentelemetry.trace import Span
+
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.test_run.test_run import (
     global_test_run_manager,
 )
-import pyfiglet
 
 PROD = "https://app.confident-ai.com"
 
@@ -17,7 +20,7 @@ def render_login_message():
     print(pyfiglet.Figlet(font="big_money-ne").renderText("DeepEval Cloud"))
 
 
-def upload_and_open_link():
+def upload_and_open_link(_span: Span):
     last_test_run_data = global_test_run_manager.get_latest_test_run_data()
     if last_test_run_data:
         confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
@@ -37,6 +40,7 @@ def upload_and_open_link():
                     print(
                         "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
                     )
+                    _span.set_attribute("completed", True)
                     break
                 else:
                     print("❌ API Key cannot be empty. Please try again.\n")
