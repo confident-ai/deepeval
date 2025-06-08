@@ -2,6 +2,7 @@ from typing import Union, Dict
 
 from deepeval.test_run import global_test_run_manager
 from deepeval.prompt import Prompt, PromptApi
+from deepeval.test_run.test_run import TEMP_FILE_PATH
 
 
 def process_hyperparameters(
@@ -52,7 +53,7 @@ def log_hyperparameters(func):
 
     hyperparameters = process_hyperparameters(modified_hyperparameters())
     test_run.hyperparameters = hyperparameters
-    global_test_run_manager.save_test_run()
+    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
     # Define the wrapper function that will be the actual decorator
     def wrapper(*args, **kwargs):

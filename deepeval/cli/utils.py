@@ -8,6 +8,7 @@ import pyfiglet
 
 PROD = "https://app.confident-ai.com"
 
+
 def render_login_message():
     print(
         f"🥳 Welcome to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)], the DeepEval cloud platform 🏡❤️"
