@@ -811,7 +811,6 @@ class Observer:
             model = self.observe_kwargs.get("model", None)
             if model is None and self.client is None:
                 raise ValueError("model or client is required for LlmSpan")
-
             return LlmSpan(**span_kwargs, attributes=None, model=model)
         elif self.span_type == SpanType.RETRIEVER.value:
             embedder = self.observe_kwargs.get("embedder", None)

@@ -449,8 +449,11 @@ class TestRunManager:
         self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
         self.disable_request = False
+        self.hyperparameters = None
 
-    def reset(self):
+    def reset(self, preserve_hyperparameters=False):
+        if preserve_hyperparameters:
+            self.hyperparameters = getattr(self.test_run, "hyperparameters")
         self.test_run = None
         self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
@@ -464,6 +467,7 @@ class TestRunManager:
         identifier: Optional[str] = None,
         file_name: Optional[str] = None,
         disable_request: Optional[bool] = False,
+        hyperparameters: Optional[Dict[str, Any]] = None
     ):
         self.disable_request = disable_request
         test_run = TestRun(
@@ -471,7 +475,7 @@ class TestRunManager:
             testFile=file_name,
             testCases=[],
             metricsScores=[],
-            hyperparameters=None,
+            hyperparameters=hyperparameters,
             testPassed=None,
             testFailed=None,
         )
@@ -482,7 +486,10 @@ class TestRunManager:
 
     def get_test_run(self, identifier: Optional[str] = None):
         if self.test_run is None:
-            self.create_test_run(identifier=identifier)
+            self.create_test_run(
+                identifier=identifier, 
+                hyperparameters=self.hyperparameters or None
+            )
 
         if self.save_to_disk:
             try:

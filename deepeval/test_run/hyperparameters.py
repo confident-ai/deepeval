@@ -1,8 +1,8 @@
-from typing import Union, Dict
+from typing import Union, Any, Dict
 
 from deepeval.test_run import global_test_run_manager
-from deepeval.prompt import Prompt, PromptApi
 from deepeval.test_run.test_run import TEMP_FILE_PATH
+from deepeval.prompt import Prompt, PromptApi
 
 
 def process_hyperparameters(
@@ -63,3 +63,23 @@ def log_hyperparameters(func):
 
     # Return the wrapper function to be used as the decorator
     return wrapper
+
+def auto_log_hyperparameters(hyperparameters: Dict[str, Any]) -> None:
+    test_run = global_test_run_manager.get_test_run()
+    existing_hyperparameters = test_run.hyperparameters or {}
+    merged_hyperparameters: Dict[str, Any] = existing_hyperparameters.copy()
+    for key, value in hyperparameters.items():
+        if key not in merged_hyperparameters:
+            merged_hyperparameters[key] = value
+        else:
+            if merged_hyperparameters[key] != value:
+                suffix = 1
+                new_key = f"{key}_{suffix}"
+                while new_key in merged_hyperparameters:
+                    suffix += 1
+                    new_key = f"{key}_{suffix}"
+                merged_hyperparameters[new_key] = value
+            else:
+                merged_hyperparameters[key] = value
+    test_run.hyperparameters = process_hyperparameters(merged_hyperparameters)
+    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
