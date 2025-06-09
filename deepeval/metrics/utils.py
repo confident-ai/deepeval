@@ -3,6 +3,7 @@ import json
 import re
 import sys
 from typing import Any, Dict, Optional, List, Union, Tuple
+
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
@@ -24,8 +25,6 @@ from deepeval.models import (
     AmazonBedrockModel,
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
-
-
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -39,6 +38,7 @@ from deepeval.test_case import (
     MLLMTestCaseParams,
     ConversationalTestCase,
     MLLMImage,
+    Turn,
 )
 
 
@@ -81,25 +81,15 @@ def format_turns(
     return res
 
 
-def process_llm_test_cases_windows(
-    llm_test_cases_windows: List[List[LLMTestCase]],
-    test_case_params: List[LLMTestCaseParams],
-) -> List[List[Dict[str, str]]]:
-    res = []
-    for llm_test_cases_window in llm_test_cases_windows:
-        window = []
-        for llm_test_case in llm_test_cases_window:
-            dict = {}
-            for param in test_case_params:
-                if getattr(llm_test_case, param.value):
-                    value = getattr(llm_test_case, param.value)
-                    dict[param.value] = value
-            window.append(dict)
-        res.append(window)
-    return res
+def convert_turn_to_dict(turn: Turn) -> Dict:
+    return {
+        key: value
+        for key, value in turn.__dict__.items()
+        if value is not None and key != "additional_metadata"
+    }
 
 
-def get_turns_in_sliding_window(turns: List[LLMTestCase], window_size: int):
+def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
 
@@ -132,7 +122,6 @@ def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
 
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
-    test_case_params: List[LLMTestCaseParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
 ):
@@ -150,29 +139,6 @@ def check_conversational_test_case_params(
         error_str = "'turns' in conversational test case cannot be empty."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
-
-    for turn in test_case.turns:
-        test_case = turn
-        missing_params = []
-        for param in test_case_params:
-            if getattr(test_case, param.value) is None:
-                missing_params.append(f"'{param.value}'")
-
-        if missing_params:
-            if len(missing_params) == 1:
-                missing_params_str = missing_params[0]
-            elif len(missing_params) == 2:
-                missing_params_str = " and ".join(missing_params)
-            else:
-                missing_params_str = (
-                    ", ".join(missing_params[:-1])
-                    + ", and "
-                    + missing_params[-1]
-                )
-
-            error_str = f"{missing_params_str} for `llm_test_case` turns cannot be None for the '{metric.__name__}' metric"
-            metric.error = error_str
-            raise MissingTestCaseParamsError(error_str)
 
 
 def check_llm_test_case_params(

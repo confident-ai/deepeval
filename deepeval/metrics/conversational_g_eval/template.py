@@ -1,6 +1,9 @@
+from typing import List, Dict
+
+
 class ConversationalGEvalTemplate:
     @staticmethod
-    def generate_evaluation_steps(parameters, criteria):
+    def generate_evaluation_steps(parameters: str, criteria: str):
         return f"""Given an evaluation criteria which outlines how you should judge a conversation between a user and an LLM chatbot using the {parameters} fields in each turn, generate 3-4 concise evaluation steps based on the criteria below. Based on the evaluation criteria, you MUST make it clear how to evaluate the {parameters} in relation to one another in each turn, as well as the overall quality of the conversation.
 
 Evaluation Criteria:
@@ -18,24 +21,33 @@ JSON:
 """
 
     @staticmethod
-    def generate_evaluation_results(evaluation_steps, conversation, parameters):
-        return f"""Given the evaluation steps that outlines how to evaluate a conversation between a user and an LLM chatbot, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria outlined in the steps and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in the conversation in your reason, but be very concise with it!
+    def generate_evaluation_results(
+        evaluation_steps: str, turns: List[Dict], parameters: str
+    ) -> str:
+        return f"""You are given a set of **Evaluation Steps** that describe how to assess a conversation between a user and an LLM chatbot. Your task is to return a JSON object with exactly two fields:
+
+1. `"score"`: An integer from 0 to 10 (inclusive), where:
+   - 10 = The conversation *fully* meets the criteria described in the Evaluation Steps.
+   - 0 = The conversation *completely fails* to meet the criteria.
+
+2. `"reason"`: A **concise but precise** explanation for the score. Your reasoning **must reference specific aspects of the Evaluation Steps** and **mention relevant details from the conversation and the given parameters**. DO NOT include the score value in your explanation.
 
 Evaluation Steps:
 {evaluation_steps}
 
 Conversation:
-{conversation}
+{turns}
+
+Parameters to consider during evaluation:
+{parameters}
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
+IMPORTANT: You MUST return only a valid JSON object with the exact keys "score" and "reason". No additional text, commentary, or formatting.
+**
 
 Example JSON:
 {{
-    "score": 0,
-    "reason": "The text does not follow the evaluation steps provided."
+  "score": 0,
+  "reason": "your concise and informative reason here"
 }}
-**
-
-JSON:
 """

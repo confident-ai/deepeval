@@ -1,5 +1,5 @@
 import asyncio
-from typing import Optional, Union, Dict, List
+from typing import Optional, Union, List
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.conversation_completeness.template import (
@@ -8,26 +8,20 @@ from deepeval.metrics.conversation_completeness.template import (
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    format_turns,
     trimAndLoadJson,
     initialize_model,
+    convert_turn_to_dict,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import (
-    LLMTestCaseParams,
-    ConversationalTestCase,
-)
+from deepeval.test_case import ConversationalTestCase
+
+from deepeval.test_case.conversational_test_case import Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.conversation_completeness.schema import *
 
 
 class ConversationCompletenessMetric(BaseConversationalMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-    ]
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -53,9 +47,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case, self._required_params, self
-        )
+        check_conversational_test_case_params(test_case, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -71,12 +63,13 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                self.turns: List[Dict[str, str]] = format_turns(
-                    test_case.turns, self._required_params
+                self.user_intentions = self._extract_user_intentions(
+                    test_case.turns
                 )
-                self.user_intentions = self._extract_user_intentions()
                 self.verdicts = [
-                    self._generate_verdict(user_intention)
+                    self._generate_verdict(
+                        turns=test_case.turns, intention=user_intention
+                    )
                     for user_intention in self.user_intentions
                 ]
 
@@ -86,7 +79,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Turns:\n{prettify_list(self.turns)}",
+                        f"Turns:\n{prettify_list(test_case.turns)}",
                         f"User Intentions:\n{prettify_list(self.user_intentions)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
@@ -100,21 +93,20 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case, self._required_params, self
-        )
+        check_conversational_test_case_params(test_case, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.turns: List[Dict[str, str]] = format_turns(
-                test_case.turns, self._required_params
+            self.user_intentions = await self._a_extract_user_intentions(
+                test_case.turns
             )
-            self.user_intentions = await self._a_extract_user_intentions()
             self.verdicts = await asyncio.gather(
                 *[
-                    self._a_generate_verdict(user_intention)
+                    self._a_generate_verdict(
+                        turns=test_case.turns, intention=user_intention
+                    )
                     for user_intention in self.user_intentions
                 ]
             )
@@ -125,7 +117,7 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Turns:\n{prettify_list(self.turns)}",
+                    f"Turns:\n{prettify_list(test_case.turns)}",
                     f"User Intentions:\n{prettify_list(self.user_intentions)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
@@ -185,10 +177,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 return data["reason"]
 
     async def _a_generate_verdict(
-        self, intention: str
+        self, turns: List[Turn], intention: str
     ) -> ConversationCompletenessVerdict:
         prompt = ConversationCompletenessTemplate.generate_verdicts(
-            messages=self.turns, intention=intention
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            intention=intention,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -210,10 +203,11 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 return ConversationCompletenessVerdict(**data)
 
     def _generate_verdict(
-        self, intention: str
+        self, turns: List[Turn], intention: str
     ) -> ConversationCompletenessVerdict:
         prompt = ConversationCompletenessTemplate.generate_verdicts(
-            messages=self.turns, intention=intention
+            turns=[convert_turn_to_dict(turn) for turn in turns],
+            intention=intention,
         )
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -232,9 +226,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return ConversationCompletenessVerdict(**data)
 
-    async def _a_extract_user_intentions(self) -> List[str]:
+    async def _a_extract_user_intentions(self, turns: List[Turn]) -> List[str]:
         prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            messages=self.turns
+            turns=[convert_turn_to_dict(turn) for turn in turns]
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -253,9 +247,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return UserIntentions(**data).intentions
 
-    def _extract_user_intentions(self) -> List[str]:
+    def _extract_user_intentions(self, turns: List[Turn]) -> List[str]:
         prompt = ConversationCompletenessTemplate.extract_user_intentions(
-            messages=self.turns
+            turns=[convert_turn_to_dict(turn) for turn in turns]
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=UserIntentions)

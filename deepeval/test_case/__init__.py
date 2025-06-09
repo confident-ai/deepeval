@@ -4,5 +4,5 @@ from .llm_test_case import (
     ToolCall,
     ToolCallParams,
 )
-from .conversational_test_case import ConversationalTestCase
+from .conversational_test_case import ConversationalTestCase, Turn, TurnParams
 from .mllm_test_case import MLLMTestCase, MLLMTestCaseParams, MLLMImage

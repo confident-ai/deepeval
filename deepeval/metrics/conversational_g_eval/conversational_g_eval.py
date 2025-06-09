@@ -4,10 +4,12 @@ from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, List, Tuple, Union, Dict
 import math
 from deepeval.metrics import BaseMetric
-from deepeval.metrics.g_eval.utils import construct_g_eval_params_string
+from deepeval.metrics.g_eval.utils import (
+    construct_conversational_g_eval_turn_params_string,
+)
 from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
+    Turn,
+    TurnParams,
     ConversationalTestCase,
 )
 from deepeval.metrics.conversational_g_eval.template import (
@@ -17,9 +19,9 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    format_turns,
     trimAndLoadJson,
     initialize_model,
+    convert_turn_to_dict,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -30,7 +32,7 @@ class ConversationalGEval(BaseMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[LLMTestCaseParams],
+        evaluation_params: Optional[List[TurnParams]] = [TurnParams.CONTENT],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -40,6 +42,9 @@ class ConversationalGEval(BaseMetric):
         verbose_mode: bool = False,
         _include_g_eval_suffix: bool = True,
     ):
+        if evaluation_params is not None and len(evaluation_params) == 0:
+            raise ValueError("evaluation_params cannot be an empty list.")
+
         self.name = name
         self.evaluation_params = evaluation_params
 
@@ -96,7 +101,7 @@ class ConversationalGEval(BaseMetric):
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                g_score, reason = self.evaluate(test_case)
+                g_score, reason = self.evaluate(test_case.turns)
                 self.reason = reason
                 self.score = float(g_score) / 10
                 self.score = (
@@ -135,7 +140,7 @@ class ConversationalGEval(BaseMetric):
             self.evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
-            g_score, reason = await self._a_evaluate(test_case)
+            g_score, reason = await self._a_evaluate(test_case.turns)
             self.reason = reason
             self.score = float(g_score) / 10
             self.score = (
@@ -159,7 +164,7 @@ class ConversationalGEval(BaseMetric):
         if self.evaluation_steps:
             return self.evaluation_steps
 
-        g_eval_params_str = construct_g_eval_params_string(
+        g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
         prompt = ConversationalGEvalTemplate.generate_evaluation_steps(
@@ -182,7 +187,7 @@ class ConversationalGEval(BaseMetric):
         if self.evaluation_steps:
             return self.evaluation_steps
 
-        g_eval_params_str = construct_g_eval_params_string(
+        g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
         prompt = ConversationalGEvalTemplate.generate_evaluation_steps(
@@ -202,22 +207,18 @@ class ConversationalGEval(BaseMetric):
                 return data["steps"]
 
     async def _a_evaluate(
-        self, test_case: LLMTestCase
+        self, turns: List[Turn]
     ) -> Tuple[Union[int, float], str]:
-        turns = format_turns(test_case.turns, self.evaluation_params)
-        g_eval_params_str = construct_g_eval_params_string(
+        g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
 
         prompt = ConversationalGEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
-            conversation=turns,
+            turns=[convert_turn_to_dict(turn) for turn in turns],
             parameters=g_eval_params_str,
         )
-
         try:
-            # Don't have to check for using native model
-            # since generate raw response only exist for deepeval's native model
             res, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=20
             )
@@ -256,17 +257,14 @@ class ConversationalGEval(BaseMetric):
                     data = trimAndLoadJson(res, self)
                     return data["score"], data["reason"]
 
-    def evaluate(
-        self, test_case: ConversationalTestCase
-    ) -> Tuple[Union[int, float], str]:
-        turns = format_turns(test_case.turns, self.evaluation_params)
-        g_eval_params_str = construct_g_eval_params_string(
+    def evaluate(self, turns: List[Turn]) -> Tuple[Union[int, float], str]:
+        g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
 
         prompt = ConversationalGEvalTemplate.generate_evaluation_results(
             evaluation_steps=self.number_evaluation_steps(),
-            conversation=turns,
+            turns=[convert_turn_to_dict(turn) for turn in turns],
             parameters=g_eval_params_str,
         )
 

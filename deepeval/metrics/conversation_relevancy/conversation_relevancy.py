@@ -9,27 +9,18 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     get_turns_in_sliding_window,
-    process_llm_test_cases_windows,
     trimAndLoadJson,
     initialize_model,
+    convert_turn_to_dict,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import (
-    LLMTestCaseParams,
-    LLMTestCase,
-    ConversationalTestCase,
-)
+from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.conversation_relevancy.schema import *
 
 
 class ConversationRelevancyMetric(BaseConversationalMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-    ]
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -38,7 +29,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        window_size: int = 3,
+        window_size: int = 10,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -55,9 +46,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case, self._required_params, self
-        )
+        check_conversational_test_case_params(test_case, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -73,18 +62,15 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                llm_test_cases_windows: List[List[LLMTestCase]] = []
-                for turns_window in get_turns_in_sliding_window(
-                    test_case.turns, self.window_size
-                ):
-                    llm_test_cases_windows.append(turns_window)
+                turns_windows: List[List[Turn]] = [
+                    window
+                    for window in get_turns_in_sliding_window(
+                        test_case.turns, self.window_size
+                    )
+                ]
 
-                self.turns_sliding_windows = process_llm_test_cases_windows(
-                    llm_test_cases_windows, self._required_params
-                )
                 self.verdicts = [
-                    self._generate_verdict(window)
-                    for window in self.turns_sliding_windows
+                    self._generate_verdict(window) for window in turns_windows
                 ]
 
                 self.score = self._calculate_score()
@@ -93,7 +79,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Turns Sliding Windows (size={self.window_size}):\n{prettify_list(self.turns_sliding_windows)}",
+                        f"Turns Sliding Windows (size={self.window_size}):\n{prettify_list(turns_windows)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -106,9 +92,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case, self._required_params, self
-        )
+        check_conversational_test_case_params(test_case, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -117,20 +101,15 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            llm_test_cases_windows: List[List[LLMTestCase]] = []
-            for turns_window in get_turns_in_sliding_window(
-                test_case.turns, self.window_size
-            ):
-                llm_test_cases_windows.append(turns_window)
+            turns_windows: List[List[Turn]] = [
+                window
+                for window in get_turns_in_sliding_window(
+                    test_case.turns, self.window_size
+                )
+            ]
 
-            self.turns_sliding_windows = process_llm_test_cases_windows(
-                llm_test_cases_windows, self._required_params
-            )
             self.verdicts = await asyncio.gather(
-                *[
-                    self._a_generate_verdict(window)
-                    for window in self.turns_sliding_windows
-                ]
+                *[self._a_generate_verdict(window) for window in turns_windows]
             )
 
             self.score = self._calculate_score()
@@ -139,7 +118,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Turns Sliding Windows (size={self.window_size}):\n{prettify_list(self.turns_sliding_windows)}",
+                    f"Turns Sliding Windows (size={self.window_size}):\n{prettify_list(turns_windows)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -198,10 +177,12 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 return data["reason"]
 
     async def _a_generate_verdict(
-        self, message_sliding_window: List[Dict[str, str]]
+        self, turns_sliding_window: List[Turn]
     ) -> ConversationRelevancyVerdict:
         prompt = ConversationRelevancyTemplate.generate_verdicts(
-            sliding_window=message_sliding_window
+            sliding_window=[
+                convert_turn_to_dict(turn) for turn in turns_sliding_window
+            ]
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -221,10 +202,12 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 return ConversationRelevancyVerdict(**data)
 
     def _generate_verdict(
-        self, message_sliding_window: List[Dict[str, str]]
+        self, turns_sliding_window: List[Turn]
     ) -> ConversationRelevancyVerdict:
         prompt = ConversationRelevancyTemplate.generate_verdicts(
-            sliding_window=message_sliding_window
+            sliding_window=[
+                convert_turn_to_dict(turn) for turn in turns_sliding_window
+            ]
         )
         if self.using_native_model:
             res, cost = self.model.generate(
