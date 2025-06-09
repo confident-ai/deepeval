@@ -5,7 +5,9 @@ from typing import Optional, List, Tuple, Union, Dict
 import math
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.g_eval.utils import (
+    Rubric,
     construct_conversational_g_eval_turn_params_string,
+    format_rubrics,
 )
 from deepeval.test_case import (
     Turn,
@@ -37,6 +39,7 @@ class ConversationalGEval(BaseMetric):
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         threshold: float = 0.5,
+        rubric: Optional[List[Rubric]] = None,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
@@ -65,6 +68,7 @@ class ConversationalGEval(BaseMetric):
             )
 
         self.criteria = criteria
+        self.rubric = rubric
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
@@ -113,7 +117,9 @@ class ConversationalGEval(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
+                        f"Criteria:\n{self.criteria}",
                         f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                        f"Rubric:\n{format_rubrics(self.rubric)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -154,6 +160,7 @@ class ConversationalGEval(BaseMetric):
                 steps=[
                     f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                    f"Rubric:\n{format_rubrics(self.rubric)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -212,12 +219,20 @@ class ConversationalGEval(BaseMetric):
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
-
-        prompt = ConversationalGEvalTemplate.generate_evaluation_results(
-            evaluation_steps=self.number_evaluation_steps(),
-            turns=[convert_turn_to_dict(turn) for turn in turns],
-            parameters=g_eval_params_str,
-        )
+        if not self.strict_mode:
+            rubric_str = format_rubrics(self.rubric) if self.rubric else None
+            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                turns=[convert_turn_to_dict(turn) for turn in turns],
+                parameters=g_eval_params_str,
+                rubric=rubric_str,
+            )
+        else:
+            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                turns=[convert_turn_to_dict(turn) for turn in turns],
+                parameters=g_eval_params_str,
+            )
         try:
             res, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=20
@@ -261,13 +276,20 @@ class ConversationalGEval(BaseMetric):
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
-
-        prompt = ConversationalGEvalTemplate.generate_evaluation_results(
-            evaluation_steps=self.number_evaluation_steps(),
-            turns=[convert_turn_to_dict(turn) for turn in turns],
-            parameters=g_eval_params_str,
-        )
-
+        if not self.strict_mode:
+            rubric_str = format_rubrics(self.rubric) if self.rubric else None
+            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                turns=[convert_turn_to_dict(turn) for turn in turns],
+                parameters=g_eval_params_str,
+                rubric=rubric_str,
+            )
+        else:
+            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+                evaluation_steps=self.number_evaluation_steps(),
+                turns=[convert_turn_to_dict(turn) for turn in turns],
+                parameters=g_eval_params_str,
+            )
         try:
             res, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=20

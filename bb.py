@@ -91,12 +91,31 @@ from deepeval.metrics import (
     ConversationalGEval,
     RoleAdherenceMetric,
 )
+from deepeval.metrics.g_eval import Rubric
 
 metric = ConversationalGEval(
     name="Tool Response Summarization Quality",
     verbose_mode=True,
     criteria="Figure out whether the tool response is able to summarize the conversation. Don't penalize lack of tool use but when there is, evaluate it.",
     evaluation_params=[TurnParams.TOOLS_CALLED],
+    rubric=[
+        Rubric(
+            score_range=(0, 2),
+            expected_outcome="Tool response is not able to summarize the conversation.",
+        ),
+        Rubric(
+            score_range=(3, 6),
+            expected_outcome="Tool response is able to summarize the conversation but missing minor details.",
+        ),
+        Rubric(
+            score_range=(7, 9),
+            expected_outcome="Tool response is able to summarize the conversation and is correct but missing minor details.",
+        ),
+        Rubric(
+            score_range=(10, 10),
+            expected_outcome="Tool response is able to summarize the conversation and is correct and missing no details.",
+        ),
+    ],
 )
 
 # metric = KnowledgeRetentionMetric(verbose_mode=True)

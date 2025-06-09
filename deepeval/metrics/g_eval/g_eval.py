@@ -229,7 +229,6 @@ class GEval(BaseMetric):
                 parameters=g_eval_params_str,
                 _additional_context=_additional_context,
             )
-
         try:
             # don't use log probabilities for unsupported gpt models
             if no_log_prob_support(self.model):
