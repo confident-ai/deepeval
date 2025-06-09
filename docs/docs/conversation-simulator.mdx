@@ -19,7 +19,18 @@ While the [`Synthesizer`](/docs/synthesizer-introduction) generates regular gold
 from deepeval.conversation_simulator import ConversationSimulator
 
 # Define simulator
-simulator = ConversationSimulator()
+simulator = ConversationSimulator(
+    user_intentions={"Opening a bank account": 1},
+    user_profile_items=[
+        "full name",
+        "current address",
+        "bank account number",
+        "date of birth",
+        "mother's maiden name",
+        "phone number",
+        "country code",
+    ],
+)
 
 # Define model callback
 async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:

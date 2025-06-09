@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Optional, List
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import time
 import json
 import os
@@ -171,6 +171,7 @@ class Prompt:
             api = Api()
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
+                BarColumn(bar_width=60),
                 TextColumn("[progress.description]{task.description}"),
                 transient=False,
             ) as progress:

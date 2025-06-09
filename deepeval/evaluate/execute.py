@@ -374,7 +374,7 @@ def execute_test_cases(
     if show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
-            BarColumn(),
+            BarColumn(bar_width=60),
             TaskProgressColumn(),
             TimeElapsedColumn(),
             console=custom_console,
@@ -447,7 +447,7 @@ async def a_execute_test_cases(
     if show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
-            BarColumn(),
+            BarColumn(bar_width=60),
             TaskProgressColumn(),
             TimeElapsedColumn(),
             console=custom_console,
@@ -1034,7 +1034,7 @@ def execute_agentic_test_cases(
     if show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
-            BarColumn(),
+            BarColumn(bar_width=60),
             TaskProgressColumn(),
             TimeElapsedColumn(),
             console=custom_console,
@@ -1087,7 +1087,7 @@ async def a_execute_agentic_test_cases(
     if show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
-            BarColumn(),
+            BarColumn(bar_width=60),
             TaskProgressColumn(),
             TimeElapsedColumn(),
             console=custom_console,
