@@ -1,13 +1,13 @@
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.tracing import observe
+from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.dataset import Golden
 from deepeval.openai import openai, OpenAI, AsyncOpenAI
 from deepeval import evaluate
 
 client = OpenAI()
 
-@observe(type="llm", model="gpt-4o")
+@observe(type="llm", model="gpt-4o", metrics=[AnswerRelevancyMetric()])
 def your_llm_app(input: str, version: int = 1):
     if version == 1:
         response = client.responses.create(
@@ -32,6 +32,12 @@ def your_llm_app(input: str, version: int = 1):
                     "additionalProperties": False
                 }
             }]
+        )
+        update_current_span(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=response.output_text
+            )
         )
         return response.output_text
     elif version == 2:
@@ -65,6 +71,12 @@ def your_llm_app(input: str, version: int = 1):
                 }
             }]
         )
+        update_current_span(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=response.choices[0].message.content
+            )
+        )
         return response.choices[0].message.content
 
 
@@ -84,6 +96,20 @@ def your_llm_app(input: str, version: int = 1):
 
 # evaluate(test_cases=test_cases, metrics=[AnswerRelevancyMetric()])
 
+
+########################################################################
+########################################################################
+########################################################################
+
+goldens = [
+    Golden(input="What is the weather like in Paris today?"),
+    Golden(input="What's the capital of Brazil?"),
+    # Golden(input="Who won the last World Cup?"),
+    # Golden(input="Explain quantum entanglement."),
+    # Golden(input="What's the latest iPhone model?"),
+    # Golden(input="How do I cook a perfect steak?"),
+]
+evaluate(observed_callback=your_llm_app, goldens=goldens)
 
 ########################################################################
 ########################################################################

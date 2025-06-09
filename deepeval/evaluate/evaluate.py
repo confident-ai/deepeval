@@ -204,7 +204,7 @@ def evaluate(
         metrics=metrics,
     )
     if goldens and observed_callback:
-        global_test_run_manager.reset(preserve_hyperparameters=True)
+        global_test_run_manager.reset()
         # global_test_run_manager.save_to_disk = True
         start_time = time.perf_counter()
         with capture_evaluation_run("traceable evaluate()"):

@@ -118,26 +118,30 @@ def extract_input_parameters(kwargs: Dict):
     return InputParameters(model=model, input=input, instructions=instructions, messages=messages, tools=tools) 
 
 def extract_output_parameters(response: Completion, input_parameters: InputParameters) -> OutputParameters:
-    prompt_tokens = None
-    completion_tokens = None
+    # Extract Output
     output = getattr(response, "output_text", None)
     if output is None:
         try:
             output = response.choices[0].message.content
         except (IndexError, AttributeError):
             pass
+    # Extract Input/Output Tokens
+    prompt_tokens = None
+    completion_tokens = None
     usage = getattr(response, "usage", None)
     if usage is not None:
         prompt_tokens = getattr(usage, "input_tokens", None) or getattr(usage, "prompt_tokens", None)
         completion_tokens = getattr(usage, "output_tokens", None) or getattr(usage, "completion_tokens", None)
     tools_called = None
-    tool_descriptions = (
-        {tool["function"]["name"]: tool["function"]["description"] for tool in input_parameters.tools}
-        if input_parameters.tools is not None
-        else None
-    )
+
+    # Extract Tool Calls
     response_output = getattr(response, "output", None)
     if response_output is not None:
+        tool_descriptions = (
+            {tool["name"]: tool["description"] for tool in input_parameters.tools}
+            if input_parameters.tools is not None
+            else None
+        )
         tools_called = []
         for tool_call in response_output:
             if tool_call.type != "function_call":
@@ -153,6 +157,11 @@ def extract_output_parameters(response: Completion, input_parameters: InputParam
         try:
             response_output = response.choices[0].message.tool_calls
             if response_output is None: raise AttributeError
+            tool_descriptions = (
+                {tool["function"]["name"]: tool["function"]["description"] for tool in input_parameters.tools}
+                if input_parameters.tools is not None
+                else None
+            )
             tools_called = []
             for tool_call in response_output:
                 tools_called.append(
@@ -198,7 +207,7 @@ def update_span_attributes(
                         "name": tool_called.name,
                         "input": tool_called.input_parameters,
                         "output": None,
-                        "metrics": [],
+                        "metrics": None,
                         "attributes": ToolAttributes(
                             input=tool_called.input_parameters,
                             output=None
