@@ -50,6 +50,18 @@ class SpanTestCase(BaseModel):
         None, alias="expectedTools"
     )
 
+class TraceTestCase(BaseModel):
+    input: str
+    actual_output: str = Field(alias="actualOutput")
+    expected_output: Optional[str] = Field(None, alias="expectedOutput")
+    retrieval_context: Optional[List[str]] = Field(
+        None, alias="retrievalContext"
+    )
+    context: Optional[List[str]] = Field(None, alias="context")
+    tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, alias="expectedTools"
+    )
 
 class BaseApiSpan(BaseModel):
     uuid: str
@@ -114,6 +126,7 @@ class TraceApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
+    trace_test_case: Optional[TraceTestCase] = Field(None, alias="traceTestCase")
 
 
 class RunThreadMetricApi(BaseModel):

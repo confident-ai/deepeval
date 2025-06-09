@@ -37,6 +37,7 @@ def update_current_trace(
     user_id: Optional[str] = None,
     input: Optional[Any] = None,
     output: Optional[Any] = None,
+    test_case: Optional[LLMTestCase] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -53,3 +54,5 @@ def update_current_trace(
         current_trace.input = input
     if output:
         current_trace.output = output
+    if test_case:
+        current_trace.llm_test_case = test_case

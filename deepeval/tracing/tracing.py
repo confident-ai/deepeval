@@ -511,6 +511,21 @@ class TraceManager:
             else None
         )
 
+        # Create trace test case
+        trace_test_case = (
+            SpanTestCase(
+                input=trace.llm_test_case.input,
+                actualOutput=trace.llm_test_case.actual_output,
+                expectedOutput=trace.llm_test_case.expected_output,
+                retrievalContext=trace.llm_test_case.retrieval_context,
+                context=trace.llm_test_case.context,
+                toolsCalled=trace.llm_test_case.tools_called,
+                expectedTools=trace.llm_test_case.expected_tools,
+            )
+            if trace.llm_test_case
+            else None
+        )
+
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -527,6 +542,7 @@ class TraceManager:
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
+            traceTestCase=trace_test_case
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
