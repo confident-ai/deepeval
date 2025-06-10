@@ -19,7 +19,7 @@ from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
 from deepeval.test_case.utils import check_valid_test_cases_type
 from deepeval.test_run.hyperparameters import process_hyperparameters
-from deepeval.test_run.test_run import TEMP_FILE_PATH, TestRunResultDisplay
+from deepeval.test_run.test_run import TEMP_FILE_PATH
 from deepeval.utils import (
     get_or_create_event_loop,
     should_ignore_errors,

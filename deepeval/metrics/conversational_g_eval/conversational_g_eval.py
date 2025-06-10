@@ -3,7 +3,7 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional, List, Tuple, Union, Dict
 import math
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
     Rubric,
     construct_conversational_g_eval_turn_params_string,
@@ -30,7 +30,7 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.conversational_g_eval.schema import *
 
 
-class ConversationalGEval(BaseMetric):
+class ConversationalGEval(BaseConversationalMetric):
     def __init__(
         self,
         name: str,

@@ -6,7 +6,11 @@ from deepeval.test_case.conversational_test_case import Turn
 from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import (
+    BaseMetric,
+    BaseConversationalMetric,
+    BaseMultimodalMetric,
+)
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -239,10 +243,19 @@ def validate_assert_test_inputs(
 def validate_evaluate_inputs(
     goldens: Optional[List] = None,
     observed_callback: Optional[Callable] = None,
-    test_cases: Optional[List] = None,
-    metrics: Optional[List] = None,
+    test_cases: Optional[
+        Union[
+            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+        ]
+    ] = None,
+    metrics: Optional[
+        Union[
+            List[BaseMetric],
+            List[BaseConversationalMetric],
+            List[BaseMultimodalMetric],
+        ]
+    ] = None,
 ):
-
     if goldens and observed_callback:
         if not getattr(observed_callback, "_is_deepeval_observed", False):
             raise ValueError(
@@ -266,6 +279,29 @@ def validate_evaluate_inputs(
         raise ValueError(
             "You must provide either goldens with a 'observed_callback', or test_cases with 'metrics'."
         )
+
+    if test_cases and metrics:
+        for test_case in test_cases:
+            for metric in metrics:
+                if isinstance(test_case, LLMTestCase) and not isinstance(
+                    metric, BaseMetric
+                ):
+                    raise ValueError(
+                        f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
+                    )
+                if isinstance(
+                    test_case, ConversationalTestCase
+                ) and not isinstance(metric, BaseConversationalMetric):
+                    print(type(metric))
+                    raise ValueError(
+                        f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
+                    )
+                if isinstance(test_case, MLLMTestCase) and not isinstance(
+                    metric, BaseMultimodalMetric
+                ):
+                    raise ValueError(
+                        f"Metric {metric.__name__} is not a valid metric for MLLMTestCase."
+                    )
 
 
 def print_test_result(test_result: TestResult, display: TestRunResultDisplay):

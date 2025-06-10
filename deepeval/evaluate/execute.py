@@ -75,9 +75,13 @@ from deepeval.utils import add_pbar, update_pbar, custom_console
 
 
 def execute_test_cases(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
+    test_cases: Union[
+        List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+    ],
+    metrics: Union[
+        List[BaseMetric],
+        List[BaseConversationalMetric],
+        List[BaseMultimodalMetric],
     ],
     skip_on_missing_params: bool,
     ignore_errors: bool,
@@ -393,9 +397,13 @@ def execute_test_cases(
 
 
 async def a_execute_test_cases(
-    test_cases: List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]],
-    metrics: List[
-        Union[BaseMetric, BaseConversationalMetric, BaseMultimodalMetric]
+    test_cases: Union[
+        List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+    ],
+    metrics: Union[
+        List[BaseMetric],
+        List[BaseConversationalMetric],
+        List[BaseMultimodalMetric],
     ],
     ignore_errors: bool,
     skip_on_missing_params: bool,
