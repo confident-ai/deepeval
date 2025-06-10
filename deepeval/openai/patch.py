@@ -14,6 +14,20 @@ from deepeval.tracing import trace_manager
 # from deepeval.prompt.api import PromptMessage
 # from deepeval.prompt.prompt import Prompt
 
+class InputParameters(BaseModel):
+    model: Optional[str] = None
+    input: Optional[str] = None
+    instructions: Optional[str] = None
+    messages: Optional[List[Dict]] = None
+    tools: Optional[List[Dict]]=None
+
+    
+class OutputParameters(BaseModel):
+    output: Optional[str] = None
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+    tools_called: Optional[List[ToolCall]] = None
+
 
 def patch_openai(openai_module):
     if getattr(openai_module, "_deepeval_patched", False): return
@@ -81,20 +95,6 @@ def wrap_openai_client_methods(client):
 # Wrapper for Individual Method
 #####################################################
 
-class InputParameters(BaseModel):
-    model: Optional[str] = None
-    input: Optional[str] = None
-    instructions: Optional[str] = None
-    messages: Optional[List[Dict]] = None
-    tools: Optional[List[Dict]]=None
-
-    
-class OutputParameters(BaseModel):
-    output: Optional[str] = None
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    tools_called: Optional[List[ToolCall]] = None
-
 def create_openai_method_wrapper(orig_fn):
     @wraps(orig_fn)
     def openai_method_wrapper(*args, **kwargs):
@@ -107,6 +107,7 @@ def create_openai_method_wrapper(orig_fn):
         return response
     return openai_method_wrapper
 
+
 #####################################################
 # Extracing Parameters from OpenAI
 #####################################################
@@ -117,9 +118,17 @@ def extract_input_parameters(kwargs: Dict):
     instructions = kwargs.get('instructions')
     messages = kwargs.get('messages')
     tools = kwargs.get('tools')
-    return InputParameters(model=model, input=input, instructions=instructions, messages=messages, tools=tools) 
+    return InputParameters(
+        model=model, input=input, 
+        instructions=instructions, 
+        messages=messages, 
+        tools=tools
+    ) 
 
-def extract_output_parameters(response: Completion, input_parameters: InputParameters) -> OutputParameters:
+def extract_output_parameters(
+    response: Completion, 
+    input_parameters: InputParameters
+) -> OutputParameters:
     # Extract Output
     output = getattr(response, "output_text", None)
     if output is None:
@@ -134,9 +143,8 @@ def extract_output_parameters(response: Completion, input_parameters: InputParam
     if usage is not None:
         prompt_tokens = getattr(usage, "input_tokens", None) or getattr(usage, "prompt_tokens", None)
         completion_tokens = getattr(usage, "output_tokens", None) or getattr(usage, "completion_tokens", None)
-    tools_called = None
-
     # Extract Tool Calls
+    tools_called = None
     response_output = getattr(response, "output", None)
     if response_output is not None:
         tool_descriptions = (
@@ -181,6 +189,7 @@ def extract_output_parameters(response: Completion, input_parameters: InputParam
         completion_tokens=completion_tokens,
         tools_called=tools_called
     )
+
 
 #####################################################
 # Update Span and Log Hyperparameters
