@@ -135,36 +135,6 @@ class TestRun(BaseModel):
             self.conversational_test_cases.append(api_test_case)
         else:
             self.test_cases.append(api_test_case)
-            # if api_test_case.conversational_instance_id is not None:
-            #     for conversational_test_case in self.conversational_test_cases:
-            #         if (
-            #             api_test_case.conversational_instance_id
-            #             == conversational_test_case.instance_id
-            #         ):
-            #             conversational_test_case.turns[api_test_case.order] = (
-            #                 api_test_case
-            #             )
-
-            #             if api_test_case.success is False:
-            #                 conversational_test_case.success = False
-
-            #             if conversational_test_case.evaluation_cost is None:
-            #                 conversational_test_case.evaluation_cost = (
-            #                     api_test_case.evaluation_cost
-            #                 )
-            #             else:
-            #                 if api_test_case.evaluation_cost is not None:
-            #                     conversational_test_case.evaluation_cost += (
-            #                         api_test_case.evaluation_cost
-            #                     )
-
-            #             conversational_test_case.run_duration += (
-            #                 api_test_case.run_duration
-            #             )
-            #             break
-
-            # else:
-            #     self.test_cases.append(api_test_case)
 
         if api_test_case.evaluation_cost is not None:
             if self.evaluation_cost is None:
@@ -202,16 +172,6 @@ class TestRun(BaseModel):
             if test_case.order is None:
                 test_case.order = highest_order
             highest_order = test_case.order + 1
-
-    # def delete_test_case_instance_ids(self):
-    #     for conversational_test_case in self.conversational_test_cases:
-    #         del conversational_test_case.instance_id
-    #         for turn in conversational_test_case.turns:
-    #             del turn.conversational_instance_id
-
-    #     for test_case in self.test_cases:
-    #         if hasattr(test_case, "conversational_instance_id"):
-    #             del test_case.conversational_instance_id
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.
@@ -910,7 +870,6 @@ class TestRunManager:
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
         test_run.sort_test_cases()
-        # test_run.delete_test_case_instance_ids()
 
         if global_test_run_cache_manager.disable_write_cache is None:
             global_test_run_cache_manager.disable_write_cache = (
