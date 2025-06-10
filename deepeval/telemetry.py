@@ -17,6 +17,7 @@ class Feature(Enum):
     REDTEAMING = "redteaming"
     SYNTHESIZER = "synthesizer"
     EVALUATION = "evaluation"
+    COMPONENT_EVALUATION = "component evaluation"
     GUARDRAIL = "guardrail"
     BENCHMARK = "benchmark"
     CONVERSATION_SIMULATOR = "conversation_simulator"
@@ -166,17 +167,18 @@ def capture_evaluation_run(type: str):
         # data
         event = f"Ran {type}"
         distinct_id = get_unique_id()
+        feature = Feature.COMPONENT_EVALUATION if event == "Ran traceable evaluate()" else Feature.EVALUATION
         properties = {
             "logged_in_with": get_logged_in_with(),
             "environment": IS_RUNNING_IN_JUPYTER,
             "user.status": get_status(),
             "user.unique_id": get_unique_id(),
-            "feature_status.evaluation": get_feature_status(Feature.EVALUATION),
+            "feature_status.evaluation": get_feature_status(feature),
             "user.public_ip": (
                 anonymous_public_ip if anonymous_public_ip else "Unknown"
             ),
         }
-        set_last_feature(Feature.EVALUATION)
+        set_last_feature(feature)
         # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
