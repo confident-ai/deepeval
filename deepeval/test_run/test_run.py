@@ -810,7 +810,7 @@ class TestRunManager:
 
         console.print(
             "[rgb(5,245,141)]✓[/rgb(5,245,141)] Done 🎉! View results on "
-            f"[link={link}]{link}[/link]."
+            f"[link={link}]{link}[/link]"
         )
         self.save_final_test_run_link(link)
 
