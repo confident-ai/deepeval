@@ -30,6 +30,7 @@ from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.api import (
     TraceApi,
     BaseApiSpan,
+    TraceTestCase,
 )
 from deepeval.dataset import Golden
 from deepeval.errors import MissingTestCaseParamsError
@@ -885,6 +886,19 @@ def execute_agentic_test_cases(
                 update_pbar(progress, pbar_id)
 
                 # Create empty trace api for llm api test case
+                trace_test_case = (
+                    TraceTestCase(
+                        input=current_trace.llm_test_case.input,
+                        actualOutput=current_trace.llm_test_case.actual_output,
+                        expectedOutput=current_trace.llm_test_case.expected_output,
+                        retrievalContext=current_trace.llm_test_case.retrieval_context,
+                        context=current_trace.llm_test_case.context,
+                        toolsCalled=current_trace.llm_test_case.tools_called,
+                        expectedTools=current_trace.llm_test_case.expected_tools,
+                    )
+                    if current_trace.llm_test_case
+                    else None
+                )
                 trace_api = TraceApi(
                     uuid=current_trace.uuid,
                     baseSpans=[],
@@ -906,6 +920,7 @@ def execute_agentic_test_cases(
                         if current_trace.end_time
                         else None
                     ),
+                    traceTestCase=trace_test_case
                 )
 
                 # Format golden as test case to create llm api test case

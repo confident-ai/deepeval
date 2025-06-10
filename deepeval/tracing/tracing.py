@@ -515,6 +515,7 @@ class TraceManager:
         is_metric_strings = None
         if trace.metrics:
             is_metric_strings = isinstance(trace.metrics[0], str)
+
         trace_test_case = (
             TraceTestCase(
                 input=trace.llm_test_case.input,
@@ -546,9 +547,9 @@ class TraceManager:
             input=trace.input,
             output=trace.output,
             traceTestCase=trace_test_case,
-            # metrics=(
-            #     trace.metrics if is_metric_strings else None
-            # ),
+            metrics=(
+                trace.metrics if is_metric_strings else None
+            ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:

@@ -2,13 +2,20 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.dataset import Golden
-from deepeval.openai import openai, OpenAI, AsyncOpenAI
+from deepeval.openai import OpenAI
 from deepeval import evaluate
 
+# metrics = [AnswerRelevancyMetric()]
+metrics = ["Answer Relevancy", "Helpfulness", "Verbosity"]
 client = OpenAI()
 
-@observe(type="llm", model="gpt-4o", metrics=[AnswerRelevancyMetric()])
+@observe(
+    type="llm", 
+    model="gpt-4o",
+    metrics=metrics
+)
 def your_llm_app(input: str, version: int = 1):
+    output = ""
     if version == 1:
         response = client.responses.create(
             model="gpt-3.5-turbo",
@@ -33,20 +40,7 @@ def your_llm_app(input: str, version: int = 1):
                 }
             }]
         )
-        update_current_span(
-            test_case=LLMTestCase(
-                input=input,
-                actual_output=str(response.output_text)
-            )
-        )
-        update_current_trace(
-            test_case=LLMTestCase(
-                input=input,
-                actual_output=str(response.output_text)
-            ),
-            metrics=[AnswerRelevancyMetric(), AnswerRelevancyMetric(), AnswerRelevancyMetric()]
-        )
-        return response.output_text
+        output = response.output_text
     elif version == 2:
         response = client.chat.completions.create(
             model="gpt-4o",
@@ -77,21 +71,22 @@ def your_llm_app(input: str, version: int = 1):
                     "strict": True
                 }
             }]
+        )       
+        output = response.choices[0].message.content
+    update_current_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=str(output)
         )
-        update_current_span(
-            test_case=LLMTestCase(
-                input=input,
-                actual_output=str(response.choices[0].message.content)
-            )
-        )
-        update_current_trace(
-            test_case=LLMTestCase(
-                input=input,
-                actual_output=str(response.choices[0].message.content)
-            ),
-            metrics=[AnswerRelevancyMetric(), AnswerRelevancyMetric(), AnswerRelevancyMetric()]
-        )
-        return response.choices[0].message.content
+    )
+    update_current_trace(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=str(output)
+        ),
+        metrics=metrics
+    )
+    return output
 
 
 # goldens = [
@@ -123,10 +118,10 @@ goldens = [
     # Golden(input="What's the latest iPhone model?"),
     # Golden(input="How do I cook a perfect steak?"),
 ]
-evaluate(observed_callback=your_llm_app, goldens=goldens)
+# evaluate(observed_callback=your_llm_app, goldens=goldens)
 
 ########################################################################
 ########################################################################
 ########################################################################
 
-# your_llm_app("What is the weather like in Paris and Bangkok today?", 2)
+your_llm_app("What is the weather like in Paris and Bangkok today?", 2)
