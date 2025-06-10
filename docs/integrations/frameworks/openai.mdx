@@ -12,10 +12,12 @@ DeepEval streamlines the process of evaluating and tracing your OpenAI applicati
 
 To begin evaluating your OpenAI application, attach the `@observe` decorator to your LLM application, and replace your OpenAI client with DeepEval's OpenAI client.
 
-```python
+```python showLineNumbers {2,19}
+from deepeval.tracing import observe
+from deepeval.openai import OpenAI
+
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import Golden
-from deepeval.openai import OpenAI
 from deepeval import evaluate
 
 @observe(metrics=[AnswerRelevancyMetric()])
@@ -36,10 +38,12 @@ evaluate(observed_callback=llm_app, goldens=[Golden("Hello, how are you?")])
 
 DeepEval's OpenAI integration also supports component-level evaluations. As with end-to-end evaluation, simply add the `@observe` decorator to any OpenAI function component in your LLM application, and replace your existing OpenAI clients with DeepEval's OpenAI client.
 
-```python
+```python showLineNumbers {2,25}
+from deepeval.tracing import observe
+from deepeval.openai import OpenAI
+
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import Golden
-from deepeval.openai import OpenAI
 from deepeval import evaluate
 
 @oberve(metrics=[AnswerRelevancyMetric()])
@@ -77,7 +81,9 @@ Since retrieval context is not available through the OpenAI API, DeepEval **cann
 :::info
 To evaluate retrieval-based metrics like Contextual Relevancy, you'll need to manually populate and set the test case using `update_current_span`
 
-```python
+```python showLineNumbers {15}
+...
+
 @observe(metrics=[AnswerRelevancyMetric()])
 def llm_app(input: str):
     client = OpenAI()

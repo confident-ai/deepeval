@@ -4,6 +4,9 @@ title: End-to-End
 sidebar_label: End-to-End
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box. For simple LLM applications like basic RAG pipelines with "flat" architectures that can be represented by a single `LLMTestCase`, end-to-end evaluation is ideal:
 
 ![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/end-to-end-evals:simple-system.png)
@@ -99,6 +102,9 @@ Both gives you exactly the same functionality, and integrates 100% with Confiden
 
 `deepeval` offers an `evaluate()` function that allows you to evaluate end-to-end LLM interactions through a list of test cases and metrics. Each test case will be evaluated by each and every metric you define in `metrics`, and a test case passes only if all `metrics` passes.
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python title="main.py" showLineNumbers {15}
 from somewhere import your_llm_app # Replace with your LLM app
 
@@ -120,7 +126,44 @@ for golden in goldens:
 
 # Evaluate end-to-end
 evaluate(test_cases=test_cases, metrics=[AnswerRelevancyMetric()])
+
 ```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI">
+
+```python title="main.py" showLineNumbers {2,13,27}
+from typing import List
+from deepeval.openai import openai
+
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import observe
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+def your_llm_app(input: str):
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
+
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Use the provided context to answer the question."},
+                {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
+            ]
+        ).choices[0].message["content"]
+        return res
+
+    retrieval_context = retriever(input)
+    return generator(input, retrieval_context), retrieval_context
+
+evaluate(observed_callback=your_llm_app, goldens=[Golden("Hello, how are you?")])
+```
+
+</TabItem>
+</Tabs>
 
 There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function for **END-TO-END** evaluation:
 
