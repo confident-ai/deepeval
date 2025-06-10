@@ -66,7 +66,9 @@ def log_hyperparameters(func):
 
 def auto_log_hyperparameters(hyperparameters: Dict[str, Any]) -> None:
     test_run = global_test_run_manager.get_test_run()
-    existing_hyperparameters = test_run.hyperparameters or {}
+    if test_run is None:   
+        return      
+    existing_hyperparameters = getattr(test_run, "hyperparameters") or {}
     merged_hyperparameters: Dict[str, Any] = existing_hyperparameters.copy()
     for key, value in hyperparameters.items():
         if key not in merged_hyperparameters:
