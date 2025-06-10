@@ -44,12 +44,11 @@ class ToolCorrectnessMetric(BaseMetric):
 
     def measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[-1]
+
         check_llm_test_case_params(test_case, self._required_params, self)
         self.test_case = test_case
         with metric_progress_indicator(

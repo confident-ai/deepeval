@@ -5,8 +5,7 @@ import re
 # Optionally add telemetry
 from ._version import __version__
 
-from deepeval.event import track
-from deepeval.monitor import monitor, a_monitor, send_feedback, a_send_feedback
+from deepeval.monitor import send_feedback, a_send_feedback
 from deepeval.evaluate import evaluate, assert_test
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
@@ -22,8 +21,6 @@ __all__ = [
     "login_with_confident_api_key",
     "log_hyperparameters",
     "track",
-    "monitor",
-    "a_monitor",
     "a_send_feedback",
     "send_feedback",
     "evaluate",

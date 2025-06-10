@@ -2,6 +2,8 @@ from typing import Optional, List, Callable, Union, Dict
 import os, time
 
 
+from deepeval.test_case.conversational_test_case import Turn
+from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
 from deepeval.metrics import BaseMetric
@@ -96,13 +98,21 @@ def create_test_result(
             )
 
 
+def create_api_turn(turn: Turn, index: int) -> TurnApi:
+    return TurnApi(
+        role=turn.role,
+        content=turn.content,
+        retrieval_context=turn.retrieval_context,
+        tools_called=turn.tools_called,
+        additional_metadata=turn.additional_metadata,
+        order=index,
+    )
+
+
 def create_api_test_case(
     test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
-    conversational_instance_id: Optional[int] = None,
-    additional_metadata: Optional[Dict] = None,
-    comments: Optional[str] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
     if isinstance(test_case, ConversationalTestCase):
         order = (
@@ -127,43 +137,29 @@ def create_api_test_case(
             testCases=[],
             additionalMetadata=test_case.additional_metadata,
         )
-        api_test_case.instance_id = id(api_test_case)
+        # api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [
-            create_api_test_case(
-                test_case=turn,
+            create_api_turn(
+                turn=turn,
                 index=index,
-                conversational_instance_id=api_test_case.instance_id,
-                additional_metadata=turn.additional_metadata,
-                comments=turn.comments,
             )
             for index, turn in enumerate(test_case.turns)
         ]
 
         return api_test_case
     else:
-        if conversational_instance_id:
-            success = None
-            name = f"turn_{index}"
-            order = index
+        order = (
+            test_case._dataset_rank
+            if test_case._dataset_rank is not None
+            else index
+        )
 
-            # Manually set the metadata and comments on conversational test case
-            # to each individual message (test case)
-            test_case.additional_metadata = additional_metadata
-            test_case.comments = comments
-            metrics_data = None
+        success = True
+        if test_case.name is not None:
+            name = test_case.name
         else:
-            order = (
-                test_case._dataset_rank
-                if test_case._dataset_rank is not None
-                else index
-            )
-
-            success = True
-            if test_case.name is not None:
-                name = test_case.name
-            else:
-                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
-            metrics_data = []
+            name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
+        metrics_data = []
 
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
@@ -184,7 +180,6 @@ def create_api_test_case(
                 order=order,
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
-                conversational_instance_id=conversational_instance_id,
                 trace=trace,
             )
         elif isinstance(test_case, MLLMTestCase):
@@ -203,7 +198,6 @@ def create_api_test_case(
                 order=order,
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
-                conversational_instance_id=conversational_instance_id,
             )
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case

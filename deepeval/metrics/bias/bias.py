@@ -46,12 +46,11 @@ class BiasMetric(BaseMetric):
 
     def measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[-1]
+
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -88,12 +87,11 @@ class BiasMetric(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        if isinstance(test_case, ConversationalTestCase):
-            test_case = test_case.turns[-1]
+
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None

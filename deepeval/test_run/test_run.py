@@ -134,36 +134,37 @@ class TestRun(BaseModel):
         if isinstance(api_test_case, ConversationalApiTestCase):
             self.conversational_test_cases.append(api_test_case)
         else:
-            if api_test_case.conversational_instance_id is not None:
-                for conversational_test_case in self.conversational_test_cases:
-                    if (
-                        api_test_case.conversational_instance_id
-                        == conversational_test_case.instance_id
-                    ):
-                        conversational_test_case.turns[api_test_case.order] = (
-                            api_test_case
-                        )
+            self.test_cases.append(api_test_case)
+            # if api_test_case.conversational_instance_id is not None:
+            #     for conversational_test_case in self.conversational_test_cases:
+            #         if (
+            #             api_test_case.conversational_instance_id
+            #             == conversational_test_case.instance_id
+            #         ):
+            #             conversational_test_case.turns[api_test_case.order] = (
+            #                 api_test_case
+            #             )
 
-                        if api_test_case.success is False:
-                            conversational_test_case.success = False
+            #             if api_test_case.success is False:
+            #                 conversational_test_case.success = False
 
-                        if conversational_test_case.evaluation_cost is None:
-                            conversational_test_case.evaluation_cost = (
-                                api_test_case.evaluation_cost
-                            )
-                        else:
-                            if api_test_case.evaluation_cost is not None:
-                                conversational_test_case.evaluation_cost += (
-                                    api_test_case.evaluation_cost
-                                )
+            #             if conversational_test_case.evaluation_cost is None:
+            #                 conversational_test_case.evaluation_cost = (
+            #                     api_test_case.evaluation_cost
+            #                 )
+            #             else:
+            #                 if api_test_case.evaluation_cost is not None:
+            #                     conversational_test_case.evaluation_cost += (
+            #                         api_test_case.evaluation_cost
+            #                     )
 
-                        conversational_test_case.run_duration += (
-                            api_test_case.run_duration
-                        )
-                        break
+            #             conversational_test_case.run_duration += (
+            #                 api_test_case.run_duration
+            #             )
+            #             break
 
-            else:
-                self.test_cases.append(api_test_case)
+            # else:
+            #     self.test_cases.append(api_test_case)
 
         if api_test_case.evaluation_cost is not None:
             if self.evaluation_cost is None:
@@ -202,15 +203,15 @@ class TestRun(BaseModel):
                 test_case.order = highest_order
             highest_order = test_case.order + 1
 
-    def delete_test_case_instance_ids(self):
-        for conversational_test_case in self.conversational_test_cases:
-            del conversational_test_case.instance_id
-            for turn in conversational_test_case.turns:
-                del turn.conversational_instance_id
+    # def delete_test_case_instance_ids(self):
+    #     for conversational_test_case in self.conversational_test_cases:
+    #         del conversational_test_case.instance_id
+    #         for turn in conversational_test_case.turns:
+    #             del turn.conversational_instance_id
 
-        for test_case in self.test_cases:
-            if hasattr(test_case, "conversational_instance_id"):
-                del test_case.conversational_instance_id
+    #     for test_case in self.test_cases:
+    #         if hasattr(test_case, "conversational_instance_id"):
+    #             del test_case.conversational_instance_id
 
     def construct_metrics_scores(self) -> int:
         # Use a dict to aggregate scores, passes, and fails for each metric.
@@ -342,12 +343,6 @@ class TestRun(BaseModel):
         for convo_test_case in self.conversational_test_cases:
             if convo_test_case.metrics_data is not None:
                 for metric_data in convo_test_case.metrics_data:
-                    process_metric_data(metric_data)
-
-            for turn in convo_test_case.turns:
-                if turn.metrics_data is None:
-                    continue
-                for metric_data in turn.metrics_data:
                     process_metric_data(metric_data)
 
         # Create MetricScores objects with the aggregated data.
@@ -716,54 +711,6 @@ class TestRunManager:
                         "",
                     )
 
-            for turn in conversational_test_case.turns:
-                if turn.metrics_data is None:
-                    # skip if no evaluation
-                    continue
-
-                pass_count = 0
-                fail_count = 0
-                test_case_name = test_case.name
-
-                for metric_data in test_case.metrics_data:
-                    if metric_data.success:
-                        pass_count += 1
-                    else:
-                        fail_count += 1
-
-                table.add_row(
-                    test_case_name,
-                    "",
-                    "",
-                    "",
-                    f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
-                )
-
-                for metric_data in test_case.metrics_data:
-                    if metric_data.error:
-                        status = "[red]ERRORED[/red]"
-                    elif metric_data.success:
-                        status = "[green]PASSED[/green]"
-                    else:
-                        status = "[red]FAILED[/red]"
-
-                    evaluation_model = metric_data.evaluation_model
-                    if evaluation_model is None:
-                        evaluation_model = "n/a"
-
-                    if metric_data.score is not None:
-                        metric_score = round(metric_data.score, 2)
-                    else:
-                        metric_score = None
-
-                    table.add_row(
-                        "",
-                        str(metric_data.name),
-                        f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
-                        status,
-                        "",
-                    )
-
             if index is not len(self.test_run.conversational_test_cases) - 1:
                 table.add_row(
                     "",
@@ -835,6 +782,7 @@ class TestRunManager:
             # Pydantic version below 2.0
             body = test_run.dict(by_alias=True, exclude_none=True)
 
+        print(body)
         # return
         api = Api()
         result = api.send_request(
@@ -962,7 +910,7 @@ class TestRunManager:
         test_run.run_duration = runDuration
         test_run.calculate_test_passes_and_fails()
         test_run.sort_test_cases()
-        test_run.delete_test_case_instance_ids()
+        # test_run.delete_test_case_instance_ids()
 
         if global_test_run_cache_manager.disable_write_cache is None:
             global_test_run_cache_manager.disable_write_cache = (

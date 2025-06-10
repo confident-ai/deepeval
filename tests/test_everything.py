@@ -7,6 +7,8 @@ from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
     ConversationalTestCase,
+    Turn,
+    ToolCall,
 )
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -85,6 +87,101 @@ comas. Asteroids, conversely, have more circular orbits and lack these visible f
 being composed mostly of rock and metal.
 """
 
+test_case_1 = ConversationalTestCase(
+    chatbot_role="A humble and doubtful wizard",
+    turns=[
+        Turn(
+            role="assistant",
+            content="Hello! I'm here to assist you with opening a new bank account. To start, may I have your full name, please?",
+        ),
+        Turn(
+            role="user",
+            content="Sure, it's Alex Johnson. I also have a dog called Jacky.",
+        ),
+        Turn(
+            role="assistant",
+            content="Great, Alex! Now, could you please provide your current address?",
+        ),
+        Turn(role="user", content="123 Maple Street, Springfield."),
+        Turn(role="assistant", content="Is that all?"),
+        Turn(
+            role="user",
+            content="I also have another address at 123 Broadway, NYC.",
+        ),
+        Turn(
+            role="assistant",
+            content="Wonderful. Next, I'll need your bank account number where we can link this new account.",
+        ),
+        Turn(role="user", content="456789123"),
+    ],
+)
+
+# Conversation 2: Account number correction and personal details
+test_case_2 = ConversationalTestCase(
+    chatbot_role="A humble and doubtful wizard",
+    turns=[
+        Turn(
+            role="assistant",
+            content="This account number seems invalid, can you please double-check?",
+        ),
+        Turn(role="user", content="Sorry you're right, its 456789124."),
+        Turn(
+            role="assistant",
+            content="Thank you. And for our next step, could you tell me your date of birth?",
+        ),
+        Turn(role="user", content="It's July 9th."),
+        Turn(role="assistant", content="What about the year?"),
+        Turn(role="user", content="1990"),
+        Turn(
+            role="assistant",
+            content="Got it. Now, for security purposes, could you share your mother's maiden name?",
+        ),
+        Turn(role="user", content="It's Smith."),
+        Turn(
+            role="assistant",
+            content="Excellent. Just a few more details. What is your phone number?",
+        ),
+    ],
+)
+
+# Conversation 3: Phone details and final confirmation with tools
+test_case_3 = ConversationalTestCase(
+    chatbot_role="A humble and doubtful wizard",
+    turns=[
+        Turn(role="user", content="555-0102"),
+        Turn(
+            role="assistant",
+            content="Great, we're almost done. Could you remind me of your full name for the account documentation?",
+        ),
+        Turn(
+            role="user", content="Didn't I tell you already? It's Alex Johnson."
+        ),
+        Turn(role="assistant", content="What is your bank account number?"),
+        Turn(
+            role="user",
+            content="Yes, I did... It's 456789124. Are you not keeping track of this?",
+        ),
+        Turn(
+            role="assistant",
+            content="One last question, what is the country code of your phone number?",
+        ),
+        Turn(role="user", content="+44"),
+        Turn(
+            role="assistant",
+            retrieval_context=["123 Maple Street, Springfield."],
+            tools_called=[
+                ToolCall(
+                    name="summarize_conversation",
+                    output={
+                        "conversation": "The user has provided their full name, current address, bank account number, date of birth, mother's maiden name, phone number, and country code."
+                    },
+                )
+            ],
+            content="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process.",
+        ),
+    ],
+)
+
 strict_mode = False
 verbose_mode = False
 
@@ -98,7 +195,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-@pytest.mark.skip(reason="openai is expensive")
+# @pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -195,14 +292,14 @@ def test_everything():
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
-    c_test_case = ConversationalTestCase(
-        turns=[test_case, test_case], chatbot_role="have a conversation"
-    )
+    # c_test_case = ConversationalTestCase(
+    #     turns=[test_case, test_case], chatbot_role="have a conversation"
+    # )
     assert_test(
-        test_case=test_case,
+        test_case=test_case_1,
         metrics=[
-            metric1,
-            metric2,
+            # metric1,
+            # metric2,
             # metric3,
             # metric4,
             # metric5,
@@ -214,7 +311,7 @@ def test_everything():
             # metric11,
             # metric12,
             # # metric13,
-            # metric14,
+            metric14,
             # metric15,
             # metric16,
             # metric17,
@@ -224,7 +321,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openapi is expensive")
+# @pytest.mark.skip(reason="openapi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -258,10 +355,11 @@ def test_everything_2():
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
     )
+    metric12 = ConversationRelevancyMetric(model=eval_model)
     assert_test(
-        test_case,
+        test_case_2,
         [
-            metric1,
+            # metric1,
             # metric2,
             # metric3,
             # metric4,
@@ -272,7 +370,7 @@ def test_everything_2():
             # metric9,
             # metric10,
             # metric11,
-            # metric12,
+            metric12,
         ],
         # run_async=False,
     )

@@ -2,7 +2,8 @@ from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.test_case.conversational_test_case import TurnParams
 from deepeval.test_case.llm_test_case import ToolCall
 
-test_case = ConversationalTestCase(
+# Conversation 1: Initial contact and address collection
+test_case_1 = ConversationalTestCase(
     chatbot_role="A humble and doubtful wizard",
     turns=[
         Turn(
@@ -28,6 +29,13 @@ test_case = ConversationalTestCase(
             content="Wonderful. Next, I'll need your bank account number where we can link this new account.",
         ),
         Turn(role="user", content="456789123"),
+    ],
+)
+
+# Conversation 2: Account number correction and personal details
+test_case_2 = ConversationalTestCase(
+    chatbot_role="A humble and doubtful wizard",
+    turns=[
         Turn(
             role="assistant",
             content="This account number seems invalid, can you please double-check?",
@@ -49,6 +57,13 @@ test_case = ConversationalTestCase(
             role="assistant",
             content="Excellent. Just a few more details. What is your phone number?",
         ),
+    ],
+)
+
+# Conversation 3: Phone details and final confirmation with tools
+test_case_3 = ConversationalTestCase(
+    chatbot_role="A humble and doubtful wizard",
+    turns=[
         Turn(role="user", content="555-0102"),
         Turn(
             role="assistant",
@@ -122,5 +137,6 @@ metric = ConversationalGEval(
 # metric = ConversationRelevancyMetric(verbose_mode=True)
 # metric = ConversationCompletenessMetric(verbose_mode=True)
 # metric = RoleAdherenceMetric(verbose_mode=True)
+from deepeval import evaluate
 
-metric.measure(test_case)
+evaluate(test_cases=[test_case_1, test_case_2, test_case_3], metrics=[metric])
