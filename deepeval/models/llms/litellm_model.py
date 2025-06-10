@@ -7,7 +7,6 @@ from tenacity import (
     wait_exponential_jitter,
     RetryCallState,
 )
-from litellm import completion, acompletion, get_llm_provider
 import os
 
 from deepeval.models import DeepEvalBaseLLM
@@ -38,6 +37,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
         temperature: float = 0,
         **kwargs,
     ):
+        from litellm import completion, acompletion, get_llm_provider
+
         # Get model name from parameter or key file
         model_name = model or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LITELLM_MODEL_NAME
