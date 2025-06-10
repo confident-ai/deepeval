@@ -17,7 +17,7 @@ class Feature(Enum):
     REDTEAMING = "redteaming"
     SYNTHESIZER = "synthesizer"
     EVALUATION = "evaluation"
-    COMPONENT_EVALUATION = "component evaluation"
+    COMPONENT_EVALUATION = "component_evaluation"
     GUARDRAIL = "guardrail"
     BENCHMARK = "benchmark"
     CONVERSATION_SIMULATOR = "conversation_simulator"
@@ -173,11 +173,14 @@ def capture_evaluation_run(type: str):
             "environment": IS_RUNNING_IN_JUPYTER,
             "user.status": get_status(),
             "user.unique_id": get_unique_id(),
-            "feature_status.evaluation": get_feature_status(feature),
             "user.public_ip": (
                 anonymous_public_ip if anonymous_public_ip else "Unknown"
             ),
         }
+        if feature == Feature.EVALUATION:
+            properties["feature_status.evaluation"] = get_feature_status(feature)
+        elif feature == Feature.COMPONENT_EVALUATION:
+            properties["feature_status.component_evaluation"] = get_feature_status(feature)
         set_last_feature(feature)
         # capture posthog
         posthog.capture(
