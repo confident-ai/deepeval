@@ -10,6 +10,7 @@ from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
 from deepeval.tracing.types import LlmSpan, ToolSpan, TraceSpanStatus
 from deepeval.test_run import auto_log_hyperparameters
 from deepeval.test_case.llm_test_case import ToolCall
+from deepeval.tracing import trace_manager
 # from deepeval.prompt.api import PromptMessage
 # from deepeval.prompt.prompt import Prompt
 
@@ -100,7 +101,8 @@ def create_openai_method_wrapper(orig_fn):
         input_parameters = extract_input_parameters(kwargs)
         response = orig_fn(*args, **kwargs)
         output_parameters = extract_output_parameters(response, input_parameters)
-        log_hyperparameters(input_parameters)
+        if trace_manager.evaluating == True:
+            log_hyperparameters(input_parameters)
         update_span_attributes(input_parameters, output_parameters)
         return response
     return openai_method_wrapper
