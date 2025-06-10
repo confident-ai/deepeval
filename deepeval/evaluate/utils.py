@@ -351,7 +351,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     elif test_result.conversational:
         print("For conversational test case:\n")
         print(
-            f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
+            f"  - Unable to print conversational test case. Run 'deepeval login' to view conversational evaluations in full."
         )
     else:
         print("For test case:\n")
@@ -450,7 +450,7 @@ def write_test_result_to_file(
         elif test_result.conversational:
             file.write("For conversational test case:\n\n")
             file.write(
-                "  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full.\n"
+                "  - Unable to print conversational test case. Run 'deepeval login' to view conversational evaluations in full.\n"
             )
         else:
             file.write("For test case:\n\n")
