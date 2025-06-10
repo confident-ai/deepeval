@@ -202,7 +202,6 @@ def update_span_attributes(
     input_parameters: InputParameters,
     output_parameters: OutputParameters
 ):  
-    # skip if span not LlmSpan
     # skip if span not LlmSpan or BaseSpan
     current_span = current_span_context.get()
     is_base_span = (
