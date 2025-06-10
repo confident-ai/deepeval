@@ -39,9 +39,13 @@ class LiteLLMModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         # Get model name from parameter or key file
-        model_name = model or KEY_FILE_HANDLER.fetch_data(KeyValues.LITELLM_MODEL_NAME)
+        model_name = model or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LITELLM_MODEL_NAME
+        )
         if not model_name:
-            raise ValueError("Model name must be provided either through parameter or set-litellm command")
+            raise ValueError(
+                "Model name must be provided either through parameter or set-litellm command"
+            )
 
         # Get API key from parameter, key file, or environment variable
         self.api_key = (
@@ -169,11 +173,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "top_logprobs": top_logprobs,
             }
             completion_params.update(self.kwargs)
-            
+
             response = completion(**completion_params)
             cost = self.calculate_cost(response)
             return response, float(cost)  # Ensure cost is always a float
-            
+
         except Exception as e:
             logging.error(f"Error in LiteLLM generate_raw_response: {e}")
             return None, 0.0  # Return 0.0 cost on error
@@ -199,11 +203,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "top_logprobs": top_logprobs,
             }
             completion_params.update(self.kwargs)
-            
+
             response = await acompletion(**completion_params)
             cost = self.calculate_cost(response)
             return response, float(cost)  # Ensure cost is always a float
-            
+
         except Exception as e:
             logging.error(f"Error in LiteLLM a_generate_raw_response: {e}")
             return None, 0.0  # Return 0.0 cost on error
@@ -226,12 +230,12 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 "api_base": self.api_base,
             }
             completion_params.update(self.kwargs)
-            
+
             response = completion(**completion_params)
             samples = [choice.message.content for choice in response.choices]
             cost = self.calculate_cost(response)
             return samples, cost
-            
+
         except Exception as e:
             logging.error(f"Error in LiteLLM generate_samples: {e}")
             raise
@@ -240,9 +244,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
         """Calculate the cost of the response based on token usage."""
         try:
             # Get token usage from response
-            input_tokens = getattr(response.usage, 'prompt_tokens', 0)
-            output_tokens = getattr(response.usage, 'completion_tokens', 0)
-            
+            input_tokens = getattr(response.usage, "prompt_tokens", 0)
+            output_tokens = getattr(response.usage, "completion_tokens", 0)
+
             # Try to get cost from response if available
             if hasattr(response, "cost") and response.cost is not None:
                 cost = float(response.cost)
@@ -251,8 +255,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
                 # Default cost per token (can be adjusted based on provider)
                 input_cost_per_token = 0.0001
                 output_cost_per_token = 0.0002
-                cost = (input_tokens * input_cost_per_token) + (output_tokens * output_cost_per_token)
-            
+                cost = (input_tokens * input_cost_per_token) + (
+                    output_tokens * output_cost_per_token
+                )
+
             # Update total evaluation cost
             self.evaluation_cost += float(cost)
             return float(cost)
@@ -273,11 +279,11 @@ class LiteLLMModel(DeepEvalBaseLLM):
         LiteLLM doesn't require explicit model loading as it handles client creation
         internally during completion calls. This method is kept for compatibility
         with the DeepEval interface.
-        
+
         Args:
             async_mode: Whether to use async mode (not used in LiteLLM)
-            
+
         Returns:
             None as LiteLLM handles client creation internally
         """
-        return None 
+        return None

@@ -3,6 +3,7 @@ from deepeval.models import LiteLLMModel
 from deepeval.metrics import GEval
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
+
 # Common model configuration for all tests
 @pytest.fixture
 def model():
@@ -10,8 +11,9 @@ def model():
         model="lm_studio/Meta-Llama-3.1-8B-Instruct-GGUF",
         api_key="lm-studio",
         api_base="http://localhost:1234/v1",
-        temperature=0
+        temperature=0,
     )
+
 
 def test_litellm_with_geval_basic(model):
     """Test basic usage of G-Eval metric with LiteLLM."""
@@ -20,9 +22,9 @@ def test_litellm_with_geval_basic(model):
         input="What is the capital of France?",
         actual_output="The capital of France is Paris.",
         expected_output="Paris",
-        context=["France is a country in Europe. Its capital city is Paris."]
+        context=["France is a country in Europe. Its capital city is Paris."],
     )
-    
+
     # Initialize G-Eval metric
     metric = GEval(
         name="answer-accuracy",
@@ -30,15 +32,15 @@ def test_litellm_with_geval_basic(model):
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
-            LLMTestCaseParams.EXPECTED_OUTPUT
+            LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
         model=model,
-        threshold=0.5
+        threshold=0.5,
     )
-    
+
     # Measure the score
     score = metric.measure(test_case)
-    
+
     # Assertions
     assert isinstance(score, float)
     assert 0 <= score <= 1
@@ -62,9 +64,11 @@ def test_litellm_with_geval_complex(model):
         They take in water and carbon dioxide, and release oxygen.
         The end product is glucose, which the plant uses for energy.
         """,
-        context=["Photosynthesis is a fundamental biological process in plants."]
+        context=[
+            "Photosynthesis is a fundamental biological process in plants."
+        ],
     )
-    
+
     # Initialize G-Eval metric with custom evaluation criteria
     metric = GEval(
         name="explanation-quality",
@@ -72,7 +76,7 @@ def test_litellm_with_geval_complex(model):
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
-            LLMTestCaseParams.CONTEXT
+            LLMTestCaseParams.CONTEXT,
         ],
         model=model,
         threshold=0.7,
@@ -80,13 +84,13 @@ def test_litellm_with_geval_complex(model):
             "Check if the explanation covers all key points",
             "Verify scientific accuracy",
             "Assess clarity and organization",
-            "Compare with expected output"
-        ]
+            "Compare with expected output",
+        ],
     )
-    
+
     # Measure the score
     score = metric.measure(test_case)
-    
+
     # Assertions
     assert isinstance(score, float)
     assert 0 <= score <= 1
@@ -100,22 +104,22 @@ def test_litellm_with_geval_multiple_cases(model):
             input="What is 2+2?",
             actual_output="The sum of 2 and 2 is 4.",
             expected_output="4",
-            context=["Basic arithmetic question"]
+            context=["Basic arithmetic question"],
         ),
         LLMTestCase(
             input="Who wrote Romeo and Juliet?",
             actual_output="Romeo and Juliet was written by William Shakespeare.",
             expected_output="William Shakespeare",
-            context=["Literature question about Shakespeare's works"]
+            context=["Literature question about Shakespeare's works"],
         ),
         LLMTestCase(
             input="What is the chemical formula for water?",
             actual_output="The chemical formula for water is H2O.",
             expected_output="H2O",
-            context=["Basic chemistry question"]
-        )
+            context=["Basic chemistry question"],
+        ),
     ]
-    
+
     # Initialize G-Eval metric
     metric = GEval(
         name="multiple-answers",
@@ -123,20 +127,20 @@ def test_litellm_with_geval_multiple_cases(model):
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
-            LLMTestCaseParams.EXPECTED_OUTPUT
+            LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
         model=model,
         threshold=0.5,
         evaluation_steps=[
             "Check if the answer matches the expected output exactly",
             "Verify the answer is complete and accurate",
-            "Ensure the answer is properly formatted"
-        ]
+            "Ensure the answer is properly formatted",
+        ],
     )
-    
+
     # Measure scores for all test cases
     scores = [metric.measure(test_case) for test_case in test_cases]
-    
+
     # Assertions
     assert all(isinstance(score, float) for score in scores)
     assert all(0 <= score <= 1 for score in scores)
@@ -157,9 +161,9 @@ def test_litellm_with_geval_custom_evaluation(model):
         A story about a robot that learns to dance and makes friends.
         The story should be creative and engaging.
         """,
-        context=["Creative writing task"]
+        context=["Creative writing task"],
     )
-    
+
     # Initialize G-Eval metric with custom evaluation criteria
     metric = GEval(
         name="story-quality",
@@ -167,7 +171,7 @@ def test_litellm_with_geval_custom_evaluation(model):
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
-            LLMTestCaseParams.EXPECTED_OUTPUT
+            LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
         model=model,
         threshold=0.6,
@@ -176,14 +180,14 @@ def test_litellm_with_geval_custom_evaluation(model):
             "Verify if it follows the expected theme",
             "Assess the story's structure and flow",
             "Evaluate character development",
-            "Check for proper grammar and spelling"
-        ]
+            "Check for proper grammar and spelling",
+        ],
     )
-    
+
     # Measure the score
     score = metric.measure(test_case)
-    
+
     # Assertions
     assert isinstance(score, float)
     assert 0 <= score <= 1
-    assert score >= 0.6  # Assuming the story meets the quality threshold 
+    assert score >= 0.6  # Assuming the story meets the quality threshold

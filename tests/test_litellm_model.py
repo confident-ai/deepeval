@@ -35,7 +35,7 @@ def test_litellm_model_initialization():
     model = LiteLLMModel(
         model="custom-model",
         api_base="https://custom-endpoint.com",
-        api_key="test-key"
+        api_key="test-key",
     )
     assert model.model_name == "custom-model"
     assert model.api_base == "https://custom-endpoint.com"
@@ -72,7 +72,7 @@ def test_litellm_model_env_vars():
 def test_litellm_model_generation():
     """Test text generation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test basic generation
     response, cost = model.generate("What is 2+2?")
     assert isinstance(response, str)
@@ -82,7 +82,7 @@ def test_litellm_model_generation():
     # Test generation with schema
     response, cost = model.generate(
         "Rate the following answer on a scale of 0-1: 'The capital of France is Paris'",
-        schema=TestSchema
+        schema=TestSchema,
     )
     assert isinstance(response, TestSchema)
     assert 0 <= response.score <= 1
@@ -95,7 +95,7 @@ def test_litellm_model_generation():
 async def test_litellm_model_async_generation():
     """Test async text generation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test basic async generation
     response, cost = await model.a_generate("What is 2+2?")
     assert isinstance(response, str)
@@ -105,7 +105,7 @@ async def test_litellm_model_async_generation():
     # Test async generation with schema
     response, cost = await model.a_generate(
         "Rate the following answer on a scale of 0-1: 'The capital of France is Paris'",
-        schema=TestSchema
+        schema=TestSchema,
     )
     assert isinstance(response, TestSchema)
     assert 0 <= response.score <= 1
@@ -117,7 +117,7 @@ async def test_litellm_model_async_generation():
 def test_litellm_model_error_handling():
     """Test error handling with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test invalid API key
     with pytest.raises(Exception):
         model = LiteLLMModel(model="gpt-3.5-turbo", api_key="invalid-key")
@@ -131,8 +131,7 @@ def test_litellm_model_error_handling():
     # Test invalid API base
     with pytest.raises(Exception):
         model = LiteLLMModel(
-            model="gpt-3.5-turbo",
-            api_base="https://invalid-base.com"
+            model="gpt-3.5-turbo", api_base="https://invalid-base.com"
         )
         model.generate("Test")
 
@@ -140,26 +139,20 @@ def test_litellm_model_error_handling():
 def test_litellm_model_schema_validation():
     """Test schema validation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test invalid JSON response
     with pytest.raises(Exception):
-        model.generate(
-            "Return invalid JSON",
-            schema=TestSchema
-        )
+        model.generate("Return invalid JSON", schema=TestSchema)
 
     # Test schema validation failure
     with pytest.raises(Exception):
-        model.generate(
-            "Return a score greater than 1",
-            schema=TestSchema
-        )
+        model.generate("Return a score greater than 1", schema=TestSchema)
 
 
 def test_litellm_model_raw_response():
     """Test raw response generation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test raw response generation
     response, cost = model.generate_raw_response("What is 2+2?", top_logprobs=5)
     assert hasattr(response, "choices")
@@ -174,9 +167,11 @@ def test_litellm_model_raw_response():
 async def test_litellm_model_async_raw_response():
     """Test async raw response generation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test async raw response generation
-    response, cost = await model.a_generate_raw_response("What is 2+2?", top_logprobs=5)
+    response, cost = await model.a_generate_raw_response(
+        "What is 2+2?", top_logprobs=5
+    )
     assert hasattr(response, "choices")
     assert len(response.choices) > 0
     assert hasattr(response.choices[0], "message")
@@ -188,12 +183,10 @@ async def test_litellm_model_async_raw_response():
 def test_litellm_model_samples():
     """Test sample generation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test sample generation
     samples, cost = model.generate_samples(
-        "Give me a number between 1 and 10",
-        n=3,
-        temperature=0.7
+        "Give me a number between 1 and 10", n=3, temperature=0.7
     )
     assert isinstance(samples, list)
     assert len(samples) == 3
@@ -205,7 +198,7 @@ def test_litellm_model_samples():
 def test_litellm_model_cost_calculation():
     """Test cost calculation with LiteLLM model."""
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Test cost calculation
     response, cost = model.generate("What is 2+2?")
     assert isinstance(cost, float)
@@ -223,7 +216,7 @@ def test_litellm_model_with_metrics():
     from deepeval.test_case import LLMTestCaseParams
 
     model = LiteLLMModel(model="gpt-3.5-turbo")
-    
+
     # Create a test case
     test_case = LLMTestCase(
         input="What is the capital of France?",
@@ -235,12 +228,15 @@ def test_litellm_model_with_metrics():
     # Create a metric
     metric = GEval(
         name="test-eval",
-        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
         model=model,
-        threshold=0.5
+        threshold=0.5,
     )
 
     # Test metric evaluation
     score = metric.measure(test_case)
     assert isinstance(score, float)
-    assert 0 <= score <= 1 
+    assert 0 <= score <= 1
