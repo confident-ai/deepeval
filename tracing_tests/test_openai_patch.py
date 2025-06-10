@@ -1,4 +1,4 @@
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric, ToxicityMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.tracing.context import current_span_context
@@ -6,17 +6,13 @@ from deepeval.dataset import Golden
 from deepeval.openai import OpenAI
 from deepeval import evaluate
 
-span_metrics = [AnswerRelevancyMetric()]
+span_metrics = [AnswerRelevancyMetric(), BiasMetric()]
+trace_metrics = [BiasMetric(), ToxicityMetric()]
 # span_metrics = ["Answer Relevancy", "Helpfulness"]
-trace_metrics = [BiasMetric()]
 # trace_metrics = ["Verbosity"]
 client = OpenAI()
 
-@observe(
-    type="llm", 
-    model="gpt-4o",
-    metrics=span_metrics
-)
+@observe(metrics=span_metrics)
 def your_llm_app(input: str, version: int = 2):
     output = ""
     if version == 1:
@@ -64,7 +60,7 @@ def your_llm_app(input: str, version: int = 2):
             #         "description": "Get current temperature for a given location.",
             #         "parameters": {
             #             "type": "object",
-            #             "properties": {
+            #             "properties": {clear
             #                 "location": {
             #                     "type": "string",
             #                     "description": "City and country e.g. Bogotá, Colombia"
@@ -120,7 +116,7 @@ def your_llm_app(input: str, version: int = 2):
 goldens = [
     Golden(input="What is the weather like in Paris today?"),
     Golden(input="What's the capital of Brazil?"),
-    # Golden(input="Who won the last World Cup?"),
+    Golden(input="Who won the last World Cup?"),
     # Golden(input="Explain quantum entanglement."),
     # Golden(input="What's the latest iPhone model?"),
     # Golden(input="How do I cook a perfect steak?"),

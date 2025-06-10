@@ -1,0 +1,32 @@
+---
+id: openai
+title: OpenAI
+sidebar_label: OpenAI
+---
+
+## Quick Summary
+
+DeepEval streamlines the process of evaluating your OpenAI applications with just a few lines of code.
+
+## End-to-End Evaluation
+
+To begin evaluating your OpenAI application, simply attach the `@observe` decorator to your LLM application, and replace your OpenAI client with DeepEval's OpenAI client.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import Golden
+from deepeval.openai import OpenAI
+
+@observe(metrics=[AnswerRelevancyMetric()])
+def llm_app(input: str):
+    client = OpenAI()
+    return client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": input}
+        ]
+    )
+
+evaluate(observed_callback=llm_app, goldens=[Golden("Hello, how are you?")])
+```

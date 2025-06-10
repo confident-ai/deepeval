@@ -210,6 +210,25 @@ class TraceManager:
                 raise ValueError(
                     f"Parent span with UUID {span.parent_uuid} does not exist."
                 )
+    
+    def remove_span_from_trace(self, span: BaseSpan):
+        """Remove a span from its trace."""
+        trace_uuid = span.trace_uuid
+        if trace_uuid not in self.active_traces:
+            raise ValueError(
+                f"Trace with UUID {trace_uuid} does not exist. A span must have a valid trace."
+            )
+
+        trace = self.active_traces[trace_uuid]
+
+        # If this is a root span (no parent), remove it from the trace's root_spans
+        if not span.parent_uuid:
+            trace.root_spans.remove(span)
+        else:
+            # This is a child span, find its parent and remove it from the parent's children
+            parent_span = self.get_span_by_uuid(span.parent_uuid)
+            if parent_span:
+                parent_span.children = [s for s in parent_span.children if s.uuid != span.uuid]
 
     def get_trace_by_uuid(self, trace_uuid: str) -> Optional[Trace]:
         """Get a trace by its UUID."""

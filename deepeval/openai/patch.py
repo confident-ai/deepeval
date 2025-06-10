@@ -8,7 +8,7 @@ from deepeval.test_case import LLMTestCase
 
 from deepeval.tracing.context import update_current_span, current_span_context, update_current_trace
 from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
-from deepeval.tracing.types import LlmSpan, ToolSpan, TraceSpanStatus
+from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, ToolSpan, RetrieverSpan, TraceSpanStatus
 from deepeval.test_run import auto_log_hyperparameters
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing import trace_manager
@@ -203,9 +203,24 @@ def update_span_attributes(
     output_parameters: OutputParameters
 ):  
     # skip if span not LlmSpan
+    # skip if span not LlmSpan or BaseSpan
     current_span = current_span_context.get()
-    if not isinstance(current_span, LlmSpan):
+    is_base_span = (
+        not isinstance(current_span, AgentSpan) and 
+        not isinstance(current_span, ToolSpan) and 
+        not isinstance(current_span, RetrieverSpan) and
+        not isinstance(current_span, LlmSpan)
+    )
+    if not isinstance(current_span, LlmSpan) and not is_base_span:
         return
+    if is_base_span:
+        new_span_instance = LlmSpan(**current_span.model_dump())
+        current_span_context.set(new_span_instance)
+        trace_manager.remove_span(current_span.uuid)
+        trace_manager.remove_span_from_trace(current_span)
+        trace_manager.add_span(new_span_instance)
+        trace_manager.add_span_to_trace(new_span_instance)
+        current_span = current_span_context.get()
     # update span attributes
     current_span.model = input_parameters.model or current_span.model
     update_current_span(
