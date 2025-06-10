@@ -28,22 +28,19 @@ To use the `ConversationCompletenessMetric`, you'll have to provide the followin
 
 - `turns`
 
-Additionally, each `LLMTestCase`s in `turns` requires the following arguments:
-
-- `input`
-- `actual_output`
+You must provide the `role` and `content` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
-Let's take this conversation as an example:
+The `ConversationCompletenessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
 ```python
 from deepeval import evaluate
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.metrics import ConversationCompletenessMetric
 
 convo_test_case = ConversationalTestCase(
-    turns=[LLMTestCase(input="...", actual_output="...")]
+    turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
 )
 metric = ConversationCompletenessMetric(threshold=0.5)
 
@@ -84,4 +81,6 @@ The `ConversationCompletenessMetric` score is calculated according to the follow
 
 <Equation formula="\text{Conversation Completeness} = \frac{\text{Number of Satisfied User Intentions in Conversation}}{\text{Total Number of User Intentions in Conversation}}" />
 
-The `ConversationCompletenessMetric` assumes that a conversion is only complete if user intentions, such as asking for help to an LLM chatbot, are met by the LLM chatbot. Hence, the `ConversationCompletenessMetric` first uses an LLM to extract a list of high level user intentions found in the list of `turns`, before using the same LLM to determine whether each intention was met and/or satisfied throughout the conversation.
+The `ConversationCompletenessMetric` assumes that a conversion is only complete if user intentions, such as asking for help to an LLM chatbot, are met by the LLM chatbot.
+
+Hence, the `ConversationCompletenessMetric` first uses an LLM to extract a list of high level user intentions found in `turns` (in `"user"` roles), before using the same LLM to determine whether each intention was met and/or satisfied throughout the conversation by the `"assistant"`.
