@@ -4,8 +4,9 @@ from pydantic import BaseModel
 from functools import wraps
 import json
 import uuid
+from deepeval.test_case import LLMTestCase
 
-from deepeval.tracing.context import update_current_span, current_span_context
+from deepeval.tracing.context import update_current_span, current_span_context, update_current_trace
 from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
 from deepeval.tracing.types import LlmSpan, ToolSpan, TraceSpanStatus
 from deepeval.test_run import auto_log_hyperparameters
@@ -104,6 +105,8 @@ def create_openai_method_wrapper(orig_fn):
         if trace_manager.evaluating == True:
             log_hyperparameters(input_parameters)
         update_span_attributes(input_parameters, output_parameters)
+        update_test_case(input_parameters, output_parameters)
+        update_child_spans(output_parameters)
         return response
     return openai_method_wrapper
 
@@ -199,56 +202,121 @@ def update_span_attributes(
     input_parameters: InputParameters,
     output_parameters: OutputParameters
 ):  
+    # skip if span not LlmSpan
     current_span = current_span_context.get()
     if not isinstance(current_span, LlmSpan):
         return
-    child_tool_spans = []
-    if output_parameters.tools_called and len(output_parameters.tools_called) > 0:
-        for tool_called in output_parameters.tools_called:
-            child_tool_spans.append(
-                ToolSpan(
-                    **{
-                        "uuid": str(uuid.uuid4()),
-                        "trace_uuid": current_span.trace_uuid,
-                        "parent_uuid": current_span.uuid,
-                        "start_time": current_span.start_time,
-                        "end_time": current_span.start_time,
-                        "status": TraceSpanStatus.SUCCESS,
-                        "children": [],
-                        "name": tool_called.name,
-                        "input": tool_called.input_parameters,
-                        "output": None,
-                        "metrics": None,
-                        "attributes": ToolAttributes(
-                            input=tool_called.input_parameters,
-                            output=None
-                        ),
-                        "description": tool_called.description
-                    }
-                )
-            )
+    # update span attributes
     current_span.model = input_parameters.model or current_span.model
-    current_span.children.extend(child_tool_spans)
     update_current_span(
         attributes=LlmAttributes(
             input=input_parameters.input or input_parameters.messages or "NA",
             output=output_parameters.output or "NA",
-            # prompt=Prompt(
-            #     alias="Prompt",
-            #     template=input_parameters.instructions,
-            #     messages_template=[
-            #         PromptMessage(role=message["role"], content=message["content"]) 
-            #         for message in input_parameters.messages
-            #     ] if input_parameters.messages else None,
-            # ),
             input_token_count=output_parameters.prompt_tokens,
             output_token_count=output_parameters.completion_tokens,
         )
     )
 
+def update_test_case(
+    input_parameters: InputParameters,
+    output_parameters: OutputParameters,
+    update_span: bool = True,
+    update_trace: bool = True,
+):  
+    # skip if span not LlmSpan
+    current_span = current_span_context.get()
+    if not isinstance(current_span, LlmSpan):
+        return
+    # skip if input or output is None
+    output = output_parameters.output
+    input = input_parameters.input
+    messages = input_parameters.messages
+    if input is None and messages is not None and len(messages) > 0:
+        user_messages = []
+        for message in messages:
+            role = message.get("role")
+            content = message.get("content")
+            if role == "user" and content:
+                user_messages.append(content)
+        if len(user_messages) > 0:
+            input = str(user_messages) if len(user_messages) > 1 else user_messages[0]
+    if input is None or output is None:
+        return
+    # update current span
+    if update_span:
+        update_current_span(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=output,
+                tools_called=output_parameters.tools_called
+            )
+        )
+    # update current trace
+    if update_trace:
+        update_current_trace(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=output,
+                tools_called=output_parameters.tools_called
+            )
+        )
+
+def update_child_spans(
+    output_parameters: OutputParameters
+):
+    # skip if span not LlmSpan
+    current_span = current_span_context.get()
+    if not isinstance(current_span, LlmSpan):
+        return
+    # add child ToolSpans to LlmSpan
+    child_tool_spans = []
+    if output_parameters.tools_called is None or len(output_parameters.tools_called) == 0: 
+        return
+    for tool_called in output_parameters.tools_called:
+        tool_span = ToolSpan(
+            **{
+                "uuid": str(uuid.uuid4()),
+                "trace_uuid": current_span.trace_uuid,
+                "parent_uuid": current_span.uuid,
+                "start_time": current_span.start_time,
+                "end_time": current_span.start_time,
+                "status": TraceSpanStatus.SUCCESS,
+                "children": [],
+                "name": tool_called.name,
+                "input": tool_called.input_parameters,
+                "output": None,
+                "metrics": None,
+                "attributes": ToolAttributes(
+                    input=tool_called.input_parameters,
+                    output=None
+                ),
+                "description": tool_called.description
+            }
+        )
+        child_tool_spans.append(tool_span)
+    current_span.children.extend(child_tool_spans)
+
 def log_hyperparameters(input_parameters: InputParameters):
+    # log model
     hyperparameters = {
         "model": input_parameters.model,
-        "prompt": input_parameters.instructions or str(input_parameters.messages)
     }
+    # log prompt (use instructions or messages)
+    messages = input_parameters.messages
+    instructions = input_parameters.instructions
+    prompt = None
+    if instructions is not None:
+        prompt = instructions
+    if messages is not None and len(messages) > 0:
+        system_messages = []
+        for message in messages:
+            role = message.get("role")
+            content = message.get("content")
+            if role == "system" and content:
+                system_messages.append(content)
+        if len(system_messages) > 0:
+            prompt = str(system_messages) if len(system_messages) > 1 else system_messages[0]
+    if prompt is not None:
+        hyperparameters["system_prompt"] = prompt
+    # auto log hyperparams
     auto_log_hyperparameters(hyperparameters)

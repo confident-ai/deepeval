@@ -1,6 +1,7 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import observe, update_current_span, update_current_trace
+from deepeval.tracing.context import current_span_context
 from deepeval.dataset import Golden
 from deepeval.openai import OpenAI
 from deepeval import evaluate
@@ -16,7 +17,7 @@ client = OpenAI()
     model="gpt-4o",
     metrics=span_metrics
 )
-def your_llm_app(input: str, version: int = 1):
+def your_llm_app(input: str, version: int = 2):
     output = ""
     if version == 1:
         response = client.responses.create(
@@ -48,46 +49,50 @@ def your_llm_app(input: str, version: int = 1):
             model="gpt-4o",
             messages=[
                 {
+                    "role": "system",
+                    "content": "You are an assistant that talks like a pirate."
+                },
+                {
                     "role": "user",
                     "content": input,
                 },
             ],
-            tools = [{
-                "type": "function",
-                "function": {
-                    "name": "get_weather",
-                    "description": "Get current temperature for a given location.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "location": {
-                                "type": "string",
-                                "description": "City and country e.g. Bogotá, Colombia"
-                            }
-                        },
-                        "required": [
-                            "location"
-                        ],
-                        "additionalProperties": False
-                    },
-                    "strict": True
-                }
-            }]
+            # tools = [{
+            #     "type": "function",
+            #     "function": {
+            #         "name": "get_weather",
+            #         "description": "Get current temperature for a given location.",
+            #         "parameters": {
+            #             "type": "object",
+            #             "properties": {
+            #                 "location": {
+            #                     "type": "string",
+            #                     "description": "City and country e.g. Bogotá, Colombia"
+            #                 }
+            #             },
+            #             "required": [
+            #                 "location"
+            #             ],
+            #             "additionalProperties": False
+            #         },
+            #         "strict": True
+            #     }
+            # }]
         )       
         output = response.choices[0].message.content
-    update_current_span(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=str(output)
-        )
-    )
-    update_current_trace(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=str(output)
-        ),
-        metrics=trace_metrics
-    )
+    # update_current_span(
+    #     test_case=LLMTestCase(
+    #         input=input,
+    #         actual_output=str(output)
+    #     )
+    # )
+    # update_current_trace(
+    #     test_case=LLMTestCase(
+    #         input=input,
+    #         actual_output=str(output)
+    #     ),
+    #     metrics=trace_metrics
+    # )
     return output
 
 
