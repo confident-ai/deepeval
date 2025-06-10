@@ -6,16 +6,17 @@ sidebar_label: OpenAI
 
 ## Quick Summary
 
-DeepEval streamlines the process of evaluating your OpenAI applications with just a few lines of code.
+DeepEval streamlines the process of evaluating and tracing your OpenAI applications through an **OpenAI client wrapper**, and supports both end-to-end and component-level evaluations.
 
 ## End-to-End Evaluation
 
-To begin evaluating your OpenAI application, simply attach the `@observe` decorator to your LLM application, and replace your OpenAI client with DeepEval's OpenAI client.
+To begin evaluating your OpenAI application, attach the `@observe` decorator to your LLM application, and replace your OpenAI client with DeepEval's OpenAI client.
 
 ```python
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import Golden
 from deepeval.openai import OpenAI
+from deepeval import evaluate
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def llm_app(input: str):
@@ -30,3 +31,73 @@ def llm_app(input: str):
 
 evaluate(observed_callback=llm_app, goldens=[Golden("Hello, how are you?")])
 ```
+
+## Component-level Evaluation
+
+DeepEval's OpenAI integration also supports component-level evaluations. As with end-to-end evaluation, simply add the `@observe` decorator to any OpenAI function component in your LLM application, and replace your existing OpenAI clients with DeepEval's OpenAI client.
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import Golden
+from deepeval.openai import OpenAI
+from deepeval import evaluate
+
+@oberve(metrics=[AnswerRelevancyMetric()])
+def llm_component(input: str):
+    client = OpenAI()
+    return client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": input}
+        ]
+    )
+
+@observe(type="agent")
+def llm_app(input: str):
+    client = OpenAI()
+    llm_response = llm_component(input)
+    return "LLM Response: " + llm_response
+
+evaluate(observed_callback=llm_app, goldens=[Golden("Hello, how are you?")])
+```
+
+## How it works
+
+When you integrate DeepEval’s OpenAI client, DeepEval automatically:
+
+- Populates span-level and trace-level `LLMTestCase`s with inputs, outputs, and tool calls from OpenAI
+- Records span-level `LLMAttributes` including input, output, and token usage
+- Logs hyperparameters such as model and system prompt for experiment analysis
+- Converts `BaseSpan`s to `LlmSpan`s without the need to define a span type
+
+### Evaluating Retrieval
+
+Since retrieval context is not available through the OpenAI API, DeepEval **cannot** automatically populate the retrieval context field in the `LLMTestCase`.
+:::info
+To evaluate retrieval-based metrics like Contextual Relevancy, you'll need to manually populate and set the test case using `update_current_span`
+
+```python
+@observe(metrics=[AnswerRelevancyMetric()])
+def llm_app(input: str):
+    client = OpenAI()
+    retrieval_context = ["Document 1", "Document 2", "Document 3"]
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": input + "\n".join(retrieval_context)}
+        ]
+    )
+
+    update_current_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=response.choices[0].message.content,
+            retrieval_context=retrieval_context,
+        )
+    )
+    return response.choices[0].message.content
+```
+
+:::

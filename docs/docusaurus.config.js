@@ -79,9 +79,9 @@ module.exports = {
       "@docusaurus/preset-classic",
       {
         blog: {
-          blogTitle: 'DeepEval Blog',
-          blogDescription: 'The official LLM evaluation blog',
-          blogSidebarCount: 'ALL',
+          blogTitle: "DeepEval Blog",
+          blogDescription: "The official LLM evaluation blog",
+          blogSidebarCount: "ALL",
         },
         docs: {
           path: "docs",
@@ -163,12 +163,12 @@ module.exports = {
             activeBasePath: "tutorials",
           },
           {
-            to: "integrations/models/openai",
+            to: "integrations/frameworks/openai",
             position: "left",
             label: "Integrations",
             activeBasePath: "integrations",
           },
-          {to: 'blog', label: 'Blog', position: 'left'},
+          { to: "blog", label: "Blog", position: "left" },
           {
             href: "https://documentation.confident-ai.com",
             position: "left",
