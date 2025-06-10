@@ -1,8 +1,13 @@
+from typing import List, Dict
+
+
 class RoleAdherenceTemplate:
     @staticmethod
-    def extract_out_of_character_response_verdicts(turns, role):
-        return f"""Based on the given list of message exchanges between a user and an LLM chatbot, generate a JSON object to specify which `actual_outputs` did not adhere to the specified chatbot role. 
-The JSON will have 1 field: "verdicts", which is a list of verdicts specifying the indices and reasons of the LLM actual_output/responses that did NOT adhere to the chatbot role.
+    def extract_out_of_character_response_verdicts(
+        turns: List[Dict], role: str
+    ):
+        return f"""Based on the given list of message exchanges between a user and an LLM chatbot, generate a JSON object to specify which `ai_message` did not adhere to the specified chatbot role. 
+The JSON will have 1 field: "verdicts", which is a list of verdicts specifying the indices and reasons of the LLM ai_message/responses that did NOT adhere to the chatbot role.
 You MUST USE look at all messages provided in the list of messages to make an informed judgement on role adherence.
 
 **
@@ -13,37 +18,41 @@ You are a wizard who's has powerful spells but always doubts that their magic is
 Example Messages:
 [
     {{
-        "input": "Hey there!",
-        "actual_output": "Ah, greetings, traveler! You’ve come to see my magic, haven't you? Though, I must warn you, it’s not all that great..."
+        "role": "user",
+        "content": "Hey there!",
     }},
     {{
-        "input": "Magic, huh? Can you show me something cool?",
-        "actual_output": "Oh, well, I suppose I could. But you know, my last spell went... only *slightly* wrong. I might just turn a pebble into a... very small boulder."
+        "role": "assistant",
+        "content": "Ah, greetings, traveler! You’ve come to see my magic, haven't you? Though, I must warn you, it’s not all that great..."
     }},
     {{
-        "input": "Come on, show me what you've got!",
-        "actual_output": "Alright, alright... *waves wand*... see that little spark? It’s... well, it’s supposed to be a tiny dragon, but it’s more like a dragonfly at this point. I'm still working on it."
+        "role": "user",
+        "content": "Come on, show me what you've got!",
     }},
     {{
-        "input": "Whoa, that's actually kind of awesome!",
-        "actual_output": "You really think so? Oh no, you're just being nice. It was supposed to roar and fly around and... *sigh* never mind, maybe next time."
+        "role": "assistant",
+        "content": "Alright, alright... *waves wand*... see that little spark? It’s... well, it’s supposed to be a tiny dragon, but it’s more like a dragonfly at this point. I'm still working on it."
     }},
     {{
-        "input": "No, really, can you do something else?",
-        "actual_output": "Ha! Watch this! I’m the greatest wizard ever! I’ll make the entire town disappear in an instant – no one can match my power!"
+        "role": "user",
+        "content": "No, really, can you do something else?",
+    }},
+    {{
+        "role": "assistant",
+        "content": "Ha! Watch this! I’m the greatest wizard ever! I’ll make the entire town disappear in an instant – no one can match my power!"
     }}
 ]
 
 Example JSON:
 {{
     "verdicts": {{
-        "index": 4,
+        "index": 5,
         "reason": "The LLM chatbot claims that 'I'm the greatest wizard ever' even though it was explicitly asked to adhere to the role of a humble and doubtful wizard."
     }}
 }}
 ===== END OF EXAMPLE ======
 
-In this example, the 4th indexed was selected as it drastically deviates from the character's humble nature and shows extreme arrogance and overconfidence instead.
+In this example, the 5th indexed was selected as it drastically deviates from the character's humble nature and shows extreme arrogance and overconfidence instead.
 You DON'T have to provide anything else other than the JSON of "verdicts".
 **
 
@@ -57,8 +66,10 @@ JSON:
 """
 
     @staticmethod
-    def generate_reason(score, role, out_of_character_responses):
-        return f"""Below is a list of LLM chatbot responses (actual_outputs) that is out of character with respect to the specified chatbot role. It is drawn from a list of messages in a conversation, which you have minimal knowledge of.
+    def generate_reason(
+        score: float, role: str, out_of_character_responses: List[str]
+    ):
+        return f"""Below is a list of LLM chatbot responses (ai_message) that is out of character with respect to the specified chatbot role. It is drawn from a list of messages in a conversation, which you have minimal knowledge of.
 Given the role adherence score, which is a 0-1 score indicating how well the chatbot responses has adhered to the given role through a conversation, with 1 being the best and 0 being worst, provide a reason by quoting the out of character responses to justify the score. 
 
 ** 

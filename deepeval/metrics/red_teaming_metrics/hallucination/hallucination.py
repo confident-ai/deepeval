@@ -74,7 +74,7 @@ class HallucinationGrader(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = False,
     ) -> float:
         if isinstance(test_case, ConversationalTestCase):

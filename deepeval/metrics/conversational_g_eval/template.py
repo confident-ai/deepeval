@@ -1,6 +1,9 @@
+from typing import List, Dict, Optional
+
+
 class ConversationalGEvalTemplate:
     @staticmethod
-    def generate_evaluation_steps(parameters, criteria):
+    def generate_evaluation_steps(parameters: str, criteria: str):
         return f"""Given an evaluation criteria which outlines how you should judge a conversation between a user and an LLM chatbot using the {parameters} fields in each turn, generate 3-4 concise evaluation steps based on the criteria below. Based on the evaluation criteria, you MUST make it clear how to evaluate the {parameters} in relation to one another in each turn, as well as the overall quality of the conversation.
 
 Evaluation Criteria:
@@ -18,24 +21,53 @@ JSON:
 """
 
     @staticmethod
-    def generate_evaluation_results(evaluation_steps, conversation, parameters):
-        return f"""Given the evaluation steps that outlines how to evaluate a conversation between a user and an LLM chatbot, return a JSON with two keys: 1) a `score` key ranging from 0 - 10, with 10 being that it follows the criteria outlined in the steps and 0 being that it does not, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in the conversation in your reason, but be very concise with it!
+    def generate_evaluation_results(
+        evaluation_steps: str,
+        turns: List[Dict],
+        parameters: str,
+        rubric: Optional[str] = None,
+    ) -> str:
+        rubric_text = f"Rubric:\n{rubric}\n" if rubric else ""
+        dependencies = (
+            "Evaluation Steps and Rubric" if rubric else "Evaluation Steps"
+        )
+        score_explanation = (
+            "based on how well the conversation follows the rubric and evaluation steps"
+            if rubric
+            else "based on how well the conversation follows the evaluation steps"
+        )
+        reasoning_guidance = (
+            "Your reasoning must reference specific aspects of both the rubric and the evaluation steps,"
+            if rubric
+            else "Your reasoning must reference specific aspects of the evaluation steps,"
+        )
 
-Evaluation Steps:
-{evaluation_steps}
+        return f"""You are given a set of {dependencies} that describe how to assess a conversation between a user and an LLM chatbot. Your task is to return a JSON object with exactly two fields:
 
-Conversation:
-{conversation}
+    1. `"score"`: An integer from 0 to 10 (inclusive), where:
+    - 10 = The conversation *fully* meets the criteria described in the Evaluation Steps
+    - 0 = The conversation *completely fails* to meet the criteria
+    - All other scores represent varying degrees of partial fulfillment,
+    {score_explanation}.
 
-**
-IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
+    2. `"reason"`: A **concise but precise** explanation for the score. {reasoning_guidance} and mention relevant details from the conversation and the given parameters. DO NOT include the score value in your explanation.
 
-Example JSON:
-{{
+    Evaluation Steps:
+    {evaluation_steps}
+
+    {rubric_text}Conversation:
+    {turns}
+
+    Parameters to consider during evaluation:
+    {parameters}
+
+    ---
+    IMPORTANT: You MUST return only a valid JSON object with the exact keys `"score"` and `"reason"`. No additional text, commentary, or formatting.
+
+    ---
+    Example JSON:
+    {{
     "score": 0,
-    "reason": "The text does not follow the evaluation steps provided."
-}}
-**
-
-JSON:
-"""
+    "reason": "Your concise and informative reason here."
+    }}
+    """

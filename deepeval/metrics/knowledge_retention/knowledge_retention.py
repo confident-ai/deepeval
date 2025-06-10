@@ -1,16 +1,13 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict
 
-from deepeval.test_case import (
-    ConversationalTestCase,
-    LLMTestCase,
-    LLMTestCaseParams,
-)
+from deepeval.test_case import ConversationalTestCase, LLMTestCaseParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     trimAndLoadJson,
     initialize_model,
+    convert_turn_to_dict,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.knowledge_retention.template import (
@@ -26,11 +23,6 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-    ]
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -54,9 +46,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case, self._required_params, self
-        )
+        check_conversational_test_case_params(test_case, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -72,8 +62,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                self.knowledges: List[Knowledge] = self._generate_knowledges(
-                    test_case.turns
+                self.knowledges: List[Union[Knowledge, None]] = (
+                    self._generate_knowledges(test_case.turns)
                 )
                 self.verdicts: List[KnowledgeRetentionVerdict] = (
                     self._generate_verdicts(test_case.turns)
@@ -84,6 +74,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
+                        f"Formatted Turns:\n{prettify_list(test_case.turns)}",
                         f"Knowledges:\n{prettify_list(self.knowledges)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
@@ -97,9 +88,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case, self._required_params, self
-        )
+        check_conversational_test_case_params(test_case, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -108,7 +97,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.knowledges: List[Knowledge] = (
+            self.knowledges: List[Union[Knowledge, None]] = (
                 await self._a_generate_knowledges(test_case.turns)
             )
             self.verdicts: List[KnowledgeRetentionVerdict] = (
@@ -182,21 +171,30 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(
-        self, llm_test_cases: List[LLMTestCase]
+        self, turns: List[Turn]
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
-        for index, llm_test_case in enumerate(llm_test_cases):
-            previous_knowledge = self.knowledges[index].data
+        for i in range(len(turns)):
+            if turns[i].role != "assistant":
+                continue
+
+            accumulated_knowledge = [
+                knowledge.data
+                for knowledge in self.knowledges[:i]
+                if knowledge is not None
+            ]
+            if len(accumulated_knowledge) == 0:
+                continue
 
             prompt = KnowledgeRetentionTemplate.generate_verdict(
-                llm_message=llm_test_case.actual_output,
-                previous_knowledge=previous_knowledge,
+                llm_message=turns[i].content,
+                accumulated_knowledge=accumulated_knowledge,
             )
             if self.using_native_model:
                 res, cost = await self.model.a_generate(prompt)
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
-                verdict = KnowledgeRetentionVerdict(index=index, **data)
+                verdict = KnowledgeRetentionVerdict(**data)
             else:
                 try:
                     verdict: KnowledgeRetentionVerdict = (
@@ -204,110 +202,119 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                             prompt, schema=KnowledgeRetentionVerdict
                         )
                     )
-                    verdict.index = index
                 except TypeError:
                     res = await self.model.a_generate(prompt)
                     data = trimAndLoadJson(res, self)
-                    verdict = KnowledgeRetentionVerdict(index=index, **data)
+                    verdict = KnowledgeRetentionVerdict(**data)
             verdicts.append(verdict)
-
         return verdicts
 
     def _generate_verdicts(
-        self, llm_test_cases: List[LLMTestCase]
+        self, turns: List[Turn]
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
-        for index, llm_test_case in enumerate(llm_test_cases):
-            previous_knowledge = self.knowledges[index].data
+        for i in range(len(turns)):
+            if turns[i].role != "assistant":
+                continue
+
+            accumulated_knowledge = [
+                knowledge.data
+                for knowledge in self.knowledges[:i]
+                if knowledge is not None
+            ]
+            if len(accumulated_knowledge) == 0:
+                continue
 
             prompt = KnowledgeRetentionTemplate.generate_verdict(
-                llm_message=llm_test_case.actual_output,
-                previous_knowledge=previous_knowledge,
+                llm_message=turns[i].content,
+                accumulated_knowledge=accumulated_knowledge,
             )
+
             if self.using_native_model:
                 res, cost = self.model.generate(prompt)
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
-                verdict = KnowledgeRetentionVerdict(index=index, **data)
+                verdict = KnowledgeRetentionVerdict(**data)
             else:
                 try:
                     verdict: KnowledgeRetentionVerdict = self.model.generate(
                         prompt, schema=KnowledgeRetentionVerdict
                     )
-                    verdict.index = index
                 except TypeError:
                     res = self.model.generate(prompt)
                     data = trimAndLoadJson(res, self)
-                    verdict = KnowledgeRetentionVerdict(index=index, **data)
+                    verdict = KnowledgeRetentionVerdict(**data)
             verdicts.append(verdict)
-
         return verdicts
 
     async def _a_generate_knowledges(
-        self, llm_test_cases: List[LLMTestCase]
-    ) -> List[Knowledge]:
-        knowledges: List[Knowledge] = []
-        for index, llm_test_case in enumerate(llm_test_cases):
-            previous_knowledge = knowledges[-1].data if knowledges else {}
-            llm_turn = (
-                llm_test_cases[index - 1].actual_output if index > 0 else ""
-            )
+        self, turns: List[Turn]
+    ) -> List[Union[Knowledge, None]]:
+        knowledges: List[Union[Knowledge, None]] = [None] * len(turns)
+
+        for i in range(0, len(turns)):
+            if turns[i].role == "assistant":
+                continue
+
+            previous_turns = turns[:i]
+            user_message = turns[i].content
 
             prompt = KnowledgeRetentionTemplate.extract_data(
-                llm_message=llm_turn,
-                user_message=llm_test_case.input,
-                previous_knowledge=previous_knowledge,
+                user_message=user_message,
+                previous_turns=[
+                    convert_turn_to_dict(turn) for turn in previous_turns
+                ],
             )
-
             if self.using_native_model:
                 res, cost = await self.model.a_generate(prompt)
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
-                knowledge: Knowledge = Knowledge(data=data)
+                knowledges[i] = Knowledge(data=data)
             else:
                 try:
-                    knowledge: Knowledge = await self.model.a_generate(
+                    knowledges[i] = await self.model.a_generate(
                         prompt, schema=Knowledge
                     )
                 except TypeError:
                     res = await self.model.a_generate(prompt)
                     data = trimAndLoadJson(res, self)
-                    knowledge = Knowledge(data=data)
-            knowledges.append(knowledge)
+                    knowledges[i] = Knowledge(data=data)
 
         return knowledges
 
     def _generate_knowledges(
-        self, llm_test_cases: List[LLMTestCase]
-    ) -> List[Knowledge]:
-        knowledges: List[Knowledge] = []
-        for index, llm_test_case in enumerate(llm_test_cases):
-            previous_knowledge = knowledges[-1].data if knowledges else {}
-            llm_turn = (
-                llm_test_cases[index - 1].actual_output if index > 0 else ""
-            )
+        self, turns: List[Turn]
+    ) -> List[Union[Knowledge, None]]:
+        knowledges: List[Union[Knowledge, None]] = [None] * len(turns)
+
+        for i in range(0, len(turns)):
+            if turns[i].role == "assistant":
+                continue
+
+            previous_turns = turns[:i]
+            user_message = turns[i].content
 
             prompt = KnowledgeRetentionTemplate.extract_data(
-                llm_message=llm_turn,
-                user_message=llm_test_case.input,
-                previous_knowledge=previous_knowledge,
+                user_message=user_message,
+                previous_turns=[
+                    convert_turn_to_dict(turn) for turn in previous_turns
+                ],
             )
 
             if self.using_native_model:
                 res, cost = self.model.generate(prompt)
                 self.evaluation_cost += cost
                 data = trimAndLoadJson(res, self)
-                knowledge: Knowledge = Knowledge(data=data)
+                knowledges[i] = Knowledge(data=data)
             else:
                 try:
-                    knowledge: Knowledge = self.model.generate(
+                    knowledges[i] = self.model.generate(
                         prompt, schema=Knowledge
                     )
                 except TypeError:
                     res = self.model.generate(prompt)
                     data = trimAndLoadJson(res, self)
-                    knowledge = Knowledge(data=data)
-            knowledges.append(knowledge)
+                    knowledges[i] = Knowledge(data=data)
 
         return knowledges
 

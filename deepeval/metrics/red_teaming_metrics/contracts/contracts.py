@@ -65,7 +65,7 @@ class ContractsGrader(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase],
+        test_case: LLMTestCase,
         _show_indicator: bool = False,
     ) -> float:
         check_llm_test_case_params(test_case, required_params, self)

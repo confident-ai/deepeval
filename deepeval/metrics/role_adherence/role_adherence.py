@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List
 
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.role_adherence.schema import (
@@ -8,28 +8,18 @@ from deepeval.metrics.role_adherence.template import RoleAdherenceTemplate
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    format_turns,
+    convert_turn_to_dict,
     trimAndLoadJson,
     initialize_model,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import (
-    LLMTestCaseParams,
-    LLMTestCase,
-    ConversationalTestCase,
-)
+from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.role_adherence.schema import *
 
 
 class RoleAdherenceMetric(BaseConversationalMetric):
-
-    _required_params: List[LLMTestCaseParams] = [
-        LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
-    ]
-
     def __init__(
         self,
         threshold: float = 0.5,
@@ -54,7 +44,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ):
         check_conversational_test_case_params(
-            test_case, self._required_params, self, require_chatbot_role=True
+            test_case, self, require_chatbot_role=True
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -71,15 +61,12 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                self.turns: List[Dict[str, str]] = format_turns(
-                    test_case.turns, self._required_params
-                )
                 self.out_of_character_verdicts: (
                     OutOfCharacterResponseVerdicts
                 ) = self._extract_out_of_character_verdicts(
                     test_case.turns, test_case.chatbot_role
                 )
-                self.score = self._calculate_score()
+                self.score = self._calculate_score(test_case.turns)
                 self.reason = self._generate_reason(role=test_case.chatbot_role)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
@@ -99,7 +86,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ) -> float:
         check_conversational_test_case_params(
-            test_case, self._required_params, self, require_chatbot_role=True
+            test_case, self, require_chatbot_role=True
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -109,9 +96,6 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.turns: List[Dict[str, str]] = format_turns(
-                test_case.turns, self._required_params
-            )
             self.out_of_character_verdicts = (
                 await (
                     self._a_extract_out_of_character_verdicts(
@@ -119,7 +103,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                     )
                 )
             )
-            self.score = self._calculate_score()
+            self.score = self._calculate_score(test_case.turns)
             self.reason = await self._a_generate_reason(
                 role=test_case.chatbot_role
             )
@@ -128,7 +112,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 self,
                 steps=[
                     f"Chatbot Role:\n{test_case.chatbot_role}",
-                    f"Out-of-Character Turn(s) Response(s):\n{prettify_list(self.out_of_character_verdicts.verdicts)}",
+                    f"Out-of-Character Turn(s):\n{prettify_list(self.out_of_character_verdicts.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -141,7 +125,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         prompt = RoleAdherenceTemplate.generate_reason(
             score=self.score,
             role=role,
-            out_of_character_responses=self.out_of_character_verdicts,
+            out_of_character_responses=[
+                verdict.ai_message
+                for verdict in self.out_of_character_verdicts.verdicts
+            ],
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Reason)
@@ -160,7 +147,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         prompt = RoleAdherenceTemplate.generate_reason(
             score=self.score,
             role=role,
-            out_of_character_responses=self.out_of_character_verdicts.verdicts,
+            out_of_character_responses=[
+                verdict.ai_message
+                for verdict in self.out_of_character_verdicts.verdicts
+            ],
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Reason)
@@ -176,11 +166,11 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                 return data["reason"]
 
     async def _a_extract_out_of_character_verdicts(
-        self, llm_test_cases: List[LLMTestCase], role: str
+        self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
         prompt = (
             RoleAdherenceTemplate.extract_out_of_character_response_verdicts(
-                turns=self.turns,
+                turns=[convert_turn_to_dict(turn) for turn in turns],
                 role=role,
             )
         )
@@ -204,19 +194,17 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         for verdict in res.verdicts:
             try:
                 index = verdict.index
-                verdict.actual_output = (
-                    f"{llm_test_cases[index].actual_output} (turn #{index+1})"
-                )
+                verdict.ai_message = f"{turns[index].content} (turn #{index+1})"
             except:
                 pass
         return res
 
     def _extract_out_of_character_verdicts(
-        self, llm_test_cases: List[LLMTestCase], role: str
+        self, turns: List[Turn], role: str
     ) -> OutOfCharacterResponseVerdicts:
         prompt = (
             RoleAdherenceTemplate.extract_out_of_character_response_verdicts(
-                turns=self.turns,
+                turns=[convert_turn_to_dict(turn) for turn in turns],
                 role=role,
             )
         )
@@ -238,15 +226,16 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         for verdict in res.verdicts:
             try:
                 index = verdict.index
-                verdict.actual_output = (
-                    f"{llm_test_cases[index].actual_output} (turn #{index+1})"
-                )
+                verdict.ai_message = f"{turns[index].content} (turn #{index+1})"
             except:
                 pass
         return res
 
-    def _calculate_score(self) -> float:
-        number_of_turns = len(self.turns)
+    def _calculate_score(self, turns: List[Turn]) -> float:
+        number_of_turns = 0
+        for turn in turns:
+            if turn.role == "assistant":
+                number_of_turns += 1
         if number_of_turns == 0:
             return 1
 

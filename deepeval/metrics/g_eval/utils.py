@@ -3,10 +3,14 @@ from openai.types.chat.chat_completion import ChatCompletion
 import math
 
 from deepeval.models import DeepEvalBaseLLM, GPTModel, AzureOpenAIModel
-from deepeval.test_case import LLMTestCaseParams
+from deepeval.test_case import (
+    LLMTestCaseParams,
+    TurnParams,
+    LLMTestCase,
+    ToolCall,
+)
 from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from pydantic import BaseModel, field_validator
-from deepeval.test_case.llm_test_case import LLMTestCase, ToolCall
 
 
 class Rubric(BaseModel):
@@ -35,6 +39,12 @@ G_EVAL_PARAMS = {
     LLMTestCaseParams.RETRIEVAL_CONTEXT: "Retrieval Context",
     LLMTestCaseParams.EXPECTED_TOOLS: "Expected Tools",
     LLMTestCaseParams.TOOLS_CALLED: "Tools Called",
+}
+
+CONVERSATIONAL_G_EVAL_PARAMS = {
+    TurnParams.CONTENT: "Content",
+    TurnParams.TOOLS_CALLED: "Tools Called",
+    TurnParams.RETRIEVAL_CONTEXT: "Retrieval Context",
 }
 
 
@@ -119,6 +129,25 @@ def construct_g_eval_params_string(
     llm_test_case_params: List[LLMTestCaseParams],
 ):
     g_eval_params = [G_EVAL_PARAMS[param] for param in llm_test_case_params]
+
+    if len(g_eval_params) == 1:
+        g_eval_params_str = g_eval_params[0]
+    elif len(g_eval_params) == 2:
+        g_eval_params_str = " and ".join(g_eval_params)
+    else:
+        g_eval_params_str = (
+            ", ".join(g_eval_params[:-1]) + ", and " + g_eval_params[-1]
+        )
+
+    return g_eval_params_str
+
+
+def construct_conversational_g_eval_turn_params_string(
+    turn_params: List[TurnParams],
+):
+    g_eval_params = [
+        CONVERSATIONAL_G_EVAL_PARAMS[param] for param in turn_params
+    ]
 
     if len(g_eval_params) == 1:
         g_eval_params_str = g_eval_params[0]

@@ -443,21 +443,25 @@ test_case = LLMTestCase(completion_time=7.53, ...)
 
 ## Conversational Test Case
 
-A `ConversationalTestCase` in `deepeval` is simply a list of conversation `turns` represented by a list of `LLMTestCase`s. While an `LLMTestCase` represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `LLMTestCase`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
+While an `LLMTestCase` represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
 
-While you cannot use a conversational metric on an `LLMTestCase`, a `ConversationalTestCase` can be evaluated using **both non-conversational and conversational metrics.**
+A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
 
 ```python
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase
 
-llm_test_case = LLMTestCase(
-    # Replace this with your user input
-    input="Why did the chicken cross the road?",
-    # Replace this with your actual LLM application
-    actual_output="Quite frankly, I don't want to know..."
-)
+turns = [
+    Turn(
+        role="assistant",
+        content="Why did the chicken cross the road?",
+    ),
+    Turn(
+        role="user",
+        content="Are you trying to be funny?",
+    ),
+]
 
-test_case = ConversationalTestCase(turns=[llm_test_case])
+test_case = ConversationalTestCase(turns=turns)
 ```
 
 :::note
@@ -466,17 +470,23 @@ Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly
 
 ### Turns
 
-The `turns` parameter is a list of `LLMTestCase`s and is basically a list of messages/exchanges in a user-LLM conversation. Different conversational metrics will require different LLM test case parameters for evaluation, while regular LLM system metrics will take the last `LLMTestCase` in a turn to carry out evaluation.
+The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. If you're using [`ConversationalGEval`](/docs/metrics-conversational-g-eval), you might also want to supply different parameteres to a `Turn`. A `Turn` is made up of the following parameters:
 
 ```python
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
-
-test_case = ConversationalTestCase(turns=[LLMTestCase(...)])
+class Turn:
+    role: Literal["user", "assistant"]
+    content: str
+    user_id: Optional[str] = None
+    retrieval_context: Optional[List[str]] = None
+    tools_called: Optional[List[ToolCall]] = None
+    additional_metadata: Optional[Dict] = None
 ```
 
-:::tip Did you know?
-You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase`s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because it is more useful to evaluate the last best LLM `actual_output` given the previous conversation context, instead of all individual `turns` in a `ConversationalTestCase`.
+:::info
+You should only provide the `retrieval_context` and `tools_called` parameter if the `role` is `"assistant"`.
 :::
+
+The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
 
 ### Chatbot Role
 

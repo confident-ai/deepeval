@@ -8,7 +8,6 @@ class Knowledge(BaseModel):
 
 class KnowledgeRetentionVerdict(BaseModel):
     verdict: str
-    index: Optional[int] = None
     reason: Optional[str] = None
 
 

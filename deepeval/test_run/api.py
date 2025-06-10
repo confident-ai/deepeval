@@ -37,7 +37,6 @@ class LLMApiTestCase(BaseModel):
         None, alias="additionalMetadata"
     )
     comments: Optional[str] = Field(None)
-    conversational_instance_id: Optional[int] = Field(None)
     trace: Optional[TraceApi] = Field(None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -103,17 +102,27 @@ class LLMApiTestCase(BaseModel):
         return False
 
 
+class TurnApi(BaseModel):
+    role: str
+    content: str
+    order: int
+    retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
+    tools_called: Optional[list] = Field(None, alias="toolsCalled")
+    additional_metadata: Optional[Dict] = Field(
+        None, alias="additionalMetadata"
+    )
+    comments: Optional[str] = Field(None)
+
+
 class ConversationalApiTestCase(BaseModel):
     name: str
     success: bool
-    instance_id: Optional[int] = Field(None)
+    # instance_id: Optional[int] = Field(None)
     # metrics_data can never be None
     metrics_data: List[MetricData] = Field(alias="metricsData")
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
-    turns: List[LLMApiTestCase] = Field(
-        default_factory=lambda: [], alias="testCases"
-    )
+    turns: List[TurnApi] = Field(default_factory=lambda: [])
     order: Union[int, None] = Field(None)
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"

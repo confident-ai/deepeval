@@ -1,7 +1,7 @@
 from typing import List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
 import csv
 import webbrowser
@@ -54,7 +54,6 @@ def validate_test_case_type(
 @dataclass
 class EvaluationDataset:
     goldens: List[Golden]
-    conversational_goldens: List[ConversationalGolden]
     _alias: Union[str, None] = field(default=None)
     _id: Union[str, None] = field(default=None)
     _llm_test_cases: List[LLMTestCase] = field(default_factory=[], repr=None)
@@ -69,12 +68,10 @@ class EvaluationDataset:
             Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
         ] = [],
         goldens: List[Golden] = [],
-        conversational_goldens: List[ConversationalGolden] = [],
     ):
         for test_case in test_cases:
             validate_test_case_type(test_case, subject="test cases")
         self.goldens = goldens
-        self.conversational_goldens = conversational_goldens
         self._alias = None
         self._id = None
 
@@ -100,7 +97,7 @@ class EvaluationDataset:
         return (
             f"{self.__class__.__name__}(test_cases={self.test_cases}, "
             f"goldens={self.goldens}, "
-            f"conversational_goldens={self.conversational_goldens}, "
+            # f"conversational_goldens={self.conversational_goldens}, "
             f"_alias={self._alias}, _id={self._id})"
         )
 
@@ -605,7 +602,6 @@ class EvaluationDataset:
                 alias=alias,
                 overwrite=overwrite,
                 goldens=goldens,
-                conversationalGoldens=self.conversational_goldens,
             )
             try:
                 body = api_dataset.model_dump(by_alias=True, exclude_none=True)
@@ -646,6 +642,7 @@ class EvaluationDataset:
                 api = Api(api_key=self._confident_api_key)
                 with Progress(
                     SpinnerColumn(style="rgb(106,0,255)"),
+                    BarColumn(bar_width=60),
                     TextColumn("[progress.description]{task.description}"),
                     transient=False,
                 ) as progress:
@@ -682,32 +679,33 @@ class EvaluationDataset:
                     self._alias = alias
                     self._id = response.datasetId
                     self.goldens = []
-                    self.conversational_goldens = []
+                    # self.conversational_goldens = []
                     self.test_cases = []
 
                     if auto_convert_goldens_to_test_cases:
                         llm_test_cases = convert_goldens_to_test_cases(
                             response.goldens, alias, response.datasetId
                         )
-                        conversational_test_cases = (
-                            convert_convo_goldens_to_convo_test_cases(
-                                response.conversational_goldens,
-                                alias,
-                                response.datasetId,
-                            )
-                        )
                         self._llm_test_cases.extend(llm_test_cases)
-                        self._conversational_test_cases.extend(
-                            conversational_test_cases
-                        )
+                        # conversational_test_cases = (
+                        #     convert_convo_goldens_to_convo_test_cases(
+                        #         response.conversational_goldens,
+                        #         alias,
+                        #         response.datasetId,
+                        #     )
+                        # )
+                        # self._conversational_test_cases.extend(
+                        #     conversational_test_cases
+                        # )
                     else:
                         self.goldens = response.goldens
-                        self.conversational_goldens = (
-                            response.conversational_goldens
-                        )
                         for golden in self.goldens:
                             golden._dataset_alias = alias
                             golden._dataset_id = response.datasetId
+
+                        # self.conversational_goldens = (
+                        #     response.conversational_goldens
+                        # )
 
                     end_time = time.perf_counter()
                     time_taken = format(end_time - start_time, ".2f")

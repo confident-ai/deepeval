@@ -29,23 +29,22 @@ To use the `RoleAdherenceMetric`, you'll have to provide the following arguments
 - `turns`
 - `chatbot_role`
 
-Additionally, each `LLMTestCase`s in `turns` requires the following arguments:
+- `turns`
 
-- `input`
-- `actual_output`
+You must provide the `role` and `content` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
-Let's take this conversation as an example:
+The `RoleAdherenceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
 ```python
 from deepeval import evaluate
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.metrics import RoleAdherenceMetric
 
 convo_test_case = ConversationalTestCase(
     chatbot_role="...",
-    turns=[LLMTestCase(input="...", actual_output="...")]
+    turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
 )
 metric = RoleAdherenceMetric(threshold=0.5)
 
@@ -84,6 +83,6 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `RoleAdherenceMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Role Adherence} = \frac{\text{Number of Turns that Adhered to Chatbot Role in Conversation}}{\text{Total Number of Turns in Conversation}}" />
+<Equation formula="\text{Role Adherence} = \frac{\text{Number of Assistant Turns that Adhered to Chatbot Role in Conversation}}{\text{Total Number of Assistant Turns in Conversation}}" />
 
-The `RoleAdherenceMetric` first loops through each turn individually before using an LLM to determine which one of them does not adhere to the specified `chatbot_role` using previous turns as context.
+The `RoleAdherenceMetric` first loops through each turn individually before using an LLM to determine which one of the `"assistant"` role `"content"` does not adhere to the specified `chatbot_role` using previous turns as context.

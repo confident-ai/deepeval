@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 class OutOfCharacterResponseVerdict(BaseModel):
     index: int
     reason: str
-    actual_output: Optional[str] = Field(default=None)
+    ai_message: Optional[str] = Field(default=None)
 
 
 class OutOfCharacterResponseVerdicts(BaseModel):

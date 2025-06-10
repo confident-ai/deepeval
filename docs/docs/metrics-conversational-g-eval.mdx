@@ -24,12 +24,7 @@ To use the `ConversationalGEval` metric, you'll have to provide the following ar
 
 - `turns`
 
-Additionally, each `LLMTestCase`s in `turns` requires the following arguments:
-
-- `input`
-- `actual_output`
-
-You'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
+You'll also want to supply any additional arguments such as `retrieval_context` and `tools_called` in `turns` if your evaluation criteria depends on these parameters.
 
 ## Usage
 
@@ -37,24 +32,15 @@ To create a custom metric that evaluates entire LLM conversations, simply instan
 
 ```python
 from deepeval import evaluate
-from deepeval.test_case import LLMTestCase, LLMTestCaseParams, ConversationalTestCase
+from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
 
 convo_test_case = ConversationalTestCase(
-    turns=[LLMTestCase(input="...", actual_output="...")]
+    turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
 )
 professionalism_metric = ConversationalGEval(
     name="Professionalism",
-    criteria="""Given the 'actual output' are generated responses from an
-    LLM chatbot and 'input' are user queries to the chatbot, determine whether
-    the chatbot has acted professionally throughout a conversation.""",
-    # NOTE: you can only provide either criteria or evaluation_steps, and not both
-    evaluation_steps=[
-        "Check whether each LLM 'actual output' is professional with regards to the user 'input'",
-        "Being professional means no profanity, no toxic language, and consistently says 'please' or 'thank you'.",
-        "Penalize heavily if exclamation marks are used in a rude demeanour."
-    ],
-    evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
+    criteria="Determine whether the assistant has acted professionally based on the content."
 )
 
 # To run metric as a standalone
@@ -68,7 +54,7 @@ There are **THREE** mandatory and **SIX** optional parameters required when inst
 
 - `name`: name of metric. This will **not** affect the evaluation.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
-- `evaluation_params`: a list of type `LLMTestCaseParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `evaluation_params`: a list of type `TurnParams`, include only the parameters that are relevant for evaluation. Defaulted to `[TurnParams.CONTENT]`.
 - [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `ConversationalGEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
@@ -77,7 +63,7 @@ There are **THREE** mandatory and **SIX** optional parameters required when inst
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
 :::danger
-For accurate and valid results, only test case parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
+For accurate and valid results, only turn parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
 :::
 
 ### As a standalone
@@ -97,7 +83,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ConversationalGEval` metric is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated `evaluation_steps` to determine the final score using the `evaluation_params` presented in an LLMTestCase of each turn.
+The `ConversationalGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ConversationalGEval` metric is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated `evaluation_steps` to determine the final score using the `evaluation_params` presented in each turn.
 
 Unlike regular `GEval` though, the `ConversationalGEval` takes the entire conversation history into account during evaluation.
 
