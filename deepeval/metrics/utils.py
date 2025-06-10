@@ -23,6 +23,7 @@ from deepeval.models import (
     MultimodalGeminiModel,
     MultimodalOllamaModel,
     AmazonBedrockModel,
+    LiteLLMModel,
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.metrics import (
@@ -272,6 +273,11 @@ def should_use_gemini_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_litellm():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LITELLM)
+    return value.lower() == "yes" if value is not None else False
+
+
 ###############################################
 # LLM
 ###############################################
@@ -291,6 +297,8 @@ def initialize_model(
         return model, False
     if should_use_gemini_model():
         return GeminiModel(), True
+    if should_use_litellm():
+        return LiteLLMModel(), True
     if should_use_ollama_model():
         return OllamaModel(), True
     elif should_use_local_model():
@@ -302,7 +310,7 @@ def initialize_model(
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
-        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, OllamaModel, LocalModel."
+        f"Unsupported type for model: {type(model)}. Expected None, str, DeepEvalBaseLLM, GPTModel, AzureOpenAIModel, LiteLLMModel, OllamaModel, LocalModel."
     )
 
 
@@ -317,6 +325,7 @@ def is_native_model(
         or isinstance(model, LocalModel)
         or isinstance(model, GeminiModel)
         or isinstance(model, AmazonBedrockModel)
+        or isinstance(model, LiteLLMModel)
     ):
         return True
     else:

@@ -472,5 +472,42 @@ def unset_gemini_model_env():
     )
 
 
+@app.command(name="set-litellm")
+def set_litellm_model_env(
+    model_name: str = typer.Argument(..., help="Name of the LiteLLM model"),
+    api_key: Optional[str] = typer.Option(
+        None, "--api-key", help="API key for the model (if required)"
+    ),
+    api_base: Optional[str] = typer.Option(
+        None, "--api-base", help="Base URL for the model API (if required)"
+    ),
+):
+    """Set up a LiteLLM model for evaluation."""
+    KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_MODEL_NAME, model_name)
+    if api_key:
+        KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_API_KEY, api_key)
+    if api_base:
+        KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_API_BASE, api_base)
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LITELLM, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "NO")
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_GEMINI_MODEL, "NO")
+    print(
+        ":raising_hands: Congratulations! You're now using a LiteLLM model for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-litellm")
+def unset_litellm_model_env():
+    """Remove LiteLLM model configuration."""
+    KEY_FILE_HANDLER.remove_key(KeyValues.LITELLM_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LITELLM_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.LITELLM_API_BASE)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LITELLM)
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
 if __name__ == "__main__":
     app()
