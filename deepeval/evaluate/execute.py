@@ -1213,9 +1213,11 @@ async def a_execute_agentic_test_case(
     pbar_eval_id = add_pbar(
         progress,
         f"     🎯 Evaluating component(s) (#{count})",
-        total=count_metrics_in_trace(trace=current_trace),
+        total=(
+            count_metrics_in_trace(trace=current_trace)
+         + (len(current_trace.metrics) if current_trace.metrics is not None else 0)
+        )
     )
-
     test_case = LLMTestCase(
         input=golden.input,
         actual_output=golden.actual_output,
@@ -1255,6 +1257,18 @@ async def a_execute_agentic_test_case(
 
     test_start_time = time.perf_counter()
     await dfs(current_trace.root_spans[0])
+    await a_execute_trace_test_case(
+        trace=current_trace,
+        trace_api=trace_api,
+        api_test_case=api_test_case,
+        ignore_errors=ignore_errors,
+        skip_on_missing_params=skip_on_missing_params,
+        show_indicator=show_indicator,
+        verbose_mode=verbose_mode,
+        progress=progress,
+        pbar_eval_id=pbar_eval_id,
+        _use_bar_indicator=_use_bar_indicator,
+    )
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
 
@@ -1326,6 +1340,54 @@ async def a_execute_span_test_case(
         api_span.metrics_data.append(metric_data)
         api_test_case.update_status(metric_data.success)
 
+async def a_execute_trace_test_case(
+    trace: Trace,
+    trace_api: TraceApi,
+    api_test_case: LLMApiTestCase,
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    verbose_mode: Optional[bool],
+    progress: Optional[Progress],
+    pbar_eval_id: Optional[int],
+    _use_bar_indicator: bool,
+):
+    if trace.metrics is None:
+        return
+    if trace.llm_test_case is None:
+        raise ValueError(
+            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
+        )
+
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+    metrics: List[BaseMetric] = trace.metrics
+    test_case: LLMTestCase = trace.llm_test_case
+
+    for metric in metrics:
+        metric.skipped = False
+        metric.error = None  # Reset metric error
+        if verbose_mode is not None:
+            metric.verbose_mode = verbose_mode
+
+    await measure_metrics_with_indicator(
+        metrics=metrics,
+        test_case=test_case,
+        cached_test_case=None,
+        skip_on_missing_params=skip_on_missing_params,
+        ignore_errors=ignore_errors,
+        show_indicator=show_metrics_indicator,
+        progress=progress,
+        pbar_eval_id=pbar_eval_id,
+        _in_component=True,
+    )
+
+    trace_api.metrics_data = []
+    for metric in metrics:
+        if metric.skipped:
+            continue
+        metric_data = create_metric_data(metric)
+        trace_api.metrics_data.append(metric_data)
+        api_test_case.update_status(metric_data.success)
 
 def count_observe_decorators_in_module(func: Callable) -> int:
     mod = inspect.getmodule(func)

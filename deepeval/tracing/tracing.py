@@ -27,6 +27,7 @@ from deepeval.tracing.api import (
     SpanApiType,
     SpanTestCase,
     TraceApi,
+    TraceTestCase,
 )
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.attributes import (
@@ -511,6 +512,23 @@ class TraceManager:
             else None
         )
 
+        is_metric_strings = None
+        if trace.metrics:
+            is_metric_strings = isinstance(trace.metrics[0], str)
+        trace_test_case = (
+            TraceTestCase(
+                input=trace.llm_test_case.input,
+                actualOutput=trace.llm_test_case.actual_output,
+                expectedOutput=trace.llm_test_case.expected_output,
+                retrievalContext=trace.llm_test_case.retrieval_context,
+                context=trace.llm_test_case.context,
+                toolsCalled=trace.llm_test_case.tools_called,
+                expectedTools=trace.llm_test_case.expected_tools,
+            )
+            if trace.llm_test_case
+            else None
+        )
+
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -527,6 +545,10 @@ class TraceManager:
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
+            traceTestCase=trace_test_case,
+            # metrics=(
+            #     trace.metrics if is_metric_strings else None
+            # ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:

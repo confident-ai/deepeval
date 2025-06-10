@@ -36,8 +36,15 @@ def your_llm_app(input: str, version: int = 1):
         update_current_span(
             test_case=LLMTestCase(
                 input=input,
-                actual_output=response.output_text
+                actual_output=str(response.output_text)
             )
+        )
+        update_current_trace(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=str(response.output_text)
+            ),
+            metrics=[AnswerRelevancyMetric(), AnswerRelevancyMetric(), AnswerRelevancyMetric()]
         )
         return response.output_text
     elif version == 2:
@@ -74,8 +81,15 @@ def your_llm_app(input: str, version: int = 1):
         update_current_span(
             test_case=LLMTestCase(
                 input=input,
-                actual_output=response.choices[0].message.content
+                actual_output=str(response.choices[0].message.content)
             )
+        )
+        update_current_trace(
+            test_case=LLMTestCase(
+                input=input,
+                actual_output=str(response.choices[0].message.content)
+            ),
+            metrics=[AnswerRelevancyMetric(), AnswerRelevancyMetric(), AnswerRelevancyMetric()]
         )
         return response.choices[0].message.content
 
@@ -115,4 +129,4 @@ evaluate(observed_callback=your_llm_app, goldens=goldens)
 ########################################################################
 ########################################################################
 
-your_llm_app("What is the weather like in Paris and Bangkok today?", 2)
+# your_llm_app("What is the weather like in Paris and Bangkok today?", 2)
