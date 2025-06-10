@@ -1201,6 +1201,21 @@ async def a_execute_agentic_test_case(
     update_pbar(progress, pbar_tags_id, advance=total_tags)
     update_pbar(progress, pbar_id)
 
+    # Create empty trace api for llm api test case
+    trace_test_case = (
+        TraceTestCase(
+            input=current_trace.llm_test_case.input,
+            actualOutput=current_trace.llm_test_case.actual_output,
+            expectedOutput=current_trace.llm_test_case.expected_output,
+            retrievalContext=current_trace.llm_test_case.retrieval_context,
+            context=current_trace.llm_test_case.context,
+            toolsCalled=current_trace.llm_test_case.tools_called,
+            expectedTools=current_trace.llm_test_case.expected_tools,
+        )
+        if current_trace.llm_test_case
+        else None
+    )
+
     # run evals through DFS
     trace_api = TraceApi(
         uuid=current_trace.uuid,
@@ -1223,6 +1238,7 @@ async def a_execute_agentic_test_case(
             if current_trace.end_time
             else None
         ),
+        traceTestCase=trace_test_case
     )
 
     pbar_eval_id = add_pbar(
