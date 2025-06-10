@@ -1,18 +1,20 @@
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.dataset import Golden
 from deepeval.openai import OpenAI
 from deepeval import evaluate
 
-# metrics = [AnswerRelevancyMetric()]
-metrics = ["Answer Relevancy", "Helpfulness", "Verbosity"]
+span_metrics = [AnswerRelevancyMetric()]
+# span_metrics = ["Answer Relevancy", "Helpfulness"]
+trace_metrics = [BiasMetric()]
+# trace_metrics = ["Verbosity"]
 client = OpenAI()
 
 @observe(
     type="llm", 
     model="gpt-4o",
-    metrics=metrics
+    metrics=span_metrics
 )
 def your_llm_app(input: str, version: int = 1):
     output = ""
@@ -84,7 +86,7 @@ def your_llm_app(input: str, version: int = 1):
             input=input,
             actual_output=str(output)
         ),
-        metrics=metrics
+        metrics=trace_metrics
     )
     return output
 
@@ -118,7 +120,7 @@ goldens = [
     # Golden(input="What's the latest iPhone model?"),
     # Golden(input="How do I cook a perfect steak?"),
 ]
-# evaluate(observed_callback=your_llm_app, goldens=goldens)
+evaluate(observed_callback=your_llm_app, goldens=goldens)
 
 ########################################################################
 ########################################################################
