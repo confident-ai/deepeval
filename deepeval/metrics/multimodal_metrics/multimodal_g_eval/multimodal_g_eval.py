@@ -1,11 +1,11 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.metrics import BaseMetric
+from deepeval.models import DeepEvalBaseMLLM
+from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
+    MLLMTestCaseParams,
+    MLLMTestCase,
 )
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import MultimodalGEvalTemplate
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import *
@@ -33,15 +33,15 @@ from deepeval.metrics.g_eval.utils import (
 )
 
 
-class MultimodalGEval(BaseMetric):
+class MultimodalGEval(BaseMultimodalMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: List[LLMTestCaseParams],
+        evaluation_params: List[MLLMTestCaseParams],
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         rubric: Optional[List[Rubric]] = None,
-        model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        model: Optional[Union[str, DeepEvalBaseMLLM]] = None,
         threshold: float = 0.5,
         top_logprobs: int = 20,
         async_mode: bool = True,
@@ -66,7 +66,7 @@ class MultimodalGEval(BaseMetric):
 
     def measure(
         self,
-        test_case: LLMTestCase,
+        test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _additional_context: Optional[str] = None,
@@ -117,7 +117,7 @@ class MultimodalGEval(BaseMetric):
 
     async def a_measure(
         self,
-        test_case: LLMTestCase,
+        test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
         _additional_context: Optional[str] = None,
@@ -201,7 +201,7 @@ class MultimodalGEval(BaseMetric):
                 return data["steps"]
 
     async def _a_evaluate(
-        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
+        self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_list= construct_test_case_list(self.evaluation_params, test_case)
         g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
@@ -268,7 +268,7 @@ class MultimodalGEval(BaseMetric):
                     return data["score"], data["reason"]
 
     def _evaluate(
-        self, test_case: LLMTestCase, _additional_context: Optional[str] = None
+        self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
         test_case_list = construct_test_case_list(self.evaluation_params, test_case)
         g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
