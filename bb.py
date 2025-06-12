@@ -62,7 +62,7 @@ test_case_2 = ConversationalTestCase(
 
 # Conversation 3: Phone details and final confirmation with tools
 test_case_3 = ConversationalTestCase(
-    # chatbot_role="A humble and doubtful wizard",
+    # chatbot_role="A hupmble and doubtful wizard",
     turns=[
         Turn(role="user", content="555-0102"),
         Turn(
