@@ -3,7 +3,7 @@ import textwrap
 
 
 class MultimodalGEvalTemplate:
-    
+
     @staticmethod
     def generate_evaluation_steps(parameters: str, criteria: str):
         return textwrap.dedent(
@@ -23,7 +23,7 @@ class MultimodalGEvalTemplate:
             JSON:
             """
         )
-        
+
     @staticmethod
     def generate_evaluation_results(
         evaluation_steps: str,
@@ -53,9 +53,10 @@ class MultimodalGEvalTemplate:
             else ""
         )
 
-        return [
-            textwrap.dedent(
-                f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
+        return (
+            [
+                textwrap.dedent(
+                    f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
 
                 - `"score"`: an integer between {score_range[0]} and {score_range[1]}, {score_explanation}.
                 - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
@@ -76,8 +77,12 @@ class MultimodalGEvalTemplate:
                 Test Case:
                 ************************
                 """
-            )] + test_case_list + [
-            textwrap.dedent(f"""
+                )
+            ]
+            + test_case_list
+            + [
+                textwrap.dedent(
+                    f"""
                 ************************
                 \n\n\n
                 Parameters:
@@ -93,8 +98,9 @@ class MultimodalGEvalTemplate:
 
                 JSON:
                 """
-            )
-        ]
+                )
+            ]
+        )
 
     @staticmethod
     def generate_strict_evaluation_results(
@@ -108,16 +114,21 @@ class MultimodalGEvalTemplate:
             if _additional_context
             else ""
         )
-        return [
-            textwrap.dedent(
-                f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+        return (
+            [
+                textwrap.dedent(
+                    f"""Given the evaluation steps, return a JSON with two keys: 1) a `score` key that is STRICTLY EITHER 1 (follows the criteria 100% outlined in the evaluation steps), OR 0 (does not follow the criteria), and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
 
                 Evaluation Steps:
                 {evaluation_steps}
                 ************************
                 """
-            )] + test_case_list + [
-            textwrap.dedent(f"""
+                )
+            ]
+            + test_case_list
+            + [
+                textwrap.dedent(
+                    f"""
                 ************************
                 {additional_context}
                 **
@@ -132,5 +143,6 @@ class MultimodalGEvalTemplate:
 
                 JSON:
                 """
-            )
-        ]
+                )
+            ]
+        )

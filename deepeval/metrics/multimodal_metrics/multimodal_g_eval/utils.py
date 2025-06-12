@@ -37,6 +37,7 @@ def construct_g_eval_params_string(
 
     return g_eval_params_str
 
+
 def construct_test_case_list(
     evaluation_params: List[MLLMTestCaseParams], test_case: MLLMTestCase
 ) -> List[Union[str, MLLMImage]]:
@@ -52,6 +53,7 @@ def construct_test_case_list(
         test_case_list.extend(test_case_param_list)
     return test_case_list
 
+
 def no_multimodal_log_prob_support(model: Union[str, DeepEvalBaseMLLM]):
     if isinstance(model, str) and model in unsupported_log_probs_gpt_models:
         return True
@@ -60,4 +62,4 @@ def no_multimodal_log_prob_support(model: Union[str, DeepEvalBaseMLLM]):
         and model.model_name in unsupported_log_probs_gpt_models
     ):
         return True
-    return False    
+    return False

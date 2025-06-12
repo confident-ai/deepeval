@@ -7,7 +7,9 @@ from deepeval.test_case import (
     MLLMTestCaseParams,
     MLLMTestCase,
 )
-from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import MultimodalGEvalTemplate
+from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import (
+    MultimodalGEvalTemplate,
+)
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import *
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -72,7 +74,9 @@ class MultimodalGEval(BaseMultimodalMetric):
         _additional_context: Optional[str] = None,
     ) -> float:
 
-        check_mllm_test_case_params(test_case, self.evaluation_params, None, None, self)
+        check_mllm_test_case_params(
+            test_case, self.evaluation_params, None, None, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -123,7 +127,9 @@ class MultimodalGEval(BaseMultimodalMetric):
         _additional_context: Optional[str] = None,
     ) -> float:
 
-        check_mllm_test_case_params(test_case, self.evaluation_params, None, None, self)
+        check_mllm_test_case_params(
+            test_case, self.evaluation_params, None, None, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -203,8 +209,12 @@ class MultimodalGEval(BaseMultimodalMetric):
     async def _a_evaluate(
         self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
-        test_case_list= construct_test_case_list(self.evaluation_params, test_case)
-        g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
+        test_case_list = construct_test_case_list(
+            self.evaluation_params, test_case
+        )
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
@@ -270,8 +280,12 @@ class MultimodalGEval(BaseMultimodalMetric):
     def _evaluate(
         self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
     ) -> Tuple[Union[int, float], str]:
-        test_case_list = construct_test_case_list(self.evaluation_params, test_case)
-        g_eval_params_str = construct_g_eval_params_string(self.evaluation_params)
+        test_case_list = construct_test_case_list(
+            self.evaluation_params, test_case
+        )
+        g_eval_params_str = construct_g_eval_params_string(
+            self.evaluation_params
+        )
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
