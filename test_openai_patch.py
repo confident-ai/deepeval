@@ -11,6 +11,7 @@ client = OpenAI(api_key="<your-openai-api-key>")
 
 trace_manager.configure(openai_client=client)
 
+
 @observe(type="llm")
 def generate_response(input: str) -> str:
     response = client.chat.completions.create(
