@@ -35,7 +35,7 @@ To create a custom metric that uses MLLMs for evaluation, simply instantiate an 
 
 ```python
 from deepeval.metrics import MultimodalGEval
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase
+from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
 
 m_test_case = MLLMTestCase(
     input=["Show me how to fold an airplane"],
@@ -52,7 +52,8 @@ text_image_coherence = MultimodalGEval(
     evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
-evaluate(test_cases=[m_test_case], metrics=[text_image_coherence])
+text_image_coherence.measure(m_test_case)
+print(text_image_coherence.score, text_image_coherence.reason)
 ```
 
 There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `MultimodalGEval` class:
@@ -114,21 +115,6 @@ Note that `score_range` ranges from **0 - 10, inclusive** and different `Rubric`
 
 :::tip
 This is an optional improvement done by `deepeval` in addition to the original implementation in the `GEval` paper.
-:::
-
-### As a standalone
-
-You can also run `GEval` on a single test case as a standalone, one-off execution.
-
-```python
-...
-
-text_image_coherence.measure(test_case)
-print(text_image_coherence.score, text_image_coherence.reason)
-```
-
-:::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?
