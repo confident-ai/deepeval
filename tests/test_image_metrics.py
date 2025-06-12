@@ -3,7 +3,7 @@ import pytest
 from deepeval.dataset import EvaluationDataset
 from deepeval import evaluate
 from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
-from deepeval.test_case import MLLMTestCase, LLMTestCase, MLLMImage
+from deepeval.test_case import MLLMTestCase, LLMTestCase, MLLMImage, MLLMTestCaseParams, ToolCall
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     ImageEditingMetric,
@@ -13,6 +13,7 @@ from deepeval.metrics import (
     MultimodalContextualPrecisionMetric,
     MultimodalAnswerRelevancyMetric,
     MultimodalFaithfulnessMetric,
+    MultimodalGEval
 )
 
 image_path = "./data/image_1.jpg"
@@ -93,6 +94,8 @@ def multimodal_rag_case():
                 url="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Liberty-from-behind-2024.jpg/330px-Liberty-from-behind-2024.jpg"
             ),
         ],
+        tools_called=[ToolCall(name="google search")],
+        expected_tools=[ToolCall(name="google search")],
     )
 
 
@@ -128,6 +131,25 @@ def test_multimodal_rag_case(multimodal_rag_case):
             MultimodalContextualPrecisionMetric(),
             MultimodalAnswerRelevancyMetric(),
             MultimodalFaithfulnessMetric(),
+            MultimodalGEval(
+                name="MultimodalGEval",
+                evaluation_params=[
+                    MLLMTestCaseParams.INPUT,
+                    MLLMTestCaseParams.ACTUAL_OUTPUT,
+                    MLLMTestCaseParams.EXPECTED_OUTPUT,
+                    MLLMTestCaseParams.CONTEXT,
+                    MLLMTestCaseParams.RETRIEVAL_CONTEXT,
+                    MLLMTestCaseParams.TOOLS_CALLED,
+                    MLLMTestCaseParams.EXPECTED_TOOLS,
+                ],
+                model="gpt-4o",
+                evaluation_steps=[
+                    "Determine if the output image follows the input instructions clearly.",
+                    "Determine if the expected output aligns with the actual output.",
+                    "Determine if the context is aligned with the retrieval context.",
+                    "Determine if the tools called are aligned with the expected tools.",
+                ],
+            ),
         ],
         display_config=DisplayConfig(verbose_mode=True),
         async_config=AsyncConfig(run_async=False),

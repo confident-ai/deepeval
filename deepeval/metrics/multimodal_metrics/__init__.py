@@ -21,3 +21,4 @@ from .multimodal_faithfulness.multimodal_faithfulness import (
 from .multimodal_tool_correctness.multimodal_tool_correctness import (
     MultimodalToolCorrectnessMetric,
 )
+from .multimodal_g_eval.multimodal_g_eval import MultimodalGEval

@@ -179,7 +179,7 @@ class GPTModel(DeepEvalBaseLLM):
         super().__init__(model_name)
 
     ###############################################
-    # Other generate functions
+    # Generate functions
     ###############################################
 
     @retry(
