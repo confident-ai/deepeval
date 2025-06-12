@@ -50,6 +50,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
+    convert_feedback_to_api_feedback,
     make_json_serializable,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
@@ -99,7 +100,7 @@ class TraceManager:
         remaining_tasks = queue_size + in_flight
         if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES" and remaining_tasks > 0:
             self._print_trace_status(
-                message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
+                message=f"WARNING: Exiting with {queue_size + in_flight} abaonded trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=YES as an environment variable to flush remaining traces to Confident AI.",
             )
@@ -527,6 +528,9 @@ class TraceManager:
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
+            feedback=convert_feedback_to_api_feedback(
+                trace.feedback, trace_uuid=trace.uuid
+            ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -609,6 +613,9 @@ class TraceManager:
             metrics=(
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals
+            feedback=convert_feedback_to_api_feedback(
+                span.feedback, span_uuid=span.uuid
+            ),
         )
 
         # Add type-specific attributes

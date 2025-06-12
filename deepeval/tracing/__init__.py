@@ -5,5 +5,5 @@ from .attributes import (
     ToolAttributes,
     AgentAttributes,
 )
-from .types import BaseSpan, Trace
+from .types import BaseSpan, Trace, Feedback
 from .tracing import observe, trace_manager

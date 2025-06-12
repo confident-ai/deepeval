@@ -1,6 +1,10 @@
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
+from typing import Optional
+
+from deepeval.feedback.api import APIFeedback
+from deepeval.tracing.types import Feedback
 
 
 class Environment(Enum):
@@ -8,6 +12,32 @@ class Environment(Enum):
     DEVELOPMENT = "development"
     STAGING = "staging"
     TESTING = "testing"
+
+
+def convert_feedback_to_api_feedback(
+    feedback: Optional[Feedback] = None,
+    trace_uuid: Optional[str] = None,
+    span_uuid: Optional[str] = None,
+) -> Optional[APIFeedback]:
+    if feedback is None:
+        return None
+
+    if trace_uuid is not None:
+        return APIFeedback(
+            traceUuid=trace_uuid,
+            rating=feedback.rating,
+            expectedResponse=feedback.expected_output,
+            explanation=feedback.explanation,
+        )
+    if span_uuid is not None:
+        return APIFeedback(
+            spanUuid=span_uuid,
+            rating=feedback.rating,
+            expectedResponse=feedback.expected_output,
+            explanation=feedback.explanation,
+        )
+    else:
+        return None
 
 
 def validate_environment(environment: str):

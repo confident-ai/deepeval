@@ -6,6 +6,7 @@ from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import current_trace_context
 from deepeval.utils import is_confident
+from deepeval.feedback.api import APIFeedback
 
 
 class SpanApiType(Enum):
@@ -93,6 +94,9 @@ class BaseApiSpan(BaseModel):
     metrics: Optional[List[str]] = Field(None, alias="metrics")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
+    ## human feedback
+    feedback: Optional[APIFeedback] = Field(None)
+
     class Config:
         use_enum_values = True
         validate_assignment = True
@@ -114,6 +118,7 @@ class TraceApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
+    feedback: Optional[APIFeedback] = Field(None)
 
 
 class RunThreadMetricApi(BaseModel):
