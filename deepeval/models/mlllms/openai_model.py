@@ -1,5 +1,6 @@
 from typing import Optional, Tuple, List, Union
 from openai import OpenAI, AsyncOpenAI
+from openai.types.chat import ParsedChatCompletion
 from pydantic import BaseModel
 from io import BytesIO
 import logging
@@ -63,15 +64,6 @@ valid_multimodal_gpt_models = [
     "gpt-4o-2024-11-20",
     "gpt-4o-mini",
     "gpt-4o-mini-2024-07-18",
-    "gpt-4",
-    "gpt-4-0125-preview",
-    "gpt-4-0613",
-    "gpt-4-1106-preview",
-    "gpt-4-turbo",
-    "gpt-4-turbo-2024-04-09",
-    "gpt-4-turbo-preview",
-    "gpt-4-32k",
-    "gpt-4-32k-0613",
 ]
 
 default_multimodal_gpt_model = "gpt-4o"
@@ -101,6 +93,10 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
 
         super().__init__(model_name, *args, **kwargs)
 
+    ###############################################
+    # Generate functions
+    ###############################################
+
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
         retry=retry_if_exception_type(retryable_exceptions),
@@ -113,9 +109,10 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     ) -> Tuple[str, float]:
         client = OpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
+        messages = [{"role": "user", "content": prompt}]
         response = client.beta.chat.completions.parse(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             response_format=schema,
         )
         input_tokens = response.usage.prompt_tokens
@@ -136,9 +133,10 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     ) -> Tuple[str, float]:
         client = AsyncOpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
+        messages = [{"role": "user", "content": prompt}]
         response = await client.beta.chat.completions.parse(
             model=self.model_name,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             response_format=schema,
         )
         input_tokens = response.usage.prompt_tokens
@@ -146,6 +144,64 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         total_cost = self.calculate_cost(input_tokens, output_tokens)
         generated_text = response.choices[0].message.parsed
         return generated_text, total_cost
+
+    ###############################################
+    # Other generate functions
+    ###############################################
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    def generate_raw_response(
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        top_logprobs: int = 5,
+    ) -> Tuple[ParsedChatCompletion, float]:
+        client = OpenAI(api_key=self._openai_api_key)
+        prompt = self.generate_prompt(multimodal_input)
+        messages = [{"role": "user", "content": prompt}]
+        completion = client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+            logprobs=True,
+            top_logprobs=top_logprobs,
+        )
+        # Cost calculation
+        input_tokens = completion.usage.prompt_tokens
+        output_tokens = completion.usage.completion_tokens
+        cost = self.calculate_cost(input_tokens, output_tokens)
+        return completion, cost
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    async def a_generate_raw_response(
+        self,
+        multimodal_input: List[Union[str, MLLMImage]],
+        top_logprobs: int = 5,
+    ) -> Tuple[ParsedChatCompletion, float]:
+        client = AsyncOpenAI(api_key=self._openai_api_key)
+        prompt = self.generate_prompt(multimodal_input)
+        messages = [{"role": "user", "content": prompt}]
+        completion = await client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+            logprobs=True,
+            top_logprobs=top_logprobs,
+        )
+        # Cost calculation
+        input_tokens = completion.usage.prompt_tokens
+        output_tokens = completion.usage.completion_tokens
+        cost = self.calculate_cost(input_tokens, output_tokens)
+        return completion, cost
+
+    ###############################################
+    # Utilities
+    ###############################################
 
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
@@ -173,10 +229,6 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
                 prompt.append(visual_dict)
         return prompt
 
-    ###############################################
-    # Utilities
-    ###############################################
-
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = model_pricing.get(
             self.model_name, model_pricing["gpt-4o"]
@@ -187,6 +239,8 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
 
     def encode_pil_image(self, pil_image):
         image_buffer = BytesIO()
+        if pil_image.mode in ("RGBA", "LA", "P"):
+            pil_image = pil_image.convert("RGB")
         pil_image.save(image_buffer, format="JPEG")
         image_bytes = image_buffer.getvalue()
         base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
