@@ -50,13 +50,13 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
-    convert_feedback_to_api_feedback,
     make_json_serializable,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
     validate_environment,
     validate_sampling_rate,
 )
+from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
 

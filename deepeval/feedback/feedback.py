@@ -1,7 +1,14 @@
 from typing import Optional
+from pydantic import BaseModel
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.feedback.api import APIFeedback
+
+
+class Feedback(BaseModel):
+    rating: int
+    expected_output: Optional[str] = None
+    explanation: Optional[str] = None
 
 
 def collect_feedback(

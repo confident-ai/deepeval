@@ -167,7 +167,11 @@ def capture_evaluation_run(type: str):
         # data
         event = f"Ran {type}"
         distinct_id = get_unique_id()
-        feature = Feature.COMPONENT_EVALUATION if event == "Ran traceable evaluate()" else Feature.EVALUATION
+        feature = (
+            Feature.COMPONENT_EVALUATION
+            if event == "Ran traceable evaluate()"
+            else Feature.EVALUATION
+        )
         properties = {
             "logged_in_with": get_logged_in_with(),
             "environment": IS_RUNNING_IN_JUPYTER,
@@ -178,9 +182,13 @@ def capture_evaluation_run(type: str):
             ),
         }
         if feature == Feature.EVALUATION:
-            properties["feature_status.evaluation"] = get_feature_status(feature)
+            properties["feature_status.evaluation"] = get_feature_status(
+                feature
+            )
         elif feature == Feature.COMPONENT_EVALUATION:
-            properties["feature_status.component_evaluation"] = get_feature_status(feature)
+            properties["feature_status.component_evaluation"] = (
+                get_feature_status(feature)
+            )
         set_last_feature(feature)
         # capture posthog
         posthog.capture(

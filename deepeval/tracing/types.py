@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 
+from deepeval.feedback import Feedback
 from deepeval.tracing.attributes import (
     AgentAttributes,
     LlmAttributes,
@@ -11,12 +12,6 @@ from deepeval.tracing.attributes import (
 )
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-
-
-class Feedback(BaseModel):
-    rating: int
-    expected_output: Optional[str] = None
-    explanation: Optional[str] = None
 
 
 class TraceWorkerStatus(Enum):
