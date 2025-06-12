@@ -90,6 +90,7 @@ class TraceManager:
 
         self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
         validate_sampling_rate(self.sampling_rate)
+        self.openai_client = None
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -130,6 +131,7 @@ class TraceManager:
         if confident_api_key is not None:
             self.confident_api_key = confident_api_key
         if openai_client is not None:
+            self.openai_client = openai_client
             patch_openai_client(openai_client)
 
     def start_new_trace(self) -> Trace:
@@ -655,7 +657,6 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
-        client: Optional[Any] = None,
         _progress: Optional[Progress] = None,
         _pbar_callback_id: Optional[int] = None,
         **kwargs,
@@ -680,7 +681,6 @@ class Observer:
         self.span_type: SpanType | str = (
             self.name if span_type is None else span_type
         )
-        self.client = client
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
 
@@ -816,9 +816,10 @@ class Observer:
             )
         elif self.span_type == SpanType.LLM.value:
             model = self.observe_kwargs.get("model", None)
-            if model is None and self.client is None:
-                raise ValueError("model or client is required for LlmSpan")
-
+            if model is None and not trace_manager.openai_client:
+                raise ValueError(
+                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/llm-tracing/integrations/openai"
+                )
             return LlmSpan(**span_kwargs, attributes=None, model=model)
         elif self.span_type == SpanType.RETRIEVER.value:
             embedder = self.observe_kwargs.get("embedder", None)
@@ -905,7 +906,6 @@ def observe(
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
-    client: Optional[Any] = None,
     **observe_kwargs,
 ):
     """
@@ -941,7 +941,6 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
-                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function
@@ -970,7 +969,6 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
-                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function

@@ -28,30 +28,7 @@ TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
 TELEMETRY_PATH = os.path.join(HIDDEN_DIR, TELEMETRY_DATA_FILE)
 
 #########################################################
-### Move Folders ########################################
-#########################################################
-
-if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
-    temp_deepeval_file_name = ".deepeval_temp"
-    os.rename(KEY_FILE, temp_deepeval_file_name)
-    os.makedirs(HIDDEN_DIR, exist_ok=True)
-    os.rename(temp_deepeval_file_name, os.path.join(HIDDEN_DIR, KEY_FILE))
-
-os.makedirs(HIDDEN_DIR, exist_ok=True)
-
-if os.path.exists(TELEMETRY_DATA_FILE):
-    os.rename(TELEMETRY_DATA_FILE, TELEMETRY_PATH)
-
-if os.path.exists(".deepeval-cache.json"):
-    os.rename(".deepeval-cache.json", f"{HIDDEN_DIR}/.deepeval-cache.json")
-
-if os.path.exists(".temp_test_run_data.json"):
-    os.rename(
-        ".temp_test_run_data.json", f"{HIDDEN_DIR}/.temp_test_run_data.json"
-    )
-
-#########################################################
-### Telemetry Config ####################################
+### Telemetry HELPERS ###################################
 #########################################################
 
 
@@ -76,6 +53,33 @@ def get_anonymous_public_ip():
         pass
     return None
 
+
+#########################################################
+### Move Folders ########################################
+#########################################################
+if not telemetry_opt_out():
+    if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
+        temp_deepeval_file_name = ".deepeval_temp"
+        os.rename(KEY_FILE, temp_deepeval_file_name)
+        os.makedirs(HIDDEN_DIR, exist_ok=True)
+        os.rename(temp_deepeval_file_name, os.path.join(HIDDEN_DIR, KEY_FILE))
+
+    os.makedirs(HIDDEN_DIR, exist_ok=True)
+
+    if os.path.exists(TELEMETRY_DATA_FILE):
+        os.rename(TELEMETRY_DATA_FILE, TELEMETRY_PATH)
+
+    if os.path.exists(".deepeval-cache.json"):
+        os.rename(".deepeval-cache.json", f"{HIDDEN_DIR}/.deepeval-cache.json")
+
+    if os.path.exists(".temp_test_run_data.json"):
+        os.rename(
+            ".temp_test_run_data.json", f"{HIDDEN_DIR}/.temp_test_run_data.json"
+        )
+
+#########################################################
+### Telemetry Config ####################################
+#########################################################
 
 anonymous_public_ip = None
 
