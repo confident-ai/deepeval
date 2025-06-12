@@ -69,5 +69,9 @@ def update_warning_opt_in():
     return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_IN") == "YES"
 
 
+def is_read_only_env():
+    return os.getenv("DEEPEVAL_FILE_SYSTEM") == "READ_ONLY"
+
+
 if update_warning_opt_in():
     check_for_update()
