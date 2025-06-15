@@ -1,7 +1,7 @@
 ---
-title: 'Evaluation-First Approach to Building Robust RAG Applications with DeepEval: An End-to-End Guide'
-description: Build robust RAG applications with an evaluation-first approach. Learn how DeepEval enables automated LLM testing, hallucination detection, and seamless CI/CD integration for confident AI deployment in critical systems.
-slug: evaluation-first-rag-deepeval-guide
+title: 'Evaluate and Deploy Robust RAG Applications with DeepEval'
+description: Evaluate and deploy reliable RAG systems with DeepEval — test LLMs, detect hallucinations, and integrate into CI/CD workflows.
+slug: rag-evaluation-deepeval-guide
 authors: [cale]
 date: 2025-06-12
 hide_table_of_contents: false
@@ -21,13 +21,14 @@ This tutorial walks you through how to build a **reliable RAG system** with [Dee
 
 By the end of this tutorial, you’ll have a deployable RAG app that’s not only smart — it’s battle-tested.
 
-## If the Retriever Fails, Everything Fails: Evaluating with DeepEval
+## Evaluating Your Retriever with DeepEval
 
 A hallucination doesn’t start in generation — it starts in retrieval. If your retriever surfaces irrelevant or incomplete context, your LLM is doomed before it even starts generating. In high-stakes use cases like contracts or compliance, one bad passage can trigger a cascade of wrong answers — or worse, legal risk.
 
-### Building a Basic Retriever
+### Building a basic retriever
 
-Let’s say you’re using a standard FAISS \+ OpenAIEmbeddings retriever.
+Let’s say you’re using a standard `FAISS` \+ `OpenAIEmbeddings` retriever.
+<details> <summary>Click here to see the implementation of a simple retriever</summary>
 
 ```python
 from langchain.vectorstores import Chroma, FAISS  
@@ -42,7 +43,7 @@ class SimpleRetriever:
         chunk_size: int = 500,  
         chunk_overlap: int = 50,  
         vector_store_class=FAISS,  
-        persist_directory: str = None  
+        persist_directory: str = None,
         k: int = 2  
     ):  
         self.document_path = document_path  
@@ -85,6 +86,7 @@ retriever = SimpleRetriever("document.txt")
 query = "What benefits do part-time employees get?"  
 results = retriever.retrieve(query)
 ```
+</details>
 
 This retriever *works* — but how well?
 
@@ -100,7 +102,7 @@ DeepEval helps you get around this with its built-in **[synthesizer](https://dee
 
 ### Generating Goldens
 
-Here’s how easy it is to generate those golden pairs:
+Here’s how easy it is to generate those goldens:
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -109,12 +111,12 @@ synthesizer = Synthesizer()
 goldens = synthesizer.generate_goldens_from_docs(
     document_paths=["document.txt"], chunk_size=500, chunk_overlap=50
 )
-
 ```
 
 Now we can use these generated goldens to evaluate our retriever. Here’s how we can evaluate our retriever using the 3 metrics mentioned before:
 
 ```python
+from deepeval.test_case import LLMTestCase
 from deepeval.metrics import (
     ContextualRelevancyMetric,
     ContextualRecallMetric,
@@ -122,32 +124,36 @@ from deepeval.metrics import (
 )
 
 # Initialize metrics
-relevancy_metric = ContextualRelevancyMetric()
-recall_metric = ContextualRecallMetric()
-precision_metric = ContextualPrecisionMetric()
+relevancy = ContextualRelevancyMetric()
+recall = ContextualRecallMetric()
+precision = ContextualPrecisionMetric()
 
-# Evaluate for each golden pair
-for pair in golden_pairs:
+# Evaluate for each golden
+for pair in goldens:
     retrieved_docs = retriever.retrieve(pair.input)
-
     context_list = [doc.page_content for doc in retrieved_docs]
-    relevancy_score = relevancy_metric.evaluate(context_list, [pair.expected_output])
-    recall_score = recall_metric.evaluate(context_list, [pair.expected_output])
-    precision_score = precision_metric.evaluate(context_list, [pair.expected_output])
+    test_case = LLMTestCase(
+        input=pair.input,
+        actual_output=pair.expected_output,
+        expected_output=pair.expected_output,
+        retrieval_context=context_list
+    )
+    relevancy.measure(test_case)
+    recall.measure(test_case)
+    precision.measure(test_case)
 
     print(f"Q: {pair.input}\nA: {pair.expected_output}")
-    print(
-        f"Relevancy: {relevancy_score}, Recall: {recall_score}, Precision: {precision_score}\n"
-    )
+    print(f"Relevancy: {relevancy.score}, Recall: {recall.score}, Precision: {precision.score}")
 ```
 
 When I did the evaluation using the above retriever, I got an average of 0.52, 0.75 and 0.64 for Relevancy, Recall and Precision scores. These are *passable* to say the least. And hence there is a need to find the best hyperparameters i.e., chunking strategies, different embedding models, different retriever types.
 
-### Improving Your Retriever
+### Improving your retriever
 
 Now let’s iterate over different strategies to see which model works best for us. 
 
 ```python
+from deepeval.test_case import LLMTestCase
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
 from langchain.vectorstores import Chroma, FAISS
 from deepeval.synthesizer import Synthesizer
@@ -161,27 +167,28 @@ import tempfile
 # Example configurations
 chunking_strategies = [500, 1024, 2048]
 embedding_models = [
-    OpenAIEmbeddings(),
-    HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2"),
+    ("OpenAIEmbeddings", OpenAIEmbeddings()),
+    ("HuggingFaceEmbeddings", HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")),
 ]
-retriever_models = [FAISS, Chroma]
+retriever_models = [
+    ("FAISS", FAISS), 
+    ("Chroma", Chroma)
+]
 
 # Initialize metrics
-relevancy_metric = ContextualRelevancyMetric()
-recall_metric = ContextualRecallMetric()
-precision_metric = ContextualPrecisionMetric()
+relevancy = ContextualRelevancyMetric()
+recall = ContextualRecallMetric()
+precision = ContextualPrecisionMetric()
 
-# Generate golden pairs only once unless testing synthesis configs
+# Generate goldens only once unless testing synthesis configs
 synthesizer = Synthesizer()
-golden_pairs = synthesizer.generate_goldens_from_docs(document_paths=["document.txt"])
+goldens = synthesizer.generate_goldens_from_docs(document_paths=["document.txt"])
 
 # Iterate over retriever configs
 for chunk_size in chunking_strategies:
-    for embedding_model in embedding_models:
-        for retriever_type in retriever_models:
-            print(
-                f"Evaluating with Chunk Size: {chunk_size}, Embedding: {embedding_model.__class__.__name__}, Retriever: {retriever_type.__name__}"
-            )
+    for embedding_name, embedding_model in embedding_models:
+        for retriever_name, retriever_type in retriever_models:
+            print(f"Evaluating with Chunk Size: {chunk_size}, Embedding: {embedding_name}, Retriever: {retriever_name}")
 
             persist_dir = tempfile.mkdtemp() if retriever_type == Chroma else None
 
@@ -194,42 +201,55 @@ for chunk_size in chunking_strategies:
                 persist_directory=persist_dir,  # Pass only if using Chroma
             )
 
-            for pair in golden_pairs:
+            for pair in goldens:
                 retrieved_docs = retriever.retrieve(pair.input)
+                context_list = [doc.page_content for doc in retrieved_docs]
 
-                relevancy_score = relevancy_metric.evaluate(
-                    retrieved_docs, [pair.expected_output]
-                )
-                recall_score = recall_metric.evaluate(
-                    retrieved_docs, [pair.expected_output]
-                )
-                precision_score = precision_metric.evaluate(
-                    retrieved_docs, [pair.expected_output]
+                test_case = LLMTestCase(
+                    input=pair.input,
+                    actual_output=pair.expected_output,
+                    expected_output=pair.expected_output,
+                    retrieval_context=context_list
                 )
 
-                print(f"\nQ: {pair.input}\nA: {pair.expected_output}")
-                print(
-                    f"Relevancy: {relevancy_score}, Recall: {recall_score}, Precision: {precision_score}"
-                )
+                relevancy.measure(test_case)
+                recall.measure(test_case)
+                precision.measure(test_case)
+
+                print(f"Q: {pair.input[:70]}...")
+                print(f"Relevancy: {relevancy.score}, Recall: {recall.score}, Precision: {precision.score}")
 ```
 
-After these iterations I’ve found that using HuggingFaceEmbeddings and FAISS with 1024 chunks gives me an average score of  0.82, 0.92 and 0.89 for Relevancy, Recall and Precision.
+After these iterations I’ve found that using `HuggingFaceEmbeddings` and `FAISS` with `1024` chunks gives me an average score of  0.82, 0.92 and 0.89 for Relevancy, Recall and Precision.
 
-**Takeaways**: Swapping to HuggingFace embeddings and increasing chunk size to 1024 improved all key scores — pushing Relevancy to 0.82, Recall to 0.92 and Precision to 0.89. With DeepEval, tuning isn't guesswork — it's measured progress. Ofcourse this is only in my case and you might have better results with different hyperparameters. Feel free to test them out to find the best ones that work for your data.
+Here's a table to compare the results
+
+| Metric      | Initial Retriever | Optimized Retriever |
+| ----------- | ----------------- | ------------------- |
+| Relevancy   | 0.52              | 0.82                |
+| Recall      | 0.75              | 0.92                |
+| Precision   | 0.64              | 0.89                |
+
+
+:::tip **Takeaways**
+Swapping to `HuggingFaceEmbeddings` and increasing chunk size to `1024` improved all key scores — pushing Relevancy to 0.82, Recall to 0.92 and Precision to 0.89. With DeepEval, tuning isn't guesswork — it's measured progress. Of course this is only in my case and you might have better results with different hyperparameters. Feel free to test them out to find the best ones that work for your data.
+:::
 
 This is the flow you want to follow if you are trying to create a reliable retriever with DeepEval.
 
-![deepeval-retriever-flow](./images/rag-blog/deepeval-retriever-flow.png)
+![DeepEval Retriever Evaluation Flow Diagram](./images/rag-blog/deepeval-retriever-flow.png)
 
-## Where Hallucinations Are Born: Evaluating Your Generator with DeepEval
+## Evaluating Your Generator with DeepEval
 
 Most teams think retrieval is the bottleneck. It’s not. In real-world RAG systems, **generation is where trust collapses**. You can have a flawless retriever — and still return confidently wrong answers.
 
 Why? Because **the generator is the system’s voice**. It’s what users read, cite, forward to legal, or base decisions on. If that voice misstates facts or hallucinates clauses, it doesn't matter how good your context was — your product is broken.
 
-### Building a Basic Generator
+### Building a basic generator
 
 In most setups, you’re building a prompt using retrieval context and user query, below is an example of how generators are usually made:
+
+<details> <summary>Click here to see the implementation of a simple generator</summary>
 
 ```python
 from langchain.llms import OpenAI
@@ -251,6 +271,7 @@ class Generator:
         prompt = self.prompt_template.format(context=context, question=question)
         return self.llm(prompt)
 ```
+</details>
 
 This might feel like a solid generator — but is it?
 
@@ -299,7 +320,7 @@ expected_answer = "Part-time employees receive prorated healthcare coverage, fle
 
 # Run RAG pipeline
 retrieved_docs = retriever.retrieve(query)
-context = "\n".join([doc.page_content for doc in retrieved_docs])
+context = [doc.page_content for doc in retrieved_docs]
 generated_answer = generator.generate(query)
 
 # Create test case
@@ -337,7 +358,7 @@ for metric in metrics:
 
 You now have a structured and repeatable way to measure how well your generator is performing — and which dimensions (e.g. tone, grounding, citations) need improvement.
 
-### Tuning the Generator: What to Experiment With
+### Improving your generator
 
 There are multiple levers you can adjust to improve the generator:
 
@@ -384,14 +405,16 @@ metrics = [
 ]
 
 retrieved_docs = retriever.retrieve(query)
-context = "\n".join([doc.page_content for doc in retrieved_docs])
+context = [doc.page_content for doc in retrieved_docs]
 
 for i, prompt_template in enumerate(prompts, 1):
     for model_name, model in models:
-        print(f"--- Prompt Variant {i} | Model: {model_name} ---")
+        print(f"Prompt Variant {i} | Model: {model_name}")
 
         generator = Generator(
-            retriever=retriever, llm=model, prompt_template=prompt_template
+            retriever=retriever, 
+            llm=model, 
+            prompt_template=prompt_template
         )
         generated_answer = generator.generate(query)
 
@@ -405,7 +428,6 @@ for i, prompt_template in enumerate(prompts, 1):
         for metric in metrics:
             metric.measure(test_case)
             print(f"{metric.name}: {metric.score} | {metric.reason}")
-        print("-" * 80)
 ```
 
 After testing all prompt–model combinations, I found:
@@ -416,17 +438,17 @@ After testing all prompt–model combinations, I found:
 consistently scored **highest on all four metrics** as follows **Faithfulness: 0.91 | Relevancy: 0.88**.
 
 This is the flow you want to follow if you are trying to create a reliable generator.
-![deepeval-generator-flow](./images/rag-blog/deepeval-generator-flow.png)
+![DeepEval Generator Evaluation Flow Diagram](./images/rag-blog/deepeval-generator-flow.png)
 
-:::note
+:::tip
 Don’t eval in isolation. Retrieval \+ generation must be co-optimized — or you’ll chase ghosts.
 :::
 
 To help visualize this robust RAG architecture, here's a diagram illustrating the flow:
 
-![deepeval-rag-flow](./images/rag-blog/deepeval-rag-flow.png)
+![DeepEval Retriever and Generator Evaluation Flow Diagram](./images/rag-blog/deepeval-rag-flow.png)
 
-## Going Further: End-to-End Evaluation & CI/CD Integration
+## CI/CD Integration for Continuous Evaluation
 
 Building a reliable RAG app is a significant achievement, but for a truly **production-grade system**, you need **continuous validation** of your application's performance. This means integrating your evaluation tests directly into your **CI/CD pipeline** (using tools like GitHub Actions, GitLab CI, or Jenkins).
 
@@ -436,7 +458,7 @@ Your law firm's contracts and internal policies are **living documents**. They'l
 
 By dynamically regenerating your golden question-answer pairs during your CI run, your tests automatically adapt to content changes. This prevents regressions caused by outdated test data and ensures your RAG application remains trustworthy and accurate over time.
 
-### Integrating DeepEval Tests into Your CI/CD
+### Integrating DeepEval tests into your CI/CD
 
 Let's assume your core RAG application logic (retriever and generator) is defined or imported, perhaps in `rag_app.py`, and your tests are in `tests/test_rag_app.py`.
 
@@ -453,36 +475,22 @@ from deepeval.metrics import (
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.dataset import EvaluationDataset
 from deepeval import assert_test
-from langchain.embeddings import OpenAIEmbeddings, HuggingFaceEmbeddings
-from langchain.vectorstores import Chroma, FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.llms import (
-    OpenAI,
-    Ollama,
-    HuggingFaceHub,
-)  # Assuming these imports are needed based on your original article for Generator
 
 # Assume SimpleRetriever and Generator classes are imported or defined here
 # If these classes are in a separate file (e.g., rag_app.py), you would import them like this:
 # from rag_app import SimpleRetriever, Generator
-# For demonstration, let's instantiate them with the best performing config
-retriever_instance = SimpleRetriever(
-    document_path="document.txt",
-    chunk_size=1024,
-    chunk_overlap=50,
-    embedding_model=HuggingFaceEmbeddings(
-        model_name="sentence-transformers/all-MiniLM-L6-v2"
-    ),
-    vector_store_class=FAISS,
-)
+# In real test file, you would instantiate these with the best performing config
+retriever_instance = SimpleRetriever(...)
+# Retriever with:
+#   HuggingFaceEmbeddings
+#   FAISS
+#   1024 chunks
 
-generator_instance = Generator(
-    retriever=retriever_instance,
-    llm=OpenAI(
-        model_name="gpt-4"
-    ),  # Use the best performing LLM. Replace with a real LLM if you want actual evaluation.
-    prompt_template="Provide a complete, legally grounded answer sourced from the documentation below.\n\n{context}\n\nClient Q: {query}\nA:",
-)
+generator_instance = Generator(...)
+# Generator with:
+#   GPT-4
+#   Prompt 2
+
 
 # Generate Q&A pairs (goldens) dynamically from your current documents
 synthesizer = Synthesizer()
@@ -498,9 +506,7 @@ for golden in golden_test_cases:
 
     # Retrieve relevant docs
     retrieved_docs = retriever_instance.retrieve(query)
-    context_list = [
-        doc.page_content for doc in retrieved_docs
-    ]  # Ensure list of strings for metrics
+    context_list = [doc.page_content for doc in retrieved_docs]
 
     # Generate answer
     generated_answer = generator_instance.generate(query)
