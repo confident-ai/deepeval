@@ -25,7 +25,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
-    SpanTestCase,
+    TraceSpanTestCase,
     TraceApi,
 )
 from deepeval.telemetry import capture_send_trace
@@ -134,7 +134,11 @@ class TraceManager:
             self.openai_client = openai_client
             patch_openai_client(openai_client)
 
-    def start_new_trace(self) -> Trace:
+    def start_new_trace(
+        self,
+        metric_collection: Optional[str] = None,
+        metrics: Optional[List[BaseMetric]] = None,
+    ) -> Trace:
         """Start a new trace and set it as the current trace."""
         trace_uuid = str(uuid.uuid4())
         new_trace = Trace(
@@ -144,6 +148,8 @@ class TraceManager:
             start_time=perf_counter(),
             end_time=None,
             confident_api_key=self.confident_api_key,
+            metric_collection=metric_collection,
+            metrics=metrics,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -514,6 +520,20 @@ class TraceManager:
             else None
         )
 
+        trace_test_case = (
+            TraceSpanTestCase(
+                input=trace.llm_test_case.input,
+                actualOutput=trace.llm_test_case.actual_output,
+                expectedOutput=trace.llm_test_case.expected_output,
+                retrievalContext=trace.llm_test_case.retrieval_context,
+                context=trace.llm_test_case.context,
+                toolsCalled=trace.llm_test_case.tools_called,
+                expectedTools=trace.llm_test_case.expected_tools,
+            )
+            if trace.llm_test_case
+            else None
+        )
+
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -532,6 +552,10 @@ class TraceManager:
             output=trace.output,
             feedback=convert_feedback_to_api_feedback(
                 trace.feedback, trace_uuid=trace.uuid
+            ),
+            traceTestCase=trace_test_case,
+            metricCollection=(
+                trace.metric_collection if trace.llm_test_case else None
             ),
         )
 
@@ -580,11 +604,8 @@ class TraceManager:
             else None
         )
 
-        is_metric_strings = None
-        if span.metrics:
-            is_metric_strings = isinstance(span.metrics[0], str)
         span_test_case = (
-            SpanTestCase(
+            TraceSpanTestCase(
                 input=span.llm_test_case.input,
                 actualOutput=span.llm_test_case.actual_output,
                 expectedOutput=span.llm_test_case.expected_output,
@@ -596,6 +617,8 @@ class TraceManager:
             if span.llm_test_case
             else None
         )
+
+        print(span_test_case)
 
         # Create the base API span
         api_span = BaseApiSpan(
@@ -612,9 +635,7 @@ class TraceManager:
             metadata=span.metadata,
             error=span.error,
             spanTestCase=span_test_case,
-            metrics=(
-                span.metrics if is_metric_strings else None
-            ),  # only need metric name if online evals
+            metricCollection=span.metric_collection,
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
             ),
@@ -657,6 +678,7 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+        metric_collection: Optional[str] = None,
         _progress: Optional[Progress] = None,
         _pbar_callback_id: Optional[int] = None,
         **kwargs,
@@ -678,6 +700,7 @@ class Observer:
 
         self.name: str = self.observe_kwargs.get("name", func_name)
         self.metrics = metrics
+        self.metric_collection = metric_collection
         self.span_type: SpanType | str = (
             self.name if span_type is None else span_type
         )
@@ -700,7 +723,10 @@ class Observer:
             if current_trace:
                 self.trace_uuid = current_trace.uuid
             else:
-                trace = trace_manager.start_new_trace()
+                trace = trace_manager.start_new_trace(
+                    metric_collection=self.metric_collection,
+                    metrics=self.metrics,
+                )
                 self.trace_uuid = trace.uuid
                 current_trace_context.set(trace)
 
@@ -802,6 +828,7 @@ class Observer:
             "input": None,
             "output": None,
             "metrics": self.metrics,
+            "metric_collection": self.metric_collection,
         }
 
         if self.span_type == SpanType.AGENT.value:
@@ -902,7 +929,8 @@ class Observer:
 def observe(
     _func: Optional[Callable] = None,
     *,
-    metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+    metrics: Optional[List[BaseMetric]] = None,
+    metric_collection: Optional[str] = None,
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
@@ -940,6 +968,7 @@ def observe(
                 with Observer(
                     type,
                     metrics=metrics,
+                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:

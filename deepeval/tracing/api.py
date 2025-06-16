@@ -38,7 +38,7 @@ class MetricData(BaseModel):
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
 
 
-class SpanTestCase(BaseModel):
+class TraceSpanTestCase(BaseModel):
     input: str
     actual_output: str = Field(alias="actualOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
@@ -90,8 +90,10 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    span_test_case: Optional[SpanTestCase] = Field(None, alias="spanTestCase")
-    metrics: Optional[List[str]] = Field(None, alias="metrics")
+    span_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="spanTestCase"
+    )
+    metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
     ## human feedback
@@ -119,6 +121,13 @@ class TraceApi(BaseModel):
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
     feedback: Optional[APIFeedback] = Field(None)
+
+    # evals
+    trace_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="traceTestCase"
+    )
+    metric_collection: Optional[str] = Field(None, alias="metricCollection")
+    metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
 
 class RunThreadMetricApi(BaseModel):

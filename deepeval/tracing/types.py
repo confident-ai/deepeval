@@ -47,7 +47,8 @@ class BaseSpan(BaseModel):
     output: Optional[Any] = None
     error: Optional[str] = None
     llm_test_case: Optional[LLMTestCase] = None
-    metrics: Optional[Union[List[str], List[BaseMetric]]] = None
+    metrics: Optional[List[BaseMetric]] = None
+    metric_collection: Optional[str] = None
     feedback: Optional[Feedback] = None
 
     # Don't serialize these
@@ -112,6 +113,12 @@ class Trace(BaseModel):
     input: Optional[Any] = None
     output: Optional[Any] = None
     feedback: Optional[Feedback] = None
+    llm_test_case: Optional[LLMTestCase] = None
+    metrics: Optional[List[BaseMetric]] = None
+    metric_collection: Optional[str] = None
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
+
+    class Config:
+        arbitrary_types_allowed = True
