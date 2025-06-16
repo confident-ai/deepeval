@@ -58,7 +58,7 @@ An `@observe` decorator creates a **span**, and the overall collection of spans 
 <Tabs>
 <TabItem value="python" label="Python">
 
-```python title="somewhere.py" showLineNumbers {12,23}
+```python title="somewhere.py" showLineNumbers {15,26}
 from typing import List
 import openai
 
@@ -66,9 +66,12 @@ from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
+@observe()
 def your_llm_app(input: str):
-def retriever(input: str):
-return ["Hardcoded text chunks from your vector database"]
+
+    @observe()
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
 
     @observe(metrics=[AnswerRelevancyMetric()])
     def generator(input: str, retrieved_chunks: List[str]):
@@ -94,7 +97,7 @@ print(your_llm_app("How are you?"))
 
 <TabItem value="openai" label="OpenAI">
 
-```python title="somewhere.py" showLineNumbers {2,12}
+```python title="somewhere.py" showLineNumbers {2,22}
 from typing import List
 from deepeval.openai import openai
 
@@ -102,22 +105,24 @@ from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
+@observe()
 def your_llm_app(input: str):
-def retriever(input: str):
-return ["Hardcoded text chunks from your vector database"]
 
-    @observe(metrics=[AnswerRelevancyMetric()])
-    def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Use the provided context to answer the question."},
-                {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
-            ]
-        ).choices[0].message["content"]
-        return res
+    @observe()
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
 
-    return generator(input, retriever(input))
+    # DeepEval's OpenAI client handles test case creation
+    res = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "Use the provided context to answer the question."},
+            {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
+        ],
+        metrics=[AnswerRelevancyMetric()]
+    )
+
+    return res.choices[0].message.content
 
 print(your_llm_app("How are you?"))
 ```
