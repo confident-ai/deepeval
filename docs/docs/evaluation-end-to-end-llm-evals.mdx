@@ -132,34 +132,28 @@ evaluate(test_cases=test_cases, metrics=[AnswerRelevancyMetric()])
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-```python title="main.py" showLineNumbers {2,13,27}
-from typing import List
-from deepeval.openai import openai
+```python title="main.py" showLineNumbers {1,20}
+from deepeval.openai import OpenAI # import OpenAI from deepeval instead
 
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe
 from deepeval.dataset import Golden
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import evaluate
 
-def your_llm_app(input: str):
-    def retriever(input: str):
-        return ["Hardcoded text chunks from your vector database"]
+goldens = [Golden(input="...")]
+client = OpenAI()
 
-    @observe(metrics=[AnswerRelevancyMetric()])
-    def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "Use the provided context to answer the question."},
-                {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
-            ]
-        ).choices[0].message["content"]
-        return res
 
-    retrieval_context = retriever(input)
-    return generator(input, retrieval_context), retrieval_context
-
-evaluate(observed_callback=your_llm_app, goldens=[Golden("Hello, how are you?")])
+# Evaluate end-to-end
+for golden in goldens:
+    client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": golden.input}
+        ],
+        metrics=[AnswerRelevancyMetric()]
+    )
 ```
 
 </TabItem>
