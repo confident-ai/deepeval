@@ -259,9 +259,8 @@ def evaluate(
     elif test_cases and metrics:
         check_valid_test_cases_type(test_cases)
 
-        global_test_run_manager.reset(preserve_hyperparameters=True)
+        global_test_run_manager.reset()
         start_time = time.perf_counter()
-        
         if display_config.show_indicator:
             console = Console()
             for metric in metrics:
@@ -317,7 +316,7 @@ def evaluate(
                 )
 
         test_run = global_test_run_manager.get_test_run()
-        test_run.hyperparameters = process_hyperparameters(hyperparameters or test_run.hyperparameters)
+        test_run.hyperparameters = process_hyperparameters(hyperparameters)
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
         confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False
