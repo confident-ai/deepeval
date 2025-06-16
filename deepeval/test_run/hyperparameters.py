@@ -1,4 +1,4 @@
-from typing import Union, Any, Dict
+from typing import Union, Dict
 
 from deepeval.test_run import global_test_run_manager
 from deepeval.prompt import Prompt, PromptApi
