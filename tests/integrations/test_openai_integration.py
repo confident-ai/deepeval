@@ -45,7 +45,7 @@ CHAT_TOOLS = [{
     }
 }]
 
-completion_mode = "response"
+completion_mode = "chat"
 client = OpenAI()
 tools = CHAT_TOOLS if completion_mode == "chat" else COMPLETION_TOOLS
 
@@ -124,6 +124,6 @@ def test_traceable_evaluate():
 ##############################################
 
 if __name__ == "__main__":
-    # test_end_to_end_evaluation()
-    # test_traceable_evaluate()
-    # test_tracing()
+    test_end_to_end_evaluation()
+    test_traceable_evaluate()
+    test_tracing()

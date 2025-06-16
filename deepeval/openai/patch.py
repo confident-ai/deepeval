@@ -39,7 +39,7 @@ def patch_openai(openai_module):
             original_init(self, *args, **kwargs)
             wrap_openai_client_methods(self, is_async)
         openai_class.__init__ = new_init
-
+        
     openai_class = getattr(openai_module, "OpenAI", None)
     if openai_class:
         wrap_init(openai_class, is_async=False)

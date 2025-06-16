@@ -15,7 +15,7 @@ class TestCaseMetricPair:
     hyperparameters: Dict[str, Any]
 
 @dataclass
-class TestCasesMetricSet:
+class TestRunParameters:
     test_cases: List[LLMTestCase]
     metrics: List[BaseMetric]
     hyperparameters: Dict[str, Any]
@@ -44,12 +44,12 @@ def evaluate_sync():
     sync_config = AsyncConfig(run_async=False)
     if not test_case_pairs:
         return
-    grouped: Dict[str, TestCasesMetricSet] = {}
+    grouped: Dict[str, TestRunParameters] = {}
     for pair in test_case_pairs:
         if pair.metrics:
             key = "".join([metric.__name__ for metric in pair.metrics])
             if key not in grouped:
-                grouped[key] = TestCasesMetricSet(
+                grouped[key] = TestRunParameters(
                     test_cases=[pair.test_case], 
                     metrics=pair.metrics,
                     hyperparameters=pair.hyperparameters
