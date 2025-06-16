@@ -1,8 +1,6 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.tracing import observe
-from deepeval.dataset import Golden
 from deepeval.openai import OpenAI
-from deepeval import evaluate
+from deepeval.tracing import observe
 
 client = OpenAI()
 
@@ -31,8 +29,6 @@ def test_end_to_end_evaluation():
             metrics=[AnswerRelevancyMetric(), BiasMetric()],
         )
 
-# test_end_to_end_evaluation()
-
 
 ##############################################
 # Test tracing
@@ -50,27 +46,22 @@ def llm_app(input: str):
     )
     return response.choices[0].message.content
 
-def test_tracing():
-    llm_app("hi")
-    llm_app("hello")
-    llm_app("how are you?")
-    llm_app("what is the capital of France?")
-
-# test_tracing()
+llm_app("hi")
 
 ##############################################
-# Test traceable evaluate
+# Test tracing
 ##############################################
 
-def test_traceable_evaluate():
-    evaluate(
-        observed_callback=llm_app,
-        goldens=[
-            Golden(input="hi"),
-            Golden(input="hello"),
-            Golden(input="how are you?"),
-            Golden(input="what is the capital of France?"),
+@observe()
+def llm_app(input: str):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful chatbot."},
+            {"role": "user", "content": input},
         ],
+        metrics=[AnswerRelevancyMetric(), BiasMetric()],
     )
+    return response.choices[0].message.content
 
-test_traceable_evaluate()
+llm_app("hi")

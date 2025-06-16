@@ -86,7 +86,7 @@ def generate_patched_openai_method(
             is_observed = len(trace_manager.traces) > 0
 
             if is_observed:
-                @observe(type="llm", model=input_parameters.model)
+                @observe(type="llm", model=input_parameters.model, metrics=metrics)
                 async def llm_generation(*args, **kwargs):
                     response = await orig_method(*args, **kwargs)
                     output_parameters = extract_output_parameters(is_completion_method, response, input_parameters)
@@ -143,7 +143,7 @@ def generate_patched_openai_method(
             is_observed = len(trace_manager.traces) > 0
 
             if is_observed:
-                @observe(type="llm", model=input_parameters.model)
+                @observe(type="llm", model=input_parameters.model, metrics=metrics)
                 def llm_generation(*args, **kwargs):
                     response = orig_method(*args, **kwargs)
                     output_parameters = extract_output_parameters(is_completion_method, response, input_parameters)
