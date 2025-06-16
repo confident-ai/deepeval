@@ -3,12 +3,12 @@ from functools import wraps
 import inspect
 import uuid
 
-from deepeval.openai.evaluate import log_hyperparameters, add_test_case
 from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
 from deepeval.openai.utils import get_attr_path, set_attr_path
 from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.tracing import trace_manager, observe
 from deepeval.metrics.base_metric import BaseMetric
+from deepeval.openai.evaluate import add_test_case
 
 from deepeval.tracing.types import (
     TraceSpanStatus,
@@ -113,7 +113,6 @@ def generate_patched_openai_method(
                 return await llm_generation(*args, **kwargs)
             else:
                 response = await orig_method(*args, **kwargs)
-                log_hyperparameters(input_parameters)
                 output_parameters = extract_output_parameters(is_completion_method, response, input_parameters)
                 test_case = LLMTestCase(
                     input=input_parameters.input,
@@ -124,7 +123,7 @@ def generate_patched_openai_method(
                     tools_called=output_parameters.tools_called,
                     expected_tools=expected_tools
                 )
-                add_test_case(test_case=test_case, metrics=metrics)
+                add_test_case(test_case=test_case, metrics=metrics, input_parameters=input_parameters)
                 return response
 
         return patched_async_openai_method
@@ -171,7 +170,6 @@ def generate_patched_openai_method(
                 return llm_generation(*args, **kwargs)
             else:
                 response = orig_method(*args, **kwargs)
-                log_hyperparameters(input_parameters)
                 output_parameters = extract_output_parameters(is_completion_method, response, input_parameters)
                 test_case = LLMTestCase(
                     input=input_parameters.input,
@@ -182,7 +180,7 @@ def generate_patched_openai_method(
                     tools_called=output_parameters.tools_called,
                     expected_tools=expected_tools
                 )
-                add_test_case(test_case=test_case, metrics=metrics)
+                add_test_case(test_case=test_case, metrics=metrics, input_parameters=input_parameters)
                 return response
 
         return patched_sync_openai_method

@@ -1,31 +1,41 @@
-from ast import keyword
+from dataclasses import dataclass
+from typing import List, Dict, Any
 import asyncio
 import atexit
-from dataclasses import dataclass
-from typing import List, Optional, Dict
-from collections import defaultdict
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import BaseMetric
+
 from deepeval.openai.extractors import InputParameters
-from deepeval.test_run import auto_log_hyperparameters
+from deepeval.test_case import LLMTestCase
 from deepeval.evaluate import AsyncConfig
+from deepeval.metrics import BaseMetric
+from deepeval import evaluate
 
 @dataclass
 class TestCaseMetricPair:
     test_case: LLMTestCase
     metrics: List[BaseMetric]
+    hyperparameters: Dict[str, Any]
 
 @dataclass
 class TestCasesMetricSet:
     test_cases: List[LLMTestCase]
     metrics: List[BaseMetric]
+    hyperparameters: Dict[str, Any]
 
 test_case_pairs: List[TestCaseMetricPair] = []
 
 
-def add_test_case(test_case: LLMTestCase, metrics: List[BaseMetric]):
-    test_case_pairs.append(TestCaseMetricPair(test_case=test_case, metrics=metrics))
+def add_test_case(
+    test_case: LLMTestCase, 
+    metrics: List[BaseMetric],
+    input_parameters: InputParameters,
+):
+    test_case_pairs.append(
+        TestCaseMetricPair(
+            test_case=test_case, 
+            metrics=metrics,
+            hyperparameters=create_hyperparameters_map(input_parameters)
+        )
+    )
 
 ##############################################
 # Evaluation
@@ -41,13 +51,17 @@ async def evaluate_async():
             if key not in grouped:
                 grouped[key] = TestCasesMetricSet(
                     test_cases=[pair.test_case], 
-                    metrics=pair.metrics
+                    metrics=pair.metrics,
+                    hyperparameters=pair.hyperparameters
                 )
             else:
                 grouped[key].test_cases.append(pair.test_case)
     for key, cases in grouped.items():
-        evaluate(test_cases=cases.test_cases, metrics=cases.metrics)
-
+        evaluate(
+            test_cases=cases.test_cases, 
+            metrics=cases.metrics, 
+            hyperparameters=cases.hyperparameters
+        )
 
 def evaluate_sync():
     sync_config = AsyncConfig(run_async=False)
@@ -60,12 +74,18 @@ def evaluate_sync():
             if key not in grouped:
                 grouped[key] = TestCasesMetricSet(
                     test_cases=[pair.test_case], 
-                    metrics=pair.metrics
+                    metrics=pair.metrics,
+                    hyperparameters=pair.hyperparameters
                 )
             else:
                 grouped[key].test_cases.append(pair.test_case)
     for key, cases in grouped.items():
-        evaluate(test_cases=cases.test_cases, metrics=cases.metrics, async_config=sync_config)
+        evaluate(
+            test_cases=cases.test_cases, 
+            metrics=cases.metrics, 
+            hyperparameters=cases.hyperparameters, 
+            async_config=sync_config
+        )
 
 @atexit.register
 def run_evaluations_atexit():
@@ -80,11 +100,12 @@ def run_evaluations_atexit():
         except Exception as e:
             print("⚠️ Could not schedule async evaluation in atexit: ", e)
 
+
 ##############################################
 # Hyperparameters
 ##############################################
 
-def log_hyperparameters(input_parameters: InputParameters):
+def create_hyperparameters_map(input_parameters: InputParameters):
     hyperparameters = {"model": input_parameters.model}
     if input_parameters.instructions:
         hyperparameters["system_prompt"] = input_parameters.instructions
@@ -94,4 +115,4 @@ def log_hyperparameters(input_parameters: InputParameters):
             hyperparameters["system_prompt"] = (
                 system_messages[0] if len(system_messages) == 1 else str(system_messages)
             )
-    auto_log_hyperparameters(hyperparameters)
+    return hyperparameters
