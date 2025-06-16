@@ -1,7 +1,8 @@
+from ast import keyword
 import asyncio
 import atexit
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Dict
 from collections import defaultdict
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
@@ -15,14 +16,73 @@ class TestCaseMetricPair:
     test_case: LLMTestCase
     metrics: List[BaseMetric]
 
+@dataclass
+class TestCasesMetricSet:
+    test_cases: List[LLMTestCase]
+    metrics: List[BaseMetric]
+
 test_case_pairs: List[TestCaseMetricPair] = []
 
-##############################################
-# Test Case Registration
-##############################################
 
 def add_test_case(test_case: LLMTestCase, metrics: List[BaseMetric]):
     test_case_pairs.append(TestCaseMetricPair(test_case=test_case, metrics=metrics))
+
+##############################################
+# Evaluation
+##############################################
+
+async def evaluate_async():
+    if not test_case_pairs:
+        return
+    grouped: Dict[str, TestCasesMetricSet] = {}
+    for pair in test_case_pairs:
+        if pair.metrics:
+            key = "".join([metric.__name__ for metric in pair.metrics])
+            if key not in grouped:
+                grouped[key] = TestCasesMetricSet(
+                    test_cases=[pair.test_case], 
+                    metrics=pair.metrics
+                )
+            else:
+                grouped[key].test_cases.append(pair.test_case)
+    for key, cases in grouped.items():
+        evaluate(test_cases=cases.test_cases, metrics=cases.metrics)
+
+
+def evaluate_sync():
+    sync_config = AsyncConfig(run_async=False)
+    if not test_case_pairs:
+        return
+    grouped: Dict[str, TestCasesMetricSet] = {}
+    for pair in test_case_pairs:
+        if pair.metrics:
+            key = "".join([metric.__name__ for metric in pair.metrics])
+            if key not in grouped:
+                grouped[key] = TestCasesMetricSet(
+                    test_cases=[pair.test_case], 
+                    metrics=pair.metrics
+                )
+            else:
+                grouped[key].test_cases.append(pair.test_case)
+    for key, cases in grouped.items():
+        evaluate(test_cases=cases.test_cases, metrics=cases.metrics, async_config=sync_config)
+
+@atexit.register
+def run_evaluations_atexit():
+    if test_case_pairs:
+        try:
+            loop = asyncio.get_event_loop()
+            loop_is_running =  loop.is_running()
+            if loop_is_running:
+                loop.create_task(evaluate_async())
+            else:
+                evaluate_sync()
+        except Exception as e:
+            print("⚠️ Could not schedule async evaluation in atexit: ", e)
+
+##############################################
+# Hyperparameters
+##############################################
 
 def log_hyperparameters(input_parameters: InputParameters):
     hyperparameters = {"model": input_parameters.model}
@@ -35,54 +95,3 @@ def log_hyperparameters(input_parameters: InputParameters):
                 system_messages[0] if len(system_messages) == 1 else str(system_messages)
             )
     auto_log_hyperparameters(hyperparameters)
-
-
-##############################################
-# Async Evaluation Function
-##############################################
-
-async def evaluate_async():
-    if not test_case_pairs:
-        return
-    grouped = defaultdict(list)
-    for pair in test_case_pairs:
-        if pair.metrics:
-            grouped[frozenset(pair.metrics)].append(pair.test_case)
-    for metric_set, cases in grouped.items():
-        evaluate(test_cases=cases, metrics=list(metric_set))
-
-def evaluate_sync():
-    sync_config = AsyncConfig(run_async=False)
-    if not test_case_pairs:
-        return
-    grouped = defaultdict(list)
-    for pair in test_case_pairs:
-        if pair.metrics:
-            key_list = []
-            print(pair.metrics)
-            for metric in pair.metrics:
-                key_list.append(metric.__class__)
-            print(key_list)
-            print("======\n"*10)
-            key = str(key_list.sort())
-            grouped[key].append(pair.test_case)
-    for metric_set, cases in grouped.items():
-        evaluate(test_cases=cases, metrics=list(metric_set), async_config=sync_config)
-
-
-##############################################
-# Fallback Atexit (non-blocking best-effort)
-##############################################
-
-@atexit.register
-def _schedule_if_loop_is_alive():
-    try:
-        loop = asyncio.get_event_loop()
-        loop_is_running =  loop.is_running()
-        if loop_is_running:
-            loop.create_task(evaluate_async())
-        else:
-            evaluate_sync()
-    except Exception as e:
-        print(e)
-        print("⚠️ Could not schedule async evaluation in atexit.")
