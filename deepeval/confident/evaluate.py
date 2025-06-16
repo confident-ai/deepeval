@@ -2,7 +2,7 @@ import time
 from typing import List, Optional, Union
 import webbrowser
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
 from deepeval.confident.api import (
     Api,
@@ -30,6 +30,7 @@ def confident_evaluate(
         response = None
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
+            BarColumn(bar_width=60),
             TextColumn("[progress.description]{task.description}"),
             transient=False,
         ) as progress:

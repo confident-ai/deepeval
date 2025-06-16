@@ -23,6 +23,7 @@ module.exports = {
         "models/vertex-ai",
         "models/vllm",
         "models/lmstudio",
+        "models/litellm",
       ],
       collapsed: true,
     },

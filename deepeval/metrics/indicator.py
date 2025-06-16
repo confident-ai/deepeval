@@ -1,11 +1,10 @@
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from contextlib import contextmanager
 import sys
 from typing import List, Optional, Union
 import time
 import asyncio
-from tqdm.asyncio import tqdm_asyncio
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import (
@@ -50,6 +49,7 @@ def metric_progress_indicator(
         if _show_indicator:
             with Progress(
                 SpinnerColumn(style="rgb(106,0,255)"),
+                BarColumn(bar_width=60),
                 TextColumn("[progress.description]{task.description}"),
                 console=console,  # Use the custom console
                 transient=transient,
@@ -160,6 +160,7 @@ async def measure_metrics_with_indicator(
     if show_indicator:
         with Progress(
             SpinnerColumn(style="rgb(106,0,255)"),
+            BarColumn(bar_width=60),
             TextColumn("[progress.description]{task.description}"),
             transient=False,
         ) as progress:

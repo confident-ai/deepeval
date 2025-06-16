@@ -138,8 +138,8 @@ class LLMTestCase:
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
     additional_metadata: Optional[Dict] = None
-    comments: Optional[str] = None
     tools_called: Optional[List[ToolCall]] = None
+    comments: Optional[str] = None
     expected_tools: Optional[List[ToolCall]] = None
     token_cost: Optional[float] = None
     completion_time: Optional[float] = None

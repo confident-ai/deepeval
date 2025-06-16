@@ -5,8 +5,7 @@ import re
 # Optionally add telemetry
 from ._version import __version__
 
-from deepeval.event import track
-from deepeval.monitor import monitor, a_monitor, send_feedback, a_send_feedback
+from deepeval.feedback import collect_feedback, a_collect_feedback
 from deepeval.evaluate import evaluate, assert_test
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
@@ -22,10 +21,8 @@ __all__ = [
     "login_with_confident_api_key",
     "log_hyperparameters",
     "track",
-    "monitor",
-    "a_monitor",
-    "a_send_feedback",
-    "send_feedback",
+    "a_collect_feedback",
+    "collect_feedback",
     "evaluate",
     "assert_test",
     "on_test_run_end",
@@ -70,6 +67,10 @@ def check_for_update():
 
 def update_warning_opt_in():
     return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_IN") == "YES"
+
+
+def is_read_only_env():
+    return os.getenv("DEEPEVAL_FILE_SYSTEM") == "READ_ONLY"
 
 
 if update_warning_opt_in():

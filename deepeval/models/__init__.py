@@ -12,6 +12,7 @@ from deepeval.models.llms import (
     AnthropicModel,
     GeminiModel,
     AmazonBedrockModel,
+    LiteLLMModel,
 )
 from deepeval.models.mlllms import (
     MultimodalOpenAIModel,

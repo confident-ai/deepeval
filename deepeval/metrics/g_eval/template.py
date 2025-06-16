@@ -35,9 +35,14 @@ JSON:
             "evaluation steps and rubric" if rubric else "evaluation steps"
         )
         score_explanation = (
-            "according to the rubric provided"
+            "based on the rubric provided"
             if rubric
-            else f"with {score_range[1]} being that it follows the criteria outlined in the steps and {score_range[0]} being that it does not"
+            else f"with {score_range[1]} indicating strong alignment with the evaluation steps and {score_range[0]} indicating no alignment"
+        )
+        reasoning_expectation = (
+            "Be specific and grounded in the evaluation steps and rubric."
+            if rubric
+            else "Be specific and grounded in the evaluation steps."
         )
         additional_context = (
             f"\n\nAdditional Context:\n{_additional_context}\n"
@@ -45,27 +50,40 @@ JSON:
             else ""
         )
 
-        return f"""Given the {dependencies}, return a JSON with two keys: 1) a `score` key ranging from {score_range[0]} to {score_range[1]}, {score_explanation}, and 2) a `reason` key, a reason for the given score, but DO NOT QUOTE THE SCORE in your reason. Please mention specific information from {parameters} in your reason, but be very concise with it!
+        return f"""You are an evaluator. Given the following {dependencies}, assess the response below and return a JSON object with two fields:
 
-Evaluation Steps:
-{evaluation_steps}
+    - `"score"`: an integer between {score_range[0]} and {score_range[1]}, {score_explanation}.
+    - `"reason"`: a brief explanation for why the score was given. This must mention specific strengths or shortcomings, referencing relevant details from the input. Do **not** quote the score itself in the explanation.
 
-{rubric_text}
+    Your explanation should:
+    - {reasoning_expectation}
+    - Mention key details from the test case parameters.
+    - Be concise, clear, and focused on the evaluation logic.
 
-{test_case_content}
-{additional_context}
-**
-IMPORTANT: Please make sure to only return in JSON format, with the "score" and "reason" key. No words or explanation is needed.
+    Only return valid JSON. Do **not** include any extra commentary or text.
 
-Example JSON:
-{{
-    "score": {score_range[0]},
-    "reason": "The text does not follow the evaluation steps provided."
-}}
-**
+    ---
 
-JSON:
-"""
+    Evaluation Steps:
+    {evaluation_steps}
+
+    {rubric_text}
+    Test Case:
+    {test_case_content}
+
+    Parameters:
+    {parameters}
+    {additional_context}
+
+    ---
+    **Example JSON:**
+    {{
+        "score": {score_range[0]},
+        "reason": "your concise and informative reason here"
+    }}
+
+    JSON:
+    """
 
     @staticmethod
     def generate_strict_evaluation_results(

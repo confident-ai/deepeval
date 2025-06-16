@@ -11,8 +11,12 @@ from deepeval.utils import (
     add_pbar,
     remove_pbars,
 )
-from deepeval.metrics.utils import initialize_model, trimAndLoadJson
-from deepeval.test_case import ConversationalTestCase, LLMTestCase
+from deepeval.metrics.utils import (
+    convert_turn_to_dict,
+    initialize_model,
+    trimAndLoadJson,
+)
+from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.conversation_simulator.template import (
     ConversationSimulatorTemplate,
 )
@@ -249,7 +253,7 @@ class ConversationSimulator:
         # add pbar
         pbar_conversation_id = add_pbar(
             progress,
-            f"\t⚡ Generating test case #{conversation_index}",
+            f"\t⚡ Test case #{conversation_index}",
             total=pbar_conversation_length,
         )
         pbar_generating_scenario_id = add_pbar(
@@ -259,7 +263,7 @@ class ConversationSimulator:
         )
         pbar_turns_id = add_pbar(
             progress,
-            f"\t\t💬 Simulating conversation",
+            f"\t\t💬 Conversing",
             total=pbar_turns_length,
         )
 
@@ -274,7 +278,7 @@ class ConversationSimulator:
         }
         model_callback_kwargs = {}
 
-        turns = []
+        turns: List[Turn] = []
         user_input = None
         conversation_history = None
 
@@ -282,7 +286,7 @@ class ConversationSimulator:
             if turn_index == 0 and self.opening_message:
                 # Add optional opening message from chatbot
                 turns.append(
-                    LLMTestCase(input="", actual_output=self.opening_message)
+                    Turn(role="assistant", content=self.opening_message)
                 )
 
             if turn_index == 0:
@@ -293,7 +297,9 @@ class ConversationSimulator:
                 update_pbar(progress, pbar_turns_id, remove=False)
             else:
                 # Generate next user input based on conversation so far
-                conversation_history = self._format_conversational_turns(turns)
+                conversation_history = json.dumps(
+                    [convert_turn_to_dict(turn) for turn in turns], indent=4
+                )
 
                 # Check if conversation should stop early
                 prompt = (
@@ -354,7 +360,7 @@ class ConversationSimulator:
                         user_input = data["simulated_input"]
                 update_pbar(progress, pbar_turns_id, remove=False)
 
-            actual_output, new_model_callback_kwargs = (
+            ai_output, new_model_callback_kwargs = (
                 self._generate_chatbot_response(
                     user_input,
                     model_callback=model_callback,
@@ -365,9 +371,15 @@ class ConversationSimulator:
             update_pbar(progress, pbar_turns_id, remove=False)
             model_callback_kwargs = new_model_callback_kwargs
             turns.append(
-                LLMTestCase(
-                    input=user_input,
-                    actual_output=actual_output,
+                Turn(
+                    role="user",
+                    content=user_input,
+                )
+            )
+            turns.append(
+                Turn(
+                    role="assistant",
+                    content=ai_output,
                     additional_metadata=additional_metadata,
                 )
             )
@@ -476,7 +488,7 @@ class ConversationSimulator:
         # add pbar
         pbar_conversation_id = add_pbar(
             progress,
-            f"\t⚡ Generating test case #{conversation_index}",
+            f"\t⚡ Test case #{conversation_index}",
             total=pbar_conversation_length,
         )
         pbar_generating_scenario_id = add_pbar(
@@ -486,7 +498,7 @@ class ConversationSimulator:
         )
         pbar_turns_id = add_pbar(
             progress,
-            f"\t\t💬 Simulating conversation",
+            f"\t\t💬 Conversing with AI",
             total=pbar_turns_length,
         )
 
@@ -501,14 +513,14 @@ class ConversationSimulator:
         }
         model_callback_kwargs = {}
 
-        turns = []
+        turns: List[Turn] = []
         user_input = None
         conversation_history = None
 
         for turn_index in range(num_turns):
             if turn_index == 0 and self.opening_message:
                 turns.append(
-                    LLMTestCase(input="", actual_output=self.opening_message)
+                    Turn(role="assistant", content=self.opening_message)
                 )
             if turn_index == 0:
                 user_input = await self._a_simulate_first_user_input(
@@ -518,7 +530,9 @@ class ConversationSimulator:
 
             else:
                 # Generate next user input based on conversation so far
-                conversation_history = self._format_conversational_turns(turns)
+                conversation_history = json.dumps(
+                    [convert_turn_to_dict(turn) for turn in turns], indent=4
+                )
 
                 # Check if conversation should stop early
                 prompt = (
@@ -581,7 +595,7 @@ class ConversationSimulator:
 
                 user_input = res.simulated_input
 
-            actual_output, new_model_callback_kwargs = (
+            ai_output, new_model_callback_kwargs = (
                 await self._a_generate_chatbot_response(
                     user_input,
                     model_callback=model_callback,
@@ -592,9 +606,15 @@ class ConversationSimulator:
             update_pbar(progress, pbar_turns_id, remove=False)
             model_callback_kwargs = new_model_callback_kwargs
             turns.append(
-                LLMTestCase(
-                    input=user_input,
-                    actual_output=actual_output,
+                Turn(
+                    role="user",
+                    content=user_input,
+                )
+            )
+            turns.append(
+                Turn(
+                    role="assistant",
+                    content=ai_output,
                     additional_metadata=additional_metadata,
                 )
             )
@@ -657,17 +677,3 @@ class ConversationSimulator:
             return res, {}
         elif type(res) is tuple:
             return res[0], res[1]
-
-    def _format_conversational_turns(self, turns: List[LLMTestCase]) -> str:
-        formatted_turns = []
-
-        for i in range(len(turns)):
-            turn = turns[i]
-            if not (i == 0 and turn.input == ""):
-                formatted_turns.append({"role": "user", "content": turn.input})
-
-            formatted_turns.append(
-                {"role": "assistant", "content": turn.actual_output}
-            )
-
-        return json.dumps(formatted_turns, indent=4)

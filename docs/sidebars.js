@@ -82,6 +82,7 @@ module.exports = {
               type: "category",
               label: "Multimodal Metrics",
               items: [
+                "multimodal-metrics-g-eval",
                 "multimodal-metrics-image-coherence",
                 "multimodal-metrics-image-helpfulness",
                 "multimodal-metrics-image-reference",

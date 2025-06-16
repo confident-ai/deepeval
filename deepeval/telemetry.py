@@ -17,6 +17,7 @@ class Feature(Enum):
     REDTEAMING = "redteaming"
     SYNTHESIZER = "synthesizer"
     EVALUATION = "evaluation"
+    COMPONENT_EVALUATION = "component_evaluation"
     GUARDRAIL = "guardrail"
     BENCHMARK = "benchmark"
     CONVERSATION_SIMULATOR = "conversation_simulator"
@@ -27,30 +28,7 @@ TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
 TELEMETRY_PATH = os.path.join(HIDDEN_DIR, TELEMETRY_DATA_FILE)
 
 #########################################################
-### Move Folders ########################################
-#########################################################
-
-if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
-    temp_deepeval_file_name = ".deepeval_temp"
-    os.rename(KEY_FILE, temp_deepeval_file_name)
-    os.makedirs(HIDDEN_DIR, exist_ok=True)
-    os.rename(temp_deepeval_file_name, os.path.join(HIDDEN_DIR, KEY_FILE))
-
-os.makedirs(HIDDEN_DIR, exist_ok=True)
-
-if os.path.exists(TELEMETRY_DATA_FILE):
-    os.rename(TELEMETRY_DATA_FILE, TELEMETRY_PATH)
-
-if os.path.exists(".deepeval-cache.json"):
-    os.rename(".deepeval-cache.json", f"{HIDDEN_DIR}/.deepeval-cache.json")
-
-if os.path.exists(".temp_test_run_data.json"):
-    os.rename(
-        ".temp_test_run_data.json", f"{HIDDEN_DIR}/.temp_test_run_data.json"
-    )
-
-#########################################################
-### Telemetry Config ####################################
+### Telemetry HELPERS ###################################
 #########################################################
 
 
@@ -75,6 +53,33 @@ def get_anonymous_public_ip():
         pass
     return None
 
+
+#########################################################
+### Move Folders ########################################
+#########################################################
+if not telemetry_opt_out():
+    if os.path.exists(KEY_FILE) and not os.path.isdir(HIDDEN_DIR):
+        temp_deepeval_file_name = ".deepeval_temp"
+        os.rename(KEY_FILE, temp_deepeval_file_name)
+        os.makedirs(HIDDEN_DIR, exist_ok=True)
+        os.rename(temp_deepeval_file_name, os.path.join(HIDDEN_DIR, KEY_FILE))
+
+    os.makedirs(HIDDEN_DIR, exist_ok=True)
+
+    if os.path.exists(TELEMETRY_DATA_FILE):
+        os.rename(TELEMETRY_DATA_FILE, TELEMETRY_PATH)
+
+    if os.path.exists(".deepeval-cache.json"):
+        os.rename(".deepeval-cache.json", f"{HIDDEN_DIR}/.deepeval-cache.json")
+
+    if os.path.exists(".temp_test_run_data.json"):
+        os.rename(
+            ".temp_test_run_data.json", f"{HIDDEN_DIR}/.temp_test_run_data.json"
+        )
+
+#########################################################
+### Telemetry Config ####################################
+#########################################################
 
 anonymous_public_ip = None
 
@@ -166,17 +171,29 @@ def capture_evaluation_run(type: str):
         # data
         event = f"Ran {type}"
         distinct_id = get_unique_id()
+        feature = (
+            Feature.COMPONENT_EVALUATION
+            if event == "Ran traceable evaluate()"
+            else Feature.EVALUATION
+        )
         properties = {
             "logged_in_with": get_logged_in_with(),
             "environment": IS_RUNNING_IN_JUPYTER,
             "user.status": get_status(),
             "user.unique_id": get_unique_id(),
-            "feature_status.evaluation": get_feature_status(Feature.EVALUATION),
             "user.public_ip": (
                 anonymous_public_ip if anonymous_public_ip else "Unknown"
             ),
         }
-        set_last_feature(Feature.EVALUATION)
+        if feature == Feature.EVALUATION:
+            properties["feature_status.evaluation"] = get_feature_status(
+                feature
+            )
+        elif feature == Feature.COMPONENT_EVALUATION:
+            properties["feature_status.component_evaluation"] = (
+                get_feature_status(feature)
+            )
+        set_last_feature(feature)
         # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties

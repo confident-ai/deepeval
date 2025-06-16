@@ -57,6 +57,7 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
 )
+from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
 
@@ -90,6 +91,7 @@ class TraceManager:
 
         self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
         validate_sampling_rate(self.sampling_rate)
+        self.openai_client = None
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -100,7 +102,7 @@ class TraceManager:
         remaining_tasks = queue_size + in_flight
         if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES" and remaining_tasks > 0:
             self._print_trace_status(
-                message=f"WARNING: Exiting with {queue_size + in_flight} trace(s) remaining to be posted.",
+                message=f"WARNING: Exiting with {queue_size + in_flight} abaonded trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
                 description=f"Set {CONFIDENT_TRACE_FLUSH}=YES as an environment variable to flush remaining traces to Confident AI.",
             )
@@ -130,6 +132,7 @@ class TraceManager:
         if confident_api_key is not None:
             self.confident_api_key = confident_api_key
         if openai_client is not None:
+            self.openai_client = openai_client
             patch_openai_client(openai_client)
 
     def start_new_trace(self) -> Trace:
@@ -568,6 +571,8 @@ class TraceManager:
             traceTestCase=trace_test_case,
             metrics=(
                 trace.metrics if is_metric_strings else None
+            feedback=convert_feedback_to_api_feedback(
+                trace.feedback, trace_uuid=trace.uuid
             ),
         )
 
@@ -651,6 +656,9 @@ class TraceManager:
             metrics=(
                 span.metrics if is_metric_strings else None
             ),  # only need metric name if online evals
+            feedback=convert_feedback_to_api_feedback(
+                span.feedback, span_uuid=span.uuid
+            ),
         )
 
         # Add type-specific attributes
@@ -690,7 +698,6 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
-        client: Optional[Any] = None,
         _progress: Optional[Progress] = None,
         _pbar_callback_id: Optional[int] = None,
         **kwargs,
@@ -715,7 +722,6 @@ class Observer:
         self.span_type: SpanType | str = (
             self.name if span_type is None else span_type
         )
-        self.client = client
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
 
@@ -851,8 +857,10 @@ class Observer:
             )
         elif self.span_type == SpanType.LLM.value:
             model = self.observe_kwargs.get("model", None)
-            if model is None and self.client is None:
-                raise ValueError("model or client is required for LlmSpan")
+            if model is None and not trace_manager.openai_client:
+                raise ValueError(
+                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/llm-tracing/integrations/openai"
+                )
             return LlmSpan(**span_kwargs, attributes=None, model=model)
         elif self.span_type == SpanType.RETRIEVER.value:
             embedder = self.observe_kwargs.get("embedder", None)
@@ -939,7 +947,6 @@ def observe(
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
-    client: Optional[Any] = None,
     **observe_kwargs,
 ):
     """
@@ -975,7 +982,6 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
-                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function
@@ -1004,7 +1010,6 @@ def observe(
                     type,
                     metrics=metrics,
                     func_name=func_name,
-                    client=client,
                     **observer_kwargs,
                 ) as observer:
                     # Call the original function

@@ -1,13 +1,30 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Literal
 from copy import deepcopy
+from enum import Enum
 
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import ToolCall
+
+
+class TurnParams(Enum):
+    CONTENT = "content"
+    RETRIEVAL_CONTEXT = "retrieval_context"
+    TOOLS_CALLED = "tools_called"
+
+
+@dataclass
+class Turn:
+    role: Literal["user", "assistant"]
+    content: str
+    user_id: Optional[str] = None
+    retrieval_context: Optional[List[str]] = None
+    tools_called: Optional[List[ToolCall]] = None
+    additional_metadata: Optional[Dict] = None
 
 
 @dataclass
 class ConversationalTestCase:
-    turns: List[LLMTestCase]
+    turns: List[Turn]
     chatbot_role: Optional[str] = None
     name: Optional[str] = field(default=None)
     additional_metadata: Optional[Dict] = None
@@ -22,8 +39,8 @@ class ConversationalTestCase:
 
         copied_turns = []
         for turn in self.turns:
-            if not isinstance(turn, LLMTestCase):
-                raise TypeError("'turns' must be a list of `LLMTestCases`")
+            if not isinstance(turn, Turn):
+                raise TypeError("'turns' must be a list of `Turn`s")
             copied_turns.append(deepcopy(turn))
 
         self.turns = copied_turns

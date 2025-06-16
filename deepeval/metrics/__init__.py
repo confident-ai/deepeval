@@ -42,4 +42,5 @@ from .multimodal_metrics import (
     MultimodalAnswerRelevancyMetric,
     MultimodalFaithfulnessMetric,
     MultimodalToolCorrectnessMetric,
+    MultimodalGEval,
 )

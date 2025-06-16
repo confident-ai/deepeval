@@ -25,7 +25,7 @@ def parse_model_name(model_name: Optional[str] = None) -> str:
     if model_name is None:
         return None
 
-    if "/" in model_name:
-        _, parsed_model_name = model_name.split("/", 1)
-        return parsed_model_name
+    # if "/" in model_name:
+    #     _, parsed_model_name = model_name.split("/", 1)
+    #     return parsed_model_name
     return model_name

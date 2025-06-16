@@ -2,9 +2,15 @@ from typing import Optional, List, Callable, Union, Dict
 import os, time
 
 
+from deepeval.test_case.conversational_test_case import Turn
+from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import (
+    BaseMetric,
+    BaseConversationalMetric,
+    BaseMultimodalMetric,
+)
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
@@ -96,13 +102,21 @@ def create_test_result(
             )
 
 
+def create_api_turn(turn: Turn, index: int) -> TurnApi:
+    return TurnApi(
+        role=turn.role,
+        content=turn.content,
+        retrieval_context=turn.retrieval_context,
+        tools_called=turn.tools_called,
+        additional_metadata=turn.additional_metadata,
+        order=index,
+    )
+
+
 def create_api_test_case(
     test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
     trace: Optional[TraceApi] = None,
     index: Optional[int] = None,
-    conversational_instance_id: Optional[int] = None,
-    additional_metadata: Optional[Dict] = None,
-    comments: Optional[str] = None,
 ) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
     if isinstance(test_case, ConversationalTestCase):
         order = (
@@ -127,43 +141,29 @@ def create_api_test_case(
             testCases=[],
             additionalMetadata=test_case.additional_metadata,
         )
-        api_test_case.instance_id = id(api_test_case)
+        # api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [
-            create_api_test_case(
-                test_case=turn,
+            create_api_turn(
+                turn=turn,
                 index=index,
-                conversational_instance_id=api_test_case.instance_id,
-                additional_metadata=turn.additional_metadata,
-                comments=turn.comments,
             )
             for index, turn in enumerate(test_case.turns)
         ]
 
         return api_test_case
     else:
-        if conversational_instance_id:
-            success = None
-            name = f"turn_{index}"
-            order = index
+        order = (
+            test_case._dataset_rank
+            if test_case._dataset_rank is not None
+            else index
+        )
 
-            # Manually set the metadata and comments on conversational test case
-            # to each individual message (test case)
-            test_case.additional_metadata = additional_metadata
-            test_case.comments = comments
-            metrics_data = None
+        success = True
+        if test_case.name is not None:
+            name = test_case.name
         else:
-            order = (
-                test_case._dataset_rank
-                if test_case._dataset_rank is not None
-                else index
-            )
-
-            success = True
-            if test_case.name is not None:
-                name = test_case.name
-            else:
-                name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
-            metrics_data = []
+            name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
+        metrics_data = []
 
         if isinstance(test_case, LLMTestCase):
             api_test_case = LLMApiTestCase(
@@ -184,7 +184,6 @@ def create_api_test_case(
                 order=order,
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
-                conversational_instance_id=conversational_instance_id,
                 trace=trace,
             )
         elif isinstance(test_case, MLLMTestCase):
@@ -203,7 +202,6 @@ def create_api_test_case(
                 order=order,
                 additionalMetadata=test_case.additional_metadata,
                 comments=test_case.comments,
-                conversational_instance_id=conversational_instance_id,
             )
         # llm_test_case_lookup_map[instance_id] = api_test_case
         return api_test_case
@@ -245,10 +243,19 @@ def validate_assert_test_inputs(
 def validate_evaluate_inputs(
     goldens: Optional[List] = None,
     observed_callback: Optional[Callable] = None,
-    test_cases: Optional[List] = None,
-    metrics: Optional[List] = None,
+    test_cases: Optional[
+        Union[
+            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+        ]
+    ] = None,
+    metrics: Optional[
+        Union[
+            List[BaseMetric],
+            List[BaseConversationalMetric],
+            List[BaseMultimodalMetric],
+        ]
+    ] = None,
 ):
-
     if goldens and observed_callback:
         if not getattr(observed_callback, "_is_deepeval_observed", False):
             raise ValueError(
@@ -272,6 +279,29 @@ def validate_evaluate_inputs(
         raise ValueError(
             "You must provide either goldens with a 'observed_callback', or test_cases with 'metrics'."
         )
+
+    if test_cases and metrics:
+        for test_case in test_cases:
+            for metric in metrics:
+                if isinstance(test_case, LLMTestCase) and not isinstance(
+                    metric, BaseMetric
+                ):
+                    raise ValueError(
+                        f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
+                    )
+                if isinstance(
+                    test_case, ConversationalTestCase
+                ) and not isinstance(metric, BaseConversationalMetric):
+                    print(type(metric))
+                    raise ValueError(
+                        f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
+                    )
+                if isinstance(test_case, MLLMTestCase) and not isinstance(
+                    metric, BaseMultimodalMetric
+                ):
+                    raise ValueError(
+                        f"Metric {metric.__name__} is not a valid metric for MLLMTestCase."
+                    )
 
 
 def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
@@ -321,7 +351,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     elif test_result.conversational:
         print("For conversational test case:\n")
         print(
-            f"  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full."
+            f"  - Unable to print conversational test case. Run 'deepeval login' to view conversational evaluations in full."
         )
     else:
         print("For test case:\n")
@@ -420,7 +450,7 @@ def write_test_result_to_file(
         elif test_result.conversational:
             file.write("For conversational test case:\n\n")
             file.write(
-                "  - Unable to print conversational test case. Login to Confident AI (https://app.confident-ai.com) to view conversational evaluations in full.\n"
+                "  - Unable to print conversational test case. Run 'deepeval login' to view conversational evaluations in full.\n"
             )
         else:
             file.write("For test case:\n\n")

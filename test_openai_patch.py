@@ -4,7 +4,7 @@ from openai import OpenAI
 import deepeval
 from deepeval.tracing import observe, trace_manager
 
-deepeval.login_with_confident_api_key("<your-deepeval-api-key>")
+deepeval.login_with_confident_api_key("<your-confident-api-key>")
 
 # Initialize OpenAI client
 client = OpenAI(api_key="<your-openai-api-key>")
@@ -12,7 +12,7 @@ client = OpenAI(api_key="<your-openai-api-key>")
 trace_manager.configure(openai_client=client)
 
 
-@observe()
+@observe(type="llm")
 def generate_response(input: str) -> str:
     response = client.chat.completions.create(
         model="gpt-4o-mini",  # or your preferred model
@@ -30,7 +30,7 @@ def generate_response(input: str) -> str:
     #         {"role": "user", "content": input}
     #     ],
     # )
-    return response
+    return response.choices[0].message.content
 
 
 try:
@@ -39,4 +39,4 @@ try:
 except Exception as e:
     raise e
 
-time.sleep(5)
+time.sleep(8)

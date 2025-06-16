@@ -214,6 +214,7 @@ class Synthesizer:
                     _send_data=False,
                     _reset_cost=False,
                 )
+                self.synthetic_goldens.extend(goldens)
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
                 if _send_data == True:
@@ -506,12 +507,11 @@ class Synthesizer:
                 # Remove pbar if not from docs
                 remove_pbars(progress, [pbar_id]) if _progress is None else None
 
-        # Wrap-up Synthesis
-        self.synthetic_goldens.extend(goldens)
         if _send_data == True:
             pass
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
+        self.synthetic_goldens.extend(goldens)
         return goldens
 
     async def a_generate_goldens_from_contexts(
@@ -544,7 +544,6 @@ class Synthesizer:
         ) as (progress, pbar_id), (
             progress if _progress is None else nullcontext()
         ):
-
             tasks = [
                 self.task_wrapper(
                     semaphore,
@@ -567,6 +566,7 @@ class Synthesizer:
 
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
+        self.synthetic_goldens.extend(goldens)
         return goldens
 
     async def _a_generate_from_context(
@@ -722,6 +722,7 @@ class Synthesizer:
             + [pbar_generate_inputs_id, pbar_generate_goldens_id],
         )
         goldens.extend(results)
+        self.synthetic_goldens.extend(goldens)
 
     async def _a_generate_text_to_sql_from_context(
         self,
@@ -769,7 +770,6 @@ class Synthesizer:
         self,
         num_goldens: int,
     ) -> List[Golden]:
-
         if (
             self.styling_config.scenario is None
             or self.styling_config.task is None
@@ -838,7 +838,9 @@ class Synthesizer:
                 )
                 for evolved_prompt, evolutions in evolved_prompts_list
             ]
-            return goldens
+
+        self.synthetic_goldens.extend(goldens)
+        return goldens
 
     def generate_goldens_from_scratch(
         self,
@@ -917,6 +919,7 @@ class Synthesizer:
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
             pass
+        self.synthetic_goldens.extend(goldens)
         return goldens
 
     def transform_distribution(
@@ -987,7 +990,6 @@ class Synthesizer:
                     **styles_json, expected_output_format=None
                 )
                 self.styling_config = styling_config
-
             # Generate goldens from scratch or from contexts if available
             if len(contexts) == 0:
                 return self.generate_goldens_from_scratch(

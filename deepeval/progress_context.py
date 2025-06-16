@@ -26,6 +26,7 @@ def progress_context(
     console = Console(file=sys.stderr)
     with Progress(
         SpinnerColumn(),
+        BarColumn(bar_width=60),
         TextColumn("[progress.description]{task.description}"),
         console=console,
         transient=transient,
@@ -64,7 +65,7 @@ def synthesizer_progress_context(
                     description += f", using {evaluation_model} and {embedder}, async={async_mode}"
             progress = Progress(
                 TextColumn("{task.description}"),
-                BarColumn(),
+                BarColumn(bar_width=60),
                 TaskProgressColumn(),
                 TimeElapsedColumn(),
                 console=custom_console,
@@ -96,7 +97,7 @@ def conversation_simulator_progress_context(
                 description += f"(using {simulator_model}, async={async_mode})"
             progress = Progress(
                 TextColumn("{task.description}"),
-                BarColumn(),
+                BarColumn(bar_width=60),
                 TaskProgressColumn(),
                 TimeElapsedColumn(),
                 console=custom_console,

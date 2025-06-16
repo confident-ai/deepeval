@@ -12,6 +12,8 @@ import random
 from deepeval.metrics import AnswerRelevancyMetric
 from asyncio import sleep
 
+from deepeval.tracing.types import Feedback
+
 #######################################################
 ## Example ############################################
 #######################################################
@@ -276,11 +278,21 @@ async def meta_agent(query: str):
             retrieval_context=["I love coffee"],
             context=["I love coffee"],
         ),
+        # feedback=Feedback(
+        #     rating=1,
+        #     expected_output="this is a mocha",
+        #     explanation="The actual output is not the expected output",
+        # ),
     )
     update_current_trace(
         metadata={"input": "input"},
         thread_id="131324ljihfsadiuyip",
         user_id="111",
+        # feedback=Feedback(
+        #     rating=5,
+        #     expected_output="Testing again",
+        #     explanation="The actual output is not the expected output",
+        # ),
     )
 
     return LLMTestCase(input="..", actual_output=final_response)
@@ -350,19 +362,19 @@ async def run_parallel_examples():
 
 
 # Run it
-# asyncio.run(run_parallel_examples())
+asyncio.run(run_parallel_examples())
 
 
-@observe()
-async def run_customizations_agent(input_items, context=None):
-    @observe()
-    async def run_customizations_agent_again(input_items, context=None):
-        return LLMTestCase(input="input_items", actual_output="context")
+# @observe()
+# async def run_customizations_agent(input_items, context=None):
+#     @observe()
+#     async def run_customizations_agent_again(input_items, context=None):
+#         return LLMTestCase(input="input_items", actual_output="context")
 
-    result = await run_customizations_agent_again(input_items, context)
-    return AnswerRelevancyMetric()
+#     result = await run_customizations_agent_again(input_items, context)
+#     return AnswerRelevancyMetric()
 
 
-asyncio.run(
-    run_customizations_agent(input_items=["item1", "item2"], context="context")
-)
+# asyncio.run(
+#     run_customizations_agent(input_items=["item1", "item2"], context="context")
+# )

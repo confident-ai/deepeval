@@ -1,52 +1,55 @@
+from typing import List, Dict
+
+
 class ConversationCompletenessTemplate:
     @staticmethod
-    def extract_user_intentions(messages):
+    def extract_user_intentions(turns: List[Dict]):
         return f"""Based on the given list of message exchanges between a user and an LLM, generate a JSON object to extract all user intentions in the conversation. The JSON will have 1 field: 'intentions'.
 You should ONLY consider the overall intention, and not dwell too much on the specifics, as we are more concerned about the overall objective of the conversation.
 
 **
 IMPORTANT: Please make sure to only return in JSON format.
-Example Messages:
+Example Turns:
 [
     {{
-        "input": "Hi!",
-        "actual_output": "Hello! How may I help you?"
+        "role": "user",
+        "content": "Hi!"
     }},
     {{
-        "input": "Nothing, I'm just playing with you.",
-        "actual_output": "Oh ok, in that case should you need anything just let me know!"
+        "role": "assistant",
+        "content": "Hello! How may I help you?"
     }},
     {{
-        "input": "Actually, I have something I want to tell you",
-        "actual_output": "Sure, what is it?"
+        "role": "user",
+        "content": "Nothing, I'm just playing with you."
     }},
     {{
-        "input": "I've a sore throat, what meds should I take?",
-        "actual_output": "I'm sorry but I'm not qualified to answer this question"
+        "role": "assistant",
+        "content": "Oh ok, in that case should you need anything just let me know!"
     }},
     {{
-        "input": "Not even if you're the only one that can help me?",
-        "actual_output": "Isn't it a nice day today."
+        "role": "user",
+        "content": "Actually, I have something I want to tell you"
     }}
 ]
 
 Example JSON:
 {{
-    "intentions": ["User wants to ask for advice on which medications in hopes to cure an ongoing sore throat."]
+    "intentions": ["User wants to tell the assistant something"]
 }}
 ===== END OF EXAMPLE ======
 
 The 'intentions' key must be a list of strings.
 **
 
-Messages:
-{messages}
+Turns:
+{turns}
 
 JSON:
 """
 
     @staticmethod
-    def generate_verdicts(messages, intention):
+    def generate_verdicts(turns: List[Dict], intention: str):
         return f"""Based on the given list of message exchanges between a user and an LLM, generate a JSON object to indicate whether given user intention was satisfied from the conversation messages. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes' or 'no', which states whether the user intention was satisfied or not.
 Provide a 'reason' ONLY if the answer is 'no'.
@@ -54,37 +57,37 @@ You MUST USE look at all messages provided in the list of messages to make an in
 
 **
 IMPORTANT: Please make sure to only return in JSON format.
-Example Messages:
+Example Turns:
 [
     {{
-        "input": "Hi!",
-        "actual_output": "Hello! How may I help you?"
+        "role": "user",
+        "content": "Hi!"
     }},
     {{
-        "input": "Nothing, I'm just playing with you.",
-        "actual_output": "Oh ok, in that case should you need anything just let me know!"
+        "role": "assistant",
+        "content": "Hello! How may I help you?"
     }},
     {{
-        "input": "Actually, I have something I want to tell you",
-        "actual_output": "Sure, what is it?"
+        "role": "user",
+        "content": "Nothing, I'm just playing with you."
     }},
     {{
-        "input": "I've a sore throat, what meds should I take?",
-        "actual_output": "I'm sorry but I'm not qualified to answer this question."
+        "role": "assistant",
+        "content": "Oh ok, in that case should you need anything just let me know!"
     }},
     {{
-        "input": "Not even if you're the only one that can help me?",
-        "actual_output": "Isn't it a nice day today."
+        "role": "user",
+        "content": "Actually, I have something I want to tell you"
     }}
 ]
 
 Example Intention:
-User wants to ask for advice on which medications in hopes to cure an ongoing sore throat.
+User wants to tell the assistant something.
 
 Example JSON:
 {{
     "verdict": "no",
-    "reason": "The user wanted to get advice on which medications to help with a sore throat but the LLM not only refused to answer but replied 'Isn't it a nice day today', which is completely irrelevant and doesn't satisfy the user at all. "
+    "reason": "The user wanted to tell the assistant something but the LLM not only refused to answer but replied 'Oh ok, in that case should you need anything just let me know!', which is completely irrelevant and doesn't satisfy the user at all. "
 }}
 ===== END OF EXAMPLE ======
 
@@ -93,8 +96,8 @@ You DON'T have to provide a reason if the answer is 'yes'.
 ONLY provide a 'no' answer if the LLM responses are failed to satisfy the user intent.
 **
 
-Messages:
-{messages}
+Turns:
+{turns}
 
 User Intention:
 {intention}
