@@ -618,8 +618,6 @@ class TraceManager:
             else None
         )
 
-        print(span_test_case)
-
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
