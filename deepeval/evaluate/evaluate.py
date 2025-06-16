@@ -261,7 +261,6 @@ def evaluate(
 
         global_test_run_manager.reset()
         start_time = time.perf_counter()
-
         if display_config.show_indicator:
             console = Console()
             for metric in metrics:

@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import logging
 import openai
 
+
 from tenacity import (
     retry,
     retry_if_exception_type,

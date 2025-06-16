@@ -27,6 +27,7 @@ from deepeval.tracing.api import (
     SpanApiType,
     SpanTestCase,
     TraceApi,
+    TraceTestCase,
 )
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.attributes import (
@@ -212,6 +213,25 @@ class TraceManager:
                 raise ValueError(
                     f"Parent span with UUID {span.parent_uuid} does not exist."
                 )
+    
+    def remove_span_from_trace(self, span: BaseSpan):
+        """Remove a span from its trace."""
+        trace_uuid = span.trace_uuid
+        if trace_uuid not in self.active_traces:
+            raise ValueError(
+                f"Trace with UUID {trace_uuid} does not exist. A span must have a valid trace."
+            )
+
+        trace = self.active_traces[trace_uuid]
+
+        # If this is a root span (no parent), remove it from the trace's root_spans
+        if not span.parent_uuid:
+            trace.root_spans.remove(span)
+        else:
+            # This is a child span, find its parent and remove it from the parent's children
+            parent_span = self.get_span_by_uuid(span.parent_uuid)
+            if parent_span:
+                parent_span.children = [s for s in parent_span.children if s.uuid != span.uuid]
 
     def get_trace_by_uuid(self, trace_uuid: str) -> Optional[Trace]:
         """Get a trace by its UUID."""
@@ -514,6 +534,24 @@ class TraceManager:
             else None
         )
 
+        is_metric_strings = None
+        if trace.metrics:
+            is_metric_strings = isinstance(trace.metrics[0], str)
+
+        trace_test_case = (
+            TraceTestCase(
+                input=trace.llm_test_case.input,
+                actualOutput=trace.llm_test_case.actual_output,
+                expectedOutput=trace.llm_test_case.expected_output,
+                retrievalContext=trace.llm_test_case.retrieval_context,
+                context=trace.llm_test_case.context,
+                toolsCalled=trace.llm_test_case.tools_called,
+                expectedTools=trace.llm_test_case.expected_tools,
+            )
+            if trace.llm_test_case
+            else None
+        )
+
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -530,6 +568,9 @@ class TraceManager:
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
+            traceTestCase=trace_test_case,
+            metrics=(
+                trace.metrics if is_metric_strings else None
             feedback=convert_feedback_to_api_feedback(
                 trace.feedback, trace_uuid=trace.uuid
             ),

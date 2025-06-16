@@ -1,6 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from contextvars import ContextVar
-from deepeval.tracing.types import BaseSpan, Trace, Feedback
+from deepeval.tracing.types import BaseSpan, Trace, BaseMetric, Feedback
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing.attributes import Attributes
 
@@ -40,6 +40,8 @@ def update_current_trace(
     user_id: Optional[str] = None,
     input: Optional[Any] = None,
     output: Optional[Any] = None,
+    test_case: Optional[LLMTestCase] = None,
+    metrics: Optional[Union[List[str], List[BaseMetric]]] = None
     feedback: Optional[Feedback] = None,
 ):
     current_trace = current_trace_context.get()
@@ -57,5 +59,9 @@ def update_current_trace(
         current_trace.input = input
     if output:
         current_trace.output = output
+    if test_case:
+        current_trace.llm_test_case = test_case
+    if metrics:
+        current_trace.metrics = metrics
     if feedback:
         current_trace.feedback = feedback
