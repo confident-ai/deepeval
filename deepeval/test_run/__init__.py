@@ -12,4 +12,4 @@ from .test_run import (
 
 from .hooks import on_test_run_end, invoke_test_run_end_hook
 from .api import MetricData
-from .hyperparameters import log_hyperparameters, auto_log_hyperparameters
+from .hyperparameters import log_hyperparameters
