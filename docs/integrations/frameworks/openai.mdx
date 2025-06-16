@@ -16,22 +16,21 @@ To begin evaluating your OpenAI application, attach the `@observe` decorator to 
 from deepeval.tracing import observe
 from deepeval.openai import OpenAI
 
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import Golden
 from deepeval import evaluate
 
-@observe(metrics=[AnswerRelevancyMetric()])
-def llm_app(input: str):
-    client = OpenAI()
-    return client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": input}
-        ]
-    )
+client = OpenAI()
+user_input = "Hello, how are you?"
 
-evaluate(observed_callback=llm_app, goldens=[Golden("Hello, how are you?")])
+client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": user_input}
+    ],
+    metrics=[AnswerRelevancyMetric(), BiasMetric()]
+)
 ```
 
 ## Component-level Evaluation
@@ -46,22 +45,22 @@ from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import Golden
 from deepeval import evaluate
 
-@oberve(metrics=[AnswerRelevancyMetric()])
-def llm_component(input: str):
+@observe(type="agent", metrics=[AnswerRelevancyMetric()])
+def llm_app(input: str):
+
+    # OpenAI integration
     client = OpenAI()
-    return client.chat.completions.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": input}
-        ]
+        ],
+        metrics=[BiasMetric()]
     )
 
-@observe(type="agent")
-def llm_app(input: str):
-    client = OpenAI()
-    llm_response = llm_component(input)
-    return "LLM Response: " + llm_response
+    # Response
+    return response.choices[0].message.content
 
 evaluate(observed_callback=llm_app, goldens=[Golden("Hello, how are you?")])
 ```
@@ -81,29 +80,24 @@ Since retrieval context is not available through the OpenAI API, DeepEval **cann
 :::info
 To evaluate retrieval-based metrics like Contextual Relevancy, you'll need to manually populate and set the test case using `update_current_span`
 
-```python showLineNumbers {15}
+```python showLineNumbers
 ...
 
-@observe(metrics=[AnswerRelevancyMetric()])
-def llm_app(input: str):
-    client = OpenAI()
-    retrieval_context = ["Document 1", "Document 2", "Document 3"]
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": input + "\n".join(retrieval_context)}
-        ]
-    )
+client = OpenAI()
+user_input = "Hello, how are you?"
 
-    update_current_span(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=response.choices[0].message.content,
-            retrieval_context=retrieval_context,
-        )
-    )
-    return response.choices[0].message.content
+client.chat.completions.create(
+    model="gpt-4o",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": user_input}
+    ],
+    metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    # Optional test case parameters
+    expected_output="Hello, how are you?",
+    retrieval_context=["Document 1", "Document 2", "Document 3"]
+    context="Document 1"
+)
 ```
 
 :::

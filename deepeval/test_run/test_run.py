@@ -453,7 +453,7 @@ class TestRunManager:
 
     def reset(self, preserve_hyperparameters=False):
         if preserve_hyperparameters:
-            self.hyperparameters = getattr(self.test_run, "hyperparameters")
+            self.hyperparameters = getattr(self.test_run, "hyperparameters", None)
         self.test_run = None
         self.temp_file_path = TEMP_FILE_PATH
         self.save_to_disk = False
