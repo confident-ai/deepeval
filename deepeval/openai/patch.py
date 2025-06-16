@@ -1,6 +1,5 @@
 from typing import Callable, List, Optional
 from functools import wraps
-import inspect
 import uuid
 
 from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
@@ -27,31 +26,32 @@ from deepeval.openai.extractors import (
 )
 
 def patch_openai(openai_module):
+    # Prevent double patching
     if getattr(openai_module, "_deepeval_patched", False):
         return
     openai_module._deepeval_patched = True
 
-    def wrap_init(cls):
-        original_init = cls.__init__
-
+    # Wrap OpenAI, AsyncOpenAI Clients
+    def wrap_init(openai_class, is_async: bool = False):
+        original_init = openai_class.__init__
         @wraps(original_init)
         def new_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
-            wrap_openai_client_methods(self)
+            wrap_openai_client_methods(self, is_async)
+        openai_class.__init__ = new_init
 
-        cls.__init__ = new_init
-
-    for cls_name in ("OpenAI", "AsyncOpenAI"):
-        cls = getattr(openai_module, cls_name, None)
-        if isinstance(cls, type):
-            wrap_init(cls)
-
+    openai_class = getattr(openai_module, "OpenAI", None)
+    if openai_class:
+        wrap_init(openai_class, is_async=False)
+    async_openai_class = getattr(openai_module, "AsyncOpenAI", None)
+    if async_openai_class:
+        wrap_init(async_openai_class, is_async=True)
 
 ##############################################
 # Wrap methods in OpenAI Client
 ##############################################
 
-def wrap_openai_client_methods(client):
+def wrap_openai_client_methods(client, is_async: bool):
     method_paths = {
         # path → is_completion_method
         "chat.completions.create": True,
@@ -61,16 +61,15 @@ def wrap_openai_client_methods(client):
     for path, is_completion in method_paths.items():
         method = get_attr_path(client, path)
         if callable(method):
-            patched_method = generate_patched_openai_method(method, is_completion_method=is_completion)
+            patched_method = generate_patched_openai_method(method, is_completion_method=is_completion, is_async=is_async)
             set_attr_path(client, path, patched_method)
         
 
 def generate_patched_openai_method(
     orig_method: Callable,
     is_completion_method: bool = False,
+    is_async: bool = False,
 ):
-    is_async = inspect.iscoroutinefunction(orig_method)
-
     if is_async:
         @wraps(orig_method)
         async def patched_async_openai_method(

@@ -105,7 +105,7 @@ def extract_output_parameters_from_completion(
     completion: Union[ChatCompletion, ParsedChatCompletion],
     input_parameters: InputParameters
 ) -> OutputParameters:
-    output = completion.choices[0].message.content
+    output = str(completion.choices[0].message.content)
     prompt_tokens = completion.usage.prompt_tokens
     completion_tokens = completion.usage.completion_tokens
 
