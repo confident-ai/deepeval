@@ -704,6 +704,7 @@ class Observer:
         )
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
+        self.custom_update_span_attributes: Optional[Callable] = None
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
@@ -737,7 +738,6 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
-
         if (
             parent_span
             and parent_span.progress is not None
@@ -753,7 +753,8 @@ class Observer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit the tracer context, updating the span status and handling trace completion."""
+        """Exit the tracer context, updating the span status and handling trace completion."""        
+
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID
         current_span = current_span_context.get()
@@ -773,7 +774,11 @@ class Observer:
         else:
             current_span.status = TraceSpanStatus.SUCCESS
 
-        self.update_span_attributes(current_span)
+        if self.custom_update_span_attributes is not None:
+            self.custom_update_span_attributes(current_span)
+        else:
+            self.update_span_attributes(current_span)
+
         if current_span.input is None:
             current_span.input = self.function_kwargs
         if current_span.output is None:
