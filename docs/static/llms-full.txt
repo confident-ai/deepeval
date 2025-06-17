@@ -9699,7 +9699,7 @@ Even if you’re not using Confident AI, you can [join our discord community](ht
 
 ## Features Overview [Permalink for this section](https://documentation.confident-ai.com/\#features-overview)
 
-[LLM Evaluation](https://documentation.confident-ai.com/llm-evaluation/introduction) [LLM Tracing](https://documentation.confident-ai.com/llm-tracing/introduction) [Prompt Studio](https://documentation.confident-ai.com/prompt-management/introduction) [Dataset Editor](https://documentation.confident-ai.com/dataset-editor/introduction) [Human-in-the-Loop](https://documentation.confident-ai.com/human-in-the-loop/overview) [Red Teaming](https://documentation.confident-ai.com/llm-red-teaming)
+[LLM Evaluation](https://documentation.confident-ai.com/llm-evaluation/introduction) [LLM Tracing](https://documentation.confident-ai.com/llm-tracing/introduction) [Prompt Studio](https://documentation.confident-ai.com/prompt-management/introduction) [Dataset Editor](https://documentation.confident-ai.com/dataset-editor/introduction) [Human-in-the-Loop](https://documentation.confident-ai.com/human-in-the-loop/introduction) [Red Teaming](https://documentation.confident-ai.com/llm-red-teaming)
 
 ## How to Navigate the Docs [Permalink for this section](https://documentation.confident-ai.com/\#how-to-navigate-the-docs)
 
@@ -13901,7 +13901,7 @@ When you run an evaluation using the `evaluate()` function or `deepeval test run
 
 Run Evaluations on Confident AI
 
-More information on everything can be found on the [Confident AI evaluation docs.](https://documentation.confident-ai.com/llm-evaluation/overview)
+More information on everything can be found on the [Confident AI evaluation docs.](https://documentation.confident-ai.com/llm-evaluation/introduction)
 
 ## Why DeepEval Metrics? [​](https://deepeval.com/docs/metrics-introduction\#why-deepeval-metrics "Direct link to Why DeepEval Metrics?")
 

@@ -36,9 +36,9 @@ def collect_feedback(
 
         api_feedback = APIFeedback(
             rating=rating,
-            trace_uuid=trace_uuid,
-            span_uuid=span_uuid,
-            thread_id=thread_id,
+            traceUuid=trace_uuid,
+            spanUuid=span_uuid,
+            threadSuppliedId=thread_id,
             expectedResponse=expected_output,
             explanation=explanation,
         )
@@ -59,7 +59,6 @@ def collect_feedback(
     except Exception as e:
         if fail_silently:
             return
-
         if raise_exception:
             raise (e)
         else:
@@ -91,9 +90,9 @@ async def a_collect_feedback(
 
         api_feedback = APIFeedback(
             rating=rating,
-            trace_uuid=trace_uuid,
-            span_uuid=span_uuid,
-            thread_id=thread_id,
+            traceUuid=trace_uuid,
+            spanUuid=span_uuid,
+            threadSuppliedId=thread_id,
             expectedResponse=expected_output,
             explanation=explanation,
         )
@@ -114,7 +113,6 @@ async def a_collect_feedback(
     except Exception as e:
         if fail_silently:
             return
-
         if raise_exception:
             raise (e)
         else:
