@@ -1,11 +1,6 @@
 from deepeval.tracing.tracing import (
     Observer, 
     SpanType, 
-    AgentSpan,
-    LlmSpan,
-    ToolSpan,
-    BaseSpan,
-    trace_manager
 )
 from deepeval.openai_agents.extractors import *
 
