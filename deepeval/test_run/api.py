@@ -16,6 +16,7 @@ class LLMApiTestCase(BaseModel):
     expected_tools: Optional[list] = Field(None, alias="expectedTools")
     token_cost: Optional[float] = Field(None, alias="tokenCost")
     completion_time: Optional[float] = Field(None, alias="completionTime")
+    tags: Optional[List[str]] = Field(None)
     multimodal_input: Optional[List[Union[str, MLLMImage]]] = Field(
         None, alias="multimodalInput"
     )

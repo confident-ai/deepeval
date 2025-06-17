@@ -177,6 +177,7 @@ def create_api_test_case(
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,
                 completionTime=test_case.completion_time,
+                tags=test_case.tags,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,

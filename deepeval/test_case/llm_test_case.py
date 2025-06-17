@@ -144,6 +144,7 @@ class LLMTestCase:
     token_cost: Optional[float] = None
     completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)
+    tags: Optional[List[str]] = field(default=None)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
