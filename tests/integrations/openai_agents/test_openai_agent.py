@@ -17,6 +17,7 @@ from tests.integrations.openai_agents.customer_service_agent import customer_ser
 from tests.integrations.openai_agents.streaming_agent import streaming_agent
 from tests.integrations.openai_agents.research_agent import research_agent
 from tests.integrations.openai_agents.remote_agent import remote_agent
+from tests.integrations.openai_agents.thread_agent import thread_agent
 from tests.integrations.openai_agents.git_mcp_agent import git_agent
 
 add_trace_processor(DeepEvalTracingProcessor())
@@ -28,12 +29,13 @@ if __name__ == "__main__":
     
     asyncio.run(git_agent())
     # asyncio.run(customer_service_agent())
-    # asyncio.run(research_agent())
-    # asyncio.run(code_interpreter_agent())
-    # asyncio.run(remote_agent())
-    # asyncio.run(streaming_agent())
-    # asyncio.run(streaming_guardrails_agent())
-    # asyncio.run(output_guardrails_agent())
+    asyncio.run(research_agent())
+    asyncio.run(code_interpreter_agent())
+    asyncio.run(remote_agent())
+    asyncio.run(streaming_agent())
+    asyncio.run(streaming_guardrails_agent())
+    asyncio.run(output_guardrails_agent())
+    asyncio.run(thread_agent())
 
     ##########################################
     # Test Async
@@ -52,3 +54,4 @@ if __name__ == "__main__":
         tasks = [streaming_agent() for _ in range(4)]
         await asyncio.gather(*tasks)
     # asyncio.run(gather_streaming_agents())
+    

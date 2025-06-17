@@ -1,6 +1,7 @@
 from deepeval.tracing.tracing import (
     Observer, 
     SpanType, 
+    current_trace_context,
 )
 from deepeval.openai_agents.extractors import *
 
@@ -39,6 +40,11 @@ class DeepEvalTracingProcessor(TracingProcessor):
         observer.__enter__()
 
     def on_trace_end(self, trace: Trace) -> None:
+        # set thread id if exists
+        current_trace = current_trace_context.get()
+        thread_id = getattr(trace, "group_id", None)
+        current_trace.thread_id = thread_id
+
         observer = self.root_span_observers.pop(trace.trace_id, None)
         if observer:
             observer.__exit__(None, None, None)
@@ -55,6 +61,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         )
         self.span_observers[span.span_id] = observer
         observer.__enter__()
+
 
     def on_span_end(self, span: Span) -> None:
         observer = self.span_observers.pop(span.span_id, None)
