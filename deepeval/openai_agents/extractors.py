@@ -2,25 +2,25 @@ from openai.types.responses.response_input_item_param import FunctionCallOutput,
 from openai.types.responses.response_output_message_param import Content
 from typing import Union, List
 from openai.types.responses import (
-    ResponseOutputItem,
-    ResponseInputItemParam,
-    EasyInputMessageParam,
+    ResponseFunctionToolCallParam,
     ResponseOutputMessageParam,
     ResponseInputContentParam,
-    ResponseFunctionToolCallParam,
-    ResponseOutputMessage,
     ResponseFunctionToolCall,
-    ResponseOutputText,
+    ResponseInputItemParam,
     ResponseOutputRefusal,
+    EasyInputMessageParam,
+    ResponseOutputMessage,
+    ResponseOutputItem,
+    ResponseOutputText,
 )
 
 from deepeval.tracing.attributes import ToolAttributes, LlmAttributes
 from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import (
+    AgentSpan,
+    ToolSpan,
     BaseSpan,
     LlmSpan,
-    ToolSpan,
-    AgentSpan,
 )
 import json
 
