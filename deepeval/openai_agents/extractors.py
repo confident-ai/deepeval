@@ -24,7 +24,6 @@ from deepeval.tracing.types import (
 )
 import json
 
-# check openai agents availability
 try:
     from agents import MCPListToolsSpanData
     from agents.tracing.span_data import (

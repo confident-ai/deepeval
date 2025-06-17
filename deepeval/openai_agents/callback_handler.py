@@ -46,9 +46,8 @@ class OpenAIAgentsCallbackHandler(TracingProcessor):
     def on_span_start(self, span: Span) -> None:
         if not span.started_at:
             return
-        span_name = self.get_span_name(span)
         span_type = self.get_span_kind(span.span_data)
-        observer = Observer(span_type=span_type, func_name=span_name)
+        observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
             observer.observe_kwargs["model"] = "temporary model"
         observer.custom_update_span_attributes = (
@@ -67,13 +66,6 @@ class OpenAIAgentsCallbackHandler(TracingProcessor):
 
     def shutdown(self) -> None:
         pass
-
-    def get_span_name(self, span_data: SpanData) -> str:
-        if hasattr(span_data, "name") and isinstance(span_data.name, str):
-            return span_data.name
-        if isinstance(span_data, HandoffSpanData) and span_data.to_agent:
-            return f"handoff to {span_data.to_agent}"
-        return "NA"
 
     def get_span_kind(self, span_data: SpanData) -> str:
         if isinstance(span_data, AgentSpanData):
