@@ -1,5 +1,20 @@
-from openai.types.responses import Response
+from openai.types.responses.response_input_item_param import FunctionCallOutput, Message
+from openai.types.responses.response_output_message_param import Content
 from typing import Optional, Union, List
+from openai.types.responses import (
+    Response,
+    ResponseOutputItem,
+    ResponseInputItemParam,
+    EasyInputMessageParam,
+    ResponseOutputMessageParam,
+    ResponseInputContentParam,
+    ResponseFunctionToolCallParam,
+    ResponseOutputMessage,
+    ResponseFunctionToolCall,
+    ResponseOutputText,
+    ResponseOutputRefusal,
+)
+
 
 from deepeval.tracing.attributes import ToolAttributes, LlmAttributes
 from deepeval.prompt.prompt import Prompt
@@ -9,6 +24,7 @@ from deepeval.tracing.types import (
     ToolSpan,
     AgentSpan,
 )
+import json
 
 # check openai agents availability
 try:
@@ -19,6 +35,7 @@ try:
         GenerationSpanData,
         ResponseSpanData,
         SpanData,
+        HandoffSpanData,
     )
     openai_agents_available = True
 except ImportError:
@@ -34,7 +51,7 @@ def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
     _check_openai_agents_available()
     # LLM Span
     if isinstance(span_data, ResponseSpanData):
-        update_attributes_from_response_span_data(span, span_data.response, span_data.input)
+        update_attributes_from_response_span_data(span, span_data)
     elif isinstance(span_data, GenerationSpanData):
         udpate_attributes_from_generation_span_data(span, span_data)
     # Tool Span
@@ -45,6 +62,9 @@ def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
     # Agent Span 
     elif isinstance(span_data, AgentSpanData):
         update_attributes_from_agent_span_data(span, span_data)
+    # Handoff Span
+    elif isinstance(span_data, HandoffSpanData):
+        update_attributes_from_handoff_span_data(span, span_data)
 
 ########################################################
 ### LLM Span ###########################################
@@ -52,12 +72,11 @@ def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
 
 def update_attributes_from_response_span_data(
     span: LlmSpan, 
-    response: Optional[Response] = None,
-    input: Optional[Union[str, List]] = None 
+    span_data: ResponseSpanData,
 ):
+    response = span_data.response
     if response is None:
         span.model = "NA"
-
     # Extract prompt template
     prompt_template = response.instructions
     prompt = Prompt(template=prompt_template) if prompt_template else None
@@ -68,13 +87,18 @@ def update_attributes_from_response_span_data(
         input_tokens = usage.input_tokens
         cached_input_tokens= usage.input_tokens_details.cached_tokens
         ouptut_reasoning_tokens= usage.output_tokens_details.reasoning_tokens
+    # Get input and output
+    input = parse_response_input(span_data.input)
+    output = parse_response_output(response.output)
+    if isinstance(output, list):
+        output = json.dumps(output)
     # Update Span
     llm_attributes=LlmAttributes(
         prompt=prompt,
         input_token_count=input_tokens,
         output_token_count=output_tokens,
         input=input,
-        output=""
+        output=output
     )
     metadata = {
         "cached_input_tokens": cached_input_tokens,
@@ -83,8 +107,9 @@ def update_attributes_from_response_span_data(
     span.set_attributes(llm_attributes)
     span.metadata = metadata
     span.model = "NA" if response.model is None else str(response.model)
-    span.input = llm_attributes.input
-    span.output = response.output
+    span.input = input
+    span.output = output
+    span.name = "LLM Generation"
 
 def udpate_attributes_from_generation_span_data(
     span: LlmSpan, 
@@ -105,8 +130,9 @@ def udpate_attributes_from_generation_span_data(
     )
     span.set_attributes(llm_attributes)
     span.model = generation_span_data.model or "NA"
-    span.input = llm_attributes.input
-    span.output = llm_attributes.output
+    span.input = llm_attributes.input or None
+    span.output = llm_attributes.output or None
+    span.name = "LLM Generation"
 
 
 ########################################################
@@ -119,11 +145,11 @@ def update_attributes_from_function_span_data(
 ):
     # Update Span
     tool_attributes = ToolAttributes(
-        input_parameters=function_span_data.input,
+        input_parameters=json.loads(function_span_data.input) or {"input": function_span_data.input},
         output=function_span_data.output
     )
     span.set_attributes(tool_attributes)
-    span.name = function_span_data.name
+    span.name = function_span_data.name or "Function tool"
     span.description = "Function tool"
 
 def update_attributes_from_mcp_list_tool_span_data(
@@ -136,7 +162,7 @@ def update_attributes_from_mcp_list_tool_span_data(
         output=mcp_list_tool_span_data.result
     )
     span.set_attributes(tool_attributes)
-    span.name = mcp_list_tool_span_data.server
+    span.name = mcp_list_tool_span_data.server or "MCP tool"
     span.description = "MCP tool"
 
 
@@ -158,3 +184,146 @@ def update_attributes_from_agent_span_data(
     span.metadata = metadata
     span.input = None
     span.output = None
+
+
+########################################################
+### Handoff Span #######################################
+########################################################
+
+def update_attributes_from_handoff_span_data(
+    span: AgentSpan, 
+    handoff_span_data: HandoffSpanData
+):
+    # Update Span
+    metadata={
+        "from_agent": handoff_span_data.from_agent,
+        "to_agent": handoff_span_data.to_agent
+    }
+    span.name = "Handoff → " + handoff_span_data.to_agent
+    span.metadata = metadata
+    span.input = None
+    span.output = None
+
+########################################################
+### Parse Input Utils ##################################
+########################################################
+
+def parse_response_input(input: Union[str, List[ResponseInputItemParam]]):
+    if isinstance(input, str):
+        return input
+    processed_input = []
+    for item in input:
+        if "type" not in item:
+            if "role" in item and "content" in item:
+                processed_input.append({
+                    "type": "message",
+                    "role": item["role"],
+                    "content": item["content"],
+                })
+        elif item["type"]== "message":
+            parsed_message = parse_message_param(item)
+            if parsed_message:
+                processed_input.append(parsed_message)
+        elif item["type"] == "function_call":
+            processed_input.append(parse_function_tool_call_param(item))
+        elif item["type"] == "function_call":
+            processed_input.append(parse_function_call_output(item))
+    return processed_input if processed_input else None
+    
+def parse_message_param(
+    message: Union[
+        EasyInputMessageParam,
+        Message,
+        ResponseOutputMessageParam,
+    ],
+):
+    role = message["role"]
+    content = message.get("content")
+    if isinstance(content, str):
+       return {"role": role, "content": content}
+    elif isinstance(content, List):
+        return {"role": role, "content": parse_message_content_list(content)}
+    else:
+        return None
+
+def parse_message_content_list(
+    content_list: List[Union[ResponseInputContentParam, Content]],
+):
+    processed_content_list = []
+    for item in content_list:
+        if item["type"] == "input_text" or item["type"] == "output_text":
+            processed_content_list.append({
+                "type": "text",
+                "text": item["text"]
+            })
+        elif item["type"] == "input_image":
+            # TODO
+            ...
+        elif item["type"] == "input_file":
+            # TODO
+            ...
+        elif item["type"] == "refusal":
+            processed_content_list.append({
+                "type": "refusal",
+                "refusal": item["refusal"]
+            })
+    return processed_content_list if processed_content_list else None
+
+def parse_function_tool_call_param(
+    tool_call_param: ResponseFunctionToolCallParam,
+):
+    return {
+        "call_id": tool_call_param["call_id"],
+        "name": tool_call_param["name"],
+        "arguments": tool_call_param["arguments"]
+    }
+
+def parse_function_call_output(
+    function_call_output: FunctionCallOutput,
+):
+    return {
+        "role": "tool",
+        "call_id": function_call_output["call_id"],
+        "output": function_call_output["output"]
+    }
+
+########################################################
+### Parse Output Utils ##################################
+########################################################
+
+def parse_response_output(response: List[ResponseOutputItem]):
+    processed_output = []
+    for item in response:
+        if item.type == "message":
+            message = parse_message(item)
+            if isinstance(message, str):
+                processed_output.append(message)
+            elif isinstance(message, list):
+                processed_output.extend(message)
+        elif item.type == "function_call":
+            processed_output.append(parse_function_call(item))
+    if len(processed_output) == 1:
+        return processed_output[0]
+    return processed_output if processed_output else None
+
+def parse_message(
+    message: ResponseOutputMessage,
+) -> Union[str, List[str]]:
+    processed_content = []
+    for item in message.content:
+        if isinstance(item, ResponseOutputText):
+            processed_content.append(item.text)
+        elif isinstance(item, ResponseOutputRefusal):
+            processed_content.append(item.refusal)
+    if len(processed_content) == 1:
+        return processed_content[0]
+    return processed_content if processed_content else None
+
+def parse_function_call(
+    function_call: ResponseFunctionToolCall,
+):
+    return {
+        "call_id": function_call.call_id,
+        "name": function_call.name,
+        "arguments": function_call.arguments    
+    }       
