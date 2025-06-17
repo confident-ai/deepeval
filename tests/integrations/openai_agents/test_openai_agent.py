@@ -1,4 +1,5 @@
 from deepeval.openai_agents import trace_openai_agents
+from agents import set_default_openai_api
 import asyncio
 import shutil
 import sys
@@ -22,20 +23,32 @@ trace_openai_agents()
 
 # Run agents
 if __name__ == "__main__":
-    # if not shutil.which("uvx"):
-    #     raise RuntimeError("uvx is not installed. Please install it with `pip install uvx`.")
+    if not shutil.which("uvx"):
+        raise RuntimeError("uvx is not installed. Please install it with `pip install uvx`.")
+    
     # asyncio.run(git_agent())
-
-    # asyncio.run(customer_service_agent())
+    asyncio.run(customer_service_agent())
     # asyncio.run(research_agent())
     # asyncio.run(code_interpreter_agent())
     # asyncio.run(remote_agent())
     # asyncio.run(streaming_agent())
     # asyncio.run(streaming_guardrails_agent())
-    asyncio.run(output_guardrails_agent())
+    # asyncio.run(output_guardrails_agent())
 
-    ## Run streaming agent 10 times
-    # async def gather_streaming_agents():
-    #     tasks = [streaming_agent() for _ in range(10)]
-    #     await asyncio.gather(*tasks)
+    ##########################################
+    # Test Async
+    ##########################################
+
+    async def gather_research_agents():
+        tasks = [research_agent(query="What is the stock price of Apple?") for _ in range(10)]
+        await asyncio.gather(*tasks)
+    # asyncio.run(gather_research_agents())
+
+    ##########################################
+    # Test Async Streaming
+    ##########################################
+
+    async def gather_streaming_agents():
+        tasks = [streaming_agent() for _ in range(4)]
+        await asyncio.gather(*tasks)
     # asyncio.run(gather_streaming_agents())

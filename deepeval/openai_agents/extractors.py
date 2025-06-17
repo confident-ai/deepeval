@@ -124,18 +124,22 @@ def udpate_attributes_from_generation_span_data(
     if usage:
         output_tokens = usage.get("output_tokens")
         input_tokens = usage.get("input_tokens")
+    # Get input and output
+    input = generation_span_data.input
+    raw_output = generation_span_data.output
+    output = raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
     # Update span
     llm_attributes=LlmAttributes(
         prompt=None,
         input_token_count=input_tokens,
         output_token_count=output_tokens,
-        input=generation_span_data.input,
-        output=generation_span_data.output
+        input=input,
+        output=output
     )
     span.set_attributes(llm_attributes)
     span.model = generation_span_data.model or "NA"
-    span.input = llm_attributes.input or None
-    span.output = llm_attributes.output or None
+    span.input = input
+    span.output = output
     span.name = "LLM Generation"
 
 
@@ -246,7 +250,7 @@ def parse_response_input(input: Union[str, List[ResponseInputItemParam]]):
                 processed_input.append(parsed_message)
         elif item["type"] == "function_call":
             processed_input.append(parse_function_tool_call_param(item))
-        elif item["type"] == "function_call":
+        elif item["type"] == "function_call_output":
             processed_input.append(parse_function_call_output(item))
     return processed_input if processed_input else None
     
