@@ -355,7 +355,7 @@ def test_everything_2():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
-        tags=["test", "test2"],
+        tags=["test3", "test4"],
     )
     metric12 = ConversationRelevancyMetric(model=eval_model)
     assert_test(
