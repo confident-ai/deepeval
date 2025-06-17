@@ -1,5 +1,5 @@
-from deepeval.openai_agents import trace_openai_agents
-from agents import set_default_openai_api
+from agents import set_default_openai_api, add_trace_processor
+from deepeval.openai_agents import DeepEvalTracingProcessor
 import asyncio
 import shutil
 import sys
@@ -19,15 +19,15 @@ from tests.integrations.openai_agents.research_agent import research_agent
 from tests.integrations.openai_agents.remote_agent import remote_agent
 from tests.integrations.openai_agents.git_mcp_agent import git_agent
 
-trace_openai_agents()
+add_trace_processor(DeepEvalTracingProcessor())
 
 # Run agents
 if __name__ == "__main__":
     if not shutil.which("uvx"):
         raise RuntimeError("uvx is not installed. Please install it with `pip install uvx`.")
     
-    # asyncio.run(git_agent())
-    asyncio.run(customer_service_agent())
+    asyncio.run(git_agent())
+    # asyncio.run(customer_service_agent())
     # asyncio.run(research_agent())
     # asyncio.run(code_interpreter_agent())
     # asyncio.run(remote_agent())

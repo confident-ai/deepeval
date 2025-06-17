@@ -27,7 +27,7 @@ def _check_openai_agents_available():
         )
 
 
-class OpenAIAgentsCallbackHandler(TracingProcessor):
+class DeepEvalTracingProcessor(TracingProcessor):
     def __init__(self) -> None:
         _check_openai_agents_available()
         self.root_span_observers: dict[str, Observer] = {}
