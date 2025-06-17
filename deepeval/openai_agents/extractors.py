@@ -65,6 +65,7 @@ def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
     elif isinstance(span_data, HandoffSpanData):
         update_attributes_from_handoff_span_data(span, span_data)
     elif isinstance(span_data, CustomSpanData):
+        update_attributes_from_custom_span_data(span, span_data)
 
 ########################################################
 ### LLM Span ###########################################
