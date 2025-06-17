@@ -4,7 +4,6 @@ from deepeval.tracing.tracing import (
 )
 from deepeval.openai_agents.extractors import *
 
-# check openai agents availability
 try:
     from agents.tracing import Span, Trace, TracingProcessor
     from agents.tracing.span_data import (
@@ -64,13 +63,9 @@ class OpenAIAgentsCallbackHandler(TracingProcessor):
             observer.__exit__(None, None, None)
 
     def force_flush(self) -> None:
-        """Forces an immediate flush of all queued spans/traces."""
-        # TODO
         pass
 
     def shutdown(self) -> None:
-        """Called when the application stops."""
-        # TODO
         pass
 
     def get_span_name(self, span_data: SpanData) -> str:

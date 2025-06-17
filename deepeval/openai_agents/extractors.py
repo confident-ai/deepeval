@@ -1,8 +1,7 @@
 from openai.types.responses.response_input_item_param import FunctionCallOutput, Message
 from openai.types.responses.response_output_message_param import Content
-from typing import Optional, Union, List
+from typing import Union, List
 from openai.types.responses import (
-    Response,
     ResponseOutputItem,
     ResponseInputItemParam,
     EasyInputMessageParam,
@@ -14,7 +13,6 @@ from openai.types.responses import (
     ResponseOutputText,
     ResponseOutputRefusal,
 )
-
 
 from deepeval.tracing.attributes import ToolAttributes, LlmAttributes
 from deepeval.prompt.prompt import Prompt
