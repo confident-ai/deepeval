@@ -35,6 +35,7 @@ try:
         SpanData,
         HandoffSpanData,
         CustomSpanData,
+        GuardrailSpanData,
     )
     openai_agents_available = True
 except ImportError:
@@ -66,6 +67,8 @@ def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
         update_attributes_from_handoff_span_data(span, span_data)
     elif isinstance(span_data, CustomSpanData):
         update_attributes_from_custom_span_data(span, span_data)
+    elif isinstance(span_data, GuardrailSpanData):
+        update_attributes_from_guardrail_span_data(span, span_data)
 
 ########################################################
 ### LLM Span ###########################################
@@ -212,6 +215,14 @@ def update_attributes_from_custom_span_data(
     # Update Span
     span.name = custom_span_data.name
     span.metadata = {"data": custom_span_data.data}
+
+def update_attributes_from_guardrail_span_data(
+    span: BaseSpan, 
+    guardrail_span_data: GuardrailSpanData
+):
+    # Update Span
+    span.name = "Guardrail: " + guardrail_span_data.name 
+    span.metadata = {"data": guardrail_span_data.triggered, "type": guardrail_span_data.type}
 
 ########################################################
 ### Parse Input Utils ##################################

@@ -7,7 +7,6 @@ async def streaming_agent():
         name="Joker",
         instructions="You are a helpful assistant.",
     )
-
     result = Runner.run_streamed(agent, input="Please tell me 5 jokes.")
     async for event in result.stream_events():
         if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):

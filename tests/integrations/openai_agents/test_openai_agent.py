@@ -10,6 +10,7 @@ sys.path.insert(0, project_root)
 
 # Import agents
 from tests.integrations.openai_agents.streaming_guardrails_agent import streaming_guardrails_agent
+from tests.integrations.openai_agents.output_guardrails_agent import output_guardrails_agent
 from tests.integrations.openai_agents.code_interpreter_agent import code_interpreter_agent
 from tests.integrations.openai_agents.customer_service_agent import customer_service_agent
 from tests.integrations.openai_agents.streaming_agent import streaming_agent
@@ -21,17 +22,20 @@ trace_openai_agents()
 
 # Run agents
 if __name__ == "__main__":
-    # asyncio.run(customer_service_agent())
-    # asyncio.run(research_agent())
     # if not shutil.which("uvx"):
     #     raise RuntimeError("uvx is not installed. Please install it with `pip install uvx`.")
     # asyncio.run(git_agent())
+
+    # asyncio.run(customer_service_agent())
+    # asyncio.run(research_agent())
     # asyncio.run(code_interpreter_agent())
     # asyncio.run(remote_agent())
     # asyncio.run(streaming_agent())
+    # asyncio.run(streaming_guardrails_agent())
+    asyncio.run(output_guardrails_agent())
 
-    # Run streaming agent 10 times
-    async def gather_streaming_agents():
-        tasks = [streaming_agent() for _ in range(10)]
-        await asyncio.gather(*tasks)
-    asyncio.run(gather_streaming_agents())
+    ## Run streaming agent 10 times
+    # async def gather_streaming_agents():
+    #     tasks = [streaming_agent() for _ in range(10)]
+    #     await asyncio.gather(*tasks)
+    # asyncio.run(gather_streaming_agents())
