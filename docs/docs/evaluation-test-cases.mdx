@@ -680,6 +680,8 @@ For more examples of `evaluate`, visit the [datasets section](/docs/evaluation-d
 
 ## Labeling Test Cases for Confident AI
 
+### Name
+
 If you're using Confident AI, the optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
 
 ```python
@@ -687,4 +689,14 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
 test_case = LLMTestCase(name="my-external-unique-id", ...)
 convo_test_case = ConversationalTestCase(name="my-external-unique-id", ...)
+```
+
+### Tags
+
+Alternatively, you can also tag test cases for filtering and searching on Confident AI:
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(tags=["Topic 1", "Topic 3"], ...)
 ```
