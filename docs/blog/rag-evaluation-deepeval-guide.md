@@ -1,7 +1,7 @@
 ---
-title: "Evaluate and Deploy Robust RAG Applications with DeepEval"
+title: "Evaluate a RAG-Based Contract Assistant with DeepEval"
 description: Evaluate and deploy reliable RAG systems with DeepEval — test LLMs, detect hallucinations, and integrate into CI/CD workflows.
-slug: rag-evaluation-deepeval-guide
+slug: rag-contract-assistant-deepeval-guide
 authors: [cale, penguine]
 date: 2025-06-12
 hide_table_of_contents: false
@@ -98,7 +98,7 @@ Here’s what we need to consider when evaluating retrievers:
 2. **[Contextual Recall](https://deepeval.com/docs/metrics-contextual-recall)** – _Did I retrieve enough of the good stuff?_
 3. **[Contextual Precision](https://deepeval.com/docs/metrics-contextual-precision)** – _Did I avoid junk I don’t need?_
 
-But knowing what to evaluate isn’t enough, here comes the hardest part of evaluating retrievers. Retrievers cannot be evaluated without a ground-truth to evaluate them against. This means we need question and answer pairs that we can use to evaluate our retriever against from our original documents. But this is a tedious, expensive, and time-consuming step.
+But knowing what to evaluate isn’t enough, here comes the hardest part of evaluating retrievers. Retrievers cannot be evaluated without a ground-truth to evaluate them against. This means we need question and answer "pairs" that we can use to evaluate our retriever against from our original documents. But this is a tedious, expensive, and time-consuming step.
 
 DeepEval helps you get around this with its built-in **[synthesizer](https://deepeval.com/docs/synthesizer-introduction)**, which can generate high-quality question–answer pairs from your raw documents — automating a huge part of the process and setting you up for continuous testing down the line.
 
@@ -131,20 +131,20 @@ recall = ContextualRecallMetric()
 precision = ContextualPrecisionMetric()
 
 # Evaluate for each golden
-for pair in goldens:
-    retrieved_docs = retriever.retrieve(pair.input)
+for golden in goldens:
+    retrieved_docs = retriever.retrieve(golden.input)
     context_list = [doc.page_content for doc in retrieved_docs]
     test_case = LLMTestCase(
-        input=pair.input,
-        actual_output=pair.expected_output,
-        expected_output=pair.expected_output,
+        input=golden.input,
+        actual_output=golden.expected_output,
+        expected_output=golden.expected_output,
         retrieval_context=context_list
     )
     relevancy.measure(test_case)
     recall.measure(test_case)
     precision.measure(test_case)
 
-    print(f"Q: {pair.input}\nA: {pair.expected_output}")
+    print(f"Q: {golden.input}\nA: {golden.expected_output}")
     print(f"Relevancy: {relevancy.score}, Recall: {recall.score}, Precision: {precision.score}")
 ```
 
@@ -203,14 +203,14 @@ for chunk_size in chunking_strategies:
                 persist_directory=persist_dir,  # Pass only if using Chroma
             )
 
-            for pair in goldens:
-                retrieved_docs = retriever.retrieve(pair.input)
+            for golden in goldens:
+                retrieved_docs = retriever.retrieve(golden.input)
                 context_list = [doc.page_content for doc in retrieved_docs]
 
                 test_case = LLMTestCase(
-                    input=pair.input,
-                    actual_output=pair.expected_output,
-                    expected_output=pair.expected_output,
+                    input=golden.input,
+                    actual_output=golden.expected_output,
+                    expected_output=golden.expected_output,
                     retrieval_context=context_list
                 )
 
@@ -218,7 +218,7 @@ for chunk_size in chunking_strategies:
                 recall.measure(test_case)
                 precision.measure(test_case)
 
-                print(f"Q: {pair.input[:70]}...")
+                print(f"Q: {golden.input[:70]}...")
                 print(f"Relevancy: {relevancy.score}, Recall: {recall.score}, Precision: {precision.score}")
 ```
 
@@ -458,7 +458,7 @@ Building a reliable RAG app is a significant achievement, but for a truly **prod
 
 Your law firm's contracts and internal policies are **living documents**. They'll inevitably be updated, revised, or new ones added. If your evaluation dataset is static, your tests can quickly become outdated, leading to silent failures or false positives.
 
-By dynamically regenerating your golden question-answer pairs during your CI run, your tests automatically adapt to content changes. This prevents regressions caused by outdated test data and ensures your RAG application remains trustworthy and accurate over time.
+By dynamically regenerating your golden question-answer "pairs" during your CI run, your tests automatically adapt to content changes. This prevents regressions caused by outdated test data and ensures your RAG application remains trustworthy and accurate over time.
 
 ### Integrating DeepEval tests into your CI/CD
 
@@ -496,13 +496,13 @@ generator_instance = Generator(...)
 
 # Generate Q&A pairs (goldens) dynamically from your current documents
 synthesizer = Synthesizer()
-golden_test_cases = synthesizer.generate_goldens_from_docs(
+goldens = synthesizer.generate_goldens_from_docs(
     document_paths=["document.txt"], chunk_size=1024, chunk_overlap=50
 )
 
 # Create DeepEval test cases from your golden pairs
 test_cases = []
-for golden in golden_test_cases:
+for golden in goldens:
     query = golden.input
     expected_answer = golden.expected_output
 
