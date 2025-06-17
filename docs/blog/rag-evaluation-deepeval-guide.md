@@ -1,13 +1,13 @@
 ---
-title: 'Evaluate and Deploy Robust RAG Applications with DeepEval'
+title: "Evaluate and Deploy Robust RAG Applications with DeepEval"
 description: Evaluate and deploy reliable RAG systems with DeepEval — test LLMs, detect hallucinations, and integrate into CI/CD workflows.
 slug: rag-evaluation-deepeval-guide
-authors: [cale]
+authors: [cale, penguine]
 date: 2025-06-12
 hide_table_of_contents: false
 ---
 
-Imagine this — You’re building a contract assistant for a mid-sized law firm with over 300 employees and a repository of more than 10,000 archived contracts and internal policies. 
+Imagine this — You’re building a contract assistant for a mid-sized law firm with over 300 employees and a repository of more than 10,000 archived contracts and internal policies.
 
 You need to build a **Retrieval-Augmented Generation (RAG)** system designed to help lawyers, paralegals, and HR personnel quickly find precise answers to complex queries about contracts, policies, and compliance.
 
@@ -15,8 +15,8 @@ In this scenario, the reliability of the RAG system is absolutely critical. Ther
 
 This tutorial walks you through how to build a **reliable RAG system** with [DeepEval](https://github.com/confident-ai/deepeval), focusing on:
 
-1. Automatically generating high-quality test data from your own docs  
-2. Component-level evaluation for both **retrievers** and **generators**  
+1. Automatically generating high-quality test data from your own docs
+2. Component-level evaluation for both **retrievers** and **generators**
 3. Integrating CI/CD tests that adapt as your contracts evolve
 
 By the end of this tutorial, you’ll have a deployable RAG app that’s not only smart — it’s battle-tested.
@@ -28,73 +28,75 @@ A hallucination doesn’t start in generation — it starts in retrieval. If you
 ### Building a basic retriever
 
 Let’s say you’re using a standard `FAISS` \+ `OpenAIEmbeddings` retriever.
+
 <details> <summary>Click here to see the implementation of a simple retriever</summary>
 
 ```python
-from langchain.vectorstores import Chroma, FAISS  
-from langchain.embeddings import OpenAIEmbeddings  
-from langchain.text_splitter import RecursiveCharacterTextSplitter  
-  
-class SimpleRetriever:  
-    def __init__(  
-        self,  
-        document_path: str,  
-        embedding_model=None,  
-        chunk_size: int = 500,  
-        chunk_overlap: int = 50,  
-        vector_store_class=FAISS,  
+from langchain.vectorstores import Chroma, FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+class SimpleRetriever:
+    def __init__(
+        self,
+        document_path: str,
+        embedding_model=None,
+        chunk_size: int = 500,
+        chunk_overlap: int = 50,
+        vector_store_class=FAISS,
         persist_directory: str = None,
-        k: int = 2  
-    ):  
-        self.document_path = document_path  
-        self.chunk_size = chunk_size  
-        self.chunk_overlap = chunk_overlap  
-        self.embedding_model = embedding_model or OpenAIEmbeddings()  
-        self.vector_store_class = vector_store_class  
-        self.persist_directory = persist_directory  
-        self.k = k  
-        self.vector_store = self._load_vector_store()  
-  
-  
-    def _load_vector_store(self):  
-        with open(self.document_path, "r", encoding="utf-8") as file:  
-            raw_text = file.read()  
-            
-        splitter = RecursiveCharacterTextSplitter(  
-            chunk_size=self.chunk_size,  
-            chunk_overlap=self.chunk_overlap  
-        )  
-        documents = splitter.create_documents([raw_text])  
-    
-        if self.vector_store_class == Chroma:  
-            return self.vector_store_class.from_documents(  
-                documents, self.embedding_model,  
-                persist_directory=self.persist_directory  
-            )  
-        else:  
-            return self.vector_store_class.from_documents(documents, self.embedding_model)  
-    
-    
-    def retrieve(self, query: str):  
-        return self.vector_store.similarity_search(query, k=self.k)  
-  
-  
-# Initialize retriever  
-retriever = SimpleRetriever("document.txt")  
-  
-# Query the retriever  
-query = "What benefits do part-time employees get?"  
+        k: int = 2
+    ):
+        self.document_path = document_path
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.embedding_model = embedding_model or OpenAIEmbeddings()
+        self.vector_store_class = vector_store_class
+        self.persist_directory = persist_directory
+        self.k = k
+        self.vector_store = self._load_vector_store()
+
+
+    def _load_vector_store(self):
+        with open(self.document_path, "r", encoding="utf-8") as file:
+            raw_text = file.read()
+
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap
+        )
+        documents = splitter.create_documents([raw_text])
+
+        if self.vector_store_class == Chroma:
+            return self.vector_store_class.from_documents(
+                documents, self.embedding_model,
+                persist_directory=self.persist_directory
+            )
+        else:
+            return self.vector_store_class.from_documents(documents, self.embedding_model)
+
+
+    def retrieve(self, query: str):
+        return self.vector_store.similarity_search(query, k=self.k)
+
+
+# Initialize retriever
+retriever = SimpleRetriever("document.txt")
+
+# Query the retriever
+query = "What benefits do part-time employees get?"
 results = retriever.retrieve(query)
 ```
+
 </details>
 
-This retriever *works* — but how well?
+This retriever _works_ — but how well?
 
 Here’s what we need to consider when evaluating retrievers:
 
-1. **[Contextual Relevancy](https://deepeval.com/docs/metrics-contextual-relevancy)** – *Is this the info I’d want if I were answering this question?*  
-2. **[Contextual Recall](https://deepeval.com/docs/metrics-contextual-recall)** – *Did I retrieve enough of the good stuff?*  
-3. **[Contextual Precision](https://deepeval.com/docs/metrics-contextual-precision)** – *Did I avoid junk I don’t need?*
+1. **[Contextual Relevancy](https://deepeval.com/docs/metrics-contextual-relevancy)** – _Is this the info I’d want if I were answering this question?_
+2. **[Contextual Recall](https://deepeval.com/docs/metrics-contextual-recall)** – _Did I retrieve enough of the good stuff?_
+3. **[Contextual Precision](https://deepeval.com/docs/metrics-contextual-precision)** – _Did I avoid junk I don’t need?_
 
 But knowing what to evaluate isn’t enough, here comes the hardest part of evaluating retrievers. Retrievers cannot be evaluated without a ground-truth to evaluate them against. This means we need question and answer pairs that we can use to evaluate our retriever against from our original documents. But this is a tedious, expensive, and time-consuming step.
 
@@ -146,11 +148,11 @@ for pair in goldens:
     print(f"Relevancy: {relevancy.score}, Recall: {recall.score}, Precision: {precision.score}")
 ```
 
-When I did the evaluation using the above retriever, I got an average of 0.52, 0.75 and 0.64 for Relevancy, Recall and Precision scores. These are *passable* to say the least. And hence there is a need to find the best hyperparameters i.e., chunking strategies, different embedding models, different retriever types.
+When I did the evaluation using the above retriever, I got an average of 0.52, 0.75 and 0.64 for Relevancy, Recall and Precision scores. These are _passable_ to say the least. And hence there is a need to find the best hyperparameters i.e., chunking strategies, different embedding models, different retriever types.
 
 ### Improving your retriever
 
-Now let’s iterate over different strategies to see which model works best for us. 
+Now let’s iterate over different strategies to see which model works best for us.
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -171,7 +173,7 @@ embedding_models = [
     ("HuggingFaceEmbeddings", HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")),
 ]
 retriever_models = [
-    ("FAISS", FAISS), 
+    ("FAISS", FAISS),
     ("Chroma", Chroma)
 ]
 
@@ -220,16 +222,15 @@ for chunk_size in chunking_strategies:
                 print(f"Relevancy: {relevancy.score}, Recall: {recall.score}, Precision: {precision.score}")
 ```
 
-After these iterations I’ve found that using `HuggingFaceEmbeddings` and `FAISS` with `1024` chunks gives me an average score of  0.82, 0.92 and 0.89 for Relevancy, Recall and Precision.
+After these iterations I’ve found that using `HuggingFaceEmbeddings` and `FAISS` with `1024` chunks gives me an average score of 0.82, 0.92 and 0.89 for Relevancy, Recall and Precision.
 
 Here's a table to compare the results
 
-| Metric      | Initial Retriever | Optimized Retriever |
-| ----------- | ----------------- | ------------------- |
-| Relevancy   | 0.52              | 0.82                |
-| Recall      | 0.75              | 0.92                |
-| Precision   | 0.64              | 0.89                |
-
+| Metric    | Initial Retriever | Optimized Retriever |
+| --------- | ----------------- | ------------------- |
+| Relevancy | 0.52              | 0.82                |
+| Recall    | 0.75              | 0.92                |
+| Precision | 0.64              | 0.89                |
 
 :::tip **Takeaways**
 Swapping to `HuggingFaceEmbeddings` and increasing chunk size to `1024` improved all key scores — pushing Relevancy to 0.82, Recall to 0.92 and Precision to 0.89. With DeepEval, tuning isn't guesswork — it's measured progress. Of course this is only in my case and you might have better results with different hyperparameters. Feel free to test them out to find the best ones that work for your data.
@@ -271,6 +272,7 @@ class Generator:
         prompt = self.prompt_template.format(context=context, question=question)
         return self.llm(prompt)
 ```
+
 </details>
 
 This might feel like a solid generator — but is it?
@@ -295,18 +297,18 @@ answer = generator.generate(question)
 print(answer)
 ```
 
-It *looks good* and it *sounds right*. But LLMs are expert improvisers. Without proper grounding, **they invent policies, procedures, and legalese**.
+It _looks good_ and it _sounds right_. But LLMs are expert improvisers. Without proper grounding, **they invent policies, procedures, and legalese**.
 
 In my testing, the model confidently stated policies that didn’t exist in the context. That’s not a hallucination — it’s a compliance failure.
 
-Just like we did with retrievers, we need to evaluate generators *with real metrics*, not just vibes. DeepEval makes this concrete with out-of-the-box and custom metrics:
+Just like we did with retrievers, we need to evaluate generators _with real metrics_, not just vibes. DeepEval makes this concrete with out-of-the-box and custom metrics:
 
-1. **[Faithfulness](https://deepeval.com/docs/metrics-faithfulness)** – Does it stick to the retrieved context?  
-2. **[Answer Relevancy](https://deepeval.com/docs/metrics-answer-relevancy)** – Is the answer focused on the query?  
-3. **[Tone](https://deepeval.com/docs/metrics-llm-evals)** – Is the response professionally framed?  
+1. **[Faithfulness](https://deepeval.com/docs/metrics-faithfulness)** – Does it stick to the retrieved context?
+2. **[Answer Relevancy](https://deepeval.com/docs/metrics-answer-relevancy)** – Is the answer focused on the query?
+3. **[Tone](https://deepeval.com/docs/metrics-llm-evals)** – Is the response professionally framed?
 4. **[Citations](https://deepeval.com/docs/metrics-llm-evals)** – Are document sources properly referenced?
 
-Before testing across your whole dataset, start with a single golden pair. Iterate on prompts, formatting, or context structure. Once it’s reliable — *then* scale.
+Before testing across your whole dataset, start with a single golden pair. Iterate on prompts, formatting, or context structure. Once it’s reliable — _then_ scale.
 
 Here’s how you can evaluate the generator with the above mentioned metrics:
 
@@ -362,9 +364,9 @@ You now have a structured and repeatable way to measure how well your generator 
 
 There are multiple levers you can adjust to improve the generator:
 
-1. LLM choice   
-2. Prompt phrasing  
-3. Context window length  
+1. LLM choice
+2. Prompt phrasing
+3. Context window length
 4. Citation formatting and instruction
 
 ```python
@@ -412,8 +414,8 @@ for i, prompt_template in enumerate(prompts, 1):
         print(f"Prompt Variant {i} | Model: {model_name}")
 
         generator = Generator(
-            retriever=retriever, 
-            llm=model, 
+            retriever=retriever,
+            llm=model,
             prompt_template=prompt_template
         )
         generated_answer = generator.generate(query)
@@ -432,7 +434,7 @@ for i, prompt_template in enumerate(prompts, 1):
 
 After testing all prompt–model combinations, I found:
 
-1. **Prompt 2** (explicit grounding \+ citation instructions)  
+1. **Prompt 2** (explicit grounding \+ citation instructions)
 2. **Model: OpenAI’s GPT-4**
 
 consistently scored **highest on all four metrics** as follows **Faithfulness: 0.91 | Relevancy: 0.88**.
@@ -545,12 +547,12 @@ def test_rag_application_performance(test_case: LLMTestCase):
     assert_test(test_case, metrics)
 ```
 
-This test ensures your retriever *and* generator keep performing at a high standard every time your documents or code changes.
+This test ensures your retriever _and_ generator keep performing at a high standard every time your documents or code changes.
 
 Now let’s write our GitHub actions file to complete our CI integration.
 
 ```yaml
-name: RAG  DeepEval  Tests  
+name: RAG  DeepEval  Tests
 
 on:
   push:
