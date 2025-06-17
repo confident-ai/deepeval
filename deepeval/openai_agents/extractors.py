@@ -34,6 +34,7 @@ try:
         ResponseSpanData,
         SpanData,
         HandoffSpanData,
+        CustomSpanData,
     )
     openai_agents_available = True
 except ImportError:
@@ -60,9 +61,10 @@ def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
     # Agent Span 
     elif isinstance(span_data, AgentSpanData):
         update_attributes_from_agent_span_data(span, span_data)
-    # Handoff Span
+    # Custom Span
     elif isinstance(span_data, HandoffSpanData):
         update_attributes_from_handoff_span_data(span, span_data)
+    elif isinstance(span_data, CustomSpanData):
 
 ########################################################
 ### LLM Span ###########################################
@@ -75,8 +77,9 @@ def update_attributes_from_response_span_data(
     response = span_data.response
     if response is None:
         span.model = "NA"
+        return
     # Extract prompt template
-    prompt_template = response.instructions
+    prompt_template = response.instructions or None
     prompt = Prompt(template=prompt_template) if prompt_template else None
     # Extract usage tokens
     usage = response.usage
@@ -87,9 +90,8 @@ def update_attributes_from_response_span_data(
         ouptut_reasoning_tokens= usage.output_tokens_details.reasoning_tokens
     # Get input and output
     input = parse_response_input(span_data.input)
-    output = parse_response_output(response.output)
-    if isinstance(output, list):
-        output = json.dumps(output)
+    raw_output = parse_response_output(response.output)
+    output = raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
     # Update Span
     llm_attributes=LlmAttributes(
         prompt=prompt,
@@ -147,7 +149,7 @@ def update_attributes_from_function_span_data(
         output=function_span_data.output
     )
     span.set_attributes(tool_attributes)
-    span.name = function_span_data.name or "Function tool"
+    span.name = "Function tool: " + function_span_data.name if function_span_data.name else "Function tool"
     span.description = "Function tool"
 
 def update_attributes_from_mcp_list_tool_span_data(
@@ -160,7 +162,7 @@ def update_attributes_from_mcp_list_tool_span_data(
         output=mcp_list_tool_span_data.result
     )
     span.set_attributes(tool_attributes)
-    span.name = mcp_list_tool_span_data.server or "MCP tool"
+    span.name = "MCP tool: " + mcp_list_tool_span_data.server if mcp_list_tool_span_data.server else "MCP tool"
     span.description = "MCP tool"
 
 
@@ -185,7 +187,7 @@ def update_attributes_from_agent_span_data(
 
 
 ########################################################
-### Handoff Span #######################################
+### Custom Span #######################################
 ########################################################
 
 def update_attributes_from_handoff_span_data(
@@ -201,6 +203,14 @@ def update_attributes_from_handoff_span_data(
     span.metadata = metadata
     span.input = None
     span.output = None
+
+def update_attributes_from_custom_span_data(
+    span: BaseSpan, 
+    custom_span_data: CustomSpanData
+):
+    # Update Span
+    span.name = custom_span_data.name
+    span.metadata = {"data": custom_span_data.data}
 
 ########################################################
 ### Parse Input Utils ##################################

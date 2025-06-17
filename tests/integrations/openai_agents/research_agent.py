@@ -271,3 +271,8 @@ class Printer:
             else:
                 renderables.append(Spinner("dots", text=content))
         self.live.update(Group(*renderables))
+
+async def research_agent() -> None:
+    query = input("Enter a financial research query: ")
+    mgr = FinancialResearchManager()
+    await mgr.run(query)

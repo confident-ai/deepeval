@@ -80,6 +80,8 @@ class OpenAIAgentsCallbackHandler(TracingProcessor):
             return "agent"
         if isinstance(span_data, FunctionSpanData):
             return "tool"
+        if isinstance(span_data, MCPListToolsSpanData):
+            return "tool"
         if isinstance(span_data, GenerationSpanData):
             return "llm"
         if isinstance(span_data, ResponseSpanData):

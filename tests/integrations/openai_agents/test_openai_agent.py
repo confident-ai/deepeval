@@ -1,20 +1,37 @@
 from deepeval.openai_agents import trace_openai_agents
 import asyncio
+import shutil
 import sys
 import os
 
+# Add project root to sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
 sys.path.insert(0, project_root)
-from tests.integrations.openai_agents.customer_service import customer_service_agent
-from tests.integrations.openai_agents.research_agent import FinancialResearchManager
+
+# Import agents
+from tests.integrations.openai_agents.streaming_guardrails_agent import streaming_guardrails_agent
+from tests.integrations.openai_agents.code_interpreter_agent import code_interpreter_agent
+from tests.integrations.openai_agents.customer_service_agent import customer_service_agent
+from tests.integrations.openai_agents.streaming_agent import streaming_agent
+from tests.integrations.openai_agents.research_agent import research_agent
+from tests.integrations.openai_agents.remote_agent import remote_agent
+from tests.integrations.openai_agents.git_mcp_agent import git_agent
 
 trace_openai_agents()
 
-async def main() -> None:
-    query = input("Enter a financial research query: ")
-    mgr = FinancialResearchManager()
-    await mgr.run(query)
-
+# Run agents
 if __name__ == "__main__":
     # asyncio.run(customer_service_agent())
-    asyncio.run(main())
+    # asyncio.run(research_agent())
+    # if not shutil.which("uvx"):
+    #     raise RuntimeError("uvx is not installed. Please install it with `pip install uvx`.")
+    # asyncio.run(git_agent())
+    # asyncio.run(code_interpreter_agent())
+    # asyncio.run(remote_agent())
+    # asyncio.run(streaming_agent())
+
+    # Run streaming agent 10 times
+    async def gather_streaming_agents():
+        tasks = [streaming_agent() for _ in range(10)]
+        await asyncio.gather(*tasks)
+    asyncio.run(gather_streaming_agents())
