@@ -462,7 +462,6 @@ class Synthesizer:
                         golden = Golden(
                             input=evolved_input,
                             context=context,
-                            expected_output=None,
                             source_file=(
                                 source_files[i]
                                 if source_files is not None
