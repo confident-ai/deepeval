@@ -27,14 +27,14 @@ if __name__ == "__main__":
     if not shutil.which("uvx"):
         raise RuntimeError("uvx is not installed. Please install it with `pip install uvx`.")
     
-    asyncio.run(git_agent())
+    # asyncio.run(git_agent())
     # asyncio.run(customer_service_agent())
-    asyncio.run(research_agent())
-    asyncio.run(code_interpreter_agent())
-    asyncio.run(remote_agent())
-    asyncio.run(streaming_agent())
-    asyncio.run(streaming_guardrails_agent())
-    asyncio.run(output_guardrails_agent())
+    # asyncio.run(research_agent())
+    # asyncio.run(code_interpreter_agent())
+    # asyncio.run(remote_agent())
+    # asyncio.run(streaming_agent())
+    # asyncio.run(streaming_guardrails_agent())
+    # asyncio.run(output_guardrails_agent())
     asyncio.run(thread_agent())
 
     ##########################################
