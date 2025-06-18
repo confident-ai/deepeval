@@ -15,7 +15,7 @@ from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
-API_BASE_URL = "https://api.confident-ai.com"
+API_BASE_URL = "http://localhost:3001"
 API_BASE_URL_EU = "https://eu.api.confident-ai.com"
 retryable_exceptions = requests.exceptions.SSLError
 

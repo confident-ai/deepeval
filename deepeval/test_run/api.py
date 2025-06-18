@@ -23,6 +23,15 @@ class LLMApiTestCase(BaseModel):
     multimodal_input_actual_output: Optional[List[Union[str, MLLMImage]]] = (
         Field(None, alias="multimodalActualOutput")
     )
+    multimodal_expected_output: Optional[List[Union[str, MLLMImage]]] = Field(
+        None, alias="multimodalExpectedOutput"
+    )
+    multimodal_retrieval_context: Optional[List[Union[str, MLLMImage]]] = Field(
+        None, alias="multimodalRetrievalContext"
+    )
+    multimodal_context: Optional[List[Union[str, MLLMImage]]] = (
+        Field(None, alias="multimodalContext")
+    )
 
     # make these optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
