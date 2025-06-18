@@ -1,8 +1,6 @@
 from typing import List, Optional, Dict, Union
 from urllib.parse import urlparse, unquote
-from dataclasses import dataclass
-from dataclasses import field
-from pydantic import Field
+from dataclasses import dataclass, field
 from enum import Enum
 import mimetypes
 import base64
@@ -15,9 +13,9 @@ from deepeval.test_case import ToolCall
 class MLLMImage:
     url: str
     local: Optional[bool] = None
-    filename: Optional[str] = Field(default=None, init=False, repr=False)
-    mime_type: Optional[str] = Field(default=None, init=False, repr=False, alias="mimeType")
-    data_base64: Optional[str] = Field(default=None, init=False, repr=False, alias="dataBase64")
+    filename: Optional[str] = field(default=None, init=False, repr=False)
+    mimeType: Optional[str] = field(default=None, init=False, repr=False)
+    dataBase64: Optional[str] = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
         is_local = self.is_local_path(self.url)
@@ -30,14 +28,14 @@ class MLLMImage:
         if self.local:
             path = self.process_url(self.url)
             self.filename = os.path.basename(path)
-            self.mime_type = mimetypes.guess_type(path)[0] or "application/octet-stream"
+            self.mimeType = mimetypes.guess_type(path)[0] or "application/octet-stream"
             with open(path, "rb") as f:
                 raw = f.read()
-            self.data_base64 = base64.b64encode(raw).decode("ascii")
+            self.dataBase64 = base64.b64encode(raw).decode("ascii")
         else:
             self.filename = None
-            self.mime_type = None
-            self.data_base64 = None
+            self.mimeType = None
+            self.dataBase64 = None
 
     @staticmethod
     def process_url(url: str) -> str:
