@@ -22,6 +22,7 @@
     "clsx": "^1.2.1",
     "docusaurus": "^1.14.7",
     "docusaurus-plugin-sass": "^0.2.5",
+    "dompurify": "^3.2.6",
     "font-awesome": "^4.7.0",
     "posthog-docusaurus": "^2.0.2",
     "posthog-js": "^1.206.1",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "2.4.1",
+    "@types/dompurify": "^3.2.0",
     "css-loader": "^7.1.2",
     "prettier": "^3.5.3",
     "style-loader": "^4.0.0"
