@@ -704,7 +704,7 @@ class Observer:
         )
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
-        self.custom_update_span_attributes: Optional[Callable] = None
+        self.update_span_properties: Optional[Callable] = None
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
@@ -774,8 +774,8 @@ class Observer:
         else:
             current_span.status = TraceSpanStatus.SUCCESS
 
-        if self.custom_update_span_attributes is not None:
-            self.custom_update_span_attributes(current_span)
+        if self.update_span_properties is not None:
+            self.update_span_properties(current_span)
         else:
             self.update_span_attributes(current_span)
 

@@ -1,7 +1,8 @@
 import asyncio
 from openai.types.responses import ResponseTextDeltaEvent
 from agents import Agent, Runner
-
+'
+'
 async def streaming_agent():
     agent = Agent(
         name="Joker",

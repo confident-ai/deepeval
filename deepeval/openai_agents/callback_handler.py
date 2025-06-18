@@ -56,8 +56,8 @@ class DeepEvalTracingProcessor(TracingProcessor):
         observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
             observer.observe_kwargs["model"] = "temporary model"
-        observer.custom_update_span_attributes = (
-            lambda span_type: custom_update_span_attributes(span_type, span.span_data)
+        observer.update_span_properties = (
+            lambda span_type: update_span_properties(span_type, span.span_data)
         )
         self.span_observers[span.span_id] = observer
         observer.__enter__()

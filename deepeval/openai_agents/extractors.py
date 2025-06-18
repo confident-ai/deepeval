@@ -46,34 +46,34 @@ def _check_openai_agents_available():
             "openai-agents is required for this integration. Install it via your package manager"
         )
 
-def custom_update_span_attributes(span: BaseSpan, span_data: SpanData):
+def update_span_properties(span: BaseSpan, span_data: SpanData):
     _check_openai_agents_available()
     # LLM Span
     if isinstance(span_data, ResponseSpanData):
-        update_attributes_from_response_span_data(span, span_data)
+        update_span_properties_from_response_span_data(span, span_data)
     elif isinstance(span_data, GenerationSpanData):
-        udpate_attributes_from_generation_span_data(span, span_data)
+        update_span_properties_from_generation_span_data(span, span_data)
     # Tool Span
     elif isinstance(span_data, FunctionSpanData):
-        update_attributes_from_function_span_data(span, span_data)
+        update_span_properties_from_function_span_data(span, span_data)
     elif isinstance(span_data, MCPListToolsSpanData):
-        update_attributes_from_mcp_list_tool_span_data(span, span_data)
+        update_span_properties_from_mcp_list_tool_span_data(span, span_data)
     # Agent Span 
     elif isinstance(span_data, AgentSpanData):
-        update_attributes_from_agent_span_data(span, span_data)
+        update_span_properties_from_agent_span_data(span, span_data)
     # Custom Span
     elif isinstance(span_data, HandoffSpanData):
-        update_attributes_from_handoff_span_data(span, span_data)
+        update_span_properties_from_handoff_span_data(span, span_data)
     elif isinstance(span_data, CustomSpanData):
-        update_attributes_from_custom_span_data(span, span_data)
+        update_span_properties_from_custom_span_data(span, span_data)
     elif isinstance(span_data, GuardrailSpanData):
-        update_attributes_from_guardrail_span_data(span, span_data)
+        update_span_properties_from_guardrail_span_data(span, span_data)
 
 ########################################################
 ### LLM Span ###########################################
 ########################################################
 
-def update_attributes_from_response_span_data(
+def update_span_properties_from_response_span_data(
     span: LlmSpan, 
     span_data: ResponseSpanData,
 ):
@@ -114,7 +114,7 @@ def update_attributes_from_response_span_data(
     span.output = output
     span.name = "LLM Generation"
 
-def udpate_attributes_from_generation_span_data(
+def update_span_properties_from_generation_span_data(
     span: LlmSpan, 
     generation_span_data: GenerationSpanData,
 ):
@@ -146,7 +146,7 @@ def udpate_attributes_from_generation_span_data(
 ### Tool Span ##########################################
 ########################################################
 
-def update_attributes_from_function_span_data(
+def update_span_properties_from_function_span_data(
     span: ToolSpan, 
     function_span_data: FunctionSpanData,
 ):
@@ -159,7 +159,7 @@ def update_attributes_from_function_span_data(
     span.name = "Function tool: " + function_span_data.name if function_span_data.name else "Function tool"
     span.description = "Function tool"
 
-def update_attributes_from_mcp_list_tool_span_data(
+def update_span_properties_from_mcp_list_tool_span_data(
     span: ToolSpan, 
     mcp_list_tool_span_data: MCPListToolsSpanData,
 ) :
@@ -177,7 +177,7 @@ def update_attributes_from_mcp_list_tool_span_data(
 ### Agent Span #########################################
 ########################################################
 
-def update_attributes_from_agent_span_data(
+def update_span_properties_from_agent_span_data(
     span: AgentSpan, 
     agent_span_data: AgentSpanData
 ):
@@ -197,7 +197,7 @@ def update_attributes_from_agent_span_data(
 ### Custom Span #######################################
 ########################################################
 
-def update_attributes_from_handoff_span_data(
+def update_span_properties_from_handoff_span_data(
     span: AgentSpan, 
     handoff_span_data: HandoffSpanData
 ):
@@ -211,7 +211,7 @@ def update_attributes_from_handoff_span_data(
     span.input = None
     span.output = None
 
-def update_attributes_from_custom_span_data(
+def update_span_properties_from_custom_span_data(
     span: BaseSpan, 
     custom_span_data: CustomSpanData
 ):
@@ -219,7 +219,7 @@ def update_attributes_from_custom_span_data(
     span.name = custom_span_data.name
     span.metadata = {"data": custom_span_data.data}
 
-def update_attributes_from_guardrail_span_data(
+def update_span_properties_from_guardrail_span_data(
     span: BaseSpan, 
     guardrail_span_data: GuardrailSpanData
 ):
