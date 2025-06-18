@@ -462,6 +462,7 @@ class Synthesizer:
                         golden = Golden(
                             input=evolved_input,
                             context=context,
+                            expected_output=None,
                             source_file=(
                                 source_files[i]
                                 if source_files is not None
@@ -692,7 +693,7 @@ class Synthesizer:
                 context=context,
                 expected_output=expected_output,
                 source_file=(
-                    source_files[index] if source_files is not None else None
+                    source_files[index] if source_files is not None and index < len(source_files) else None
                 ),
                 additional_metadata={
                     "evolutions": evolutions_used,
