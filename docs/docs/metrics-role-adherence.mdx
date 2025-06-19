@@ -19,7 +19,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 The role adherence metric is a conversational metric that determines whether your LLM chatbot is able to adhere to its given role **throughout a conversation**.
 
 :::tip
-The `RoleAdherenceMetric` is particular useful for a role-playing usecase.
+The `RoleAdherenceMetric` is particularly useful for a role-playing use case.
 :::
 
 ## Required Arguments
@@ -28,8 +28,6 @@ To use the `RoleAdherenceMetric`, you'll have to provide the following arguments
 
 - `turns`
 - `chatbot_role`
-
-- `turns`
 
 You must provide the `role` and `content` for evaluation to happen. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
@@ -85,4 +83,4 @@ The `RoleAdherenceMetric` score is calculated according to the following equatio
 
 <Equation formula="\text{Role Adherence} = \frac{\text{Number of Assistant Turns that Adhered to Chatbot Role in Conversation}}{\text{Total Number of Assistant Turns in Conversation}}" />
 
-The `RoleAdherenceMetric` first loops through each turn individually before using an LLM to determine which one of the `"assistant"` role `"content"` does not adhere to the specified `chatbot_role` using previous turns as context.
+The `RoleAdherenceMetric` iterates over each assistant turn and uses an LLM to evaluate whether the content adheres to the specified `chatbot_role`, using previous conversation turns as context.
