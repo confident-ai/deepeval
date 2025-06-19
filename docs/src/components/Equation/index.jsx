@@ -1,18 +1,20 @@
-import React from "react";
-import katex from "katex";
-import styles from "./Equation.module.css";
+import React from 'react';
+import DOMPurify from 'dompurify';
 
-const Equation = (props) => {
-  const html = katex.renderToString(props.formula, {
-    throwOnError: false,
-    displayMode: true,
+const Equation = ({ children, ...props }) => {
+  // Sanitize the HTML content to prevent XSS attacks
+  const sanitizedHTML = DOMPurify.sanitize(children, {
+    ALLOWED_TAGS: ['span', 'div', 'sub', 'sup', 'em', 'strong', 'i', 'b'],
+    ALLOWED_ATTR: ['class', 'style'],
+    ALLOW_DATA_ATTR: false
   });
 
   return (
-    <div className={styles.equationContainer}>
-      <span dangerouslySetInnerHTML={{ __html: html }} />
-    </div>
+    <div 
+      {...props}
+      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+    />
   );
 };
 
-export default Equation; 
+export default Equation;
