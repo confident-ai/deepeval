@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict, model_validator
-from typing import Optional, Any, List, Union, Dict
+from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional, List, Union, Dict
 
 from deepeval.test_case import MLLMImage
 from deepeval.tracing.api import TraceApi, MetricData
