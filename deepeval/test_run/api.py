@@ -29,8 +29,8 @@ class LLMApiTestCase(BaseModel):
     multimodal_retrieval_context: Optional[List[Union[str, MLLMImage]]] = Field(
         None, alias="multimodalRetrievalContext"
     )
-    multimodal_context: Optional[List[Union[str, MLLMImage]]] = (
-        Field(None, alias="multimodalContext")
+    multimodal_context: Optional[List[Union[str, MLLMImage]]] = Field(
+        None, alias="multimodalContext"
     )
 
     # make these optional, not all test cases in a conversation will be evaluated

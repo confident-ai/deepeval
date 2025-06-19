@@ -20,7 +20,7 @@ class MLLMImage:
     def __post_init__(self):
         is_local = self.is_local_path(self.url)
         if self.local is not None:
-            assert (self.local == is_local), "Local path mismatch"
+            assert self.local == is_local, "Local path mismatch"
         else:
             self.local = is_local
 
@@ -28,7 +28,9 @@ class MLLMImage:
         if self.local:
             path = self.process_url(self.url)
             self.filename = os.path.basename(path)
-            self.mimeType = mimetypes.guess_type(path)[0] or "application/octet-stream"
+            self.mimeType = (
+                mimetypes.guess_type(path)[0] or "application/octet-stream"
+            )
             with open(path, "rb") as f:
                 raw = f.read()
             self.dataBase64 = base64.b64encode(raw).decode("ascii")
@@ -43,7 +45,11 @@ class MLLMImage:
             return url
         parsed = urlparse(url)
         if parsed.scheme == "file":
-            raw_path = f"//{parsed.netloc}{parsed.path}" if parsed.netloc else parsed.path
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
             path = unquote(raw_path)
             return path
         return url
@@ -54,7 +60,11 @@ class MLLMImage:
             return True
         parsed = urlparse(url)
         if parsed.scheme == "file":
-            raw_path = f"//{parsed.netloc}{parsed.path}" if parsed.netloc else parsed.path
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
             path = unquote(raw_path)
             return os.path.exists(path)
         return False

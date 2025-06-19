@@ -31,13 +31,13 @@ mllm_param = [
     """
     ),
 ]
-    
+
 mllm_test_case = MLLMTestCase(
     input=mllm_param,
     actual_output=mllm_param,
     expected_output=mllm_param,
     retrieval_context=mllm_param,
-    context=mllm_param
+    context=mllm_param,
 )
 
 ###################################################
