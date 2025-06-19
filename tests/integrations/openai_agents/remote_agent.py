@@ -16,7 +16,9 @@ async def remote_agent():
         [
             {
                 "role": "user",
-                "content": [{"type": "input_image", "detail": "auto", "image_url": URL}],
+                "content": [
+                    {"type": "input_image", "detail": "auto", "image_url": URL}
+                ],
             },
             {
                 "role": "user",

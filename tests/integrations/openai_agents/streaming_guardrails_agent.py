@@ -61,7 +61,9 @@ async def streaming_guardrails_agent():
     guardrail_task = None
 
     async for event in result.stream_events():
-        if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
+        if event.type == "raw_response_event" and isinstance(
+            event.data, ResponseTextDeltaEvent
+        ):
             print(event.data.delta, end="", flush=True)
             current_text += event.data.delta
 
@@ -69,9 +71,14 @@ async def streaming_guardrails_agent():
             # Note that we don't run the guardrail check if there's already a task running. An
             # alternate implementation is to have N guardrails running, or cancel the previous
             # one.
-            if len(current_text) >= next_guardrail_check_len and not guardrail_task:
+            if (
+                len(current_text) >= next_guardrail_check_len
+                and not guardrail_task
+            ):
                 print("Running guardrail check")
-                guardrail_task = asyncio.create_task(check_guardrail(current_text))
+                guardrail_task = asyncio.create_task(
+                    check_guardrail(current_text)
+                )
                 next_guardrail_check_len += 300
 
         # Every iteration of the loop, check if the guardrail has been triggered
@@ -79,7 +86,9 @@ async def streaming_guardrails_agent():
             guardrail_result = guardrail_task.result()
             if not guardrail_result.is_readable_by_ten_year_old:
                 print("\n\n================\n\n")
-                print(f"Guardrail triggered. Reasoning:\n{guardrail_result.reasoning}")
+                print(
+                    f"Guardrail triggered. Reasoning:\n{guardrail_result.reasoning}"
+                )
                 break
 
     # Do one final check on the final output

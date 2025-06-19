@@ -753,7 +753,7 @@ class Observer:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit the tracer context, updating the span status and handling trace completion."""        
+        """Exit the tracer context, updating the span status and handling trace completion."""
 
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID

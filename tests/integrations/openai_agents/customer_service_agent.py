@@ -36,7 +36,8 @@ class AirlineAgentContext(BaseModel):
 
 
 @function_tool(
-    name_override="faq_lookup_tool", description_override="Lookup frequently asked questions."
+    name_override="faq_lookup_tool",
+    description_override="Lookup frequently asked questions.",
 )
 async def faq_lookup_tool(question: str) -> str:
     if "bag" in question or "baggage" in question:
@@ -58,7 +59,9 @@ async def faq_lookup_tool(question: str) -> str:
 
 @function_tool
 async def update_seat(
-    context: RunContextWrapper[AirlineAgentContext], confirmation_number: str, new_seat: str
+    context: RunContextWrapper[AirlineAgentContext],
+    confirmation_number: str,
+    new_seat: str,
 ) -> str:
     """
     Update the seat for a given confirmation number.
@@ -71,14 +74,18 @@ async def update_seat(
     context.context.confirmation_number = confirmation_number
     context.context.seat_number = new_seat
     # Ensure that the flight number has been set by the incoming handoff
-    assert context.context.flight_number is not None, "Flight number is required"
+    assert (
+        context.context.flight_number is not None
+    ), "Flight number is required"
     return f"Updated seat to {new_seat} for confirmation number {confirmation_number}"
 
 
 ### HOOKS
 
 
-async def on_seat_booking_handoff(context: RunContextWrapper[AirlineAgentContext]) -> None:
+async def on_seat_booking_handoff(
+    context: RunContextWrapper[AirlineAgentContext],
+) -> None:
     flight_number = f"FLT-{random.randint(100, 999)}"
     context.context.flight_number = flight_number
 
@@ -145,12 +152,16 @@ async def customer_service_agent():
         user_input = input("Enter your message: ")
         with trace("Customer service", group_id=conversation_id):
             input_items.append({"content": user_input, "role": "user"})
-            result = await Runner.run(current_agent, input_items, context=context)
+            result = await Runner.run(
+                current_agent, input_items, context=context
+            )
 
             for new_item in result.new_items:
                 agent_name = new_item.agent.name
                 if isinstance(new_item, MessageOutputItem):
-                    print(f"{agent_name}: {ItemHelpers.text_message_output(new_item)}")
+                    print(
+                        f"{agent_name}: {ItemHelpers.text_message_output(new_item)}"
+                    )
                 elif isinstance(new_item, HandoffOutputItem):
                     print(
                         f"Handed off from {new_item.source_agent.name} to {new_item.target_agent.name}"
@@ -160,6 +171,8 @@ async def customer_service_agent():
                 elif isinstance(new_item, ToolCallOutputItem):
                     print(f"{agent_name}: Tool call output: {new_item.output}")
                 else:
-                    print(f"{agent_name}: Skipping item: {new_item.__class__.__name__}")
+                    print(
+                        f"{agent_name}: Skipping item: {new_item.__class__.__name__}"
+                    )
             input_items = result.to_input_list()
             current_agent = result.last_agent

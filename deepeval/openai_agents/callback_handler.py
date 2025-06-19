@@ -1,6 +1,6 @@
 from deepeval.tracing.tracing import (
-    Observer, 
-    SpanType, 
+    Observer,
+    SpanType,
     current_trace_context,
 )
 from deepeval.openai_agents.extractors import *
@@ -16,10 +16,12 @@ try:
         HandoffSpanData,
         ResponseSpanData,
         SpanData,
-)
+    )
+
     openai_agents_available = True
 except ImportError:
     openai_agents_available = False
+
 
 def _check_openai_agents_available():
     if not openai_agents_available:
@@ -33,7 +35,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         _check_openai_agents_available()
         self.root_span_observers: dict[str, Observer] = {}
         self.span_observers: dict[str, Observer] = {}
-        
+
     def on_trace_start(self, trace: Trace) -> None:
         observer = Observer(span_type=SpanType.AGENT, func_name=trace.name)
         self.root_span_observers[trace.trace_id] = observer
@@ -61,7 +63,6 @@ class DeepEvalTracingProcessor(TracingProcessor):
         )
         self.span_observers[span.span_id] = observer
         observer.__enter__()
-
 
     def on_span_end(self, span: Span) -> None:
         observer = self.span_observers.pop(span.span_id, None)

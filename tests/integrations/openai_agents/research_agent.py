@@ -17,20 +17,25 @@ from typing import Any
 class AnalysisSummary(BaseModel):
     summary: str
 
+
 class FinancialSearchItem(BaseModel):
     reason: str
     query: str
 
+
 class FinancialSearchPlan(BaseModel):
     searches: list[FinancialSearchItem]
+
 
 class AnalysisSummary(BaseModel):
     summary: str
 
+
 class VerificationResult(BaseModel):
     verified: bool
     issues: str
-    
+
+
 class FinancialReportData(BaseModel):
     short_summary: str
     markdown_report: str
@@ -114,6 +119,7 @@ writer_agent = Agent(
     output_type=FinancialReportData,
 )
 
+
 async def _summary_extractor(run_result: RunResult) -> str:
     """Custom output extractor for sub‑agents that return an AnalysisSummary."""
     # The financial/risk analyst agents emit an AnalysisSummary with a `summary` field.
@@ -139,7 +145,9 @@ class FinancialResearchManager:
                 is_done=True,
                 hide_checkmark=True,
             )
-            self.printer.update_item("start", "Starting financial research...", is_done=True)
+            self.printer.update_item(
+                "start", "Starting financial research...", is_done=True
+            )
             search_plan = await self._plan_searches(query)
             search_results = await self._perform_searches(search_plan)
             report = await self._write_report(query, search_results)
@@ -168,10 +176,15 @@ class FinancialResearchManager:
         )
         return result.final_output_as(FinancialSearchPlan)
 
-    async def _perform_searches(self, search_plan: FinancialSearchPlan) -> Sequence[str]:
+    async def _perform_searches(
+        self, search_plan: FinancialSearchPlan
+    ) -> Sequence[str]:
         with custom_span("Search the web"):
             self.printer.update_item("searching", "Searching...")
-            tasks = [asyncio.create_task(self._search(item)) for item in search_plan.searches]
+            tasks = [
+                asyncio.create_task(self._search(item))
+                for item in search_plan.searches
+            ]
             results: list[str] = []
             num_completed = 0
             for task in asyncio.as_completed(tasks):
@@ -180,7 +193,8 @@ class FinancialResearchManager:
                     results.append(result)
                 num_completed += 1
                 self.printer.update_item(
-                    "searching", f"Searching... {num_completed}/{len(tasks)} completed"
+                    "searching",
+                    f"Searching... {num_completed}/{len(tasks)} completed",
                 )
             self.printer.mark_item_done("searching")
             return results
@@ -193,7 +207,9 @@ class FinancialResearchManager:
         except Exception:
             return None
 
-    async def _write_report(self, query: str, search_results: Sequence[str]) -> FinancialReportData:
+    async def _write_report(
+        self, query: str, search_results: Sequence[str]
+    ) -> FinancialReportData:
         # Expose the specialist analysts as tools so the writer can invoke them inline
         # and still produce the final FinancialReportData output.
         fundamentals_tool = financials_agent.as_tool(
@@ -206,7 +222,9 @@ class FinancialResearchManager:
             tool_description="Use to get a short write‑up of potential red flags",
             custom_output_extractor=_summary_extractor,
         )
-        writer_with_tools = writer_agent.clone(tools=[fundamentals_tool, risk_tool])
+        writer_with_tools = writer_agent.clone(
+            tools=[fundamentals_tool, risk_tool]
+        )
         self.printer.update_item("writing", "Thinking about report...")
         input_data = f"Original query: {query}\nSummarized search results: {search_results}"
         result = Runner.run_streamed(writer_with_tools, input_data)
@@ -218,14 +236,20 @@ class FinancialResearchManager:
         last_update = time.time()
         next_message = 0
         async for _ in result.stream_events():
-            if time.time() - last_update > 5 and next_message < len(update_messages):
-                self.printer.update_item("writing", update_messages[next_message])
+            if time.time() - last_update > 5 and next_message < len(
+                update_messages
+            ):
+                self.printer.update_item(
+                    "writing", update_messages[next_message]
+                )
                 next_message += 1
                 last_update = time.time()
         self.printer.mark_item_done("writing")
         return result.final_output_as(FinancialReportData)
 
-    async def _verify_report(self, report: FinancialReportData) -> VerificationResult:
+    async def _verify_report(
+        self, report: FinancialReportData
+    ) -> VerificationResult:
         self.printer.update_item("verifying", "Verifying report...")
         result = await Runner.run(verifier_agent, report.markdown_report)
         self.printer.mark_item_done("verifying")
@@ -251,7 +275,11 @@ class Printer:
         self.hide_done_ids.add(item_id)
 
     def update_item(
-        self, item_id: str, content: str, is_done: bool = False, hide_checkmark: bool = False
+        self,
+        item_id: str,
+        content: str,
+        is_done: bool = False,
+        hide_checkmark: bool = False,
     ) -> None:
         self.items[item_id] = (content, is_done)
         if hide_checkmark:
@@ -271,6 +299,7 @@ class Printer:
             else:
                 renderables.append(Spinner("dots", text=content))
         self.live.update(Group(*renderables))
+
 
 async def research_agent() -> None:
     query = input("Enter a financial research query: ")
