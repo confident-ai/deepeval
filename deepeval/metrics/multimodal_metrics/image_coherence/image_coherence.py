@@ -327,6 +327,16 @@ class ImageCoherenceMetric(BaseMultimodalMetric):
     def calculate_score(self, scores: List[float]):
         return sum(scores) / len(scores)
 
+    def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.success = self.score >= self.threshold
+            except:
+                self.success = False
+        return self.success
+
     @property
     def __name__(self):
         return "Image Coherence"

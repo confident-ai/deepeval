@@ -709,7 +709,7 @@ class TestRunManager:
             print("No test cases found, unable to upload to Confident AI.")
             return
 
-        test_run.guard_mllm_test_cases()
+        # test_run.guard_mllm_test_cases()
         BATCH_SIZE = 40
         CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
 
@@ -741,7 +741,7 @@ class TestRunManager:
         except AttributeError:
             # Pydantic version below 2.0
             body = test_run.dict(by_alias=True, exclude_none=True)
-
+            
         api = Api()
         result = api.send_request(
             method=HttpMethods.POST,
