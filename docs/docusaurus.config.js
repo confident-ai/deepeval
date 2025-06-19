@@ -9,7 +9,7 @@ module.exports = {
     [
       "posthog-docusaurus",
       {
-        apiKey: "phc_xuPeotBDIsi9uNBRS1ZqFD24IaOTx6lmt4ZCLfOnaee",
+        apiKey: process.env.DOCUSAURUS_API_KEY || "",
         appUrl: "https://us.i.posthog.com",
         enableInDevelopment: false,
       },
@@ -96,7 +96,7 @@ module.exports = {
           customCss: require.resolve("./src/css/custom.scss"),
         },
         gtag: {
-          trackingID: "G-N2EGDDYG9M",
+          trackingID: process.env.DOCUSAURUS_GA_TRACKING_ID || "",
           anonymizeIP: false,
         },
       },
@@ -193,8 +193,8 @@ module.exports = {
         ],
       },
       algolia: {
-        appId: "7U9PQIW1ZA",
-        apiKey: "fb799aeac8bcd0f6b9e0e233a385ad33",
+        appId: process.env.DOCUSAURUS_APP_ID || "",
+        apiKey: process.env.DOCUSAURUS_API_KEY || "",
         indexName: "confident-ai",
         contextualSearch: true,
       },
