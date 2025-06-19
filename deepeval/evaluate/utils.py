@@ -191,6 +191,7 @@ def create_api_test_case(
             api_test_case = LLMApiTestCase(
                 name=name,
                 input="",
+                multimodalMode=True,
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
                 multimodalExpectedOutput=test_case.expected_output,
