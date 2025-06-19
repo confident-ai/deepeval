@@ -36,23 +36,21 @@ The `input` and `actual_output` are required to create an `MLLMTestCase` (and he
 ## Usage
 
 ```python
-from deepeval.metrics import MultimodalToolCorrectnessMetric
 from deepeval.test_case import MLLMTestCase, ToolCall
+from deepeval.metrics import MultimodalToolCorrectnessMetric
+from deepeval import evaluate
 
-test_case = MLLMTestCase(
-    input="What's in this image?",
-    actual_output="The image shows a pair of running shoes.",
+metric = MultimodalToolCorrectnessMetric()
+m_test_case = MLLMTestCase(
+    input="[What's in this image?"],
+    actual_output=["The image shows a pair of running shoes."],
     # Replace this with the tools that was actually used by your LLM agent
     tools_called=[ToolCall(name="ImageAnalysis"), ToolCall(name="ToolQuery")],
     expected_tools=[ToolCall(name="ImageAnalysis")],
 )
 
-metric = MultimodalToolCorrectnessMetric()
-metric.measure(test_case)
-print(metric.score, metric.reason)
 
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
+evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
 There are **SEVEN** optional parameters when creating a `MultimodalToolCorrectnessMetric`:
@@ -67,6 +65,21 @@ There are **SEVEN** optional parameters when creating a `MultimodalToolCorrectne
 
 :::info
 Since `should_exact_match` is a stricter criteria than `should_consider_ordering`, setting `should_consider_ordering` will have no effect when `should_exact_match` is set to `True`.
+:::
+
+### As a standalone
+
+You can also run the `MultimodalToolCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(m_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 :::
 
 ## How Is It Calculated?

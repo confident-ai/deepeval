@@ -127,18 +127,18 @@ class Index extends React.Component {
         <div className={styles.featuresContainer}>
           <FeatureCard
             title="Unit-Testing for LLMs"
+            link="/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines"
+            description="Native integration with Pytest, that fits right in your workflow."
+          />
+          <FeatureCard
+            title="LLM-as-a-Judge Metrics"
+            link="/docs/metrics-introduction"
+            description="40+ research-backed metrics, including custom G-Eval and deterministic metrics."
+          />
+          <FeatureCard
+            title="Single and Multi-Turn Evals"
             link="/docs/evaluation-test-cases"
-            description="LLM evaluation metrics to regression test LLM outputs in Python"
-          />
-          <FeatureCard
-            title="Prompt and Model Discovery"
-            link="/docs/getting-started#visualize-your-results"
-            description="Gain insights to quickly iterate towards optimal prompts and model"
-          />
-          <FeatureCard
-            title="LLM Red Teaming"
-            link="/docs/red-teaming-introduction"
-            description="Security and safety test LLM applications for vulnerabilities"
+            description="Covering any use cases, any system architecture, including multi-modality."
           />
         </div>
       </div>
