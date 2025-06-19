@@ -44,6 +44,7 @@ grpcio = "^1.67.1"
 anthropic = "^0.49.0"
 google-genai = "^1.9.0"
 posthog = "^3.23.0"
+llama-index = "*"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"

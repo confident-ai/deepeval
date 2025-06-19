@@ -1,17 +1,14 @@
-from datetime import datetime, timezone
 import json
 from typing import Any
-import uuid
+
 from llama_index.core.instrumentation.event_handlers.base import (
     BaseEventHandler,
     BaseEvent
 )
 
-from deepeval.tracing.api import BaseApiSpan, SpanApiType, TraceApi, TraceSpanApiStatus
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
-from deepeval.tracing.utils import to_zod_compatible_iso
 from deepeval.tracing import trace_manager
-from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.context import current_span_context
 
 def serialize(obj):
     if hasattr(obj, '__dict__'):

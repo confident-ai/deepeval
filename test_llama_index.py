@@ -1,14 +1,16 @@
 import os
+import asyncio
+import time
+
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
 from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.llms.openai import OpenAI
-import asyncio
-from deepeval.integrations import LLamaIndexEventHandler
-import time
 import llama_index.core.instrumentation as instrument
 
 import deepeval
+from deepeval.integrations import LLamaIndexEventHandler
 from deepeval.tracing.tracing import observe
+
 deepeval.login_with_confident_api_key("<confident_api_key>")
 
 os.environ["OPENAI_API_KEY"] = "<openai_api_key>"
@@ -52,4 +54,4 @@ async def main():
 # Run the agent
 if __name__ == "__main__":
     asyncio.run(main())
-    time.sleep(10) # wait for queue to be processed
+    time.sleep(20) # wait for queue to be processed
