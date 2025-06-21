@@ -716,7 +716,7 @@ class TestRunManager:
             else test_run.test_cases
         )
 
-        BATCH_SIZE = 40
+        BATCH_SIZE = 20 if is_conversational_run else 40
         initial_batch = all_test_cases_to_process[:BATCH_SIZE]
         remaining_test_cases_to_process = all_test_cases_to_process[BATCH_SIZE:]
 
