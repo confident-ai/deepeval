@@ -496,7 +496,10 @@ def test_read_only_save_synthesizer(monkeypatch, capsys, tmp_path):
 
     # Check that the warning was printed
     captured = capsys.readouterr()
-    assert "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY" in captured.out
+    assert (
+        "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
+        in captured.out
+    )
 
 
 #########################################################

@@ -463,7 +463,9 @@ def write_test_result_to_file(
                 f"  - retrieval context: {test_result.retrieval_context}\n"
             )
 
-    aggregate_metric_pass_rates_to_file(test_result)
+    aggregate_metric_pass_rates_to_file(
+        [test_result] if not isinstance(test_result, list) else test_result
+    )
 
 
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:

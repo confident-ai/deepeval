@@ -88,7 +88,9 @@ def test_read_only_save_dataset(tmp_path, monkeypatch, capsys):
 
     # Create a dummy dataset
     goldens = [
-        Golden(input="input1", actual_output="actual1", expected_output="expected1")
+        Golden(
+            input="input1", actual_output="actual1", expected_output="expected1"
+        )
     ]
     dataset = EvaluationDataset(goldens=goldens)
 
@@ -102,4 +104,7 @@ def test_read_only_save_dataset(tmp_path, monkeypatch, capsys):
 
     # Check that the warning was printed
     captured = capsys.readouterr()
-    assert "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY" in captured.out
+    assert (
+        "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
+        in captured.out
+    )

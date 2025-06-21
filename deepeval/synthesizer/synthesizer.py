@@ -1461,7 +1461,9 @@ class Synthesizer:
             or file_name contains periods.
         """
         if is_read_only_env():
-            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            print(
+                "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
+            )
             return ""
         if str(file_type).lower() not in valid_file_types:
             raise ValueError(
