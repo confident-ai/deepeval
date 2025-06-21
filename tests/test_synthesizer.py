@@ -476,6 +476,29 @@ def test_synthesis_costs(synthesizer: Synthesizer):
         assert "synthesis_cost" in dir(synthesizer)
 
 
+def test_read_only_save_synthesizer(monkeypatch, capsys, tmp_path):
+    # Set the read-only environment variable
+    monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+
+    # Create a synthesizer with a dummy golden
+    synthesizer = Synthesizer()
+    synthesizer.synthetic_goldens = [
+        Golden(input="input", actual_output="actual")
+    ]
+
+    # Attempt to save the goldens
+    file_name = "test_synthesizer"
+    file_path = tmp_path / f"{file_name}.json"
+    synthesizer.save_as("json", str(tmp_path), file_name=file_name)
+
+    # Check that the file was not created
+    assert not file_path.exists()
+
+    # Check that the warning was printed
+    captured = capsys.readouterr()
+    assert "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY" in captured.out
+
+
 #########################################################
 ### Test Everything #####################################
 #########################################################

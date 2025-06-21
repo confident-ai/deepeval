@@ -80,3 +80,26 @@ def test_create_dataset():
         actual_output_key_name="actual_output",
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"
+
+
+def test_read_only_save_dataset(tmp_path, monkeypatch, capsys):
+    # Set the read-only environment variable
+    monkeypatch.setenv("DEEPEVAL_FILE_SYSTEM", "READ_ONLY")
+
+    # Create a dummy dataset
+    goldens = [
+        Golden(input="input1", actual_output="actual1", expected_output="expected1")
+    ]
+    dataset = EvaluationDataset(goldens=goldens)
+
+    # Attempt to save the dataset
+    file_name = "test_dataset"
+    file_path = tmp_path / f"{file_name}.json"
+    dataset.save_as("json", str(tmp_path), file_name=file_name)
+
+    # Check that the file was not created
+    assert not file_path.exists()
+
+    # Check that the warning was printed
+    captured = capsys.readouterr()
+    assert "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY" in captured.out

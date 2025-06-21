@@ -525,3 +525,7 @@ my_theme = Theme(
     }
 )
 custom_console = Console(theme=my_theme)
+
+
+def is_read_only_env():
+    return os.getenv("DEEPEVAL_FILE_SYSTEM") == "READ_ONLY"
