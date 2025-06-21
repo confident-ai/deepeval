@@ -21,6 +21,7 @@ import os
 from contextlib import nullcontext
 
 from deepeval.utils import get_or_create_event_loop, is_confident
+from deepeval.utils import is_read_only_env
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
     is_native_model,
@@ -1459,6 +1460,9 @@ class Synthesizer:
             ValueError: If file_type is invalid, no synthetic goldens exist,
             or file_name contains periods.
         """
+        if is_read_only_env():
+            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            return ""
         if str(file_type).lower() not in valid_file_types:
             raise ValueError(
                 "Invalid file type. Available file types to save as: , ".join(

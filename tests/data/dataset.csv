@@ -1,0 +1,6 @@
+query,expected_output,actual_output,context,retrieval
+1,Hello world!,Actual output for 1,,
+2,,Actual output for 2,"A powerful language model.;Context for 2;Additional info",
+3,CSV Example,Actual output for 3,"Working with CSV data.;Context for 3;Additional info",
+4,Python Programming,Actual output for 4,,"A powerful language model.;Context for 2;Additional info"
+5,Data Science,Actual output for 5,"Analyzing data.;Context for 5;Additional info", 
