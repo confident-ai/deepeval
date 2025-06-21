@@ -133,10 +133,48 @@ metric = ConversationalGEval(
     ],
 )
 
+from deepeval.metrics import BaseConversationalMetric
+from deepeval.test_case import LLMTestCase
+
+
+class FakeMetric(BaseConversationalMetric):
+    # This metric by default checks if the latency is greater than 10 seconds
+    def __init__(self, threshold: float = 0.5):
+        super().__init__()
+        self.threshold = threshold
+
+    def measure(self, test_case: LLMTestCase):
+        # Set self.success and self.score in the "measure" method
+        self.score = 1
+        self.success = self.score >= self.threshold
+        # You can also optionally set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "This metric looking good!"
+        return self.score
+
+    async def a_measure(self, test_case: LLMTestCase):
+        self.score = 1
+        self.success = self.score >= self.threshold
+        # You can also optionally set a reason for the score returned.
+        # This is particularly useful for a score computed using LLMs
+        self.reason = "This async metric looking good!"
+        return self.score
+
+    def is_successful(self):
+        return self.success
+
+    @property
+    def __name__(self):
+        return "Coherence"
+
+
 # metric = KnowledgeRetentionMetric(verbose_mode=True)
 # metric = ConversationRelevancyMetric(verbose_mode=True)
 # metric = ConversationCompletenessMetric(verbose_mode=True)
 # metric = RoleAdherenceMetric(verbose_mode=True)
 from deepeval import evaluate
 
-evaluate(test_cases=[test_case_1, test_case_2, test_case_3], metrics=[metric])
+evaluate(
+    test_cases=[test_case_1, test_case_2, test_case_3] * 30,
+    metrics=[FakeMetric()],
+)
