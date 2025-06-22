@@ -45,7 +45,6 @@ anthropic = "*"
 google-genai = "^1.9.0"
 posthog = "^3.23.0"
 pyfiglet = "*"
-llama-index = "*"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
