@@ -483,30 +483,30 @@ class TraceManager:
         retriever_spans = []
         tool_spans = []
 
-        # Process all spans in the trace
-        def process_spans(spans):
-            for span in spans:
-                # Convert BaseSpan to BaseApiSpan
-                api_span = self._convert_span_to_api_span(span)
+        # Process all spans in the trace iteratively
+        span_stack = list(trace.root_spans)  # Start with root spans
+        
+        while span_stack:
+            span = span_stack.pop()
+            
+            # Convert BaseSpan to BaseApiSpan
+            api_span = self._convert_span_to_api_span(span)
 
-                # Categorize spans by type
-                if isinstance(span, AgentSpan):
-                    agent_spans.append(api_span)
-                elif isinstance(span, LlmSpan):
-                    llm_spans.append(api_span)
-                elif isinstance(span, RetrieverSpan):
-                    retriever_spans.append(api_span)
-                elif isinstance(span, ToolSpan):
-                    tool_spans.append(api_span)
-                else:
-                    base_spans.append(api_span)
+            # Categorize spans by type
+            if isinstance(span, AgentSpan):
+                agent_spans.append(api_span)
+            elif isinstance(span, LlmSpan):
+                llm_spans.append(api_span)
+            elif isinstance(span, RetrieverSpan):
+                retriever_spans.append(api_span)
+            elif isinstance(span, ToolSpan):
+                tool_spans.append(api_span)
+            else:
+                base_spans.append(api_span)
 
-                # Process children recursively
-                if span.children:
-                    process_spans(span.children)
-
-        # Start processing from root spans
-        process_spans(trace.root_spans)
+            # Add children to the stack for processing
+            if span.children:
+                span_stack.extend(span.children)
 
         # Convert perf_counter values to ISO 8601 strings
         start_time = (
