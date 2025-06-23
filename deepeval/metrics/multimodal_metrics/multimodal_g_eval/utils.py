@@ -1,7 +1,7 @@
 from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, ToolCall
 from deepeval.test_case.mllm_test_case import MLLMImage
 from deepeval.models.mlllms.openai_model import (
-    unsupported_log_probs_multimodal_gpt_models
+    unsupported_log_probs_multimodal_gpt_models,
 )
 from deepeval.models import (
     DeepEvalBaseMLLM,
@@ -55,7 +55,10 @@ def construct_test_case_list(
 
 
 def no_multimodal_log_prob_support(model: Union[str, DeepEvalBaseMLLM]):
-    if isinstance(model, str) and model in unsupported_log_probs_multimodal_gpt_models:
+    if (
+        isinstance(model, str)
+        and model in unsupported_log_probs_multimodal_gpt_models
+    ):
         return True
     elif (
         isinstance(model, MultimodalOpenAIModel)

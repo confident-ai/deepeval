@@ -3,7 +3,9 @@ from deepeval.metrics import (
     ImageHelpfulnessMetric,
     ImageReferenceMetric,
 )
-from deepeval.metrics.multimodal_metrics.multimodal_g_eval.multimodal_g_eval import MultimodalGEval
+from deepeval.metrics.multimodal_metrics.multimodal_g_eval.multimodal_g_eval import (
+    MultimodalGEval,
+)
 from deepeval.test_case import MLLMImage, MLLMTestCase
 import textwrap
 from deepeval import evaluate
@@ -47,23 +49,25 @@ mllm_test_case = MLLMTestCase(
 ###################################################
 
 evaluate(
-    test_cases=[mllm_test_case], 
+    test_cases=[mllm_test_case],
     metrics=[
         ImageCoherenceMetric(model="gpt-4.1"),
         MultimodalGEval(
             name="Answer Relevancy",
             model="gpt-4.1-nano",
-            evaluation_params=[MLLMTestCaseParams.INPUT, MLLMTestCaseParams.ACTUAL_OUTPUT],
-            criteria="Determine if actual output is relevant to input."
+            evaluation_params=[
+                MLLMTestCaseParams.INPUT,
+                MLLMTestCaseParams.ACTUAL_OUTPUT,
+            ],
+            criteria="Determine if actual output is relevant to input.",
         ),
         # ImageCoherenceMetric(model="gpt-4.1"),
         # ImageCoherenceMetric(model="gpt-4.1"),
         # ImageCoherenceMetric(model="gpt-4.1"),
         # ImageCoherenceMetric(model="gpt-4.1"),
         # ImageCoherenceMetric(model="gpt-4.1"),
-    ]
+    ],
 )
-
 
 
 ###################################################

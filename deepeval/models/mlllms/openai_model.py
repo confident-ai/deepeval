@@ -13,7 +13,10 @@ from tenacity import (
     RetryCallState,
 )
 
-from deepeval.models.llms.openai_model import model_pricing, structured_outputs_models
+from deepeval.models.llms.openai_model import (
+    model_pricing,
+    structured_outputs_models,
+)
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.test_case import MLLMImage
@@ -49,7 +52,7 @@ valid_multimodal_gpt_models = [
     "o1-2024-12-17",
     "o1-preview-2024-09-12",
     "gpt-4.5-preview-2025-02-27",
-    "o4-mini"
+    "o4-mini",
 ]
 
 default_multimodal_gpt_model = "gpt-4o"
@@ -60,7 +63,7 @@ unsupported_log_probs_multimodal_gpt_models = [
     "o1-2024-12-17",
     "o1-preview-2024-09-12",
     "gpt-4.5-preview-2025-02-27",
-    "o4-mini"
+    "o4-mini",
 ]
 
 
@@ -118,7 +121,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
                 total_cost = self.calculate_cost(input_tokens, output_tokens)
                 generated_text = response.choices[0].message.parsed
                 return generated_text, total_cost
-                
+
         completion = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
@@ -132,7 +135,6 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
             return schema.model_validate(json_output), cost
         else:
             return output, cost
-        
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
