@@ -86,16 +86,8 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         Subclasses of BaseSpanHandler should create the respective span type T
         and return it. Only NullSpanHandler should return a None here.
         """
-        # prepare fallback
-        new_span_fallback_json = {
-            "id_": id_,
-            "bound_args": serialize(bound_args),
-            "instance": serialize(instance),
-            "parent_span_id": parent_span_id,
-            "tags": serialize(tags),
-            "kwargs": serialize(kwargs),
-        }
-
+        # TODO: Prepare a fallback for the span
+        
         # if parent_span_id is present, add the span to the parent trace
         if parent_span_id:
             base_span = BaseSpan(
@@ -106,7 +98,7 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
                 parent_uuid=parent_span_id,
                 start_time=perf_counter(),
                 name=id_,
-                metadata={"new_span_fallback_json": new_span_fallback_json}
+                metadata=None,
             )
             trace_manager.add_span(base_span)
             trace_manager.add_span_to_trace(base_span)
@@ -131,7 +123,7 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
                 parent_uuid=None,
                 start_time=perf_counter(),
                 name=id_,
-                metadata={"new_span_fallback_json": new_span_fallback_json}
+                metadata=None,
             )
             trace_manager.add_span(base_span)
             trace_manager.add_span_to_trace(base_span)
@@ -151,20 +143,11 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         that is to be exited. If None is returned, then the span won't actually
         be exited.
         """
-        
-        # prepare fallback
-        exit_span_fallback_json = {
-            "id_": id_,
-            "bound_args": serialize(bound_args),
-            "instance": serialize(instance),
-            "result": serialize(result),
-            "kwargs": serialize(kwargs),
-        }
+        # TODO: Prepare an exit fallback
         # fetch from the active_spans
         span = trace_manager.active_spans[id_]
         # update the fallback metadata
         span.end_time = perf_counter()
-        span.metadata["exit_span_fallback_json"] = exit_span_fallback_json
         span.status = TraceSpanStatus.SUCCESS
         
         # remove the span from the active_spans
@@ -185,19 +168,13 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         **kwargs: Any,
     ) -> Optional[T]:
         """Logic for preparing to drop a span."""
-        # prepare fallback
-        exit_span_fallback_json = {
-            "id_": id_,
-            "bound_args": serialize(bound_args),
-            "instance": serialize(instance),
-            "err": serialize(err),
-            "kwargs": serialize(kwargs),
-        }
+        # TODO: Prepare a drop fallback
+        
         # fetch from the active_spans
         span = trace_manager.active_spans[id_]
+        
         # update the fallback metadata
         span.end_time = perf_counter()
-        span.metadata["exit_span_fallback_json"] = exit_span_fallback_json
         span.status = TraceSpanStatus.ERRORED
         
         # remove the span from the active_spans
