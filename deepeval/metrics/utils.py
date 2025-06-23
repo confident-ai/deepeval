@@ -244,7 +244,7 @@ def check_mllm_test_cases_params(
             metric,
         )
 
-def check_matching_test_case_inputs(test_cases: List[LLMTestCase]):
+def check_matching_llm_test_case_inputs(test_cases: List[LLMTestCase]):
     if len(test_cases) == 0:
         raise ValueError("Test cases cannot be empty")
     input = test_cases[0].input

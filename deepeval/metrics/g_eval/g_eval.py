@@ -15,7 +15,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     check_llm_test_case_params,
     check_llm_test_cases_params,
-    check_matching_test_case_inputs,
+    check_matching_llm_test_case_inputs,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -76,7 +76,7 @@ class GEval(BaseMetric):
         comparable_test_cases = isinstance(test_case, List)
         if comparable_test_cases:
             check_llm_test_cases_params(test_case, self.evaluation_params, self)
-            check_matching_test_case_inputs(test_case)
+            check_matching_llm_test_case_inputs(test_case)
         else:
             check_llm_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -140,7 +140,7 @@ class GEval(BaseMetric):
         comparable_test_cases = isinstance(test_case, List)
         if comparable_test_cases:
             check_llm_test_cases_params(test_case, self.evaluation_params, self)
-            check_matching_test_case_inputs(test_case)
+            check_matching_llm_test_case_inputs(test_case)
         else:
             check_llm_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
