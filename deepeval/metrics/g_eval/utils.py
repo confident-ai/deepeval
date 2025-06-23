@@ -226,6 +226,13 @@ def number_evaluation_steps(evaluation_steps: List[str]) -> str:
     return formatted_evaluation_steps
 
 
+def number_test_case_contents(test_case_contents: List[str]) -> str:
+    formatted_test_case_contents = """"""
+    for index, string in enumerate(test_case_contents):
+        formatted_test_case_contents += f"{index}. {string}\n"
+    return formatted_test_case_contents
+
+
 def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
     if rubric is None:
         return (0, 10)
