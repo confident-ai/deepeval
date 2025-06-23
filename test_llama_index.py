@@ -7,15 +7,15 @@ from llama_index.llms.openai import OpenAI
 import llama_index.core.instrumentation as instrument
 
 import deepeval
-from deepeval.integrations import LLamaIndexEventHandler
+from deepeval.integrations import LLamaIndexSpanHandler
 from deepeval.tracing import observe
 
-os.environ["OPENAI_API_KEY"] = "<your-openai-api-key>"
+os.environ["OPENAI_API_KEY"] = "<openai_api_key>"
 
-deepeval.login_with_confident_api_key("<your-confident-api-key>")
+deepeval.login_with_confident_api_key("<confident_api_key>")
 
 dispatcher = instrument.get_dispatcher()
-dispatcher.add_event_handler(LLamaIndexEventHandler())
+dispatcher.add_span_handler(LLamaIndexSpanHandler())
 
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
@@ -28,7 +28,6 @@ agent = FunctionAgent(
     and search through documents to answer questions.""",
 )
 
-@observe()
 async def main():   
     response = await agent.run(
         "What's 7 * 8?"
