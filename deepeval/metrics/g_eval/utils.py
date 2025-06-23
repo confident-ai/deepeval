@@ -129,7 +129,6 @@ def construct_g_eval_params_string(
     llm_test_case_params: List[LLMTestCaseParams],
 ):
     g_eval_params = [G_EVAL_PARAMS[param] for param in llm_test_case_params]
-
     if len(g_eval_params) == 1:
         g_eval_params_str = g_eval_params[0]
     elif len(g_eval_params) == 2:
@@ -165,6 +164,7 @@ def construct_test_case_string(
     evaluation_params: List[LLMTestCaseParams], test_case: LLMTestCase
 ) -> str:
     text = """"""
+    text += f"Test Case ID: {test_case._identifier}\n\n"
     for param in evaluation_params:
         value = getattr(test_case, param.value)
         if isinstance(value, ToolCall):

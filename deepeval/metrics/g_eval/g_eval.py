@@ -91,9 +91,20 @@ class GEval(BaseMetric):
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                g_score, reason = self._evaluate(
-                    test_case, _additional_context=_additional_context
-                )
+                if not comparable_test_cases:
+                    g_score, reason = self._evaluate(
+                        test_case, _additional_context=_additional_context
+                    )
+                    self.score = float(g_score) / 10
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
+                    self.success = self.score >= self.threshold
+                else:
+                    best_test_case, best_test_case_index, reason = self._comparable_evaluate(
+                        test_case, _additional_context=_additional_context
                 self.reason = reason
                 self.score = float(g_score) / 10
                 self.score = (
