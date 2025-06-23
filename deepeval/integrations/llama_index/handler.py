@@ -108,8 +108,11 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
                 uuid=id_,
                 root_spans=[],
                 status=TraceSpanStatus.IN_PROGRESS,
-                start_time=time.time(),
+                start_time=perf_counter(),
+                end_time=None,
                 confident_api_key=trace_manager.confident_api_key,
+                metric_collection=None,
+                metrics=None,
             )
             trace_manager.active_traces[id_] = new_trace
             trace_manager.traces.append(new_trace)
