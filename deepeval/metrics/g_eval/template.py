@@ -1,4 +1,6 @@
 from typing import List, Optional, Tuple
+import textwrap
+
 from deepeval.metrics.g_eval.utils import Rubric
 
 
@@ -116,3 +118,63 @@ Example JSON:
 
 JSON:
 """
+
+    @staticmethod
+    def generate_comparable_evaluation_results(
+        evaluation_steps: str,
+        test_case_contents: List[str],
+        parameters: str,
+        rubric: Optional[str] = None,
+        _additional_context: Optional[str] = None,
+    ):
+        rubric_text = f"Rubric:\n{rubric}\n" if rubric else ""
+        dependencies = "evaluation steps and rubric" if rubric else "evaluation steps"
+        reasoning_expectation = (
+            "Be specific and grounded in the evaluation steps and rubric."
+            if rubric
+            else "Be specific and grounded in the evaluation steps."
+        )
+        test_case_content = "\n\n".join(test_case_contents)
+        additional_context = (
+            f"\n\nAdditional Context:\n{_additional_context}\n"
+            if _additional_context
+            else ""
+        )
+        
+        return textwrap.dedent(
+            f"""You are an evaluator. Given the following {dependencies}, select the single test case that best aligns with the {dependencies}.
+                Return a JSON object with two fields:
+
+            - `"best_test_case_index"`: an integer between 0 and {len(test_case_contents) - 1}, indicating which test case is best aligned with the {dependencies}.
+            - `"reason"`: a brief explanation for why the test case was chosen. This must mention specific strengths or shortcomings, referencing relevant details from the best test case's parameters as well as the other test cases' parameters.
+
+            Your explanation should:
+            - {reasoning_expectation}
+            - Mention key details from the test cases' parameters.
+            - Be concise, clear, and focused on the evaluation logic.
+
+            Only return valid JSON. Do **not** include any extra commentary or text.
+
+            ---
+
+            Evaluation Steps:
+            {evaluation_steps}
+
+            {rubric_text}
+            Test Case:
+            {test_case_content}
+
+            Parameters:
+            {parameters}
+            {additional_context}
+
+            ---
+            **Example JSON:**
+            {{
+                "best_test_case_index": 0,
+                "reason": "your concise and informative reason here"
+            }}
+
+            JSON:
+        """ 
+        )
