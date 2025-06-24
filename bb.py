@@ -107,6 +107,7 @@ from deepeval.metrics import (
     RoleAdherenceMetric,
 )
 from deepeval.metrics.g_eval import Rubric
+from deepeval.test_case import LLMTestCase
 
 metric = ConversationalGEval(
     name="Tool Response Summarization Quality",
@@ -133,11 +134,11 @@ metric = ConversationalGEval(
     ],
 )
 
-from deepeval.metrics import BaseConversationalMetric
+from deepeval.metrics import BaseMetric, BaseConversationalMetric
 from deepeval.test_case import LLMTestCase
 
 
-class FakeMetric(BaseConversationalMetric):
+class FakeMetric(BaseMetric):
     # This metric by default checks if the latency is greater than 10 seconds
     def __init__(self, threshold: float = 0.5):
         super().__init__()
@@ -174,7 +175,13 @@ class FakeMetric(BaseConversationalMetric):
 # metric = RoleAdherenceMetric(verbose_mode=True)
 from deepeval import evaluate
 
+test_case = LLMTestCase(
+    input="What is the capital of France?",
+    expected_output="Paris",
+    actual_output="Paris",
+)
+
 evaluate(
-    test_cases=[test_case_1, test_case_2, test_case_3] * 30,
+    test_cases=[test_case] * 500,
     metrics=[FakeMetric()],
 )
