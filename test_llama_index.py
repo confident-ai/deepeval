@@ -7,7 +7,7 @@ from llama_index.llms.openai import OpenAI
 import llama_index.core.instrumentation as instrument
 
 import deepeval
-from deepeval.integrations import instrument_llama_index
+from deepeval.integrations.llama_index.handler import instrument_llama_index
 
 os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
 
