@@ -388,6 +388,6 @@ class ConversationalGEval(BaseConversationalMetric):
     @property
     def __name__(self):
         if self._include_g_eval_suffix:
-            return f"{self.name} (Conversational GEval)"
+            return f"{self.name} [Conversational GEval]"
         else:
             return self.name

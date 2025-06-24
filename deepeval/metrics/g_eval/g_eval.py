@@ -353,6 +353,6 @@ class GEval(BaseMetric):
     @property
     def __name__(self):
         if self._include_g_eval_suffix:
-            return f"{self.name} (GEval)"
+            return f"{self.name} [GEval]"
         else:
             return self.name

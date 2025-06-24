@@ -125,6 +125,6 @@ class DAGMetric(BaseMetric):
     @property
     def __name__(self):
         if self._include_dag_suffix:
-            return f"{self.name} (DAG)"
+            return f"{self.name} [DAG]"
         else:
             return self.name
