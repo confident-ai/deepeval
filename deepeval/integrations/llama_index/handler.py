@@ -9,6 +9,7 @@ from llama_index_instrumentation.base import BaseEvent
 from llama_index.core.instrumentation.events.llm import LLMChatStartEvent, LLMChatEndEvent
 from llama_index.core.instrumentation.events.span import SpanDropEvent
 from llama_index.core.instrumentation.span.base import BaseSpan
+from llama_index_instrumentation.dispatcher import Dispatcher
 
 from deepeval.tracing.types import LlmSpan, LlmAttributes, RetrieverSpan, ToolSpan, TraceSpanStatus
 from deepeval.tracing import trace_manager
@@ -174,3 +175,7 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         **kwargs: Any,
     ) -> Optional[T]:
         pass
+
+def instrument_llama_index(dispatcher: Dispatcher):
+    dispatcher.add_event_handler(LLamaIndexEventHandler())
+    dispatcher.add_span_handler(LLamaIndexSpanHandler())

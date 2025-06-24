@@ -4,5 +4,5 @@
 #     auto_eval_state,
 # )
 
-from deepeval.integrations.llama_index.handler import LLamaIndexEventHandler, LLamaIndexSpanHandler
-__all__ = ["LLamaIndexEventHandler", "LLamaIndexSpanHandler"]
+from deepeval.integrations.llama_index.handler import instrument_llama_index
+__all__ = ["instrument_llama_index"]
