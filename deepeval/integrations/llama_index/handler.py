@@ -1,30 +1,119 @@
-import inspect
 import json
-import time
 from time import perf_counter
-from typing import Any, Dict, Optional, TypeVar
+from typing import Any, Dict, List, Optional
 
 from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
-from llama_index_instrumentation.base import BaseEvent
-
 from llama_index.core.instrumentation.span_handlers.base import BaseSpanHandler
+from llama_index.core.agent.workflow.workflow_events import ToolCall, ToolCallResult
+from llama_index_instrumentation.base import BaseEvent
+from llama_index.core.instrumentation.events.llm import LLMChatStartEvent, LLMChatEndEvent
+from llama_index.core.instrumentation.events.span import SpanDropEvent
 from llama_index.core.instrumentation.span.base import BaseSpan
+
+from deepeval.tracing.types import LlmSpan, LlmAttributes, RetrieverSpan, ToolSpan, TraceSpanStatus
+from deepeval.tracing import trace_manager
+
+from typing import TypeVar
+import inspect
 
 T = TypeVar("T", bound=BaseSpan)
 
-from deepeval.tracing.types import BaseSpan, Trace, TraceSpanStatus
-from deepeval.tracing import trace_manager
-from deepeval.tracing.context import current_span_context
+# globals
+active_trace_uuid: Optional[str] = None
+# span mapping
+llm_span_dict: Dict[str, LlmSpan] = {}
+tool_span_dict: Dict[str, ToolSpan] = {}
+retriever_span_dict: Dict[str, RetrieverSpan] = {}
 
-# TODO: Remove this once we have a better way to serialize the span metadata
+# might be used for debugging
 def serialize(obj):
     if hasattr(obj, '__dict__'):
         return obj.__dict__
     return str(obj)  # fallback
 
-class LLamaIndexSpanHandler(BaseSpanHandler):
-    """LlamaIndex custom SpanHandler."""
+class LLamaIndexEventHandler(BaseEventHandler):
+    """LlamaIndex custom EventHandler."""
 
+    @classmethod
+    def class_name(cls) -> str:
+        """Class name."""
+        return "LLamaIndexEventHandler"
+
+    def handle(self, event: BaseEvent, **kwargs) -> Any:
+        """Logic for handling event."""
+
+        global active_trace_uuid
+        global llm_span_dict
+        global tool_span_dict
+        global retriever_span_dict
+
+        if isinstance(event, LLMChatStartEvent):
+            if not active_trace_uuid:
+                active_trace_uuid = trace_manager.start_new_trace().uuid
+
+            input_messages = []
+            for msg in event.messages:
+                role = msg.role.value
+                content = " ".join(
+                    block.text for block in msg.blocks if getattr(block, "block_type", None) == "text"
+                ).strip()
+                input_messages.append({"role": role, "content": content})
+            
+            llm_span_dict[event.span_id] = LlmSpan(
+                name="confident_llama_index_llm_span",
+                uuid=event.id_,
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=active_trace_uuid,
+                parent_uuid=None,
+                start_time=perf_counter(), 
+                model=getattr(event, "model_dict", {}).get("model", "unknown"),
+                attributes=LlmAttributes(input=input_messages, output="")
+            )
+            
+        if isinstance(event, LLMChatEndEvent):
+            
+            if event.span_id in llm_span_dict:
+                llm_span = llm_span_dict[event.span_id]
+                try:
+                    response = event.response.message.blocks[0].text
+                except:
+                    response = ""
+                
+                # Update the span by reference
+                llm_span.end_time = perf_counter()
+                llm_span.status = TraceSpanStatus.SUCCESS
+                llm_span.attributes.output = response
+                
+                # Update the dictionary with the modified span
+                llm_span_dict[event.span_id] = llm_span
+        
+        # this is the last event, so we can add all the spans to the trace
+        if isinstance(event, SpanDropEvent):
+            # add all spans in all the dictionaries to the trace
+            for span in llm_span_dict.values():
+                trace_manager.add_span_to_trace(span)
+            for span in tool_span_dict.values():
+                trace_manager.add_span_to_trace(span)
+            for span in retriever_span_dict.values():
+                trace_manager.add_span_to_trace(span)
+            
+            trace_manager.end_trace(active_trace_uuid)
+
+            # reset the dictionaries
+            llm_span_dict = {}
+            tool_span_dict = {}
+            retriever_span_dict = {}
+            active_trace_uuid = None
+
+# used for tool calls
+class LLamaIndexSpanHandler(BaseSpanHandler):
+
+    @classmethod
+    def class_name(cls) -> str:
+        """Class name."""
+        return "LLamaIndexSpanHandler"
+    
     def new_span(
         self,
         id_: str,
@@ -34,56 +123,26 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         tags: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Optional[T]:
-        """
-        Create a span.
-
-        Subclasses of BaseSpanHandler should create the respective span type T
-        and return it. Only NullSpanHandler should return a None here.
-        """
-        # TODO: Prepare a fallback for the span
         
-        # if parent_span_id is present, add the span to the parent trace
-        if parent_span_id:
-            base_span = BaseSpan(
-                uuid=id_,
-                status=TraceSpanStatus.IN_PROGRESS,
-                children=[],
-                trace_uuid=parent_span_id,
-                parent_uuid=parent_span_id,
-                start_time=perf_counter(),
-                name=id_,
-                metadata=None,
-            )
-            trace_manager.add_span(base_span)
-            trace_manager.add_span_to_trace(base_span)
-        else:
-            # if parent_span_id is not present, create a new trace
-            new_trace = Trace(
-                uuid=id_,
-                root_spans=[],
-                status=TraceSpanStatus.IN_PROGRESS,
-                start_time=perf_counter(),
-                end_time=None,
-                confident_api_key=trace_manager.confident_api_key,
-                metric_collection=None,
-                metrics=None,
-            )
-            trace_manager.active_traces[id_] = new_trace
-            trace_manager.traces.append(new_trace)
+        global active_trace_uuid
+        global tool_span_dict
+        
+        if not active_trace_uuid:
+            active_trace_uuid = trace_manager.start_new_trace().uuid
+
+        _ev = bound_args.arguments.get("ev")
+        if _ev is not None and isinstance(_ev, ToolCall):
             
-            # create a new span
-            base_span = BaseSpan(
-                uuid=id_,
+            tool_span_dict[_ev.tool_id] = ToolSpan(
+                uuid=_ev.tool_id,
+                name=_ev.tool_name,
                 status=TraceSpanStatus.IN_PROGRESS,
                 children=[],
-                trace_uuid=id_,
                 parent_uuid=None,
+                trace_uuid=active_trace_uuid,
                 start_time=perf_counter(),
-                name=id_,
-                metadata=None,
+                input=_ev.tool_kwargs
             )
-            trace_manager.add_span(base_span)
-            trace_manager.add_span_to_trace(base_span)
     
     def prepare_to_exit_span(
         self,
@@ -93,28 +152,18 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         result: Optional[Any] = None,
         **kwargs: Any,
     ) -> Optional[T]:
-        """
-        Logic for preparing to exit a span.
-
-        Subclasses of BaseSpanHandler should return back the specific span T
-        that is to be exited. If None is returned, then the span won't actually
-        be exited.
-        """
-        # TODO: Prepare an exit fallback
-        # fetch from the active_spans
-        span = trace_manager.active_spans[id_]
-        # update the fallback metadata
-        span.end_time = perf_counter()
-        span.status = TraceSpanStatus.SUCCESS
         
-        # remove the span from the active_spans
-        trace_manager.remove_span(id_)
+        global tool_span_dict
         
-        # if root, end equivalent trace 
-        if span.parent_uuid is None:
-            trace = trace_manager.active_traces[span.trace_uuid]
-            trace.status = TraceSpanStatus.SUCCESS
-            trace_manager.end_trace(trace.uuid)
+        _ev = bound_args.arguments.get("ev")
+        if _ev is not None and isinstance(_ev, ToolCallResult):
+            if _ev.tool_id in tool_span_dict:
+                tool_span = tool_span_dict[_ev.tool_id]
+                tool_span.end_time = perf_counter()
+                tool_span.status = TraceSpanStatus.SUCCESS
+                tool_span.output = _ev.tool_output.content
+                tool_span_dict[_ev.tool_id] = tool_span
+            
     
     def prepare_to_drop_span(
         self,
@@ -124,22 +173,4 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         err: Optional[BaseException] = None,
         **kwargs: Any,
     ) -> Optional[T]:
-        """Logic for preparing to drop a span."""
-        # TODO: Prepare a drop fallback
-        
-        # fetch from the active_spans
-        span = trace_manager.active_spans[id_]
-        
-        # update the fallback metadata
-        span.end_time = perf_counter()
-        span.status = TraceSpanStatus.ERRORED
-        
-        # remove the span from the active_spans
-        trace_manager.remove_span(id_)
-        
-        # if root, end equivalent trace 
-        if span.parent_uuid is None:
-            trace = trace_manager.active_traces[span.trace_uuid]
-            trace.end_time = perf_counter()
-            trace.status = TraceSpanStatus.ERRORED
-            trace_manager.end_trace(trace.uuid)
+        pass

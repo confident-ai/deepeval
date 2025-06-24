@@ -7,14 +7,14 @@ from llama_index.llms.openai import OpenAI
 import llama_index.core.instrumentation as instrument
 
 import deepeval
-from deepeval.integrations import LLamaIndexSpanHandler
-from deepeval.tracing import observe
+from deepeval.integrations import LLamaIndexEventHandler, LLamaIndexSpanHandler
 
-os.environ["OPENAI_API_KEY"] = "<openai_api_key>"
+os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
 
-deepeval.login_with_confident_api_key("<confident_api_key>")
+deepeval.login_with_confident_api_key("<YOUR_CONFIDENT_API_KEY>")
 
 dispatcher = instrument.get_dispatcher()
+dispatcher.add_event_handler(LLamaIndexEventHandler())
 dispatcher.add_span_handler(LLamaIndexSpanHandler())
 
 def multiply(a: float, b: float) -> float:
