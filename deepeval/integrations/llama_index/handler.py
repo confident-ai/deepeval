@@ -1,15 +1,25 @@
-import json
 from time import perf_counter
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
-from llama_index.core.instrumentation.span_handlers.base import BaseSpanHandler
-from llama_index.core.agent.workflow.workflow_events import ToolCall, ToolCallResult
-from llama_index_instrumentation.base import BaseEvent
-from llama_index.core.instrumentation.events.llm import LLMChatStartEvent, LLMChatEndEvent
-from llama_index.core.instrumentation.events.span import SpanDropEvent
-from llama_index.core.instrumentation.span.base import BaseSpan
-from llama_index_instrumentation.dispatcher import Dispatcher
+try: 
+    from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
+    from llama_index.core.instrumentation.span_handlers.base import BaseSpanHandler
+    from llama_index.core.agent.workflow.workflow_events import ToolCall, ToolCallResult
+    from llama_index_instrumentation.base import BaseEvent
+    from llama_index.core.instrumentation.events.llm import LLMChatStartEvent, LLMChatEndEvent
+    from llama_index.core.instrumentation.events.span import SpanDropEvent
+    from llama_index.core.instrumentation.span.base import BaseSpan
+    from llama_index_instrumentation.dispatcher import Dispatcher
+
+    llama_index_installed = True
+except:
+    llama_index_installed = False
+
+def is_llama_index_installed():
+    if not llama_index_installed:
+        raise ImportError("llama-index is neccesary for this functionality. Please install it with `pip install llama-index` or with package manager of choice.")
+
+is_llama_index_installed()
 
 from deepeval.tracing.types import LlmSpan, LlmAttributes, RetrieverSpan, ToolSpan, TraceSpanStatus
 from deepeval.tracing import trace_manager
@@ -34,6 +44,10 @@ def serialize(obj):
 
 class LLamaIndexEventHandler(BaseEventHandler):
     """LlamaIndex custom EventHandler."""
+
+    def __init__(self):
+        is_llama_index_installed()
+        super().__init__()
 
     @classmethod
     def class_name(cls) -> str:
@@ -110,6 +124,10 @@ class LLamaIndexEventHandler(BaseEventHandler):
 # used for tool calls
 class LLamaIndexSpanHandler(BaseSpanHandler):
 
+    def __init__(self):
+        is_llama_index_installed()
+        super().__init__()
+
     @classmethod
     def class_name(cls) -> str:
         """Class name."""
@@ -177,5 +195,6 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         pass
 
 def instrument_llama_index(dispatcher: Dispatcher):
+    is_llama_index_installed()
     dispatcher.add_event_handler(LLamaIndexEventHandler())
     dispatcher.add_span_handler(LLamaIndexSpanHandler())
