@@ -485,10 +485,10 @@ class TraceManager:
 
         # Process all spans in the trace iteratively
         span_stack = list(trace.root_spans)  # Start with root spans
-        
+
         while span_stack:
             span = span_stack.pop()
-            
+
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
 

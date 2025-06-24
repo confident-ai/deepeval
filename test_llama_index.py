@@ -15,9 +15,11 @@ deepeval.login_with_confident_api_key("<YOUR_CONFIDENT_API_KEY>")
 
 instrument_llama_index(instrument.get_dispatcher())
 
+
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
+
 
 agent = FunctionAgent(
     tools=[multiply],
@@ -26,11 +28,11 @@ agent = FunctionAgent(
     and search through documents to answer questions.""",
 )
 
-async def main():   
-    response = await agent.run(
-        "What's 7 * 8?"
-    )
+
+async def main():
+    response = await agent.run("What's 7 * 8?")
     print(response)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
