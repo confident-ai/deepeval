@@ -740,7 +740,7 @@ def test_chatbot_performance(test_case: ConversationalTestCase):
 
 This test file plugs straight into any CI setup (GitHub Actions, GitLab CI, etc.), so your chatbot keeps meeting quality and safety standards with every push. Just run:
 
-```bash
+```bash title="bash"
 poetry run pytest -v test_chatbot_quality.py
 ```
 
