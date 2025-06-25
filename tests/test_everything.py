@@ -195,7 +195,7 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-# @pytest.mark.skip(reason="openai is expensive")
+@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -322,7 +322,7 @@ def test_everything():
     )
 
 
-# @pytest.mark.tskip(reason="openapi is expensive")
+# @pytest.mark.skip(reason="openapi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)

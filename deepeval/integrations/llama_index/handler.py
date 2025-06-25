@@ -1,5 +1,6 @@
 from time import perf_counter
-from typing import Any, Dict, Optional
+import inspect
+from typing import Any, Dict, Optional, TypeVar
 
 try:
     from llama_index_instrumentation.base import BaseEvent
@@ -42,9 +43,6 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
 )
 from deepeval.tracing import trace_manager
-
-from typing import TypeVar
-import inspect
 
 # globals
 active_trace_uuid: Optional[str] = None
