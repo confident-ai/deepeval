@@ -7,13 +7,14 @@ from langchain_core.outputs import LLMResult
 
 from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import LlmAttributes
-from deepeval.tracing.types import LlmSpan, TraceSpanStatus, ToolSpan
+from deepeval.tracing.types import LlmSpan, RetrieverSpan, TraceSpanStatus, ToolSpan
 
 class CallbackHandler(BaseCallbackHandler):
 
     active_trace_id: Optional[str] = None
     llm_span_dict: Dict[str, LlmSpan] = {}
     tool_span_dict: Dict[str, ToolSpan] = {}
+    retriever_span_dict: Dict[str, RetrieverSpan] = {}
 
     def on_chain_start(
         self,
@@ -43,10 +44,13 @@ class CallbackHandler(BaseCallbackHandler):
                 trace_manager.add_span_to_trace(span)
             for span in self.tool_span_dict.values():
                 trace_manager.add_span_to_trace(span)
+            for span in self.retriever_span_dict.values():
+                trace_manager.add_span_to_trace(span)
 
             trace_manager.end_trace(self.active_trace_id)
             self.llm_span_dict = {}
             self.tool_span_dict = {}
+            self.retriever_span_dict = {}
             self.active_trace_id = None
 
     def on_llm_start(
@@ -145,3 +149,56 @@ class CallbackHandler(BaseCallbackHandler):
         tool_span.status = TraceSpanStatus.SUCCESS
         tool_span.output = output
         self.tool_span_dict[str(run_id)] = tool_span
+
+    def on_retriever_start(
+        self,
+        serialized: dict[str, Any],
+        query: str,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        if self.active_trace_id is None:
+            self.active_trace_id = trace_manager.start_new_trace().uuid
+        
+        self.retriever_span_dict[str(run_id)] = RetrieverSpan(
+            name="langchain_retriever_span" + str(run_id),
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=None,
+            start_time=perf_counter(),
+            embedder=metadata.get("ls_embedding_provider", "unknown"),
+            input=query, 
+        )
+
+    def on_retriever_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        retriever_span = self.retriever_span_dict.get(str(run_id))
+        
+        if retriever_span is None:
+            return
+        
+        output_list = []
+        if isinstance(output, list):
+            for item in output:
+                output_list.append(str(item))
+        else:
+            output_list.append(str(output))
+        
+        retriever_span.end_time = perf_counter()
+        retriever_span.status = TraceSpanStatus.SUCCESS
+        retriever_span.output = output_list
+        self.retriever_span_dict[str(run_id)] = retriever_span
