@@ -1,770 +1,271 @@
-# from langchain_core.tracers.base import BaseTracer
-# from langchain_core.messages import BaseMessage
-# from langchain_core.tracers.schemas import Run
-# from deepeval.monitor import monitor
-# from contextvars import ContextVar
-# from time import perf_counter
-# from itertools import chain
-# from copy import deepcopy
-# from enum import Enum
-# import logging
-# import json
-# import math
-# from typing import (
-#     Any,
-#     Dict,
-#     Iterable,
-#     Iterator,
-#     List,
-#     Mapping,
-#     Optional,
-#     Sequence,
-#     Tuple,
-# )
+from typing import Any, Optional
+from uuid import UUID
+from time import perf_counter
 
-# from deepeval.utils import dataclass_to_dict, class_to_dict
-# from deepeval.tracing import (
-#     trace_manager,
-#     ChainTrace,
-#     ChainAttributes,
-#     ToolTrace,
-#     ToolAttributes,
-#     LlmTrace,
-#     LlmAttributes,
-#     GenericTrace,
-#     GenericAttributes,
-#     RetrieverTrace,
-#     RetrieverAttributes,
-#     RetrievalNode,
-#     TraceStatus,
-#     TraceProvider,
-#     LangChainTraceType,
-#     BaseTrace,
-#     TraceData,
-# )
-# import threading
-# from langsmith import utils as ls_utils
-# import warnings
-
-# warnings.filterwarnings(
-#     "ignore", category=ls_utils.LangSmithMissingAPIKeyWarning
-# )
-# logger = logging.getLogger(__name__)
-# logger.addHandler(logging.NullHandler())
-
-# from langchain_core.tracers.base import BaseTracer
+try:
+    from langchain_core.callbacks.base import BaseCallbackHandler
+    from langchain_core.outputs import LLMResult
+    langchain_installed = True
+except:
+    langchain_installed = False
+    
+def is_langchain_installed():
+    if not langchain_installed:
+        raise ImportError("LangChain is not installed. Please install it with `pip install langchain`.")
 
 
-# class LangChainCallbackHandler(BaseTracer):
-#     pass
+# ASSUMPTIONS: 
+# cycle for a single invoke call
+# one trace per cycle
 
+from deepeval.tracing import trace_manager
+from deepeval.tracing.types import BaseSpan, LlmSpan, RetrieverSpan, TraceSpanStatus, ToolSpan
 
-# class LangChainCallbackHandler(BaseTracer):
-#     def __init__(self, auto_eval=False, *args, **kwargs) -> None:
-#         self.auto_eval = auto_eval
-#         self.event_map: Dict[str, BaseTrace] = {}
-#         self.track_params: Dict[str, Dict] = {}
-#         self.event_map_lock = threading.Lock()
-#         super().__init__(*args, **kwargs)
+class CallbackHandler(BaseCallbackHandler):
 
-#     def _start_trace(self, run: Run) -> None:
-#         # Create trace instance
-#         parent_id = run.parent_run_id
-#         parent_id_string = str(run.parent_run_id) if parent_id else None
-#         run_id_string = str(run.id)
-#         if not parent_id:
-#             self.track_params[run_id_string] = {}
-#         self.run_map[str(run.id)] = run
-#         with self.event_map_lock:
-#             root_parent_id = (
-#                 self.event_map[parent_id_string].rootParentId
-#                 if parent_id
-#                 else run_id_string
-#             )
-#             event_type = self.convert_event_type_to_deepeval_trace_type(
-#                 run.run_type
-#             )
-#             trace_instance = self.create_trace_instance(
-#                 event_type=event_type,
-#                 name=run.name,
-#                 parent_id=parent_id_string,
-#                 root_parent_id=root_parent_id,
-#             )
-#             # Update event_map with trace instance
-#             self.event_map[run_id_string] = trace_instance
+    def __init__(self):
+        is_langchain_installed()
+        super().__init__()
 
-#     def _end_trace(self, run: Run) -> None:
-#         with self.event_map_lock:
-#             # Update trace instance created in _start_trace
-#             trace_instance = self.event_map[str(run.id)]
-#             event_type = trace_instance.type
-#             processed_payload = dict(
-#                 self._flatten(
-#                     chain(
-#                         self._as_input(self._convert_io(run.inputs)),
-#                         self._as_output(self._convert_io(run.outputs)),
-#                         self._prompts(run.inputs),
-#                         self._input_messages(run.inputs),
-#                         self._output_messages(run.outputs),
-#                         self._prompt_template(run),
-#                         self._invocation_parameters(run),
-#                         self._model_name(run.extra),
-#                         self._token_counts(run.outputs),
-#                         self._function_calls(run.outputs),
-#                         self._tools(run),
-#                         self._retrieval_documents(run),
-#                         self._metadata(run),
-#                     )
-#                 )
-#             )
-#             trace_instance: BaseTrace = self.update_trace_instance(
-#                 trace_instance, event_type, processed_payload, run
-#             )
-#             trace_instance.inputPayload = class_to_dict(run.inputs)
-#             trace_instance.outputPayload = class_to_dict(run.outputs)
-#             # Update event map if not root trace
-#             if trace_instance.parentId is not None:
-#                 parent_trace = self.event_map.get(trace_instance.parentId)
-#                 parent_trace.traces.append(trace_instance)
-#             # # Monitor (send to Observatory) if root trace
-#             else:
-#                 current_trace_stack = trace_manager.get_trace_stack_copy()
-#                 if len(current_trace_stack) == 0:
-#                     track_params = self.track_params.get(run.id, {})
-#                     dict_representation = dataclass_to_dict(trace_instance)
-#                     if trace_instance.type == LangChainTraceType.CHAIN:
-#                         track_params["input"] = (
-#                             trace_instance.chainAttributes.input
-#                         )
-#                         track_params["response"] = (
-#                             trace_instance.chainAttributes.output
-#                         )
-#                     monitor(
-#                         event_name=trace_instance.name,
-#                         model=track_params.get("model") or "NA",
-#                         input=track_params.get("input") or "NA",
-#                         response=track_params.get("response") or "NA",
-#                         retrieval_context=track_params.get("retrieval_context"),
-#                         completion_time=trace_instance.executionTime,
-#                         token_usage=track_params.get("token_usage"),
-#                         trace_stack=dict_representation,
-#                     )
-#                 else:
-#                     parent_trace = current_trace_stack[-1]
-#                     parent_trace.traces.append(trace_instance)
-#                     trace_manager.set_trace_stack(current_trace_stack)
+    active_trace_id: Optional[str] = None
 
-#             # Delete trace_instance from the event_map once processed
-#             del self.event_map[str(run.id)]
+    def on_chain_start(
+        self,
+        serialized: dict[str, Any],
+        inputs: dict[str, Any],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
+        
+        base_span = BaseSpan(
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
+            start_time=perf_counter(),
+            name="langchain_chain_span_" + str(run_id),
+            input=inputs
+        )
+        trace_manager.add_span(base_span)
+        trace_manager.add_span_to_trace(base_span)
 
-#     ############################################
-#     ### Creating Trace Instances ###############
-#     ############################################
+    def on_chain_end(
+        self,
+        outputs: dict[str, Any],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:        
+        base_span = trace_manager.get_span_by_uuid(str(run_id))
 
-#     def create_trace_instance(
-#         self,
-#         event_type: LangChainTraceType | str,
-#         name: str,
-#         parent_id: Optional[str],
-#         root_parent_id: str,
-#     ) -> TraceData:
-#         trace_kwargs = {
-#             "traceProvider": TraceProvider.LANGCHAIN,
-#             "type": event_type,
-#             "executionTime": perf_counter(),
-#             "name": name,
-#             "status": TraceStatus.SUCCESS,
-#             "traces": [],
-#             "inputPayload": None,
-#             "outputPayload": None,
-#             "parentId": parent_id,
-#             "rootParentId": root_parent_id,
-#         }
-#         if event_type == LangChainTraceType.CHAIN:
-#             trace_kwargs["chainAttributes"] = None
-#             trace_instance = ChainTrace(**trace_kwargs)
-#         elif event_type == LangChainTraceType.LLM:
-#             trace_kwargs["llmAttributes"] = None
-#             trace_instance = LlmTrace(**trace_kwargs)
-#         elif event_type == LangChainTraceType.RETRIEVER:
-#             trace_kwargs["retrieverAttributes"] = None
-#             trace_instance = RetrieverTrace(**trace_kwargs)
-#         elif event_type == LangChainTraceType.TOOL:
-#             trace_kwargs["toolAttributes"] = None
-#             trace_instance = ToolTrace(**trace_kwargs)
-#         else:
-#             trace_instance = GenericTrace(**trace_kwargs)
-#         return trace_instance
+        if base_span is None:
+            return
 
-#     def update_trace_instance(
-#         self,
-#         trace_instance: TraceData,
-#         event_type: LangChainTraceType,
-#         processed_payload: Optional[Dict[str, Any]],
-#         run: Run,
-#     ) -> TraceData:
-#         trace_instance.executionTime = (
-#             perf_counter() - trace_instance.executionTime
-#         )
-#         if event_type == LangChainTraceType.CHAIN:
-#             input_value = "NA"
-#             output_value = "NA"
-#             for key, value in run.inputs.items():
-#                 if "input" in key and isinstance(value, str):
-#                     input_value = value
-#                     break
-#             for key, value in run.outputs.items():
-#                 if "output" in key and isinstance(value, str):
-#                     output_value = value
-#                     break
-#             attributes = ChainAttributes(input=input_value, output=output_value)
-#             trace_instance.chainAttributes = attributes
-#         elif event_type == LangChainTraceType.LLM:
-#             prompt = (
-#                 "\n".join(processed_payload.get("llm_prompts") or ["NA"])
-#                 or "NA"
-#             )
-#             attributes = LlmAttributes(
-#                 # Required Attributes
-#                 input_str=prompt,
-#                 output_str=processed_payload.get(
-#                     "llm_output_messages.0.message_content"
-#                 )
-#                 or "NA",
-#                 # Optional Attributes
-#                 model=processed_payload.get("llm_model"),
-#                 total_token_count=processed_payload.get(
-#                     "llm_token_count_total"
-#                 ),
-#                 prompt_token_count=processed_payload.get(
-#                     "llm_token_count_prompt"
-#                 ),
-#                 completion_token_count=processed_payload.get(
-#                     "llm_token_count_completion"
-#                 ),
-#                 prompt_template=prompt,
-#                 prompt_template_variables=None,
-#             )
-#             trace_instance.llmAttributes = attributes
-#             track_params = self.track_params[trace_instance.rootParentId]
-#             track_params["model"] = processed_payload.get("llm_model_name")
-#             track_params["token_usage"] = processed_payload.get(
-#                 "llm_token_count_total"
-#             )
+        base_span.end_time = perf_counter()
+        base_span.status = TraceSpanStatus.SUCCESS
+        base_span.output = outputs
+        trace_manager.remove_span(str(run_id))
+        
+        if parent_run_id is None:
+            current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            if current_trace is not None:
+                current_trace.input = base_span.input
+                current_trace.output = base_span.output
+            trace_manager.end_trace(self.active_trace_id)
+            self.active_trace_id = None
 
-#         elif event_type == LangChainTraceType.RETRIEVER:
-#             retrieval_documents: List[RetrievalNode] = []
-#             total_content_length = 0
-#             i = 0
-#             while True:
-#                 content_key = f"retrieval_documents.{i}.document_content"
-#                 metadata_key = f"retrieval_documents.{i}.document_metadata"
-#                 if content_key not in processed_payload:
-#                     break
-#                 document_content = processed_payload[content_key]
-#                 document_metadata: Dict = json.loads(
-#                     processed_payload[metadata_key]
-#                 )
-#                 total_content_length += len(document_content)
-#                 node = RetrievalNode(
-#                     content=document_content,
-#                     source_file=document_metadata.get("source"),
-#                 )
-#                 retrieval_documents.append(node)
-#                 i += 1
-#             attributes = RetrieverAttributes(
-#                 # Required Attributes
-#                 query_str=processed_payload.get("input_value"),
-#                 nodes=retrieval_documents,
-#                 # Optional Attributes
-#                 average_chunk_size=total_content_length
-#                 // len("retrieval_documents"),
-#                 top_k=len("retrieval_documents"),
-#             )
-#             trace_instance.retrieverAttributes = attributes
-#             track_params = self.track_params[trace_instance.rootParentId]
-#             track_params["retrieval_context"] = [
-#                 doc.content for doc in retrieval_documents
-#             ]
-#         elif event_type == LangChainTraceType.TOOL:
-#             attributes = ToolAttributes(
-#                 # Required Attributes
-#                 name=processed_payload.get("tool_name") or "NA",
-#                 description=processed_payload.get("tool_description") or "NA",
-#             )
-#             trace_instance.toolAttributes = attributes
-#         else:
-#             input_value = "NA"
-#             output_value = "NA"
-#             for key, value in run.inputs.items():
-#                 if "input" in key and isinstance(value, str):
-#                     input_value = value
-#                     break
-#             for key, value in run.outputs.items():
-#                 if "output" in key and isinstance(value, str):
-#                     output_value = value
-#                     break
-#             attributes = GenericAttributes(
-#                 input=input_value, output=output_value
-#             )
-#             trace_instance.genericAttributes = attributes
-#         return trace_instance
+    def on_llm_start(
+        self,
+        serialized: dict[str, Any],
+        prompts: list[str],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
 
-#     ############################################
-#     ### Helper Functions #######################
-#     ############################################
+        # prepare input
+        input = "\n".join(prompts) if prompts else ""
+        
+        llm_span = LlmSpan(
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
+            start_time=perf_counter(),
+            name="langchain_llm_span_" + str(run_id),
+            input=input,
+            #TODO: why model is coming unknown?
+            model=serialized.get("model_name", "unknown"),
+        )
+        trace_manager.add_span(llm_span)
+        trace_manager.add_span_to_trace(llm_span)
 
-#     def convert_event_type_to_deepeval_trace_type(self, event_type: str):
-#         # TODO: add more types
-#         if event_type == "llm":
-#             return LangChainTraceType.LLM
-#         elif event_type == "retriever":
-#             return LangChainTraceType.RETRIEVER
-#         elif event_type == "embedding":
-#             return LangChainTraceType.EMBEDDING
-#         elif event_type == "tool":
-#             return LangChainTraceType.TOOL
-#         elif event_type == "chain":
-#             return LangChainTraceType.CHAIN
+    def on_llm_end(
+        self,
+        response: LLMResult,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        llm_span = trace_manager.get_span_by_uuid(str(run_id))
+        if llm_span is None:
+            return
 
-#         return event_type.capitalize()
+        # prepare output
+        response_str = ""
+        for generation in response.generations:
+            for gen in generation:
+                response_str += gen.text + "\n"
 
-#     def _persist_run(self, run: Run) -> None:
-#         pass
+        llm_span.end_time = perf_counter()
+        llm_span.status = TraceSpanStatus.SUCCESS
+        llm_span.output = response_str
+        trace_manager.remove_span(str(run_id))
 
-#     def _flatten(
-#         self, key_values: Iterable[Tuple[str, Any]]
-#     ) -> Iterator[Tuple[str, Any]]:
-#         for key, value in key_values:
-#             if value is None:
-#                 continue
-#             if isinstance(value, Mapping):
-#                 for sub_key, sub_value in self._flatten(value.items()):
-#                     yield f"{key}.{sub_key}", sub_value
-#             elif isinstance(value, List) and any(
-#                 isinstance(item, Mapping) for item in value
-#             ):
-#                 for index, sub_mapping in enumerate(value):
-#                     for sub_key, sub_value in self._flatten(
-#                         sub_mapping.items()
-#                     ):
-#                         yield f"{key}.{index}.{sub_key}", sub_value
-#             else:
-#                 if isinstance(value, Enum):
-#                     value = value.value
-#                 yield key, value
+        if parent_run_id is None:
+            current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            if current_trace is not None:
+                current_trace.input = llm_span.input
+                current_trace.output = llm_span.output
+            trace_manager.end_trace(self.active_trace_id)
+            self.active_trace_id = None
 
-#     def safe_json_dumps(self, obj: Any, **kwargs: Any) -> str:
-#         """
-#         A convenience wrapper around `json.dumps` that ensures that any object can
-#         be safely encoded without a `TypeError` and that non-ASCII Unicode
-#         characters are not escaped.
-#         """
-#         return json.dumps(obj, default=str, ensure_ascii=False, **kwargs)
+    def on_tool_start(
+        self,
+        serialized: dict[str, Any],
+        input_str: str,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        inputs: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
 
-#     def _as_input(self, values: Iterable[str]) -> Iterator[Tuple[str, str]]:
-#         return zip(("input_value", "input.mime_type"), values)
+        tool_span = ToolSpan(
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
+            start_time=perf_counter(),
+            name="langchain_tool_span_" + str(run_id),
+            input=input_str
+        )
+        trace_manager.add_span(tool_span)
+        trace_manager.add_span_to_trace(tool_span)
 
-#     def _as_output(self, values: Iterable[str]) -> Iterator[Tuple[str, str]]:
-#         return zip(("output_value", "output.mime_type"), values)
+    def on_tool_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        tool_span = trace_manager.get_span_by_uuid(str(run_id))
+        
+        if tool_span is None:
+            return
+        
+        tool_span.end_time = perf_counter()
+        tool_span.status = TraceSpanStatus.SUCCESS
+        tool_span.output = output
+        trace_manager.remove_span(str(run_id))
 
-#     def _convert_io(self, obj: Optional[Mapping[str, Any]]) -> Iterator[str]:
-#         if not obj:
-#             return
-#         assert isinstance(obj, dict), f"expected dict, found {type(obj)}"
-#         if len(obj) == 1 and isinstance(value := next(iter(obj.values())), str):
-#             yield value
-#         else:
-#             obj = dict(self._replace_nan(obj))
-#             yield self.safe_json_dumps(obj)
-#             yield "application/json"
+        if parent_run_id is None:
+            current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            if current_trace is not None:
+                current_trace.input = tool_span.input
+                current_trace.output = tool_span.output
+            trace_manager.end_trace(self.active_trace_id)
+            self.active_trace_id = None
 
-#     def _replace_nan(self, obj: Mapping[str, Any]) -> Iterator[Tuple[str, Any]]:
-#         for k, v in obj.items():
-#             if isinstance(v, float) and not math.isfinite(v):
-#                 yield k, None
-#             else:
-#                 yield k, v
+    def on_retriever_start(
+        self,
+        serialized: dict[str, Any],
+        query: str,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
+        
+        retriever_span = RetrieverSpan(
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
+            start_time=perf_counter(),
+            name="langchain_retriever_span_" + str(run_id),
+            input=query,
+            embedder=metadata.get("ls_embedding_provider", "unknown"),
+        )
+        trace_manager.add_span(retriever_span)
+        trace_manager.add_span_to_trace(retriever_span)
 
-#     # Unchecked
-#     def _prompts(
-#         self, inputs: Optional[Mapping[str, Any]]
-#     ) -> Iterator[Tuple[str, List[str]]]:
-#         """Yields prompts if present."""
-#         if not inputs:
-#             return
-#         assert hasattr(inputs, "get"), f"expected Mapping, found {type(inputs)}"
-#         if prompts := inputs.get("prompts"):
-#             yield "llm_prompts", prompts
+    def on_retriever_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        retriever_span = trace_manager.get_span_by_uuid(str(run_id))
+        
+        if retriever_span is None:
+            return
+        
+        # prepare output
+        output_list = []
+        if isinstance(output, list):
+            for item in output:
+                output_list.append(str(item))
+        else:
+            output_list.append(str(output))
+        
+        retriever_span.end_time = perf_counter()
+        retriever_span.status = TraceSpanStatus.SUCCESS
+        retriever_span.output = output_list
+        trace_manager.remove_span(str(run_id))
 
-#     # Unchecked
-#     def _input_messages(
-#         self,
-#         inputs: Optional[Mapping[str, Any]],
-#     ) -> Iterator[Tuple[str, List[Dict[str, Any]]]]:
-#         """Yields chat messages if present."""
-#         if not inputs:
-#             return
-#         assert hasattr(inputs, "get"), f"expected Mapping, found {type(inputs)}"
-#         # There may be more than one set of messages. We'll use just the first set.
-#         if not (multiple_messages := inputs.get("messages")):
-#             return
-#         assert isinstance(
-#             multiple_messages, Iterable
-#         ), f"expected Iterable, found {type(multiple_messages)}"
-#         # This will only get the first set of messages.
-#         if not (first_messages := next(iter(multiple_messages), None)):
-#             return
-#         parsed_messages = []
-#         if isinstance(first_messages, list):
-#             for message_data in first_messages:
-#                 if isinstance(message_data, BaseMessage):
-#                     parsed_messages.append(
-#                         dict(self._parse_message_data(message_data.to_json()))
-#                     )
-#                 elif hasattr(message_data, "get"):
-#                     parsed_messages.append(
-#                         dict(self._parse_message_data(message_data))
-#                     )
-#                 else:
-#                     raise ValueError(
-#                         f"failed to parse message of type {type(message_data)}"
-#                     )
-#         elif isinstance(first_messages, BaseMessage):
-#             parsed_messages.append(
-#                 dict(self._parse_message_data(first_messages.to_json()))
-#             )
-#         elif hasattr(first_messages, "get"):
-#             parsed_messages.append(
-#                 dict(self._parse_message_data(first_messages))
-#             )
-#         else:
-#             raise ValueError(
-#                 f"failed to parse messages of type {type(first_messages)}"
-#             )
-#         if parsed_messages:
-#             yield "llm_input_messages", parsed_messages
-
-#     # Unchecked
-#     def _output_messages(
-#         self,
-#         outputs: Optional[Mapping[str, Any]],
-#     ) -> Iterator[Tuple[str, List[Dict[str, Any]]]]:
-#         """Yields chat messages if present."""
-#         if not outputs:
-#             return
-#         assert hasattr(
-#             outputs, "get"
-#         ), f"expected Mapping, found {type(outputs)}"
-#         # There may be more than one set of generations. We'll use just the first set.
-#         if not (multiple_generations := outputs.get("generations")):
-#             return
-#         assert isinstance(
-#             multiple_generations, Iterable
-#         ), f"expected Iterable, found {type(multiple_generations)}"
-#         # This will only get the first set of generations.
-#         if not (first_generations := next(iter(multiple_generations), None)):
-#             return
-#         assert isinstance(
-#             first_generations, Iterable
-#         ), f"expected Iterable, found {type(first_generations)}"
-#         parsed_messages = []
-#         for generation in first_generations:
-#             assert hasattr(
-#                 generation, "get"
-#             ), f"expected Mapping, found {type(generation)}"
-#             if message_data := generation.get("message"):
-#                 if isinstance(message_data, BaseMessage):
-#                     parsed_messages.append(
-#                         dict(self._parse_message_data(message_data.to_json()))
-#                     )
-#                 elif hasattr(message_data, "get"):
-#                     parsed_messages.append(
-#                         dict(self._parse_message_data(message_data))
-#                     )
-#                 else:
-#                     raise ValueError(
-#                         f"fail to parse message of type {type(message_data)}"
-#                     )
-#         if parsed_messages:
-#             yield "llm_output_messages", parsed_messages
-
-#     # Unchecked
-#     def _parse_message_data(
-#         self, message_data: Optional[Mapping[str, Any]]
-#     ) -> Iterator[Tuple[str, Any]]:
-#         """Parses message data to grab message role, content, etc."""
-#         if not message_data:
-#             return
-#         assert hasattr(
-#             message_data, "get"
-#         ), f"expected Mapping, found {type(message_data)}"
-#         id_ = message_data.get("id")
-#         assert isinstance(id_, List), f"expected list, found {type(id_)}"
-#         message_class_name = id_[-1]
-#         if message_class_name.startswith("HumanMessage"):
-#             role = "user"
-#         elif message_class_name.startswith("AIMessage"):
-#             role = "assistant"
-#         elif message_class_name.startswith("SystemMessage"):
-#             role = "system"
-#         elif message_class_name.startswith("FunctionMessage"):
-#             role = "function"
-#         elif message_class_name.startswith("ToolMessage"):
-#             role = "tool"
-#         elif message_class_name.startswith("ChatMessage"):
-#             role = message_data["kwargs"]["role"]
-#         else:
-#             raise ValueError(
-#                 f"Cannot parse message of type: {message_class_name}"
-#             )
-#         yield "message_role", role
-#         if kwargs := message_data.get("kwargs"):
-#             assert hasattr(
-#                 kwargs, "get"
-#             ), f"expected Mapping, found {type(kwargs)}"
-#             if content := kwargs.get("content"):
-#                 assert isinstance(
-#                     content, str
-#                 ), f"expected str, found {type(content)}"
-#                 yield "message_content", content
-#             if additional_kwargs := kwargs.get("additional_kwargs"):
-#                 assert hasattr(
-#                     additional_kwargs, "get"
-#                 ), f"expected Mapping, found {type(additional_kwargs)}"
-#                 if function_call := additional_kwargs.get("function_call"):
-#                     assert hasattr(
-#                         function_call, "get"
-#                     ), f"expected Mapping, found {type(function_call)}"
-#                     if name := function_call.get("name"):
-#                         assert isinstance(
-#                             name, str
-#                         ), f"expected str, found {type(name)}"
-#                         yield "message_function_call_name", name
-#                     if arguments := function_call.get("arguments"):
-#                         assert isinstance(
-#                             arguments, str
-#                         ), f"expected str, found {type(arguments)}"
-#                         yield "message_function_call_arguments_json", arguments
-#                 if tool_calls := additional_kwargs.get("tool_calls"):
-#                     assert isinstance(
-#                         tool_calls, Iterable
-#                     ), f"expected Iterable, found {type(tool_calls)}"
-#                     message_tool_calls = []
-#                     for tool_call in tool_calls:
-#                         if message_tool_call := dict(
-#                             self._get_tool_call(tool_call)
-#                         ):
-#                             message_tool_calls.append(message_tool_call)
-#                     if message_tool_calls:
-#                         yield "message_tool_calls", message_tool_calls
-
-#     def _get_tool_call(
-#         self, tool_call: Optional[Mapping[str, Any]]
-#     ) -> Iterator[Tuple[str, Any]]:
-#         if not tool_call:
-#             return
-#         assert hasattr(
-#             tool_call, "get"
-#         ), f"expected Mapping, found {type(tool_call)}"
-#         if function := tool_call.get("function"):
-#             assert hasattr(
-#                 function, "get"
-#             ), f"expected Mapping, found {type(function)}"
-#             if name := function.get("name"):
-#                 assert isinstance(
-#                     name, str
-#                 ), f"expected str, found {type(name)}"
-#                 yield "tool_call_function_name", name
-#             if arguments := function.get("arguments"):
-#                 assert isinstance(
-#                     arguments, str
-#                 ), f"expected str, found {type(arguments)}"
-#                 yield "tool_call_function_arguments_json", arguments
-
-#     def _prompt_template(self, run: Run) -> Iterator[Tuple[str, Any]]:
-#         """
-#         A best-effort attempt to locate the PromptTemplate object among the
-#         keyword arguments of a serialized object, e.g. an LLMChain object.
-#         """
-#         serialized: Optional[Mapping[str, Any]] = run.serialized
-#         if not serialized:
-#             return
-#         assert hasattr(
-#             serialized, "get"
-#         ), f"expected Mapping, found {type(serialized)}"
-#         if not (kwargs := serialized.get("kwargs")):
-#             return
-#         assert isinstance(kwargs, dict), f"expected dict, found {type(kwargs)}"
-#         for obj in kwargs.values():
-#             if not hasattr(obj, "get") or not (id_ := obj.get("id")):
-#                 continue
-#             # The `id` field of the object is a list indicating the path to the
-#             # object's class in the LangChain package, e.g. `PromptTemplate` in
-#             # the `langchain.prompts.prompt` module is represented as
-#             # ["langchain", "prompts", "prompt", "PromptTemplate"]
-#             assert isinstance(
-#                 id_, Sequence
-#             ), f"expected list, found {type(id_)}"
-#             if id_[-1].endswith("PromptTemplate"):
-#                 if not (kwargs := obj.get("kwargs")):
-#                     continue
-#                 assert hasattr(
-#                     kwargs, "get"
-#                 ), f"expected Mapping, found {type(kwargs)}"
-#                 if not (template := kwargs.get("template", "")):
-#                     continue
-#                 yield "llm_prompt_template", template
-#                 if input_variables := kwargs.get("input_variables"):
-#                     assert isinstance(
-#                         input_variables, list
-#                     ), f"expected list, found {type(input_variables)}"
-#                     template_variables = {}
-#                     for variable in input_variables:
-#                         if (value := run.inputs.get(variable)) is not None:
-#                             template_variables[variable] = value
-#                     if template_variables:
-#                         yield "llm_prompt_template_variables", self.safe_json_dumps(
-#                             template_variables
-#                         )
-#                 break
-
-#     def _invocation_parameters(self, run: Run) -> Iterator[Tuple[str, str]]:
-#         """Yields invocation parameters if present."""
-#         if run.run_type.lower() != "llm":
-#             return
-#         if not (extra := run.extra):
-#             return
-#         assert hasattr(extra, "get"), f"expected Mapping, found {type(extra)}"
-#         if invocation_parameters := extra.get("invocation_params"):
-#             assert isinstance(
-#                 invocation_parameters, Mapping
-#             ), f"expected Mapping, found {type(invocation_parameters)}"
-#             yield "llm_invocation_parameters", self.safe_json_dumps(
-#                 invocation_parameters
-#             )
-
-#     def _model_name(
-#         self, extra: Optional[Mapping[str, Any]]
-#     ) -> Iterator[Tuple[str, str]]:
-#         """Yields model name if present."""
-#         if not extra:
-#             return
-#         assert hasattr(extra, "get"), f"expected Mapping, found {type(extra)}"
-#         if not (invocation_params := extra.get("invocation_params")):
-#             return
-#         for key in ["model_name", "model"]:
-#             if name := invocation_params.get(key):
-#                 yield "llm_model_name", name
-#                 return
-
-#     def _token_counts(
-#         self, outputs: Optional[Mapping[str, Any]]
-#     ) -> Iterator[Tuple[str, int]]:
-#         """Yields token count information if present."""
-#         if not outputs:
-#             return
-#         assert hasattr(
-#             outputs, "get"
-#         ), f"expected Mapping, found {type(outputs)}"
-#         if not (llm_output := outputs.get("llm_output")):
-#             return
-#         assert hasattr(
-#             llm_output, "get"
-#         ), f"expected Mapping, found {type(llm_output)}"
-#         if not (token_usage := llm_output.get("token_usage")):
-#             return
-#         assert hasattr(
-#             token_usage, "get"
-#         ), f"expected Mapping, found {type(token_usage)}"
-#         for attribute_name, key in [
-#             ("llm_token_count_prompt", "prompt_tokens"),
-#             ("llm_token_count_completion", "completion_tokens"),
-#             ("llm_token_count_total", "total_tokens"),
-#         ]:
-#             if (token_count := token_usage.get(key)) is not None:
-#                 yield attribute_name, token_count
-
-#     def _function_calls(
-#         self, outputs: Optional[Mapping[str, Any]]
-#     ) -> Iterator[Tuple[str, str]]:
-#         """Yields function call information if present."""
-#         if not outputs:
-#             return
-#         assert hasattr(
-#             outputs, "get"
-#         ), f"expected Mapping, found {type(outputs)}"
-#         try:
-#             function_call_data = deepcopy(
-#                 outputs["generations"][0][0]["message"]["kwargs"][
-#                     "additional_kwargs"
-#                 ]["function_call"]
-#             )
-#             function_call_data["arguments"] = json.loads(
-#                 function_call_data["arguments"]
-#             )
-#             yield "llm_function_call", self.safe_json_dumps(function_call_data)
-#         except Exception:
-#             pass
-
-#     def _tools(self, run: Run) -> Iterator[Tuple[str, str]]:
-#         """Yields tool attributes if present."""
-#         if run.run_type.lower() != "tool":
-#             return
-#         if not (serialized := run.serialized):
-#             return
-#         assert hasattr(
-#             serialized, "get"
-#         ), f"expected Mapping, found {type(serialized)}"
-#         if name := serialized.get("name"):
-#             yield "tool_name", name
-#         if description := serialized.get("description"):
-#             yield "tool_description", description
-
-#     def _retrieval_documents(
-#         self,
-#         run: Run,
-#     ) -> Iterator[Tuple[str, List[Mapping[str, Any]]]]:
-#         if run.run_type.lower() != "retriever":
-#             return
-#         if not (outputs := run.outputs):
-#             return
-#         assert hasattr(
-#             outputs, "get"
-#         ), f"expected Mapping, found {type(outputs)}"
-#         documents = outputs.get("documents")
-#         assert isinstance(
-#             documents, Iterable
-#         ), f"expected Iterable, found {type(documents)}"
-#         yield "retrieval_documents", [
-#             dict(self._as_document(document)) for document in documents
-#         ]
-
-#     def _metadata(self, run: Run) -> Iterator[Tuple[str, str]]:
-#         """
-#         Takes the LangChain chain metadata and adds it to the trace
-#         """
-#         if not run.extra or not (metadata := run.extra.get("metadata")):
-#             return
-#         assert isinstance(
-#             metadata, Mapping
-#         ), f"expected Mapping, found {type(metadata)}"
-#         if session_id := (
-#             metadata.get("langchain_session_id")
-#             or metadata.get("langchain_conversation_id")
-#             or metadata.get("langchain_thread_id")
-#         ):
-#             yield "session_id", session_id
-#         yield "metadata", self.safe_json_dumps(metadata)
-
-#     def _as_document(self, document: Any) -> Iterator[Tuple[str, Any]]:
-#         if page_content := getattr(document, "page_content", None):
-#             assert isinstance(
-#                 page_content, str
-#             ), f"expected str, found {type(page_content)}"
-#             yield "document_content", page_content
-#         if metadata := getattr(document, "metadata", None):
-#             assert isinstance(
-#                 metadata, Mapping
-#             ), f"expected Mapping, found {type(metadata)}"
-#             yield "document_metadata", self.safe_json_dumps(metadata)
+        if parent_run_id is None:
+            current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            if current_trace is not None:
+                current_trace.input = retriever_span.input
+                current_trace.output = retriever_span.output
+            trace_manager.end_trace(self.active_trace_id)
+            self.active_trace_id = None
