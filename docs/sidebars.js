@@ -19,6 +19,7 @@ module.exports = {
           items: [
             "evaluation-test-cases",
             "evaluation-multiturn-test-cases",
+            "evaluation-arena-test-cases",
           ],
           collapsed: true,
         },
@@ -41,6 +42,7 @@ module.exports = {
             "metrics-introduction",
             "metrics-llm-evals",
             "metrics-dag",
+            "metrics-arena-g-eval",
             {
               type: "category",
               label: "RAG Metrics",
