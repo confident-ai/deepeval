@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from uuid import UUID
 from time import perf_counter
-from deepeval.tracing.attributes import LlmAttributes
+from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -230,9 +230,9 @@ class CallbackHandler(BaseCallbackHandler):
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
             name="langchain_retriever_span_" + str(run_id),
-            input=query,
             embedder=metadata.get("ls_embedding_provider", "unknown"),
         )
+        retriever_span.set_attributes(RetrieverAttributes(embedding_input=query, retrieval_context=[]))
         trace_manager.add_span(retriever_span)
         trace_manager.add_span_to_trace(retriever_span)
 
@@ -260,7 +260,7 @@ class CallbackHandler(BaseCallbackHandler):
         
         retriever_span.end_time = perf_counter()
         retriever_span.status = TraceSpanStatus.SUCCESS
-        retriever_span.output = output_list
+        retriever_span.set_attributes(RetrieverAttributes(embedding_input=retriever_span.attributes.embedding_input, retrieval_context=output_list))
         trace_manager.remove_span(str(run_id))
 
         if parent_run_id is None:
