@@ -7,14 +7,11 @@ from langchain_core.outputs import LLMResult
 
 from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import LlmAttributes
-from deepeval.tracing.types import LlmSpan, RetrieverSpan, TraceSpanStatus, ToolSpan
+from deepeval.tracing.types import BaseSpan, LlmSpan, RetrieverSpan, TraceSpanStatus, ToolSpan
 
 class CallbackHandler(BaseCallbackHandler):
 
     active_trace_id: Optional[str] = None
-    llm_span_dict: Dict[str, LlmSpan] = {}
-    tool_span_dict: Dict[str, ToolSpan] = {}
-    retriever_span_dict: Dict[str, RetrieverSpan] = {}
 
     def on_chain_start(
         self,
@@ -27,9 +24,25 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        
         if parent_run_id is None:
             if self.active_trace_id is None:
                 self.active_trace_id = trace_manager.start_new_trace().uuid
+        
+        base_span = BaseSpan(
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
+            start_time=perf_counter(),
+            name="langchain_chain_span_" + str(run_id),
+            input=inputs,
+            output=None,
+            error=None,
+        )
+        trace_manager.add_span(base_span)
+        trace_manager.add_span_to_trace(base_span)
 
     def on_chain_end(
         self,
@@ -39,18 +52,40 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
-        if parent_run_id is None:
-            for span in self.llm_span_dict.values():
-                trace_manager.add_span_to_trace(span)
-            for span in self.tool_span_dict.values():
-                trace_manager.add_span_to_trace(span)
-            for span in self.retriever_span_dict.values():
-                trace_manager.add_span_to_trace(span)
+        
+        # get the span
+        base_span = trace_manager.get_span_by_uuid(str(run_id))
+        
+        if base_span is None:
+            return
+        
+        # update the end time
+        base_span.end_time = perf_counter()
+        
+        # update the status
+        base_span.status = TraceSpanStatus.SUCCESS
+        
+        # update the attributes
+        base_span.output = outputs
 
+        # remove the span
+        trace_manager.remove_span(str(run_id))
+
+        # TODO: figure out how to add children to the span
+
+        # assuming that the chain with no parent is the root span
+        if parent_run_id is None:
+
+            # update the trace input and output
+            current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            if current_trace is not None:
+                current_trace.input = base_span.input
+                current_trace.output = base_span.output
+
+            # end the trace
             trace_manager.end_trace(self.active_trace_id)
-            self.llm_span_dict = {}
-            self.tool_span_dict = {}
-            self.retriever_span_dict = {}
+
+            # reset the active trace id
             self.active_trace_id = None
 
     def on_llm_start(
