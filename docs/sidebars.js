@@ -13,7 +13,15 @@ module.exports = {
       className: "sidebar-item-icon-llm-eval",
       items: [
         "evaluation-introduction",
-        "evaluation-test-cases",
+        {
+          type: "category",
+          label: "Test Cases",
+          items: [
+            "evaluation-test-cases",
+            "evaluation-multiturn-test-cases",
+          ],
+          collapsed: true,
+        },
         "evaluation-datasets",
         {
           type: "category",

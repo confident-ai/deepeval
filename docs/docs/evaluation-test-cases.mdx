@@ -1,7 +1,7 @@
 ---
 id: evaluation-test-cases
-title: Test Cases
-sidebar_label: Test Cases
+title: Single-Turn
+sidebar_label: Single-Turn
 ---
 
 <head>
@@ -13,13 +13,13 @@ sidebar_label: Test Cases
 
 ## Quick Summary
 
-A test case is a blueprint provided by `deepeval` to unit test LLM outputs. There are two types of test cases in `deepeval`: `LLMTestCase` and `ConversationalTestCase`.
+A **single-turn test case** is a blueprint provided by `deepeval` to unit test LLM outputs, and **represents a single, atomic unit of interaction** with your LLM app. There are two types of single-turn test cases in `deepeval`: `LLMTestCase` and `MLLMTestCase`.
 
 :::caution
-Throughout this documentation, you should assume the term 'test case' refers to an `LLMTestCase` instead of a `ConversationalTestCase`.
+Throughout this documentation, you should assume the term 'test case' refers to an `LLMTestCase` instead of `MLLMImage` or `ConversationalTestCase`.
 :::
 
-An `LLMTestCase` is the most prominent type of test case in `deepeval` and **represents a single, atomic unit of interaction** with your LLM app. It has **NINE** parameters:
+An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has **NINE** parameters:
 
 - `input`
 - `actual_output`
@@ -439,66 +439,6 @@ The `completion_time` is an **optional** parameter and is similar to the `token_
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(completion_time=7.53, ...)
-```
-
-## Conversational Test Case
-
-While an `LLMTestCase` represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
-
-A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
-
-```python
-from deepeval.test_case import Turn, ConversationalTestCase
-
-turns = [
-    Turn(
-        role="assistant",
-        content="Why did the chicken cross the road?",
-    ),
-    Turn(
-        role="user",
-        content="Are you trying to be funny?",
-    ),
-]
-
-test_case = ConversationalTestCase(turns=turns)
-```
-
-:::note
-Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
-:::
-
-### Turns
-
-The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. If you're using [`ConversationalGEval`](/docs/metrics-conversational-g-eval), you might also want to supply different parameteres to a `Turn`. A `Turn` is made up of the following parameters:
-
-```python
-class Turn:
-    role: Literal["user", "assistant"]
-    content: str
-    user_id: Optional[str] = None
-    retrieval_context: Optional[List[str]] = None
-    tools_called: Optional[List[ToolCall]] = None
-    additional_metadata: Optional[Dict] = None
-```
-
-:::info
-You should only provide the `retrieval_context` and `tools_called` parameter if the `role` is `"assistant"`.
-:::
-
-The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
-
-### Chatbot Role
-
-The `chatbot_role` parameter is an **optional** parameter that specifies what role the chatbot is supposed to play. This is currently only required for the `RoleAdherenceMetric`, where it is particularly useful for a role-playing evaluation use case.
-
-```python
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
-
-test_case = ConversationalTestCase(
-    chatbot_role="...",
-    turns=[LLMTestCase(...)]
-)
 ```
 
 ## MLLM Test Case
