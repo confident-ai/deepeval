@@ -395,6 +395,7 @@ class GEval(BaseMetric):
             test_case_contents.append(
                 construct_test_case_string(self.evaluation_params, test_case)
             )
+
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )

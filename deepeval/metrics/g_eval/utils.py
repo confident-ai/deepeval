@@ -8,6 +8,7 @@ from deepeval.test_case import (
     TurnParams,
     LLMTestCase,
     ToolCall,
+    ArenaTestCase,
 )
 from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from pydantic import BaseModel, field_validator
@@ -164,7 +165,6 @@ def construct_test_case_string(
     evaluation_params: List[LLMTestCaseParams], test_case: LLMTestCase
 ) -> str:
     text = """"""
-    text += f"Test Case ID: {test_case._identifier}\n\n"
     for param in evaluation_params:
         value = getattr(test_case, param.value)
         if isinstance(value, ToolCall):

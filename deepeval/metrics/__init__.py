@@ -2,6 +2,7 @@ from .base_metric import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
+    BaseArenaMetric,
 )
 
 from .dag.dag import DAGMetric
@@ -11,6 +12,7 @@ from .hallucination.hallucination import HallucinationMetric
 from .answer_relevancy.answer_relevancy import AnswerRelevancyMetric
 from .summarization.summarization import SummarizationMetric
 from .g_eval.g_eval import GEval
+from .arena_g_eval.arena_g_eval import ArenaGEval
 from .faithfulness.faithfulness import FaithfulnessMetric
 from .contextual_recall.contextual_recall import ContextualRecallMetric
 from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
