@@ -1,6 +1,7 @@
 from typing import Any, Optional
 from uuid import UUID
 from time import perf_counter
+from deepeval.tracing.attributes import LlmAttributes
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -110,9 +111,9 @@ class CallbackHandler(BaseCallbackHandler):
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
             name="langchain_llm_span_" + str(run_id),
-            input=input,
             #TODO: why model is coming unknown?
             model=serialized.get("model_name", "unknown"),
+            attributes=LlmAttributes(input=input, output=""), 
         )
         trace_manager.add_span(llm_span)
         trace_manager.add_span_to_trace(llm_span)
@@ -137,7 +138,7 @@ class CallbackHandler(BaseCallbackHandler):
 
         llm_span.end_time = perf_counter()
         llm_span.status = TraceSpanStatus.SUCCESS
-        llm_span.output = response_str
+        llm_span.set_attributes(LlmAttributes(input=llm_span.attributes.input, output=response_str))
         trace_manager.remove_span(str(run_id))
 
         if parent_run_id is None:
