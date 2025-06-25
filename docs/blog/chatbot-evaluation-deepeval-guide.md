@@ -7,32 +7,34 @@ date: 2025-06-24
 hide_table_of_contents: false
 ---
 
-Chatbots are everywhere — health, real estate, finance, and even research. Over the past few years, they’ve taken the world by storm.
+Chatbots are everywhere — in healthcare, real estate, finance, and even research. Over the past few years, they’ve taken the world by storm. Today, there are countless frameworks and startups focused on making chatbot creation as easy as possible. At this point, even kids can spin up bots to help with their homework.
 
-There are now countless frameworks and startups built around making chatbot creation as easy as possible. At this point, even kids can spin up bots to help them with their homework.
-
-But here’s the thing:  _Building a chatbot is easy — making it reliable? Not so much._
+But here’s the thing: _building a chatbot is easy, but building a reliable one is a different story._
 
 It’s not enough for a chatbot to _sound good._ It needs to understand context, avoid hallucinations, give safe and accurate responses, and handle multiple turns of conversation gracefully.
 
 In this blog, I’m going to show you how to  _evaluate and improve your multi-turn conversational chatbot_  using [**DeepEval**](https://deepeval.com), a powerful open-source LLM evaluation framework.
 
-So what does a _reliable_ chatbot actually look like? In this article, we’ll break that down using a real-world use case.
-
 ## TL;DR
 
-In this guide, we build a simple multi-turn medical chatbot, show how and why it fails, and then walk through how to evaluate and improve it using **DeepEval** — an open-source LLM evaluation framework.
+In this guide, we build a simple multi-turn medical chatbot, show why it struggles, and then walk you through how to evaluate and improve it using **DeepEval** — an open-source framework for LLM evaluation.
 
 We cover:
 
-- **Multi-turn chatbots** and the complex challenges they bring to table — memory retention, tone, hallucination control, and persona adherence.
-- **Evaluating chatbot quality:** regular surface-level metrics (BLEU, accuracy) don’t cut it — you need domain-aware, conversation-focused evaluation.
-- **DeepEval** enables you to evaluate on metrics like Role Adherence, Knowledge Retention, Tone, and Carelessness, tailored for LLM-based systems.
-- **ConversationSimulator:** Using `ConversationSimulator` to generate realistic test cases and automate multi-turn chatbot evaluation — no hand-labeling needed.
-- **Regression Testing** to iterate across models, prompts, and memory strategies to find what works — and catch regressions in CI with just a few lines of code.
-- **DeepEval** (100% open source ⭐ https://github.com/confident-ai/deepeval) helps you move fast without shipping unreliable bots.
+- The unique challenges of multi-turn chatbots: memory, tone, hallucinations, and sticking to a persona.
 
-If you're building a production chatbot (especially in sensitive domains like healthcare), this guide will save you time — and maybe even someone’s health.
+- Why typical metrics like BLEU or accuracy aren’t enough — you need domain-aware, conversation-focused evaluation.
+
+- How **DeepEval** helps you measure Role Adherence, Knowledge Retention, Tone, Carelessness, and more, tailored for chatbots.
+
+- Using the `ConversationSimulator` to generate realistic multi-turn test cases — no manual labeling required.
+
+- Setting up regression tests to iterate on models, prompts, and memory strategies, and catch regressions in CI with just a few lines.
+
+- **DeepEval** (fully open source ⭐ https://github.com/confident-ai/deepeval) helps you move fast without shipping unreliable bots.
+
+
+If you’re building a chatbot for production — especially in sensitive domains like healthcare — this guide will save you time, effort, and maybe even someone’s health.
 
 ## The Unique Challenges of Multi-Turn Chatbots
 
@@ -46,116 +48,205 @@ Unlike single-turn bots that treat each question as a standalone input (think: a
 
 Before we can build a _reliable_ chatbot, we first need to understand _why_ and _how_ they break.
 
-Multi-turn chatbots introduce a unique set of challenges that go far beyond just generating _"good-sounding"_ text. They need to:
+Multi-turn chatbots come with a unique set of challenges that go far beyond just generating _good-sounding_ responses. They need to:
 
--   Track context accurately across multiple messages.
--   Avoid hallucinating false information.
--   Handle ambiguity with care.
--   Balance informativeness with tone and empathy.
--   Know when to say “I don’t know.”
+- Accurately track context across multiple exchanges
+- Avoid hallucinating or fabricating information
+- Handle ambiguity with care
+- Balance informativeness with tone and empathy.
+- Know when to say **I don’t know.**
 
-Let’s look at how these conditions change in a  **medical assistant chatbot** setting.
+Let’s look at how these challenges play out when building a **medical assistant chatbot.**
 
 ## Why the Medical Use-Case?
 
-Think about it: if you're building a chatbot that gives medical advice to real patients,  **every response matters**. One mistake can change the course of someone’s health — or worse.
+Think about it: if you're building a chatbot that provides medical advice to real patients, every response matters. One mistake can impact someone’s health — or worse, lead to irreversible and even fatal consequences.
 
-In these high-stakes situations, an unreliable chatbot doesn’t just break trust — it can cause real harm. And if that happens, you’re not just patching bugs. You’re dealing with lawsuits, lost credibility, and potentially life-altering consequences.
+In high-stakes scenarios like this, an unreliable chatbot doesn’t just break trust — it can cause real harm. And when that happens, you’re not just fixing bugs. You’re facing lawsuits, lost credibility, and potentially life-altering consequences.
 
-And trust me — you don’t want that.
+Trust me — you don’t want to be in that position.
 
 ### Building a multi-turn chatbot
 
-We are going to build a chatbot that talks directly to patients and helps answer their medical concerns. To build this safely, we’ll define clear responsibilities and evaluation goals from the start.
+A multi-turn chatbot is typically built by defining a role, tracking chat history, and generating responses based on the ongoing conversation. In this case, we're creating a chatbot that interacts directly with patients and helps address their medical concerns. To do this safely, we’ll define clear responsibilities and evaluation goals from the start.
 
-A reliable medical chatbot needs to:
+Our medical chatbot needs to:
 
-- Provide medically accurate advice.
-- Show empathy and reassurance — especially for anxious patients.
-- Remember symptoms and prior exchanges to give context-aware responses.
-- Avoid hallucinations or off-topic replies that could put someone at risk.
-- Give complete, relevant answers to patient concerns.
+- Provide medically accurate advice
+- Show empathy and reassurance — especially for anxious patients
+- Remember symptoms and prior exchanges to give context-aware responses
+- Avoid hallucinations or off-topic replies that could confuse users
+- Give complete, relevant answers to patient concerns
 
-Let's build a simple multi-turn chatbot using a basic approach. We'll be using a list of dictionaries to keep track of our chat history. 
+Let’s begin by building a basic version of our multi-turn chatbot. We’ll use a simple list of dictionaries to keep track of chat history. While this approach is minimal and not production-ready, it’s a solid starting point — and we’ll enhance it by evaluating performance using DeepEval.
 
 <details><summary><strong>Click to see the implementation of a simple multi-turn chatbot</strong></summary>
 
 ```python
+import asyncio
 from langchain.llms import OpenAI, Ollama
-from typing import List, Dict
+from typing import List, Dict, Literal
+from deepeval.test_case import Turn
 
 
 class SimpleChatbot:
-    def __init__(self, llm=None, prompt_template: str = None):
+    def __init__(
+        self,
+        llm=None,
+        prompt_template: str = None,
+        # New history hyper-parameters
+        history_strategy: Literal["full", "windowed", "none", "summary"] = "full",
+        history_window: int = 3,
+    ):
         self.llm = llm or OpenAI(temperature=0)
-        self.conversation_history: List[Dict[str, str]] = []
+        self.conversation_history: List[Turn] = []
+        self.summary: str = ""  # Initialize summary attribute
+
+        # Store the new hyper-parameters
+        self.history_strategy = history_strategy
+        self.history_window = history_window
 
         self.prompt_template = prompt_template or (
-            "You are a medical assistant chatbot. Your job is to help patients with general concerns "
-            "in a professional, empathetic tone. Use only known medical knowledge and avoid guessing.\n\n"
-            "Conversation:\n{history}\nPatient: {user_input}\nAssistant:"
+            """
+                You are a medical assistant chatbot. Your job is to help patients with general concerns
+                in a professional, empathetic tone. Use only known medical knowledge and avoid guessing.
+                Conversation:\n{history}
+                Patient: {user_input}
+                Assistant:
+            """
         )
 
     def _format_history(self) -> str:
-        history_str = ""
-        for turn in self.conversation_history:
-            history_str += f"Patient: {turn['user']}\nAssistant: {turn['bot']}\n"
-        return history_str.strip()
+        history_str_parts = []  # Use a list to build parts and then join
 
-    def chat(self, user_input: str) -> str:
+        if self.history_strategy == "none":
+            return ""
+
+        # Determine which turns to use based on strategy
+        turns_to_format: List[Turn] = []
+        if self.history_strategy == "windowed":
+            turns_to_format = self.conversation_history[-self.history_window :]
+        elif self.history_strategy == "full":
+            turns_to_format = self.conversation_history
+        elif self.history_strategy == "summary":
+            # For 'summary' strategy, the history is just the summary string
+            return f"Summary of prior conversation:\n{self.summary}"
+
+        # Format the selected turns
+        for turn_obj in turns_to_format:
+            if turn_obj.role == "user":
+                history_str_parts.append(f"Patient: {turn_obj.content}")
+            elif turn_obj.role == "assistant":
+                history_str_parts.append(f"Assistant: {turn_obj.content}")
+
+        return "\n".join(history_str_parts).strip()
+
+    async def _update_summary(self):
+        """Asynchronously updates the conversation summary."""
+        if not self.conversation_history:
+            self.summary = ""
+            return
+
+        # Format full conversation into a string for summarization
+        full_text_parts = []
+        for turn_obj in self.conversation_history:
+            if turn_obj.role == "user":
+                full_text_parts.append(f"Patient: {turn_obj.content}")
+            elif turn_obj.role == "assistant":
+                full_text_parts.append(f"Assistant: {turn_obj.content}")
+        full_text = "\n".join(full_text_parts)
+
+        summary_prompt = (
+            f"Summarize the following conversation between a patient and a medical assistant: "
+            f"{full_text}"
+            f"Summary: "
+        )
+
+        # Use ainvoke if available, else asyncio.to_thread for synchronous LLM calls
+        if hasattr(self.llm, "ainvoke"):
+            self.summary = await self.llm.ainvoke(summary_prompt)
+        else:
+            self.summary = await asyncio.to_thread(self.llm, summary_prompt)
+        self.summary = self.summary.strip()
+
+    async def a_chat(self, user_input: str) -> str:
         history = self._format_history()
         prompt = self.prompt_template.format(history=history, user_input=user_input)
-        response = self.llm(prompt)
+
+        if hasattr(self.llm, "ainvoke"):
+            response = await self.llm.ainvoke(prompt)
+        else:
+            # Fallback for synchronous LLMs, wrap in a thread executor
+            # This is safer if self.llm(prompt) is a blocking call
+            response = await asyncio.to_thread(self.llm, prompt)
 
         # Update history
-        self.conversation_history.append({"user": user_input, "bot": response.strip()})
+        self.conversation_history.append(Turn(role="user", content=user_input))
+        self.conversation_history.append(
+            Turn(role="assistant", content=response.strip())
+        )
+
+        if self.history_strategy == "summary":
+            await self._update_summary()
 
         return response.strip()
+
+    def chat(self, user_input: str) -> str:
+        """
+        Synchronous chat method.
+        Note: This internally runs an async method using asyncio.run(),
+        so it must NOT be called from within an existing asyncio event loop.
+        """
+        return asyncio.run(self.a_chat(user_input))
 ```
 
 </details>
 
-Here’s how you can try it out:
+:::note
+This `SimpleChatbot` is implemented with flexibility in mind — making it easier to integrate with DeepEval, adjust hyperparameters, and iterate quickly on performance improvements.
+:::
+
+Here’s how you can try out the `SimpleChatbot` in practice:
 
 ```python
 llm = Ollama(model="llama3.2")
 chatbot = SimpleChatbot(llm=llm)
 
-# First turn
-print(chatbot.chat("Hi, I’ve had a cough and mild fever since yesterday."))
 
-# Follow-up turn
-print(chatbot.chat("Should I be worried or just rest?"))
+# First Chat
+res1 = chatbot.chat("Hi, I've had a cough and mild fever since yesterday.")
+print("Response 1: ", res1)
 
-# Another follow-up
-print(chatbot.chat("I also have a sore throat now."))
+# Adding new symptoms
+res2 = chatbot.chat("I have headache, fatigue as well")
+print("\nResponse 2: ", res2)
+
+# Follow-up question
+res3 = chatbot.chat("Should I be worried?")
+print("\nResponse 3: ", res3)
 ```
 
-This chatbot seems to handle multi-turn conversations decently.
-But what happens when it encounters edge cases, vague symptoms, or contradicting inputs?
+This example shows how the chatbot maintains context across multiple turns — enabling it to respond appropriately to follow-up questions based on prior information. So far, it has delivered accurate and relevant responses to the user inputs. But is this really enough? How can you be sure your chatbot will perform reliably most of the time — without misguiding patients?
 
 This uncertainty is exactly why evaluating your chatbot is critical — especially in sensitive domains like healthcare.
 
 But here’s the problem: _evaluating a multi-turn chatbot is easier said than done._
 
-That’s where DeepEval comes in.
-It lets you evaluate LLM-based applications with minimal setup, using real-world metrics that actually reflect conversational quality.
+That’s where **DeepEval** comes in. It enables you to evaluate LLM-based applications with minimal setup, using real-world metrics that precisely reflect conversational quality.
 
-Whether you're stress-testing a chatbot or fine-tuning its tone and memory, DeepEval helps you go beyond surface-level performance.
+Here are the key metrics **DeepEval** offers for evaluating any multi-turn chatbot:
 
-Here are the key metrics you should consider when evaluating any multi-turn chatbot:
-
-- [**Role Adherence**](https://deepeval.com/docs/metrics-role-adherence) - Does the chatbot stick to its assigned role or persona?
-- [**Knowledge Retention**](https://deepeval.com/docs/metrics-knowledge-retention) - Does it remember important context from earlier turns?
-- [**Conversation Completeness**](https://deepeval.com/docs/metrics-conversation-completeness) - Are its responses complete and well-formed?
-- [**Conversation Relevancy**](https://deepeval.com/docs/metrics-conversation-relevancy) - Are its answers relevant to the user’s input?
-- [**Custom metrics**](https://deepeval.com/docs/metrics-conversational-g-eval) - Tailor evaluations to your use case with custom metrics.
+- [**Role Adherence**](https://deepeval.com/docs/metrics-role-adherence) — Does the chatbot stick to its assigned role or persona?
+- [**Knowledge Retention**](https://deepeval.com/docs/metrics-knowledge-retention) — Does it remember important context from earlier turns?
+- [**Conversation Completeness**](https://deepeval.com/docs/metrics-conversation-completeness) — Are its responses complete and well-formed?
+- [**Conversation Relevancy**](https://deepeval.com/docs/metrics-conversation-relevancy) — Are its answers relevant to the user’s input?
+- [**Custom metrics**](https://deepeval.com/docs/metrics-conversational-g-eval) — Tailor evaluations to your use case with custom metrics.
 
 ## Defining Evaluation Metrics
 
-For our medical assistant chatbot, we’ll focus on the metrics that truly matter in a high-stakes, multi-turn setting like healthcare.
+For our medical assistant chatbot, we’ll focus on metrics that truly matter in a multi-turn healthcare setting.
 
-We’ll evaluate the chatbot across the following key dimensions:
+We’ll evaluate the chatbot across the following key metrics:
 
 - [**Role Adherence**](https://deepeval.com/docs/metrics-role-adherence): Does the chatbot consistently stay in character as a professional, empathetic medical assistant?
 - [**Knowledge Retention**](https://deepeval.com/docs/metrics-knowledge-retention): Does it remember earlier parts of the conversation, including symptoms and patient concerns?
@@ -168,19 +259,19 @@ We’ll evaluate the chatbot across the following key dimensions:
 
 For a chatbot to be reliable, it needs to be rigorously tested.
 
-However, testing a chatbot isn’t as easy as it sounds — you need real conversations or inputs that an actual person might ask the chatbot to check how it performs in a production setting. But that’s rarely feasible — it’s expensive and time-consuming.
+But testing a chatbot isn’t as straightforward as it sounds. You need real conversations or prompts — the kind of inputs an actual user might send — to understand how the system performs in a realistic setting. Unfortunately, collecting that kind of data is often expensive and time-consuming.
 
-To evaluate your chatbot, you first need a dataset or at least a handful of test cases. For conversational metrics in DeepEval, these would be `ConversationalTestCases`.
+To evaluate your chatbot effectively, you need a dataset — or at the very least, a handful of well-crafted test cases. For conversational metrics in **DeepEval**, these are called `ConversationalTestCases`.
 
-This is where most developers give up — generating these test cases is tedious and takes effort.
+This is where most developers give up — creating these test cases is tedious and requires significant effort.
 
-But DeepEval has your back.
-It comes with a [`ConversationSimulator`](https://deepeval.com/docs/conversation-simulator) that can help you generate realistic `ConversationalTestCases` automatically.
+**DeepEval** helps you overcome this challenge with its [`ConversationSimulator`](https://deepeval.com/docs/conversation-simulator). This tool can automatically generate realistic `ConversationalTestCases`, saving you the time and effort of crafting them manually.
 
-Here’s a simple code snippet to show you how it works:
+Here’s how you can use `ConversationSimulator` to generate synthetic `ConversationalTestCases`.
 
 ```python
 from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.test_case import Turn, ConversationalTestCase
 
 # Define user intentions for our medical chatbot
 user_intentions = {
@@ -205,40 +296,57 @@ simulator = ConversationSimulator(
     user_intentions=user_intentions, user_profile_items=user_profile_items
 )
 
+# Define chatbot
+llm_for_simulation = Ollama(model="llama3.2")
+chatbot_for_simulation = SimpleChatbot(llm=llm_for_simulation, history_strategy="summary")
+
 # Define the model callback for the simulator
 # This callback needs to reset the chatbot's history for each new simulated conversation
-async def medical_chatbot_callback( input: str, conversation_history: List[Dict[str, str]] ) -> str:
-    # Reset the chatbot's history for a fresh conversation simulation
-    # This is crucial for accurate simulation of multiple independent conversations
-    chatbot.conversation_history = []
-    # Replay the history for the current conversation turn to maintain context
-    for turn in conversation_history:
-        # We need to simulate the bot's previous responses for the chatbot's history
-        chatbot.conversation_history.append(turn)
+async def medical_chatbot_callback(
+    input: str, 
+    conversation_history: List[Dict[str, str]]
+) -> str:
+    chatbot_for_simulation.conversation_history = []
+    chatbot_for_simulation.summary = ""
 
-    # Now get the response for the current input
-    # You would need to implement your chatbot to use Turns and work asynchronously
-    response = await chatbot.chat(input)
+    for turn_data in conversation_history:
+        user_content = turn_data.get("user_input", "")
+        agent_content = turn_data.get("agent_response", "")
+
+        if user_content:
+            chatbot_for_simulation.conversation_history.append(Turn(role="user", content=user_content))
+        if agent_content:
+            chatbot_for_simulation.conversation_history.append(Turn(role="assistant", content=agent_content))
+    
+    if chatbot_for_simulation.history_strategy == "summary":
+        await chatbot_for_simulation._update_summary()
+
+    response = await chatbot_for_simulation.a_chat(input)
     return response
 
 
-# Start the simulation
-print("Starting conversation simulation...")
-convo_test_cases: List[ConversationalTestCase] = simulator.simulate(
-    model_callback=medical_chatbot_callback,
-    stopping_criteria="Stop when the user's medical concern has been thoroughly addressed and appropriate advice or next steps have been provided.",
-    min_turns=3,  # Ensure at least 3 turns per conversation
-    max_turns=10,  # Limit to 10 turns to keep simulations manageable
-)
+async def run_simulation():
+    print("Starting conversation simulation...")
+    convo_test_cases: List[ConversationalTestCase] = await simulator.simulate(
+        model_callback=medical_chatbot_callback,
+        stopping_criteria="Stop when the user's medical concern has been thoroughly addressed and appropriate advice or next steps have been provided.",
+        min_turns=3,
+        max_turns=10,
+    )
+    print(f"\nGenerated {len(convo_test_cases)} conversational test cases.")
 
-print(f"\nGenerated {len(convo_test_cases)} conversational test cases.")
+if __name__ == "__main__":
+    # Starting the simulator
+    asyncio.run(run_simulation())
 ```
 
-And just like that, you’ve got realistic, multi-turn test cases — no more wasting hours writing them by hand.
+And just like that, you've got realistic, multi-turn test cases — without spending hours writing them yourself.
 
 ### Evaluating the chatbot
 
-Now that we have our test cases to evaluate our model. Here’s how we can evaluate our chatbot using the metrics we defined above.
+Now that we’ve tackled the hardest part — generating solid test cases — it’s time to actually evaluate how our chatbot performs.
+
+We’ll use the metrics we discussed earlier for our medical assistant use case. Here’s how to run an evaluation with **DeepEval** using your generated `ConversationalTestCases`:
 
 ```python
 from deepeval.metrics import (
@@ -285,13 +393,25 @@ for test_case in convo_test_cases:
         print(f"{metric.name}: {metric.score} | {metric.reason}")
 ```
 
-Great — we’ve successfully implemented and evaluated our chatbot.
+Great — we’ve successfully implemented and evaluated our chatbot. So what were the results?
 
-I got some unsurprising scores: 0.6, 0.7, 0.5, 0.6, 0.8 — for `KnowledgeRetentionMetric`, `ConversationCompletenessMetric`, `ConversationRelevancyMetric`, `RoleAdherenceMetric`, and `Tone`. Even `Carelessness` came in at just 0.8. Yep — not a single metric passed. (I admit the thresholds were high, but so are the stakes!)
+Let’s just say the results might raise a few eyebrows:
 
-Let’s take a look at the problems with our current model. Firstly, the prompt for the model is too basic, it is not enough for a medical chatbot. Next would be the memory management of this chatbot, I'm basically concatenating the previous conversations. While this does keep the entire conversation, as conversations get longer, we’ll start hitting context window limits. Worse, LLMs tend to struggle with long, unstructured histories — making memory retention unreliable.
+- Knowledge Retention: 0.6
+- Conversation Completeness: 0.7
+- Conversation Relevancy: 0.5
+- Role Adherence: 0.6
+- Tone: 0.8
+- Carelessness: 0.9
+Only a single metric passed. Surprising? Maybe. Disappointing? Truly.
 
-No worries — our chatbot is intentionally simple and there’s plenty of room to improve it through prompt tuning, better memory management, and smarter architecture choices. Let’s walk through how to do that next.
+But more importantly — why did our chatbot fail?
+
+Let’s break that down next.
+
+Analysing the problems with our current model. Firstly, the prompt for the model is too basic, it is not enough for a medical chatbot. Next would be the memory management of this chatbot, We used the _full_ conversation history strategy, which keeps all past turns. While this ensures nothing is lost, as conversations get longer, we’ll start hitting context window limits. Worse, LLMs tend to struggle with long, unstructured histories — making memory retention unreliable.
+
+In the next section, we’ll walk through how to improve our chatbot — by refining the prompt and rethinking how we handle memory.
 
 ## Improving Your Chatbot with DeepEval
 
@@ -302,115 +422,6 @@ When you're working with a multi-turn conversational chatbot, these are the leve
 1. LLM choice
 2. Prompt design
 3. Chat history management
-
-Before we try different strategies to improve your chatbot, we need to tweak our initial `SimpleChatbot` implementation to support them effectively.
-
-<details><summary><strong>Click to see the implementation of a simple multi-turn chatbot that can use different strategies</strong></summary>
-
-```python
-from langchain.llms import OpenAI, Ollama
-from typing import List, Dict, Optional, Literal
-
-
-class SimpleChatbot:
-    def __init__(
-        self,
-        llm=None,
-        prompt_template: str = None,
-        history_strategy: Literal["full", "windowed", "none", "summary"] = "full",
-        history_window: int = 3,
-    ):
-        self.llm = llm or OpenAI(temperature=0)
-        self.conversation_history: List[Dict[str, str]] = []
-        self.summary: str = ""
-
-        self.history_strategy = history_strategy
-        self.history_window = history_window
-
-        self.prompt_template = prompt_template or (
-            "You are a medical assistant chatbot. Your job is to help patients with general concerns "
-            "in a professional, empathetic tone. Use only known medical knowledge and avoid guessing.\n\n"
-            "Conversation:\n{history}\nPatient: {user_input}\nAssistant:"
-        )
-
-    def _format_history(self) -> str:
-        if self.history_strategy == "none":
-            return ""
-
-        elif self.history_strategy == "windowed":
-            turns = self.conversation_history[-self.history_window :]
-            return "\n".join(
-                f"Patient: {t['user']}\nAssistant: {t['bot']}" for t in turns
-            )
-
-        elif self.history_strategy == "summary":
-            return f"Summary of prior conversation:\n{self.summary}"
-
-        else:  # 'full'
-            return "\n".join(
-                f"Patient: {t['user']}\nAssistant: {t['bot']}"
-                for t in self.conversation_history
-            )
-
-    def _update_summary(self):
-        if not self.conversation_history:
-            return
-
-        full_text = "\n".join(
-            f"Patient: {t['user']}\nAssistant: {t['bot']}"
-            for t in self.conversation_history
-        )
-
-        summary_prompt = (
-            "Summarize the following conversation between a patient and a medical assistant:\n\n"
-            f"{full_text}\n\nSummary:"
-        )
-
-        self.summary = self.llm(summary_prompt).strip()
-
-    def chat(self, user_input: str) -> str:
-        history = self._format_history()
-        prompt = self.prompt_template.format(history=history, user_input=user_input)
-        response = self.llm(prompt).strip()
-
-        self.conversation_history.append({"user": user_input, "bot": response})
-
-        if self.history_strategy == "summary":
-            self._update_summary()
-
-        return response
-
-    async def achat(self, user_input: str) -> str:
-        return self.chat(user_input)
-```
-
-</details>
-
-Now, you need to make a minor tweak to your `ConversationalTestCase` generation snippet.
-
-<details><summary><strong>Click here to see how to update your medical_chatbot_callback in your evaluation dataset generation</strong></summary>
-
-```python
-from deepeval.test_case import Turn
-
-async def medical_chatbot_callback(input: str, conversation_history: List[Turn]) -> str:
-    chatbot.conversation_history = []  # reset
-
-    for i in range(0, len(conversation_history) - 1, 2):
-        user_turn = conversation_history[i]
-        bot_turn = conversation_history[i + 1]
-
-        if user_turn.role == "user" and bot_turn.role == "assistant":
-            chatbot.conversation_history.append({
-                "user": user_turn.content,
-                "bot": bot_turn.content,
-            })
-
-    return await chatbot.achat(input)
-```
-
-</details>
-
 
 Here’s how you can test various hyperparameters to find what works best for your use case.
 
@@ -429,52 +440,37 @@ from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.conversation_simulator import ConversationSimulator
 from deepeval import evaluate
 
-# ---- Your upgraded SimpleChatbot with async achat() assumed imported here ----
+# ---- Import your chatbot here ----
 # from your_module import SimpleChatbot
 
 # --- Evaluation Metrics ---
-metrics = [
-    KnowledgeRetentionMetric(threshold=0.7),
-    ConversationCompletenessMetric(threshold=0.7),
-    ConversationRelevancyMetric(threshold=0.7),
-    RoleAdherenceMetric(threshold=0.8),
-    ConversationalGEval(
-        name="Tone",
-        criteria="Determine whether the chatbot is empathetic and supportive, especially toward anxious or distressed users",
-        threshold=0.8,
-    ),
-    ConversationalGEval(
-        name="Carelessness",
-        criteria="Does the chatbot avoid giving misleading, risky, or overly confident medical advice, and does it encourage consultation with licensed healthcare professionals when appropriate?",
-        threshold=0.9,
-    ),
-]
+metrics = [...]  # Use the same metrics we've previously defined
 
 # --- Prompt Templates ---
 prompt_templates = [
     """
         You are a professional, empathetic medical assistant. Provide general info ONLY from known medical knowledge.
         DO NOT diagnose, prescribe, or guess. Always advise consulting a doctor for any specific medical concern.
-        --- Context ---
-        {memory_context}
+        --- History ---
+        {history}
         ---------------
         Patient: {user_input}
-        Assistant:
+        Assistant: 
     """,
     """
         You are a professional, empathetic medical assistant. Provide general info ONLY from known medical knowledge.
         STRICTLY DO NOT: Diagnose, prescribe, recommend drugs, or make definitive health claims. ALWAYS suggest consulting a doctor.
-        ---- memory context ----
-        {memory_context}
+        ---- History ----
+        {history}
         ------------------------
         Assistant (Format: 1. General Advice, 2. Important Disclaimer):
-        1. General Advice:
+        1. General Advice: 
     """,
     """
         You are a professional, empathetic medical assistant. Provide general info ONLY from known medical knowledge.
         STRICTLY DO NOT: Diagnose, prescribe, recommend drugs, or make definitive health claims. ALWAYS suggest consulting a doctor.
-        --- Context ---
-        {memory_context}
+        --- History ---
+        {history}
         ---------------
         Patient: {user_input}
         Assistant (Format: 1. General Advice, 2. Important Disclaimer):
@@ -491,85 +487,108 @@ models = [
 # --- History Modes ---
 history_modes = [
     ("full", None),
-    ("windowed", 2),
+    ("windowed", 5),
     ("summary", None),
 ]
 
 # --- Simulation Metadata ---
-user_intentions = {
-    "reporting new symptoms and seeking advice": 3,
-    "asking about medication side effects": 2,
-    "inquiring about common illness prevention": 1,
-    "describing an ongoing health issue and asking for next steps": 2,
-    "asking for death chances": 2,
-}
-user_profile_items = [
-    "patient's age",
-    "patient's general health status",
-    "any known allergies",
-    "current medications",
-]
+user_intentions = {...}
+user_profile_items = [...]
+# Use the same metadata as the one we previously used in generation section
 
 
 def get_callback(chatbot):
     async def medical_chatbot_callback(
-        input: str, conversation_history: List[Turn]
+        input: str, conversation_history: List[Dict[str, str]]
     ) -> str:
         chatbot.conversation_history = []
-        for i in range(0, len(conversation_history) - 1, 2):
-            user_turn = conversation_history[i]
-            bot_turn = conversation_history[i + 1]
-            if user_turn.role == "user" and bot_turn.role == "assistant":
+        chatbot.summary = ""
+
+        for turn_data in conversation_history:
+            user_content = turn_data.get("user_input", "")
+            agent_content = turn_data.get("agent_response", "")
+
+            if user_content:
                 chatbot.conversation_history.append(
-                    {"user": user_turn.content, "bot": bot_turn.content}
+                    Turn(role="user", content=user_content)
                 )
-        return await chatbot.achat(input)
+            if agent_content:
+                chatbot.conversation_history.append(
+                    Turn(role="assistant", content=agent_content)
+                )
+
+        if chatbot.history_strategy == "summary":
+            await chatbot._update_summary()
+
+        response = await chatbot.a_chat(input)
+        return response
 
     return medical_chatbot_callback
 
 
-for prompt in prompt_templates:
-    for model_name, llm in models:
-        for history_mode, window in history_modes:
-            print(f"Testing: Model={model_name} | History={history_mode} ===")
+async def iterate():
+    for prompt in prompt_templates:
+        for model_name, llm in models:
+            for history_mode, window in history_modes:
+                print(f"Testing: Model={model_name} | History={history_mode} ===")
 
-            chatbot = SimpleChatbot(
-                llm=llm,
-                prompt_template=prompt.strip(),
-                history_strategy=history_mode,
-                history_window=window or 3,
-            )
+                chatbot = SimpleChatbot(
+                    llm=llm,
+                    prompt_template=prompt.strip(),
+                    history_strategy=history_mode,
+                    history_window=window or 3,
+                )
 
-            # Define callback for simulator
-            model_callback = get_callback(chatbot)
+                # Define callback for simulator
+                medical_chatbot_callback = get_callback(chatbot)
 
-            # Initialize simulator
-            simulator = ConversationSimulator(
-                user_intentions=user_intentions,
-                user_profile_items=user_profile_items,
-            )
+                # Initialize simulator
+                simulator = ConversationSimulator(
+                    user_intentions=user_intentions,
+                    user_profile_items=user_profile_items,
+                )
 
-            # Run simulation
-            convo_test_cases: List[ConversationalTestCase] = await simulator.asimulate(
-                model_callback=model_callback,
-                stopping_criteria="Stop when the user's medical concern has been thoroughly addressed and appropriate advice or next steps have been provided.",
-                min_turns=3,
-                max_turns=6,
-            )
+                # Run simulation
+                convo_test_cases: List[ConversationalTestCase] = await simulator.simulate(
+                    model_callback=medical_chatbot_callback,
+                    stopping_criteria="Stop when the user's medical concern has been thoroughly addressed and appropriate advice or next steps have been provided.",
+                    min_turns=3,
+                    max_turns=10,
+                )
 
-            for test_case in convo_test_cases:
-                test_case.chatbot_role = "a professional, empathetic medical assistant"
+                for test_case in convo_test_cases:
+                    test_case.chatbot_role = (
+                        "a professional, empathetic medical assistant"
+                    )
 
-            # Set chatbot role for evaluation
-            for test_case in convo_test_cases:
-                for metric in metrics:
-                    metric.measure(test_case)
-                    print(f"{metric.name}: {metric.score} | {metric.reason}")
+                # Set chatbot role for evaluation
+                for test_case in convo_test_cases:
+                    for metric in metrics:
+                        metric.measure(test_case)
+                        print(f"{metric.name}: {metric.score} | {metric.reason}")
+
+
+if __name__ == "__main__":
+    asyncio.run(iterate())    
 ```
 
-After running the script I got the best results using - prompt template 3, gpt-4 model, and summary history mode with astonishing scores of 0.9, 0.8, 0.8, 0.9, 0.9 and 1.0 — for `KnowledgeRetentionMetric`, `ConversationCompletenessMetric`, `ConversationRelevancyMetric`, `RoleAdherenceMetric`, `Tone` and `Carelessness`. Yep, even I was amazed.
+After running the experiments, here’s what worked best:
+- **Prompt** Template: 3
+- **Model**: GPT-4
+- **History Strategy**: Summary
 
-Here's a table to compare the results
+This combo delivered standout results:
+
+- `KnowledgeRetentionMetric`: 0.9
+- `ConversationCompletenessMetric`: 0.8
+- `ConversationRelevancyMetric`: 0.8
+- `RoleAdherenceMetric`: 0.9
+- `Tone`: 0.9
+- `Carelessness`: 1.0
+
+Yep — even I was amazed.
+
+Here’s a quick before-and-after comparison:
 
 | Metric                         | Initial Chatbot | Optimized Chatbot |
 | -------------------------------| --------------- | ----------------- |
@@ -581,15 +600,24 @@ Here's a table to compare the results
 | Carelessness                   | 0.8             | 1.0               |
 
 :::tip **Takeaways**
-Switching to prompt template 3, the GPT-4 model, and summary history mode dramatically boosted all key scores. `KnowledgeRetentionMetric` and `RoleAdherenceMetric` hit 0.9, `ConversationCompletenessMetric` and `ConversationRelevancyMetric` reached 0.8, and `Tone` and `Carelessness` achieved 0.9 and a perfect 1.0! This isn't just guesswork; it's measured progress that highlights the power of evaluating and fine-tuning your chatbot's core components.
+Switching to Prompt Template 3, GPT-4, and summary history mode dramatically improved performance across the board.
+
+With `KnowledgeRetentionMetric`, `RoleAdherenceMetric` reaching a score of 0.9, `ConversationCompletenessMetric`, `ConversationRelevancyMetric` hitting 0.8,  `Tone` hitting 0.9 and finally `Carelessness` reaching a perfect 1.0.
+
+This isn’t luck — it’s the result of systematically tuning the parts that matter. When you evaluate properly, real improvements follow.
 :::
 
+![Multi-turn chatbot test flow using DeepEval’s ConversationSimulator](./images/chatbot-blog/deepeval-simulator-chatbot.png)
 
-This is how we can use DeepEval to create reliable multi-turn chatbots.
+This is how we can use **DeepEval** to create reliable multi-turn chatbots.
 
 ## Regression Testing Your Chatbot in CI/CD
 
-Creating a reliable chatbot is great. But to make it truly production-ready, you need to test your chatbot every time you tweak a hyperparameter — and ensure it isn’t regressing. Here’s how to run automated regression tests for your chatbot in CI/CD using DeepEval.
+Building a reliable chatbot is one thing. Keeping it reliable as you make changes — that’s where things get tricky.
+
+Every time you update a prompt, swap out an LLM, or adjust memory strategy, you risk introducing regressions. That’s why automated regression testing is critical — especially in production environments where trust matters.
+
+Here’s how to set up regression testing for your chatbot using **DeepEval**:
 
 ```python title="test_chatbot_quality.py"
 import pytest
@@ -609,16 +637,18 @@ from deepeval import assert_test
 from simple_chatbot import SimpleChatbot  # adjust import as needed
 
 
-prompt_template = """
-You are a professional, empathetic medical assistant. Provide general info ONLY from known medical knowledge.
-STRICTLY DO NOT: Diagnose, prescribe, recommend drugs, or make definitive health claims. ALWAYS suggest consulting a doctor.
---- Context ---
-{memory_context}
----------------
-Patient: {user_input}
-Assistant (Format: 1. General Advice, 2. Important Disclaimer):
-1. General Advice:
-""".strip()
+prompt_template = (
+    """
+        You are a professional, empathetic medical assistant. Provide general info ONLY from known medical knowledge.
+        STRICTLY DO NOT: Diagnose, prescribe, recommend drugs, or make definitive health claims. ALWAYS suggest consulting a doctor.
+        --- History ---
+        {history}
+        ---------------
+        Patient: {user_input}
+        Assistant (Format: 1. General Advice, 2. Important Disclaimer):
+        1. General Advice:
+    """
+)
 
 
 chatbot = SimpleChatbot(
@@ -628,26 +658,30 @@ chatbot = SimpleChatbot(
 )
 
 
-async def medical_chatbot_callback(input: str, conversation_history: List[Turn]) -> str:
-    if not chatbot.conversation_history or (
-        conversation_history
-        and chatbot.conversation_history
-        and conversation_history[0].content
-        != chatbot.conversation_history[0].get("user", "")
-    ):
+async def medical_chatbot_callback(
+        input: str, conversation_history: List[Dict[str, str]]
+    ) -> str:
         chatbot.conversation_history = []
+        chatbot.summary = ""
 
-    for i in range(0, len(conversation_history) - 1, 2):
-        user_turn = conversation_history[i]
-        bot_turn = conversation_history[i + 1]
-        if user_turn.role == "user" and bot_turn.role == "assistant":
-            chatbot.conversation_history.append(
-                {
-                    "user": user_turn.content,
-                    "bot": bot_turn.content,
-                }
-            )
-    return await chatbot.achat(input)
+        for turn_data in conversation_history:
+            user_content = turn_data.get("user_input", "")
+            agent_content = turn_data.get("agent_response", "")
+
+            if user_content:
+                chatbot.conversation_history.append(
+                    Turn(role="user", content=user_content)
+                )
+            if agent_content:
+                chatbot.conversation_history.append(
+                    Turn(role="assistant", content=agent_content)
+                )
+
+        if chatbot.history_strategy == "summary":
+            await chatbot._update_summary()
+
+        response = await chatbot.a_chat(input)
+        return response
 
 
 def generate_test_cases():
@@ -704,7 +738,11 @@ def test_chatbot_performance(test_case: ConversationalTestCase):
     assert_test(test_case, metrics)
 ```
 
-This setup helps ensure your chatbot doesn’t regress — and continues to meet your quality standards with every update.
+This test file plugs straight into any CI setup (GitHub Actions, GitLab CI, etc.), so your chatbot keeps meeting quality and safety standards with every push. Just run:
+
+```bash
+poetry run pytest -v test_chatbot_quality.py
+```
 
 Now let’s write our GitHub actions file to complete our CI integration.
 
@@ -745,10 +783,10 @@ jobs:
 
 ## Conclusion
 
-We’ve seen how a simple chatbot can fall short, and how DeepEval helps us go beyond surface-level performance to actually test what matters: memory, empathy, tone, safety, and relevance.
+We’ve seen how even a simple chatbot can miss the mark — and how **DeepEval** helps you go deeper than surface-level performance to test what actually matters: memory, tone, safety, empathy, and relevance.
 
-By simulating real conversations, defining custom metrics, and automating evaluation in CI, you can catch issues before they ever reach a real user. No guesswork, no hand-waving — just measurable, repeatable quality.
+By simulating real conversations, defining the right metrics, and plugging evaluation into CI, you catch issues early — before they ever reach a real user. No guesswork. No assumptions. Just measurable, repeatable quality.
 
-Whether you're debugging hallucinations or tuning prompts, the key is to treat your chatbot like any other critical software component: test it, improve it, and never ship blind.
+Whether you're fixing hallucinations or fine-tuning prompts, the mindset is the same: treat your chatbot like any other critical system — test it, iterate on it, and never ship blind.
 
-Got a bot in production? Start evaluating it today. You might be surprised by what you find.
+Already have a bot in production? Start evaluating it. You might be surprised by what you find.
