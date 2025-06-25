@@ -83,8 +83,9 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        if self.active_trace_id is None:
-            self.active_trace_id = trace_manager.start_new_trace().uuid
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
 
         # prepare input
         input = "\n".join(prompts) if prompts else ""
@@ -148,15 +149,16 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> Any:
         
-        if self.active_trace_id is None:
-            self.active_trace_id = trace_manager.start_new_trace().uuid
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
 
         tool_span = ToolSpan(
             uuid=str(run_id),
             status=TraceSpanStatus.IN_PROGRESS,
             children=[],
             trace_uuid=self.active_trace_id,
-            parent_uuid=str(parent_run_id),
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
             name="langchain_tool_span_" + str(run_id),
             input=input_str
@@ -191,55 +193,67 @@ class CallbackHandler(BaseCallbackHandler):
             trace_manager.end_trace(self.active_trace_id)
             self.active_trace_id = None
 
-    # def on_retriever_start(
-    #     self,
-    #     serialized: dict[str, Any],
-    #     query: str,
-    #     *,
-    #     run_id: UUID,
-    #     parent_run_id: Optional[UUID] = None,
-    #     tags: Optional[list[str]] = None,
-    #     metadata: Optional[dict[str, Any]] = None,
-    #     **kwargs: Any,
-    # ) -> Any:
+    def on_retriever_start(
+        self,
+        serialized: dict[str, Any],
+        query: str,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
         
-    #     if self.active_trace_id is None:
-    #         self.active_trace_id = trace_manager.start_new_trace().uuid
+        if parent_run_id is None:
+            if self.active_trace_id is None:
+                self.active_trace_id = trace_manager.start_new_trace().uuid
         
-    #     self.retriever_span_dict[str(run_id)] = RetrieverSpan(
-    #         name="langchain_retriever_span" + str(run_id),
-    #         uuid=str(run_id),
-    #         status=TraceSpanStatus.IN_PROGRESS,
-    #         children=[],
-    #         trace_uuid=self.active_trace_id,
-    #         parent_uuid=None,
-    #         start_time=perf_counter(),
-    #         embedder=metadata.get("ls_embedding_provider", "unknown"),
-    #         input=query, 
-    #     )
+        retriever_span = RetrieverSpan(
+            uuid=str(run_id),
+            status=TraceSpanStatus.IN_PROGRESS,
+            children=[],
+            trace_uuid=self.active_trace_id,
+            parent_uuid=str(parent_run_id) if parent_run_id else None,
+            start_time=perf_counter(),
+            name="langchain_retriever_span_" + str(run_id),
+            input=query,
+            embedder=metadata.get("ls_embedding_provider", "unknown"),
+        )
+        trace_manager.add_span(retriever_span)
+        trace_manager.add_span_to_trace(retriever_span)
 
-    # def on_retriever_end(
-    #     self,
-    #     output: Any,
-    #     *,
-    #     run_id: UUID,
-    #     parent_run_id: Optional[UUID] = None,
-    #     **kwargs: Any,
-    # ) -> Any:
+    def on_retriever_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
         
-    #     retriever_span = self.retriever_span_dict.get(str(run_id))
+        retriever_span = trace_manager.get_span_by_uuid(str(run_id))
         
-    #     if retriever_span is None:
-    #         return
+        if retriever_span is None:
+            return
         
-    #     output_list = []
-    #     if isinstance(output, list):
-    #         for item in output:
-    #             output_list.append(str(item))
-    #     else:
-    #         output_list.append(str(output))
+        # prepare output
+        output_list = []
+        if isinstance(output, list):
+            for item in output:
+                output_list.append(str(item))
+        else:
+            output_list.append(str(output))
         
-    #     retriever_span.end_time = perf_counter()
-    #     retriever_span.status = TraceSpanStatus.SUCCESS
-    #     retriever_span.output = output_list
-    #     self.retriever_span_dict[str(run_id)] = retriever_span
+        retriever_span.end_time = perf_counter()
+        retriever_span.status = TraceSpanStatus.SUCCESS
+        retriever_span.output = output_list
+        trace_manager.remove_span(str(run_id))
+
+        if parent_run_id is None:
+            current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            if current_trace is not None:
+                current_trace.input = retriever_span.input
+                current_trace.output = retriever_span.output
+            trace_manager.end_trace(self.active_trace_id)
+            self.active_trace_id = None
