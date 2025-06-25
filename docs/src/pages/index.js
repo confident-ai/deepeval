@@ -12,7 +12,7 @@ class HomeNav extends React.Component {
           <Link to={"/docs/getting-started"}>Docs</Link>
         </div>
         <div>
-          <Link to="https://documentation.confident-ai.com">Confident AI</Link>
+          <Link to="https://documentation.confident-ai.com/docs">Confident AI</Link>
         </div>
         <div>
           <Link to="/guides/guides-rag-evaluation">Guides</Link>

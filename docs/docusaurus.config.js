@@ -170,7 +170,7 @@ module.exports = {
           },
           {to: 'blog', label: 'Blog', position: 'left'},
           {
-            href: "https://documentation.confident-ai.com",
+            href: "https://documentation.confident-ai.com/docs",
             position: "left",
             label: "Confident AI Docs",
           },
@@ -222,7 +222,7 @@ module.exports = {
               },
               {
                 label: "Confident AI",
-                to: "https://documentation.confident-ai.com",
+                to: "https://documentation.confident-ai.com/docs",
               },
               {
                 label: "Tutorials",
