@@ -258,7 +258,14 @@ def check_matching_llm_test_case_inputs(test_cases: List[LLMTestCase]):
     for test_case in test_cases[1:]:
         if test_case.input != input:
             raise MismatchedTestCaseInputsError(
-                "Input of test cases do not match"
+                "'input's of test case(s) do not match"
+            )
+
+    expected_output = test_cases[0].expected_output
+    for test_case in test_cases[1:]:
+        if test_case.expected_output != expected_output:
+            raise MismatchedTestCaseInputsError(
+                "'expected_output's of test case(s) do not match"
             )
 
 

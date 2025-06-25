@@ -173,7 +173,7 @@ class GEvalTemplate:
             {evaluation_steps}
 
             {rubric_text}
-            Test Case:
+            Test Cases:
             {test_case_contents}
 
             Parameters:

@@ -5,7 +5,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics.g_eval.template import GEvalTemplate
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -179,6 +178,7 @@ class GEval(BaseMetric):
                 self.best_test_case = best_test_case
                 self.best_test_case_index = best_test_case_index
                 self.success = True
+
             self.reason = reason
             self.verbose_logs = construct_verbose_logs(
                 self,

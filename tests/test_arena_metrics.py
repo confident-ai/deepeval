@@ -1,10 +1,27 @@
+from typing import Dict, List, Union
 from deepeval.metrics import GEval
-from deepeval.test_case import LLMTestCaseParams, LLMTestCase
+from deepeval.test_case import (
+    LLMTestCaseParams,
+    LLMTestCase,
+    MLLMTestCase,
+    ConversationalTestCase,
+)
+
+
+class ArenaTestCase:
+    contestants: Dict[
+        str, Union[LLMTestCase, MLLMTestCase, ConversationalTestCase]
+    ]
+
+
+class Arena:
+    test_cases: List[ArenaTestCase]
+
 
 g_eval = GEval(
     name="GEval",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-    criteria="Determine if the actual output maintains a friendly tone.",
+    criteria="Determine if the actual output maintains a friendly tone. Give it a higher score if yes.",
     async_mode=True,
 )
 
