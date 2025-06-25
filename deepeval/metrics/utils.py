@@ -4,7 +4,7 @@ import re
 import sys
 from typing import Any, Dict, Optional, List, Union, Tuple
 
-from deepeval.errors import MissingTestCaseParamsError
+from deepeval.errors import MissingTestCaseParamsError, MismatchedTestCaseInputsError
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
     DeepEvalBaseLLM,
@@ -171,6 +171,13 @@ def check_llm_test_case_params(
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
+def check_llm_test_cases_params(
+    test_cases: List[LLMTestCase],
+    test_case_params: List[LLMTestCaseParams],
+    metric: BaseMetric,
+):
+    for test_case in test_cases:
+        check_llm_test_case_params(test_case, test_case_params, metric)
 
 def check_mllm_test_case_params(
     test_case: MLLMTestCase,
@@ -221,6 +228,29 @@ def check_mllm_test_case_params(
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
+def check_mllm_test_cases_params(
+    test_cases: List[MLLMTestCase],
+    test_case_params: List[MLLMTestCaseParams],
+    input_image_count: Optional[int],
+    actual_output_image_count: Optional[int],
+    metric: BaseMetric
+):
+    for test_case in test_cases:
+        check_mllm_test_case_params(
+            test_case,
+            test_case_params,
+            input_image_count,
+            actual_output_image_count,
+            metric,
+        )
+
+def check_matching_llm_test_case_inputs(test_cases: List[LLMTestCase]):
+    if len(test_cases) == 0:
+        raise ValueError("Test cases cannot be empty")
+    input = test_cases[0].input
+    for test_case in test_cases[1:]:
+        if test_case.input != input:
+            raise MismatchedTestCaseInputsError("Input of test cases do not match")
 
 def trimAndLoadJson(
     input_string: str,

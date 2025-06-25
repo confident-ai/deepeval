@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
+import uuid
 
 
 class LLMTestCaseParams(Enum):
@@ -148,6 +149,7 @@ class LLMTestCase:
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
+    _identifier: Optional[str] = field(default=str(uuid.uuid4()), repr=False)
 
     def __post_init__(self):
         # Ensure `context` is None or a list of strings
