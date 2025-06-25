@@ -8,6 +8,7 @@ g_eval = GEval(
     async_mode=True,
 )
 
+
 async def main():
     test_cases = [
         LLMTestCase(
@@ -32,6 +33,8 @@ async def main():
     print(g_eval.best_test_case_index)
     print(g_eval.reason)
 
+
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

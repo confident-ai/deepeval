@@ -132,7 +132,9 @@ class GEvalTemplate:
         _additional_context: Optional[str] = None,
     ):
         rubric_text = f"Rubric:\n{rubric}\n" if rubric else ""
-        dependencies = "evaluation steps and rubric" if rubric else "evaluation steps"
+        dependencies = (
+            "evaluation steps and rubric" if rubric else "evaluation steps"
+        )
         reasoning_expectation = (
             "Be specific and grounded in the evaluation steps and rubric."
             if rubric
@@ -143,7 +145,7 @@ class GEvalTemplate:
             if _additional_context
             else ""
         )
-        
+
         return textwrap.dedent(
             f"""
             You are an evaluator. Given the following {dependencies}, select the single test case that best aligns with the {dependencies}.
@@ -187,5 +189,5 @@ class GEvalTemplate:
             }}
 
             JSON:
-        """ 
+        """
         )

@@ -31,7 +31,7 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
     get_score_range,
-    number_test_case_contents
+    number_test_case_contents,
 )
 
 
@@ -80,7 +80,7 @@ class GEval(BaseMetric):
         else:
             check_llm_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
-        
+
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -110,8 +110,10 @@ class GEval(BaseMetric):
                     )
                     self.success = self.score >= self.threshold
                 else:
-                    best_test_case, best_test_case_index, reason = self._comparable_evaluate(
-                        test_case, _additional_context=_additional_context
+                    best_test_case, best_test_case_index, reason = (
+                        self._comparable_evaluate(
+                            test_case, _additional_context=_additional_context
+                        )
                     )
                     self.best_test_case_index = best_test_case_index
                     self.best_test_case = best_test_case
@@ -123,7 +125,11 @@ class GEval(BaseMetric):
                         f"Criteria:\n{self.criteria}",
                         f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
                         f"Rubric:\n{format_rubrics(self.rubric)}",
-                        f"Score: {self.score}" if not comparable_test_cases else f"Best Test Case: {construct_test_case_string(self.evaluation_params, self.best_test_case)}",
+                        (
+                            f"Score: {self.score}"
+                            if not comparable_test_cases
+                            else f"Best Test Case: {construct_test_case_string(self.evaluation_params, self.best_test_case)}"
+                        ),
                         f"Reason: {self.reason}",
                     ],
                 )
@@ -159,12 +165,16 @@ class GEval(BaseMetric):
                     test_case, _additional_context=_additional_context
                 )
                 self.score = (
-                    float(g_score) / 10 if not self.strict_mode else int(g_score)
+                    float(g_score) / 10
+                    if not self.strict_mode
+                    else int(g_score)
                 )
                 self.success = self.score >= self.threshold
             else:
-                best_test_case, best_test_case_index, reason = await self._a_comparable_evaluate(
-                    test_case, _additional_context=_additional_context
+                best_test_case, best_test_case_index, reason = (
+                    await self._a_comparable_evaluate(
+                        test_case, _additional_context=_additional_context
+                    )
                 )
                 self.best_test_case = best_test_case
                 self.best_test_case_index = best_test_case_index
@@ -176,11 +186,17 @@ class GEval(BaseMetric):
                     f"Criteria:\n{self.criteria}",
                     f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
                     f"Rubric:\n{format_rubrics(self.rubric)}",
-                    f"Score: {self.score}" if not comparable_test_cases else f"Best Test Case: {construct_test_case_string(self.evaluation_params, self.best_test_case)}",
+                    (
+                        f"Score: {self.score}"
+                        if not comparable_test_cases
+                        else f"Best Test Case: {construct_test_case_string(self.evaluation_params, self.best_test_case)}"
+                    ),
                     f"Reason: {self.reason}",
                 ],
             )
-            return self.score if not comparable_test_cases else self.best_test_case
+            return (
+                self.score if not comparable_test_cases else self.best_test_case
+            )
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -370,13 +386,15 @@ class GEval(BaseMetric):
                     return data["score"], data["reason"]
 
     async def _a_comparable_evaluate(
-        self, test_cases: List[LLMTestCase], _additional_context: Optional[str] = None
+        self,
+        test_cases: List[LLMTestCase],
+        _additional_context: Optional[str] = None,
     ) -> Tuple[LLMTestCase, str]:
         test_case_contents = []
         for test_case in test_cases:
-            test_case_contents.append(construct_test_case_string(
-                self.evaluation_params, test_case
-            ))
+            test_case_contents.append(
+                construct_test_case_string(self.evaluation_params, test_case)
+            )
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
@@ -401,7 +419,7 @@ class GEval(BaseMetric):
                 res: BestTestCase = await self.model.a_generate(
                     prompt, schema=BestTestCase
                 )
-                best_test_case_index = res.best_test_case_index 
+                best_test_case_index = res.best_test_case_index
                 best_test_case = test_cases[best_test_case_index]
                 reason = res.reason
                 return best_test_case, best_test_case_index, reason
@@ -416,13 +434,13 @@ class GEval(BaseMetric):
     def _comparable_evaluate(
         self,
         test_cases: List[LLMTestCase],
-        _additional_context: Optional[str] = None
+        _additional_context: Optional[str] = None,
     ) -> Tuple[LLMTestCase, str]:
         test_case_contents = []
         for test_case in test_cases:
-            test_case_contents.append(construct_test_case_string(
-                self.evaluation_params, test_case
-            ))
+            test_case_contents.append(
+                construct_test_case_string(self.evaluation_params, test_case)
+            )
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
@@ -447,7 +465,7 @@ class GEval(BaseMetric):
                 res: BestTestCase = self.model.generate(
                     prompt, schema=BestTestCase
                 )
-                best_test_case_index = res.best_test_case_index 
+                best_test_case_index = res.best_test_case_index
                 best_test_case = test_cases[best_test_case_index]
                 reason = res.reason
                 return best_test_case, best_test_case_index, reason
