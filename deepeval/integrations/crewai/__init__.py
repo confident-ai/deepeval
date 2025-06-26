@@ -11,7 +11,8 @@ def is_crewai_installed():
         raise ImportError(
             "CrewAI is not installed. Please install it with `pip install crewai`."
         )
+
 crewai_logger = CrewAILogger()
 
-def instrument():
+def instrumentator():
     crewai_logger.patch_crewai_LLM("call")
