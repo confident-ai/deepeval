@@ -1,4 +1,6 @@
 from .patchers import CrewAILogger
+from typing import Optional
+import deepeval
 
 try:
     from crewai import LLM
@@ -14,5 +16,8 @@ def is_crewai_installed():
 
 crewai_logger = CrewAILogger()
 
-def instrumentator():
+def instrumentator(api_key: Optional[str] = None):
+    if api_key:
+        deepeval.login_with_confident_api_key(api_key)
+        
     crewai_logger.patch_crewai_LLM("call")
