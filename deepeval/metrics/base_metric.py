@@ -6,6 +6,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMTestCase,
     LLMTestCaseParams,
+    ArenaTestCase,
 )
 from deepeval.models import DeepEvalBaseLLM
 
@@ -129,3 +130,34 @@ class BaseMultimodalMetric:
     @property
     def __name__(self):
         return "Base Multimodal Metric"
+
+
+class BaseArenaMetric:
+    reason: Optional[str] = None
+    evaluation_model: Optional[str] = None
+    async_mode: bool = True
+    verbose_mode: bool = True
+    include_reason: bool = False
+    error: Optional[str] = None
+    evaluation_cost: Optional[float] = None
+    verbose_logs: Optional[str] = None
+    model = Optional[DeepEvalBaseLLM]
+    using_native_model = Optional[bool]
+
+    @abstractmethod
+    def measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def a_measure(self, test_case: ArenaTestCase, *args, **kwargs) -> str:
+        raise NotImplementedError(
+            f"Async execution for {self.__class__.__name__} not supported yet. Please set 'async_mode' to 'False'."
+        )
+
+    @abstractmethod
+    def is_successful(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    def __name__(self):
+        return "Base Arena Metric"

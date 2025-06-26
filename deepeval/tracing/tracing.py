@@ -848,7 +848,7 @@ class Observer:
             model = self.observe_kwargs.get("model", None)
             if model is None and not trace_manager.openai_client:
                 raise ValueError(
-                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/llm-tracing/integrations/openai"
+                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/docs/llm-tracing/integrations/openai"
                 )
             return LlmSpan(**span_kwargs, attributes=None, model=model)
         elif self.span_type == SpanType.RETRIEVER.value:

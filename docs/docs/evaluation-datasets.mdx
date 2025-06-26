@@ -36,12 +36,12 @@ If you don't already have an `EvaluationDataset`, a great starting point is to s
 
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/dataset-editor:dataset-annotation.mp4"
-  confidentUrl="/dataset-editor/annotate-datasets"
+  confidentUrl="/docs/dataset-editor/annotate-datasets"
   label="Learn Dataset Annotation on Confident AI"
 />
 
 Full documentation for datasets on [Confident AI
-here.](https://documentation.confident-ai.com/dataset-editor/introduction)
+here.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
 
 :::
 
@@ -161,7 +161,7 @@ dataset = EvaluationDataset(goldens=[Golden(input="First golden")])
 dataset.push(alias="My dataset")
 ```
 
-You'll need to have already [created a dataset on Confident AI](https://documentation.confident-ai.com/dataset-editor/introduction#quickstart) for this to work.
+You'll need to have already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work.
 
 ### Locally
 
@@ -202,7 +202,7 @@ dataset.pull(alias="My Evals Dataset")
 :::tip Did Your Know?
 You can **create, annotate, and comment** on datasets on Confident AI? You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 
-For more information, visit the [Confident AI datasets section.](https://documentation.confident-ai.com/dataset-editor/introduction)
+For more information, visit the [Confident AI datasets section.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
 :::
 
 ### From JSON
@@ -348,13 +348,13 @@ Visit the [end-to-end LLM evals section](/docs/evaluation-end-to-end-llm-evals#u
 
 ### On Confident AI
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/getting-started/create-account):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/create-account):
 
 ```bash
 deepeval login
 ```
 
-Then, define metrics by [creating a metric collection](https://documentation.confident-ai.com) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
+Then, define metrics by [creating a metric collection](https://documentation.confident-ai.com/docs) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
 
 ```python
 from deepeval import confident_evaluate
@@ -366,5 +366,5 @@ confident_evaluate(metric_collection="Agentic Metrics", dataset)
 ```
 
 :::tip
-You can find the full tutorial on running evaluations on Confident AI [here.](https://documentation.confident-ai.com)
+You can find the full tutorial on running evaluations on Confident AI [here.](https://documentation.confident-ai.com/docs)
 :::

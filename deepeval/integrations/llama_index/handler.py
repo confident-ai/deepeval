@@ -1,7 +1,10 @@
 from time import perf_counter
-from typing import Any, Dict, Optional
+import inspect
+from typing import Any, Dict, Optional, TypeVar
 
 try:
+    from llama_index_instrumentation.base import BaseEvent
+    from llama_index_instrumentation.dispatcher import Dispatcher
     from llama_index.core.instrumentation.event_handlers.base import (
         BaseEventHandler,
     )
@@ -12,15 +15,14 @@ try:
         ToolCall,
         ToolCallResult,
     )
-    from llama_index_instrumentation.base import BaseEvent
     from llama_index.core.instrumentation.events.llm import (
         LLMChatStartEvent,
         LLMChatEndEvent,
     )
     from llama_index.core.instrumentation.events.span import SpanDropEvent
     from llama_index.core.instrumentation.span.base import BaseSpan
-    from llama_index_instrumentation.dispatcher import Dispatcher
 
+    T = TypeVar("T", bound=BaseSpan)
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -41,11 +43,6 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
 )
 from deepeval.tracing import trace_manager
-
-from typing import TypeVar
-import inspect
-
-T = TypeVar("T", bound=BaseSpan)
 
 # globals
 active_trace_uuid: Optional[str] = None

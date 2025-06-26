@@ -4,7 +4,10 @@ import re
 import sys
 from typing import Any, Dict, Optional, List, Union, Tuple
 
-from deepeval.errors import MissingTestCaseParamsError
+from deepeval.errors import (
+    MissingTestCaseParamsError,
+    MismatchedTestCaseInputsError,
+)
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
     DeepEvalBaseLLM,
@@ -30,6 +33,7 @@ from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
+    BaseArenaMetric,
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
@@ -40,6 +44,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMImage,
     Turn,
+    ArenaTestCase,
 )
 
 
@@ -145,7 +150,7 @@ def check_conversational_test_case_params(
 def check_llm_test_case_params(
     test_case: LLMTestCase,
     test_case_params: List[LLMTestCaseParams],
-    metric: BaseMetric,
+    metric: Union[BaseMetric, BaseArenaMetric],
 ):
     if isinstance(test_case, LLMTestCase) is False:
         error_str = f"Unable to evaluate test cases that are not of type 'LLMTestCase' using the non-conversational '{metric.__name__}' metric."
@@ -170,6 +175,42 @@ def check_llm_test_case_params(
         error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
+
+
+def check_llm_test_cases_params(
+    test_cases: List[LLMTestCase],
+    test_case_params: List[LLMTestCaseParams],
+    metric: BaseMetric,
+):
+    for test_case in test_cases:
+        check_llm_test_case_params(test_case, test_case_params, metric)
+
+
+def check_arena_test_case_params(
+    arena_test_case: ArenaTestCase,
+    test_case_params: List[LLMTestCaseParams],
+    metric: BaseArenaMetric,
+):
+    if not isinstance(arena_test_case, ArenaTestCase):
+        raise ValueError(
+            f"Expected ArenaTestCase, got {type(arena_test_case).__name__}"
+        )
+
+    cases = list(arena_test_case.contestants.values())
+    ref_input = cases[0].input
+    for case in cases[1:]:
+        if case.input != ref_input:
+            raise ValueError("All contestants must have the same 'input'.")
+
+    ref_expected = cases[0].expected_output
+    for case in cases[1:]:
+        if case.expected_output != ref_expected:
+            raise ValueError(
+                "All contestants must have the same 'expected_output'."
+            )
+
+    for test_case in cases:
+        check_llm_test_case_params(test_case, test_case_params, metric)
 
 
 def check_mllm_test_case_params(
@@ -220,6 +261,41 @@ def check_mllm_test_case_params(
         error_str = f"{missing_params_str} cannot be None for the '{metric.__name__}' metric"
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
+
+
+def check_mllm_test_cases_params(
+    test_cases: List[MLLMTestCase],
+    test_case_params: List[MLLMTestCaseParams],
+    input_image_count: Optional[int],
+    actual_output_image_count: Optional[int],
+    metric: BaseMetric,
+):
+    for test_case in test_cases:
+        check_mllm_test_case_params(
+            test_case,
+            test_case_params,
+            input_image_count,
+            actual_output_image_count,
+            metric,
+        )
+
+
+def check_matching_llm_test_case_inputs(test_cases: List[LLMTestCase]):
+    if len(test_cases) == 0:
+        raise ValueError("Test cases cannot be empty")
+    input = test_cases[0].input
+    for test_case in test_cases[1:]:
+        if test_case.input != input:
+            raise MismatchedTestCaseInputsError(
+                "'input's of test case(s) do not match"
+            )
+
+    expected_output = test_cases[0].expected_output
+    for test_case in test_cases[1:]:
+        if test_case.expected_output != expected_output:
+            raise MismatchedTestCaseInputsError(
+                "'expected_output's of test case(s) do not match"
+            )
 
 
 def trimAndLoadJson(
