@@ -3,17 +3,13 @@ import functools
 
 try:
     from crewai import LLM
+    from crewai.tools.tool_usage import ToolUsage
     from crewai.utilities.events import (
         CrewKickoffStartedEvent,
         CrewKickoffCompletedEvent,
         ToolUsageEvent,
         ToolUsageFinishedEvent,
-        ToolUsageErrorEvent,
         ToolUsageStartedEvent,
-        ToolExecutionErrorEvent,
-        ToolSelectionErrorEvent,
-        ToolUsageEvent,
-        ToolValidateInputErrorEvent,
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     crewai_installed = True
@@ -41,6 +37,7 @@ class CrewAIEventsListener(BaseEventListener):
     def setup_listeners(self, crewai_event_bus):
         # patch to trace the llm call
         self.patch_crewai_LLM("call")
+        self.patch_crewai_ToolUsage("use")
         
         @crewai_event_bus.on(CrewKickoffStartedEvent)
         def on_crew_started(source, event):
@@ -52,24 +49,6 @@ class CrewAIEventsListener(BaseEventListener):
             if self.active_trace_id is not None:
                 trace_manager.end_trace(self.active_trace_id)
                 self.active_trace_id = None
-
-        @crewai_event_bus.on(ToolUsageEvent)
-        def on_tool_usage(source, event):
-            print("-----Tool usage")
-            print(">>>event", event)
-            print(">>>source", source)
-
-        @crewai_event_bus.on(ToolUsageStartedEvent)
-        def on_tool_usage_started(source, event):
-            print("-----Tool usage started")
-            print(">>>event", event)
-            print(">>>source", source)
-            
-        @crewai_event_bus.on(ToolUsageFinishedEvent)
-        def on_tool_usage_finished(source, event):
-            print("-----Tool usage finished")
-            print(">>>event", event)
-            print(">>>source", source)
 
     def patch_crewai_LLM(self, method_to_patch: str):    
         original_methods = {}
@@ -110,3 +89,24 @@ class CrewAIEventsListener(BaseEventListener):
                 return response
             
             setattr(LLM, method_to_patch, wrapped_method)
+
+    def patch_crewai_ToolUsage(self, method_to_patch: str):
+        original_methods = {}
+
+        method = getattr(ToolUsage, method_to_patch)
+        if callable(method) and not isinstance(method, type):
+            original_methods[method_to_patch] = method
+
+            @functools.wraps(method)
+            def wrapped_method(*args, original_method=method, **kwargs):
+                print("-------Tool usage--------")
+                print(">>>args", args)
+                print(">>>kwargs", kwargs)
+                
+                response = original_method(*args, **kwargs)
+                
+                print(">>>result: ", response)
+                
+                return response
+
+            setattr(ToolUsage, method_to_patch, wrapped_method)
