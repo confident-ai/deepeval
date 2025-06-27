@@ -1,6 +1,8 @@
 from typing import Optional, Callable
 import functools
 
+from deepeval.tracing.attributes import ToolAttributes
+
 try:
     from crewai import LLM
     from crewai.tools.tool_usage import ToolUsage
@@ -17,7 +19,7 @@ except:
     crewai_installed = False
 
 from deepeval.tracing import trace_manager
-from deepeval.tracing.types import LlmSpan, LlmAttributes, TraceSpanStatus
+from deepeval.tracing.types import LlmSpan, LlmAttributes, ToolSpan, TraceSpanStatus
 from uuid import uuid4
 from time import perf_counter
 
@@ -99,13 +101,28 @@ class CrewAIEventsListener(BaseEventListener):
 
             @functools.wraps(method)
             def wrapped_method(*args, original_method=method, **kwargs):
-                print("-------Tool usage--------")
-                print(">>>args", args)
-                print(">>>kwargs", kwargs)
+                tool_calling = args[1]
+                
+                tool_span = ToolSpan(
+                    uuid=str(uuid4()),
+                    status=TraceSpanStatus.IN_PROGRESS,
+                    children=[],
+                    trace_uuid=self.active_trace_id,
+                    parent_uuid=None,
+                    start_time=perf_counter(),
+                    name=tool_calling.tool_name,
+                    input=tool_calling.arguments,
+                )
+                trace_manager.add_span(tool_span)
+                trace_manager.add_span_to_trace(tool_span)
                 
                 response = original_method(*args, **kwargs)
                 
-                print(">>>result: ", response)
+                tool_span.end_time = perf_counter()
+                tool_span.status = TraceSpanStatus.SUCCESS
+                tool_span.output = response
+
+                trace_manager.remove_span(tool_span.uuid)
                 
                 return response
 
