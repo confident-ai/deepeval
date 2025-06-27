@@ -37,7 +37,8 @@ class CrewAIEventsListener(BaseEventListener):
         super().__init__()
 
     def setup_listeners(self, crewai_event_bus):
-        # patch to trace the llm call
+        
+        # patch trace the classes
         self.patch_crewai_LLM("call")
         self.patch_crewai_ToolUsage("use")
         
