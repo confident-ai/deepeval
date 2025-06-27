@@ -43,6 +43,7 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
 )
 from deepeval.tracing import trace_manager
+from deepeval.telemetry import capture_tracing_integration
 
 # globals
 active_trace_uuid: Optional[str] = None
@@ -145,6 +146,7 @@ class LLamaIndexEventHandler(BaseEventHandler):
 class LLamaIndexSpanHandler(BaseSpanHandler):
 
     def __init__(self):
+        capture_tracing_integration("llama_index")
         is_llama_index_installed()
         super().__init__()
 

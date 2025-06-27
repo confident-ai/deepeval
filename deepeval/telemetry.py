@@ -22,6 +22,7 @@ class Feature(Enum):
     BENCHMARK = "benchmark"
     CONVERSATION_SIMULATOR = "conversation_simulator"
     UNKNOWN = "unknown"
+    TRACING_INTEGRATION = "tracing_integration"
 
 
 TELEMETRY_DATA_FILE = ".deepeval_telemetry.txt"
@@ -558,6 +559,31 @@ def capture_send_trace():
             yield span
 
 
+# tracing integration
+def capture_tracing_integration(integration_name: str):
+    if telemetry_opt_out():
+        yield
+    else:
+        event = f"Tracing Integration: {integration_name}"
+        distinct_id = get_unique_id()
+        properties = {
+            "logged_in_with": get_logged_in_with(),
+            "environment": IS_RUNNING_IN_JUPYTER,
+            "user.status": get_status(),
+            "user.unique_id": get_unique_id(),
+            "user.public_ip": (
+                anonymous_public_ip if anonymous_public_ip else "Unknown"
+            ),
+            "feature_status.tracing_integration": get_feature_status(
+                Feature.TRACING_INTEGRATION
+            ),
+        }
+        set_last_feature(Feature.TRACING_INTEGRATION)
+        # capture posthog
+        posthog.capture(
+            distinct_id=distinct_id, event=event, properties=properties
+        )
+        
 #########################################################
 ### Helper Functions s####################################
 #########################################################
