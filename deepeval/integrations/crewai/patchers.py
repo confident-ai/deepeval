@@ -7,9 +7,11 @@ from time import perf_counter
 
 try:
     from crewai import LLM
+
     crewai_installed = True
 except:
     crewai_installed = False
+
 
 def is_crewai_installed():
     if not crewai_installed:
@@ -17,13 +19,14 @@ def is_crewai_installed():
             "CrewAI is not installed. Please install it with `pip install crewai`."
         )
 
+
 class CrewAILogger:
     active_trace_id: Optional[str] = None
 
     def __init__(self):
         is_crewai_installed()
-    
-    def patch_crewai_LLM(self, method_to_patch: str):    
+
+    def patch_crewai_LLM(self, method_to_patch: str):
         original_methods = {}
 
         method = getattr(LLM, method_to_patch)
@@ -31,10 +34,10 @@ class CrewAILogger:
             original_methods[method_to_patch] = method
 
             @functools.wraps(method)
-            def wrapped_method(*args, original_method=method, **kwargs):                
+            def wrapped_method(*args, original_method=method, **kwargs):
                 if self.active_trace_id is None:
                     self.active_trace_id = trace_manager.start_new_trace().uuid
-                
+
                 llm_span = LlmSpan(
                     uuid=str(uuid4()),
                     status=TraceSpanStatus.IN_PROGRESS,
@@ -49,19 +52,20 @@ class CrewAILogger:
                 )
                 trace_manager.add_span(llm_span)
                 trace_manager.add_span_to_trace(llm_span)
-                
+
                 response = original_method(*args, **kwargs)
-                
+
                 llm_span.end_time = perf_counter()
                 llm_span.status = TraceSpanStatus.SUCCESS
                 llm_span.set_attributes(
-                    LlmAttributes(input=llm_span.attributes.input, output=response)
+                    LlmAttributes(
+                        input=llm_span.attributes.input, output=response
+                    )
                 )
                 trace_manager.remove_span(llm_span.uuid)
                 trace_manager.end_trace(self.active_trace_id)
                 self.active_trace_id = None
-                
-                return response
-            
-            setattr(LLM, method_to_patch, wrapped_method)
 
+                return response
+
+            setattr(LLM, method_to_patch, wrapped_method)

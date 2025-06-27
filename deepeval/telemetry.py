@@ -583,7 +583,8 @@ def capture_tracing_integration(integration_name: str):
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
-        
+
+
 #########################################################
 ### Helper Functions s####################################
 #########################################################

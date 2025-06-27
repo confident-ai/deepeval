@@ -16,6 +16,7 @@ import typing
 import json
 from deepeval.telemetry import capture_tracing_integration
 
+
 class ConfidentSpanExporter(SpanExporter):
     def __init__(self):
         capture_tracing_integration("otel")

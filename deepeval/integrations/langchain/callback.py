@@ -33,6 +33,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.telemetry import capture_tracing_integration
 
+
 class CallbackHandler(BaseCallbackHandler):
 
     def __init__(self):
