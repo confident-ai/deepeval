@@ -11,6 +11,7 @@ from deepeval.test_run.api import MetricData
 from deepeval.utils import (
     delete_file_if_exists,
     serialize,
+    is_read_only_env,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
@@ -153,6 +154,10 @@ class TestRunCacheManager:
         if self.disable_write_cache:
             return
 
+        if is_read_only_env():
+            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            return
+
         if to_temp:
             try:
                 with portalocker.Lock(
@@ -178,6 +183,10 @@ class TestRunCacheManager:
 
     def create_cached_test_run(self, temp: bool = False):
         if self.disable_write_cache:
+            return
+
+        if is_read_only_env():
+            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
             return
 
         cached_test_run = CachedTestRun()
@@ -253,6 +262,10 @@ class TestRunCacheManager:
             # Clear cache if write cache is disabled
             delete_file_if_exists(self.cache_file_name)
             delete_file_if_exists(self.temp_cache_file_name)
+            return
+
+        if is_read_only_env():
+            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
             return
 
         self.get_cached_test_run(from_temp=True)
