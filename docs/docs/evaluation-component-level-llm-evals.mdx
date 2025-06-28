@@ -54,11 +54,13 @@ An `@observe` decorator creates a **span**, and the overall collection of spans 
 
 ```python title="somewhere.py" showLineNumbers {12,23}
 from typing import List
-import openai
+from openai import OpenAI
 
 from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
+
+client = OpenAI()
 
 def your_llm_app(input: str):
     def retriever(input: str):
@@ -66,7 +68,7 @@ def your_llm_app(input: str):
 
     @observe(metrics=[AnswerRelevancyMetric()])
     def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "Use the provided context to answer the question."},

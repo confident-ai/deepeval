@@ -48,10 +48,13 @@ Tracing only runs when you want it to run, and takes 3 lines of code:
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": query}]
     ).choices[0].message["content"]
@@ -81,10 +84,13 @@ The `@observe` decorator creates spans, and a call to your LLM application decor
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
 
   update_current_span(
     test_case=LLMTestCase(input=query, output=response)
