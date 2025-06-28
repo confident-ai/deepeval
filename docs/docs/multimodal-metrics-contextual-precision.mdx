@@ -36,12 +36,12 @@ The `input` and `actual_output` are required to create an `MLLMTestCase` (and he
 ## Usage
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import MultimodalContextualPrecisionMetric
 from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.metrics import MultimodalContextualPrecisionMetric
+from deepeval import evaluate
 
 metric = MultimodalContextualPrecisionMetric()
-test_case = MLLMTestCase(
+m_test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
     actual_output=[
         "France is home to iconic landmarks like the Eiffel Tower in Paris.",
@@ -58,11 +58,8 @@ test_case = MLLMTestCase(
     ],
 )
 
-metric.measure(test_case)
-print(metric.score, metric.reason)
 
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
+evaluate(test_case=[m_test_case], metrics=[metric])
 ```
 
 There are **SIX** optional parameters when creating a `MultimodalContextualPrecisionMetric`:
@@ -73,6 +70,17 @@ There are **SIX** optional parameters when creating a `MultimodalContextualPreci
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `MultimodalContextualPrecisionMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(m_test_case)
+print(metric.score, metric.reason)
+```
 
 ## How Is It Calculated?
 

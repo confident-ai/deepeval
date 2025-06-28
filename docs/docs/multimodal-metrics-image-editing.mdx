@@ -34,28 +34,22 @@ The `input` and `actual_output` are required to create an `MLLMTestCase` (and he
 ## Usage
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import ImageEditingMetric
 from deepeval.test_case import MLLMTestCase, MLLMImage
-
-# Replace this with your actual MLLM application output
-actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
+from deepeval.metrics import ImageEditingMetric
+from deepeval import evaluate
 
 metric = ImageEditingMetric(
     threshold=0.7,
     include_reason=True,
 )
-test_case = MLLMTestCase(
+m_test_case = MLLMTestCase(
     input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)],
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
+    # Replace this with your actual MLLM application output
+    actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 )
 
-metric.measure(test_case)
-print(metric.score, metric.reason)
 
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
+evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
 There are **FIVE** optional parameters when creating a `ImageEditingMetric`:
@@ -65,6 +59,17 @@ There are **FIVE** optional parameters when creating a `ImageEditingMetric`:
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `ImageEditingMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(m_test_case)
+print(metric.score, metric.reason)
+```
 
 ## How Is It Calculated?
 

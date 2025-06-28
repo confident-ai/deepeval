@@ -190,8 +190,12 @@ def create_api_test_case(
         elif isinstance(test_case, MLLMTestCase):
             api_test_case = LLMApiTestCase(
                 name=name,
+                input="",
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
+                multimodalExpectedOutput=test_case.expected_output,
+                multimodalRetrievalContext=test_case.retrieval_context,
+                multimodalContext=test_case.context,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,

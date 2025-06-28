@@ -79,6 +79,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Union[str, Dict, Tuple[str, float]]:
+        from litellm import completion
+
         completion_params = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
@@ -120,6 +122,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Union[str, Dict, Tuple[str, float]]:
+        from litellm import acompletion
+
         completion_params = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
@@ -163,6 +167,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
         prompt: str,
         top_logprobs: int = 5,
     ) -> Tuple[Any, float]:
+        from litellm import completion
+
         try:
             completion_params = {
                 "model": self.model_name,
@@ -193,6 +199,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
         prompt: str,
         top_logprobs: int = 5,
     ) -> Tuple[Any, float]:
+        from litellm import acompletion
+
         try:
             completion_params = {
                 "model": self.model_name,
@@ -221,6 +229,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
     def generate_samples(
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[List[str], float]:
+        from litellm import completion
+
         try:
             completion_params = {
                 "model": self.model_name,
@@ -272,6 +282,8 @@ class LiteLLMModel(DeepEvalBaseLLM):
         return float(self.evaluation_cost)
 
     def get_model_name(self) -> str:
+        from litellm import get_llm_provider
+
         provider = get_llm_provider(self.model_name)
         return f"{self.model_name} ({provider})"
 

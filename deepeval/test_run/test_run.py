@@ -709,24 +709,18 @@ class TestRunManager:
             print("No test cases found, unable to upload to Confident AI.")
             return
 
-        test_run.guard_mllm_test_cases()
-        BATCH_SIZE = 40
-        CONVERSATIONAL_BATCH_SIZE = BATCH_SIZE // 3
-
-        initial_batch = test_run.test_cases[:BATCH_SIZE]
-        remaining_test_cases = test_run.test_cases[BATCH_SIZE:]
-
-        initial_conversational_batch = test_run.conversational_test_cases[
-            :CONVERSATIONAL_BATCH_SIZE
-        ]
-        remaining_conversational_test_cases = (
-            test_run.conversational_test_cases[CONVERSATIONAL_BATCH_SIZE:]
+        is_conversational_run = len(test_run.conversational_test_cases) > 0
+        all_test_cases_to_process = (
+            test_run.conversational_test_cases
+            if is_conversational_run
+            else test_run.test_cases
         )
 
-        if (
-            len(remaining_test_cases) > 0
-            or len(remaining_conversational_test_cases) > 0
-        ):
+        BATCH_SIZE = 20 if is_conversational_run else 40
+        initial_batch = all_test_cases_to_process[:BATCH_SIZE]
+        remaining_test_cases_to_process = all_test_cases_to_process[BATCH_SIZE:]
+
+        if len(remaining_test_cases_to_process) > 0:
             console.print(
                 "Sending a large test run to Confident, this might take a bit longer than usual..."
             )
@@ -734,8 +728,11 @@ class TestRunManager:
         ####################
         ### POST REQUEST ###
         ####################
-        test_run.test_cases = initial_batch
-        test_run.conversational_test_cases = initial_conversational_batch
+        if is_conversational_run:
+            test_run.conversational_test_cases = initial_batch
+        else:
+            test_run.test_cases = initial_batch
+
         try:
             body = test_run.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
@@ -755,39 +752,39 @@ class TestRunManager:
             link=result["link"],
         )
         link = response.link
+
         ################################################
         ### Send the remaining test cases in batches ###
         ################################################
-        max_iterations = (
-            max(
-                len(remaining_test_cases),
-                len(remaining_conversational_test_cases),
-            )
-            // CONVERSATIONAL_BATCH_SIZE
+        total_remaining = len(remaining_test_cases_to_process)
+        num_remaining_batches = (
+            (total_remaining + BATCH_SIZE - 1) // BATCH_SIZE
+            if total_remaining > 0
+            else 0
         )
-        for i in range(0, max_iterations + 1):
-            test_case_index = (
-                i * CONVERSATIONAL_BATCH_SIZE * 3
-            )  # Multiply by 3 to match the conversational batch step
-            test_case_batch = remaining_test_cases[
-                test_case_index : test_case_index + BATCH_SIZE
+
+        for i in range(num_remaining_batches):
+            start_index = i * BATCH_SIZE
+            batch = remaining_test_cases_to_process[
+                start_index : start_index + BATCH_SIZE
             ]
 
-            # Adjusting for conversational_test_cases
-            conversational_index = i * CONVERSATIONAL_BATCH_SIZE
-            conversational_batch = remaining_conversational_test_cases[
-                conversational_index : conversational_index
-                + CONVERSATIONAL_BATCH_SIZE
-            ]
+            if len(batch) == 0:
+                break  # Should not happen with correct num_remaining_batches, but as a safeguard
 
-            if len(test_case_batch) == 0 and len(conversational_batch) == 0:
-                break
-
-            remaining_test_run = RemainingTestRun(
-                testRunId=response.testRunId,
-                testCases=test_case_batch,
-                conversationalTestCases=conversational_batch,
-            )
+            # Create RemainingTestRun with the correct list populated
+            if is_conversational_run:
+                remaining_test_run = RemainingTestRun(
+                    testRunId=response.testRunId,
+                    testCases=[],  # This will be empty
+                    conversationalTestCases=batch,
+                )
+            else:
+                remaining_test_run = RemainingTestRun(
+                    testRunId=response.testRunId,
+                    testCases=batch,
+                    conversationalTestCases=[],  # This will be empty
+                )
 
             body = None
             try:

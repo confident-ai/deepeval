@@ -13,7 +13,16 @@ module.exports = {
       className: "sidebar-item-icon-llm-eval",
       items: [
         "evaluation-introduction",
-        "evaluation-test-cases",
+        {
+          type: "category",
+          label: "Test Cases",
+          items: [
+            "evaluation-test-cases",
+            "evaluation-multiturn-test-cases",
+            "evaluation-arena-test-cases",
+          ],
+          collapsed: true,
+        },
         "evaluation-datasets",
         {
           type: "category",
@@ -33,6 +42,7 @@ module.exports = {
             "metrics-introduction",
             "metrics-llm-evals",
             "metrics-dag",
+            "metrics-arena-g-eval",
             {
               type: "category",
               label: "RAG Metrics",

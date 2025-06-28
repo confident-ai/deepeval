@@ -31,7 +31,7 @@ def make_json_serializable(obj):
     if isinstance(obj, (list, tuple, set)):
         return [make_json_serializable(i) for i in obj]
     if isinstance(obj, dict):
-        return {k: make_json_serializable(v) for k, v in obj.items()}
+        return {str(k): make_json_serializable(v) for k, v in obj.items()}
     if hasattr(obj, "__dict__"):
         return {
             key: make_json_serializable(value)

@@ -841,6 +841,9 @@ class EvaluationDataset:
         include_test_cases: bool = False,
     ) -> str:
         if is_read_only_env():
+            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            return ""
+        if is_read_only_env():
             print(
                 "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
             )
