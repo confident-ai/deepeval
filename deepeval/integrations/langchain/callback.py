@@ -31,11 +31,13 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
     ToolSpan,
 )
+from deepeval.telemetry import capture_tracing_integration
 
 
 class CallbackHandler(BaseCallbackHandler):
 
     def __init__(self):
+        capture_tracing_integration("langchain")
         is_langchain_installed()
         super().__init__()
 
