@@ -50,70 +50,83 @@ class IFEvalTemplate:
         return text.strip()
 
     @staticmethod
-    def validate_format_compliance(response: str, expected_format: str) -> bool:
+    def get_instruction_category(instruction_id: str) -> str:
         """
-        Validate if a response follows the expected format.
+        Get the category of an instruction based on its ID.
 
         Args:
-            response: The model's response
-            expected_format: The expected format description
+            instruction_id: The instruction ID (e.g., "punctuation:no_comma")
 
         Returns:
-            True if format is compliant, False otherwise
+            The instruction category (e.g., "punctuation")
         """
-        # This is a basic implementation - can be extended based on specific format requirements
-        if "json" in expected_format.lower():
-            try:
-                import json
-                json.loads(response)
-                return True
-            except Exception:
-                return False
-        elif "list" in expected_format.lower():
-            # Check if response looks like a list
-            lines = response.strip().split('\n')
-            return len(lines) > 1 or response.strip().startswith('-') or response.strip().startswith('*')
-        else:
-            # For other formats, basic validation
-            return len(response.strip()) > 0
+        return instruction_id.split(":")[0] if ":" in instruction_id else "unknown"
 
     @staticmethod
-    def check_constraint_adherence(response: str, constraints: list) -> bool:
+    def get_instruction_description(instruction_id: str) -> str:
         """
-        Check if a response adheres to given constraints.
+        Get a human-readable description of an instruction.
 
         Args:
-            response: The model's response
-            constraints: List of constraint descriptions
+            instruction_id: The instruction ID
 
         Returns:
-            True if all constraints are adhered to, False otherwise
+            Human-readable description
         """
-        # Basic constraint checking - can be extended based on specific constraint types
-        for constraint in constraints:
-            if "length" in constraint.lower():
-                # Check length constraints
-                if "max" in constraint.lower():
-                    max_length = int(''.join(filter(str.isdigit, constraint)))
-                    if len(response) > max_length:
-                        return False
-                elif "min" in constraint.lower():
-                    min_length = int(''.join(filter(str.isdigit, constraint)))
-                    if len(response) < min_length:
-                        return False
-            elif "contains" in constraint.lower():
-                # Check if response contains required elements
-                required_elements = constraint.split(
-                    "contains")[1].strip().split(",")
-                for element in required_elements:
-                    if element.strip() not in response:
-                        return False
-            elif "not_contains" in constraint.lower():
-                # Check if response doesn't contain forbidden elements
-                forbidden_elements = constraint.split(
-                    "not_contains")[1].strip().split(",")
-                for element in forbidden_elements:
-                    if element.strip() in response:
-                        return False
+        descriptions = {
+            "punctuation:no_comma": "No commas allowed",
+            "punctuation:no_period": "No periods allowed",
+            "punctuation:no_question_mark": "No question marks allowed",
+            "punctuation:no_exclamation_mark": "No exclamation marks allowed",
+            "length_constraints:number_words": "Word count constraint",
+            "length_constraints:number_characters": "Character count constraint",
+            "length_constraints:number_sentences": "Sentence count constraint",
+            "detectable_format:json": "Must be valid JSON format",
+            "detectable_format:list": "Must be in list format",
+            "detectable_format:number_bullets": "Must have specified number of bullet points",
+            "detectable_format:number_highlighted_sections": "Must have specified number of highlighted sections",
+            "detectable_content:keyword_frequency": "Must contain keyword with specified frequency",
+            "detectable_content:forbidden_words": "Must not contain forbidden words",
+            "detectable_content:number_placeholders": "Must have specified number of placeholders",
+            "detectable_content:postscript": "Must contain postscript marker",
+            "detectable_content:first_word": "Must start with specified word",
+            "structural_constraints:number_paragraphs": "Must have specified number of paragraphs",
+            "structural_constraints:number_sections": "Must have specified number of sections",
+            "combination:repeat_prompt": "Must repeat the specified prompt"
+        }
 
-        return True
+        return descriptions.get(instruction_id, f"Unknown instruction: {instruction_id}")
+
+    @staticmethod
+    def format_verification_report(instruction_scores: dict, prediction: str) -> str:
+        """
+        Format a detailed verification report for verbose output.
+
+        Args:
+            instruction_scores: Dictionary mapping instruction IDs to boolean results
+            prediction: The model's prediction
+
+        Returns:
+            Formatted verification report
+        """
+        report = "=== IFEval Verification Report ===\n\n"
+        report += f"Prediction Length: {len(prediction)} characters, {len(prediction.split())} words\n\n"
+
+        # Group by category
+        categories = {}
+        for instruction_id, passed in instruction_scores.items():
+            category = IFEvalTemplate.get_instruction_category(instruction_id)
+            if category not in categories:
+                categories[category] = []
+            categories[category].append((instruction_id, passed))
+
+        for category, instructions in categories.items():
+            report += f"--- {category.upper()} ---\n"
+            for instruction_id, passed in instructions:
+                status = "✓ PASS" if passed else "✗ FAIL"
+                description = IFEvalTemplate.get_instruction_description(
+                    instruction_id)
+                report += f"  {status}: {description} ({instruction_id})\n"
+            report += "\n"
+
+        return report
