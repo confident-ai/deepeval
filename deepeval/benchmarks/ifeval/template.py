@@ -32,7 +32,6 @@ class IFEvalTemplate:
         Returns:
             Extracted response string
         """
-        # Look for common response indicators
         response_indicators = [
             "Response:",
             "Answer:",
@@ -46,7 +45,6 @@ class IFEvalTemplate:
                 if len(parts) > 1:
                     return parts[1].strip()
 
-        # If no indicator found, return the whole text
         return text.strip()
 
     @staticmethod
@@ -112,7 +110,6 @@ class IFEvalTemplate:
         report = "=== IFEval Verification Report ===\n\n"
         report += f"Prediction Length: {len(prediction)} characters, {len(prediction.split())} words\n\n"
 
-        # Group by category
         categories = {}
         for instruction_id, passed in instruction_scores.items():
             category = IFEvalTemplate.get_instruction_category(instruction_id)

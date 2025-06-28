@@ -136,7 +136,6 @@ class IFEvalInstructionVerifier:
             return len(highlights) >= num_highlights
 
         elif instruction_id == "detectable_format:title":
-            # Check for title wrapped in double angular brackets
             title_pattern = r'<<[^>]+>>'
             return bool(re.search(title_pattern, response))
 
@@ -146,15 +145,12 @@ class IFEvalInstructionVerifier:
     def verify_case_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
         """Verify case-related constraints."""
         if instruction_id == "change_case:english_lowercase":
-            # Check if response is all lowercase
             return response.lower() == response and response.islower()
 
         elif instruction_id == "change_case:english_uppercase":
-            # Check if response is all uppercase
             return response.upper() == response and response.isupper()
 
         elif instruction_id == "change_case:english_titlecase":
-            # Check if response is in title case
             return response.istitle()
 
         return True
@@ -452,11 +448,9 @@ class IFEval(DeepEvalBaseBenchmark):
             res = model.generate(golden.input)
             prediction = str(res)
 
-        # Verify instruction compliance
         instruction_scores = {}
         all_instructions_passed = True
 
-        # Get instruction metadata from golden's additional_metadata
         metadata = golden.additional_metadata or {}
         instruction_ids = metadata.get('instruction_ids', [])
         kwargs_list = metadata.get('kwargs_list', [])
@@ -489,7 +483,6 @@ class IFEval(DeepEvalBaseBenchmark):
 
         goldens: List[Golden] = []
 
-        # Use train split (there's no test split in IFEval)
         train_data = dataset["train"]
 
         for data in train_data:
@@ -499,10 +492,8 @@ class IFEval(DeepEvalBaseBenchmark):
 
             golden = Golden(
                 input=prompt,
-                expected_output=""  # IFEval doesn't have expected outputs, only verification rules
+                expected_output=""
             )
-
-            # Add instruction metadata
             golden.additional_metadata = {
                 'instruction_ids': instruction_id_list,
                 'kwargs_list': kwargs
