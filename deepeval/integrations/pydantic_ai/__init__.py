@@ -1,12 +1,22 @@
 from typing import Optional
+
 import deepeval
-
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.trace import set_tracer_provider
-
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
+
+try:
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.trace import set_tracer_provider
+    opentelemetry_installed = True
+except:
+    opentelemetry_installed = False
+
+def is_opentelemetry_available():
+    if not opentelemetry_installed:
+        raise ImportError("OpenTelemetry SDK is not available. Please install it with `pip install opentelemetry-sdk`.")
+    return True
+
 
 def setup_instrumentation(api_key: Optional[str] = None):
 
