@@ -1,17 +1,12 @@
-from typing import Optional, Callable
+from typing import Optional
 import functools
-
-from deepeval.tracing.attributes import ToolAttributes
 
 try:
     from crewai import LLM
     from crewai.tools.tool_usage import ToolUsage
     from crewai.utilities.events import (
         CrewKickoffStartedEvent,
-        CrewKickoffCompletedEvent,
-        ToolUsageEvent,
-        ToolUsageFinishedEvent,
-        ToolUsageStartedEvent,
+        CrewKickoffCompletedEvent
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     crewai_installed = True
