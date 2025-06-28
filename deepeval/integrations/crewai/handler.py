@@ -17,6 +17,7 @@ from deepeval.tracing import trace_manager
 from deepeval.tracing.types import LlmSpan, LlmAttributes, ToolSpan, TraceSpanStatus
 from uuid import uuid4
 from time import perf_counter
+from deepeval.telemetry import capture_tracing_integration
 
 def is_crewai_installed():
     if not crewai_installed:
@@ -28,6 +29,7 @@ class CrewAIEventsListener(BaseEventListener):
     active_trace_id: Optional[str] = None
     
     def __init__(self):
+        capture_tracing_integration("crewai")
         is_crewai_installed()
         super().__init__()
 
