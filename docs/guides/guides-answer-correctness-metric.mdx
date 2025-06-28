@@ -33,7 +33,7 @@ Begin creating your Correctness metric by instantiating a `GEval` object, choosi
 from deepeval.metrics import GEval
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     ...
 )
 ```
@@ -58,7 +58,7 @@ G-Eval allows you to select parameters that are relevant for evaluation by provi
 from deepeval.metrics import GEval
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     evaluation_params=[
         LLMTestCaseParams.EXPECTED_OUTPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
@@ -72,7 +72,7 @@ If the expected output is unavailable, you can alternatively compare the actual 
 from deepeval.metrics import GEval
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     evaluation_params=[
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
@@ -90,7 +90,7 @@ Here is a simple example of how one might define a basic Correctness metric:
 from deepeval.metrics import GEval
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     evaluation_params=[
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
@@ -105,7 +105,7 @@ Here's a more complex set of `evaluation_steps`, where detail is crucial to ensu
 ```python
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     evaluation_params=[
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
@@ -122,7 +122,7 @@ Here's another example metric which prioritizes general factual correctness over
 ```python
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     evaluation_params=[
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
@@ -185,7 +185,7 @@ First, perform the Correctness evaluation on your dataset:
 ```python
 correctness_metric = GEval(
     name="Correctness",
-    model="gpt-4o",
+    model="gpt-4.1",
     evaluation_params=[
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],

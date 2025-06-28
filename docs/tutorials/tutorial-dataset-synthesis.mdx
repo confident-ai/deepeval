@@ -130,7 +130,7 @@ from deepeval.synthesizer.config import FiltrationConfig
 from deepeval.synthesizer import Synthesizer
 
 filtration_config = FiltrationConfig(
-    critic_model="gpt-4o",  # Model used to assess the quality of generated data
+    critic_model="gpt-4.1",  # Model used to assess the quality of generated data
     synthetic_input_quality_threshold=0.8  # Minimum acceptable quality score for generated inputs
 )
 synthesizer = Synthesizer(filtration_config=filtration_config)

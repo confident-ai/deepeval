@@ -219,7 +219,7 @@ def test_llm():
     assert_test(test_case, [answer_relevancy_metric])
 
 # You should aim to make these values dynamic
-@deepeval.log_hyperparameters(model="gpt-4o", prompt_template="...")
+@deepeval.log_hyperparameters(model="gpt-4.1", prompt_template="...")
 def hyperparameters():
     # You can also return an empty dict {} if there's no additional parameters to log
     return {
@@ -611,7 +611,7 @@ from deepeval import evaluate
 evaluate(
     test_cases=[test_case],
     metrics=[metric],
-    hyperparameters={"model": "gpt-4o", "prompt template": "..."}
+    hyperparameters={"model": "gpt-4.1", "prompt template": "..."}
 )
 ```
 

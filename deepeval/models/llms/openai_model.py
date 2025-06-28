@@ -138,7 +138,7 @@ model_pricing = {
     },
 }
 
-default_gpt_model = "gpt-4o"
+default_gpt_model = "gpt-4.1"
 
 retryable_exceptions = (
     openai.RateLimitError,

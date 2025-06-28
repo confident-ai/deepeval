@@ -85,7 +85,7 @@ synthesizer.generate_goldens_from_docs(
 
 There are **SEVEN** optional parameters when creating a `ContextConstructionConfig`:
 
-- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4o` when initialized as a standalone instance.
+- [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else `gpt-4.1` when initialized as a standalone instance.
 - [Optional] `encoding`: the encoding to use to decode .txt files. Defaulted to auto detecting the encoding.
 - [Optional] `max_contexts_per_document`: the maximum number of contexts to be generated per document. Defaulted to 3.
 - [Optional] `min_contexts_per_document`: the minimum number of contexts to be generated per document. Defaulted to 1.
