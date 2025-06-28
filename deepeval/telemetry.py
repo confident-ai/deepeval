@@ -579,10 +579,16 @@ def capture_tracing_integration(integration_name: str):
             ),
         }
         set_last_feature(Feature.TRACING_INTEGRATION)
+        
         # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
         )
+        # capture new relic
+        with tracer.start_as_current_span(event) as span:
+            for property, value in properties.items():
+                span.set_attribute(property, value)
+            yield span
 
 
 #########################################################
