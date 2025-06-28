@@ -44,7 +44,7 @@ Apart from tracing being mandatory for component-level evaluation, tracing solve
 
 Tracing only runs when you want it to run, and takes 3 lines of code:
 
-```python showLineNumbers {3,5,12}
+```python showLineNumbers {3,8,15}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
@@ -57,7 +57,7 @@ def complete(query: str):
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": query}]
-    ).choices[0].message["content"]
+    ).choices[0].message.content
 
     update_current_span(test_case=LLMTestCase(input=query, output=response))
     return response
@@ -80,7 +80,7 @@ A span can contain many child spans, forming a tree structure—just like how di
 
 The `@observe` decorator creates spans, and a call to your LLM application decorated by one or more `@observe` decorators create a trace with many spans. This is how you would use `@observe`:
 
-```python showLineNumbers {5}
+```python showLineNumbers {8}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
@@ -90,7 +90,7 @@ client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
 
   update_current_span(
     test_case=LLMTestCase(input=query, output=response)

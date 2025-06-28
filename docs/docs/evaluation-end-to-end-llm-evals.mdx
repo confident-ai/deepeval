@@ -40,7 +40,7 @@ You'll need to setup your LLM application to return the test case parameters req
 
 We'll be using this LLM application in this example which has a simple, "flat" RAG architecture to demonstrate how to run end-to-end evaluations on it using `deepeval`:
 
-```python title="somewhere.py" showLineNumbers {19}
+```python title="somewhere.py" showLineNumbers {21}
 from typing import List
 from openai import OpenAI
 
@@ -57,7 +57,7 @@ def your_llm_app(input: str):
                 {"role": "system", "content": "Use the provided context to answer the question."},
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
         return res
 
     retrieval_context = retriever(input)

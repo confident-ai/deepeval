@@ -52,7 +52,7 @@ If you're worried about how tracing via `@observe` can affect your application, 
 
 An `@observe` decorator creates a **span**, and the overall collection of spans is called a **trace**. We'll trace this example LLM application to demonstrate how to run component-level evaluations using `deepeval` in two lines of code:
 
-```python title="somewhere.py" showLineNumbers {12,23}
+```python title="somewhere.py" showLineNumbers {14,25}
 from typing import List
 from openai import OpenAI
 
@@ -74,7 +74,7 @@ def your_llm_app(input: str):
                 {"role": "system", "content": "Use the provided context to answer the question."},
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
 
         # Create test case at runtime
         update_current_span(test_case=LLMTestCase(input=input, actual_output=res))

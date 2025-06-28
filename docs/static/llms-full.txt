@@ -2984,7 +2984,7 @@ def sync_without_stream(user_message: str):
       model=model,
       messages=[{"role": "user", "content": user_message}]
     )
-    output = response["choices"][0]["message"]["content"]
+    output = response.choices[0].message.content
 
     # Run monitor() synchronously
     deepeval.monitor(input=user_message, output=output, model=model, event_name="RAG chatbot")
@@ -9928,7 +9928,7 @@ def complete(query: str):
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": query}]
-    ).choices[0].message["content"]
+    ).choices[0].message.content
 
     update_current_span(test_case=LLMTestCase(input=query, output=response))
     return response
@@ -9962,7 +9962,7 @@ client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
 
   update_current_span(
     test_case=LLMTestCase(input=query, output=response)
@@ -17888,7 +17888,7 @@ def your_llm_app(input: str):
                 {"role": "system", "content": "Use the provided context to answer the question."},\
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}\
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
 
         # Create test case at runtime
         update_current_span(test_case=LLMTestCase(input=input, actual_output=res))
@@ -22555,7 +22555,7 @@ def your_llm_app(input: str):
                 {"role": "system", "content": "Use the provided context to answer the question."},\
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}\
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
         return res
 
     retrieval_context = retriever(input)
