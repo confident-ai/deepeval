@@ -71,7 +71,7 @@ class FinancialAdvisorLLM(DeepEvalBaseLLM):
     def generate(self, prompt: str) -> str:
         client = self.load_model()
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4.1",
             messages = [
                 {"role": "system", "content": self.get_system_prompt()},
                 {"role": "user", "content": prompt}
@@ -139,7 +139,7 @@ red_teamer = RedTeamer(
     target_purpose=target_purpose,
     target_system_prompt=target_system_prompt,
     synthesizer_model="gpt-3.5-turbo-0125",
-    evaluation_model="gpt-4o",
+    evaluation_model="gpt-4.1",
     async_mode=True
 )
 ```
@@ -207,7 +207,7 @@ While it might be tempting to conduct an exhaustive scan, targeting the **highes
 3. **Tune Attack Enhancements to Match Model Strength**: Adjust enhancement distributions for optimal effectiveness. Encoding-based enhancements may work well on simpler models, while advanced models with strong filters benefit from more dialogue-based enhancements.
 4. **Optimize Attack Volume Per Vulnerability**: Start with a reasonable number of attacks (e.g., 5 per vulnerability). For critical vulnerabilities, increase the number of attacks to probe deeper, focusing on the most effective enhancement types for your model's risk profile.
 
-In our `FinancialAdvisorLLM` example, we start with an attack volume of 5 attacks per vulnerability, which is a moderate starting point suited for initial testing. Given that `FinancialAdvisorLLM` is powered by GPT-4o, which has strong filtering capabilities, we include Jailbreak Crescendo right away. Additionally, we use a balanced mix of encoding and one-shot enhancements to explore a range of bypass strategies and assess how well the model protects user privacy (we've defined multiple user privacy vulnerabilities) in response to these types of enhancements.
+In our `FinancialAdvisorLLM` example, we start with an attack volume of 5 attacks per vulnerability, which is a moderate starting point suited for initial testing. Given that `FinancialAdvisorLLM` is powered by gpt-4.1, which has strong filtering capabilities, we include Jailbreak Crescendo right away. Additionally, we use a balanced mix of encoding and one-shot enhancements to explore a range of bypass strategies and assess how well the model protects user privacy (we've defined multiple user privacy vulnerabilities) in response to these types of enhancements.
 
 ### Considerations for Attack Enhancements
 
