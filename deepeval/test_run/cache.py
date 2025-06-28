@@ -155,7 +155,9 @@ class TestRunCacheManager:
             return
 
         if is_read_only_env():
-            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            print(
+                "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
+            )
             return
 
         if to_temp:
@@ -186,7 +188,9 @@ class TestRunCacheManager:
             return
 
         if is_read_only_env():
-            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            print(
+                "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
+            )
             return
 
         cached_test_run = CachedTestRun()
@@ -265,7 +269,9 @@ class TestRunCacheManager:
             return
 
         if is_read_only_env():
-            print("Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY")
+            print(
+                "Warning: Skipping write due to DEEPEVAL_FILE_SYSTEM=READ_ONLY"
+            )
             return
 
         self.get_cached_test_run(from_temp=True)
