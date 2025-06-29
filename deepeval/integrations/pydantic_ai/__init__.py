@@ -2,6 +2,7 @@ from typing import Optional
 
 import deepeval
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
+from deepeval.telemetry import capture_tracing_integration
 
 try:
     from opentelemetry import trace
@@ -19,6 +20,8 @@ def is_opentelemetry_available():
 
 
 def setup_instrumentation(api_key: Optional[str] = None):
+
+    capture_tracing_integration("pydantic_ai")
 
     if api_key:
         deepeval.login_with_confident_api_key(api_key)
