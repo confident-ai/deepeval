@@ -1,5 +1,5 @@
 ---
-title: "Build and Evaluate a Multi-Turn Chatbot using DeepEval"
+title: "Build and Evaluate a Multi-Turn Chatbot Using DeepEval"
 description: Improve chatbot performance by evaluating conversation quality, memory, and custom metrics using DeepEval.
 slug: medical-chatbot-deepeval-guide
 authors: [cale]
