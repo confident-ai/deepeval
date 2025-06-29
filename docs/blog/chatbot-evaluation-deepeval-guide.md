@@ -324,53 +324,7 @@ class SimpleChatbot:
         return reply
 
     async def a_chat(self, user_input: str) -> str:
-        # Build messages based on history strategy
-        if self.history_mode == "summary":
-            messages = [
-                {"role": "system", "content": f"{self.system_prompt}\n\nSummary:\n{self.summary}"},
-                {"role": "user", "content": user_input}
-            ]
-        else:
-            messages = [{"role": "system", "content": self.system_prompt}]
-            if self.history_mode == "windowed":
-                messages += self.history[-self.history_window:]
-            else:  # full
-                messages += self.history
-            messages.append({"role": "user", "content": user_input})
-
-        # Get assistant reply
-        response = await client.chat.completions.acreate(
-            model=self.llm,
-            messages=messages,
-            temperature=0,
-        )
-        reply = response.choices[0].message.content.strip()
-
-        # Update full history
-        self.history.append({"role": "user", "content": user_input})
-        self.history.append({"role": "assistant", "content": reply})
-
-        # If summary mode, regenerate summary
-        if self.history_mode == "summary":
-            summary_prompt = "Summarize the following conversation between a patient and a medical assistant. Keep it concise and medically relevant:\n\n"
-            full_transcript = ""
-            for msg in self.history:
-                if msg["role"] == "user":
-                    full_transcript += f"User: {msg['content']}\n"
-                elif msg["role"] == "assistant":
-                    full_transcript += f"Assistant: {msg['content']}\n"
-
-            summary_response = await client.chat.completions.acreate(
-                model=self.summarizer_model,
-                messages=[
-                    {"role": "system", "content": summary_prompt},
-                    {"role": "user", "content": full_transcript}
-                ],
-                temperature=0,
-            )
-            self.summary = summary_response.choices[0].message.content.strip()
-
-        return reply
+        # Use `acreate` method and implement the asynchronous chat method here
 ```
 
 </details>
