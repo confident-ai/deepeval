@@ -6,6 +6,7 @@ from deepeval.metrics import (
     AnswerRelevancyMetric,
     BiasMetric,
     FaithfulnessMetric,
+    TaskCompletionMetric,
 )
 from deepeval.tracing import (
     update_current_span,
@@ -119,7 +120,7 @@ async def custom_research_agent(query: str):
 @observe(
     type="agent",
     available_tools=["get_weather", "get_location"],
-    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+    metrics=[TaskCompletionMetric()],
 )
 async def weather_agent(query: str):
     update_current_span(
@@ -148,7 +149,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+    metrics=[TaskCompletionMetric(user_goal="Get the weather")],
     metric_collection="Test",
 )
 async def meta_agent(input: str):
@@ -179,13 +180,13 @@ goldens = [
 ]
 
 # # Run Async
-evaluate(
-    goldens=goldens * 40,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True, max_concurrent=40),
-    cache_config=CacheConfig(write_cache=False),
+# evaluate(
+#     goldens=goldens,
+#     observed_callback=meta_agent,
+    # async_config=AsyncConfig(run_async=True, max_concurrent=40),
+    # cache_config=CacheConfig(write_cache=False),
     # display_config=DisplayConfig(show_indicator=False),
-)
+#)
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
@@ -193,12 +194,12 @@ evaluate(
 #     display_config=DisplayConfig(show_indicator=False),
 # )
 # # Run Sync
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=False),
-#     display_config=DisplayConfig(show_indicator=True),
-# )
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=False),
+    display_config=DisplayConfig(show_indicator=True),
+)
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,

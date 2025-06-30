@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Dict
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -18,7 +18,6 @@ from deepeval.metrics.task_completion.template import TaskCompletionTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.task_completion.schema import *
 
-
 class TaskCompletionMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
@@ -30,12 +29,14 @@ class TaskCompletionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
+        task: Optional[str] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
+        self.user_goal = task
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -50,8 +51,9 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(test_case, self._required_params, self)
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if not has_trace:
+            check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -70,13 +72,15 @@ class TaskCompletionMetric(BaseMetric):
                 user_goal, task_outcome = self._extract_goal_and_outcome(
                     test_case
                 )
-                self.user_goal = user_goal
+                self.user_goal = user_goal if self.user_goal is None else self.user_goal
                 self.task_outcome = task_outcome
                 verdict, reason = self._generate_verdicts()
                 self.verdict = verdict
                 self.reason = reason
                 self.score = self._calculate_score()
                 self.success = self.score >= self.threshold
+                if has_trace:
+                    self.suggested_fixes = self._generate_suggested_fixes(test_case)
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -93,8 +97,9 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(test_case, self._required_params, self)
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if not has_trace:
+            check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -106,13 +111,15 @@ class TaskCompletionMetric(BaseMetric):
             user_goal, task_outcome = await self._a_extract_goal_and_outcome(
                 test_case
             )
-            self.user_goal = user_goal
+            self.user_goal = user_goal if self.user_goal is None else self.user_goal
             self.task_outcome = task_outcome
             verdict, reason = await self._a_generate_verdicts()
             self.verdict = verdict
             self.reason = reason
             self.score = self._calculate_score()
             self.success = self.score >= self.threshold
+            if has_trace:
+                self.suggested_fixes = await self._a_generate_suggested_fixes(test_case)
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -171,11 +178,15 @@ class TaskCompletionMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
-        prompt = TaskCompletionTemplate.extract_goal_and_outcome(
-            input=test_case.input,
-            actual_output=test_case.actual_output,
-            tools_called=test_case.tools_called,
-        )
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if has_trace:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(trace=test_case._trace_dict)
+        else:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome(
+                input=test_case.input,
+                actual_output=test_case.actual_output,
+                tools_called=test_case.tools_called,
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
                 prompt, schema=GoalAndOutcome
@@ -197,11 +208,15 @@ class TaskCompletionMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
-        prompt = TaskCompletionTemplate.extract_goal_and_outcome(
-            input=test_case.input,
-            actual_output=test_case.actual_output,
-            tools_called=test_case.tools_called,
-        )
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if has_trace:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(trace=test_case._trace_dict)
+        else:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome(
+                input=test_case.input,
+                actual_output=test_case.actual_output,
+                tools_called=test_case.tools_called,
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=GoalAndOutcome)
             self.evaluation_cost += cost
@@ -216,6 +231,48 @@ class TaskCompletionMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["user_goal"], data["task_outcome"]
+
+    async def _a_generate_suggested_fixes(self, test_case: LLMTestCase):
+        prompt = TaskCompletionTemplate.generate_suggested_fixes(
+            verdict=self.verdict,
+            reason=self.reason,
+            trace=test_case._trace_dict,
+        )
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt, schema=SuggestedFixes)
+            self.evaluation_cost += cost
+            return res.suggested_fixes
+        else:
+            try:
+                res: SuggestedFixes = await self.model.a_generate(
+                    prompt, schema=SuggestedFixes
+                )
+                return res.suggested_fixes
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["suggested_fixes"]
+
+    def _generate_suggested_fixes(self, test_case: LLMTestCase):
+        prompt = TaskCompletionTemplate.generate_suggested_fixes(
+            verdict=self.verdict,
+            reason=self.reason,
+            trace=test_case._trace_dict,
+        )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt, schema=SuggestedFixes)
+            self.evaluation_cost += cost
+            return res.suggested_fixes
+        else:
+            try:
+                res: SuggestedFixes = self.model.generate(
+                    prompt, schema=SuggestedFixes
+                )
+                return res.suggested_fixes
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["suggested_fixes"]
 
     def _calculate_score(self):
         return (
