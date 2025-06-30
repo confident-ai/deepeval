@@ -131,11 +131,11 @@ Increasing the complexity of your prompt template can make it harder for an LLM 
 
 ## Improving Your Model
 
-We'll try to fix this by using a better model. The model hyperparameter will be upgraded to use `gpt-4o` instead of the original `gpt-3.5` model, and we can re-evaluate our LLM application one last time to verify the results.
+We'll try to fix this by using a better model. The model hyperparameter will be upgraded to use `gpt-4.1` instead of the original `gpt-3.5` model, and we can re-evaluate our LLM application one last time to verify the results.
 
 ```python
 ...
-MODEL="gpt-4o"
+MODEL="gpt-4.1"
 
 evaluate(
   dataset,
@@ -145,7 +145,7 @@ evaluate(
 ```
 
 :::tip
-Don't forget to actually use the `gpt-4o` model and not just log it for improved results!
+Don't forget to actually use the `gpt-4.1` model and not just log it for improved results!
 :::
 
 ## Analyzing The Improved Chatbot
