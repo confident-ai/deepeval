@@ -1,5 +1,5 @@
 from deepeval.test_case import ToolCall
-from typing import List
+from typing import List, Dict
 import textwrap
 import json
 
@@ -74,6 +74,133 @@ class TaskCompletionTemplate:
 
             JSON:
         """
+        )
+    
+    class TaskCompletionTemplate:
+
+    @staticmethod
+    def extract_goal_and_outcome_from_trace(trace: dict) -> str:
+        return textwrap.dedent(
+            f"""Given a nested workflow trace whose spans may be of type `agent`, `tool`, `llm`, `retriever`, or `custom`, identify:
+
+            1. **user_goal** – the task or objective expressed by the user in the root agent’s input.  
+            2. **task_outcome** – a strictly factual description of what the system did, based only on the trace.
+
+            The task outcome should be solely factual, derived strictly from the trace.
+            Do **not** include subjective language such as “successfully”, “efficiently”, or “well”.  
+            Enumerate each relevant action or output the trace shows, in plain language.
+
+            ``Example:
+            Example trace:
+            {{
+            "name": "trip_planner",
+            "type": "agent",
+            "input": {{
+                "input": "Can you help me plan a business trip to Chicago next week?"
+            }},
+            "output": {{
+                "summary": "Trip planning initiated."
+            }},
+            "available_tools": ["flight_tool", "hotel_tool"],
+            "agent_handoffs": [],
+            "children": [
+                {{
+                "name": "flight_tool",
+                "type": "tool",
+                "input": {{
+                    "inputParameters": {{
+                    "destination": "Chicago",
+                    "date": "2024-07-10"
+                    }}
+                }},
+                "output": {{
+                    "flights": ["Flight 101", "Flight 202"]
+                }},
+                "description": "Search for flights to a destination",
+                "children": []
+                }},
+                {{
+                "name": "hotel_tool",
+                "type": "tool",
+                "input": {{
+                    "inputParameters": {{
+                    "location": "Chicago",
+                    "check_in": "2024-07-10",
+                    "check_out": "2024-07-12"
+                    }}
+                }},
+                "output": {{
+                    "hotels": ["The Grand Chicago", "Lakeview Inn"]
+                }},
+                "description": "Find hotels for specified dates",
+                "children": []
+                }},
+                {{
+                "name": "agenda_llm",
+                "type": "llm",
+                "input": {{
+                    "prompt": "Draft a meeting agenda",
+                    "input": [
+                    {{
+                        "role": "system",
+                        "content": "You are an executive assistant."
+                    }},
+                    {{
+                        "role": "user",
+                        "content": "Create an agenda for a client strategy meeting."
+                    }}
+                    ]
+                }},
+                "output": "1. Q2 review\\n2. Client feedback\\n3. Strategy planning",
+                "model": "gpt-4",
+                "inputTokenCount": 38,
+                "outputTokenCount": 21,
+                "children": []
+                }},
+                {{
+                "name": "slide_retriever",
+                "type": "retriever",
+                "input": {{
+                    "embeddingInput": "presentation.pptx"
+                }},
+                "output": {{
+                    "retrievalContext": [
+                    "Slide 1: Revenue",
+                    "Slide 2: Client Feedback",
+                    "Slide 3: Goals"
+                    ]
+                }},
+                "topK": 3,
+                "chunkSize": 512,
+                "children": []
+                }},
+                {{
+                "name": "client_embedder",
+                "type": "custom",
+                "input": {{
+                    "text": "Concerns from enterprise clients"
+                }},
+                "output": [0.1, 0.32, 0.85],
+                "children": []
+                }}
+            ]
+            }}
+            Example JSON:
+            {{
+            "user_goal": "Plan a business trip to Chicago, including flights, lodging, meeting agenda, presentation review, and client preparation.",
+            "task_outcome": "The system invoked a tool to retrieve two flight options and another tool to find two hotels for the specified dates. An LLM with model 'gpt-4' generated a three-topic meeting agenda from a system/user prompt. A retriever extracted three slides using the embedding input 'presentation.pptx' with topK=3 and chunk size 512. A custom component generated vector embeddings for a client-related input string."
+            }}
+            ===== END OF EXAMPLE =====
+
+            **
+            IMPORTANT – return only valid JSON with two keys: `user_goal` and `task_outcome`.
+            **
+
+            trace:
+            {trace}
+
+            JSON:
+            """
         )
 
     @staticmethod

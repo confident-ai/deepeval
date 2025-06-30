@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Dict
 
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
@@ -17,7 +17,6 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.task_completion.template import TaskCompletionTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.task_completion.schema import *
-
 
 class TaskCompletionMetric(BaseMetric):
 
@@ -93,7 +92,6 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -171,11 +169,15 @@ class TaskCompletionMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
-        prompt = TaskCompletionTemplate.extract_goal_and_outcome(
-            input=test_case.input,
-            actual_output=test_case.actual_output,
-            tools_called=test_case.tools_called,
-        )
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if has_trace:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(trace=test_case._trace_dict)
+        else:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome(
+                input=test_case.input,
+                actual_output=test_case.actual_output,
+                tools_called=test_case.tools_called,
+            )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
                 prompt, schema=GoalAndOutcome
@@ -197,11 +199,15 @@ class TaskCompletionMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
-        prompt = TaskCompletionTemplate.extract_goal_and_outcome(
-            input=test_case.input,
-            actual_output=test_case.actual_output,
-            tools_called=test_case.tools_called,
-        )
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if has_trace:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(trace=test_case._trace_dict)
+        else:
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome(
+                input=test_case.input,
+                actual_output=test_case.actual_output,
+                tools_called=test_case.tools_called,
+            )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=GoalAndOutcome)
             self.evaluation_cost += cost
