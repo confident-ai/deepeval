@@ -10,3 +10,7 @@ class GoalAndOutcome(BaseModel):
 class TaskCompletionVerdict(BaseModel):
     verdict: float
     reason: Optional[str] = Field(default=None)
+
+
+class SuggestedFixes(BaseModel):
+    suggested_fixes: List[str]

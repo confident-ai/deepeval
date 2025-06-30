@@ -195,7 +195,7 @@ class TaskCompletionTemplate:
             **
 
             trace:
-            {trace}
+            {json.dumps(trace, indent=2)}
 
             JSON:
             """
@@ -229,6 +229,47 @@ class TaskCompletionTemplate:
                 {actual_outcome}
 
                 JSON:
+            """
+        )
+
+    @staticmethod
+    def generate_suggested_fixes(verdict: float, reason: str, trace: dict) -> str:
+        return textwrap.dedent(
+            f"""You are an LLM evaluation expert tasked with helping developers improve their AI agents.
+
+            Given:
+            - A `verdict` (score from 0 to 1) indicating how well the agent achieved the user’s goal.
+            - A `reason` explaining the gap between the user’s goal and the actual outcome.
+            - A `trace` representing the full execution of the agent, including its decisions, tool calls, and outputs.
+
+            Your job is to analyze the trace and reason to provide **concrete and actionable suggested fixes**. These may include:
+            - Improving prompt phrasing
+            - Changing tool input parameters
+            - Adding missing tool calls
+            - Adjusting the sequence of steps
+            - Fixing model outputs or logic issues
+
+            Only include suggestions that directly address the issues described in the reason and trace.
+
+            **
+            IMPORTANT: Please return a valid JSON with one key `suggested_fixes`, which contains a list of bullet points (strings).
+            **
+
+            Example JSON:
+            {{
+                "suggested_fixes": [
+                    "Update the flight search tool to include return date when round-trip is implied.",
+                    "Use a system prompt to clarify the goal before invoking the LLM for agenda generation.",
+                    "Add a final summarization step to combine all tool outputs into a cohesive plan."
+                ]
+            }}
+
+            verdict: {verdict}
+            reason: {reason}
+            trace:
+            {json.dumps(trace, indent=2)}
+
+            JSON:
             """
         )
 
