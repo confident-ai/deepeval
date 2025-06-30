@@ -106,11 +106,27 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(TaskStartedEvent)
         def on_task_started(source, event):
-            pass
+            base_span = BaseSpan(
+                uuid=str(source.__hash__),
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=self.active_trace_id,
+                parent_uuid=str(source.agent.id),
+                start_time=perf_counter(),
+                name="(task) "+ source.description
+            )
+            trace_manager.add_span(base_span)
+            trace_manager.add_span_to_trace(base_span)
 
         @crewai_event_bus.on(TaskCompletedEvent)
         def on_task_completed(source, event):
-            pass
+            base_span = trace_manager.get_span_by_uuid(str(source.__hash__))
+            if base_span is None:
+                return
+            
+            base_span.end_time = perf_counter()
+            base_span.status = TraceSpanStatus.SUCCESS
+            trace_manager.remove_span(base_span.uuid)
 
         @crewai_event_bus.on(LLMCallStartedEvent)
         def on_llm_started(source, event):
