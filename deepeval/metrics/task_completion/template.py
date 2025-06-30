@@ -76,8 +76,6 @@ class TaskCompletionTemplate:
         """
         )
     
-    class TaskCompletionTemplate:
-
     @staticmethod
     def extract_goal_and_outcome_from_trace(trace: dict) -> str:
         return textwrap.dedent(

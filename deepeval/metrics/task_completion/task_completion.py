@@ -23,18 +23,19 @@ class TaskCompletionMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.TOOLS_CALLED,
     ]
 
     def __init__(
         self,
         threshold: float = 0.5,
+        user_goal: Optional[str] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
+        self.user_goal = user_goal
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -69,7 +70,7 @@ class TaskCompletionMetric(BaseMetric):
                 user_goal, task_outcome = self._extract_goal_and_outcome(
                     test_case
                 )
-                self.user_goal = user_goal
+                self.user_goal = user_goal if self.user_goal is None else self.user_goal
                 self.task_outcome = task_outcome
                 verdict, reason = self._generate_verdicts()
                 self.verdict = verdict
@@ -104,7 +105,7 @@ class TaskCompletionMetric(BaseMetric):
             user_goal, task_outcome = await self._a_extract_goal_and_outcome(
                 test_case
             )
-            self.user_goal = user_goal
+            self.user_goal = user_goal if self.user_goal is None else self.user_goal
             self.task_outcome = task_outcome
             verdict, reason = await self._a_generate_verdicts()
             self.verdict = verdict
