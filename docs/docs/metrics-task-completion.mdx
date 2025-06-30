@@ -27,8 +27,6 @@ Task Completion analyzes your **agent's full trace** to determine task success, 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
 
 ```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
 from deepeval.metrics import TaskCompletionMetric
 from deepeval.tracing import observe
 
