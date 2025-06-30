@@ -42,6 +42,7 @@ from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
+    TaskCompletionMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -1308,6 +1309,11 @@ async def a_execute_span_test_case(
     metrics: List[BaseMetric] = span.metrics
     test_case: LLMTestCase = span.llm_test_case
 
+    # add trace if task completion
+    has_task_completion = any(isinstance(metric, TaskCompletionMetric) for metric in span.metrics)
+    if has_task_completion:
+        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+    
     for metric in metrics:
         metric.skipped = False
         metric.error = None  # Reset metric error
