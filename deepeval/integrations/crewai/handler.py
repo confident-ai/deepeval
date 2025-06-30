@@ -88,7 +88,7 @@ class CrewAIEventsListener(BaseEventListener):
                 trace_uuid=self.active_trace_id,
                 parent_uuid=str(source.crew.id),
                 start_time=perf_counter(),
-                name=source.role
+                name="(agent) "+source.role
             )
             trace_manager.add_span(base_span)
             trace_manager.add_span_to_trace(base_span)
