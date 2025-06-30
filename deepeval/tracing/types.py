@@ -119,6 +119,7 @@ class Trace(BaseModel):
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
+    nested_spans_dict: Optional[Dict[str, Any]] = Field(None, exclude=True)
 
     class Config:
         arbitrary_types_allowed = True
