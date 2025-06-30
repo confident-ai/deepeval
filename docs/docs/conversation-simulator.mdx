@@ -71,7 +71,7 @@ There are **ONE** mandatory and **SIX** optional parameters when creating a `Con
 - [Optional] `user_profile_items`: a list of strings representing the fake user properties that should be generated for each user profile, which must be supplied if `user_profiles` isn't provided. Defaulted to `None`.
 - [Optional] `user_profiles`: a list of strings representing complete fake user profiles, which must be supplied if `user_profile_items` isn't provided. Defaulted to `None`.
 - [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
-- [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
 

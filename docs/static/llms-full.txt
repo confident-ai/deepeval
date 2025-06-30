@@ -1450,7 +1450,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 
 - \[Optional\] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -1884,7 +1884,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **SIX** optional parameters when creating a `BiasMetric`:
 
 - \[Optional\] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -2247,7 +2247,7 @@ There are **TWO** mandatory and **SIX** optional parameters when creating a `DAG
 - `name`: name of metric.
 - `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree.
 - \[Optional\] `threshold`: a float representing the minimum passing threshold. Defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -2961,7 +2961,7 @@ from deepeval import evaluate
 evaluate(
     test_cases=[...],
     metrics=[...],
-    hyperparameters={"model": "gpt-4o", "prompt template": "..."}
+    hyperparameters={"model": "gpt-4.1", "prompt template": "..."}
 )
 
 ```
@@ -3354,7 +3354,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **SIX** optional parameters when creating a `ToxicityMetric`:
 
 - \[Optional\] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -3500,7 +3500,7 @@ For more help on enabling LM Studio’s server or configuring models, check out 
 
 On this page
 
-By default, DeepEval uses `gpt-4o` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
+By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
 
 ### Setting Up Your API Key [​](https://deepeval.com/integrations/models/openai\#setting-up-your-api-key "Direct link to Setting Up Your API Key")
 
@@ -3520,11 +3520,11 @@ Alternatively, if you're working in a notebook environment (Jupyter or Colab), s
 
 ### Python [​](https://deepeval.com/integrations/models/openai\#python "Direct link to Python")
 
-You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `GPTModel`.
+You may use OpenAI models other than `gpt-4.1`, which can be configured directly in python code through DeepEval's `GPTModel`.
 
 info
 
-You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
+You may want to use stronger reasoning models like `gpt-4.1` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 
 ```codeBlockLines_e6Vv
 from deepeval.models import GPTModel
@@ -3540,7 +3540,7 @@ answer_relevancy = AnswerRelevancyMetric(model=model)
 
 There are **ONE** mandatory and **ONE** optional parameters when creating a `GPTModel`:
 
-- `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4o`.
+- `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4.1`.
 - \[Optional\] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
 ### Available OpenAI Models [​](https://deepeval.com/integrations/models/openai\#available-openai-models "Direct link to Available OpenAI Models")
@@ -3551,6 +3551,7 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used OpenAI models:
 
+- `gpt-4.1`
 - `gpt-4.5-preview`
 - `gpt-4o`
 - `gpt-4o-mini`

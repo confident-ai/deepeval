@@ -4,7 +4,7 @@ title: OpenAI
 sidebar_label: OpenAI
 ---
 
-By default, DeepEval uses `gpt-4o` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
+By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
 
 ### Setting Up Your API Key
 
@@ -22,10 +22,10 @@ Alternatively, if you're working in a notebook environment (Jupyter or Colab), s
 
 ### Python
 
-You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `GPTModel`.
+You may use OpenAI models other than `gpt-4.1`, which can be configured directly in python code through DeepEval's `GPTModel`.
 
 :::info
-You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
+You may want to use stronger reasoning models like `gpt-4.1` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 :::
 
 ```python
@@ -52,6 +52,7 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used OpenAI models:
 
+- `gpt-4.1`
 - `gpt-4.5-preview`
 - `gpt-4o`
 - `gpt-4o-mini`

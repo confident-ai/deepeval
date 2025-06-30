@@ -55,7 +55,7 @@ valid_multimodal_gpt_models = [
     "o4-mini",
 ]
 
-default_multimodal_gpt_model = "gpt-4o"
+default_multimodal_gpt_model = "gpt-4.1"
 
 unsupported_log_probs_multimodal_gpt_models = [
     "o1",
@@ -263,8 +263,8 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
         pricing = model_pricing.get(
-            self.model_name, model_pricing["gpt-4o"]
-        )  # Default to 'gpt-4o' if model not found
+            self.model_name, model_pricing["gpt-4.1"]
+        )  # Default to 'gpt-4.1' if model not found
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
