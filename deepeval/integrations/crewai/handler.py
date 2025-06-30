@@ -6,7 +6,14 @@ try:
     from crewai.tools.tool_usage import ToolUsage
     from crewai.utilities.events import (
         CrewKickoffStartedEvent,
-        CrewKickoffCompletedEvent
+        CrewKickoffCompletedEvent,
+        LLMCallStartedEvent,
+        LLMCallCompletedEvent,
+        AgentExecutionStartedEvent,
+        AgentExecutionCompletedEvent,
+        AgentExecutionErrorEvent,
+        TaskStartedEvent,
+        TaskCompletedEvent
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     crewai_installed = True
@@ -14,7 +21,7 @@ except:
     crewai_installed = False
 
 from deepeval.tracing import trace_manager
-from deepeval.tracing.types import LlmSpan, LlmAttributes, ToolSpan, TraceSpanStatus
+from deepeval.tracing.types import BaseSpan, LlmSpan, LlmAttributes, ToolSpan, TraceSpanStatus
 from uuid import uuid4
 from time import perf_counter
 from deepeval.telemetry import capture_tracing_integration
@@ -43,13 +50,69 @@ class CrewAIEventsListener(BaseEventListener):
         def on_crew_started(source, event):
             if self.active_trace_id is None:
                 self.active_trace_id = trace_manager.start_new_trace().uuid
+            
+            base_span = BaseSpan(
+                uuid=str(source.id),
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=self.active_trace_id,
+                parent_uuid=None, # for now crew is the root of the trace
+                start_time=perf_counter(),
+                name = "crew",
+                input=event.inputs
+            )
+            trace_manager.add_span(base_span)
+            trace_manager.add_span_to_trace(base_span)
 
         @crewai_event_bus.on(CrewKickoffCompletedEvent)
         def on_crew_completed(source, event):
+            base_span = trace_manager.get_span_by_uuid(str(source.id))
+            if base_span is None:
+                return
+            
+            base_span.end_time = perf_counter()
+            base_span.status = TraceSpanStatus.SUCCESS
+            base_span.output = event.output
+            trace_manager.remove_span(base_span.uuid)
+            
             if self.active_trace_id is not None:
                 trace_manager.end_trace(self.active_trace_id)
                 self.active_trace_id = None
 
+        @crewai_event_bus.on(AgentExecutionStartedEvent)
+        def on_agent_started(source, event):
+            pass
+
+        @crewai_event_bus.on(AgentExecutionCompletedEvent)
+        def on_agent_completed(source, event):
+            pass
+
+        @crewai_event_bus.on(TaskStartedEvent)
+        def on_task_started(source, event):
+            pass
+
+        @crewai_event_bus.on(TaskCompletedEvent)
+        def on_task_completed(source, event):
+            pass
+
+        @crewai_event_bus.on(LLMCallStartedEvent)
+        def on_llm_started(source, event):
+            pass
+            # print("--------------llm started------------------")
+            # print(source)
+            # print("--------------------------------")
+            # print(event)
+            # print("--------------------------------")
+        
+        @crewai_event_bus.on(LLMCallCompletedEvent)
+        def on_llm_completed(source, event):
+            pass
+            # print("--------------llm completed------------------")
+            # print(source)
+            # print("--------------------------------")
+            # print(event)
+            # print("--------------------------------")
+        
     def patch_crewai_LLM(self, method_to_patch: str):    
         original_methods = {}
 
