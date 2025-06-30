@@ -14,7 +14,7 @@ tool_correctness_metric = ToolCorrectnessMetric(
 
 exact_match = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(
             name="tool1", input_parameters={"a": 1, "b": 2, "c": 2}, output="x"
@@ -29,7 +29,7 @@ exact_match = LLMTestCase(
 
 tool_name_mismatch = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool2", input_parameters={"a": 1, "b": 2}, output="x")
     ],
@@ -40,7 +40,7 @@ tool_name_mismatch = LLMTestCase(
 
 input_parameter_mismatch = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool1", input_parameters={"a": 2, "b": 2}, output="x")
     ],
@@ -51,7 +51,7 @@ input_parameter_mismatch = LLMTestCase(
 
 output_mismatch = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool1", input_parameters={"a": 1, "b": 2}, output="y")
     ],
@@ -62,7 +62,7 @@ output_mismatch = LLMTestCase(
 
 extra_tools_called = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool1", input_parameters={"a": 1, "b": 2}, output="x"),
         ToolCall(name="tool2", input_parameters={"c": 3}, output="y"),
@@ -74,7 +74,7 @@ extra_tools_called = LLMTestCase(
 
 missing_tools = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[],
     expected_tools=[
         ToolCall(name="tool1", input_parameters={"a": 1, "b": 2}, output="x")
@@ -83,7 +83,7 @@ missing_tools = LLMTestCase(
 
 correct_ordering = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool1", input_parameters={"a": 1, "b": 2}, output="x"),
         ToolCall(name="tool2", input_parameters={"c": 3}, output="y"),
@@ -96,7 +96,7 @@ correct_ordering = LLMTestCase(
 
 out_of_order_tools = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool2", input_parameters={"c": 3}, output="y"),
         ToolCall(name="tool1", input_parameters={"a": 1, "b": 2}, output="x"),
@@ -109,7 +109,7 @@ out_of_order_tools = LLMTestCase(
 
 missing_and_out_of_order = LLMTestCase(
     input="",
-    actual_output="",
+    generated_output="",
     tools_called=[
         ToolCall(name="tool2", input_parameters={"c": 3}, output="y")
     ],

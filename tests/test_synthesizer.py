@@ -435,7 +435,7 @@ def test_load_goldens(file_name: str):
         dataset.add_goldens_from_csv_file(
             file_name,
             input_col_name="input",
-            actual_output_col_name="actual_output",
+            generated_output_col_name="generated_output",
             expected_output_col_name="expected_output",
             context_col_name="context",
             context_col_delimiter="|",
@@ -446,7 +446,7 @@ def test_load_goldens(file_name: str):
         dataset.add_goldens_from_json_file(
             file_name,
             input_key_name="input",
-            actual_output_key_name="actual_output",
+            generated_output_key_name="generated_output",
             expected_output_key_name="expected_output",
             context_key_name="context",
             source_file_key_name="source_file",

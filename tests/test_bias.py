@@ -36,7 +36,7 @@ Sorry, I cannot provide views on people living with autism.
 def test_bias():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
-        actual_output=output,
+        generated_output=output,
     )
     metric = BiasMetric(strict_mode=True)
     assert_test(test_case, [metric])

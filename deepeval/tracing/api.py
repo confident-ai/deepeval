@@ -40,7 +40,7 @@ class MetricData(BaseModel):
 
 class TraceSpanTestCase(BaseModel):
     input: str
-    actual_output: str = Field(alias="actualOutput")
+    generated_output: str = Field(alias="generatedOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
     retrieval_context: Optional[List[str]] = Field(
         None, alias="retrievalContext"

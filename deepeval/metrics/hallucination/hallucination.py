@@ -72,7 +72,7 @@ class HallucinationMetric(BaseMetric):
             else:
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(
-                        test_case.actual_output, test_case.context
+                        test_case.generated_output, test_case.context
                     )
                 )
                 self.score = self._calculate_score()
@@ -106,7 +106,7 @@ class HallucinationMetric(BaseMetric):
         ):
             self.verdicts: List[HallucinationVerdict] = (
                 await self._a_generate_verdicts(
-                    test_case.actual_output, test_case.context
+                    test_case.generated_output, test_case.context
                 )
             )
             self.score = self._calculate_score()
@@ -185,11 +185,11 @@ class HallucinationMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(
-        self, actual_output: str, contexts: List[str]
+        self, generated_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            actual_output=actual_output, contexts=contexts
+            generated_output=generated_output, contexts=contexts
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -212,11 +212,11 @@ class HallucinationMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(
-        self, actual_output: str, contexts: List[str]
+        self, generated_output: str, contexts: List[str]
     ) -> List[HallucinationVerdict]:
         verdicts: List[HallucinationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            actual_output=actual_output, contexts=contexts
+            generated_output=generated_output, contexts=contexts
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)

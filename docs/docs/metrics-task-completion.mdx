@@ -16,17 +16,17 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer agent={true} referenceless={true} />
 
-The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `generated_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Arguments
 
 To use the `TaskCompletion`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `tools_called`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 :::tip
 To learn why each test case parameter is necessary in calculating the `TaskCompletion` score, see [how is it calculated](/docs/metrics-task-completion#how-is-it-calculated).
@@ -48,7 +48,7 @@ metric = TaskCompletionMetric(
 )
 test_case = LLMTestCase(
     input="Plan a 3-day itinerary for Paris with cultural landmarks and local cuisine.",
-    actual_output=(
+    generated_output=(
         "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
         "Day 2: Louvre Museum, lunch at Angelina Paris. "
         "Day 3: Montmartre, evening at a wine bar."
@@ -101,7 +101,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -135,7 +135,7 @@ The `TaskCompletionMetric` score is calculated according to the following equati
 
 <Equation formula="\text{Task Completion Score} = \text{AlignmentScore}(\text{Task}, \text{Outcome})" />
 
-- **Task** and **Outcome** are extracted from the `input`, `actual_output`, and `tools_called` using an LLM.
+- **Task** and **Outcome** are extracted from the `input`, `generated_output`, and `tools_called` using an LLM.
 - The **Alignment Score** measures how well the outcome aligns with the task (or user-defined task), as judged by an LLM.
 
 <div
@@ -157,7 +157,7 @@ The `TaskCompletionMetric` score is calculated according to the following equati
 </div>
 
 :::note  
-While the task is primarily derived from the `input` and the outcome from the `actual_output`, these parameters alone are insufficient to calculate the **Task Completion Score**. See below for details.  
+While the task is primarily derived from the `input` and the outcome from the `generated_output`, these parameters alone are insufficient to calculate the **Task Completion Score**. See below for details.  
 :::
 
 #### What Is Task?
@@ -166,4 +166,4 @@ The **task** represents the user’s goal or the action they want the agent to p
 
 #### What Is Outcome?
 
-The **outcome** refers to the agent’s actions in response to the user’s request. Like the task, the outcome cannot be derived from the `actual_output` alone. For example, if a restaurant reservation agent replies with "Booked for tonight," it’s impossible to confirm if the user’s goal was met without additional information such as the restaurant name, time, and tools used. These test case details (especially `tools_called`) are crucial to verify that the outcome aligns with the user’s intended task.
+The **outcome** refers to the agent’s actions in response to the user’s request. Like the task, the outcome cannot be derived from the `generated_output` alone. For example, if a restaurant reservation agent replies with "Booked for tonight," it’s impossible to confirm if the user’s goal was met without additional information such as the restaurant name, time, and tools used. These test case details (especially `tools_called`) are crucial to verify that the outcome aligns with the user’s intended task.

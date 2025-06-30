@@ -31,7 +31,7 @@ Currently, our chatbot sometimes fails to directly address user queries, instead
 To address this, you can leverage `deepeval`'s default [`AnswerRelevancyMetric`](/docs/metrics-answer-relevancy), which is available out-of-the-box and evaluates how relevant an LLM's output is to the input.
 
 :::info
-The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `actual_output` and then classifies each statement's relevance to the `input` using the same LLM. You can read more on how each individual default metric is calculated by visiting their [individual metric pages.](/docs/metrics-answer-relevancy#how-is-it-calculated)
+The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `generated_output` and then classifies each statement's relevance to the `input` using the same LLM. You can read more on how each individual default metric is calculated by visiting their [individual metric pages.](/docs/metrics-answer-relevancy#how-is-it-calculated)
 :::
 
 ### Faithfulness
@@ -42,9 +42,9 @@ Our next metric addresses the inaccuracies in patient diagnoses. The chatbot's f
 Criteria 2: The chatbot should provide accurate diagnoses based on the given symptoms.
 ```
 
-This is because the RAG engine is responsible for **retrieving relevant medical information from our knowledge base** to support patient diagnoses. To address this, we need to evaluate specifically whether the information in the retrieved chunks actually align with the information in the actual output.
+This is because the RAG engine is responsible for **retrieving relevant medical information from our knowledge base** to support patient diagnoses. To address this, we need to evaluate specifically whether the information in the retrieved chunks actually align with the information in the generated output.
 
-`deepeval`'s [`FaithfulnessMetric`](/docs/metrics-faithfulness) is well-suited for this task. It assesses the whether the `actual_output` factually aligns with the contents of the `retrieval_context`.
+`deepeval`'s [`FaithfulnessMetric`](/docs/metrics-faithfulness) is well-suited for this task. It assesses the whether the `generated_output` factually aligns with the contents of the `retrieval_context`.
 
 :::tip  
 `deepeval` offers a total of **5 RAG metrics** to evaluate your RAG pipeline. To learn more about selecting the right metrics for your use case, check out this [in-depth guide on RAG evaluation](/guides/guides-rag-evaluation).
@@ -92,14 +92,14 @@ contextual_relevancy_metric = ContextualRelevancyMetric()
 
 ### Defining a Custom Metric
 
-Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `actual_output`.
+Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `generated_output`.
 
 ```python
 from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics import GEval
 
 # Define criteria for evaluating professionalism
-criteria = """Determine whether the actual output demonstrates professionalism by being
+criteria = """Determine whether the generated output demonstrates professionalism by being
 clear, respectful, and maintaining an empathetic tone consistent with medical interactions."""
 
 # Create a GEval metric for professionalism

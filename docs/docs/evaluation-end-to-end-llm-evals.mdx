@@ -26,7 +26,7 @@ Most of what you saw in `deepeval`'s [quickstart](/docs/getting-started) is end-
 
 ### Select metrics
 
-You'll need to select the appropriate metrics and ensure your LLM app returns the required fields to create end-to-end `LLMTestCase`. For example, `AnswerRelevancyMetric()` expects `input` and `actual_output`, while `FaithfulnessMetric()` also requires `retrieval_context`.
+You'll need to select the appropriate metrics and ensure your LLM app returns the required fields to create end-to-end `LLMTestCase`. For example, `AnswerRelevancyMetric()` expects `input` and `generated_output`, while `FaithfulnessMetric()` also requires `retrieval_context`.
 
 You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for your use case, but the general rule of thumb is to include no more than 5 metrics, with 2-3 system specific, generic metrics and 1-2 use case specific, custom metrics.
 
@@ -116,7 +116,7 @@ goldens = [Golden(input="...")]
 test_case = []
 for golden in goldens:
     res, text_chunks = your_llm_app(golden.input)
-    test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
+    test_case = LLMTestCase(input=golden.input, generated_output=res, retrieval_context=text_chunks)
     test_cases.append(test_case)
 
 
@@ -159,7 +159,7 @@ goldens = [Golden(input="...")]
 @pytest.mark.parametrize("golden", goldens)
 def test_llm_app(golden: Golden):
     res, text_chunks = your_llm_app(golden.input)
-    test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
+    test_case = LLMTestCase(input=golden.input, generated_output=res, retrieval_context=text_chunks)
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
 ```
 

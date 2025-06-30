@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer referenceless={true} />
 
-The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the necessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
+The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the necessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `generated_output`.
 
 :::note
 The `SummarizationMetric` is the only default metric in `deepeval` that is not cacheable.
@@ -27,13 +27,13 @@ The `SummarizationMetric` is the only default metric in `deepeval` that is not c
 To use the `SummarizationMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
-Let's take this `input` and `actual_output` as an example:
+Let's take this `input` and `generated_output` as an example:
 
 ```python
 # This is the original text to be summarized
@@ -46,8 +46,8 @@ more comprehensive and faithful summary, signifying that the summary effectively
 encapsulates the crucial points and details from the original content.
 """
 
-# This is the summary, replace this with the actual output from your LLM application
-actual_output="""
+# This is the summary, replace this with the generated output from your LLM application
+generated_output="""
 The coverage score quantifies how well a summary captures and
 accurately represents key information from the original text,
 with a higher score indicating greater comprehensiveness.
@@ -62,7 +62,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import SummarizationMetric
 ...
 
-test_case = LLMTestCase(input=input, actual_output=actual_output)
+test_case = LLMTestCase(input=input, generated_output=generated_output)
 metric = SummarizationMetric(
     threshold=0.5,
     model="gpt-4",
@@ -108,7 +108,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 

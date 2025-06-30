@@ -35,7 +35,7 @@ def test_length_metric():
     metric = LatencyMetric()
     test_case = LLMTestCase(
         input="placeholder",
-        actual_output="This is a long sentence that is more than 3 letters",
+        generated_output="This is a long sentence that is more than 3 letters",
     )
     # a_measure not implemented
     assert_test(test_case, [metric], run_async=False)

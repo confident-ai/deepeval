@@ -111,7 +111,7 @@ PGVector functions as the **retrieval engine** in your RAG pipeline, efficiently
 
 ## Evaluating PGVector Retrieval
 
-Evaluating your PGVector retriever involves **two key steps**. First, you need to generate a test case by preparing an `input` query along with the expected LLM response. This `input` is then processed through your RAG pipeline to produce an `LLMTestCase`, which includes the query, actual output, expected output, and retrieved context.
+Evaluating your PGVector retriever involves **two key steps**. First, you need to generate a test case by preparing an `input` query along with the expected LLM response. This `input` is then processed through your RAG pipeline to produce an `LLMTestCase`, which includes the query, generated output, expected output, and retrieved context.
 
 Once the test case is created, the next step is to assess retrieval performance using a selection of evaluation metrics designed to measure the precision, recall, and relevance of the retrieved context.
 
@@ -137,7 +137,7 @@ query = "How does PGVector work?"
 retrieval_context = search(query)
 ```
 
-Next, we'll insert the `retrieval_context` retrieved from the vector database into our prompt template to generate an LLM response, referred to as `actual_output`. This step finalizes the required parameters needed to construct an `LLMTestCase`.
+Next, we'll insert the `retrieval_context` retrieved from the vector database into our prompt template to generate an LLM response, referred to as `generated_output`. This step finalizes the required parameters needed to construct an `LLMTestCase`.
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -154,13 +154,13 @@ Supporting Context:
 {retrieval_context}
 """
 
-actual_output = generate(prompt) # hypothetical function, replace with your own LLM
-print(actual_output)
+generated_output = generate(prompt) # hypothetical function, replace with your own LLM
+print(generated_output)
 # PGVector enables efficient vector search within PostgreSQL for AI applications.
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context,
     expected_output="PGVector is an extension that brings efficient vector search capabilities to PostgreSQL.",
 )

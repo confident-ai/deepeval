@@ -14,7 +14,7 @@ sidebar_label: Optimizing Hyperparameters
 Apart from catching regressions and sanity checking your LLM applications, LLM evaluation and testing plays an pivotal role in picking the best hyperparameters for your LLM application.
 
 :::info
-In `deepeval`, hyperparameters refer to independent variables that affect the final `actual_output` of your LLM application, which includes the LLM used, the prompt template, temperature, etc.
+In `deepeval`, hyperparameters refer to independent variables that affect the final `generated_output` of your LLM application, which includes the LLM used, the prompt template, temperature, etc.
 :::
 
 ## Which Hyperparameters Should I Iterate On?
@@ -38,13 +38,13 @@ In the previous guide on [RAG Evaluation](/guides/guides-rag-evaluation), you al
 To find the best hyperparameter combination, simply:
 
 - choose a/multiple [LLM evaluation metrics](#metrics-introduction) that fits your evaluation criteria
-- execute evaluations in a nested for-loop, while generating `actual_outputs` **at evaluation time** based on the current hyperparameter combination
+- execute evaluations in a nested for-loop, while generating `generated_outputs` **at evaluation time** based on the current hyperparameter combination
 
 :::note
-In reality, you don't have to strictly generate `actual_outputs` at evaluation time and can evaluate with datasets of precomputed `actual_outputs`, but you ought to ensure that the `actual_outputs` in each [`LLMTestCase`](/docs/evaluation-test-cases) can be properly identified by a hyperparameter combination for this to work.
+In reality, you don't have to strictly generate `generated_outputs` at evaluation time and can evaluate with datasets of precomputed `generated_outputs`, but you ought to ensure that the `generated_outputs` in each [`LLMTestCase`](/docs/evaluation-test-cases) can be properly identified by a hyperparameter combination for this to work.
 :::
 
-Let's walkthrough a quick example hypothetical example showing how to find the best model and prompt template hyperparameter combination using the `AnswerRelevancyMetric` as a measurement. First, define a function to generate `actual_output`s for `LLMTestCase`s based on a certain hyperparameter combination:
+Let's walkthrough a quick example hypothetical example showing how to find the best model and prompt template hyperparameter combination using the `AnswerRelevancyMetric` as a measurement. First, define a function to generate `generated_output`s for `LLMTestCase`s based on a certain hyperparameter combination:
 
 ```python
 from typing import List
@@ -60,9 +60,9 @@ def construct_test_cases(model: str, prompt_template: str) : List[LLMTestCase]:
     for input in list_of_inputs:
         test_case = LLMTestCase(
             input=input,
-            # Hypothetical function to generate actual outputs
+            # Hypothetical function to generate generated outputs
             # at evaluation time based on your hyperparameters!
-            actual_output=generate_actual_output(llm, prompt)
+            generated_output=generate_generated_output(llm, prompt)
         )
         test_cases.append(test_case)
 

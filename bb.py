@@ -178,7 +178,7 @@ from deepeval import evaluate
 test_case = LLMTestCase(
     input="What is the capital of France?",
     expected_output="Paris",
-    actual_output="Paris",
+    generated_output="Paris",
 )
 
 evaluate(

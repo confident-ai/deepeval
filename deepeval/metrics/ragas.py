@@ -300,7 +300,7 @@ class RAGASContextualEntitiesRecall(BaseMetric):
 
 #         data = {
 #             "question": [test_case.input],
-#             "answer": [test_case.actual_output],
+#             "answer": [test_case.generated_output],
 #             "ground_truth": [test_case.expected_output],
 #             "contexts": [test_case.retrieval_context],
 #         }
@@ -377,7 +377,7 @@ class RAGASAnswerRelevancyMetric(BaseMetric):
 
         data = {
             "question": [test_case.input],
-            "answer": [test_case.actual_output],
+            "answer": [test_case.generated_output],
             "contexts": [test_case.retrieval_context],
         }
         dataset = Dataset.from_dict(data)
@@ -453,7 +453,7 @@ class RAGASFaithfulnessMetric(BaseMetric):
         data = {
             "contexts": [test_case.retrieval_context],
             "question": [test_case.input],
-            "answer": [test_case.actual_output],
+            "answer": [test_case.generated_output],
         }
         dataset = Dataset.from_dict(data)
         with capture_metric_type(

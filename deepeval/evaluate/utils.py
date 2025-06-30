@@ -73,7 +73,7 @@ def create_test_result(
     else:
         multimodal = (
             api_test_case.multimodal_input is not None
-            and api_test_case.multimodal_input_actual_output is not None
+            and api_test_case.multimodal_input_generated_output is not None
         )
         if multimodal:
             return TestResult(
@@ -81,7 +81,7 @@ def create_test_result(
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
                 input=api_test_case.multimodal_input,
-                actual_output=api_test_case.multimodal_input_actual_output,
+                generated_output=api_test_case.multimodal_input_generated_output,
                 conversational=False,
                 multimodal=True,
                 additional_metadata=api_test_case.additional_metadata,
@@ -92,7 +92,7 @@ def create_test_result(
                 success=api_test_case.success,
                 metrics_data=api_test_case.metrics_data,
                 input=api_test_case.input,
-                actual_output=api_test_case.actual_output,
+                generated_output=api_test_case.generated_output,
                 expected_output=api_test_case.expected_output,
                 context=api_test_case.context,
                 retrieval_context=api_test_case.retrieval_context,
@@ -169,7 +169,7 @@ def create_api_test_case(
             api_test_case = LLMApiTestCase(
                 name=name,
                 input=test_case.input,
-                actualOutput=test_case.actual_output,
+                generatedOutput=test_case.generated_output,
                 expectedOutput=test_case.expected_output,
                 context=test_case.context,
                 retrievalContext=test_case.retrieval_context,
@@ -192,7 +192,7 @@ def create_api_test_case(
                 name=name,
                 input="",
                 multimodalInput=test_case.input,
-                multimodalActualOutput=test_case.actual_output,
+                multimodalActualOutput=test_case.generated_output,
                 multimodalExpectedOutput=test_case.expected_output,
                 multimodalRetrievalContext=test_case.retrieval_context,
                 multimodalContext=test_case.context,
@@ -351,7 +351,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     if test_result.multimodal:
         print("For multimodal test case:\n")
         print(f"  - input: {test_result.input}")
-        print(f"  - actual output: {test_result.actual_output}")
+        print(f"  - generated output: {test_result.generated_output}")
 
     elif test_result.conversational:
         print("For conversational test case:\n")
@@ -361,7 +361,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     else:
         print("For test case:\n")
         print(f"  - input: {test_result.input}")
-        print(f"  - actual output: {test_result.actual_output}")
+        print(f"  - generated output: {test_result.generated_output}")
         print(f"  - expected output: {test_result.expected_output}")
         print(f"  - context: {test_result.context}")
         print(f"  - retrieval context: {test_result.retrieval_context}")
@@ -451,7 +451,7 @@ def write_test_result_to_file(
         if test_result.multimodal:
             file.write("For multimodal test case:\n\n")
             file.write(f"  - input: {test_result.input}\n")
-            file.write(f"  - actual output: {test_result.actual_output}\n")
+            file.write(f"  - generated output: {test_result.generated_output}\n")
         elif test_result.conversational:
             file.write("For conversational test case:\n\n")
             file.write(
@@ -460,7 +460,7 @@ def write_test_result_to_file(
         else:
             file.write("For test case:\n\n")
             file.write(f"  - input: {test_result.input}\n")
-            file.write(f"  - actual output: {test_result.actual_output}\n")
+            file.write(f"  - generated output: {test_result.generated_output}\n")
             file.write(f"  - expected output: {test_result.expected_output}\n")
             file.write(f"  - context: {test_result.context}\n")
             file.write(

@@ -73,18 +73,18 @@ class JsonCorrectnessMetric(BaseMetric):
                 valid_json = True
                 try:
                     self.expected_schema.model_validate_json(
-                        test_case.actual_output
+                        test_case.generated_output
                     )
                 except ValidationError as e:
                     valid_json = False
 
                 self.score = 1 if valid_json else 0
-                self.reason = self.generate_reason(test_case.actual_output)
+                self.reason = self.generate_reason(test_case.generated_output)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"LLM outputed Json:\n{test_case.actual_output}",
+                        f"LLM outputed Json:\n{test_case.generated_output}",
                         # f"Expected Json Schema:\n{json.dumps(self.expected_schema.model_json_schema(), indent=4)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -111,18 +111,18 @@ class JsonCorrectnessMetric(BaseMetric):
             valid_json = True
             try:
                 self.expected_schema.model_validate_json(
-                    test_case.actual_output
+                    test_case.generated_output
                 )
             except ValidationError as e:
                 valid_json = False
 
             self.score = 1 if valid_json else 0
-            self.reason = await self.a_generate_reason(test_case.actual_output)
+            self.reason = await self.a_generate_reason(test_case.generated_output)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"LLM outputed Json:\n{test_case.actual_output}",
+                    f"LLM outputed Json:\n{test_case.generated_output}",
                     # f"Expected Json Schema:\n{json.dumps(self.expected_schema.model_json_schema(), indent=4)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -130,7 +130,7 @@ class JsonCorrectnessMetric(BaseMetric):
 
             return self.score
 
-    async def a_generate_reason(self, actual_output: str) -> str:
+    async def a_generate_reason(self, generated_output: str) -> str:
         if self.include_reason is False:
             return None
 
@@ -139,7 +139,7 @@ class JsonCorrectnessMetric(BaseMetric):
             return DEFAULT_CORRECT_REASON
 
         prompt: dict = JsonCorrectnessTemplate.generate_reason(
-            actual_output=actual_output,
+            generated_output=generated_output,
             expected_schema=json.dumps(
                 self.expected_schema.model_json_schema(), indent=4
             ),
@@ -159,7 +159,7 @@ class JsonCorrectnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def generate_reason(self, actual_output: str) -> str:
+    def generate_reason(self, generated_output: str) -> str:
         if self.include_reason is False:
             return None
 
@@ -168,7 +168,7 @@ class JsonCorrectnessMetric(BaseMetric):
             return DEFAULT_CORRECT_REASON
 
         prompt: dict = JsonCorrectnessTemplate.generate_reason(
-            actual_output=actual_output,
+            generated_output=generated_output,
             expected_schema=json.dumps(
                 self.expected_schema.model_json_schema(), indent=4
             ),

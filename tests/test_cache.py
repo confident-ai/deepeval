@@ -40,7 +40,7 @@ class FakeMetric(BaseMetric):
 
 
 def test_cache():
-    test_case = LLMTestCase(input="input", actual_output="output")
+    test_case = LLMTestCase(input="input", generated_output="output")
     metric = FakeMetric(
         threshold=0.2, include_reason=False, strict_mode=True, model="omg"
     )
@@ -49,7 +49,7 @@ def test_cache():
 
 # @pytest.mark.skip("askjdfn")
 def test_cache_again():
-    test_case = LLMTestCase(input="input 3", actual_output="output 2")
+    test_case = LLMTestCase(input="input 3", generated_output="output 2")
     metric = FakeMetric(
         threshold=0.2, include_reason=False, strict_mode=True, model="omg"
     )

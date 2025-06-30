@@ -3,7 +3,7 @@ from typing import Optional, List
 
 class FaithfulnessTemplate:
     @staticmethod
-    def generate_claims(actual_output: str):
+    def generate_claims(generated_output: str):
         return f"""Based on the given text, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
 These truths, MUST BE COHERENT, and CANNOT be taken out of context.
     
@@ -27,7 +27,7 @@ You should NOT include any prior knowledge, and take the text at face value when
 **
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """
@@ -73,7 +73,7 @@ JSON:
         return f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
 Provide a 'reason' ONLY if the answer is 'no'. 
-The provided claim is drawn from the actual output. Try to provide a correction in the reason using the facts in the retrieval context.
+The provided claim is drawn from the generated output. Try to provide a correction in the reason using the facts in the retrieval context.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key as a list of JSON objects.
@@ -94,11 +94,11 @@ Example:
         }},
         {{
             "verdict": "no",
-            "reason": "The actual output claims Einstein won the Nobel Prize in 1969, which is untrue as the retrieval context states it is 1968 instead."
+            "reason": "The generated output claims Einstein won the Nobel Prize in 1969, which is untrue as the retrieval context states it is 1968 instead."
         }},
         {{
             "verdict": "no",
-            "reason": "The actual output claims Einstein is a German chef, which is not correct as the retrieval context states he was a German scientist instead."
+            "reason": "The generated output claims Einstein is a German chef, which is not correct as the retrieval context states he was a German scientist instead."
         }},
     ]  
 }}
@@ -122,8 +122,8 @@ JSON:
 
     @staticmethod
     def generate_reason(score: float, contradictions: List[str]):
-        return f"""Below is a list of Contradictions. It is a list of strings explaining why the 'actual output' does not align with the information presented in the 'retrieval context'. Contradictions happen in the 'actual output', NOT the 'retrieval context'.
-Given the faithfulness score, which is a 0-1 score indicating how faithful the `actual output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score. 
+        return f"""Below is a list of Contradictions. It is a list of strings explaining why the 'generated output' does not align with the information presented in the 'retrieval context'. Contradictions happen in the 'generated output', NOT the 'retrieval context'.
+Given the faithfulness score, which is a 0-1 score indicating how faithful the `generated output` is to the retrieval context (higher the better), CONCISELY summarize the contradictions to justify the score. 
 
 ** 
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
@@ -134,7 +134,7 @@ Example JSON:
 
 If there are no contradictions, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 Your reason MUST use information in `contradiction` in your reason.
-Be sure in your reason, as if you know what the actual output is from the contradictions.
+Be sure in your reason, as if you know what the generated output is from the contradictions.
 **
 
 Faithfulness Score:

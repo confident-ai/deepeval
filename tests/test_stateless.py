@@ -73,7 +73,7 @@ class LatencyMetric(BaseMetric):
 
 test_case_1 = LLMTestCase(
     input="What is this again?",
-    actual_output="This is a latte.",
+    generated_output="This is a latte.",
     expected_output="This is a mocha.",
     retrieval_context=["I love coffee."],
     context=["I love coffee."],
@@ -82,7 +82,7 @@ test_case_1 = LLMTestCase(
 
 test_case_2 = LLMTestCase(
     input="What is this again?",
-    actual_output="This is a latte.",
+    generated_output="This is a latte.",
     expected_output="This is a latte.",
     retrieval_context=["I love coffee."],
     context=["I love coffee."],
@@ -91,7 +91,7 @@ test_case_2 = LLMTestCase(
 
 test_case_3 = LLMTestCase(
     input="Do you have cold brew?",
-    actual_output="Cold brew has numerous health benefits.",
+    generated_output="Cold brew has numerous health benefits.",
     expected_output="No, we only have latte and americano",
     retrieval_context=["I love coffee."],
     context=["Our drinks include latte and americano"],
@@ -100,7 +100,7 @@ test_case_3 = LLMTestCase(
 
 test_case_4 = LLMTestCase(
     input="Can I get an americano with almond milk?",
-    actual_output="We don't have almond milk.",
+    generated_output="We don't have almond milk.",
     expected_output="Yes, we can make an americano with almond milk.",
     retrieval_context=["We have soy and oat milk."],
     context=["We offer various milk options, including almond milk."],
@@ -109,7 +109,7 @@ test_case_4 = LLMTestCase(
 
 test_case_5 = LLMTestCase(
     input="Is the espresso strong?",
-    actual_output="Our espresso is mild.",
+    generated_output="Our espresso is mild.",
     expected_output="Yes, our espresso is quite strong.",
     retrieval_context=["Some customers find our coffee mild."],
     context=["Our espresso is known for its strong flavor."],
@@ -118,7 +118,7 @@ test_case_5 = LLMTestCase(
 
 test_case_6 = LLMTestCase(
     input="What desserts do you have?",
-    actual_output="We have cakes and cookies.",
+    generated_output="We have cakes and cookies.",
     expected_output="We have cakes, cookies, and brownies.",
     retrieval_context=["Our cafe offers cookies and brownies."],
     context=["Our dessert options include cakes, cookies, and brownies."],
@@ -127,7 +127,7 @@ test_case_6 = LLMTestCase(
 
 test_case_7 = LLMTestCase(
     input="Do you serve breakfast all day?",
-    actual_output="Breakfast is only served until 11 AM.",
+    generated_output="Breakfast is only served until 11 AM.",
     expected_output="Yes, we serve breakfast all day.",
     retrieval_context=["Breakfast times are usually until noon."],
     context=["Breakfast is available all day at our cafe."],
@@ -136,7 +136,7 @@ test_case_7 = LLMTestCase(
 
 test_case_8 = LLMTestCase(
     input="Do you have any vegan options?",
-    actual_output="We have vegan salads.",
+    generated_output="We have vegan salads.",
     expected_output="We offer vegan salads and smoothies.",
     retrieval_context=["We recently started offering vegan dishes."],
     context=["We have vegan salads and smoothies on our menu."],
@@ -145,7 +145,7 @@ test_case_8 = LLMTestCase(
 
 test_case_9 = LLMTestCase(
     input="Is there parking nearby?",
-    actual_output="There is no parking available.",
+    generated_output="There is no parking available.",
     expected_output="Yes, there is a parking lot right behind the cafe.",
     retrieval_context=["Street parking can be hard to find."],
     context=["Parking is available behind the cafe."],
@@ -190,7 +190,7 @@ test_cases = [
 #     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode)
 #     metric10 = GEval(
 #         name="Coherence",
-#         criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+#         criteria="Coherence - determine if the generated output is coherent with the input, and does not contradict anything in the retrieval context.",
 #         evaluation_params=[
 #             LLMTestCaseParams.INPUT,
 #             LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -238,7 +238,7 @@ test_cases = [
 #     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
 #     metric10 = GEval(
 #         name="Coherence",
-#         criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+#         criteria="Coherence - determine if the generated output is coherent with the input, and does not contradict anything in the retrieval context.",
 #         evaluation_params=[
 #             LLMTestCaseParams.INPUT,
 #             LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -286,7 +286,7 @@ test_cases = [
 #         SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=async_mode),
 #         GEval(
 #             name="Coherence",
-#             criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+#             criteria="Coherence - determine if the generated output is coherent with the input, and does not contradict anything in the retrieval context.",
 #             evaluation_params=[
 #                 LLMTestCaseParams.INPUT,
 #                 LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -321,7 +321,7 @@ test_cases = [
 # metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, async_mode=False)
 # metric10 = GEval(
 #     name="Coherence",
-#     criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+#     criteria="Coherence - determine if the generated output is coherent with the input, and does not contradict anything in the retrieval context.",
 #     evaluation_params=[
 #         LLMTestCaseParams.INPUT,
 #         LLMTestCaseParams.ACTUAL_OUTPUT,

@@ -139,13 +139,13 @@ response_object = rag_application.query(user_input)
 # Process the response object to get the output string
 # and retrieved nodes
 if response_object is not None:
-    actual_output = response_object.response
+    generated_output = response_object.response
     retrieval_context = [node.get_content() for node in response_object.source_nodes]
 
 # Create a test case and metric as usual
 test_case = LLMTestCase(
     input=user_input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context
 )
 answer_relevancy_metric = AnswerRelevancyMetric()
@@ -158,7 +158,7 @@ print(answer_relevancy_metric.reason)
 
 ### Unit Testing with LlamaIndex
 
-Unit testing LlamaIndex is as simple as defining an `EvaluationDataset` and generating `actual_output`s and `retrieval_context`s at evaluation time. Building upon the previous example:
+Unit testing LlamaIndex is as simple as defining an `EvaluationDataset` and generating `generated_output`s and `retrieval_context`s at evaluation time. Building upon the previous example:
 
 ```python test_llamaindex.py
 import pytest
@@ -183,12 +183,12 @@ def test_rag(golden: Golden):
     # Process the response object to get the output string
     # and retrieved nodes
     if response_object is not None:
-        actual_output = response_object.response
+        generated_output = response_object.response
         retrieval_context = [node.get_content() for node in response_object.source_nodes]
 
     test_case = LLMTestCase(
         input=golden.input,
-        actual_output=actual_output,
+        generated_output=generated_output,
         retrieval_context=retrieval_context
     )
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
@@ -198,7 +198,7 @@ def test_rag(golden: Golden):
 Here, `rag_application` is simply the query engine from Llamaindex, which you'll have to import from the appropriate module.
 
 :::note
-In this example, we initialized an `EvaluationDataset` with a `Golden` instead of an `LLMTestCase`. This is because we're generating `actual_output`s and `retrieval_context`s at evaluation time, meaning we cannot initialize with test cases since an `LLMTestCase` requires an `actual_output` to create. Remember, a `Golden` do not require an `actual_output`, so whilst test cases are always ready for evaluation, a golden isn't.
+In this example, we initialized an `EvaluationDataset` with a `Golden` instead of an `LLMTestCase`. This is because we're generating `generated_output`s and `retrieval_context`s at evaluation time, meaning we cannot initialize with test cases since an `LLMTestCase` requires an `generated_output` to create. Remember, a `Golden` do not require an `generated_output`, so whilst test cases are always ready for evaluation, a golden isn't.
 :::
 
 ## Using DeepEval from LlamaIndex
@@ -355,7 +355,7 @@ response_object = rag_application.query(user_input)
 # Process the response object to get the output string
 # and retrieved nodes
 if response_object is not None:
-    actual_output = response_object.response
+    generated_output = response_object.response
     retrieval_context = [node.get_content() for node in response_object.source_nodes]
 ```
 

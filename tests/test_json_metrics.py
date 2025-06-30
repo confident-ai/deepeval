@@ -145,7 +145,7 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input="What is this",
-    actual_output="this is a latte",
+    generated_output="this is a latte",
     expected_output="this is a mocha",
     retrieval_context=["I love coffee"],
     context=["I love coffee"],

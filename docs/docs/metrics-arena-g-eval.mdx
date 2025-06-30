@@ -31,17 +31,17 @@ a_test_case = ArenaTestCase(
     contestants={
         "GPT-4": LLMTestCase(
             input="What is the capital of France?",
-            actual_output="Paris",
+            generated_output="Paris",
         ),
         "Claude-4": LLMTestCase(
             input="What is the capital of France?",
-            actual_output="Paris is the capital of France.",
+            generated_output="Paris is the capital of France.",
         ),
     },
 )
 arena_geval = ArenaGEval(
     name="Friendly",
-    criteria="Choose the winner of the more friendly contestant based on the input and actual output",
+    criteria="Choose the winner of the more friendly contestant based on the input and generated output",
     evaluation_params=[
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,

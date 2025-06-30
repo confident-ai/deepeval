@@ -118,7 +118,7 @@ We'll use this `Qdrant` collection in the following sections as our retrieval en
 
 ## Evaluating Qdrant Retrieval
 
-To evaluate your Qdrant retriever, you'll first need to prepare an `LLMTestCase`, which includes an `input`, `actual_output`, `expected_output`, and `retrieval_context`. This requires defining an `input` and `expected_output` before generating a response and extracting the retrieval contexts.
+To evaluate your Qdrant retriever, you'll first need to prepare an `LLMTestCase`, which includes an `input`, `generated_output`, `expected_output`, and `retrieval_context`. This requires defining an `input` and `expected_output` before generating a response and extracting the retrieval contexts.
 
 In this example, we'll be using the following input:
 
@@ -134,7 +134,7 @@ and the corresponding expected output:
 
 ### Preparing your Test Case
 
-To generate the response or `actual_output` from your RAG pipeline, you'll first need to retrieve relevant contexts from your `Qdrant` collection. To achieve this, we'll define a `search` function that embeds the `input` using the same embedding model (`all-MiniLM-L6-v2`) as above, then search for the top 3 most similar vectors and extract the corresponding texts.
+To generate the response or `generated_output` from your RAG pipeline, you'll first need to retrieve relevant contexts from your `Qdrant` collection. To achieve this, we'll define a `search` function that embeds the `input` using the same embedding model (`all-MiniLM-L6-v2`) as above, then search for the top 3 most similar vectors and extract the corresponding texts.
 
 ```python
 ...
@@ -169,11 +169,11 @@ Supporting Context:
 {retrieval_context}
 """
 
-actual_output = generate(prompt) # hypothetical function, replace with your own LLM
-print(actual_output)
+generated_output = generate(prompt) # hypothetical function, replace with your own LLM
+print(generated_output)
 ```
 
-We'll then pass the input and expected output that was initially defined into an `LLMTestCase`, along with the actual output and retrieval context that we generated and searched for.
+We'll then pass the input and expected output that was initially defined into an `LLMTestCase`, along with the generated output and retrieval context that we generated and searched for.
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -182,13 +182,13 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context,
     expected_output="Qdrant is a powerful vector database optimized for semantic search and retrieval.",
 )
 ```
 
-Before proceeding with evaluations, let's examine the `actual_output` that was generated:
+Before proceeding with evaluations, let's examine the `generated_output` that was generated:
 
 ```bash
 Qdrant is a scalable vector database optimized for high-performance retrieval.

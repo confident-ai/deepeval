@@ -12,7 +12,7 @@ from deepeval.test_case import (
 
 @dataclass
 class FormattedLLMTestCase:
-    actual_output: Optional[str] = None
+    generated_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
     tools_called: Optional[List[ToolCall]] = None
@@ -20,8 +20,8 @@ class FormattedLLMTestCase:
 
     def __repr__(self):
         data = {}
-        if self.actual_output is not None:
-            data["actual_output"] = self.actual_output
+        if self.generated_output is not None:
+            data["generated_output"] = self.generated_output
         if self.context is not None:
             data["context"] = self.context
         if self.retrieval_context is not None:
@@ -83,8 +83,8 @@ def construct_formatted_llm_test_case(
     evaluation_params: List[LLMTestCaseParams], test_case: LLMTestCase
 ) -> FormattedLLMTestCase:
     return FormattedLLMTestCase(
-        actual_output=(
-            test_case.actual_output
+        generated_output=(
+            test_case.generated_output
             if LLMTestCaseParams.ACTUAL_OUTPUT in evaluation_params
             else None
         ),

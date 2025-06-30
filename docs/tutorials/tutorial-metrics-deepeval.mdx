@@ -180,7 +180,7 @@ diagnosis_specificity_metric = Granular(
     criteria="Evaluate how well the diagnosis provided matches the most specific and accurate diagnosis based on the given symptoms.",
     evaluation_params={
         "input": LLMTestCaseParams.INPUT,
-        "actual_output": LLMTestCaseParams.ACTUAL_OUTPUT,
+        "generated_output": LLMTestCaseParams.ACTUAL_OUTPUT,
     }
 )
 ```
@@ -197,7 +197,7 @@ overdiagnosis_metric = Granular(
     criteria="Evaluate whether the diagnosis is overly specific given the symptoms, avoiding unnecessary precision that could lead to overdiagnosis.",
     evaluation_params={
         "input": LLMTestCaseParams.INPUT,
-        "actual_output": LLMTestCaseParams.ACTUAL_OUTPUT,
+        "generated_output": LLMTestCaseParams.ACTUAL_OUTPUT,
     }
 )
 ```

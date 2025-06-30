@@ -28,7 +28,7 @@ three = """Understanding comets and asteroids is crucial in studying the solar s
 def test_contextual_relevancy():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
-        actual_output=output,
+        generated_output=output,
         expected_output=output,
         retrieval_context=[one, two, three],
     )

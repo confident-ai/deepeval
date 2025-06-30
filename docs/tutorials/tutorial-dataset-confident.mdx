@@ -7,14 +7,14 @@ sidebar_label: Using Datasets for Evaluation
 To **start using your datasets for evaluation**, you’ll need to:
 
 1. **Pull your dataset** from Confident AI.
-2. Compute the actual outputs and retrieval contexts, and **convert your goldens into test cases**.
+2. Compute the generated outputs and retrieval contexts, and **convert your goldens into test cases**.
 3. Begin running **evaluations**.
 
 In this tutorial, we’ll pull the synthetic dataset generated in the previous section and run evaluations on the dataset against the three metrics we’ve defined: Answer Relevancy, Faithfulness, and Professionalism.
 
 ## Pulling Your Dataset
 
-To pull a dataset from Confident AI, simply call the `pull` method from an `EvaluationDataset` and specify the dataset alias you wish to retrieve. By default, `auto_convert_goldens_to_test_cases` is set to `True`, but we'll set it to `False` for this tutorial since the actual output is a required parameter in an `LLMTestCase`, and we haven't generated them yet.
+To pull a dataset from Confident AI, simply call the `pull` method from an `EvaluationDataset` and specify the dataset alias you wish to retrieve. By default, `auto_convert_goldens_to_test_cases` is set to `True`, but we'll set it to `False` for this tutorial since the generated output is a required parameter in an `LLMTestCase`, and we haven't generated them yet.
 
 ```python
 from deepeval import EvaluationDataset
@@ -31,14 +31,14 @@ Next, we'll convert the goldens in the dataset we pulled into `LLMTestCase`s and
 from deepeval.test_case import LLMTestCase
 
 for golden in dataset.goldens:
-    # Compute actual output and retrieval context
-    actual_output = "..."  # Replace with logic to compute actual output
+    # Compute generated output and retrieval context
+    generated_output = "..."  # Replace with logic to compute generated output
     retrieval_context = "..."  # Replace with logic to compute retrieval context
 
     dataset.add_test_case(
         LLMTestCase(
             input=golden.input,
-            actual_output=actual_output,
+            generated_output=generated_output,
             retrieval_context=retrieval_context
         )
     )

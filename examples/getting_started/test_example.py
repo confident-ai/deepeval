@@ -17,14 +17,14 @@ dataset = EvaluationDataset(alias="My dataset", test_cases=[])
 def test_everything(test_case: LLMTestCase):
     test_case = LLMTestCase(
         input="What if these shoes don't fit?",
-        # Replace this with the actual output of your LLM application
-        actual_output="We offer a 30-day full refund at no extra cost.",
+        # Replace this with the generated output of your LLM application
+        generated_output="We offer a 30-day full refund at no extra cost.",
         expected_output="You're eligible for a free full refund within 30 days of purchase.",
     )
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
     correctness_metric = GEval(
         name="Correctness",
-        criteria="Correctness - determine if the actual output is correct according to the expected output.",
+        criteria="Correctness - determine if the generated output is correct according to the expected output.",
         evaluation_params=[
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,

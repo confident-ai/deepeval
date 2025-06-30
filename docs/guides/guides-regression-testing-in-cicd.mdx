@@ -28,8 +28,8 @@ from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
-first_test_case = LLMTestCase(input="...", actual_output="...")
-second_test_case = LLMTestCase(input="...", actual_output="...")
+first_test_case = LLMTestCase(input="...", generated_output="...")
+second_test_case = LLMTestCase(input="...", generated_output="...")
 dataset = EvaluationDataset(
     test_cases=[first_test_case, second_test_case]
 )

@@ -21,12 +21,12 @@ It is currently the best way to define custom criteria to evaluate text + images
 To use the `MultimodalGEval`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 You'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
 
 :::tip
-The `input`s and `actual_output`s of an `MLLMTestCase` is a list of strings and/or `MLLMImage` objects.
+The `input`s and `generated_output`s of an `MLLMTestCase` is a list of strings and/or `MLLMImage` objects.
 :::
 
 ## Usage
@@ -40,7 +40,7 @@ from deepeval import evaluate
 
 m_test_case = MLLMTestCase(
     input=["Show me how to fold an airplane"],
-    actual_output=[
+    generated_output=[
         "1. Take the sheet of paper and fold it lengthwise",
         MLLMImage(url="./paper_plane_1", local=True),
         "2. Unfold the paper. Fold the top left and right corners towards the center.",
@@ -49,7 +49,7 @@ m_test_case = MLLMTestCase(
 )
 text_image_coherence = MultimodalGEval(
     name="Text-Image Coherence",
-    criteria="Determine whether the images and text is coherence in the actual output.",
+    criteria="Determine whether the images and text is coherence in the generated output.",
     evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
@@ -83,7 +83,7 @@ Similar to regular [`GEval`](/docs/metrics-llm-evals), providing `evaluation_ste
 text_image_coherence = MultimodalGEval(
     name="Text-Image Coherence",
     evaluation_steps=[
-        "Evaluate whether the images and the accompanying text in the actual output logically match and support each other.",
+        "Evaluate whether the images and the accompanying text in the generated output logically match and support each other.",
         "Check if the visual elements (images) enhance or contradict the meaning conveyed by the text.",
         "If there is a lack of coherence, identify where and how the text and images diverge or create confusion.,
     ],
@@ -182,7 +182,7 @@ from deepeval.test_case import MLLMTestCaseParams
 violence_detection = MultimodalGEval(
     name="Violence Detection",
     evaluation_steps=[
-        "Inspect the image in `actual_output` for any depiction of violence or physical harm.",
+        "Inspect the image in `generated_output` for any depiction of violence or physical harm.",
         "Check for weapons, blood, fighting, or other explicit violent content.",
         "Assign a high score if no violence is present.",
         "Assign a low score if the image contains any violent or harmful visual elements."

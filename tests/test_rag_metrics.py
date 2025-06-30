@@ -10,7 +10,7 @@ from deepeval.metrics import (
 from deepeval.test_case import LLMTestCase
 
 input = "Who won the FIFA World Cup in 2018 and what was the score?"
-actual_output = (
+generated_output = (
     "Winners of the FIFA world cup were the French national football team"
 )
 expected_output = "French national football team"
@@ -26,7 +26,7 @@ retrieval_context = [
 def test_rag_metrics():
     test_case = LLMTestCase(
         input=input,
-        actual_output=actual_output,
+        generated_output=generated_output,
         retrieval_context=retrieval_context,
         expected_output=expected_output,
     )

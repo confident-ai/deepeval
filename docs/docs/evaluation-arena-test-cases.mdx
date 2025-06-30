@@ -21,19 +21,19 @@ test_case = ArenaTestCase(
     contestants={
         "GPT-4": LLMTestCase(
             input="What is the capital of France?",
-            actual_output="Paris",
+            generated_output="Paris",
         ),
         "Claude-4": LLMTestCase(
             input="What is the capital of France?",
-            actual_output="Paris is the capital of France.",
+            generated_output="Paris is the capital of France.",
         ),
         "Gemini 2.0": LLMTestCase(
             input="What is the capital of France?",
-            actual_output="Absolutely! The capital of France is Paris 😊",
+            generated_output="Absolutely! The capital of France is Paris 😊",
         ),
         "Deepseek R1": LLMTestCase(
             input="What is the capital of France?",
-            actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
+            generated_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
         ),
     },
 )
@@ -55,19 +55,19 @@ The `ArenaTestCase` takes a simple `contestants` argument, which is a dictionary
 contestants = {
     "GPT-4": LLMTestCase(
         input="What is the capital of France?",
-        actual_output="Paris",
+        generated_output="Paris",
     ),
     "Claude-4": LLMTestCase(
         input="What is the capital of France?",
-        actual_output="Paris is the capital of France.",
+        generated_output="Paris is the capital of France.",
     ),
     "Gemini 2.0": LLMTestCase(
         input="What is the capital of France?",
-        actual_output="Absolutely! The capital of France is Paris 😊",
+        generated_output="Absolutely! The capital of France is Paris 😊",
     ),
     "Deepseek R1": LLMTestCase(
         input="What is the capital of France?",
-        actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
+        generated_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
     ),
 }
 
@@ -82,7 +82,7 @@ from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
 
 arena_geval = ArenaGEval(
     name="Friendly",
-    criteria="Choose the winter of the more friendly contestant based on the input and actual output",
+    criteria="Choose the winter of the more friendly contestant based on the input and generated output",
     evaluation_params=[
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,

@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer referenceless={true} />
 
-The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate `actual_output`s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate `generated_output`s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::tip
 Not sure if this metric is for you? Run the follow command to find out:
@@ -32,9 +32,9 @@ deepeval recommend metrics
 To use the `PromptAlignmentMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -52,8 +52,8 @@ metric = PromptAlignmentMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    # Replace this with the actual output from your LLM application
-    actual_output="We offer a 30-day full refund at no extra cost."
+    # Replace this with the generated output from your LLM application
+    generated_output="We offer a 30-day full refund at no extra cost."
 )
 
 # To run metric as a standalone
@@ -85,7 +85,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -119,7 +119,7 @@ The `PromptAlignmentMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Prompt Alignment} = \frac{\text{Number of Instructions Followed}}{\text{Total Number of Instructions}}" />
 
-The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruction is followed in the `actual_output` using additional context from the `input`.
+The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruction is followed in the `generated_output` using additional context from the `input`.
 
 :::tip
 

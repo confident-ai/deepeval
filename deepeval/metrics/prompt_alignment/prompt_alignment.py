@@ -72,11 +72,11 @@ class PromptAlignmentMetric(BaseMetric):
                 )
             else:
                 self.verdicts: Verdicts = self._generate_verdicts(
-                    test_case.input, test_case.actual_output
+                    test_case.input, test_case.generated_output
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason(
-                    test_case.input, test_case.actual_output
+                    test_case.input, test_case.generated_output
                 )
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
@@ -107,11 +107,11 @@ class PromptAlignmentMetric(BaseMetric):
             _in_component=_in_component,
         ):
             self.verdicts: Verdicts = await self._a_generate_verdicts(
-                test_case.input, test_case.actual_output
+                test_case.input, test_case.generated_output
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason(
-                test_case.input, test_case.actual_output
+                test_case.input, test_case.generated_output
             )
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
@@ -125,7 +125,7 @@ class PromptAlignmentMetric(BaseMetric):
 
             return self.score
 
-    async def _a_generate_reason(self, input: str, actual_output: str) -> str:
+    async def _a_generate_reason(self, input: str, generated_output: str) -> str:
         if self.include_reason is False:
             return None
 
@@ -137,7 +137,7 @@ class PromptAlignmentMetric(BaseMetric):
         prompt = PromptAlignmentTemplate.generate_reason(
             unalignment_reasons=unalignment_reasons,
             input=input,
-            actual_output=actual_output,
+            generated_output=generated_output,
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
@@ -155,7 +155,7 @@ class PromptAlignmentMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self, input: str, actual_output: str) -> str:
+    def _generate_reason(self, input: str, generated_output: str) -> str:
         if self.include_reason is False:
             return None
 
@@ -167,7 +167,7 @@ class PromptAlignmentMetric(BaseMetric):
         prompt = PromptAlignmentTemplate.generate_reason(
             unalignment_reasons=unalignment_reasons,
             input=input,
-            actual_output=actual_output,
+            generated_output=generated_output,
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
@@ -184,12 +184,12 @@ class PromptAlignmentMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(
-        self, input: str, actual_output: str
+        self, input: str, generated_output: str
     ) -> Verdicts:
         prompt = PromptAlignmentTemplate.generate_verdicts(
             prompt_instructions=self.prompt_instructions,
             input=input,
-            actual_output=actual_output,
+            generated_output=generated_output,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -208,11 +208,11 @@ class PromptAlignmentMetric(BaseMetric):
                     PromptAlignmentVerdict(**item) for item in data["verdicts"]
                 ]
 
-    def _generate_verdicts(self, input: str, actual_output: str) -> Verdicts:
+    def _generate_verdicts(self, input: str, generated_output: str) -> Verdicts:
         prompt = PromptAlignmentTemplate.generate_verdicts(
             prompt_instructions=self.prompt_instructions,
             input=input,
-            actual_output=actual_output,
+            generated_output=generated_output,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)

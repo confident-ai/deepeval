@@ -27,9 +27,9 @@ Image Coherence evaluates MLLM responses containing text accompanied by retrieve
 To use the `ImageCoherence`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -44,7 +44,7 @@ metric = ImageCoherenceMetric(
 )
 m_test_case = MLLMTestCase(
     input=["Provide step-by-step instructions on how to fold a paper airplane."],
-    actual_output=[
+    generated_output=[
       # Replace this with the output of your LLM app
       "1. Take the sheet of paper and fold it lengthwise",
       MLLMImage(url="./paper_plane_1", local=True),

@@ -20,7 +20,7 @@ def test_litellm_with_geval_basic(model):
     # Create a test case
     test_case = LLMTestCase(
         input="What is the capital of France?",
-        actual_output="The capital of France is Paris.",
+        generated_output="The capital of France is Paris.",
         expected_output="Paris",
         context=["France is a country in Europe. Its capital city is Paris."],
     )
@@ -52,7 +52,7 @@ def test_litellm_with_geval_complex(model):
     # Create a test case with more complex evaluation
     test_case = LLMTestCase(
         input="Explain the process of photosynthesis.",
-        actual_output="""
+        generated_output="""
         Photosynthesis is the process by which plants convert light energy into chemical energy.
         The process involves:
         1. Light absorption by chlorophyll
@@ -102,19 +102,19 @@ def test_litellm_with_geval_multiple_cases(model):
     test_cases = [
         LLMTestCase(
             input="What is 2+2?",
-            actual_output="The sum of 2 and 2 is 4.",
+            generated_output="The sum of 2 and 2 is 4.",
             expected_output="4",
             context=["Basic arithmetic question"],
         ),
         LLMTestCase(
             input="Who wrote Romeo and Juliet?",
-            actual_output="Romeo and Juliet was written by William Shakespeare.",
+            generated_output="Romeo and Juliet was written by William Shakespeare.",
             expected_output="William Shakespeare",
             context=["Literature question about Shakespeare's works"],
         ),
         LLMTestCase(
             input="What is the chemical formula for water?",
-            actual_output="The chemical formula for water is H2O.",
+            generated_output="The chemical formula for water is H2O.",
             expected_output="H2O",
             context=["Basic chemistry question"],
         ),
@@ -152,7 +152,7 @@ def test_litellm_with_geval_custom_evaluation(model):
     # Create a test case
     test_case = LLMTestCase(
         input="Write a short story about a robot.",
-        actual_output="""
+        generated_output="""
         Once upon a time, there was a robot named R2D2 who loved to dance.
         Every day, it would practice its moves in the garden.
         One day, it won a dance competition and made many friends.

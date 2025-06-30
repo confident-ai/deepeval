@@ -66,7 +66,7 @@ class OpenAI(DeepEvalBaseLLM):
 def test_faithfulness():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
-        actual_output=output,
+        generated_output=output,
         retrieval_context=[one, two, three],
     )
     # model = OpenAI()

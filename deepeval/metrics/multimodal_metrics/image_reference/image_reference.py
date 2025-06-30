@@ -67,16 +67,16 @@ class ImageReferenceMetric(BaseMultimodalMetric):
                     )
                 )
             else:
-                actual_output = test_case.actual_output
+                generated_output = test_case.generated_output
                 self.contexts_above = []
                 self.contexts_below = []
                 self.scores = []
                 self.reasons = []
-                for image_index in self.get_image_indices(actual_output):
+                for image_index in self.get_image_indices(generated_output):
                     context_above, context_below = self.get_image_context(
-                        image_index, actual_output
+                        image_index, generated_output
                     )
-                    image = actual_output[image_index]
+                    image = generated_output[image_index]
                     score, reason = self.evaluate_image_reference(
                         image, context_above, context_below
                     )
@@ -158,19 +158,19 @@ class ImageReferenceMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            actual_output = test_case.actual_output
+            generated_output = test_case.generated_output
             self.contexts_above = []
             self.contexts_below = []
             self.scores = []
             self.reasons = []
 
             tasks = []
-            image_indices = self.get_image_indices(actual_output)
+            image_indices = self.get_image_indices(generated_output)
             for image_index in image_indices:
                 context_above, context_below = self.get_image_context(
-                    image_index, actual_output
+                    image_index, generated_output
                 )
-                image = actual_output[image_index]
+                image = generated_output[image_index]
                 tasks.append(
                     self.a_evaluate_image_reference(
                         image, context_above, context_below
@@ -293,23 +293,23 @@ class ImageReferenceMetric(BaseMultimodalMetric):
                 return data["score"], data["reasoning"]
 
     def get_image_context(
-        self, image_index: int, actual_output: List[Union[str, MLLMImage]]
+        self, image_index: int, generated_output: List[Union[str, MLLMImage]]
     ) -> Tuple[str, str]:
         context_above = None
         context_below = None
 
         # Find context_above (last characters until max_context_size)
         for i in range(image_index - 1, -1, -1):  # Iterate backward
-            if isinstance(actual_output[i], str):
-                context_above = actual_output[i]
+            if isinstance(generated_output[i], str):
+                context_above = generated_output[i]
                 if self.max_context_size:
                     context_above = context_above[-self.max_context_size :]
                 break
 
         # Find context_below (first characters until max_context_size)
-        for i in range(image_index + 1, len(actual_output)):  # Iterate forward
-            if isinstance(actual_output[i], str):
-                context_below = actual_output[i]
+        for i in range(image_index + 1, len(generated_output)):  # Iterate forward
+            if isinstance(generated_output[i], str):
+                context_below = generated_output[i]
                 if self.max_context_size:
                     context_below = context_below[: self.max_context_size]
                 break
@@ -317,11 +317,11 @@ class ImageReferenceMetric(BaseMultimodalMetric):
         return context_above, context_below
 
     def get_image_indices(
-        self, actual_output: List[Union[str, MLLMImage]]
+        self, generated_output: List[Union[str, MLLMImage]]
     ) -> List[int]:
         return [
             index
-            for index, element in enumerate(actual_output)
+            for index, element in enumerate(generated_output)
             if isinstance(element, MLLMImage)
         ]
 

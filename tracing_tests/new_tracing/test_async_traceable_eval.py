@@ -27,12 +27,12 @@ from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
 
 geval_metric = GEval(
     name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    criteria="Determine how persuasive the `generated output` is to getting a user booking in a call.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
 conciseness_node = BinaryJudgementNode(
-    criteria="Does the actual output contain less than or equal to 4 sentences?",
+    criteria="Does the generated output contain less than or equal to 4 sentences?",
     children=[
         VerdictNode(verdict=False, score=0),
         VerdictNode(verdict=True, child=geval_metric),
@@ -124,7 +124,7 @@ async def custom_research_agent(query: str):
 async def weather_agent(query: str):
     update_current_span(
         test_case=LLMTestCase(
-            input=query, actual_output="Weather information unavailable"
+            input=query, generated_output="Weather information unavailable"
         )
     )
     await sleep(random.uniform(1, 3))
@@ -163,7 +163,7 @@ async def meta_agent(input: str):
     """
 
     update_current_span(
-        test_case=LLMTestCase(input=input, actual_output=final_response)
+        test_case=LLMTestCase(input=input, generated_output=final_response)
     )
     return final_response
 

@@ -19,7 +19,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 The multimodal contextual relevancy metric measures the quality of your multimodal RAG pipeline's retriever by evaluating the overall relevance of the information presented in your `retrieval_context` for a given `input`. `deepeval`'s multimodal contextual relevancy metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
-The **Multimodal Contextual Relevancy** is the multimodal adaptation of DeepEval's [contextual relevancy metric](/docs/metrics-contextual-relevancy). It accepts images in addition to text for the `input`, `actual_output`, and `retrieval_context`.
+The **Multimodal Contextual Relevancy** is the multimodal adaptation of DeepEval's [contextual relevancy metric](/docs/metrics-contextual-relevancy). It accepts images in addition to text for the `input`, `generated_output`, and `retrieval_context`.
 :::
 
 ## Required Arguments
@@ -27,14 +27,14 @@ The **Multimodal Contextual Relevancy** is the multimodal adaptation of DeepEval
 To use the `MultimodalContextualRelevancyMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `retrieval_context`
 
 :::note
 Similar to `MultimodalContextualPrecisionMetric`, the `MultimodalContextualRelevancyMetric` uses `retrieval_context` from your multimodal RAG pipeline for evaluation.
 :::
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -46,7 +46,7 @@ from deepeval import evaluate
 metric = MultimodalContextualRelevancyMetric()
 m_test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
-    actual_output=[
+    generated_output=[
         "France is home to iconic landmarks like the Eiffel Tower in Paris.",
         MLLMImage(...)
     ],

@@ -47,7 +47,7 @@ def generate_test_cases(
         input_ids = tokenized_output.input_ids
         outputs = model.generate(input_ids)
         decoded_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        golden.actual_output = decoded_output
+        golden.generated_output = decoded_output
 
     test_cases = convert_goldens_to_test_cases(
         goldens=evaluation_dataset.goldens,

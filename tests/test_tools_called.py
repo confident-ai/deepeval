@@ -22,7 +22,7 @@ calculator_tool = ToolCall(
 
 tool_test_case = LLMTestCase(
     input="What is today's date and what is 2+3?",
-    actual_output="Today's date is Jan 19, 2025 and 2+3 = 5",
+    generated_output="Today's date is Jan 19, 2025 and 2+3 = 5",
     tools_called=[search_tool, calculator_tool],
     expected_tools=[search_tool, calculator_tool],
 )

@@ -523,7 +523,7 @@ class TraceManager:
         trace_test_case = (
             TraceSpanTestCase(
                 input=trace.llm_test_case.input,
-                actualOutput=trace.llm_test_case.actual_output,
+                generatedOutput=trace.llm_test_case.generated_output,
                 expectedOutput=trace.llm_test_case.expected_output,
                 retrievalContext=trace.llm_test_case.retrieval_context,
                 context=trace.llm_test_case.context,
@@ -607,7 +607,7 @@ class TraceManager:
         span_test_case = (
             TraceSpanTestCase(
                 input=span.llm_test_case.input,
-                actualOutput=span.llm_test_case.actual_output,
+                generatedOutput=span.llm_test_case.generated_output,
                 expectedOutput=span.llm_test_case.expected_output,
                 retrievalContext=span.llm_test_case.retrieval_context,
                 context=span.llm_test_case.context,

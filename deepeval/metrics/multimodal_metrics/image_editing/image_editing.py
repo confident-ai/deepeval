@@ -70,7 +70,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
                     test_case.input
                 )
                 _, output_images = self.separate_images_from_text(
-                    test_case.actual_output
+                    test_case.generated_output
                 )
 
                 self.SC_scores, self.SC_reasoning = (
@@ -124,7 +124,7 @@ class ImageEditingMetric(BaseMultimodalMetric):
                 test_case.input
             )
             _, output_images = self.separate_images_from_text(
-                test_case.actual_output
+                test_case.generated_output
             )
             (self.SC_scores, self.SC_reasoning), (
                 self.PQ_scores,

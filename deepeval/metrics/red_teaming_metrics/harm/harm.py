@@ -98,7 +98,7 @@ class HarmGrader(BaseMetric):
     ) -> Tuple[Union[int, float], str]:
         prompt = HarmTemplate.generate_evaluation_results(
             input=test_case.input,
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             harm_category=self.harm_category,
         )
         if self.using_native_model:
@@ -119,7 +119,7 @@ class HarmGrader(BaseMetric):
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = HarmTemplate.generate_evaluation_results(
             input=test_case.input,
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             harm_category=self.harm_category,
         )
         if self.using_native_model:

@@ -69,14 +69,14 @@ from deepeval.metrics import GEval
 def test_correctness():
     correctness_metric = GEval(
         name="Correctness",
-        criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+        criteria="Determine if the 'generated output' is correct based on the 'expected output'.",
         evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
         threshold=0.5
     )
     test_case = LLMTestCase(
         input="I have a persistent cough and fever. Should I be worried?",
-        # Replace this with the actual output from your LLM application
-        actual_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
+        # Replace this with the generated output from your LLM application
+        generated_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
         expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
     )
     assert_test(test_case, [correctness_metric])
@@ -90,9 +90,9 @@ deepeval test run test_example.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- The variable `input` mimics a user input, and `generated_output` is a placeholder for what your application's supposed to output based on this input.
 - The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom metric with human-like accuracy.
-- In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`, but not all metrics require an `expected_output`.
+- In this example, the metric `criteria` is correctness of the `generated_output` based on the provided `expected_output`, but not all metrics require an `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-confident-ai-highly-recommended) for video demo).
@@ -148,12 +148,12 @@ from deepeval.dataset import Golden
 from deepeval.metrics import GEval
 from deepeval import evaluate
 
-correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
+correctness = GEval(name="Correctness", criteria="Determine if the 'generated output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
 
 @observe(metrics=[correctness])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    update_current_span(test_case=LLMTestCase(input="...", generated_output="..."))
     return
 
 @observe
@@ -204,7 +204,7 @@ To create a metric, simply import from the `deepeval.metrics` module:
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(input="...", generated_output="...")
 relevancy = AnswerRelevancyMetric(threshold=0.5)
 
 relevancy.measure(test_case)
@@ -225,10 +225,10 @@ All default metrics are evaluated using LLMs, and you can use **ANY** LLM of you
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 
-test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+test_case = LLMTestCase(input="...", generated_output="...", expected_output="...")
 correctness = GEval(
     name="Correctness",
-    criteria="Correctness - determine if the actual output is correct according to the expected output.",
+    criteria="Correctness - determine if the generated output is correct according to the expected output.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
     strict_mode=True
 )
@@ -243,7 +243,7 @@ Under the hood, `deepeval` first generates a series of evaluation steps, before 
 
 Although `GEval` is great in many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
 
-Take this decision tree for example, which evaluates a Summarization use case based on the `actual_output` of your `LLMTestCase`. Here, we want to check whether the `actual_output` contains the correct "summary headings", and whether they are in the correct order.
+Take this decision tree for example, which evaluates a Summarization use case based on the `generated_output` of your `LLMTestCase`. Here, we want to check whether the `generated_output` contains the correct "summary headings", and whether they are in the correct order.
 
 <details><summary>Click to see code associated with diagram below</summary>
 
@@ -275,7 +275,7 @@ correct_headings_node = BinaryJudgementNode(
 )
 
 extract_headings_node = TaskNode(
-    instructions="Extract all headings in `actual_output`",
+    instructions="Extract all headings in `generated_output`",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
     children=[correct_headings_node, correct_order_node],
@@ -325,7 +325,7 @@ deepeval test run test_example.py
 A dataset in `deepeval`, or more specifically an evaluation dataset, is simply a collection of `LLMTestCases` and/or `Goldens`.
 
 :::note
-A `Golden` is simply an `LLMTestCase` with no `actual_output`, and it is an important concept if you're looking to generate LLM outputs at evaluation time. To learn more about `Golden`s, [click here.](/docs/evaluation-datasets#with-goldens)
+A `Golden` is simply an `LLMTestCase` with no `generated_output`, and it is an important concept if you're looking to generate LLM outputs at evaluation time. To learn more about `Golden`s, [click here.](/docs/evaluation-datasets#with-goldens)
 :::
 
 To create a dataset, simply initialize an `EvaluationDataset` with a list of `LLMTestCase`s or `Golden`s:
@@ -334,7 +334,7 @@ To create a dataset, simply initialize an `EvaluationDataset` with a list of `LL
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
-dataset = EvaluationDataset(test_cases=[LLMTestCase(input="...", actual_output="...")])
+dataset = EvaluationDataset(test_cases=[LLMTestCase(input="...", generated_output="...")])
 ```
 
 Then, using `deepeval`'s Pytest integration, you can utilize the `@pytest.mark.parametrize` decorator to loop through and evaluate your dataset.
@@ -420,12 +420,12 @@ goldens = synthesizer.generate_goldens_from_docs(
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-After you're done with generating, simply evaluate your dataset as shown above. Note that `deepeval`'s `Synthesizer` does **NOT** generate `actual_output`s for each golden. This is because `actual_output`s are meant to be generated by your LLM (application), not `deepeval`'s synthesizer.
+After you're done with generating, simply evaluate your dataset as shown above. Note that `deepeval`'s `Synthesizer` does **NOT** generate `generated_output`s for each golden. This is because `generated_output`s are meant to be generated by your LLM (application), not `deepeval`'s synthesizer.
 
 [Visit the synthesizer section](/docs/synthesizer-introduction) to learn how to customize `deepeval`'s synthetic data generation capabilities to your needs.
 
 :::note
-Remember, a `Golden` is basically an `LLMTestCase` but with no `actual_output`.
+Remember, a `Golden` is basically an `LLMTestCase` but with no `generated_output`.
 :::
 
 ## Red Team Your LLM application
@@ -537,7 +537,7 @@ dataset.pull(alias="My first dataset")
 print(dataset)
 ```
 
-You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden`s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com/docs)
+You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden`s, which might not always be ready for evaluation (ie. missing an `generated_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com/docs)
 
 ### Running Evaluations
 

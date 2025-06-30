@@ -27,13 +27,13 @@ The Text to Image metric achieves scores **comparable to human evaluations** whe
 To use the `TextToImageMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 :::note
 The input should contain exactly **0 images**, and the output should contain exactly **1 image**.
 :::
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -49,7 +49,7 @@ metric = TextToImageMetric(
 m_test_case = MLLMTestCase(
     input=["Generate an image of a blue pair of shoes."],
     # Replace with your MLLM app output
-    actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)],
+    generated_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)],
 )
 
 

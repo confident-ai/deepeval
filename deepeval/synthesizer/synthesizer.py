@@ -1339,7 +1339,7 @@ class Synthesizer:
             input_text = golden.input
             expected_output = golden.expected_output
             context = golden.context
-            actual_output = golden.actual_output
+            generated_output = golden.generated_output
             retrieval_context = golden.retrieval_context
             metadata = golden.additional_metadata
             source_file = golden.source_file
@@ -1367,7 +1367,7 @@ class Synthesizer:
             # Prepare a row for the DataFrame
             row = {
                 "input": input_text,
-                "actual_output": actual_output,
+                "generated_output": generated_output,
                 "expected_output": expected_output,
                 "context": context,
                 "retrieval_context": retrieval_context,
@@ -1493,7 +1493,7 @@ class Synthesizer:
                 json_data = [
                     {
                         "input": golden.input,
-                        "actual_output": golden.actual_output,
+                        "generated_output": golden.generated_output,
                         "expected_output": golden.expected_output,
                         "context": golden.context,
                         "source_file": golden.source_file,
@@ -1509,7 +1509,7 @@ class Synthesizer:
                 writer.writerow(
                     [
                         "input",
-                        "actual_output",
+                        "generated_output",
                         "expected_output",
                         "context",
                         "source_file",
@@ -1519,7 +1519,7 @@ class Synthesizer:
                     writer.writerow(
                         [
                             golden.input,
-                            golden.actual_output,
+                            golden.generated_output,
                             golden.expected_output,
                             "|".join(golden.context),
                             golden.source_file,
@@ -1530,7 +1530,7 @@ class Synthesizer:
                 for golden in self.synthetic_goldens:
                     record = {
                         "input": golden.input,
-                        "actual_output": golden.actual_output,
+                        "generated_output": golden.generated_output,
                         "expected_output": golden.expected_output,
                         "context": golden.context,
                         "source_file": golden.source_file,

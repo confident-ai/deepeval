@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer referenceBased={true} />
 
-The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the `actual_output` to the provided `context`.
+The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the `generated_output` to the provided `context`.
 
 :::info
 If you're looking to evaluate hallucination for a RAG system, please refer to the [faithfulness metric](/docs/metrics-faithfulness) instead.
@@ -27,10 +27,10 @@ If you're looking to evaluate hallucination for a RAG system, please refer to th
 To use the `HallucinationMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `context`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -44,12 +44,12 @@ from deepeval.test_case import LLMTestCase
 # Replace this with the actual documents that you are passing as input to your LLM.
 context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
 
-# Replace this with the actual output from your LLM application
-actual_output="A blond drinking water in public."
+# Replace this with the generated output from your LLM application
+generated_output="A blond drinking water in public."
 
 test_case = LLMTestCase(
     input="What was the blond doing?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     context=context
 )
 metric = HallucinationMetric(threshold=0.5)
@@ -82,7 +82,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -116,7 +116,7 @@ The `HallucinationMetric` score is calculated according to the following equatio
 
 <Equation formula="\text{Hallucination} = \frac{\text{Number of Contradicted Contexts}}{\text{Total Number of Contexts}}" />
 
-The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the `actual_output`.
+The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the `generated_output`.
 
 :::info
 Although extremely similar to the `FaithfulnessMetric`, the `HallucinationMetric` is calculated differently since it uses `contexts` as the source of truth instead. Since `contexts` is the ideal segment of your knowledge base relevant to a specific input, the degree of hallucination can be measured by the degree of which the `contexts` is disagreed upon.

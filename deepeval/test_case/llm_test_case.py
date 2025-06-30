@@ -8,7 +8,7 @@ import uuid
 
 class LLMTestCaseParams(Enum):
     INPUT = "input"
-    ACTUAL_OUTPUT = "actual_output"
+    ACTUAL_OUTPUT = "generated_output"
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
     RETRIEVAL_CONTEXT = "retrieval_context"
@@ -134,7 +134,7 @@ class ToolCall(BaseModel):
 @dataclass
 class LLMTestCase:
     input: str
-    actual_output: str
+    generated_output: str
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None

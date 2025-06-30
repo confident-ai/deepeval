@@ -86,7 +86,7 @@
 #     metric = HallucinationMetric(threshold=0.8)
 #     test_case = LLMTestCase(
 #         input=input,
-#         actual_output=chatbot.query(user_input=input),
+#         generated_output=chatbot.query(user_input=input),
 #         context=context,
 #     )
 #     assert_test(test_case, [metric])

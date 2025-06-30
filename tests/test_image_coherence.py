@@ -38,7 +38,7 @@ mllm_param = [
 
 mllm_test_case = MLLMTestCase(
     input=mllm_param,
-    actual_output=mllm_param,
+    generated_output=mllm_param,
     expected_output=mllm_param,
     retrieval_context=mllm_param,
     context=mllm_param,
@@ -59,7 +59,7 @@ evaluate(
                 MLLMTestCaseParams.INPUT,
                 MLLMTestCaseParams.ACTUAL_OUTPUT,
             ],
-            criteria="Determine if actual output is relevant to input.",
+            criteria="Determine if generated output is relevant to input.",
         ),
         # ImageCoherenceMetric(model="gpt-4.1"),
         # ImageCoherenceMetric(model="gpt-4.1"),
@@ -75,8 +75,8 @@ evaluate(
 ###################################################
 
 # image_coherence_metric = ImageCoherenceMetric()
-# evaluation_1 = image_coherence_metric.evaluate_image_coherence(mllm_test_case.actual_output[1], mllm_test_case.actual_output[0], mllm_test_case.actual_output[2])
-# evaluation_2 = image_coherence_metric.evaluate_image_coherence(mllm_test_case.actual_output[3], mllm_test_case.actual_output[2], mllm_test_case.actual_output[4])
+# evaluation_1 = image_coherence_metric.evaluate_image_coherence(mllm_test_case.generated_output[1], mllm_test_case.generated_output[0], mllm_test_case.generated_output[2])
+# evaluation_2 = image_coherence_metric.evaluate_image_coherence(mllm_test_case.generated_output[3], mllm_test_case.generated_output[2], mllm_test_case.generated_output[4])
 
 # print(evaluation_1)
 # print(evaluation_2)

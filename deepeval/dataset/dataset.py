@@ -186,7 +186,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_col_name: str,
-        actual_output_col_name: str,
+        generated_output_col_name: str,
         expected_output_col_name: Optional[str] = None,
         context_col_name: Optional[str] = None,
         context_col_delimiter: str = ";",
@@ -206,7 +206,7 @@ class EvaluationDataset:
         Args:
             file_path (str): Path to the CSV file containing the test cases.
             input_col_name (str): The column name in the CSV corresponding to the input for the test case.
-            actual_output_col_name (str): The column name in the CSV corresponding to the actual output for the test case.
+            generated_output_col_name (str): The column name in the CSV corresponding to the generated output for the test case.
             expected_output_col_name (str, optional): The column name in the CSV corresponding to the expected output for the test case. Defaults to None.
             context_col_name (str, optional): The column name in the CSV corresponding to the context for the test case. Defaults to None.
             context_delimiter (str, optional): The delimiter used to separate items in the context list within the CSV file. Defaults to ';'.
@@ -244,7 +244,7 @@ class EvaluationDataset:
         df = df.astype(object).where(pd.notna(df), None)
 
         inputs = get_column_data(df, input_col_name)
-        actual_outputs = get_column_data(df, actual_output_col_name)
+        generated_outputs = get_column_data(df, generated_output_col_name)
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
         )
@@ -302,7 +302,7 @@ class EvaluationDataset:
 
         for (
             input,
-            actual_output,
+            generated_output,
             expected_output,
             context,
             retrieval_context,
@@ -311,7 +311,7 @@ class EvaluationDataset:
             additional_metadata,
         ) in zip(
             inputs,
-            actual_outputs,
+            generated_outputs,
             expected_outputs,
             contexts,
             retrieval_contexts,
@@ -322,7 +322,7 @@ class EvaluationDataset:
             self.add_test_case(
                 LLMTestCase(
                     input=input,
-                    actual_output=actual_output,
+                    generated_output=generated_output,
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
@@ -336,7 +336,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_key_name: str,
-        actual_output_key_name: str,
+        generated_output_key_name: str,
         expected_output_key_name: Optional[str] = None,
         context_key_name: Optional[str] = None,
         retrieval_context_key_name: Optional[str] = None,
@@ -352,7 +352,7 @@ class EvaluationDataset:
         Args:
             file_path (str): Path to the JSON file containing the test cases.
             input_key_name (str): The key name in the JSON objects corresponding to the input for the test case.
-            actual_output_key_name (str): The key name in the JSON objects corresponding to the actual output for the test case.
+            generated_output_key_name (str): The key name in the JSON objects corresponding to the generated output for the test case.
             expected_output_key_name (str, optional): The key name in the JSON objects corresponding to the expected output for the test case. Defaults to None.
             context_key_name (str, optional): The key name in the JSON objects corresponding to the context for the test case. Defaults to None.
             retrieval_context_key_name (str, optional): The key name in the JSON objects corresponding to the retrieval context for the test case. Defaults to None.
@@ -362,7 +362,7 @@ class EvaluationDataset:
 
         Raises:
             FileNotFoundError: If the JSON file specified by `file_path` cannot be found.
-            ValueError: If the JSON file is not valid or if required keys (input and actual output) are missing in one or more JSON objects.
+            ValueError: If the JSON file is not valid or if required keys (input and generated output) are missing in one or more JSON objects.
 
         Note:
             The JSON file should be structured as a list of objects, with each object containing the required keys. The method assumes the file format and keys are correctly defined and present.
@@ -379,14 +379,14 @@ class EvaluationDataset:
         for json_obj in json_list:
             if (
                 input_key_name not in json_obj
-                or actual_output_key_name not in json_obj
+                or generated_output_key_name not in json_obj
             ):
                 raise ValueError(
                     "Required fields are missing in one or more JSON objects"
                 )
 
             input = json_obj[input_key_name]
-            actual_output = json_obj[actual_output_key_name]
+            generated_output = json_obj[generated_output_key_name]
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
             retrieval_context = json_obj.get(retrieval_context_key_name)
@@ -398,7 +398,7 @@ class EvaluationDataset:
             self.add_test_case(
                 LLMTestCase(
                     input=input,
-                    actual_output=actual_output,
+                    generated_output=generated_output,
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
@@ -411,7 +411,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_col_name: str,
-        actual_output_col_name: Optional[str] = None,
+        generated_output_col_name: Optional[str] = None,
         expected_output_col_name: Optional[str] = None,
         context_col_name: Optional[str] = None,
         context_col_delimiter: str = ";",
@@ -445,8 +445,8 @@ class EvaluationDataset:
         )
 
         inputs = get_column_data(df, input_col_name)
-        actual_outputs = get_column_data(
-            df, actual_output_col_name, default=None
+        generated_outputs = get_column_data(
+            df, generated_output_col_name, default=None
         )
         expected_outputs = get_column_data(
             df, expected_output_col_name, default=None
@@ -495,7 +495,7 @@ class EvaluationDataset:
 
         for (
             input,
-            actual_output,
+            generated_output,
             expected_output,
             context,
             retrieval_context,
@@ -505,7 +505,7 @@ class EvaluationDataset:
             additional_metadata,
         ) in zip(
             inputs,
-            actual_outputs,
+            generated_outputs,
             expected_outputs,
             contexts,
             retrieval_contexts,
@@ -517,7 +517,7 @@ class EvaluationDataset:
             self.goldens.append(
                 Golden(
                     input=input,
-                    actual_output=actual_output,
+                    generated_output=generated_output,
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
@@ -532,7 +532,7 @@ class EvaluationDataset:
         self,
         file_path: str,
         input_key_name: str,
-        actual_output_key_name: Optional[str] = None,
+        generated_output_key_name: Optional[str] = None,
         expected_output_key_name: Optional[str] = None,
         context_key_name: Optional[str] = None,
         retrieval_context_key_name: Optional[str] = None,
@@ -557,7 +557,7 @@ class EvaluationDataset:
                 )
 
             input = json_obj[input_key_name]
-            actual_output = json_obj.get(actual_output_key_name)
+            generated_output = json_obj.get(generated_output_key_name)
             expected_output = json_obj.get(expected_output_key_name)
             context = json_obj.get(context_key_name)
             retrieval_context = json_obj.get(retrieval_context_key_name)
@@ -568,7 +568,7 @@ class EvaluationDataset:
             self.goldens.append(
                 Golden(
                     input=input,
-                    actual_output=actual_output,
+                    generated_output=generated_output,
                     expected_output=expected_output,
                     context=context,
                     retrieval_context=retrieval_context,
@@ -848,7 +848,7 @@ class EvaluationDataset:
             Golden(
                 input=golden.input,
                 expected_output=golden.expected_output,
-                actual_output=golden.actual_output,
+                generated_output=golden.generated_output,
                 retrieval_context=golden.retrieval_context,
                 context=golden.context,
                 source_file=golden.source_file,
@@ -879,7 +879,7 @@ class EvaluationDataset:
                 json_data = [
                     {
                         "input": golden.input,
-                        "actual_output": golden.actual_output,
+                        "generated_output": golden.generated_output,
                         "expected_output": golden.expected_output,
                         "retrieval_context": golden.retrieval_context,
                         "context": golden.context,
@@ -897,7 +897,7 @@ class EvaluationDataset:
                 writer.writerow(
                     [
                         "input",
-                        "actual_output",
+                        "generated_output",
                         "expected_output",
                         "retrieval_context",
                         "context",
@@ -918,7 +918,7 @@ class EvaluationDataset:
                     writer.writerow(
                         [
                             golden.input,
-                            golden.actual_output,
+                            golden.generated_output,
                             golden.expected_output,
                             retrieval_context,
                             context,
@@ -930,7 +930,7 @@ class EvaluationDataset:
                 for golden in goldens:
                     record = {
                         "input": golden.input,
-                        "actual_output": golden.actual_output,
+                        "generated_output": golden.generated_output,
                         "expected_output": golden.expected_output,
                         "retrieval_context": golden.retrieval_context,
                         "context": golden.context,

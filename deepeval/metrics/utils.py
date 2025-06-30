@@ -217,7 +217,7 @@ def check_mllm_test_case_params(
     test_case: MLLMTestCase,
     test_case_params: List[MLLMTestCaseParams],
     input_image_count: Optional[int],
-    actual_output_image_count: Optional[int],
+    generated_output_image_count: Optional[int],
     metric: BaseMetric,
 ):
     if input_image_count:
@@ -229,13 +229,13 @@ def check_mllm_test_case_params(
             error_str = f"Can only evaluate test cases with '{input_image_count}' input images using the '{metric.__name__}' metric. `{count}` found."
             raise ValueError(error_str)
 
-    if actual_output_image_count:
+    if generated_output_image_count:
         count = 0
-        for ele in test_case.actual_output:
+        for ele in test_case.generated_output:
             if isinstance(ele, MLLMImage):
                 count += 1
-        if count != actual_output_image_count:
-            error_str = f"Unable to evaluate test cases with '{actual_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
+        if count != generated_output_image_count:
+            error_str = f"Unable to evaluate test cases with '{generated_output_image_count}' output images using the '{metric.__name__}' metric. `{count}` found."
             raise ValueError(error_str)
 
     if isinstance(test_case, MLLMTestCase) is False:
@@ -267,7 +267,7 @@ def check_mllm_test_cases_params(
     test_cases: List[MLLMTestCase],
     test_case_params: List[MLLMTestCaseParams],
     input_image_count: Optional[int],
-    actual_output_image_count: Optional[int],
+    generated_output_image_count: Optional[int],
     metric: BaseMetric,
 ):
     for test_case in test_cases:
@@ -275,7 +275,7 @@ def check_mllm_test_cases_params(
             test_case,
             test_case_params,
             input_image_count,
-            actual_output_image_count,
+            generated_output_image_count,
             metric,
         )
 

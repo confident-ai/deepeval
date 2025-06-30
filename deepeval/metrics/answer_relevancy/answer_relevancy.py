@@ -70,7 +70,7 @@ class AnswerRelevancyMetric(BaseMetric):
                 )
             else:
                 self.statements: List[str] = self._generate_statements(
-                    test_case.actual_output
+                    test_case.generated_output
                 )
                 self.verdicts: List[AnswerRelevancyVerdict] = (
                     self._generate_verdicts(test_case.input)
@@ -106,7 +106,7 @@ class AnswerRelevancyMetric(BaseMetric):
             _in_component=_in_component,
         ):
             self.statements: List[str] = await self._a_generate_statements(
-                test_case.actual_output
+                test_case.generated_output
             )
             self.verdicts: List[AnswerRelevancyVerdict] = (
                 await self._a_generate_verdicts(test_case.input)
@@ -235,10 +235,10 @@ class AnswerRelevancyMetric(BaseMetric):
 
     async def _a_generate_statements(
         self,
-        actual_output: str,
+        generated_output: str,
     ) -> List[str]:
         prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output,
+            generated_output=generated_output,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Statements)
@@ -257,10 +257,10 @@ class AnswerRelevancyMetric(BaseMetric):
 
     def _generate_statements(
         self,
-        actual_output: str,
+        generated_output: str,
     ) -> List[str]:
         prompt = self.evaluation_template.generate_statements(
-            actual_output=actual_output,
+            generated_output=generated_output,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Statements)

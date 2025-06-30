@@ -75,7 +75,7 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
+                self.claims = self._generate_claims(test_case.generated_output)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -111,7 +111,7 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
         ):
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(test_case.retrieval_context),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_claims(test_case.generated_output),
             )
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -278,10 +278,10 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 return data["truths"]
 
     async def _a_generate_claims(
-        self, actual_output: List[Union[str, MLLMImage]]
+        self, generated_output: List[Union[str, MLLMImage]]
     ) -> List[str]:
         prompt = MultimodalFaithfulnessTemplate.generate_claims(
-            excerpt=actual_output
+            excerpt=generated_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
@@ -297,10 +297,10 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                 return data["claims"]
 
     def _generate_claims(
-        self, actual_output: List[Union[str, MLLMImage]]
+        self, generated_output: List[Union[str, MLLMImage]]
     ) -> List[str]:
         prompt = MultimodalFaithfulnessTemplate.generate_claims(
-            excerpt=actual_output
+            excerpt=generated_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)

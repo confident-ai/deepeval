@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer usesLLMs={false} referenceless={true} />
 
-The json correctness metric measures whether your LLM application is able to generate `actual_output`s with the correct **json schema**.
+The json correctness metric measures whether your LLM application is able to generate `generated_output`s with the correct **json schema**.
 
 :::note
 
@@ -29,9 +29,9 @@ The `JsonCorrectnessMetric` like the `ToolCorrectnessMetric` is not an LLM-eval,
 To use the `JsonCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -45,7 +45,7 @@ class ExampleSchema(BaseModel):
 ```
 
 :::tip
-If your `actual_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
+If your `generated_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
 
 ```python
 from pydantic import RootModel
@@ -74,8 +74,8 @@ metric = JsonCorrectnessMetric(
 )
 test_case = LLMTestCase(
     input="Output me a random Json with the 'name' key",
-    # Replace this with the actual output from your LLM application
-    actual_output="{'name': null}"
+    # Replace this with the generated output from your LLM application
+    generated_output="{'name': null}"
 )
 
 # To run metric as a standalone
@@ -96,7 +96,7 @@ There are **ONE** mandatory and **SIX** optional parameters when creating an `Pr
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
 :::info
-Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
+Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `generated_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
 :::
 
 ### Within components
@@ -111,7 +111,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -145,9 +145,9 @@ The `PromptAlignmentMetric` score is calculated according to the following equat
 
 <Equation
   formula="\text{Json Correctness} = \begin{cases}
-1 & \text{If the actual output fits the expected schema}, \\
+1 & \text{If the generated output fits the expected schema}, \\
 0 & \text{Otherwise}
 \end{cases}"
 />
 
-The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `actual_output` can be loaded into the schema.
+The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `generated_output` can be loaded into the schema.

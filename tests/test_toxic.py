@@ -17,7 +17,7 @@ Just trying to help you learn our best practices.
 def test_bias():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
-        actual_output=output,
+        generated_output=output,
     )
     metric = ToxicityMetric()
     assert_test(test_case, [metric])

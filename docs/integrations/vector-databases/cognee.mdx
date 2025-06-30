@@ -51,7 +51,7 @@ for context in retrieval_context:
 
 ## Evaluating Cognee RAG Pipelines
 
-Unit testing RAG pipelines powered by Cognee is as simple as defining an `EvaluationDataset` and generating `actual_output`s and `retrieval_context`s at evaluation time. Building upon the previous example, first generate all the necessarily parameters required to test RAG:
+Unit testing RAG pipelines powered by Cognee is as simple as defining an `EvaluationDataset` and generating `generated_output`s and `retrieval_context`s at evaluation time. Building upon the previous example, first generate all the necessarily parameters required to test RAG:
 
 ```python main.py
 ...
@@ -69,7 +69,7 @@ Supporting Context:
 {retrieval_context}
 """
 
-actual_output = generate(prompt) # hypothetical function, replace with your own LLM
+generated_output = generate(prompt) # hypothetical function, replace with your own LLM
 ```
 
 Then, simply run `evaluate()`:
@@ -86,7 +86,7 @@ from deepeval import evaluate
 ...
 test_case = LLMTestCase(
     input=input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context,
     expected_output="Cognee is the Graph RAG Framework.",
 )

@@ -26,7 +26,7 @@ def test_summarization():
     Artificial Intelligence (AI) is significantly influencing numerous industries, notably healthcare, finance, and education. In healthcare, AI aids in diagnostics and personalized medicine, improving patient outcomes through efficient analysis of medical data. In finance, AI enhances market trend analysis and fraud detection, boosting efficiency and security. AI's role in developing autonomous vehicles is also pivotal, promoting road safety through real-time decision-making. However, the rapid growth of AI raises ethical concerns, including privacy, data security, and employment impact. Addressing these issues is vital for the responsible development and use of AI, which holds great potential for societal advancement. Also, OpenAI is the leader in the AI race.
     """
 
-    test_case = LLMTestCase(input=input, actual_output=output)
+    test_case = LLMTestCase(input=input, generated_output=output)
 
     assert_test(test_case, [metric])
 
