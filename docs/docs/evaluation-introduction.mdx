@@ -215,14 +215,17 @@ You can also replace `dataset` with a list of test cases, as shown in the [test 
 
 You can also run metrics on nested components by setting up tracing in `deepeval`, and requires under 10 lines of code:
 
-```python showLineNumbers {5}
+```python showLineNumbers {8}
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = openai.ChatCompletion.create(model="gpt-4.1", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
 
   update_current_span(
     test_case=LLMTestCase(input=query, output=response)

@@ -2976,13 +2976,15 @@ Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-
 import openai
 import deepeval
 
+client = OpenAI()
+
 def sync_without_stream(user_message: str):
     model = "gpt-4-turbo"
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
       model=model,
       messages=[{"role": "user", "content": user_message}]
     )
-    output = response["choices"][0]["message"]["content"]
+    output = response.choices[0].message.content
 
     # Run monitor() synchronously
     deepeval.monitor(input=user_message, output=output, model=model, event_name="RAG chatbot")
@@ -9918,13 +9920,16 @@ Tracing only runs when you want it to run, and takes 3 lines of code:
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": query}]
-    ).choices[0].message["content"]
+    ).choices[0].message.content
 
     update_current_span(test_case=LLMTestCase(input=query, output=response))
     return response
@@ -9952,10 +9957,13 @@ The `@observe` decorator creates spans, and a call to your LLM application decor
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
 
   update_current_span(
     test_case=LLMTestCase(input=query, output=response)
@@ -17867,19 +17875,21 @@ from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
+client = OpenAI()
+
 def your_llm_app(input: str):
     def retriever(input: str):
         return ["Hardcoded text chunks from your vector database"]
 
     @observe(metrics=[AnswerRelevancyMetric()])
     def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model="gpt-4o",
             messages=[\
                 {"role": "system", "content": "Use the provided context to answer the question."},\
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}\
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
 
         # Create test case at runtime
         update_current_span(test_case=LLMTestCase(input=input, actual_output=res))
@@ -22531,20 +22541,22 @@ somewhere.py
 
 ```codeBlockLines_e6Vv codeBlockLinesWithNumbering_o6Pm
 from typing import List
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 def your_llm_app(input: str):
     def retriever(input: str):
         return ["Hardcoded text chunks from your vector database"]
 
     def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model="gpt-4o",
             messages=[\
                 {"role": "system", "content": "Use the provided context to answer the question."},\
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}\
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
         return res
 
     retrieval_context = retriever(input)

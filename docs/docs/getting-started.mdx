@@ -586,13 +586,15 @@ Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-
 import openai
 import deepeval
 
+client = OpenAI()
+
 def sync_without_stream(user_message: str):
     model = "gpt-4-turbo"
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
       model=model,
       messages=[{"role": "user", "content": user_message}]
     )
-    output = response["choices"][0]["message"]["content"]
+    output = response.choices[0].message.content
 
     # Run monitor() synchronously
     deepeval.monitor(input=user_message, output=output, model=model, event_name="RAG chatbot")
