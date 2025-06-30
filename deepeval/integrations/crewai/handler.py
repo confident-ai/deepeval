@@ -43,8 +43,8 @@ class CrewAIEventsListener(BaseEventListener):
     def setup_listeners(self, crewai_event_bus):
         
         # patch trace the classes
-        self.patch_crewai_LLM("call")
-        self.patch_crewai_ToolUsage("use")
+        # self.patch_crewai_LLM("call")
+        # self.patch_crewai_ToolUsage("use")
         
         @crewai_event_bus.on(CrewKickoffStartedEvent)
         def on_crew_started(source, event):
@@ -81,11 +81,28 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(AgentExecutionStartedEvent)
         def on_agent_started(source, event):
-            pass
+            base_span = BaseSpan(
+                uuid=str(source.id),
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=self.active_trace_id,
+                parent_uuid=str(source.crew.id),
+                start_time=perf_counter(),
+                name=source.role
+            )
+            trace_manager.add_span(base_span)
+            trace_manager.add_span_to_trace(base_span)
+            
 
         @crewai_event_bus.on(AgentExecutionCompletedEvent)
         def on_agent_completed(source, event):
-            pass
+            base_span = trace_manager.get_span_by_uuid(str(source.id))
+            if base_span is None:
+                return
+            
+            base_span.end_time = perf_counter()
+            base_span.status = TraceSpanStatus.SUCCESS
+            trace_manager.remove_span(base_span.uuid)
 
         @crewai_event_bus.on(TaskStartedEvent)
         def on_task_started(source, event):
@@ -154,6 +171,7 @@ class CrewAIEventsListener(BaseEventListener):
             setattr(LLM, method_to_patch, wrapped_method)
 
     def patch_crewai_ToolUsage(self, method_to_patch: str):
+
         original_methods = {}
 
         method = getattr(ToolUsage, method_to_patch)
