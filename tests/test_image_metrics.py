@@ -30,7 +30,7 @@ edited_image_path = "./data/edited_image.webp"
 def text_to_image_case():
     return MLLMTestCase(
         input=["generate an image of the eiffel tower"],
-        actual_output=[
+        generated_output=[
             MLLMImage(
                 url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
             )
@@ -45,7 +45,7 @@ def image_editing_case():
             "Make this image more interesting.",
             MLLMImage(image_path, local=True),
         ],
-        actual_output=[
+        generated_output=[
             MLLMImage(
                 url="https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Alpaca_%2831562329701%29.jpg/1280px-Alpaca_%2831562329701%29.jpg",
                 local=False,
@@ -58,7 +58,7 @@ def image_editing_case():
 def multimodal_rag_case():
     return MLLMTestCase(
         input=["Tell me about some landmarks in France"],
-        actual_output=[
+        generated_output=[
             "The Eiffel Tower is located in Paris, France.",
             MLLMImage(
                 url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"
@@ -151,7 +151,7 @@ def test_multimodal_rag_case(multimodal_rag_case):
                 model="gpt-4o",
                 evaluation_steps=[
                     "Determine if the output image follows the input instructions clearly.",
-                    "Determine if the expected output aligns with the actual output.",
+                    "Determine if the expected output aligns with the generated output.",
                     "Determine if the context is aligned with the retrieval context.",
                     "Determine if the tools called are aligned with the expected tools.",
                 ],

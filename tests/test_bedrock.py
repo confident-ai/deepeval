@@ -71,7 +71,7 @@ def test_sync():
 def test_evaluate():
     test_case = LLMTestCase(
         input="What is this again?",
-        actual_output="this is a latte",
+        generated_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     test_evaluate()
     # test_case = LLMTestCase(
     #     input="What is this again?",
-    #     actual_output="this is a latte",
+    #     generated_output="this is a latte",
     #     expected_output="this is a mocha",
     #     retrieval_context=["I love coffee"],
     #     context=["I love coffee"]

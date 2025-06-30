@@ -3,7 +3,7 @@ from typing import List
 
 class AnswerRelevancyTemplate:
     @staticmethod
-    def generate_statements(actual_output: str):
+    def generate_statements(generated_output: str):
         return f"""Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can be considered as statements, but only if outside of a coherent statement.
 
 Example:
@@ -26,7 +26,7 @@ IMPORTANT: Please make sure to only return in valid and parseable JSON format, w
 **
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """
@@ -38,7 +38,7 @@ Please generate a list of JSON with two keys: `verdict` and `reason`.
 The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement is relevant to addressing the original input, 'no' if the statement is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).
 The 'reason' is the reason for the verdict.
 Provide a 'reason' ONLY if the answer is 'no'. 
-The provided statements are statements made in the actual output.
+The provided statements are statements made in the generated output.
 
 **
 IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'verdicts' key mapping to a list of JSON objects. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
@@ -100,8 +100,8 @@ JSON:
     def generate_reason(
         irrelevant_statements: List[str], input: str, score: float
     ):
-        return f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the actual output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
-The irrelevant statements represent things in the actual output that is irrelevant to addressing whatever is asked/talked about in the input.
+        return f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the generated output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
+The irrelevant statements represent things in the generated output that is irrelevant to addressing whatever is asked/talked about in the input.
 If there is nothing irrelevant, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 
 
@@ -120,7 +120,7 @@ Example JSON:
 Answer Relevancy Score:
 {score}
 
-Reasons why the score can't be higher based on irrelevant statements in the actual output:
+Reasons why the score can't be higher based on irrelevant statements in the generated output:
 {irrelevant_statements}
 
 Input:

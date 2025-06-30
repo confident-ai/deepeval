@@ -29,7 +29,7 @@ def test_g_eval():
     )
     test_case = LLMTestCase(
         input="What is the capital of France?",
-        actual_output="Paris",
+        generated_output="Paris",
         expected_output="Paris",
         context=["Geography"],
     )

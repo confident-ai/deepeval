@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer referenceless={true} rag={true} />
 
-The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `generated_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 :::tip
 Here is a detailed guide on [RAG evaluation](/guides/guides-rag-evaluation), which we highly recommend as it explains everything about `deepeval`'s RAG metrics.
@@ -27,9 +27,9 @@ Here is a detailed guide on [RAG evaluation](/guides/guides-rag-evaluation), whi
 To use the `AnswerRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -48,7 +48,7 @@ metric = AnswerRelevancyMetric(
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     # Replace this with the output from your LLM app
-    actual_output="We offer a 30-day full refund at no extra cost."
+    generated_output="We offer a 30-day full refund at no extra cost."
 )
 
 # To run metric as a standalone
@@ -80,7 +80,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -114,7 +114,7 @@ The `AnswerRelevancyMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Answer Relevancy} = \frac{\text{Number of Relevant Statements}}{\text{Total Number of Statements}}" />
 
-The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `actual_output`, before using the same LLM to classify whether each statement is relevant to the `input`.
+The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `generated_output`, before using the same LLM to classify whether each statement is relevant to the `input`.
 
 :::note
 You can set the `verbose_mode` of **ANY** `deepeval` metric to `True` to debug the `measure()` method:
@@ -148,7 +148,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
 # Define custom template
 class CustomTemplate(AnswerRelevancyTemplate):
     @staticmethod
-    def generate_statements(actual_output: str):
+    def generate_statements(generated_output: str):
         return f"""Given the text, breakdown and generate a list of statements presented.
 
 Example:
@@ -162,7 +162,7 @@ Our new laptop model features a high-resolution Retina display for crystal-clear
 ===== END OF EXAMPLE ======
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """

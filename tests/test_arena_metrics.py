@@ -15,7 +15,7 @@ g_eval = ArenaGEval(
         LLMTestCaseParams.ACTUAL_OUTPUT,
         LLMTestCaseParams.INPUT,
     ],
-    criteria="Determine if the actual output maintains a friendly tone. Choose the winter of the more friendly contestant",
+    criteria="Determine if the generated output maintains a friendly tone. Choose the winter of the more friendly contestant",
     async_mode=False,
 )
 
@@ -28,19 +28,19 @@ async def main():
         contestants={
             "contestant2": LLMTestCase(
                 input="What is the capital of France?",
-                actual_output="Paris",
+                generated_output="Paris",
             ),
             "contestant2": LLMTestCase(
                 input="What is the capital of France?",
-                actual_output="Paris is the capital of France.",
+                generated_output="Paris is the capital of France.",
             ),
             "contestant3": LLMTestCase(
                 input="What is the capital of France?",
-                actual_output="Absolutely! The capital of France is Paris 😊",
+                generated_output="Absolutely! The capital of France is Paris 😊",
             ),
             "contestant4": LLMTestCase(
                 input="What is the capital of France?",
-                actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
+                generated_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
             ),
         },
     )

@@ -137,7 +137,7 @@ def create_deepeval_dataset(dataset, eval_size, retrieval_window_size):
         )
         test_case = deepeval.test_case.LLMTestCase(
             input=question,
-            actual_output=rag_response,
+            generated_output=rag_response,
             expected_output=answer,
             retrieval_context=context,
         )

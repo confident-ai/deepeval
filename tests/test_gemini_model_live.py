@@ -26,13 +26,13 @@ SKIP_LIVE_TESTS = not (
 # Create a test case for simple evaluation
 simple_test_case = LLMTestCase(
     input="What is the capital of France?",
-    actual_output="The capital of France is Paris.",
+    generated_output="The capital of France is Paris.",
 )
 
 # Create a test case for multimodal evaluation
 multimodal_test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
-    actual_output=[
+    generated_output=[
         "The Eiffel Tower is located in Paris, France.",
         MLLMImage(
             url="https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg/375px-Tour_Eiffel_Wikimedia_Commons_%28cropped%29.jpg"

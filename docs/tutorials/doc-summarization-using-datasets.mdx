@@ -22,7 +22,7 @@ dataset.pull(alias="Legal Documents Dataset", auto_convert_goldens_to_test_cases
 ```
 
 :::note
-By default, `auto_convert_goldens_to_test_cases` is `True`, but it will raise an error if your dataset, `Legal Documents Dataset`, hasn't been populated with summaries in the `actual_output` field, which is a mandatory field in a test case. [Learn more about test cases here](/docs/evaluation-test-cases).
+By default, `auto_convert_goldens_to_test_cases` is `True`, but it will raise an error if your dataset, `Legal Documents Dataset`, hasn't been populated with summaries in the `generated_output` field, which is a mandatory field in a test case. [Learn more about test cases here](/docs/evaluation-test-cases).
 :::
 
 ## Converting Goldens to Test Cases
@@ -33,12 +33,12 @@ Next, we'll convert the goldens in the dataset we pulled into `LLMTestCase`s and
 from deepeval.test_case import LLMTestCase
 
 for golden in dataset.goldens:
-    actual_output = llm.summarize(golden.input)  # Replace with logic to compute actual output
+    generated_output = llm.summarize(golden.input)  # Replace with logic to compute generated output
 
     dataset.add_test_case(
         LLMTestCase(
             input=golden.input,
-            actual_output=actual_output,
+            generated_output=generated_output,
         )
     )
 ```

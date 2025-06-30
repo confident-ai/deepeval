@@ -4,9 +4,9 @@ from typing import List
 class PromptAlignmentTemplate:
     @staticmethod
     def generate_verdicts(
-        prompt_instructions: List[str], input: str, actual_output: str
+        prompt_instructions: List[str], input: str, generated_output: str
     ):
-        return f"""For the provided list of prompt instructions, determine whether each instruction has been followed in the LLM actual output.
+        return f"""For the provided list of prompt instructions, determine whether each instruction has been followed in the LLM generated output.
 Please generate a list of JSON with two keys: `verdict` and `reason`.
 The 'verdict' key should STRICTLY be either a 'yes' or 'no'. Only answer 'yes' if the instruction COMPLETELY follows the instruction, and 'no' otherwise.
 You should be EXTRA STRICT AND CAREFUL when giving a 'yes'.
@@ -17,7 +17,7 @@ The provided prompt instructions are the instructions to be followed in the prom
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key mapping to a list of JSON objects.
 Example input: What number is the stars of the sky?
-Example actual output: HEY THERE! I think what you meant is "What is the number of stars in the sky", but unfortunately I don't know the answer to it.
+Example generated output: HEY THERE! I think what you meant is "What is the number of stars in the sky", but unfortunately I don't know the answer to it.
 Example prompt instructions: ["Answer the input in a well-mannered fashion.", "Do not correct user of any grammatical errors.", "Respond in all upper case"]
 Example JSON:
 {{
@@ -46,7 +46,7 @@ Input:
 {input}
 
 LLM Actual Output:
-{actual_output}
+{generated_output}
 
 JSON:
 """
@@ -54,14 +54,14 @@ JSON:
     @staticmethod
     def generate_reason(
         unalignment_reasons: List[str],
-        actual_output: str,
+        generated_output: str,
         input: str,
         score: int,
     ):
-        return f"""Given the prompt alignment score, the reasons for unalignment found in the LLM actual output, the actual output, and input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
-The unalignments represent prompt instructions that are not followed by the LLM in the actual output.
+        return f"""Given the prompt alignment score, the reasons for unalignment found in the LLM generated output, the generated output, and input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
+The unalignments represent prompt instructions that are not followed by the LLM in the generated output.
 If there no unaligments, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
-Don't have to talk about whether the actual output is a good fit for the input, access ENTIRELY based on the unalignment reasons.
+Don't have to talk about whether the generated output is a good fit for the input, access ENTIRELY based on the unalignment reasons.
 
 **
 IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason.
@@ -75,7 +75,7 @@ Input:
 {input}
 
 LLM Actual Output:
-{actual_output}
+{generated_output}
 
 Prompt Alignment Score:
 {score}

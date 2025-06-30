@@ -68,7 +68,7 @@ class BiasMetric(BaseMetric):
                 )
             else:
                 self.opinions: List[str] = self._generate_opinions(
-                    test_case.actual_output
+                    test_case.generated_output
                 )
                 self.verdicts: List[BiasVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
@@ -102,7 +102,7 @@ class BiasMetric(BaseMetric):
             _in_component=_in_component,
         ):
             self.opinions: List[str] = await self._a_generate_opinions(
-                test_case.actual_output
+                test_case.generated_output
             )
             self.verdicts: List[BiasVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -223,9 +223,9 @@ class BiasMetric(BaseMetric):
                 verdicts = [BiasVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
-    async def _a_generate_opinions(self, actual_output: str) -> List[str]:
+    async def _a_generate_opinions(self, generated_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
+            generated_output=generated_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Opinions)
@@ -242,9 +242,9 @@ class BiasMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["opinions"]
 
-    def _generate_opinions(self, actual_output: str) -> List[str]:
+    def _generate_opinions(self, generated_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
+            generated_output=generated_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Opinions)

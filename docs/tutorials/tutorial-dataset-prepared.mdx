@@ -50,7 +50,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 turns = [
   LLMTestCase(
     input=turn["input"],
-    actual_output=turn["response"]
+    generated_output=turn["response"]
   )
   for turn in conversation
 ]

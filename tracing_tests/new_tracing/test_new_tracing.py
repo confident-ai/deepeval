@@ -273,7 +273,7 @@ async def meta_agent(query: str):
         metadata={"user_id": "11111", "date": "1/1/11"},
         test_case=LLMTestCase(
             input="What is this again?",
-            actual_output="this is a latte",
+            generated_output="this is a latte",
             expected_output="this is a mocha",
             retrieval_context=["I love coffee"],
             context=["I love coffee"],
@@ -281,7 +281,7 @@ async def meta_agent(query: str):
         # feedback=Feedback(
         #     rating=1,
         #     expected_output="this is a mocha",
-        #     explanation="The actual output is not the expected output",
+        #     explanation="The generated output is not the expected output",
         # ),
     )
     update_current_trace(
@@ -291,11 +291,11 @@ async def meta_agent(query: str):
         # feedback=Feedback(
         #     rating=5,
         #     expected_output="Testing again",
-        #     explanation="The actual output is not the expected output",
+        #     explanation="The generated output is not the expected output",
         # ),
     )
 
-    return LLMTestCase(input="..", actual_output=final_response)
+    return LLMTestCase(input="..", generated_output=final_response)
 
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -310,12 +310,12 @@ from deepeval.metrics import DAGMetric, GEval
 
 geval_metric = GEval(
     name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    criteria="Determine how persuasive the `generated output` is to getting a user booking in a call.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
 conciseness_node = BinaryJudgementNode(
-    criteria="Does the actual output contain less than or equal to 4 sentences?",
+    criteria="Does the generated output contain less than or equal to 4 sentences?",
     children=[
         VerdictNode(verdict=False, score=0),
         VerdictNode(verdict=True, child=geval_metric),
@@ -369,7 +369,7 @@ asyncio.run(run_parallel_examples())
 # async def run_customizations_agent(input_items, context=None):
 #     @observe()
 #     async def run_customizations_agent_again(input_items, context=None):
-#         return LLMTestCase(input="input_items", actual_output="context")
+#         return LLMTestCase(input="input_items", generated_output="context")
 
 #     result = await run_customizations_agent_again(input_items, context)
 #     return AnswerRelevancyMetric()

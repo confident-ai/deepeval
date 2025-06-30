@@ -139,7 +139,7 @@ class IntellectualPropertyGrader(BaseMetric):
         self, test_case: LLMTestCase
     ) -> Tuple[Union[int, float], str]:
         prompt = IntellectualPropertyTemplate.generate_evaluation_results(
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             purpose=self.purpose,
         )
         if self.using_native_model:
@@ -159,7 +159,7 @@ class IntellectualPropertyGrader(BaseMetric):
 
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = IntellectualPropertyTemplate.generate_evaluation_results(
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             purpose=self.purpose,
         )
         if self.using_native_model:

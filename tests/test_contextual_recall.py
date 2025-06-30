@@ -40,7 +40,7 @@ planets, mostly located in the asteroid belt.
 def test_contextual_recall():
     test_case = LLMTestCase(
         input="What is the primary difference between a comet and an asteroid?",
-        actual_output=output,
+        generated_output=output,
         expected_output=output,
         retrieval_context=[one, two, three],
     )

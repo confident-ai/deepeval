@@ -16,7 +16,7 @@ class TestResult:
     conversational: bool
     multimodal: Optional[bool] = None
     input: Union[Optional[str], List[Union[str, MLLMImage]]] = None
-    actual_output: Union[Optional[str], List[Union[str, MLLMImage]]] = None
+    generated_output: Union[Optional[str], List[Union[str, MLLMImage]]] = None
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None

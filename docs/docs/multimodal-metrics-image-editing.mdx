@@ -23,13 +23,13 @@ The Image Editing metric assesses the performance of **image editing tasks** by 
 To use the `ImageEditingMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 :::note
 Both the input and output should each contain exactly **1 image**.
 :::
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -45,7 +45,7 @@ metric = ImageEditingMetric(
 m_test_case = MLLMTestCase(
     input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)],
     # Replace this with your actual MLLM application output
-    actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
+    generated_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 )
 
 

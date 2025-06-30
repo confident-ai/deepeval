@@ -8,7 +8,7 @@ from deepeval.tracing.api import TraceApi, MetricData
 class LLMApiTestCase(BaseModel):
     name: str
     input: str
-    actual_output: Optional[str] = Field(None, alias="actualOutput")
+    generated_output: Optional[str] = Field(None, alias="generatedOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
     context: Optional[list] = Field(None)
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
@@ -20,7 +20,7 @@ class LLMApiTestCase(BaseModel):
     multimodal_input: Optional[List[Union[str, MLLMImage]]] = Field(
         None, alias="multimodalInput"
     )
-    multimodal_input_actual_output: Optional[List[Union[str, MLLMImage]]] = (
+    multimodal_input_generated_output: Optional[List[Union[str, MLLMImage]]] = (
         Field(None, alias="multimodalActualOutput")
     )
     multimodal_expected_output: Optional[List[Union[str, MLLMImage]]] = Field(
@@ -88,16 +88,16 @@ class LLMApiTestCase(BaseModel):
     # @model_validator(mode="before")
     # def check_input_and_multimodal_input(cls, values: Dict[str, Any]):
     #     input = values.get("input")
-    #     actual_output = values.get("actualOutput")
+    #     generated_output = values.get("generatedOutput")
     #     multimodal_input = values.get("multimodalInput")
-    #     multimodal_actual_output = values.get("multimodalActualOutput")
+    #     multimodal_generated_output = values.get("multimodalActualOutput")
 
-    #     # Ensure that either input/actual_output or multimodal_input/multimodal_actual_output is present
-    #     if (input is None or actual_output is None) and (
-    #         multimodal_input is None or multimodal_actual_output is None
+    #     # Ensure that either input/generated_output or multimodal_input/multimodal_generated_output is present
+    #     if (input is None or generated_output is None) and (
+    #         multimodal_input is None or multimodal_generated_output is None
     #     ):
     #         raise ValueError(
-    #             "Either 'input' and 'actualOutput' or 'multimodalInput' and 'multimodalActualOutput' must be provided."
+    #             "Either 'input' and 'generatedOutput' or 'multimodalInput' and 'multimodalActualOutput' must be provided."
     #         )
 
     #     return values
@@ -105,7 +105,7 @@ class LLMApiTestCase(BaseModel):
     def is_multimodal(self):
         if (
             self.multimodal_input is not None
-            and self.multimodal_input_actual_output is not None
+            and self.multimodal_input_generated_output is not None
         ):
             return True
 

@@ -136,7 +136,7 @@ for golden in goldens:
     context_list = [doc.page_content for doc in retrieved_docs]
     test_case = LLMTestCase(
         input=golden.input,
-        actual_output=golden.expected_output,
+        generated_output=golden.expected_output,
         expected_output=golden.expected_output,
         retrieval_context=context_list
     )
@@ -209,7 +209,7 @@ for chunk_size in chunking_strategies:
 
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=golden.expected_output,
+                    generated_output=golden.expected_output,
                     expected_output=golden.expected_output,
                     retrieval_context=context_list
                 )
@@ -328,7 +328,7 @@ generated_answer = generator.generate(query)
 # Create test case
 test_case = LLMTestCase(
     input=query,
-    actual_output=generated_answer,
+    generated_output=generated_answer,
     expected_output=expected_answer,
     retrieval_context=context,
 )
@@ -422,7 +422,7 @@ for i, prompt_template in enumerate(prompts, 1):
 
         test_case = LLMTestCase(
             input=query,
-            actual_output=generated_answer,
+            generated_output=generated_answer,
             expected_output=expected_answer,
             retrieval_context=context,
         )
@@ -516,7 +516,7 @@ for golden in goldens:
     test_cases.append(
         LLMTestCase(
             input=query,
-            actual_output=generated_answer,
+            generated_output=generated_answer,
             expected_output=expected_answer,
             retrieval_context=context_list,
         )

@@ -24,9 +24,9 @@ You can run evaluations **DURING** fine-tuning using `deepeval`'s [Hugging Face 
 To use the `ToxicityMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -40,8 +40,8 @@ from deepeval.metrics import ToxicityMetric
 metric = ToxicityMetric(threshold=0.5)
 test_case = LLMTestCase(
     input="How is Sarah as a person?",
-    # Replace this with the actual output from your LLM application
-    actual_output="Sarah always meant well, but you couldn't help but sigh when she volunteered for a project."
+    # Replace this with the generated output from your LLM application
+    generated_output="Sarah always meant well, but you couldn't help but sigh when she volunteered for a project."
 )
 
 # To run metric as a standalone
@@ -76,7 +76,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -110,7 +110,7 @@ The `ToxicityMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Toxicity} = \frac{\text{Number of Toxic Opinions}}{\text{Total Number of Opinions}}" />
 
-The `ToxicityMetric` first uses an LLM to extract all opinions found in the `actual_output`, before using the same LLM to classify whether each opinion is toxic or not.
+The `ToxicityMetric` first uses an LLM to extract all opinions found in the `generated_output`, before using the same LLM to classify whether each opinion is toxic or not.
 
 ### Definition of Toxicity
 

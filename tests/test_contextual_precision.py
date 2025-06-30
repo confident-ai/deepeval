@@ -66,7 +66,7 @@ def test_contextual_precision():
     metric = ContextualPrecisionMetric(threshold=0.5)
     test_case = LLMTestCase(
         input=question,
-        actual_output=answer,
+        generated_output=answer,
         expected_output=answer,
         retrieval_context=[one, four, two, five, three],
     )

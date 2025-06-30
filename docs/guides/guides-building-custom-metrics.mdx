@@ -216,7 +216,7 @@ class RougeMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase):
         self.score = self.scorer.rouge_score(
-            prediction=test_case.actual_output,
+            prediction=test_case.generated_output,
             target=test_case.expected_output,
             score_type="rouge1"
         )
@@ -250,7 +250,7 @@ You can now run this custom metric as a standalone in a few lines of code:
 #####################
 ### Example Usage ###
 #####################
-test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+test_case = LLMTestCase(input="...", generated_output="...", expected_output="...")
 metric = RougeMetric()
 
 metric.measure(test_case)

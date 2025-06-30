@@ -34,7 +34,7 @@ context = [
 def test_ragas_score():
     test_case = LLMTestCase(
         input=query,
-        actual_output=output,
+        generated_output=output,
         expected_output=expected_output,
         context=context,
     )
@@ -52,7 +52,7 @@ def test_everything():
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
     test_case = LLMTestCase(
         input=query,
-        actual_output=output,
+        generated_output=output,
         expected_output=expected_output,
         retrieval_context=context,
         context=context,

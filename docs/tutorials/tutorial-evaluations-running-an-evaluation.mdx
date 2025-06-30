@@ -16,33 +16,33 @@ from deepeval.test_case import LLMTestCase
 # test cases truncated for better readability...
 test_case_0 = LLMTestCase(
   input="Hey, I've been experiencing headaches lately.",
-  actual_output="I can help you with that.  Could you pleas...",
+  generated_output="I can help you with that.  Could you pleas...",
   retrieval_context=["Headaches can have various causes, in..."]
 )
 
 test_case_1 = LLMTestCase(
   input="I'm been coughing a lot lately.",
-  actual_output="Could you please provide your name, the da..."
+  generated_output="Could you please provide your name, the da..."
 )
 
 test_case_2 = LLMTestCase(
   input="I'm feeling pretty sick, can I book an appointment...",
-  actual_output="Could you please provide more specific det..."
+  generated_output="Could you please provide more specific det..."
 )
 
 test_case_3 = LLMTestCase(
   input="My name is John Doe. My email is johndoe@gmail.com...",
-  actual_output="Please confirm the following details: Name..."
+  generated_output="Please confirm the following details: Name..."
 )
 
 test_case_4 = LLMTestCase(
   input="My nose has been running constantly. Could it be s...",
-  actual_output="A runny nose is always caused by harmless ...",
+  generated_output="A runny nose is always caused by harmless ...",
   retrieval_context=["A runny nose can be caused by common ..."]
 )
 ```
 
-Although we've precomputed the `actual_output` and the `retrieval_context` for each of the test cases in example above, you'll ideally generate these parameters from your LLM application at evaluation time.
+Although we've precomputed the `generated_output` and the `retrieval_context` for each of the test cases in example above, you'll ideally generate these parameters from your LLM application at evaluation time.
 
 :::note
 The parameters we need to populate `LLMTestCase`s with depend on the metrics we’ve chosen and what parameters they require. The _union of those required parameters_ is what we must define for each `LLMTestCase`. You can find the `LLMTestCase` parameters required for each metric in their respective metric documentation pages:
@@ -94,7 +94,7 @@ If you don't know where the metrics are coming from, you should go back and revi
 
 ## Analyzing Your Testing Report
 
-You'll be redirected to the following page on Confident AI **once your evaluation is complete**. Here, you'll find the testing report generated for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding actual output. Clicking on a test case will reveal the remaining parameters and metric scores.
+You'll be redirected to the following page on Confident AI **once your evaluation is complete**. Here, you'll find the testing report generated for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding generated output. Clicking on a test case will reveal the remaining parameters and metric scores.
 
 :::info
 A test case is only **considered passing** if it exceeds the threshold for all the metrics it was evaluated on.

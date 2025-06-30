@@ -108,7 +108,7 @@ second_golden = Golden(input="...")
 dataset = EvaluationDataset(goldens=[first_golden, second_golden])
 coherence_metric = GEval(
     name="Coherence",
-    criteria="Coherence - determine if the actual output is coherent with the input.",
+    criteria="Coherence - determine if the generated output is coherent with the input.",
     evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 ```

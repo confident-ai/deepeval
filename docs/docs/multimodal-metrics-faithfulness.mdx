@@ -16,10 +16,10 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer custom={true} multimodal={true} />
 
-The multimodal faithfulness metric measures the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s multimodal faithfulness metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
+The multimodal faithfulness metric measures the quality of your RAG pipeline's generator by evaluating whether the `generated_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s multimodal faithfulness metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 
 :::info
-The **Multimodal Faithfulness** is the multimodal adaptation of DeepEval's [faithfulness metric](/docs/metrics-faithfulness). It accepts images in addition to text for the `input`, `actual_output`, and `retrieval_context`.
+The **Multimodal Faithfulness** is the multimodal adaptation of DeepEval's [faithfulness metric](/docs/metrics-faithfulness). It accepts images in addition to text for the `input`, `generated_output`, and `retrieval_context`.
 :::
 
 ## Required Arguments
@@ -27,10 +27,10 @@ The **Multimodal Faithfulness** is the multimodal adaptation of DeepEval's [fait
 To use the `MultimodalFaithfulnessMetric`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `retrieval_context`
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 ## Usage
 
@@ -42,7 +42,7 @@ from deepeval import evaluate
 metric = MultimodalFaithfulnessMetric()
 m_test_case = MLLMTestCase(
     input=["Tell me about some landmarks in France"],
-    actual_output=[
+    generated_output=[
         "France is home to iconic landmarks like the Eiffel Tower in Paris.",
         MLLMImage(...)
     ],
@@ -84,7 +84,7 @@ The `MultimodalFaithfulnessMetric` score is calculated according to the followin
 
 <Equation formula="\text{Multimodal Faithfulness} = \frac{\text{Number of Truthful Claims}}{\text{Total Number of Claims}}" />
 
-The `MultimodalFaithfulnessMetric` first uses an MLLM to extract all claims made in the `actual_output` (including from images), before using the same MLLM to classify whether each claim is truthful based on the facts presented in the `retrieval_context`.
+The `MultimodalFaithfulnessMetric` first uses an MLLM to extract all claims made in the `generated_output` (including from images), before using the same MLLM to classify whether each claim is truthful based on the facts presented in the `retrieval_context`.
 
 **A claim is considered truthful if it does not contradict any facts** presented in the `retrieval_context`.
 

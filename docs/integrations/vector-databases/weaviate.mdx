@@ -119,12 +119,12 @@ with client.batch as batch:
 
 Once the Weaviate retriever is set up, we can begin evaluating its effectiveness in returning relevant contexts. This involves:
 
-- **Constructing a Test Case**: to do so, define an `input` query that represents a typical search scenario and prepare the expected output. Then generate the `actual_output` for the given input and extract the retrieved context during generation.
+- **Constructing a Test Case**: to do so, define an `input` query that represents a typical search scenario and prepare the expected output. Then generate the `generated_output` for the given input and extract the retrieved context during generation.
 - **Evaluating the Test Case**: simply run deepeval's `evaluate` function on your populated test case and selection of retriever metrics.
 
 ### Preparing your Test Case
 
-The first step in generating the `actual_output` from your RAG pipeline is retrieving the relevant `retrieval_context` from your Qdrant collection based on the input query. Below is a function that encodes the query, searches for the top 3 most relevant vectors in Qdrant, and extracts the corresponding text from the retrieved results.
+The first step in generating the `generated_output` from your RAG pipeline is retrieving the relevant `retrieval_context` from your Qdrant collection based on the input query. Below is a function that encodes the query, searches for the top 3 most relevant vectors in Qdrant, and extracts the corresponding text from the retrieved results.
 
 ```python
 ...
@@ -156,24 +156,24 @@ Supporting Context:
 {retrieval_context}
 """
 
-actual_output = generate(prompt)  # Replace with your LLM function
-print(actual_output)
+generated_output = generate(prompt)  # Replace with your LLM function
+print(generated_output)
 ```
 
-With both the `actual_output` and `retrieval_context` generated, we now have all the necessary parameters to construct our test case:
+With both the `generated_output` and `retrieval_context` generated, we now have all the necessary parameters to construct our test case:
 
 ```python
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context,
     expected_output="Weaviate is a powerful vector database for AI applications, optimized for efficient semantic retrieval.",
 )
 ```
 
-Before proceeding with the evaluation, let's examine the generated `actual_output`.
+Before proceeding with the evaluation, let's examine the generated `generated_output`.
 
 ```
 Weaviate is a cloud-native vector database that enables fast semantic search using vector embeddings and hybrid retrieval.
@@ -255,7 +255,7 @@ for vectorizer in ["all-MiniLM-L6-v2", "bge-small-en", "nomic-embed-text-v1"]:
 
     test_case = LLMTestCase(
         input=query,
-        actual_output=llm.generate(query, retrieval_context),
+        generated_output=llm.generate(query, retrieval_context),
         retrieval_context=retrieval_context,
         expected_output="Weaviate is an optimized vector database for AI applications.",
     )

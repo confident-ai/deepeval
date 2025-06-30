@@ -26,7 +26,7 @@ If you want custom but extremely deterministic metric scores, you can checkout `
 To use the `GEval`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 You'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
 
@@ -40,10 +40,10 @@ from deepeval.test_case import LLMTestCaseParams
 
 correctness_metric = GEval(
     name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    criteria="Determine whether the generated output is factually correct based on the expected output.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",
         "You should also heavily penalize omission of detail",
         "Vague language, or contradicting OPINIONS, are OK"
     ],
@@ -76,7 +76,7 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input="The dog chased the cat up the tree, who ran up the tree?",
-    actual_output="It depends, some might consider the cat, while others might argue the dog.",
+    generated_output="It depends, some might consider the cat, while others might argue the dog.",
     expected_output="The cat."
 )
 
@@ -101,7 +101,7 @@ Providing `evaluation_steps` tells `GEval` to follow your `evaluation_steps` for
 correctness_metric = GEval(
     name="Correctness",
     evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",
         "You should also heavily penalize omission of detail",
         "Vague language, or contradicting OPINIONS, are OK"
     ],
@@ -119,7 +119,7 @@ from deepeval.metrics.g_eval import Rubric
 
 correctness_metric = GEval(
     name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    criteria="Determine whether the generated output is factually correct based on the expected output.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
     rubric=[
         Rubric(score_range=(0,2), expected_outcome="Factually incorrect."),
@@ -148,7 +148,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[correctness_metric])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    update_current_span(test_case=LLMTestCase(input="...", generated_output="..."))
     return
 
 @observe
@@ -238,7 +238,7 @@ Please do not directly copy and paste examples below without first assessing the
 
 ### Answer Correctness
 
-Answer correctness is the most used G-Eval metric of all and usually involves comparing the `actual_output` to the `expected_output`, which makes it a reference-based metric.
+Answer correctness is the most used G-Eval metric of all and usually involves comparing the `generated_output` to the `expected_output`, which makes it a reference-based metric.
 
 ```python
 from deepeval.metrics import GEval
@@ -247,7 +247,7 @@ from deepeval.test_case import LLMTestCaseParams
 correctness = GEval(
     name="Correctness",
     evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",
         "You should also heavily penalize omission of detail",
         "Vague language, or contradicting OPINIONS, are OK"
     ],
@@ -290,10 +290,10 @@ from deepeval.test_case import LLMTestCaseParams
 professionalism = GEval(
     name="Professionalism",
     evaluation_steps=[
-        "Determine whether the actual output maintains a professional tone throughout.",
-        "Evaluate if the language in the actual output reflects expertise and domain-appropriate formality.",
-        "Ensure the actual output stays contextually appropriate and avoids casual or ambiguous expressions.",
-        "Check if the actual output is clear, respectful, and avoids slang or overly informal phrasing."
+        "Determine whether the generated output maintains a professional tone throughout.",
+        "Evaluate if the language in the generated output reflects expertise and domain-appropriate formality.",
+        "Ensure the generated output stays contextually appropriate and avoids casual or ambiguous expressions.",
+        "Check if the generated output is clear, respectful, and avoids slang or overly informal phrasing."
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
@@ -303,7 +303,7 @@ Full example and advice on best practices available [here.](/blog/top-5-geval-us
 
 ### Safety
 
-Safety evaluates whether your LLM's `actual_output` aligns with whatever ethical guidelines your organization might have and is designed to tackle criteria such as bias, toxicity, fairness, and PII leakage.
+Safety evaluates whether your LLM's `generated_output` aligns with whatever ethical guidelines your organization might have and is designed to tackle criteria such as bias, toxicity, fairness, and PII leakage.
 
 ```python
 from deepeval.metrics import GEval
@@ -334,7 +334,7 @@ from deepeval.test_case import LLMTestCaseParams
 medical_faithfulness = GEval(
     name="Medical Faithfulness",
     evaluation_steps=[
-        "Extract medical claims or diagnoses from the actual output.",
+        "Extract medical claims or diagnoses from the generated output.",
         "Verify each medical claim against the retrieved contextual information, such as clinical guidelines or medical literature.",
         "Identify any contradictions or unsupported medical claims that could lead to misdiagnosis.",
         "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",

@@ -6,7 +6,7 @@ from deepeval.test_case import MLLMImage
 
 class MultimodalAnswerRelevancyTemplate:
     @staticmethod
-    def generate_statements(actual_output: List[str]):
+    def generate_statements(generated_output: List[str]):
 
         return textwrap.dedent(
             f"""Given the text, breakdown and generate a list of statements presented. Ambiguous statements and single words can also be considered as statements.
@@ -24,14 +24,14 @@ class MultimodalAnswerRelevancyTemplate:
             **
 
             Text:
-            {actual_output}
+            {generated_output}
 
             JSON:
             """
         )
 
     @staticmethod
-    def generate_verdicts(input, actual_output):
+    def generate_verdicts(input, generated_output):
         return (
             [
                 textwrap.dedent(
@@ -40,7 +40,7 @@ class MultimodalAnswerRelevancyTemplate:
                     The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement or image is relevant to addressing the original input, 'no' if the statement or image is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).
                     The 'reason' is the reason for the verdict.
                     Provide a 'reason' ONLY if the answer is 'no'. 
-                    The provided statements are statements and images generated in the actual output.
+                    The provided statements are statements and images generated in the generated output.
 
                     **
                     IMPORTANT: Please make sure to only return in JSON format, with the 'verdicts' key mapping to a list of JSON objects.
@@ -51,7 +51,7 @@ class MultimodalAnswerRelevancyTemplate:
                         "verdicts": [
                             {{
                                 "verdict": "no",
-                                "reason": "The 'Shoes.' statement made in the actual output is completely irrelevant to the input, which asks about what to do in the event of an earthquake."
+                                "reason": "The 'Shoes.' statement made in the generated output is completely irrelevant to the input, which asks about what to do in the event of an earthquake."
                             }},
                             {{
                                 "verdict": "idk"
@@ -80,7 +80,7 @@ class MultimodalAnswerRelevancyTemplate:
                     """
                 )
             ]
-            + actual_output
+            + generated_output
             + [
                 textwrap.dedent(
                     """
@@ -93,8 +93,8 @@ class MultimodalAnswerRelevancyTemplate:
     @staticmethod
     def generate_reason(irrelevant_statements, input, score):
         return textwrap.dedent(
-            f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the actual output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
-            The irrelevant statements represent things in the actual output that is irrelevant to addressing whatever is asked/talked about in the input.
+            f"""Given the answer relevancy score, the list of reasons of irrelevant statements made in the generated output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
+            The irrelevant statements represent things in the generated output that is irrelevant to addressing whatever is asked/talked about in the input.
             If there is nothing irrelevant, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 
 
@@ -109,7 +109,7 @@ class MultimodalAnswerRelevancyTemplate:
             Answer Relevancy Score:
             {score}
 
-            Reasons why the score can't be higher based on irrelevant statements in the actual output:
+            Reasons why the score can't be higher based on irrelevant statements in the generated output:
             {irrelevant_statements}
 
             Input:

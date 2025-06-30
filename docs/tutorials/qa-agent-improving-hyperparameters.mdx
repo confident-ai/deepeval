@@ -17,7 +17,7 @@ deepeval login
 
 ## Analying your Test Report
 
-Once your evaluation is complete, you'll be redirected to the following page on Confident AI. Here, you'll find a **detailed testing report** for the test cases we defined and evaluated in the previous section. Each test case includes its status (pass or fail), input, and actual output. Clicking on a test case will reveal additional parameters and metric scores.
+Once your evaluation is complete, you'll be redirected to the following page on Confident AI. Here, you'll find a **detailed testing report** for the test cases we defined and evaluated in the previous section. Each test case includes its status (pass or fail), input, and generated output. Clicking on a test case will reveal additional parameters and metric scores.
 
 Let's inspect the test report:
 
@@ -73,14 +73,14 @@ With these parameters, let's rerun our evaluations to see whether these changes 
 
 ```python
 for golden in dataset.goldens:
-    # Compute actual output and retrieval context
-    actual_output = qa_agent.generate(golden.input)  # Replace with logic to compute actual output
+    # Compute generated output and retrieval context
+    generated_output = qa_agent.generate(golden.input)  # Replace with logic to compute generated output
     retrieval_context = qa_agent.get_retrieval_context()  # Replace with logic to compute retrieval context
 
     dataset.add_test_case(
         LLMTestCase(
             input=golden.input,
-            actual_output=actual_output,
+            generated_output=generated_output,
             retrieval_context=retrieval_context
         )
     )

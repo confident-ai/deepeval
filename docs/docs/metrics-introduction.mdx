@@ -170,7 +170,7 @@ Metrics in `deepeval` are categorized by whether they require ground truth for e
 
 - **Referenceless metrics** evaluate outputs without ground truth comparisons. Most generic metrics in `deepeval` are referenceless, allowing evaluation without labeled datasets.
 
-For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `actual_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
+For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `generated_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
 
 :::note
 By definition, [online metrics used in production](https://documentation.confident-ai.com/docs/llm-tracing/tracing-features/online-evaluation) **cannot** be reference-based.
@@ -207,7 +207,7 @@ graph TD
 
 Here are some additional ideas if you're not sure:
 
-- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates `actual_output` alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against `retrieved_context`)
+- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates `generated_output` alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against `retrieved_context`)
 - **Agents**: Use the `ToolCorrectnessMetric` to verify proper tool selection and usage
 - **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
 - **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks
@@ -422,7 +422,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import evaluate
 
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(input="...", generated_output="...")
 
 evaluate(test_cases=[test_case], metrics=[AnswerRelevancyMetric()])
 ```
@@ -487,7 +487,7 @@ from deepeval.test_case import LLMTestCase
 # Initialize a test case
 test_case = LLMTestCase(
     input="...",
-    actual_output="...",
+    generated_output="...",
     retrieval_context=["..."]
 )
 
@@ -535,7 +535,7 @@ When a metric's `async_mode=True` (which is the default for all metrics), invoca
 :::info
 Let's take the [`FaithfulnessMetric` algorithm](/docs/metrics-faithfulness#how-is-it-calculated) for example:
 
-1. **Extract all factual claims** made in the `actual_output`
+1. **Extract all factual claims** made in the `generated_output`
 2. **Extract all factual truths** found in the `retrieval_context`
 3. **Compare extracted claims and truths** to generate a final score and reason.
 
@@ -612,7 +612,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
 # Define custom template
 class CustomTemplate(AnswerRelevancyTemplate):
     @staticmethod
-    def generate_statements(actual_output: str):
+    def generate_statements(generated_output: str):
         return f"""Given the text, breakdown and generate a list of statements presented.
 
 Example:
@@ -626,7 +626,7 @@ Our new laptop model features a high-resolution Retina display for crystal-clear
 ===== END OF EXAMPLE ======
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """

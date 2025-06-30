@@ -168,14 +168,14 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 def test_case():
     correctness_metric = GEval(
         name="Correctness",
-        criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+        criteria="Determine if the 'generated output' is correct based on the 'expected output'.",
         evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
         threshold=0.5
     )
     test_case = LLMTestCase(
         input="What if these shoes don't fit?",
-        # Replace this with the actual output from your LLM application
-        actual_output="You have 30 days to get a full refund at no extra cost.",
+        # Replace this with the generated output from your LLM application
+        generated_output="You have 30 days to get a full refund at no extra cost.",
         expected_output="We offer a 30-day full refund at no extra costs.",
         retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
     )
@@ -196,9 +196,9 @@ deepeval test run test_chatbot.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- The variable `input` mimics a user input, and `generated_output` is a placeholder for what your application's supposed to output based on this input.
 - The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](https://deepeval.com/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom custom with human-like accuracy.
-- In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`.
+- In this example, the metric `criteria` is correctness of the `generated_output` based on the provided `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 [Read our documentation](https://deepeval.com/docs/getting-started?utm_source=GitHub) for more information on more options to run end-to-end evaluation, how to use additional metrics, create your own custom metrics, and tutorials on how to integrate with other tools like LangChain and LlamaIndex.
@@ -218,12 +218,12 @@ from deepeval.dataset import Golden
 from deepeval.metrics import GEval
 from deepeval import evaluate
 
-correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
+correctness = GEval(name="Correctness", criteria="Determine if the 'generated output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
 
 @observe(metrics=[correctness])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    update_current_span(test_case=LLMTestCase(input="...", generated_output="..."))
     return
 
 @observe
@@ -250,8 +250,8 @@ from deepeval.test_case import LLMTestCase
 answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    # Replace this with the actual output from your LLM application
-    actual_output="We offer a 30-day full refund at no extra costs.",
+    # Replace this with the generated output from your LLM application
+    generated_output="We offer a 30-day full refund at no extra costs.",
     retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
 )
 evaluate([test_case], [answer_relevancy_metric])
@@ -268,8 +268,8 @@ from deepeval.test_case import LLMTestCase
 answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.7)
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    # Replace this with the actual output from your LLM application
-    actual_output="We offer a 30-day full refund at no extra costs.",
+    # Replace this with the generated output from your LLM application
+    generated_output="We offer a 30-day full refund at no extra costs.",
     retrieval_context=["All customers are eligible for a 30 day full refund at no extra costs."]
 )
 
@@ -292,8 +292,8 @@ from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
-first_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
-second_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
+first_test_case = LLMTestCase(input="...", generated_output="...", context=["..."])
+second_test_case = LLMTestCase(input="...", generated_output="...", context=["..."])
 
 dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
 

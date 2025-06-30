@@ -43,7 +43,7 @@ from deepeval.test_case import LLMTestCaseParams
 # Define a custom G-Eval metric
 custom_metric = GEval(
     name="Relevancy",
-    criteria="Check if the actual output directly addresses the input.",
+    criteria="Check if the generated output directly addresses the input.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.INPUT]
 )
 ```
@@ -58,7 +58,7 @@ Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows u
 
 ## Answer Correctness
 
-[Answer Correctness](/guides/guides-answer-correctness-metric) is the most widely used G-Eval metric. It measures how closely the LLM’s _actual output_ aligns with the _expected output_. As a **reference-based metric**, it requires a ground truth (expected output) to be provided and is most commonly used during development where labeled answers are available, rather than in production.
+[Answer Correctness](/guides/guides-answer-correctness-metric) is the most widely used G-Eval metric. It measures how closely the LLM’s _generated output_ aligns with the _expected output_. As a **reference-based metric**, it requires a ground truth (expected output) to be provided and is most commonly used during development where labeled answers are available, rather than in production.
 
 :::note
 You'll see that answer correctness is not a predefined metric in DeepEval because correctness is subjective - hence also why G-Eval is perfect for it.
@@ -73,10 +73,10 @@ from deepeval.test_case import LLMTestCaseParams
 
 correctness_metric = GEval(
     name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    criteria="Determine whether the generated output is factually correct based on the expected output.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",
         "You should also heavily penalize omission of detail",
         "Vague language, or contradicting OPINIONS, are OK"
     ],
@@ -169,10 +169,10 @@ professionalism_metric = GEval(
     criteria="Assess the level of professionalism and expertise conveyed in the response.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[
-        "Determine whether the actual output maintains a professional tone throughout.",
-        "Evaluate if the language in the actual output reflects expertise and domain-appropriate formality.",
-        "Ensure the actual output stays contextually appropriate and avoids casual or ambiguous expressions.",
-        "Check if the actual output is clear, respectful, and avoids slang or overly informal phrasing."
+        "Determine whether the generated output maintains a professional tone throughout.",
+        "Evaluate if the language in the generated output reflects expertise and domain-appropriate formality.",
+        "Ensure the generated output stays contextually appropriate and avoids casual or ambiguous expressions.",
+        "Check if the generated output is clear, respectful, and avoids slang or overly informal phrasing."
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
@@ -247,7 +247,7 @@ There are 5 core criteria for evaluating RAG systems, which make up DeepEval’s
 | **Contextual Recall**                        | Are the retrieved documents complete?                     |
 | **Contextual Relevancy**                     | Are the retrieved documents relevant?                     |
 
-Below is an example of a custom **Faithfulness** metric for a medical diagnosis use case. It evaluates whether the actual output is factually aligned with the retrieved context.
+Below is an example of a custom **Faithfulness** metric for a medical diagnosis use case. It evaluates whether the generated output is factually aligned with the retrieved context.
 
 ```python
 from deepeval.metrics import GEval
@@ -255,10 +255,10 @@ from deepeval.test_case import LLMTestCaseParams
 
 custom_faithfulness_metric = GEval(
     name="Medical Diagnosis Faithfulness",
-    criteria="Evaluate the factual alignment of the actual output with the retrieved contextual information in a medical context.",
+    criteria="Evaluate the factual alignment of the generated output with the retrieved contextual information in a medical context.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[
-        "Extract medical claims or diagnoses from the actual output.",
+        "Extract medical claims or diagnoses from the generated output.",
         "Verify each medical claim against the retrieved contextual information, such as clinical guidelines or medical literature.",
         "Identify any contradictions or unsupported medical claims that could lead to misdiagnosis.",
         "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",
@@ -292,7 +292,7 @@ from deepeval.test_case import LLMTestCaseParams
 
 geval_metric = GEval(
     name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    criteria="Determine how persuasive the `generated output` is to getting a user booking in a call.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 ```
@@ -318,7 +318,7 @@ Unlike G-Eval, DAG evaluates each condition explicitly and independently, offeri
 
 ### Example
 
-A **DAG** handles the above use case deterministically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `actual_output` is as a sales email.
+A **DAG** handles the above use case deterministically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `generated_output` is as a sales email.
 
 Here is an example of a G-Eval + DAG approach:
 
@@ -335,12 +335,12 @@ from deepeval.metrics import DAGMetric, GEval
 
 geval_metric = GEval(
     name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    criteria="Determine how persuasive the `generated output` is to getting a user booking in a call.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
 conciseness_node = BinaryJudgementNode(
-    criteria="Does the actual output contain less than or equal to 4 sentences?",
+    criteria="Does the generated output contain less than or equal to 4 sentences?",
     children=[
         VerdictNode(verdict=False, score=0),
         VerdictNode(verdict=True, child=geval_metric),
@@ -352,7 +352,7 @@ dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
 metric = DagMetric(dag=dag)
 
 # create test case
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(input="...", generated_output="...")
 
 # measure
 metric.measure(test_case)

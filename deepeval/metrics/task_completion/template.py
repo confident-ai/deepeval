@@ -7,7 +7,7 @@ import json
 class TaskCompletionTemplate:
 
     @staticmethod
-    def extract_goal_and_outcome(input, actual_output, tools_called):
+    def extract_goal_and_outcome(input, generated_output, tools_called):
         return textwrap.dedent(
             f"""Given an agentic workflow comprised of a human input, AI response, and tools used by the AI, identify the user_goal (the task or objective the user wants to achieve) and the task_outcome (the final outcome or result of the workflow).
             The task outcome should be solely factual, derived strictly from the workflow (input, response, and tools called), without any reasoning involved.
@@ -70,7 +70,7 @@ class TaskCompletionTemplate:
             input: {input}
             tools called:
             {TaskCompletionTemplate.print_tools_called(tools_called)}
-            response: {actual_output}
+            response: {generated_output}
 
             JSON:
         """

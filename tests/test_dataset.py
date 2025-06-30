@@ -64,7 +64,7 @@ def test_create_dataset():
     dataset.add_test_cases_from_csv_file(
         file_path,
         input_col_name="query",
-        actual_output_col_name="actual_output",
+        generated_output_col_name="generated_output",
         expected_output_col_name="expected_output",
         context_col_name="context",
         retrieval_context_col_name="retrieval",
@@ -77,6 +77,6 @@ def test_create_dataset():
         expected_output_key_name="expected_output",
         context_key_name="context",
         retrieval_context_key_name="retrieval",
-        actual_output_key_name="actual_output",
+        generated_output_key_name="generated_output",
     )
     assert len(dataset.test_cases) == 10, "Test Cases not loaded from JSON"

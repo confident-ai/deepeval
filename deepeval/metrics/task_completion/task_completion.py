@@ -173,7 +173,7 @@ class TaskCompletionMetric(BaseMetric):
     ) -> Tuple:
         prompt = TaskCompletionTemplate.extract_goal_and_outcome(
             input=test_case.input,
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             tools_called=test_case.tools_called,
         )
         if self.using_native_model:
@@ -199,7 +199,7 @@ class TaskCompletionMetric(BaseMetric):
     ) -> Tuple:
         prompt = TaskCompletionTemplate.extract_goal_and_outcome(
             input=test_case.input,
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             tools_called=test_case.tools_called,
         )
         if self.using_native_model:

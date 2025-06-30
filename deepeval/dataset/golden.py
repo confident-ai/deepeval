@@ -5,8 +5,8 @@ from deepeval.test_case import ToolCall, Turn
 
 class Golden(BaseModel):
     input: str
-    actual_output: Optional[str] = Field(
-        default=None, serialization_alias="actualOutput"
+    generated_output: Optional[str] = Field(
+        default=None, serialization_alias="generatedOutput"
     )
     expected_output: Optional[str] = Field(
         default=None, serialization_alias="expectedOutput"

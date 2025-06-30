@@ -161,7 +161,7 @@ def generate_response(input: str) -> str:
     response = "Generated response based on the prompt: " + input
 
     update_current_span(
-        test_case=LLMTestCase(input=input, actual_output=response)
+        test_case=LLMTestCase(input=input, generated_output=response)
     )
     return response
 
@@ -174,7 +174,7 @@ def rag_pipeline(query: str) -> str:
     response = generate_response(f"Context: {context}\nQuery: {query}")
 
     update_current_span(
-        test_case=LLMTestCase(input=query, actual_output=response, retrieval_context=docs)
+        test_case=LLMTestCase(input=query, generated_output=response, retrieval_context=docs)
     )
     return response
 

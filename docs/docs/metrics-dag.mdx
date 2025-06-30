@@ -32,7 +32,7 @@ The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and g
 To use the `DAGMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 You'll also need to supply any additional arguments such as `expected_output` and `tools_called` if your evaluation criteria depends on these parameters.
 
@@ -59,7 +59,7 @@ Bob: "Yes, we'll share an early build."
 Charlie: "Great, we'll start preparing assets."
 Alice: "Plan: fixes by Friday, marketing prep Monday, sync next Wednesday. Thanks, everyone!"
 """,
-    actual_output="""
+    generated_output="""
 Intro:
 Alice outlined the agenda: product updates, blockers, and marketing alignment.
 
@@ -94,8 +94,8 @@ from deepeval.metrics import GEval
 metric = GEval(
     name="Format Correctness",
     evaluation_steps=[
-        "The `actual_output` is completely wrong if it misses any of the headings: 'intro', 'body', 'conclusion'.",
-        "If the `actual_output` has all the complete headings but are in the wrong order, penalize it.",
+        "The `generated_output` is completely wrong if it misses any of the headings: 'intro', 'body', 'conclusion'.",
+        "If the `generated_output` has all the complete headings but are in the wrong order, penalize it.",
         "If the summary has all the correct headings and they are in the right order, give it a perfect score."
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
@@ -114,10 +114,10 @@ The `DAGMetric` requires you to first construct a decision tree that **has direc
 
 ![ok](https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png)
 
-We can see that the `actual_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
+We can see that the `generated_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
 
 :::info
-The `LLMTestCase` we're showing symbolizes all nodes can get access to an `LLMTestCase` at any point in the DAG, but in this example only the first node that extracts all the headings from the `actual_output` needed the `LLMTestCase`.
+The `LLMTestCase` we're showing symbolizes all nodes can get access to an `LLMTestCase` at any point in the DAG, but in this example only the first node that extracts all the headings from the `generated_output` needed the `LLMTestCase`.
 :::
 
 We can see that our decision tree involves **involves four types of nodes**:
@@ -127,7 +127,7 @@ We can see that our decision tree involves **involves four types of nodes**:
 3. `NonBinaryJudgementNode`s: this node will also take in a `criteria`, but unlike the `BinaryJudgementNode`, the `NonBinaryJudgementNode` node have the ability to output a verdict other than `True`/`False`.
 4. `VerdictNode`s: the `VerdictNode` is **always** a leaf node, and determines the final output score based on the evaluation path that was taken.
 
-Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `actual_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode`s.
+Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `generated_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode`s.
 
 :::note
 Some might skeptical if this complexity is necessary but in reality, you'll quickly realize that the more processing you do, the more deterministic your evaluation gets. You can of course combine the correctness and ordering of the summary headings in one step, but as your criteria gets more complicated, your evaluation model is likely to hallucinate more and more.
@@ -165,7 +165,7 @@ correct_headings_node = BinaryJudgementNode(
 )
 
 extract_headings_node = TaskNode(
-    instructions="Extract all headings in `actual_output`",
+    instructions="Extract all headings in `generated_output`",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
     children=[correct_headings_node, correct_order_node],
@@ -181,7 +181,7 @@ When creating your DAG, there are three important points to remember:
 2. All nodes, except for `VerdictNode`s, can have access to an `LLMTestCase` at any point in time.
 3. All leaf nodes are `VerdictNode`s, but not all `VerdictNode`s are leaf nodes.
 
-**IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `actual_output` of the `LLMTestCase`.
+**IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `generated_output` of the `LLMTestCase`.
 
 :::tip
 To make creating a `DAGMetric` easier, you should aim to start by sketching out all the criteria and different paths your evaluation can take.
@@ -249,7 +249,7 @@ There are **THREE** mandatory and **TWO** optional parameter when creating a `Ta
 - [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
 
 :::info
-For example, if you intend to breakdown the `actual_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode`s can reference for subsequent judgement in your decision tree.
+For example, if you intend to breakdown the `generated_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode`s can reference for subsequent judgement in your decision tree.
 :::
 
 ### `BinaryJudgementNode`

@@ -69,12 +69,12 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
   input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
+  generated_output="Joe Biden",
   retrieval_context=["Joe Biden serves as the current president of America."]
 )
 ```
 
-In this example, `input` mimics an user interaction with a RAG-based LLM application, where `actual_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
+In this example, `input` mimics an user interaction with a RAG-based LLM application, where `generated_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -83,7 +83,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 answer_relevancy_metric = AnswerRelevancyMetric()
 test_case = LLMTestCase(
   input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
+  generated_output="Joe Biden",
   retrieval_context=["Joe Biden serves as the current president of America."]
 )
 
@@ -103,7 +103,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 answer_relevancy_metric = AnswerRelevancyMetric()
 test_case = LLMTestCase(
   input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
+  generated_output="Joe Biden",
   retrieval_context=["Joe Biden serves as the current president of America."]
 )
 

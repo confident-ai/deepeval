@@ -254,7 +254,7 @@ def test_everything():
     )
     metric10 = GEval(
         name="Coherence",
-        criteria="Coherence - determine if the actual output is coherent with the input, and does not contradict anything in the retrieval context.",
+        criteria="Coherence - determine if the generated output is coherent with the input, and does not contradict anything in the retrieval context.",
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -266,7 +266,7 @@ def test_everything():
     )
     metric11 = GEval(
         name="Relevancy",
-        criteria="Relevancy - determine if the actual output is relevant with the input.",
+        criteria="Relevancy - determine if the generated output is relevant with the input.",
         evaluation_params=[
             LLMTestCaseParams.INPUT,
             LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -287,7 +287,7 @@ def test_everything():
 
     test_case = LLMTestCase(
         input="What is this",
-        actual_output="this is a latte",
+        generated_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
@@ -336,7 +336,7 @@ def test_everything_2():
     metric10 = (
         GEval(
             name="Coherence",
-            criteria="Coherence - determine if the actual output is coherent with the input.",
+            criteria="Coherence - determine if the generated output is coherent with the input.",
             evaluation_params=[
                 LLMTestCaseParams.INPUT,
                 LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -351,7 +351,7 @@ def test_everything_2():
 
     test_case = LLMTestCase(
         input="What is this again?",
-        actual_output="this is a latte",
+        generated_output="this is a latte",
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
@@ -403,7 +403,7 @@ def test_everything_2():
 
 # test_case = LLMTestCase(
 #     input="What is this again?",
-#     actual_output="this is a latte",
+#     generated_output="this is a latte",
 #     expected_output="this is a mocha",
 #     retrieval_context=["I love coffee"],
 #     context=["I love coffee"],

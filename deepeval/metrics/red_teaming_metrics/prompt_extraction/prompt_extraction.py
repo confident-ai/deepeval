@@ -136,7 +136,7 @@ class PromptExtractionGrader(BaseMetric):
     ) -> Tuple[Union[int, float], str]:
         prompt = PromptExtractionTemplate.generate_evaluation_results(
             input=test_case.input,
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             purpose=self.purpose,
         )
         if self.using_native_model:
@@ -157,7 +157,7 @@ class PromptExtractionGrader(BaseMetric):
     def evaluate(self, test_case: LLMTestCase) -> Tuple[Union[int, float], str]:
         prompt = PromptExtractionTemplate.generate_evaluation_results(
             input=test_case.input,
-            actual_output=test_case.actual_output,
+            generated_output=test_case.generated_output,
             purpose=self.purpose,
         )
         if self.using_native_model:

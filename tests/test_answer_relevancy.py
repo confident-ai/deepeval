@@ -76,7 +76,7 @@ def test_answer_relevancy():
     metric = FakeMetric(threshold=0.5)
     test_case = LLMTestCase(
         input="What is your name",
-        actual_output="Idk",
+        generated_output="Idk",
         retrieval_context=[one, two, three],
     )
     assert_test(test_case=test_case, metrics=[metric], run_async=False)
@@ -104,12 +104,12 @@ from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 test_cases = [
     LLMTestCase(
         input="What is your name",
-        actual_output="Idk",
+        generated_output="Idk",
         retrieval_context=[one, two, three],
     ),
     LLMTestCase(
         input="What is your name",
-        actual_output="Idk",
+        generated_output="Idk",
         retrieval_context=[one, two, three],
     ),
 ]

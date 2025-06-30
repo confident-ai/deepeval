@@ -220,7 +220,7 @@ def test_litellm_model_with_metrics():
     # Create a test case
     test_case = LLMTestCase(
         input="What is the capital of France?",
-        actual_output="The capital of France is Paris.",
+        generated_output="The capital of France is Paris.",
         expected_output="Paris",
         context="Geography question about France",
     )

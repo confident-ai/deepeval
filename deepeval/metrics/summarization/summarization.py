@@ -85,7 +85,7 @@ class SummarizationMetric(BaseMetric):
             else:
                 self.truths: List[str] = self._generate_truths(test_case.input)
                 self.claims: List[str] = self._generate_claims(
-                    test_case.actual_output
+                    test_case.generated_output
                 )
                 self.coverage_verdicts: List[SummarizationCoverageVerdict] = (
                     self._generate_coverage_verdicts(test_case)
@@ -134,7 +134,7 @@ class SummarizationMetric(BaseMetric):
         ):
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(test_case.input),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_claims(test_case.generated_output),
             )
             (
                 self.coverage_verdicts,
@@ -374,7 +374,7 @@ class SummarizationMetric(BaseMetric):
 
         tasks = [
             self._a_generate_answers(test_case.input),
-            self._a_generate_answers(test_case.actual_output),
+            self._a_generate_answers(test_case.generated_output),
         ]
         results = await asyncio.gather(*tasks)
         original_answers = results[0]
@@ -403,7 +403,7 @@ class SummarizationMetric(BaseMetric):
             )
 
         original_answers = self._generate_answers(test_case.input)
-        summary_answers = self._generate_answers(test_case.actual_output)
+        summary_answers = self._generate_answers(test_case.generated_output)
 
         if len(original_answers) != len(summary_answers):
             raise ValueError("Number of verdicts generated does not equal.")
@@ -501,7 +501,7 @@ class SummarizationMetric(BaseMetric):
 
     async def _a_generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
+        prompt = FaithfulnessTemplate.generate_claims(generated_output=text)
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
             self.evaluation_cost += cost
@@ -536,7 +536,7 @@ class SummarizationMetric(BaseMetric):
 
     def _generate_claims(self, text: str) -> List[str]:
         # Borrow faithfulness template
-        prompt = FaithfulnessTemplate.generate_claims(actual_output=text)
+        prompt = FaithfulnessTemplate.generate_claims(generated_output=text)
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)
             self.evaluation_cost += cost

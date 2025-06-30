@@ -136,7 +136,7 @@ dataset.generate_goldens_from_docs(document_paths=["madeup_company.txt"])
 By default the synthesizer requires an OpenAI API key for generation. However, you can fully **customize the synthetic generation process** with custom models and various parameters. You can learn more about the [synthetic generation process here](/docs/synthesizer-introduction).
 :::
 
-A row of dataset is called a `Golden`. When generating from documents, each golden contains an input (the user query), the expected output (ideal LLM response to user query), and the context (ideal context to be retrieved). A golden is different from an `LLMTestCase` because it does not require the actual output, which is generated at evaluation time.
+A row of dataset is called a `Golden`. When generating from documents, each golden contains an input (the user query), the expected output (ideal LLM response to user query), and the context (ideal context to be retrieved). A golden is different from an `LLMTestCase` because it does not require the generated output, which is generated at evaluation time.
 
 You can access the list of goldens from the dataset object:
 

@@ -416,7 +416,7 @@ class RougeMetric(BaseMetric):
 
     def measure(self, test_case: LLMTestCase):
         self.score = self.scorer.rouge_score(
-            prediction=test_case.actual_output,
+            prediction=test_case.generated_output,
             target=test_case.expected_output,
             score_type="rouge1"
         )
@@ -451,7 +451,7 @@ You can now run this custom metric as a standalone in a few lines of code:
 #####################
 ### Example Usage ###
 #####################
-test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+test_case = LLMTestCase(input="...", generated_output="...", expected_output="...")
 metric = RougeMetric()
 
 metric.measure(test_case)
@@ -1278,7 +1278,7 @@ Due to these reasons, we highly recommend that you use `deepeval`'s RAG metrics 
 To use the `RagasMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `expected_output`
 - `retrieval_context`
 
@@ -1298,8 +1298,8 @@ from deepeval import evaluate
 from deepeval.metrics.ragas import RagasMetric
 from deepeval.test_case import LLMTestCase
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
+# Replace this with the generated output from your LLM application
+generated_output = "We offer a 30-day full refund at no extra cost."
 
 # Replace this with the expected output from your RAG generator
 expected_output = "You are eligible for a 30 day full refund at no extra cost."
@@ -1310,7 +1310,7 @@ retrieval_context = ["All customers are eligible for a 30 day full refund at no 
 metric = RagasMetric(threshold=0.5, model="gpt-3.5-turbo")
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     expected_output=expected_output,
     retrieval_context=retrieval_context
 )
@@ -1397,21 +1397,21 @@ Referenceless metric
 
 RAG metric
 
-The faithfulness metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating whether the `actual_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The faithfulness metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating whether the `generated_output` factually aligns with the contents of your `retrieval_context`. `deepeval`'s faithfulness metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 note
 
-Although similar to the `HallucinationMetric`, the faithfulness metric in `deepeval` is more concerned with contradictions between the `actual_output` and `retrieval_context` in RAG pipelines, rather than hallucination in the actual LLM itself.
+Although similar to the `HallucinationMetric`, the faithfulness metric in `deepeval` is more concerned with contradictions between the `generated_output` and `retrieval_context` in RAG pipelines, rather than hallucination in the actual LLM itself.
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-faithfulness\#required-arguments "Direct link to Required Arguments")
 
 To use the `FaithfulnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `retrieval_context`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-faithfulness#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-faithfulness#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-faithfulness\#usage "Direct link to Usage")
 
@@ -1422,8 +1422,8 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import FaithfulnessMetric
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
+# Replace this with the generated output from your LLM application
+generated_output = "We offer a 30-day full refund at no extra cost."
 
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
@@ -1435,7 +1435,7 @@ metric = FaithfulnessMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context
 )
 
@@ -1470,7 +1470,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -1506,7 +1506,7 @@ The `FaithfulnessMetric` score is calculated according to the following equation
 
 Faithfulness=Number of Truthful ClaimsTotal Number of Claims\\text{Faithfulness} = \\frac{\\text{Number of Truthful Claims}}{\\text{Total Number of Claims}}Faithfulness=Total Number of ClaimsNumber of Truthful Claims​
 
-The `FaithfulnessMetric` first uses an LLM to extract all claims made in the `actual_output`, before using the same LLM to classify whether each claim is truthful based on the facts presented in the `retrieval_context`.
+The `FaithfulnessMetric` first uses an LLM to extract all claims made in the `generated_output`, before using the same LLM to classify whether each claim is truthful based on the facts presented in the `retrieval_context`.
 
 **A claim is considered truthful if it does not contradict any facts** presented in the `retrieval_context`.
 
@@ -1534,7 +1534,7 @@ from deepeval.metrics.faithfulness import FaithfulnessTemplate
 # Define custom template
 class CustomTemplate(FaithfulnessTemplate):
     @staticmethod
-    def generate_claims(actual_output: str):
+    def generate_claims(generated_output: str):
         return f"""Based on the given text, please extract a comprehensive list of facts that can inferred from the provided text.
 
 Example:
@@ -1548,7 +1548,7 @@ Example JSON:
 ===== END OF EXAMPLE ======
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """
@@ -1846,16 +1846,16 @@ The bias metric uses LLM-as-a-judge to determine whether your LLM output contain
 
 info
 
-Bias in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
+Bias in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `generated_output`, is not dependent on anything other than the value of the parameter itself.
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-bias\#required-arguments "Direct link to Required Arguments")
 
 To use the `BiasMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-bias#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-bias#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-bias\#usage "Direct link to Usage")
 
@@ -1869,8 +1869,8 @@ from deepeval.metrics import BiasMetric
 metric = BiasMetric(threshold=0.5)
 test_case = LLMTestCase(
     input="What do you think about autistic people?",
-    # Replace this with the actual output from your LLM application
-    actual_output="Sorry, I cannot provide views for people living with autism."
+    # Replace this with the generated output from your LLM application
+    generated_output="Sorry, I cannot provide views for people living with autism."
 )
 
 # To run metric as a standalone
@@ -1906,7 +1906,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -1942,7 +1942,7 @@ The `BiasMetric` score is calculated according to the following equation:
 
 Bias=Number of Biased OpinionsTotal Number of Opinions\\text{Bias} = \\frac{\\text{Number of Biased Opinions}}{\\text{Total Number of Opinions}}Bias=Total Number of OpinionsNumber of Biased Opinions​
 
-The `BiasMetric` first uses an LLM to extract all opinions found in the `actual_output`, before using the same LLM to classify whether each opinion is biased or not.
+The `BiasMetric` first uses an LLM to extract all opinions found in the `generated_output`, before using the same LLM to classify whether each opinion is biased or not.
 
 ### Definition of Bias [​](https://deepeval.com/docs/metrics-bias\#definition-of-bias "Direct link to Definition of Bias")
 
@@ -2071,7 +2071,7 @@ The `DAGMetric` is a **custom metric based on a LLM-powered decision tree, and g
 To use the `DAGMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 You'll also need to supply any additional arguments such as `expected_output` and `tools_called` if your evaluation criteria depends on these parameters.
 
@@ -2098,7 +2098,7 @@ Bob: "Yes, we'll share an early build."
 Charlie: "Great, we'll start preparing assets."
 Alice: "Plan: fixes by Friday, marketing prep Monday, sync next Wednesday. Thanks, everyone!"
 """,
-    actual_output="""
+    generated_output="""
 Intro:
 Alice outlined the agenda: product updates, blockers, and marketing alignment.
 
@@ -2133,8 +2133,8 @@ from deepeval.metrics import GEval
 metric = GEval(
     name="Format Correctness",
     evaluation_steps=[\
-        "The `actual_output` is completely wrong if it misses any of the headings: 'intro', 'body', 'conclusion'.",\
-        "If the `actual_output` has all the complete headings but are in the wrong order, penalize it.",\
+        "The `generated_output` is completely wrong if it misses any of the headings: 'intro', 'body', 'conclusion'.",\
+        "If the `generated_output` has all the complete headings but are in the wrong order, penalize it.",\
         "If the summary has all the correct headings and they are in the right order, give it a perfect score."\
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT]
@@ -2154,11 +2154,11 @@ The `DAGMetric` requires you to first construct a decision tree that **has direc
 
 ![ok](https://deepeval-docs.s3.amazonaws.com/metrics:dag:summarization.png)
 
-We can see that the `actual_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
+We can see that the `generated_output` of an `LLMTestCase` is first processed to extract all headings, before deciding whether they are in the correct ordering. If they are not correct, we give it a score of 0, heavily penalizing it, whereas if it is correct, we check the degree of which they are in the correct ordering. Based on this "degree of correct ordering", we can then decide what score to assign it.
 
 info
 
-The `LLMTestCase` we're showing symbolizes all nodes can get access to an `LLMTestCase` at any point in the DAG, but in this example only the first node that extracts all the headings from the `actual_output` needed the `LLMTestCase`.
+The `LLMTestCase` we're showing symbolizes all nodes can get access to an `LLMTestCase` at any point in the DAG, but in this example only the first node that extracts all the headings from the `generated_output` needed the `LLMTestCase`.
 
 We can see that our decision tree involves **involves four types of nodes**:
 
@@ -2167,7 +2167,7 @@ We can see that our decision tree involves **involves four types of nodes**:
 3. `NonBinaryJudgementNode` s: this node will also take in a `criteria`, but unlike the `BinaryJudgementNode`, the `NonBinaryJudgementNode` node have the ability to output a verdict other than `True`/ `False`.
 4. `VerdictNode` s: the `VerdictNode` is **always** a leaf node, and determines the final output score based on the evaluation path that was taken.
 
-Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `actual_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode` s.
+Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `generated_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode` s.
 
 note
 
@@ -2205,7 +2205,7 @@ correct_headings_node = BinaryJudgementNode(
 )
 
 extract_headings_node = TaskNode(
-    instructions="Extract all headings in `actual_output`",
+    instructions="Extract all headings in `generated_output`",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
     children=[correct_headings_node, correct_order_node],
@@ -2222,7 +2222,7 @@ When creating your DAG, there are three important points to remember:
 2. All nodes, except for `VerdictNode` s, can have access to an `LLMTestCase` at any point in time.
 3. All leaf nodes are `VerdictNode` s, but not all `VerdictNode` s are leaf nodes.
 
-**IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `actual_output` of the `LLMTestCase`.
+**IMPORTANT:** You'll see that in our example, `extract_headings_node` has `correct_order_node` as a child because `correct_order_node`'s `criteria` depends on the extracted summary headings from the `generated_output` of the `LLMTestCase`.
 
 tip
 
@@ -2294,7 +2294,7 @@ There are **THREE** mandatory and **TWO** optional parameter when creating a `Ta
 
 info
 
-For example, if you intend to breakdown the `actual_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode` s can reference for subsequent judgement in your decision tree.
+For example, if you intend to breakdown the `generated_output` of an `LLMTestCase` into distinct sentences, the `output_label` would be something like "Extracted Sentences", which children `BaseNode` s can reference for subsequent judgement in your decision tree.
 
 ### `BinaryJudgementNode` [​](https://deepeval.com/docs/metrics-dag\#binaryjudgementnode "Direct link to binaryjudgementnode")
 
@@ -2467,14 +2467,14 @@ from deepeval.metrics import GEval
 def test_correctness():
     correctness_metric = GEval(
         name="Correctness",
-        criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+        criteria="Determine if the 'generated output' is correct based on the 'expected output'.",
         evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
         threshold=0.5
     )
     test_case = LLMTestCase(
         input="I have a persistent cough and fever. Should I be worried?",
-        # Replace this with the actual output from your LLM application
-        actual_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
+        # Replace this with the generated output from your LLM application
+        generated_output="A persistent cough and fever could be a viral infection or something more serious. See a doctor if symptoms worsen or don't improve in a few days.",
         expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
     )
     assert_test(test_case, [correctness_metric])
@@ -2490,9 +2490,9 @@ deepeval test run test_example.py
 
 **Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
 
-- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- The variable `input` mimics a user input, and `generated_output` is a placeholder for what your application's supposed to output based on this input.
 - The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](https://deepeval.com/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom metric with human-like accuracy.
-- In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`, but not all metrics require an `expected_output`.
+- In this example, the metric `criteria` is correctness of the `generated_output` based on the provided `expected_output`, but not all metrics require an `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ( [see below](https://deepeval.com/docs/getting-started#save-results-on-confident-ai-highly-recommended) for video demo).
@@ -2546,12 +2546,12 @@ from deepeval.dataset import Golden
 from deepeval.metrics import GEval
 from deepeval import evaluate
 
-correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
+correctness = GEval(name="Correctness", criteria="Determine if the 'generated output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
 
 @observe(metrics=[correctness])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    update_current_span(test_case=LLMTestCase(input="...", generated_output="..."))
     return
 
 @observe
@@ -2599,7 +2599,7 @@ To create a metric, simply import from the `deepeval.metrics` module:
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(input="...", generated_output="...")
 relevancy = AnswerRelevancyMetric(threshold=0.5)
 
 relevancy.measure(test_case)
@@ -2621,10 +2621,10 @@ All default metrics are evaluated using LLMs, and you can use **ANY** LLM of you
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import GEval
 
-test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+test_case = LLMTestCase(input="...", generated_output="...", expected_output="...")
 correctness = GEval(
     name="Correctness",
-    criteria="Correctness - determine if the actual output is correct according to the expected output.",
+    criteria="Correctness - determine if the generated output is correct according to the expected output.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
     strict_mode=True
 )
@@ -2640,7 +2640,7 @@ Under the hood, `deepeval` first generates a series of evaluation steps, before 
 
 Although `GEval` is great in many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](https://deepeval.com/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
 
-Take this decision tree for example, which evaluates a Summarization use case based on the `actual_output` of your `LLMTestCase`. Here, we want to check whether the `actual_output` contains the correct "summary headings", and whether they are in the correct order.
+Take this decision tree for example, which evaluates a Summarization use case based on the `generated_output` of your `LLMTestCase`. Here, we want to check whether the `generated_output` contains the correct "summary headings", and whether they are in the correct order.
 
 Click to see code associated with diagram below
 
@@ -2672,7 +2672,7 @@ correct_headings_node = BinaryJudgementNode(
 )
 
 extract_headings_node = TaskNode(
-    instructions="Extract all headings in `actual_output`",
+    instructions="Extract all headings in `generated_output`",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
     output_label="Summary headings",
     children=[correct_headings_node, correct_order_node],
@@ -2721,7 +2721,7 @@ A dataset in `deepeval`, or more specifically an evaluation dataset, is simply a
 
 note
 
-A `Golden` is simply an `LLMTestCase` with no `actual_output`, and it is an important concept if you're looking to generate LLM outputs at evaluation time. To learn more about `Golden` s, [click here.](https://deepeval.com/docs/evaluation-datasets#with-goldens)
+A `Golden` is simply an `LLMTestCase` with no `generated_output`, and it is an important concept if you're looking to generate LLM outputs at evaluation time. To learn more about `Golden` s, [click here.](https://deepeval.com/docs/evaluation-datasets#with-goldens)
 
 To create a dataset, simply initialize an `EvaluationDataset` with a list of `LLMTestCase` s or `Golden` s:
 
@@ -2729,7 +2729,7 @@ To create a dataset, simply initialize an `EvaluationDataset` with a list of `LL
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
-dataset = EvaluationDataset(test_cases=[LLMTestCase(input="...", actual_output="...")])
+dataset = EvaluationDataset(test_cases=[LLMTestCase(input="...", generated_output="...")])
 
 ```
 
@@ -2818,13 +2818,13 @@ dataset = EvaluationDataset(goldens=goldens)
 
 ```
 
-After you're done with generating, simply evaluate your dataset as shown above. Note that `deepeval`'s `Synthesizer` does **NOT** generate `actual_output` s for each golden. This is because `actual_output` s are meant to be generated by your LLM (application), not `deepeval`'s synthesizer.
+After you're done with generating, simply evaluate your dataset as shown above. Note that `deepeval`'s `Synthesizer` does **NOT** generate `generated_output` s for each golden. This is because `generated_output` s are meant to be generated by your LLM (application), not `deepeval`'s synthesizer.
 
 [Visit the synthesizer section](https://deepeval.com/docs/synthesizer-introduction) to learn how to customize `deepeval`'s synthetic data generation capabilities to your needs.
 
 note
 
-Remember, a `Golden` is basically an `LLMTestCase` but with no `actual_output`.
+Remember, a `Golden` is basically an `LLMTestCase` but with no `generated_output`.
 
 ## Red Team Your LLM application [​](https://deepeval.com/docs/getting-started\#red-team-your-llm-application "Direct link to Red Team Your LLM application")
 
@@ -2933,7 +2933,7 @@ print(dataset)
 
 ```
 
-You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden` s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com/docs/)
+You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden` s, which might not always be ready for evaluation (ie. missing an `generated_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com/docs/)
 
 ### Running Evaluations [​](https://deepeval.com/docs/getting-started\#running-evaluations "Direct link to Running Evaluations")
 
@@ -3325,9 +3325,9 @@ You can run evaluations **DURING** fine-tuning using `deepeval`'s [Hugging Face 
 To use the `ToxicityMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-toxicity#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-toxicity#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-toxicity\#usage "Direct link to Usage")
 
@@ -3341,8 +3341,8 @@ from deepeval.metrics import ToxicityMetric
 metric = ToxicityMetric(threshold=0.5)
 test_case = LLMTestCase(
     input="How is Sarah as a person?",
-    # Replace this with the actual output from your LLM application
-    actual_output="Sarah always meant well, but you couldn't help but sigh when she volunteered for a project."
+    # Replace this with the generated output from your LLM application
+    generated_output="Sarah always meant well, but you couldn't help but sigh when she volunteered for a project."
 )
 
 # To run metric as a standalone
@@ -3378,7 +3378,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -3414,7 +3414,7 @@ The `ToxicityMetric` score is calculated according to the following equation:
 
 Toxicity=Number of Toxic OpinionsTotal Number of Opinions\\text{Toxicity} = \\frac{\\text{Number of Toxic Opinions}}{\\text{Total Number of Opinions}}Toxicity=Total Number of OpinionsNumber of Toxic Opinions​
 
-The `ToxicityMetric` first uses an LLM to extract all opinions found in the `actual_output`, before using the same LLM to classify whether each opinion is toxic or not.
+The `ToxicityMetric` first uses an LLM to extract all opinions found in the `generated_output`, before using the same LLM to classify whether each opinion is toxic or not.
 
 ### Definition of Toxicity [​](https://deepeval.com/docs/metrics-toxicity\#definition-of-toxicity "Direct link to Definition of Toxicity")
 
@@ -3696,14 +3696,14 @@ deepeval recommend metrics
 To use the `ContextualRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `retrieval_context`
 
 note
 
 Similar to `ContextualPrecisionMetric`, the `ContextualRelevancyMetric` uses `retrieval_context` from your RAG pipeline for evaluation.
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-contextual-relevancy#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-contextual-relevancy#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-contextual-relevancy\#usage "Direct link to Usage")
 
@@ -3714,8 +3714,8 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ContextualRelevancyMetric
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
+# Replace this with the generated output from your LLM application
+generated_output = "We offer a 30-day full refund at no extra cost."
 
 # Replace this with the actual retrieved context from your RAG pipeline
 retrieval_context = ["All customers are eligible for a 30 day full refund at no extra cost."]
@@ -3727,7 +3727,7 @@ metric = ContextualRelevancyMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context
 )
 
@@ -3761,7 +3761,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -4632,7 +4632,7 @@ To use the `RoleAdherenceMetric`, you'll have to provide the following arguments
 Additionally, each `LLMTestCase` s in `turns` requires the following arguments:
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 ## Usage [​](https://deepeval.com/docs/metrics-role-adherence\#usage "Direct link to Usage")
 
@@ -4645,7 +4645,7 @@ from deepeval.metrics import RoleAdherenceMetric
 
 convo_test_case = ConversationalTestCase(
     chatbot_role="...",
-    turns=[LLMTestCase(input="...", actual_output="...")]
+    turns=[LLMTestCase(input="...", generated_output="...")]
 )
 metric = RoleAdherenceMetric(threshold=0.5)
 
@@ -5511,7 +5511,7 @@ To use the `ConversationRelevancyMetric`, you'll have to provide the following a
 Additionally, each `LLMTestCase` s in `turns` requires the following arguments:
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 ## Usage [​](https://deepeval.com/docs/metrics-conversation-relevancy\#usage "Direct link to Usage")
 
@@ -5521,7 +5521,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import ConversationRelevancyMetric
 
 convo_test_case = ConversationalTestCase(
-    turns=[LLMTestCase(input="...", actual_output="...")]
+    turns=[LLMTestCase(input="...", generated_output="...")]
 )
 metric = ConversationRelevancyMetric(threshold=0.5)
 
@@ -5565,7 +5565,7 @@ The `ConversationRelevancyMetric` score is calculated according to the following
 
 Conversation Relevancy=Number of Turns with Relevant Actual OutputsTotal Number of Turns\\text{Conversation Relevancy} = \\frac{\\text{Number of Turns with Relevant Actual Outputs}}{\\text{Total Number of Turns}}Conversation Relevancy=Total Number of TurnsNumber of Turns with Relevant Actual Outputs​
 
-The `ConversationRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `actual_output` that is relevant to the `input` based on previous conversational context found in the sliding window.
+The `ConversationRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `generated_output` that is relevant to the `input` based on previous conversational context found in the sliding window.
 
 - [Required Arguments](https://deepeval.com/docs/metrics-conversation-relevancy#required-arguments)
 - [Usage](https://deepeval.com/docs/metrics-conversation-relevancy#usage)
@@ -5608,7 +5608,7 @@ To address this, you can leverage `deepeval`'s default [`AnswerRelevancyMetric`]
 
 info
 
-The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `actual_output` and then classifies each statement's relevance to the `input` using the same LLM. You can read more on how each individual default metric is calculated by visiting their [individual metric pages.](https://deepeval.com/docs/metrics-answer-relevancy#how-is-it-calculated)
+The `AnswerRelevancyMetric` uses an LLM to extract all statements from the `generated_output` and then classifies each statement's relevance to the `input` using the same LLM. You can read more on how each individual default metric is calculated by visiting their [individual metric pages.](https://deepeval.com/docs/metrics-answer-relevancy#how-is-it-calculated)
 
 ### Faithfulness [​](https://deepeval.com/tutorials/tutorial-metrics-selection\#faithfulness "Direct link to Faithfulness")
 
@@ -5619,9 +5619,9 @@ Criteria 2: The chatbot should provide accurate diagnoses based on the given sym
 
 ```
 
-This is because the RAG engine is responsible for **retrieving relevant medical information from our knowledge base** to support patient diagnoses. To address this, we need to evaluate specifically whether the information in the retrieved chunks actually align with the information in the actual output.
+This is because the RAG engine is responsible for **retrieving relevant medical information from our knowledge base** to support patient diagnoses. To address this, we need to evaluate specifically whether the information in the retrieved chunks actually align with the information in the generated output.
 
-`deepeval`'s [`FaithfulnessMetric`](https://deepeval.com/docs/metrics-faithfulness) is well-suited for this task. It assesses the whether the `actual_output` factually aligns with the contents of the `retrieval_context`.
+`deepeval`'s [`FaithfulnessMetric`](https://deepeval.com/docs/metrics-faithfulness) is well-suited for this task. It assesses the whether the `generated_output` factually aligns with the contents of the `retrieval_context`.
 
 tip
 
@@ -5672,14 +5672,14 @@ contextual_relevancy_metric = ContextualRelevancyMetric()
 
 ### Defining a Custom Metric [​](https://deepeval.com/tutorials/tutorial-metrics-selection\#defining-a-custom-metric "Direct link to Defining a Custom Metric")
 
-Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `actual_output`.
+Next, we'll define our custom G-Eval metric for professionalism. This involves specifying the name of the metric, the evaluation criteria, and the parameters to evaluate. In this case, we're only assessing the LLM's `generated_output`.
 
 ```codeBlockLines_e6Vv
 from deepeval.test_case import LLMTestCaseParams
 from deepeval.metrics import GEval
 
 # Define criteria for evaluating professionalism
-criteria = """Determine whether the actual output demonstrates professionalism by being
+criteria = """Determine whether the generated output demonstrates professionalism by being
 clear, respectful, and maintaining an empathetic tone consistent with medical interactions."""
 
 # Create a GEval metric for professionalism
@@ -7538,7 +7538,7 @@ If you want custom but extremely deterministic metric scores, you can checkout `
 To use the `GEval`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 You'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
 
@@ -7552,10 +7552,10 @@ from deepeval.test_case import LLMTestCaseParams
 
 correctness_metric = GEval(
     name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    criteria="Determine whether the generated output is factually correct based on the expected output.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[\
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",\
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",\
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
@@ -7589,7 +7589,7 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input="The dog chased the cat up the tree, who ran up the tree?",
-    actual_output="It depends, some might consider the cat, while others might argue the dog.",
+    generated_output="It depends, some might consider the cat, while others might argue the dog.",
     expected_output="The cat."
 )
 
@@ -7615,7 +7615,7 @@ Providing `evaluation_steps` tells `GEval` to follow your `evaluation_steps` for
 correctness_metric = GEval(
     name="Correctness",
     evaluation_steps=[\
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",\
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",\
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
@@ -7634,7 +7634,7 @@ from deepeval.metrics.g_eval import Rubric
 
 correctness_metric = GEval(
     name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    criteria="Determine whether the generated output is factually correct based on the expected output.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
     rubric=[\
         Rubric(score_range=(0,2), expected_outcome="Factually incorrect."),\
@@ -7664,7 +7664,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[correctness_metric])
 def inner_component():
     # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    update_current_span(test_case=LLMTestCase(input="...", generated_output="..."))
     return
 
 @observe
@@ -7768,7 +7768,7 @@ Please do not directly copy and paste examples below without first assessing the
 
 ### Answer Correctness [​](https://deepeval.com/docs/metrics-llm-evals\#answer-correctness "Direct link to Answer Correctness")
 
-Answer correctness is the most used G-Eval metric of all and usually involves comparing the `actual_output` to the `expected_output`, which makes it a reference-based metric.
+Answer correctness is the most used G-Eval metric of all and usually involves comparing the `generated_output` to the `expected_output`, which makes it a reference-based metric.
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
@@ -7777,7 +7777,7 @@ from deepeval.test_case import LLMTestCaseParams
 correctness = GEval(
     name="Correctness",
     evaluation_steps=[\
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",\
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",\
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
@@ -7822,10 +7822,10 @@ from deepeval.test_case import LLMTestCaseParams
 professionalism = GEval(
     name="Professionalism",
     evaluation_steps=[\
-        "Determine whether the actual output maintains a professional tone throughout.",\
-        "Evaluate if the language in the actual output reflects expertise and domain-appropriate formality.",\
-        "Ensure the actual output stays contextually appropriate and avoids casual or ambiguous expressions.",\
-        "Check if the actual output is clear, respectful, and avoids slang or overly informal phrasing."\
+        "Determine whether the generated output maintains a professional tone throughout.",\
+        "Evaluate if the language in the generated output reflects expertise and domain-appropriate formality.",\
+        "Ensure the generated output stays contextually appropriate and avoids casual or ambiguous expressions.",\
+        "Check if the generated output is clear, respectful, and avoids slang or overly informal phrasing."\
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
@@ -7836,7 +7836,7 @@ Full example and advice on best practices available [here.](https://deepeval.com
 
 ### Safety [​](https://deepeval.com/docs/metrics-llm-evals\#safety "Direct link to Safety")
 
-Safety evaluates whether your LLM's `actual_output` aligns with whatever ethical guidelines your organization might have and is designed to tackle criteria such as bias, toxicity, fairness, and PII leakage.
+Safety evaluates whether your LLM's `generated_output` aligns with whatever ethical guidelines your organization might have and is designed to tackle criteria such as bias, toxicity, fairness, and PII leakage.
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
@@ -7868,7 +7868,7 @@ from deepeval.test_case import LLMTestCaseParams
 medical_faithfulness = GEval(
     name="Medical Faithfulness",
     evaluation_steps=[\
-        "Extract medical claims or diagnoses from the actual output.",\
+        "Extract medical claims or diagnoses from the generated output.",\
         "Verify each medical claim against the retrieved contextual information, such as clinical guidelines or medical literature.",\
         "Identify any contradictions or unsupported medical claims that could lead to misdiagnosis.",\
         "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",\
@@ -8585,7 +8585,7 @@ Referenceless metric
 
 RAG metric
 
-The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `actual_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The answer relevancy metric uses LLM-as-a-judge to measure the quality of your RAG pipeline's generator by evaluating how relevant the `generated_output` of your LLM application is compared to the provided `input`. `deepeval`'s answer relevancy metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 tip
 
@@ -8596,9 +8596,9 @@ Here is a detailed guide on [RAG evaluation](https://deepeval.com/guides/guides-
 To use the `AnswerRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-answer-relevancy#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-answer-relevancy#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-answer-relevancy\#usage "Direct link to Usage")
 
@@ -8617,7 +8617,7 @@ metric = AnswerRelevancyMetric(
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     # Replace this with the output from your LLM app
-    actual_output="We offer a 30-day full refund at no extra cost."
+    generated_output="We offer a 30-day full refund at no extra cost."
 )
 
 # To run metric as a standalone
@@ -8650,7 +8650,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -8686,7 +8686,7 @@ The `AnswerRelevancyMetric` score is calculated according to the following equat
 
 Answer Relevancy=Number of Relevant StatementsTotal Number of Statements\\text{Answer Relevancy} = \\frac{\\text{Number of Relevant Statements}}{\\text{Total Number of Statements}}Answer Relevancy=Total Number of StatementsNumber of Relevant Statements​
 
-The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `actual_output`, before using the same LLM to classify whether each statement is relevant to the `input`.
+The `AnswerRelevancyMetric` first uses an LLM to extract all statements made in the `generated_output`, before using the same LLM to classify whether each statement is relevant to the `input`.
 
 note
 
@@ -8720,7 +8720,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
 # Define custom template
 class CustomTemplate(AnswerRelevancyTemplate):
     @staticmethod
-    def generate_statements(actual_output: str):
+    def generate_statements(generated_output: str):
         return f"""Given the text, breakdown and generate a list of statements presented.
 
 Example:
@@ -8734,7 +8734,7 @@ Our new laptop model features a high-resolution Retina display for crystal-clear
 ===== END OF EXAMPLE ======
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """
@@ -8896,11 +8896,11 @@ Using the RAG triad of metrics in `deepeval` is as simple as writing a few lines
 ```codeBlockLines_e6Vv
 from deepeval.test_case import LLMTestCase
 
-test_case = LLMTestCase(input="...", actual_output="...", retrieval_context=["..."])
+test_case = LLMTestCase(input="...", generated_output="...", retrieval_context=["..."])
 
 ```
 
-Here, `input` is the user query, `actual_output` is the LLM generated response, and `retrieval_context` is a list of strings representing the retrieved text chunks. Then, define the RAG triad metrics:
+Here, `input` is the user query, `generated_output` is the LLM generated response, and `retrieval_context` is a list of strings representing the retrieved text chunks. Then, define the RAG triad metrics:
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric, ContextualRelevancyMetric
@@ -8949,10 +8949,10 @@ On this page
 
 To begin running evaluations on our QA Agent, we'll need two things:
 
-1. An `EvaluationDataset` populated with the generated answers ( `actual_output`) and the `retrieval_context` from the knowledge base for each question.
+1. An `EvaluationDataset` populated with the generated answers ( `generated_output`) and the `retrieval_context` from the knowledge base for each question.
 2. A selection of metrics to evaluate our `EvaluationDataset` on.
 
-In the previous section, we defined `AnswerRelevancy` and `Faithfulness` as our metrics of choice. While we already have an `EvaluationDataset`, it has not yet been populated with these parameters. Our first step is to generate the actual outputs and retrieval contexts for each `Golden` for evaluation.
+In the previous section, we defined `AnswerRelevancy` and `Faithfulness` as our metrics of choice. While we already have an `EvaluationDataset`, it has not yet been populated with these parameters. Our first step is to generate the generated outputs and retrieval contexts for each `Golden` for evaluation.
 
 info
 
@@ -8969,7 +8969,7 @@ Before we populate the Goldens, we need access to them. We'll do this by pulling
 
 note
 
-By default, `auto_convert_goldens_to_test_cases` is set to `True`, but we'll set it to `False` for this tutorial since the actual output is a required parameter in an `LLMTestCase`, and we haven't generated them yet.
+By default, `auto_convert_goldens_to_test_cases` is set to `True`, but we'll set it to `False` for this tutorial since the generated output is a required parameter in an `LLMTestCase`, and we haven't generated them yet.
 
 ```codeBlockLines_e6Vv
 from deepeval.dataset import EvaluationDataset
@@ -8979,20 +8979,20 @@ dataset.pull("MadeUpCompany QA Dataset", auto_convert_goldens_to_test_cases=Fals
 
 ```
 
-Next, we’ll iterate through each `Golden`'s inputs and generate the `actual_output` and `retrieval_context` for each synthetic user query.
+Next, we’ll iterate through each `Golden`'s inputs and generate the `generated_output` and `retrieval_context` for each synthetic user query.
 
 ```codeBlockLines_e6Vv
 from deepeval.test_case import LLMTestCase
 
 for golden in dataset.goldens:
-    # Compute actual output and retrieval context
-    actual_output = qa_agent.generate(golden.input)  # Replace with logic to compute actual output
+    # Compute generated output and retrieval context
+    generated_output = qa_agent.generate(golden.input)  # Replace with logic to compute generated output
     retrieval_context = qa_agent.get_retrieval_context()  # Replace with logic to compute retrieval context
 
     dataset.add_test_case(
         LLMTestCase(
             input=golden.input,
-            actual_output=actual_output,
+            generated_output=generated_output,
             retrieval_context=retrieval_context
         )
     )
@@ -9521,7 +9521,7 @@ deepeval login
 
 ## Analying your Test Report [​](https://deepeval.com/tutorials/qa-agent-improving-hyperparameters\#analying-your-test-report "Direct link to Analying your Test Report")
 
-Once your evaluation is complete, you'll be redirected to the following page on Confident AI. Here, you'll find a **detailed testing report** for the test cases we defined and evaluated in the previous section. Each test case includes its status (pass or fail), input, and actual output. Clicking on a test case will reveal additional parameters and metric scores.
+Once your evaluation is complete, you'll be redirected to the following page on Confident AI. Here, you'll find a **detailed testing report** for the test cases we defined and evaluated in the previous section. Each test case includes its status (pass or fail), input, and generated output. Clicking on a test case will reveal additional parameters and metric scores.
 
 Let's inspect the test report:
 
@@ -9563,14 +9563,14 @@ With these parameters, let's rerun our evaluations to see whether these changes 
 
 ```codeBlockLines_e6Vv
 for golden in dataset.goldens:
-    # Compute actual output and retrieval context
-    actual_output = qa_agent.generate(golden.input)  # Replace with logic to compute actual output
+    # Compute generated output and retrieval context
+    generated_output = qa_agent.generate(golden.input)  # Replace with logic to compute generated output
     retrieval_context = qa_agent.get_retrieval_context()  # Replace with logic to compute retrieval context
 
     dataset.add_test_case(
         LLMTestCase(
             input=golden.input,
-            actual_output=actual_output,
+            generated_output=generated_output,
             retrieval_context=retrieval_context
         )
     )
@@ -10032,7 +10032,7 @@ def generate_response(input: str) -> str:
     response = "Generated response based on the prompt: " + input
 
     update_current_span(
-        test_case=LLMTestCase(input=input, actual_output=response)
+        test_case=LLMTestCase(input=input, generated_output=response)
     )
     return response
 
@@ -10044,7 +10044,7 @@ def rag_pipeline(query: str) -> str:
     response = generate_response(f"Context: {context}\nQuery: {query}")
 
     update_current_span(
-        test_case=LLMTestCase(input=query, actual_output=response, retrieval_context=docs)
+        test_case=LLMTestCase(input=query, generated_output=response, retrieval_context=docs)
     )
     return response
 
@@ -10143,7 +10143,7 @@ info
 
 You can also create a dataset by uploading a CSV file or by creating goldens from scratch. `Goldens` are test cases `where` actual\_outputs haven't been populated yet. They make up the golden dataset, and you can [learn more about them here](https://deepeval.com/docs/evaluation-datasets#with-goldens).
 
-You'll notice that only the inputs corresponding to your document texts are populated. This allows you to generate different summaries ( `actual_output`) for each iteration of your summarizer.
+You'll notice that only the inputs corresponding to your document texts are populated. This allows you to generate different summaries ( `generated_output`) for each iteration of your summarizer.
 
 ## Maintaining the Dataset [​](https://deepeval.com/tutorials/doc-summarization-annotating-datasets\#maintaining-the-dataset "Direct link to Maintaining the Dataset")
 
@@ -13732,7 +13732,7 @@ LLM-as-a-judge
 
 Reference-based metric
 
-The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the `actual_output` to the provided `context`.
+The hallucination metric uses LLM-as-a-judge to determine whether your LLM generates factually correct information by comparing the `generated_output` to the provided `context`.
 
 info
 
@@ -13743,10 +13743,10 @@ If you're looking to evaluate hallucination for a RAG system, please refer to th
 To use the `HallucinationMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `context`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-hallucination#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-hallucination#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-hallucination\#usage "Direct link to Usage")
 
@@ -13760,12 +13760,12 @@ from deepeval.test_case import LLMTestCase
 # Replace this with the actual documents that you are passing as input to your LLM.
 context=["A man with blond-hair, and a brown shirt drinking out of a public water fountain."]
 
-# Replace this with the actual output from your LLM application
-actual_output="A blond drinking water in public."
+# Replace this with the generated output from your LLM application
+generated_output="A blond drinking water in public."
 
 test_case = LLMTestCase(
     input="What was the blond doing?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     context=context
 )
 metric = HallucinationMetric(threshold=0.5)
@@ -13799,7 +13799,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -13835,7 +13835,7 @@ The `HallucinationMetric` score is calculated according to the following equatio
 
 Hallucination=Number of Contradicted ContextsTotal Number of Contexts\\text{Hallucination} = \\frac{\\text{Number of Contradicted Contexts}}{\\text{Total Number of Contexts}}Hallucination=Total Number of ContextsNumber of Contradicted Contexts​
 
-The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the `actual_output`.
+The `HallucinationMetric` uses an LLM to determine, for each context in `contexts`, whether there are any contradictions to the `generated_output`.
 
 info
 
@@ -14012,7 +14012,7 @@ Metrics in `deepeval` are categorized by whether they require ground truth for e
 - **Referenceless metrics** evaluate outputs without ground truth comparisons. Most generic metrics in `deepeval` are referenceless, allowing evaluation without labeled datasets.
 
 
-For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `actual_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
+For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `generated_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
 
 note
 
@@ -14047,7 +14047,7 @@ Constantly reassess if still relevant for use case
 
 Here are some additional ideas if you're not sure:
 
-- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates `actual_output` alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against `retrieved_context`)
+- **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates `generated_output` alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against `retrieved_context`)
 - **Agents**: Use the `ToolCorrectnessMetric` to verify proper tool selection and usage
 - **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
 - **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks
@@ -14272,7 +14272,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import evaluate
 
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(input="...", generated_output="...")
 
 evaluate(test_cases=[test_case], metrics=[AnswerRelevancyMetric()])
 
@@ -14340,7 +14340,7 @@ from deepeval.test_case import LLMTestCase
 # Initialize a test case
 test_case = LLMTestCase(
     input="...",
-    actual_output="...",
+    generated_output="...",
     retrieval_context=["..."]
 )
 
@@ -14396,7 +14396,7 @@ info
 
 Let's take the [`FaithfulnessMetric` algorithm](https://deepeval.com/docs/metrics-faithfulness#how-is-it-calculated) for example:
 
-1. **Extract all factual claims** made in the `actual_output`
+1. **Extract all factual claims** made in the `generated_output`
 2. **Extract all factual truths** found in the `retrieval_context`
 3. **Compare extracted claims and truths** to generate a final score and reason.
 
@@ -14474,7 +14474,7 @@ from deepeval.metrics.answer_relevancy import AnswerRelevancyTemplate
 # Define custom template
 class CustomTemplate(AnswerRelevancyTemplate):
     @staticmethod
-    def generate_statements(actual_output: str):
+    def generate_statements(generated_output: str):
         return f"""Given the text, breakdown and generate a list of statements presented.
 
 Example:
@@ -14488,7 +14488,7 @@ Our new laptop model features a high-resolution Retina display for crystal-clear
 ===== END OF EXAMPLE ======
 
 Text:
-{actual_output}
+{generated_output}
 
 JSON:
 """
@@ -14594,13 +14594,13 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
   input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
+  generated_output="Joe Biden",
   retrieval_context=["Joe Biden serves as the current president of America."]
 )
 
 ```
 
-In this example, `input` mimics an user interaction with a RAG-based LLM application, where `actual_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
+In this example, `input` mimics an user interaction with a RAG-based LLM application, where `generated_output` is the output of your LLM application and `retrieval_context` is the retrieved nodes in your RAG pipeline. Creating a test case allows you to evaluate using `deepeval`'s default metrics:
 
 ```codeBlockLines_e6Vv
 from deepeval.test_case import LLMTestCase
@@ -14609,7 +14609,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 answer_relevancy_metric = AnswerRelevancyMetric()
 test_case = LLMTestCase(
   input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
+  generated_output="Joe Biden",
   retrieval_context=["Joe Biden serves as the current president of America."]
 )
 
@@ -14630,7 +14630,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 answer_relevancy_metric = AnswerRelevancyMetric()
 test_case = LLMTestCase(
   input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
+  generated_output="Joe Biden",
   retrieval_context=["Joe Biden serves as the current president of America."]
 )
 
@@ -14842,7 +14842,7 @@ LLM-as-a-judge
 
 Referenceless metric
 
-The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the necessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `actual_output`.
+The summarization metric uses LLM-as-a-judge to determine whether your LLM (application) is generating factually correct summaries while including the necessary details from the original text. In a summarization task within `deepeval`, the original text refers to the `input` while the summary is the `generated_output`.
 
 note
 
@@ -14853,13 +14853,13 @@ The `SummarizationMetric` is the only default metric in `deepeval` that is not c
 To use the `SummarizationMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-summarization#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-summarization#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-summarization\#usage "Direct link to Usage")
 
-Let's take this `input` and `actual_output` as an example:
+Let's take this `input` and `generated_output` as an example:
 
 ```codeBlockLines_e6Vv
 # This is the original text to be summarized
@@ -14872,8 +14872,8 @@ more comprehensive and faithful summary, signifying that the summary effectively
 encapsulates the crucial points and details from the original content.
 """
 
-# This is the summary, replace this with the actual output from your LLM application
-actual_output="""
+# This is the summary, replace this with the generated output from your LLM application
+generated_output="""
 The coverage score quantifies how well a summary captures and
 accurately represents key information from the original text,
 with a higher score indicating greater comprehensiveness.
@@ -14889,7 +14889,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import SummarizationMetric
 ...
 
-test_case = LLMTestCase(input=input, actual_output=actual_output)
+test_case = LLMTestCase(input=input, generated_output=generated_output)
 metric = SummarizationMetric(
     threshold=0.5,
     model="gpt-4",
@@ -14936,7 +14936,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -15843,7 +15843,7 @@ A dataset is a list of goldens, and it's important to know how it is different f
 
 Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, `Golden` S:
 
-- Don't require an `actual_output` when created
+- Don't require an `generated_output` when created
 - Allow for LLM output generation during evaluation time
 - Store expected results like `expected_output` and `expected_tools`
 - Serve as templates before becoming fully-formed test cases
@@ -15854,7 +15854,7 @@ Goldens represent a more flexible alternative to test cases in the `deepeval`, a
 - Compare performance between model versions
 - Test with `input` s that haven't yet been processed by your LLM
 
-Think of `Golden` s as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements ( `actual_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
+Think of `Golden` s as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements ( `generated_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
 
 ## Create A Dataset [​](https://deepeval.com/docs/evaluation-datasets\#create-a-dataset "Direct link to Create A Dataset")
 
@@ -15881,8 +15881,8 @@ print(dataset.goldens)
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset
 
-first_test_case = LLMTestCase(input="...", actual_output="...")
-second_test_case = LLMTestCase(input="...", actual_output="...")
+first_test_case = LLMTestCase(input="...", generated_output="...")
+second_test_case = LLMTestCase(input="...", generated_output="...")
 
 dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
 
@@ -15901,7 +15901,7 @@ dataset.add_test_case(test_case)
 
 tip
 
-A `Golden` and `LLMTestCase` contains almost an identical class signature, so technically you can also supply other parameters such as the `actual_output` when creating a `Golden`.
+A `Golden` and `LLMTestCase` contains almost an identical class signature, so technically you can also supply other parameters such as the `generated_output` when creating a `Golden`.
 
 ## Generate A Dataset [​](https://deepeval.com/docs/evaluation-datasets\#generate-a-dataset "Direct link to Generate A Dataset")
 
@@ -16019,7 +16019,7 @@ dataset.add_test_cases_from_json_file(
     # file_path is the absolute path to you .json file
     file_path="example.json",
     input_key_name="query",
-    actual_output_key_name="actual_output",
+    generated_output_key_name="generated_output",
     expected_output_key_name="expected_output",
     context_key_name="context",
     retrieval_context_key_name="retrieval_context",
@@ -16036,7 +16036,7 @@ dataset.add_goldens_from_json_file(
 
 info
 
-Loading datasets as goldens are especially helpful if you're looking to generate LLM `actual_output` s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
+Loading datasets as goldens are especially helpful if you're looking to generate LLM `generated_output` s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
 
 ### From CSV [​](https://deepeval.com/docs/evaluation-datasets\#from-csv "Direct link to From CSV")
 
@@ -16054,7 +16054,7 @@ dataset.add_test_cases_from_csv_file(
     # file_path is the absolute path to you .csv file
     file_path="example.csv",
     input_col_name="query",
-    actual_output_col_name="actual_output",
+    generated_output_col_name="generated_output",
     expected_output_col_name="expected_output",
     context_col_name="context",
     context_col_delimiter= ";",
@@ -16449,7 +16449,7 @@ from deepeval.test_case import LLMTestCaseParams
 # Define a custom G-Eval metric
 custom_metric = GEval(
     name="Relevancy",
-    criteria="Check if the actual output directly addresses the input.",
+    criteria="Check if the generated output directly addresses the input.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.INPUT]
 )
 
@@ -16465,7 +16465,7 @@ Another benefit is that since G-Eval relies on LLM-as-a-judge, DeepEval allows u
 
 ## Answer Correctness [​](https://deepeval.com/blog/top-5-geval-use-cases\#answer-correctness "Direct link to Answer Correctness")
 
-[Answer Correctness](https://deepeval.com/guides/guides-answer-correctness-metric) is the most widely used G-Eval metric. It measures how closely the LLM’s _actual output_ aligns with the _expected output_. As a **reference-based metric**, it requires a ground truth (expected output) to be provided and is most commonly used during development where labeled answers are available, rather than in production.
+[Answer Correctness](https://deepeval.com/guides/guides-answer-correctness-metric) is the most widely used G-Eval metric. It measures how closely the LLM’s _generated output_ aligns with the _expected output_. As a **reference-based metric**, it requires a ground truth (expected output) to be provided and is most commonly used during development where labeled answers are available, rather than in production.
 
 note
 
@@ -16480,10 +16480,10 @@ from deepeval.test_case import LLMTestCaseParams
 
 correctness_metric = GEval(
     name="Correctness",
-    criteria="Determine whether the actual output is factually correct based on the expected output.",
+    criteria="Determine whether the generated output is factually correct based on the expected output.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[\
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",\
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",\
         "You should also heavily penalize omission of detail",\
         "Vague language, or contradicting OPINIONS, are OK"\
     ],
@@ -16578,10 +16578,10 @@ professionalism_metric = GEval(
     criteria="Assess the level of professionalism and expertise conveyed in the response.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[\
-        "Determine whether the actual output maintains a professional tone throughout.",\
-        "Evaluate if the language in the actual output reflects expertise and domain-appropriate formality.",\
-        "Ensure the actual output stays contextually appropriate and avoids casual or ambiguous expressions.",\
-        "Check if the actual output is clear, respectful, and avoids slang or overly informal phrasing."\
+        "Determine whether the generated output maintains a professional tone throughout.",\
+        "Evaluate if the language in the generated output reflects expertise and domain-appropriate formality.",\
+        "Ensure the generated output stays contextually appropriate and avoids casual or ambiguous expressions.",\
+        "Check if the generated output is clear, respectful, and avoids slang or overly informal phrasing."\
     ],
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
@@ -16658,7 +16658,7 @@ There are 5 core criteria for evaluating RAG systems, which make up DeepEval’s
 | **Contextual Recall** | Are the retrieved documents complete? |
 | **Contextual Relevancy** | Are the retrieved documents relevant? |
 
-Below is an example of a custom **Faithfulness** metric for a medical diagnosis use case. It evaluates whether the actual output is factually aligned with the retrieved context.
+Below is an example of a custom **Faithfulness** metric for a medical diagnosis use case. It evaluates whether the generated output is factually aligned with the retrieved context.
 
 ```codeBlockLines_e6Vv
 from deepeval.metrics import GEval
@@ -16666,10 +16666,10 @@ from deepeval.test_case import LLMTestCaseParams
 
 custom_faithfulness_metric = GEval(
     name="Medical Diagnosis Faithfulness",
-    criteria="Evaluate the factual alignment of the actual output with the retrieved contextual information in a medical context.",
+    criteria="Evaluate the factual alignment of the generated output with the retrieved contextual information in a medical context.",
     # NOTE: you can only provide either criteria or evaluation_steps, and not both
     evaluation_steps=[\
-        "Extract medical claims or diagnoses from the actual output.",\
+        "Extract medical claims or diagnoses from the generated output.",\
         "Verify each medical claim against the retrieved contextual information, such as clinical guidelines or medical literature.",\
         "Identify any contradictions or unsupported medical claims that could lead to misdiagnosis.",\
         "Heavily penalize hallucinations, especially those that could result in incorrect medical advice.",\
@@ -16704,7 +16704,7 @@ from deepeval.test_case import LLMTestCaseParams
 
 geval_metric = GEval(
     name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    criteria="Determine how persuasive the `generated output` is to getting a user booking in a call.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
@@ -16733,7 +16733,7 @@ Unlike G-Eval, DAG evaluates each condition explicitly and independently, offeri
 
 ### Example [​](https://deepeval.com/blog/top-5-geval-use-cases\#example "Direct link to Example")
 
-A **DAG** handles the above use case deterministically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `actual_output` is as a sales email.
+A **DAG** handles the above use case deterministically by splitting the logic, and only if it passes this initial sentence length check does the `GEval` metric evaluate how well the `generated_output` is as a sales email.
 
 Here is an example of a G-Eval + DAG approach:
 
@@ -16750,12 +16750,12 @@ from deepeval.metrics import DAGMetric, GEval
 
 geval_metric = GEval(
     name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+    criteria="Determine how persuasive the `generated output` is to getting a user booking in a call.",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
 conciseness_node = BinaryJudgementNode(
-    criteria="Does the actual output contain less than or equal to 4 sentences?",
+    criteria="Does the generated output contain less than or equal to 4 sentences?",
     children=[\
         VerdictNode(verdict=False, score=0),\
         VerdictNode(verdict=True, child=geval_metric),\
@@ -16767,7 +16767,7 @@ dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
 metric = DagMetric(dag=dag)
 
 # create test case
-test_case = LLMTestCase(input="...", actual_output="...")
+test_case = LLMTestCase(input="...", generated_output="...")
 
 # measure
 metric.measure(test_case)
@@ -16834,34 +16834,34 @@ from deepeval.test_case import LLMTestCase
 # test cases truncated for better readability...
 test_case_0 = LLMTestCase(
   input="Hey, I've been experiencing headaches lately.",
-  actual_output="I can help you with that.  Could you pleas...",
+  generated_output="I can help you with that.  Could you pleas...",
   retrieval_context=["Headaches can have various causes, in..."]
 )
 
 test_case_1 = LLMTestCase(
   input="I'm been coughing a lot lately.",
-  actual_output="Could you please provide your name, the da..."
+  generated_output="Could you please provide your name, the da..."
 )
 
 test_case_2 = LLMTestCase(
   input="I'm feeling pretty sick, can I book an appointment...",
-  actual_output="Could you please provide more specific det..."
+  generated_output="Could you please provide more specific det..."
 )
 
 test_case_3 = LLMTestCase(
   input="My name is John Doe. My email is johndoe@gmail.com...",
-  actual_output="Please confirm the following details: Name..."
+  generated_output="Please confirm the following details: Name..."
 )
 
 test_case_4 = LLMTestCase(
   input="My nose has been running constantly. Could it be s...",
-  actual_output="A runny nose is always caused by harmless ...",
+  generated_output="A runny nose is always caused by harmless ...",
   retrieval_context=["A runny nose can be caused by common ..."]
 )
 
 ```
 
-Although we've precomputed the `actual_output` and the `retrieval_context` for each of the test cases in example above, you'll ideally generate these parameters from your LLM application at evaluation time.
+Although we've precomputed the `generated_output` and the `retrieval_context` for each of the test cases in example above, you'll ideally generate these parameters from your LLM application at evaluation time.
 
 note
 
@@ -16915,7 +16915,7 @@ If you don't know where the metrics are coming from, you should go back and revi
 
 ## Analyzing Your Testing Report [​](https://deepeval.com/tutorials/tutorial-evaluations-running-an-evaluation\#analyzing-your-testing-report "Direct link to Analyzing Your Testing Report")
 
-You'll be redirected to the following page on Confident AI **once your evaluation is complete**. Here, you'll find the testing report generated for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding actual output. Clicking on a test case will reveal the remaining parameters and metric scores.
+You'll be redirected to the following page on Confident AI **once your evaluation is complete**. Here, you'll find the testing report generated for the 5 test cases that we defined and evaluated in the previous steps. Each test case displays its status (pass or fail), input, and corresponding generated output. Clicking on a test case will reveal the remaining parameters and metric scores.
 
 info
 
@@ -17271,7 +17271,7 @@ from deepeval.dataset import EvaluationDataset
 from some_llm_library import llm  # Replace with the actual LLM summarizer
 
 # Convert document strings to test cases with LLM summaries
-test_cases = [LLMTestCase(input=doc, actual_output=llm.summarize(doc)) for doc in documents]
+test_cases = [LLMTestCase(input=doc, generated_output=llm.summarize(doc)) for doc in documents]
 
 # Create the evaluation dataset
 dataset = EvaluationDataset(test_cases=test_cases)
@@ -17280,14 +17280,14 @@ dataset = EvaluationDataset(test_cases=test_cases)
 
 info
 
-An `EvaluationDataset` consists of a series of test cases. Each test case contains an `input`, which represents the document we feed into the summarizer, and the `actual_output`, which is the summary generated by the LLM. [More on test cases here](https://deepeval.com/docs/evaluation-test-cases).
+An `EvaluationDataset` consists of a series of test cases. Each test case contains an `input`, which represents the document we feed into the summarizer, and the `generated_output`, which is the summary generated by the LLM. [More on test cases here](https://deepeval.com/docs/evaluation-test-cases).
 
 Keep in mind that, for the sake of this tutorial, our `EvaluationDataset` consists of 5 test cases (5 documents), and our first `test_case` corresponds to the service agreement we inspected when we first [defined our evaluation criteria](https://deepeval.com/tutorials/legal-doc-summarizer-defining-a-summarization-criteria) in the previous sections.
 
 ```codeBlockLines_e6Vv
 print(dataset.test_cases[0].input)
 #CONTRACT FOR SERVICES...
-print(dataset.test_cases[0].actual_output)
+print(dataset.test_cases[0].generated_output)
 #This agreement establishes...
 print(len(dataset.test_cases))
 # 5
@@ -17324,7 +17324,7 @@ Once your evaluation is complete, you'll be redirected to the test cases page on
 
 info
 
-Each **test case** includes a status (pass or fail), input (document), and actual output (summary). A test case is considered failing if any one of its metric score fails to meet the metric threshold.
+Each **test case** includes a status (pass or fail), input (document), and generated output (summary). A test case is considered failing if any one of its metric score fails to meet the metric threshold.
 
 ### Identifying the Failing Test Case [​](https://deepeval.com/tutorials/doc-summarization-running-an-evaluation\#identifying-the-failing-test-case "Direct link to Identifying the Failing Test Case")
 
@@ -17414,7 +17414,7 @@ failing_llm_test_case = LLMTestCase(
         Name: Jane Smith
         Title: Managing Partner
     """,
-    actual_output="This agreement outlines a software development and consulting arrangement between Acme Solutions, Inc. and BetaCorp LLC. Acme Solutions will provide software services as defined in an exhibit, with work commencing on February 1, 2025, and lasting for a set period unless extended. Compensation is structured as multiple installments, with penalties for late payments mentioned but not detailed. The contract also covers confidentiality, stating that proprietary information must be protected. Intellectual property rights grant ownership to the client, though usage restrictions are not fully explained. Dispute resolution involves arbitration, but jurisdiction specifics are not included here. Liability limitations and termination clauses are covered, but details on service expectations, warranty periods, and potential penalties are not fully elaborated. The contract also references force majeure conditions. Overall, the agreement defines responsibilities, payment terms, and legal considerations, though some specifics on financial penalties, intellectual property nuances, and governing laws are not fully captured in this summary.",
+    generated_output="This agreement outlines a software development and consulting arrangement between Acme Solutions, Inc. and BetaCorp LLC. Acme Solutions will provide software services as defined in an exhibit, with work commencing on February 1, 2025, and lasting for a set period unless extended. Compensation is structured as multiple installments, with penalties for late payments mentioned but not detailed. The contract also covers confidentiality, stating that proprietary information must be protected. Intellectual property rights grant ownership to the client, though usage restrictions are not fully explained. Dispute resolution involves arbitration, but jurisdiction specifics are not included here. Liability limitations and termination clauses are covered, but details on service expectations, warranty periods, and potential penalties are not fully elaborated. The contract also references force majeure conditions. Overall, the agreement defines responsibilities, payment terms, and legal considerations, though some specifics on financial penalties, intellectual property nuances, and governing laws are not fully captured in this summary.",
 )
 
 ```
@@ -17731,7 +17731,7 @@ info
 
 By default the synthesizer requires an OpenAI API key for generation. However, you can fully **customize the synthetic generation process** with custom models and various parameters. You can learn more about the [synthetic generation process here](https://deepeval.com/docs/synthesizer-introduction).
 
-A row of dataset is called a `Golden`. When generating from documents, each golden contains an input (the user query), the expected output (ideal LLM response to user query), and the context (ideal context to be retrieved). A golden is different from an `LLMTestCase` because it does not require the actual output, which is generated at evaluation time.
+A row of dataset is called a `Golden`. When generating from documents, each golden contains an input (the user query), the expected output (ideal LLM response to user query), and the context (ideal context to be retrieved). A golden is different from an `LLMTestCase` because it does not require the generated output, which is generated at evaluation time.
 
 You can access the list of goldens from the dataset object:
 
@@ -17892,7 +17892,7 @@ def your_llm_app(input: str):
         ).choices[0].message.content
 
         # Create test case at runtime
-        update_current_span(test_case=LLMTestCase(input=input, actual_output=res))
+        update_current_span(test_case=LLMTestCase(input=input, generated_output=res))
 
         return res
 
@@ -18376,11 +18376,11 @@ The `ContextualPrecisionMetric` focuses on evaluating the re-ranker of your RAG 
 To use the `ContextualPrecisionMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `expected_output`
 - `retrieval_context`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-contextual-precision#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-contextual-precision#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-contextual-precision\#usage "Direct link to Usage")
 
@@ -18391,8 +18391,8 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ContextualPrecisionMetric
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
+# Replace this with the generated output from your LLM application
+generated_output = "We offer a 30-day full refund at no extra cost."
 
 # Replace this with the expected output of your RAG generator
 expected_output = "You are eligible for a 30 day full refund at no extra cost."
@@ -18407,7 +18407,7 @@ metric = ContextualPrecisionMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     expected_output=expected_output,
     retrieval_context=retrieval_context
 )
@@ -18442,7 +18442,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -18575,11 +18575,11 @@ The `ToolCorrectnessMetric` allows you to define the **strictness** of correctne
 To use the `ToolCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `tools_called`
 - `expected_tools`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-tool-correctness#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-tool-correctness#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-tool-correctness\#usage "Direct link to Usage")
 
@@ -18592,7 +18592,7 @@ from deepeval.metrics import ToolCorrectnessMetric
 
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output="We offer a 30-day full refund at no extra cost.",
+    generated_output="We offer a 30-day full refund at no extra cost.",
     # Replace this with the tools that was actually used by your LLM agent
     tools_called=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery")],
     expected_tools=[ToolCall(name="WebSearch")],
@@ -18633,7 +18633,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -18789,7 +18789,7 @@ We'll use this `Qdrant` collection in the following sections as our retrieval en
 
 ## Evaluating Qdrant Retrieval [​](https://deepeval.com/integrations/vector-databases/qdrant\#evaluating-qdrant-retrieval "Direct link to Evaluating Qdrant Retrieval")
 
-To evaluate your Qdrant retriever, you'll first need to prepare an `LLMTestCase`, which includes an `input`, `actual_output`, `expected_output`, and `retrieval_context`. This requires defining an `input` and `expected_output` before generating a response and extracting the retrieval contexts.
+To evaluate your Qdrant retriever, you'll first need to prepare an `LLMTestCase`, which includes an `input`, `generated_output`, `expected_output`, and `retrieval_context`. This requires defining an `input` and `expected_output` before generating a response and extracting the retrieval contexts.
 
 In this example, we'll be using the following input:
 
@@ -18807,7 +18807,7 @@ and the corresponding expected output:
 
 ### Preparing your Test Case [​](https://deepeval.com/integrations/vector-databases/qdrant\#preparing-your-test-case "Direct link to Preparing your Test Case")
 
-To generate the response or `actual_output` from your RAG pipeline, you'll first need to retrieve relevant contexts from your `Qdrant` collection. To achieve this, we'll define a `search` function that embeds the `input` using the same embedding model ( `all-MiniLM-L6-v2`) as above, then search for the top 3 most similar vectors and extract the corresponding texts.
+To generate the response or `generated_output` from your RAG pipeline, you'll first need to retrieve relevant contexts from your `Qdrant` collection. To achieve this, we'll define a `search` function that embeds the `input` using the same embedding model ( `all-MiniLM-L6-v2`) as above, then search for the top 3 most similar vectors and extract the corresponding texts.
 
 ```codeBlockLines_e6Vv
 ...
@@ -18843,12 +18843,12 @@ Supporting Context:
 {retrieval_context}
 """
 
-actual_output = generate(prompt) # hypothetical function, replace with your own LLM
-print(actual_output)
+generated_output = generate(prompt) # hypothetical function, replace with your own LLM
+print(generated_output)
 
 ```
 
-We'll then pass the input and expected output that was initially defined into an `LLMTestCase`, along with the actual output and retrieval context that we generated and searched for.
+We'll then pass the input and expected output that was initially defined into an `LLMTestCase`, along with the generated output and retrieval context that we generated and searched for.
 
 ```codeBlockLines_e6Vv
 from deepeval.test_case import LLMTestCase
@@ -18857,14 +18857,14 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context,
     expected_output="Qdrant is a powerful vector database optimized for semantic search and retrieval.",
 )
 
 ```
 
-Before proceeding with evaluations, let's examine the `actual_output` that was generated:
+Before proceeding with evaluations, let's examine the `generated_output` that was generated:
 
 ```codeBlockLines_e6Vv
 Qdrant is a scalable vector database optimized for high-performance retrieval.
@@ -19537,7 +19537,7 @@ To use the `ConversationCompletenessMetric`, you'll have to provide the followin
 Additionally, each `LLMTestCase` s in `turns` requires the following arguments:
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 ## Usage [​](https://deepeval.com/docs/metrics-conversation-completeness\#usage "Direct link to Usage")
 
@@ -19549,7 +19549,7 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import ConversationCompletenessMetric
 
 convo_test_case = ConversationalTestCase(
-    turns=[LLMTestCase(input="...", actual_output="...")]
+    turns=[LLMTestCase(input="...", generated_output="...")]
 )
 metric = ConversationCompletenessMetric(threshold=0.5)
 
@@ -19628,11 +19628,11 @@ deepeval recommend metrics
 To use the `ContextualRecallMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `expected_output`
 - `retrieval_context`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-contextual-recall#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-contextual-recall#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-contextual-recall\#usage "Direct link to Usage")
 
@@ -19643,8 +19643,8 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import ContextualRecallMetric
 
-# Replace this with the actual output from your LLM application
-actual_output = "We offer a 30-day full refund at no extra cost."
+# Replace this with the generated output from your LLM application
+generated_output = "We offer a 30-day full refund at no extra cost."
 
 # Replace this with the expected output from your RAG generator
 expected_output = "You are eligible for a 30 day full refund at no extra cost."
@@ -19659,7 +19659,7 @@ metric = ContextualRecallMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    actual_output=actual_output,
+    generated_output=generated_output,
     expected_output=expected_output,
     retrieval_context=retrieval_context
 )
@@ -19694,7 +19694,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -19734,7 +19734,7 @@ The `ContextualRecallMetric` first uses an LLM to extract all **statements made 
 
 info
 
-We use the `expected_output` instead of the `actual_output` because we're measuring the quality of the RAG retriever for a given ideal output.
+We use the `expected_output` instead of the `generated_output` because we're measuring the quality of the RAG retriever for a given ideal output.
 
 A higher contextual recall score represents a greater ability of the retrieval system to capture all relevant information from the total available relevant set within your knowledge base.
 
@@ -19802,7 +19802,7 @@ On this page
 
 Referenceless metric
 
-The json correctness metric measures whether your LLM application is able to generate `actual_output` s with the correct **json schema**.
+The json correctness metric measures whether your LLM application is able to generate `generated_output` s with the correct **json schema**.
 
 note
 
@@ -19813,9 +19813,9 @@ The `JsonCorrectnessMetric` like the `ToolCorrectnessMetric` is not an LLM-eval,
 To use the `JsonCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-json-correctness#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-json-correctness#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-json-correctness\#usage "Direct link to Usage")
 
@@ -19831,7 +19831,7 @@ class ExampleSchema(BaseModel):
 
 tip
 
-If your `actual_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
+If your `generated_output` is a list of JSON objects, you can simply create a list schema by wrapping your existing schema in a `RootModel`. For example:
 
 ```codeBlockLines_e6Vv
 from pydantic import RootModel
@@ -19858,8 +19858,8 @@ metric = JsonCorrectnessMetric(
 )
 test_case = LLMTestCase(
     input="Output me a random Json with the 'name' key",
-    # Replace this with the actual output from your LLM application
-    actual_output="{'name': null}"
+    # Replace this with the generated output from your LLM application
+    generated_output="{'name': null}"
 )
 
 # To run metric as a standalone
@@ -19882,7 +19882,7 @@ There are **ONE** mandatory and **SIX** optional parameters when creating an `Pr
 
 info
 
-Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `actual_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
+Unlike other metrics, the `model` is used for generating reason instead of evaluation. It will only be used if the `generated_output` has the wrong schema, **AND** if `include_reason` is set to `True`.
 
 ### Within components [​](https://deepeval.com/docs/metrics-json-correctness\#within-components "Direct link to Within components")
 
@@ -19896,7 +19896,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -19931,11 +19931,11 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 The `PromptAlignmentMetric` score is calculated according to the following equation:
 
 Json Correctness={1If the actual output fits the expected schema,0Otherwise\\text{Json Correctness} = \\begin{cases}
-1 & \\text{If the actual output fits the expected schema}, \\\
+1 & \\text{If the generated output fits the expected schema}, \\\
 0 & \\text{Otherwise}
 \\end{cases}Json Correctness={10​If the actual output fits the expected schema,Otherwise​
 
-The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `actual_output` can be loaded into the schema.
+The `JsonCorrectnessMetric` does not use an LLM for evaluation and instead uses the provided `expected_schema` to determine whether the `generated_output` can be loaded into the schema.
 
 - [Required Arguments](https://deepeval.com/docs/metrics-json-correctness#required-arguments)
 - [Usage](https://deepeval.com/docs/metrics-json-correctness#usage)
@@ -19954,7 +19954,7 @@ LLM-as-a-judge
 
 Referenceless metric
 
-The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate `actual_output` s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The prompt alignment metric uses LLM-as-a-judge to measure whether your LLM application is able to generate `generated_output` s that aligns with any **instructions** specified in your prompt template. `deepeval`'s prompt alignment metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 tip
 
@@ -19970,9 +19970,9 @@ deepeval recommend metrics
 To use the `PromptAlignmentMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-prompt-alignment#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-prompt-alignment#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/metrics-prompt-alignment\#usage "Direct link to Usage")
 
@@ -19990,8 +19990,8 @@ metric = PromptAlignmentMetric(
 )
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
-    # Replace this with the actual output from your LLM application
-    actual_output="We offer a 30-day full refund at no extra cost."
+    # Replace this with the generated output from your LLM application
+    generated_output="We offer a 30-day full refund at no extra cost."
 )
 
 # To run metric as a standalone
@@ -20024,7 +20024,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -20060,7 +20060,7 @@ The `PromptAlignmentMetric` score is calculated according to the following equat
 
 Prompt Alignment=Number of Instructions FollowedTotal Number of Instructions\\text{Prompt Alignment} = \\frac{\\text{Number of Instructions Followed}}{\\text{Total Number of Instructions}}Prompt Alignment=Total Number of InstructionsNumber of Instructions Followed​
 
-The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruction is followed in the `actual_output` using additional context from the `input`.
+The `PromptAlignmentMetric` uses an LLM to classify whether each prompt instruction is followed in the `generated_output` using additional context from the `input`.
 
 tip
 
@@ -20488,7 +20488,7 @@ for context in retrieval_context:
 
 ## Evaluating Cognee RAG Pipelines [​](https://deepeval.com/integrations/vector-databases/cognee\#evaluating-cognee-rag-pipelines "Direct link to Evaluating Cognee RAG Pipelines")
 
-Unit testing RAG pipelines powered by Cognee is as simple as defining an `EvaluationDataset` and generating `actual_output` s and `retrieval_context` s at evaluation time. Building upon the previous example, first generate all the necessarily parameters required to test RAG:
+Unit testing RAG pipelines powered by Cognee is as simple as defining an `EvaluationDataset` and generating `generated_output` s and `retrieval_context` s at evaluation time. Building upon the previous example, first generate all the necessarily parameters required to test RAG:
 
 ```codeBlockLines_e6Vv
 ...
@@ -20506,7 +20506,7 @@ Supporting Context:
 {retrieval_context}
 """
 
-actual_output = generate(prompt) # hypothetical function, replace with your own LLM
+generated_output = generate(prompt) # hypothetical function, replace with your own LLM
 
 ```
 
@@ -20524,7 +20524,7 @@ from deepeval import evaluate
 ...
 test_case = LLMTestCase(
     input=input,
-    actual_output=actual_output,
+    generated_output=generated_output,
     retrieval_context=retrieval_context,
     expected_output="Cognee is the Graph RAG Framework.",
 )
@@ -20556,7 +20556,7 @@ Apart from catching regressions and sanity checking your LLM applications, LLM e
 
 info
 
-In `deepeval`, hyperparameters refer to independent variables that affect the final `actual_output` of your LLM application, which includes the LLM used, the prompt template, temperature, etc.
+In `deepeval`, hyperparameters refer to independent variables that affect the final `generated_output` of your LLM application, which includes the LLM used, the prompt template, temperature, etc.
 
 ## Which Hyperparameters Should I Iterate On? [​](https://deepeval.com/guides/guides-optimizing-hyperparameters\#which-hyperparameters-should-i-iterate-on "Direct link to Which Hyperparameters Should I Iterate On?")
 
@@ -20579,13 +20579,13 @@ In the previous guide on [RAG Evaluation](https://deepeval.com/guides/guides-rag
 To find the best hyperparameter combination, simply:
 
 - choose a/multiple [LLM evaluation metrics](https://deepeval.com/guides/guides-optimizing-hyperparameters#metrics-introduction) that fits your evaluation criteria
-- execute evaluations in a nested for-loop, while generating `actual_outputs` **at evaluation time** based on the current hyperparameter combination
+- execute evaluations in a nested for-loop, while generating `generated_outputs` **at evaluation time** based on the current hyperparameter combination
 
 note
 
-In reality, you don't have to strictly generate `actual_outputs` at evaluation time and can evaluate with datasets of precomputed `actual_outputs`, but you ought to ensure that the `actual_outputs` in each [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases) can be properly identified by a hyperparameter combination for this to work.
+In reality, you don't have to strictly generate `generated_outputs` at evaluation time and can evaluate with datasets of precomputed `generated_outputs`, but you ought to ensure that the `generated_outputs` in each [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases) can be properly identified by a hyperparameter combination for this to work.
 
-Let's walkthrough a quick example hypothetical example showing how to find the best model and prompt template hyperparameter combination using the `AnswerRelevancyMetric` as a measurement. First, define a function to generate `actual_output` s for `LLMTestCase` s based on a certain hyperparameter combination:
+Let's walkthrough a quick example hypothetical example showing how to find the best model and prompt template hyperparameter combination using the `AnswerRelevancyMetric` as a measurement. First, define a function to generate `generated_output` s for `LLMTestCase` s based on a certain hyperparameter combination:
 
 ```codeBlockLines_e6Vv
 from typing import List
@@ -20601,9 +20601,9 @@ def construct_test_cases(model: str, prompt_template: str) : List[LLMTestCase]:
     for input in list_of_inputs:
         test_case = LLMTestCase(
             input=input,
-            # Hypothetical function to generate actual outputs
+            # Hypothetical function to generate generated outputs
             # at evaluation time based on your hyperparameters!
-            actual_output=generate_actual_output(llm, prompt)
+            generated_output=generate_generated_output(llm, prompt)
         )
         test_cases.append(test_case)
 
@@ -20727,7 +20727,7 @@ Throughout this documentation, you should assume the term 'test case' refers to 
 An `LLMTestCase` is the most prominent type of test case in `deepeval` and **represents a single, atomic unit of interaction** with your LLM app. It has **NINE** parameters:
 
 - `input`
-- `actual_output`
+- `generated_output`
 - \[Optional\] `expected_output`
 - \[Optional\] `context`
 - \[Optional\] `retrieval_context`
@@ -20744,7 +20744,7 @@ from deepeval.test_case import LLMTestCase, ToolCall
 test_case = LLMTestCase(
     input="What if these shoes don't fit?",
     expected_output="You're eligible for a 30 day refund at no extra cost.",
-    actual_output="We offer a 30-day full refund at no extra cost.",
+    generated_output="We offer a 30-day full refund at no extra cost.",
     context=["All customers are eligible for a 30 day full refund at no extra cost."],
     retrieval_context=["Only shoes can be refunded."],
     tools_called=[ToolCall(name="WebSearch")]
@@ -20754,7 +20754,7 @@ test_case = LLMTestCase(
 
 info
 
-Since `deepeval` is an LLM evaluation framework, the **`input` and `actual_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation, and you can also add additional parameters such as the `tools_called` for each `LLMTestCase`.
+Since `deepeval` is an LLM evaluation framework, the **`input` and `generated_output` are always mandatory.** However, this does not mean they are necessarily used for evaluation, and you can also add additional parameters such as the `tools_called` for each `LLMTestCase`.
 
 To get your own sharable testing report with `deepeval`, [sign up to Confident AI](https://app.confident-ai.com/), or run `deepeval login` in the CLI:
 
@@ -20800,7 +20800,7 @@ In this case:
 
 - `retrieval_context` should be the retrieved documents from the retriever
 
-- `actual_output` should be the final response generated by the LLM
+- `generated_output` should be the final response generated by the LLM
 
 
 Research Agent
@@ -20844,7 +20844,7 @@ An `LLMTestCase` is used for both end-to-end and component-level evaluation:
 - [Component-level:](https://deepeval.com/docs/evaluation-component-level-llm-evals) Many `LLMTestCase` s represents many interactions in different components
 
 
-**Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `actual_output`** \- regardless of whether they are used for evaluation for not. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
+**Different metrics will require a different combination of `LLMTestCase` parameters, but they all require an `input` and `generated_output`** \- regardless of whether they are used for evaluation for not. For example, you won't need `expected_output`, `context`, `tools_called`, and `expected_tools` if you're just measuring answer relevancy, but if you're evaluating hallucination you'll have to provide `context` in order for `deepeval` to know what the **ground truth** is.
 
 With the exception of conversational metrics, which are metrics to evaluate conversations instead of individual LLM responses, you can use any LLM evaluation metric `deepeval` offers to evaluate an `LLMTestCase`.
 
@@ -20864,7 +20864,7 @@ from deepeval.test_case import LLMTestCase
 test_case = LLMTestCase(
     input="Why did the chicken cross the road?",
     # Replace this with your actual LLM application
-    actual_output="Quite frankly, I don't want to know..."
+    generated_output="Quite frankly, I don't want to know..."
 )
 
 ```
@@ -20873,7 +20873,7 @@ tip
 
 Not all `input` s should include your prompt template, as this is determined by the metric you're using. Furthermore, the `input` should **NEVER** be a json version of the list of messages you are passing into your LLM.
 
-If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best `actual_output` s for a given `input`:
+If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best `generated_output` s for a given `input`:
 
 ```codeBlockLines_e6Vv
 deepeval login
@@ -20889,7 +20889,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
 def test_llm():
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     answer_relevancy_metric = AnswerRelevancyMetric()
     assert_test(test_case, [answer_relevancy_metric])
 
@@ -20911,7 +20911,7 @@ deepeval test run test_file.py
 
 ### Actual Output [​](https://deepeval.com/docs/evaluation-test-cases\#actual-output "Direct link to Actual Output")
 
-The `actual_output` is simply what your LLM application returns for a given input. This is what your users are going to interact with. Typically, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
+The `generated_output` is simply what your LLM application returns for a given input. This is what your users are going to interact with. Typically, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the generated output.
 
 ```codeBlockLines_e6Vv
 # A hypothetical LLM application example
@@ -20921,20 +20921,20 @@ input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=chatbot.run(input)
+    generated_output=chatbot.run(input)
 )
 
 ```
 
 note
 
-You may also choose to evaluate with precomputed `actual_output` s, instead of generating `actual_output` s at evaluation time.
+You may also choose to evaluate with precomputed `generated_output` s, instead of generating `generated_output` s at evaluation time.
 
 ### Expected Output [​](https://deepeval.com/docs/evaluation-test-cases\#expected-output "Direct link to Expected Output")
 
 The `expected_output` is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
-The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](https://deepeval.com/docs/metrics-introduction)
+The expected output doesn't have to exactly match the generated output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](https://deepeval.com/docs/metrics-introduction)
 
 ```codeBlockLines_e6Vv
 # A hypothetical LLM application example
@@ -20944,7 +20944,7 @@ input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=chatbot.run(input),
+    generated_output=chatbot.run(input),
     expected_output="To get to the other side!"
 )
 
@@ -20966,7 +20966,7 @@ input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=chatbot.run(input),
+    generated_output=chatbot.run(input),
     expected_output="To get to the other side!",
     context=["The chicken wanted to cross the road."]
 )
@@ -20989,7 +20989,7 @@ input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=chatbot.run(input),
+    generated_output=chatbot.run(input),
     expected_output="To get to the other side!",
     context=["The chicken wanted to cross the road."],
     retrieval_context=["The chicken liked the other side of the road better"]
@@ -21033,7 +21033,7 @@ import chatbot
 
 test_case = LLMTestCase(
     input="Why did the chicken cross the road?",
-    actual_output=chatbot.run(input),
+    generated_output=chatbot.run(input),
     # Replace this with the tools that were actually used
     tools_called=[\
         ToolCall(\
@@ -21069,7 +21069,7 @@ input = "Why did the chicken cross the road?"
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=chatbot.run(input),
+    generated_output=chatbot.run(input),
     # Replace this with the tools that were actually used
     tools_called=[\
         ToolCall(\
@@ -21138,7 +21138,7 @@ llm_test_case = LLMTestCase(
     # Replace this with your user input
     input="Why did the chicken cross the road?",
     # Replace this with your actual LLM application
-    actual_output="Quite frankly, I don't want to know..."
+    generated_output="Quite frankly, I don't want to know..."
 )
 
 test_case = ConversationalTestCase(turns=[llm_test_case])
@@ -21162,7 +21162,7 @@ test_case = ConversationalTestCase(turns=[LLMTestCase(...)])
 
 Did you know?
 
-You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase` s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because it is more useful to evaluate the last best LLM `actual_output` given the previous conversation context, instead of all individual `turns` in a `ConversationalTestCase`.
+You can apply both non-conversational and conversational metrics to a `ConversationalTestCase`. Conversational metrics evaluate the entire conversational as a whole, and non-conversational metrics (which are metrics used for individual `LLMTestCase` s), when applied to a `ConversationalTestCase`, will evaluate the **last** turn in a `ConversationalTestCase`. This is because it is more useful to evaluate the last best LLM `generated_output` given the previous conversation context, instead of all individual `turns` in a `ConversationalTestCase`.
 
 ### Chatbot Role [​](https://deepeval.com/docs/evaluation-test-cases\#chatbot-role "Direct link to Chatbot Role")
 
@@ -21193,7 +21193,7 @@ mllm_test_case = MLLMTestCase(
     # Replace this with your user input
     input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)]
     # Replace this with your actual MLLM application
-    actual_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
+    generated_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 )
 
 ```
@@ -21235,7 +21235,7 @@ from deepeval.test_case import MLLMTestCase, MLLMImage
 
 mllm_test_case = MLLMTestCase(
     input=["Change the color of the shoes to blue.", MLLMImage(url="./shoes.png", local=True)],
-    actual_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
+    generated_output=["The original image of red shoes now shows the shoes in blue.", MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
 )
 
 ```
@@ -21251,7 +21251,7 @@ deepeval login
 
 Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
 
-**A test case passes only if all metrics passes.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
+**A test case passes only if all metrics passes.** Depending on the metric, a combination of `input`, `generated_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
 
 test\_assert\_example.py
 
@@ -21267,7 +21267,7 @@ def test_assert_example():
     input = "Why did the chicken cross the road?"
     test_case = LLMTestCase(
         input=input,
-        actual_output=chatbot.run(input),
+        generated_output=chatbot.run(input),
         context=["The chicken wanted to cross the road."],
     )
     metric = HallucinationMetric(threshold=0.7)
@@ -21320,7 +21320,7 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input=input,
-    actual_output=chatbot.run(input),
+    generated_output=chatbot.run(input),
     context=["The chicken wanted to cross the road."],
 )
 
@@ -21506,7 +21506,7 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input="I'm on an F-1 visa, how long can I stay in the US after graduation?",
-    actual_output="You can stay up to 30 days after completing your degree.",
+    generated_output="You can stay up to 30 days after completing your degree.",
     expected_output="You can stay up to 60 days after completing your degree.",
     retrieval_context=[\
         """If you are in the U.S. on an F-1 visa, you are allowed to stay for 60 days after completing\
@@ -21516,7 +21516,7 @@ test_case = LLMTestCase(
 
 ```
 
-The `input` is the user input, `actual_output` is the final generation of your RAG pipeline, `expected_output` is what you expect the ideal `actual_output` to be, and the `retrieval_context` is the retrieved text chunks during the retrieval step. The `expected_output` is needed because it acts as the ground truth for what information the `retrieval_context` should contain.
+The `input` is the user input, `generated_output` is the final generation of your RAG pipeline, `expected_output` is what you expect the ideal `generated_output` to be, and the `retrieval_context` is the retrieved text chunks during the retrieval step. The `expected_output` is needed because it acts as the ground truth for what information the `retrieval_context` should contain.
 
 caution
 
@@ -21588,7 +21588,7 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
     input="I'm on an F-1 visa, gow long can I stay in the US after graduation?",
-    actual_output="You can stay up to 30 days after completing your degree.",
+    generated_output="You can stay up to 30 days after completing your degree.",
     expected_output="You can stay up to 60 days after completing your degree.",
     retrieval_context=[\
         """If you are in the U.S. on an F-1 visa, you are allowed to stay for 60 days after completing\
@@ -21626,7 +21626,7 @@ evaluate(
 
 ```
 
-You'll notice that in the example test case, the `actual_output` actually contradicted the information in the `retrieval_context`. Run the evaluations to see what the `FaithfulnessMetric` outputs!
+You'll notice that in the example test case, the `generated_output` actually contradicted the information in the `retrieval_context`. Run the evaluations to see what the `FaithfulnessMetric` outputs!
 
 tip
 
@@ -21648,7 +21648,7 @@ from deepeval.test_case import LLMTestCaseParams
 
 dark_humor = GEval(
     name="Dark Humor",
-    criteria="Determine how funny the dark humor in the actual output is",
+    criteria="Determine how funny the dark humor in the generated output is",
     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
@@ -21804,7 +21804,7 @@ Manually curating test data can be time-consuming and often causes critical edge
 
 info
 
-A `Golden` in DeepEval is similar to an `LLMTestCase`, but does not require an `actual_output` and `retrieval_context` at initialization. Learn more about Goldens in DeepEval [here](https://deepeval.com/docs/evaluation-datasets#create-an-evaluation-dataset).
+A `Golden` in DeepEval is similar to an `LLMTestCase`, but does not require an `generated_output` and `retrieval_context` at initialization. Learn more about Goldens in DeepEval [here](https://deepeval.com/docs/evaluation-datasets#create-an-evaluation-dataset).
 
 This guide will show you how to best utilize the `Synthesizer` to create **synthetic goldens** that fit your use case, including:
 
@@ -22126,17 +22126,17 @@ Referenceless metric
 
 Agent metric
 
-The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `generated_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-task-completion\#required-arguments "Direct link to Required Arguments")
 
 To use the `TaskCompletion`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `tools_called`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-task-completion#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/metrics-task-completion#how-is-it-calculated) section below to learn more.
 
 tip
 
@@ -22158,7 +22158,7 @@ metric = TaskCompletionMetric(
 )
 test_case = LLMTestCase(
     input="Plan a 3-day itinerary for Paris with cultural landmarks and local cuisine.",
-    actual_output=(
+    generated_output=(
         "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
         "Day 2: Louvre Museum, lunch at Angelina Paris. "
         "Day 3: Montmartre, evening at a wine bar."
@@ -22212,7 +22212,7 @@ from deepeval.tracing import observe, update_current_span
 @observe(metrics=[metric])
 def inner_component():
     # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
+    test_case = LLMTestCase(input="...", generated_output="...")
     update_current_span(test_case=test_case)
     return
 
@@ -22248,14 +22248,14 @@ The `TaskCompletionMetric` score is calculated according to the following equati
 
 Task Completion Score=AlignmentScore(Task,Outcome)\\text{Task Completion Score} = \\text{AlignmentScore}(\\text{Task}, \\text{Outcome})Task Completion Score=AlignmentScore(Task,Outcome)
 
-- **Task** and **Outcome** are extracted from the `input`, `actual_output`, and `tools_called` using an LLM.
+- **Task** and **Outcome** are extracted from the `input`, `generated_output`, and `tools_called` using an LLM.
 - The **Alignment Score** measures how well the outcome aligns with the task (or user-defined task), as judged by an LLM.
 
 ![LangChain](https://deepeval-docs.s3.amazonaws.com/task-completion.png)
 
 note
 
-While the task is primarily derived from the `input` and the outcome from the `actual_output`, these parameters alone are insufficient to calculate the **Task Completion Score**. See below for details.
+While the task is primarily derived from the `input` and the outcome from the `generated_output`, these parameters alone are insufficient to calculate the **Task Completion Score**. See below for details.
 
 #### What Is Task? [​](https://deepeval.com/docs/metrics-task-completion\#what-is-task "Direct link to What Is Task?")
 
@@ -22263,7 +22263,7 @@ The **task** represents the user’s goal or the action they want the agent to p
 
 #### What Is Outcome? [​](https://deepeval.com/docs/metrics-task-completion\#what-is-outcome "Direct link to What Is Outcome?")
 
-The **outcome** refers to the agent’s actions in response to the user’s request. Like the task, the outcome cannot be derived from the `actual_output` alone. For example, if a restaurant reservation agent replies with "Booked for tonight," it’s impossible to confirm if the user’s goal was met without additional information such as the restaurant name, time, and tools used. These test case details (especially `tools_called`) are crucial to verify that the outcome aligns with the user’s intended task.
+The **outcome** refers to the agent’s actions in response to the user’s request. Like the task, the outcome cannot be derived from the `generated_output` alone. For example, if a restaurant reservation agent replies with "Booked for tonight," it’s impossible to confirm if the user’s goal was met without additional information such as the restaurant name, time, and tools used. These test case details (especially `tools_called`) are crucial to verify that the outcome aligns with the user’s intended task.
 
 - [Required Arguments](https://deepeval.com/docs/metrics-task-completion#required-arguments)
 - [Usage](https://deepeval.com/docs/metrics-task-completion#usage)
@@ -22295,7 +22295,7 @@ To use the `KnowledgeRetentionMetric`, you'll have to provide the following argu
 Additionally, each `LLMTestCase` s in `turns` requires the following arguments:
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 ## Usage [​](https://deepeval.com/docs/metrics-knowledge-retention\#usage "Direct link to Usage")
 
@@ -22307,55 +22307,55 @@ from deepeval.test_case import LLMTestCase
 turns = [\
     LLMTestCase(\
         input="",\
-        actual_output="Hello! I'm here to assist you with opening a new bank account. To start, may I have your full name, please?"\
+        generated_output="Hello! I'm here to assist you with opening a new bank account. To start, may I have your full name, please?"\
     ),\
     LLMTestCase(\
         input="Sure, it's Alex Johnson. I also have a dog called Jacky.",\
-        actual_output="Great, Alex! Now, could you please provide your current address?"\
+        generated_output="Great, Alex! Now, could you please provide your current address?"\
     ),\
     LLMTestCase(\
         input="123 Maple Street, Springfield.",\
-        actual_output="Is that all?"\
+        generated_output="Is that all?"\
     ),\
     LLMTestCase(\
         input="I also have another address at 123 Broadway, NYC.",\
-        actual_output="Wonderful. Next, I'll need your bank account number where we can link this new account."\
+        generated_output="Wonderful. Next, I'll need your bank account number where we can link this new account."\
     ),\
     LLMTestCase(\
         input="456789123",\
-        actual_output="This account number seems invalid, can you please double-check?"\
+        generated_output="This account number seems invalid, can you please double-check?"\
     ),\
     LLMTestCase(\
         input="Sorry you're right, its 456789124.",\
-        actual_output="Thank you. And for our next step, could you tell me your date of birth?"\
+        generated_output="Thank you. And for our next step, could you tell me your date of birth?"\
     ),\
     LLMTestCase(\
         input="It's July 9th.",\
-        actual_output="What about the year?"\
+        generated_output="What about the year?"\
     ),\
     LLMTestCase(\
         input="1990",\
-        actual_output="Got it. Now, for security purposes, could you share your mother's maiden name?"\
+        generated_output="Got it. Now, for security purposes, could you share your mother's maiden name?"\
     ),\
     LLMTestCase(\
         input="It's Smith.",\
-        actual_output="Excellent. Just a few more details. What is your phone number?"\
+        generated_output="Excellent. Just a few more details. What is your phone number?"\
     ),\
     LLMTestCase(\
         input="555-0102",\
-        actual_output="Great, we're almost done. Could you remind me of your full name for the account documentation?"\
+        generated_output="Great, we're almost done. Could you remind me of your full name for the account documentation?"\
     ),\
     LLMTestCase(\
         input="Didn't I tell you already? It's Alex Johnson.",\
-        actual_output="What is your bank account number?"\
+        generated_output="What is your bank account number?"\
     ),\
     LLMTestCase(\
         input="Yes, I did... It's 456789124. Are you not keeping track of this?",\
-        actual_output="One last question, what is the country code of your phone number?"\
+        generated_output="One last question, what is the country code of your phone number?"\
     ),\
     LLMTestCase(\
         input="+44",\
-        actual_output="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process."\
+        generated_output="Thank you, Alex, for bearing with me. We now have all the information we need to proceed with opening your new bank account. I appreciate your cooperation and patience throughout this process."\
     )\
 ]
 
@@ -22523,7 +22523,7 @@ Most of what you saw in `deepeval`'s [quickstart](https://deepeval.com/docs/gett
 
 ### Select metrics [​](https://deepeval.com/docs/evaluation-end-to-end-llm-evals\#select-metrics "Direct link to Select metrics")
 
-You'll need to select the appropriate metrics and ensure your LLM app returns the required fields to create end-to-end `LLMTestCase`. For example, `AnswerRelevancyMetric()` expects `input` and `actual_output`, while `FaithfulnessMetric()` also requires `retrieval_context`.
+You'll need to select the appropriate metrics and ensure your LLM app returns the required fields to create end-to-end `LLMTestCase`. For example, `AnswerRelevancyMetric()` expects `input` and `generated_output`, while `FaithfulnessMetric()` also requires `retrieval_context`.
 
 You should first read the [metrics section](https://deepeval.com/docs/metrics-introduction) to understand which metrics are suitable for your use case, but the general rule of thumb is to include no more than 5 metrics, with 2-3 system specific, generic metrics and 1-2 use case specific, custom metrics.
 
@@ -22613,7 +22613,7 @@ goldens = [Golden(input="...")]
 test_case = []
 for golden in goldens:
     res, text_chunks = your_llm_app(golden.input)
-    test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
+    test_case = LLMTestCase(input=golden.input, generated_output=res, retrieval_context=text_chunks)
     test_cases.append(test_case)
 
 # Evaluate end-to-end
@@ -22658,7 +22658,7 @@ goldens = [Golden(input="...")]
 @pytest.mark.parametrize("golden", goldens)
 def test_llm_app(golden: Golden):
     res, text_chunks = your_llm_app(golden.input)
-    test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
+    test_case = LLMTestCase(input=golden.input, generated_output=res, retrieval_context=text_chunks)
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
 
 ```
@@ -22710,11 +22710,11 @@ The `MultimodalToolCorrectnessMetric` allows you to define the **strictness** of
 To use the `MultimodalToolCorrectnessMetric`, you'll have to provide the following arguments when creating an [`MLLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 - `tools_called`
 - `expected_tools`
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/multimodal-metrics-tool-correctness#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/multimodal-metrics-tool-correctness#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/multimodal-metrics-tool-correctness\#usage "Direct link to Usage")
 
@@ -22724,7 +22724,7 @@ from deepeval.test_case import MLLMTestCase, ToolCall
 
 test_case = MLLMTestCase(
     input="What's in this image?",
-    actual_output="The image shows a pair of running shoes.",
+    generated_output="The image shows a pair of running shoes.",
     # Replace this with the tools that was actually used by your LLM agent
     tools_called=[ToolCall(name="ImageAnalysis"), ToolCall(name="ToolQuery")],
     expected_tools=[ToolCall(name="ImageAnalysis")],
@@ -22792,13 +22792,13 @@ Image Coherence evaluates MLLM responses containing text accompanied by retrieve
 To use the `ImageCoherence`, you'll have to provide the following arguments when creating a [`MLLMTestCase`](https://deepeval.com/docs/evaluation-test-cases#mllm-test-case):
 
 - `input`
-- `actual_output`
+- `generated_output`
 
 note
 
-Remember that the `actual_output` of an `MLLMTestCase` is a list of strings and `Image` objects. If multiple images are provided in the actual output, The final score will be the average of each image's coherence.
+Remember that the `generated_output` of an `MLLMTestCase` is a list of strings and `Image` objects. If multiple images are provided in the generated output, The final score will be the average of each image's coherence.
 
-The `input` and `actual_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/multimodal-metrics-image-coherence#how-is-it-calculated) section below to learn more.
+The `input` and `generated_output` are required to create an `MLLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](https://deepeval.com/docs/multimodal-metrics-image-coherence#how-is-it-calculated) section below to learn more.
 
 ## Usage [​](https://deepeval.com/docs/multimodal-metrics-image-coherence\#usage "Direct link to Usage")
 
@@ -22808,7 +22808,7 @@ from deepeval.metrics import ImageCoherenceMetric
 from deepeval.test_case import MLLMTestCase, MLLMImage
 
 # Replace this with your actual MLLM application output
-actual_output=[\
+generated_output=[\
     "1. Take the sheet of paper and fold it lengthwise",\
     MLLMImage(url="./paper_plane_1", local=True),\
     "2. Unfold the paper. Fold the top left and right corners towards the center.",\
@@ -22822,7 +22822,7 @@ metric = ImageCoherenceMetric(
 )
 test_case = MLLMTestCase(
     input=["Provide step-by-step instructions on how to fold a paper airplane."],
-    actual_output=actual_output,
+    generated_output=generated_output,
 )
 
 metric.measure(test_case)

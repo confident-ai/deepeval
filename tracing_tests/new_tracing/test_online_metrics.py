@@ -28,7 +28,7 @@ async def meta_agent(query: str):
         metadata={"user_id": "11111", "date": "1/1/11"},
         test_case=LLMTestCase(
             input="What is this again?",
-            actual_output="this is a latte",
+            generated_output="this is a latte",
             expected_output="this is a mocha",
             retrieval_context=["I love coffee"],
             context=["I love coffee"],
@@ -42,7 +42,7 @@ async def meta_agent(query: str):
         user_id="111",
         test_case=LLMTestCase(
             input="What is this again?",
-            actual_output="this is a latte",
+            generated_output="this is a latte",
             expected_output="this is a mocha",
             retrieval_context=["I love coffee"],
             context=["I love coffee"],

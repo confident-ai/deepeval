@@ -9,7 +9,7 @@ from deepeval import evaluate, assert_test
 
 test_case_travel_itinerary = LLMTestCase(
     input="Plan a 3-day itinerary for a trip to Paris, including cultural landmarks and local cuisine recommendations.",
-    actual_output="Day 1: Visit the Eiffel Tower, have dinner at Le Jules Verne. Day 2: Explore the Louvre Museum, lunch at Angelina Paris. Day 3: Walk through Montmartre, evening at a wine bar.",
+    generated_output="Day 1: Visit the Eiffel Tower, have dinner at Le Jules Verne. Day 2: Explore the Louvre Museum, lunch at Angelina Paris. Day 3: Walk through Montmartre, evening at a wine bar.",
     tools_called=[
         ToolCall(
             name="Itinerary Generator",
@@ -32,7 +32,7 @@ test_case_travel_itinerary = LLMTestCase(
 
 test_case_job_interview = LLMTestCase(
     input="I have a job interview for a software engineering role. Provide 5 key questions I should prepare for and tips on answering them.",
-    actual_output="1. 'Tell me about yourself.' Focus on your relevant skills. 2. 'Describe a challenging project.' Highlight problem-solving. 3. 'Why this company?' Research their values. 4. 'What are your strengths?' Be specific. 5. 'Do you have questions for us?' Ask about growth opportunities.",
+    generated_output="1. 'Tell me about yourself.' Focus on your relevant skills. 2. 'Describe a challenging project.' Highlight problem-solving. 3. 'Why this company?' Research their values. 4. 'What are your strengths?' Be specific. 5. 'Do you have questions for us?' Ask about growth opportunities.",
     tools_called=[
         ToolCall(
             name="Question Generator",
@@ -65,7 +65,7 @@ test_case_job_interview = LLMTestCase(
 
 test_case_email_drafting = LLMTestCase(
     input="Write a professional email to follow up after a job interview for a marketing role.",
-    actual_output="Subject: Thank You for the Opportunity\nDear [Interviewer Name],\nThank you for taking the time to meet with me about the marketing role. I’m excited about the opportunity and look forward to contributing to your team.\nBest regards,\n[Your Name]",
+    generated_output="Subject: Thank You for the Opportunity\nDear [Interviewer Name],\nThank you for taking the time to meet with me about the marketing role. I’m excited about the opportunity and look forward to contributing to your team.\nBest regards,\n[Your Name]",
     tools_called=[
         ToolCall(
             name="Email Template Generator",
@@ -78,7 +78,7 @@ test_case_email_drafting = LLMTestCase(
 
 test_case_recipe_recommendation = LLMTestCase(
     input="I have chicken, spinach, and garlic. Suggest a recipe.",
-    actual_output="You can make garlic butter chicken with sautéed spinach. Ingredients: chicken, garlic, spinach, butter, salt, and pepper. Instructions: Sauté garlic, cook chicken in butter, and add spinach.",
+    generated_output="You can make garlic butter chicken with sautéed spinach. Ingredients: chicken, garlic, spinach, butter, salt, and pepper. Instructions: Sauté garlic, cook chicken in butter, and add spinach.",
     tools_called=[
         ToolCall(
             name="Recipe Finder",
@@ -99,7 +99,7 @@ test_case_recipe_recommendation = LLMTestCase(
 
 test_case_meeting_scheduler = LLMTestCase(
     input="Schedule a 30-minute meeting with the team next week. Preferred times are between 10 AM and 12 PM.",
-    actual_output="The meeting is scheduled for Wednesday at 10:30 AM.",
+    generated_output="The meeting is scheduled for Wednesday at 10:30 AM.",
     tools_called=[
         ToolCall(
             name="Calendar Scheduler",
@@ -117,7 +117,7 @@ test_case_meeting_scheduler = LLMTestCase(
 
 test_case_vague_input = LLMTestCase(
     input="Tell me something interesting.",
-    actual_output="The Eiffel Tower is in Paris.",
+    generated_output="The Eiffel Tower is in Paris.",
     tools_called=[
         ToolCall(
             name="Fact Generator",
@@ -130,7 +130,7 @@ test_case_vague_input = LLMTestCase(
 
 test_case_overlapping_tools = LLMTestCase(
     input="Book a dinner reservation for 2 at 7 PM tomorrow at an Italian restaurant.",
-    actual_output="Reservation confirmed at La Piazza at 7 PM.",
+    generated_output="Reservation confirmed at La Piazza at 7 PM.",
     tools_called=[
         ToolCall(
             name="Restaurant Finder",
@@ -155,7 +155,7 @@ test_case_overlapping_tools = LLMTestCase(
 
 test_case_contradictory_output = LLMTestCase(
     input="Summarize the article about climate change in 50 words.",
-    actual_output="Climate change is causing global warming and affecting ecosystems. We must reduce emissions and adopt renewable energy sources. Many countries are taking steps, but more effort is needed to avoid catastrophic impacts. Collaboration is crucial.",
+    generated_output="Climate change is causing global warming and affecting ecosystems. We must reduce emissions and adopt renewable energy sources. Many countries are taking steps, but more effort is needed to avoid catastrophic impacts. Collaboration is crucial.",
     tools_called=[
         ToolCall(
             name="Article Summarizer",
@@ -171,7 +171,7 @@ test_case_contradictory_output = LLMTestCase(
 
 test_case_missing_inputs = LLMTestCase(
     input="Translate 'Bonjour' to English.",
-    actual_output="Hello.",
+    generated_output="Hello.",
     tools_called=[
         ToolCall(
             name="Translation Tool",
@@ -184,7 +184,7 @@ test_case_missing_inputs = LLMTestCase(
 
 test_case_unrealistic_expectations = LLMTestCase(
     input="Write a 500-page novel about space exploration.",
-    actual_output="The story is about a brave astronaut exploring Mars and discovering alien life.",
+    generated_output="The story is about a brave astronaut exploring Mars and discovering alien life.",
     tools_called=[
         ToolCall(
             name="Novel Generator",
@@ -200,7 +200,7 @@ test_case_unrealistic_expectations = LLMTestCase(
 
 test_case_ambiguous_output = LLMTestCase(
     input="What’s the capital of the USA?",
-    actual_output="It’s either Washington, D.C. or New York.",
+    generated_output="It’s either Washington, D.C. or New York.",
     tools_called=[
         ToolCall(
             name="Fact Checker",

@@ -77,7 +77,7 @@ def your_llm_app(input: str):
         ).choices[0].message.content
 
         # Create test case at runtime
-        update_current_span(test_case=LLMTestCase(input=input, actual_output=res))
+        update_current_span(test_case=LLMTestCase(input=input, generated_output=res))
 
         return res
 

@@ -12,7 +12,7 @@ def convert_test_cases_to_goldens(
     for test_case in test_cases:
         golden = {
             "input": test_case.input,
-            "actual_output": test_case.actual_output,
+            "generated_output": test_case.generated_output,
             "expected_output": test_case.expected_output,
             "context": test_case.context,
             "retrieval_context": test_case.retrieval_context,
@@ -32,7 +32,7 @@ def convert_goldens_to_test_cases(
     for index, golden in enumerate(goldens):
         test_case = LLMTestCase(
             input=golden.input,
-            actual_output=golden.actual_output,
+            generated_output=golden.generated_output,
             expected_output=golden.expected_output,
             context=golden.context,
             retrieval_context=golden.retrieval_context,

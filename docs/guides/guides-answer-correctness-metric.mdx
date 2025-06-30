@@ -17,10 +17,10 @@ sidebar_label: Answer Correctness Metric
 Although numerous general-purpose Correctness metrics exist, our users find it most useful to create a **custom Correctness metric** for their custom LLM application. In `deepeval`, this can be accomplished through **[G-Eval](/docs/metrics-llm-evals)**.
 :::
 
-Assessing Correctness involves comparing an LLM's actual output with the ground truth, but the process is not as straightforward as it may seem. There are important things to consider such as:
+Assessing Correctness involves comparing an LLM's generated output with the ground truth, but the process is not as straightforward as it may seem. There are important things to consider such as:
 
 - Determining what constitutes your ground truth (selecting **evaluation parameters**)
-- Defining the **evaluation steps/criteria** for assessing actual output against ground truth
+- Defining the **evaluation steps/criteria** for assessing generated output against ground truth
 - Establishing what constitutes an appropriate **threshold** to scale your correctness score
 
 ## How to create your Correctness Metric
@@ -52,7 +52,7 @@ G-Eval allows you to select parameters that are relevant for evaluation by provi
 - `LLMTestCaseParams.CONTEXT`
 - `LLMTestCaseParams.RETRIEVAL_CONTEXT`
 
-`ACTUAL_OUTPUT` should **always** be included in your `evaluation_params`, as this is what every Correctness metric will be directly evaluating. As mentioned earlier, Correctness is determined by how well the actual output aligns with the ground truth, which is typically more variable. The ground truth is best represented by `EXPECTED_OUTPUT`, where the expected output serves as the **ideal reference** for the actual output, with an exact match earning a score of 1.
+`ACTUAL_OUTPUT` should **always** be included in your `evaluation_params`, as this is what every Correctness metric will be directly evaluating. As mentioned earlier, Correctness is determined by how well the generated output aligns with the ground truth, which is typically more variable. The ground truth is best represented by `EXPECTED_OUTPUT`, where the expected output serves as the **ideal reference** for the generated output, with an exact match earning a score of 1.
 
 ```python
 from deepeval.metrics import GEval
@@ -66,7 +66,7 @@ correctness_metric = GEval(
 )
 ```
 
-If the expected output is unavailable, you can alternatively compare the actual output with the `CONTEXT`, which serves as the **ideal retrieval context** for a RAG application. This comparison comes with its own set of evaluation criterias, however, which we will explore in the following step.
+If the expected output is unavailable, you can alternatively compare the generated output with the `CONTEXT`, which serves as the **ideal retrieval context** for a RAG application. This comparison comes with its own set of evaluation criterias, however, which we will explore in the following step.
 
 ```python
 from deepeval.metrics import GEval
@@ -95,7 +95,7 @@ correctness_metric = GEval(
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
-        "Determine whether the actual output is factually correct based on the expected output."
+        "Determine whether the generated output is factually correct based on the expected output."
     ],
 )
 ```
@@ -110,8 +110,8 @@ correctness_metric = GEval(
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
-       'Compare the actual output directly with the expected output to verify factual accuracy.',
-       'Check if all elements mentioned in the expected output are present and correctly represented in the actual output.',
+       'Compare the generated output directly with the expected output to verify factual accuracy.',
+       'Check if all elements mentioned in the expected output are present and correctly represented in the generated output.',
        'Assess if there are any discrepancies in details, values, or information between the actual and expected outputs.'
     ],
 )
@@ -127,7 +127,7 @@ correctness_metric = GEval(
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
-        "Check whether the facts in 'actual output' contradicts any facts in 'expected output'",
+        "Check whether the facts in 'generated output' contradicts any facts in 'expected output'",
         "You should also lightly penalize omission of detail, and focus on the main idea",
         "Vague language, or contradicting OPINIONS, are OK"
     ],
@@ -154,17 +154,17 @@ from deepeval.dataset import EvaluationDataset
 
 # Test Case with a correctness score of 1 (complete alignment with expected output)
 first_test_case = LLMTestCase(input="Summarize the benefits of daily exercise.",
-                              actual_output="Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.",
+                              generated_output="Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.",
                               expected_output="Daily exercise improves cardiovascular health, boosts mood, and enhances overall fitness.")
 
 # Test Case with a correctness score of 0.5 (partial alignment with expected output)
 second_test_case = LLMTestCase(input="Explain the process of photosynthesis.",
-                               actual_output="Photosynthesis is how plants make their food using sunlight.",
+                               generated_output="Photosynthesis is how plants make their food using sunlight.",
                                expected_output="Photosynthesis is the process by which green plants and some other organisms use sunlight to synthesize nutrients from carbon dioxide and water. It involves the green pigment chlorophyll and generates oxygen as a byproduct.")
 
 # Test Case with a correctness score of 0 (no meaningful alignment with expected output)
 third_test_case = LLMTestCase(input="Describe the effects of global warming.",
-                              actual_output="Global warming leads to colder winters.",
+                              generated_output="Global warming leads to colder winters.",
                               expected_output="Global warming causes more extreme weather, including hotter summers, rising sea levels, and increased frequency of extreme weather events.")
 
 test_cases = [first_test_test_case, second_test_case, third_test_case]
@@ -190,7 +190,7 @@ correctness_metric = GEval(
         LLMTestCaseParams.CONTEXT,
         LLMTestCaseParams.ACTUAL_OUTPUT],
     evaluation_steps=[
-        "Check whether the facts in 'actual output' contradict any facts in 'expected output'",
+        "Check whether the facts in 'generated output' contradict any facts in 'expected output'",
         "Lightly penalize omissions of detail, focusing on the main idea",
         "Vague language or contradicting opinions are permissible"
     ],

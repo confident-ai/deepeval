@@ -72,7 +72,7 @@ class MLLMImage:
 
 class MLLMTestCaseParams(Enum):
     INPUT = "input"
-    ACTUAL_OUTPUT = "actual_output"
+    ACTUAL_OUTPUT = "generated_output"
     EXPECTED_OUTPUT = "expected_output"
     CONTEXT = "context"
     RETRIEVAL_CONTEXT = "retrieval_context"
@@ -83,7 +83,7 @@ class MLLMTestCaseParams(Enum):
 @dataclass
 class MLLMTestCase:
     input: List[Union[str, MLLMImage]]
-    actual_output: List[Union[str, MLLMImage]]
+    generated_output: List[Union[str, MLLMImage]]
     expected_output: Optional[List[Union[str, MLLMImage]]] = None
     context: Optional[List[Union[str, MLLMImage]]] = None
     retrieval_context: Optional[List[Union[str, MLLMImage]]] = None

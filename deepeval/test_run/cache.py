@@ -102,7 +102,7 @@ class TestRunCacheManager:
         cached_test_run = self.get_cached_test_run()
         cache_dict = {
             LLMTestCaseParams.INPUT.value: test_case.input,
-            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
+            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.generated_output,
             LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
             LLMTestCaseParams.CONTEXT.value: test_case.context,
             LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,
@@ -125,7 +125,7 @@ class TestRunCacheManager:
             return
         cache_dict = {
             LLMTestCaseParams.INPUT.value: test_case.input,
-            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.actual_output,
+            LLMTestCaseParams.ACTUAL_OUTPUT.value: test_case.generated_output,
             LLMTestCaseParams.EXPECTED_OUTPUT.value: test_case.expected_output,
             LLMTestCaseParams.CONTEXT.value: test_case.context,
             LLMTestCaseParams.RETRIEVAL_CONTEXT.value: test_case.retrieval_context,

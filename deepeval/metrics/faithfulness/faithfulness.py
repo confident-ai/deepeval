@@ -81,7 +81,7 @@ class FaithfulnessMetric(BaseMetric):
                 )
             else:
                 self.truths = self._generate_truths(test_case.retrieval_context)
-                self.claims = self._generate_claims(test_case.actual_output)
+                self.claims = self._generate_claims(test_case.generated_output)
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -116,7 +116,7 @@ class FaithfulnessMetric(BaseMetric):
         ):
             self.truths, self.claims = await asyncio.gather(
                 self._a_generate_truths(test_case.retrieval_context),
-                self._a_generate_claims(test_case.actual_output),
+                self._a_generate_claims(test_case.generated_output),
             )
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -278,9 +278,9 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["truths"]
 
-    async def _a_generate_claims(self, actual_output: str) -> List[str]:
+    async def _a_generate_claims(self, generated_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output
+            generated_output=generated_output
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Claims)
@@ -295,9 +295,9 @@ class FaithfulnessMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["claims"]
 
-    def _generate_claims(self, actual_output: str) -> List[str]:
+    def _generate_claims(self, generated_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_claims(
-            actual_output=actual_output
+            generated_output=generated_output
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Claims)

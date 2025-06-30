@@ -919,7 +919,7 @@ def execute_agentic_test_cases(
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=golden.actual_output or "TODO",
+                    generated_output=golden.generated_output or "TODO",
                     expected_output=golden.expected_output,
                     context=golden.context,
                     retrieval_context=golden.retrieval_context,
@@ -1226,7 +1226,7 @@ async def a_execute_agentic_test_case(
 
     test_case = LLMTestCase(
         input=golden.input,
-        actual_output=golden.actual_output,
+        generated_output=golden.generated_output,
         expected_output=golden.expected_output,
         context=golden.context,
         retrieval_context=golden.retrieval_context,

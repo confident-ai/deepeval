@@ -60,7 +60,7 @@ def rag_pipeline(query: str) -> str:
     # Set test case to evaluate current span
     update_current_span(
         test_case=LLMTestCase(
-            input=query, actual_output=response, retrieval_context=docs
+            input=query, generated_output=response, retrieval_context=docs
         )
     )
     return response
