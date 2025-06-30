@@ -23,6 +23,7 @@ class TaskCompletionMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.TOOLS_CALLED,
     ]
 
     def __init__(
@@ -50,8 +51,9 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(test_case, self._required_params, self)
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if not has_trace:
+            check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -93,7 +95,9 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_llm_test_case_params(test_case, self._required_params, self)
+        has_trace: bool = isinstance(test_case._trace_dict, Dict)
+        if not has_trace:
+            check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
