@@ -38,7 +38,7 @@ class MetricData(BaseModel):
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
 
 
-class SpanTestCase(BaseModel):
+class TraceSpanTestCase(BaseModel):
     input: str
     actual_output: str = Field(alias="actualOutput")
     expected_output: Optional[str] = Field(None, alias="expectedOutput")
@@ -102,8 +102,10 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    span_test_case: Optional[SpanTestCase] = Field(None, alias="spanTestCase")
-    metrics: Optional[List[str]] = Field(None, alias="metrics")
+    span_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="spanTestCase"
+    )
+    metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
     ## human feedback
@@ -136,19 +138,29 @@ class TraceApi(BaseModel):
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
     feedback: Optional[APIFeedback] = Field(None)
 
+    # evals
+    trace_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="traceTestCase"
+    )
+    metric_collection: Optional[str] = Field(None, alias="metricCollection")
+    metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
+
+
 class RunThreadMetricApi(BaseModel):
-    thread_id: str = Field(alias="threadId")
+    thread_supplied_id: str = Field(alias="threadSuppliedId")
     metric_collection: str = Field(alias="metricCollection")
 
 
 def evaluate_thread(thread_id: str, metric_collection: str):
     trace = current_trace_context.get()
-    api_key = trace.confident_api_key
+    api_key = None
+    if trace:
+        api_key = trace.confident_api_key
     if not api_key and not is_confident():
         return
 
     run_thread_metric_api = RunThreadMetricApi(
-        threadId=thread_id,
+        threadSuppliedId=thread_id,
         metricCollection=metric_collection,
     )
     try:
@@ -162,6 +174,35 @@ def evaluate_thread(thread_id: str, metric_collection: str):
 
     api = Api(api_key=api_key)
     api.send_request(
+        method=HttpMethods.POST,
+        endpoint=Endpoints.THREAD_METRICS_ENDPOINT,
+        body=body,
+    )
+
+
+async def a_evaluate_thread(thread_id: str, metric_collection: str):
+    trace = current_trace_context.get()
+    api_key = None
+    if trace:
+        api_key = trace.confident_api_key
+    if not api_key and not is_confident():
+        return
+
+    run_thread_metric_api = RunThreadMetricApi(
+        threadSuppliedId=thread_id,
+        metricCollection=metric_collection,
+    )
+    try:
+        body = run_thread_metric_api.model_dump(
+            by_alias=True,
+            exclude_none=True,
+        )
+    except AttributeError:
+        # Pydantic version below 2.0
+        body = run_thread_metric_api.dict(by_alias=True, exclude_none=True)
+
+    api = Api(api_key=api_key)
+    await api.a_send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.THREAD_METRICS_ENDPOINT,
         body=body,

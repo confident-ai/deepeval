@@ -148,7 +148,8 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[AnswerRelevancyMetric(), BiasMetric(), metric],
+    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+    metric_collection="Test",
 )
 async def meta_agent(input: str):
     # 50% probability of executing the function
@@ -178,13 +179,13 @@ goldens = [
 ]
 
 # # Run Async
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=True),
-#     cache_config=CacheConfig(write_cache=False),
-#     # display_config=DisplayConfig(show_indicator=False),
-# )
+evaluate(
+    goldens=goldens * 40,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True, max_concurrent=40),
+    cache_config=CacheConfig(write_cache=False),
+    # display_config=DisplayConfig(show_indicator=False),
+)
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,

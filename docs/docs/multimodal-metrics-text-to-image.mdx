@@ -42,24 +42,18 @@ from deepeval import evaluate
 from deepeval.metrics import TextToImageMetric
 from deepeval.test_case import MLLMTestCase, MLLMImage
 
-# Replace this with your actual MLLM application output
-actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)]
-
 metric = TextToImageMetric(
     threshold=0.7,
     include_reason=True,
 )
-test_case = MLLMTestCase(
+m_test_case = MLLMTestCase(
     input=["Generate an image of a blue pair of shoes."],
-    actual_output=actual_output,
-    retrieval_context=retrieval_context
+    # Replace with your MLLM app output
+    actual_output=[MLLMImage(url="https://shoe-images.com/edited-shoes", local=False)],
 )
 
-metric.measure(test_case)
-print(metric.score, metric.reason)
 
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
+evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
 There are **FIVE** optional parameters when creating a `TextToImageMetric`:
@@ -69,6 +63,21 @@ There are **FIVE** optional parameters when creating a `TextToImageMetric`:
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `TextToImageMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(m_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
 
 ## How Is It Calculated?
 

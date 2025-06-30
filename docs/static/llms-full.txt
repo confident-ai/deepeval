@@ -3,7 +3,7 @@
 ## DeepEval LLM Evaluation
 [Docs](https://deepeval.com/docs/getting-started)
 
-[Confident AI](https://documentation.confident-ai.com/)
+[Confident AI](https://documentation.confident-ai.com/docs/)
 
 [Guides](https://deepeval.com/guides/guides-rag-evaluation)
 
@@ -2438,7 +2438,7 @@ pip install -U deepeval
 
 ```
 
-`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com/), the native evaluation platform for DeepEval:
+`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com/docs/), the native evaluation platform for DeepEval:
 
 ```codeBlockLines_e6Vv
 deepeval login
@@ -2451,7 +2451,7 @@ Confident AI is free and allows you to keep all evaluation results on the cloud.
 
 ## Create Your First Test Run [​](https://deepeval.com/docs/getting-started\#create-your-first-test-run "Direct link to Create Your First Test Run")
 
-Run `touch test_example.py` to create a test file in your root directory to run your first **end-to-end evaluation**. An [LLM test case](https://deepeval.com/docs/evaluation-test-cases#llm-test-case) in `deepeval` is represents a single unit of LLM app interaction (for a series of LLM interactions i.e. conversation, visit the conversational test cases [section](https://deepeval.com/docs/evaluation-test-cases#conversational-test-case) instead).
+Run `touch test_example.py` to create a test file in your root directory to run your first **end-to-end evaluation**. An [LLM test case](https://deepeval.com/docs/evaluation-test-cases#llm-test-case) in `deepeval` is represents a single unit of LLM app interaction (for a series of LLM interactions i.e. conversation, visit the conversational test cases [section](https://deepeval.com/docs/evaluation-multiturn-test-cases) instead).
 
 ![ok](https://deepeval-docs.s3.amazonaws.com/llm-test-case.svg)
 
@@ -2514,7 +2514,7 @@ After you've pasted in your API key, Confident AI will **generate testing report
 
 Watch Full Guide on Confident AI
 
-**Once you've ran more than one test run**, you'll be able to use the [regression testing page](https://documentation.confident-ai.com/llm-evaluation/ab-regression-testing) shown near the end of the video. Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression.
+**Once you've ran more than one test run**, you'll be able to use the [regression testing page](https://documentation.confident-ai.com/docs/llm-evaluation/ab-regression-testing) shown near the end of the video. Green rows indicate that your LLM has shown improvement on specific test cases, whereas red rows highlight areas of regression.
 
 You should save your test run as a dataset on Confident AI, which allows you to **reuse and edit** the set of `input` s and any `expected_output`, `context`, etc. for subsequent evaluations.
 
@@ -2775,7 +2775,7 @@ tip
 
 Visit the [evaluation introduction section](https://deepeval.com/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the different types of flags you can use with the `deepeval test run` command.
 
-Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:
+Especially for those working as part of a team, or have domain experts annotating datasets for you, it is best practice to keep your dataset somewhere as one source of truth. Your team can annotate datasets directly on [Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/annotate-datasets), which is also 100% integrated with `deepeval`:
 
 Learn Dataset Annotation on Confident AI
 
@@ -2894,7 +2894,7 @@ While there are many LLMOps platform that exist, Confident AI is laser focused o
 
 caution
 
-This section is just an overview of Confident AI. If Confident AI sounds interesting, [**click here**](https://documentation.confident-ai.com/) for the full Confident AI quickstart guide instead.
+This section is just an overview of Confident AI. If Confident AI sounds interesting, [**click here**](https://documentation.confident-ai.com/docs/) for the full Confident AI quickstart guide instead.
 
 ### Login [​](https://deepeval.com/docs/getting-started\#login "Direct link to Login")
 
@@ -2933,11 +2933,11 @@ print(dataset)
 
 ```
 
-You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden` s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com/)
+You'll often times want to process the pulled dataset before evaluating it, since test cases in a dataset are stored as `Golden` s, which might not always be ready for evaluation (ie. missing an `actual_output`). To see a concrete example and a more detailed explanation, visit the [evaluating datasets section.](https://documentation.confident-ai.com/docs/)
 
 ### Running Evaluations [​](https://deepeval.com/docs/getting-started\#running-evaluations "Direct link to Running Evaluations")
 
-You can either run evaluations [locally using `deepeval`](https://documentation.confident-ai.com/), or on the cloud on a [collection of metrics](https://documentation.confident-ai.com/) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled dataset, we can run an evaluation:
+You can either run evaluations [locally using `deepeval`](https://documentation.confident-ai.com/docs/), or on the cloud on a [collection of metrics](https://documentation.confident-ai.com/docs/) (which is also powered by `deepeval`). Most of the time, running evaluations locally is preferred because it allows for greater flexibility in metric customization. Using the previously pulled dataset, we can run an evaluation:
 
 ```codeBlockLines_e6Vv
 from deepeval import evaluate
@@ -2970,7 +2970,7 @@ Feel free to execute this in a nested for loop to figure out which combination g
 
 ### Monitoring LLM Outputs [​](https://deepeval.com/docs/getting-started\#monitoring-llm-outputs "Direct link to Monitoring LLM Outputs")
 
-Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-time.](https://documentation.confident-ai.com/) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
+Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-time.](https://documentation.confident-ai.com/docs/) A single API request is all that's required, and this would typically happen at your servers right before returning an LLM response to your users:
 
 ```codeBlockLines_e6Vv
 import openai
@@ -3013,7 +3013,7 @@ Confident AI allows you to keep track of either `"user"` feedback (ie. feedback 
 
 note
 
-To learn more, visit the [human feedback section page.](https://documentation.confident-ai.com/)
+To learn more, visit the [human feedback section page.](https://documentation.confident-ai.com/docs/)
 
 ## Full Example [​](https://deepeval.com/docs/getting-started\#full-example "Direct link to Full Example")
 
@@ -4621,7 +4621,7 @@ The `RoleAdherenceMetric` is particular useful for a role-playing usecase.
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-role-adherence\#required-arguments "Direct link to Required Arguments")
 
-To use the `RoleAdherenceMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-test-cases#conversational-test-case):
+To use the `RoleAdherenceMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 - `chatbot_role`
@@ -5501,7 +5501,7 @@ The conversation relevancy metric is a conversational metric that determines whe
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-conversation-relevancy\#required-arguments "Direct link to Required Arguments")
 
-To use the `ConversationRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-test-cases#conversational-test-case):
+To use the `ConversationRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
@@ -9665,7 +9665,7 @@ Your LLM system should provide a balanced perspective without showing favoritism
   - [Politics](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-bias#politics)
 
 ## Confident AI Documentation
-[Skip to Content](https://documentation.confident-ai.com/#nextra-skip-nav)
+[Skip to Content](https://documentation.confident-ai.com/docs/#nextra-skip-nav)
 
 Confident AI is [free to try](https://app.confident-ai.com/auth/signup). No credit card required.
 
@@ -9692,28 +9692,28 @@ Confident AI created and owns DeepEval.
 
 When you choose Confident AI, you can rest assured that:
 
-1. The platform [supports all LLM use cases](https://documentation.confident-ai.com/llm-use-cases), no matter how complicated they are, or your evaluation needs.
+1. The platform [supports all LLM use cases](https://documentation.confident-ai.com/docs/llm-use-cases), no matter how complicated they are, or your evaluation needs.
 2. Our expertise in building DeepEval can help you simplify the process of evaluation to get the most out of your eval results.
 
 Even if you’re not using Confident AI, you can [join our discord community](https://discord.com/invite/3SEyvpgu2f) to talk LLM evaluation anytime.
 
-## Features Overview [Permalink for this section](https://documentation.confident-ai.com/\#features-overview)
+## Features Overview [Permalink for this section](https://documentation.confident-ai.com/docs/\#features-overview)
 
-[LLM Evaluation](https://documentation.confident-ai.com/llm-evaluation/introduction) [LLM Tracing](https://documentation.confident-ai.com/llm-tracing/introduction) [Prompt Studio](https://documentation.confident-ai.com/prompt-management/introduction) [Dataset Editor](https://documentation.confident-ai.com/dataset-editor/introduction) [Human-in-the-Loop](https://documentation.confident-ai.com/human-in-the-loop/overview) [Red Teaming](https://documentation.confident-ai.com/llm-red-teaming)
+[LLM Evaluation](https://documentation.confident-ai.com/docs/llm-evaluation/introduction) [LLM Tracing](https://documentation.confident-ai.com/docs/llm-tracing/introduction) [Prompt Studio](https://documentation.confident-ai.com/docs/prompt-management/introduction) [Dataset Editor](https://documentation.confident-ai.com/docs/dataset-editor/introduction) [Human-in-the-Loop](https://documentation.confident-ai.com/docs/human-in-the-loop/introduction) [Red Teaming](https://documentation.confident-ai.com/docs/llm-red-teaming)
 
-## How to Navigate the Docs [Permalink for this section](https://documentation.confident-ai.com/\#how-to-navigate-the-docs)
+## How to Navigate the Docs [Permalink for this section](https://documentation.confident-ai.com/docs/\#how-to-navigate-the-docs)
 
 This documentation is designed to teach you how to use Confident AI to evaluate your LLM apps with as little fluff as possible. The:
 
-- **Concepts** [section](https://documentation.confident-ai.com/concepts/test-cases) covers essential terminology for understanding LLM evaluation - recommended starting point for beginners
-- **Quickstart** [section](https://documentation.confident-ai.com/getting-started/create-account) provides the fundamentals needed to begin using the platform effectively
-- **Data Handling** [page](https://documentation.confident-ai.com/data-handling) explains data organization, privacy controls, and residency options
+- **Concepts** [section](https://documentation.confident-ai.com/docs/concepts/test-cases) covers essential terminology for understanding LLM evaluation - recommended starting point for beginners
+- **Quickstart** [section](https://documentation.confident-ai.com/docs/getting-started/create-account) provides the fundamentals needed to begin using the platform effectively
+- **Data Handling** [page](https://documentation.confident-ai.com/docs/data-handling) explains data organization, privacy controls, and residency options
 - **Platform Features** section details the complete suite of Confident AI capabilities:
-  - [LLM Evaluations](https://documentation.confident-ai.com/llm-evaluation/introduction)
-  - [LLM Tracing](https://documentation.confident-ai.com/llm-tracing/introduction)
-  - [Dataset Management](https://documentation.confident-ai.com/dataset-editor/introduction)
-  - [Prompt Engineering](https://documentation.confident-ai.com/prompt-management/introduction)
-  - [Human-in-the-Loop](https://documentation.confident-ai.com/human-in-the-loop/introduction)
+  - [LLM Evaluations](https://documentation.confident-ai.com/docs/llm-evaluation/introduction)
+  - [LLM Tracing](https://documentation.confident-ai.com/docs/llm-tracing/introduction)
+  - [Dataset Management](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
+  - [Prompt Engineering](https://documentation.confident-ai.com/docs/prompt-management/introduction)
+  - [Human-in-the-Loop](https://documentation.confident-ai.com/docs/human-in-the-loop/introduction)
 
 💡
 
@@ -9724,41 +9724,41 @@ There will be numerous places throughout this documentation where we will refere
 
 For those interested in using only our open-source **DeepEval** LLM evaluation framework without Confident AI, please visit [DeepEval’s documentation](https://deepeval.com/).
 
-## FAQs [Permalink for this section](https://documentation.confident-ai.com/\#faqs)
+## FAQs [Permalink for this section](https://documentation.confident-ai.com/docs/\#faqs)
 
-### How is this different from DeepEval? [Permalink for this section](https://documentation.confident-ai.com/\#how-is-this-different-from-deepeval)
+### How is this different from DeepEval? [Permalink for this section](https://documentation.confident-ai.com/docs/\#how-is-this-different-from-deepeval)
 
 While DeepEval computes the metric results required for data-driven LLM app development, it does not provide the insights required for iteration.
 
-[Click here](https://documentation.confident-ai.com/why-confident-ai#deepeval-vs-confident-ai) for a more comprehensive comparison.
+[Click here](https://documentation.confident-ai.com/docs/why-confident-ai#deepeval-vs-confident-ai) for a more comprehensive comparison.
 
-### What LLM use cases are supported? [Permalink for this section](https://documentation.confident-ai.com/\#what-llm-use-cases-are-supported)
+### What LLM use cases are supported? [Permalink for this section](https://documentation.confident-ai.com/docs/\#what-llm-use-cases-are-supported)
 
 All types of LLM use cases are supported, including summarization, Text-SQL, custom support chatbots, internal RAG QAs, conversational agents, etc.
 
 These use cases can be of any system, including RAG pipelines, agentic workflows, conversational chatbots, or just a combination of everything (e.g. RAG chatbots, agentic RAG).
 
-Confident AI has tailored metrics and platform capabilities for different types of LLM applications, and it is extremely important to adjust your evaluation strategy depending on your LLM use case. You can read more on the different types of use cases on [this page.](https://documentation.confident-ai.com/llm-use-cases)
+Confident AI has tailored metrics and platform capabilities for different types of LLM applications, and it is extremely important to adjust your evaluation strategy depending on your LLM use case. You can read more on the different types of use cases on [this page.](https://documentation.confident-ai.com/docs/llm-use-cases)
 
-### What about complex agentic systems? [Permalink for this section](https://documentation.confident-ai.com/\#what-about-complex-agentic-systems)
+### What about complex agentic systems? [Permalink for this section](https://documentation.confident-ai.com/docs/\#what-about-complex-agentic-systems)
 
-Complex agentic systems are definitely supported on Confident AI through [LLM tracing.](https://documentation.confident-ai.com/llm-tracing/introduction) One thing to note though is that it is extremely important to decide carefully on what to (not) evaluate in a complex LLM agentic workflow, since trying to evaluate everything means you’re actually evaluating nothing.
+Complex agentic systems are definitely supported on Confident AI through [LLM tracing.](https://documentation.confident-ai.com/docs/llm-tracing/introduction) One thing to note though is that it is extremely important to decide carefully on what to (not) evaluate in a complex LLM agentic workflow, since trying to evaluate everything means you’re actually evaluating nothing.
 
 The first step to evaluating agentic use cases is to setup tracing before deciding on which and where LLM evaluation metrics should be used. You can also join our discord community or contact [support@confident-ai.com](mailto:support@confident-ai.com) to share what you’re building and get recommendations on how to best run evals if in doubt.
 
-### Is Confident AI enterprise ready? [Permalink for this section](https://documentation.confident-ai.com/\#is-confident-ai-enterprise-ready)
+### Is Confident AI enterprise ready? [Permalink for this section](https://documentation.confident-ai.com/docs/\#is-confident-ai-enterprise-ready)
 
 Yes, Confident AI offers SSO, data segregation for teams, user roles and permissions (with customizations available), and well as the ability to self-host in your cloud premises.
 
-### What about HIPAA compliance? [Permalink for this section](https://documentation.confident-ai.com/\#what-about-hipaa-compliance)
+### What about HIPAA compliance? [Permalink for this section](https://documentation.confident-ai.com/docs/\#what-about-hipaa-compliance)
 
 We’re proudly HIPAA compliant and are willing to sign BAAs with customers on the [Premium subscription plan or above.](https://confident-ai.com/pricing).
 
-### Can I self-host Confident AI? [Permalink for this section](https://documentation.confident-ai.com/\#can-i-self-host-confident-ai)
+### Can I self-host Confident AI? [Permalink for this section](https://documentation.confident-ai.com/docs/\#can-i-self-host-confident-ai)
 
 Yes, while most users are using the SaaS offering, your organization can deploy Confident AI in your cloud premises (e.g. AWS, Azure, GCP, etc.) through a dockerized manner, which includes integrations with your existing identify providers (e.g. Azure AD, Ping, Okta, etc.) of choice for authentication into Confident AI platform. In our experience, this process takes 1-2 weeks max.
 
-### What is the pricing? [Permalink for this section](https://documentation.confident-ai.com/\#what-is-the-pricing)
+### What is the pricing? [Permalink for this section](https://documentation.confident-ai.com/docs/\#what-is-the-pricing)
 
 No credit card upfront is required, and we offer transparent pricing with 4 different tiers which includes a generous free tier. You can view the [full pricing here.](https://confident-ai.com/pricing)
 
@@ -9766,7 +9766,7 @@ We try to make it sure that you only pay for something once you have had the cha
 
 Last updated onMay 26, 2025
 
-[Hyperparameters](https://documentation.confident-ai.com/concepts/hyperparameters "Hyperparameters") [How It Works](https://documentation.confident-ai.com/how-it-works "How It Works")
+[Hyperparameters](https://documentation.confident-ai.com/docs/concepts/hyperparameters "Hyperparameters") [How It Works](https://documentation.confident-ai.com/docs/how-it-works "How It Works")
 
 * * *
 
@@ -9978,7 +9978,7 @@ If you simply decorate your LLM application with `@observe` and don't supply any
 
 info
 
-The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://documentation.confident-ai.com/llm-tracing/introduction), which is also possibler when running end-to-end evaluations.
+The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://documentation.confident-ai.com/docs/llm-tracing/introduction), which is also possibler when running end-to-end evaluations.
 
 ## Full Example [​](https://deepeval.com/docs/evaluation-llm-tracing\#full-example "Direct link to Full Example")
 
@@ -10080,7 +10080,7 @@ note
 
 LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI, it enables more advanced features like end-to-end debugging.
 
-Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type` s, `name` s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
+Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type` s, `name` s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/docs/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
 
 Learn how to setup LLM tracing for Confident AI
 
@@ -10092,7 +10092,7 @@ For simplicity, we always recommend **custom spans** unless needed otherwise, si
 - This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
 - Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
-To learn more about the different spans `type` s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/llm-tracing/introduction)
+To learn more about the different spans `type` s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/docs/llm-tracing/introduction)
 
 ### Verbose logs [​](https://deepeval.com/docs/evaluation-llm-tracing\#verbose-logs "Direct link to Verbose logs")
 
@@ -13901,7 +13901,7 @@ When you run an evaluation using the `evaluate()` function or `deepeval test run
 
 Run Evaluations on Confident AI
 
-More information on everything can be found on the [Confident AI evaluation docs.](https://documentation.confident-ai.com/llm-evaluation/overview)
+More information on everything can be found on the [Confident AI evaluation docs.](https://documentation.confident-ai.com/docs/llm-evaluation/introduction)
 
 ## Why DeepEval Metrics? [​](https://deepeval.com/docs/metrics-introduction\#why-deepeval-metrics "Direct link to Why DeepEval Metrics?")
 
@@ -14007,7 +14007,7 @@ For custom metrics (G-Eval and DAG), reference requirements depend on your evalu
 
 note
 
-By definition, [online metrics used in production](https://documentation.confident-ai.com/llm-tracing/tracing-features/online-evaluation) **cannot** be reference-based.
+By definition, [online metrics used in production](https://documentation.confident-ai.com/docs/llm-tracing/tracing-features/online-evaluation) **cannot** be reference-based.
 
 ## Choosing Your Metrics [​](https://deepeval.com/docs/metrics-introduction\#choosing-your-metrics "Direct link to Choosing Your Metrics")
 
@@ -14561,7 +14561,7 @@ deepeval test run test_example.py
 
 ## Test Run [​](https://deepeval.com/docs/evaluation-introduction\#test-run "Direct link to Test Run")
 
-Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/llm-evaluation/evaluation-features/testing-reports) on the cloud.
+Running an LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports) on the cloud.
 
 ## Metrics [​](https://deepeval.com/docs/evaluation-introduction\#metrics "Direct link to Metrics")
 
@@ -15826,7 +15826,7 @@ If you don't already have an `EvaluationDataset`, a great starting point is to s
 Learn Dataset Annotation on Confident AI
 
 Full documentation for datasets on [Confident AI\\
-here.](https://documentation.confident-ai.com/dataset-editor/introduction)
+here.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
 
 ## What Are Goldens? [​](https://deepeval.com/docs/evaluation-datasets\#what-are-goldens "Direct link to What Are Goldens?")
 
@@ -15950,7 +15950,7 @@ dataset.push(alias="My dataset")
 
 ```
 
-You'll need to have already [created a dataset on Confident AI](https://documentation.confident-ai.com/dataset-editor/introduction#quickstart) for this to work.
+You'll need to have already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work.
 
 ### Locally [​](https://deepeval.com/docs/evaluation-datasets\#locally "Direct link to Locally")
 
@@ -15994,7 +15994,7 @@ Did Your Know?
 
 You can **create, annotate, and comment** on datasets on Confident AI? You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 
-For more information, visit the [Confident AI datasets section.](https://documentation.confident-ai.com/dataset-editor/introduction)
+For more information, visit the [Confident AI datasets section.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
 
 ### From JSON [​](https://deepeval.com/docs/evaluation-datasets\#from-json "Direct link to From JSON")
 
@@ -16144,14 +16144,14 @@ Visit the [end-to-end LLM evals section](https://deepeval.com/docs/evaluation-en
 
 ### On Confident AI [​](https://deepeval.com/docs/evaluation-datasets\#on-confident-ai-1 "Direct link to On Confident AI")
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/getting-started/create-account):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/create-account):
 
 ```codeBlockLines_e6Vv
 deepeval login
 
 ```
 
-Then, define metrics by [creating a metric collection](https://documentation.confident-ai.com/) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
+Then, define metrics by [creating a metric collection](https://documentation.confident-ai.com/docs/) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
 
 ```codeBlockLines_e6Vv
 from deepeval import confident_evaluate
@@ -16165,7 +16165,7 @@ confident_evaluate(metric_collection="Agentic Metrics", dataset)
 
 tip
 
-You can find the full tutorial on running evaluations on Confident AI [here.](https://documentation.confident-ai.com/)
+You can find the full tutorial on running evaluations on Confident AI [here.](https://documentation.confident-ai.com/docs/)
 
 - [Quick Summary](https://deepeval.com/docs/evaluation-datasets#quick-summary)
 - [What Are Goldens?](https://deepeval.com/docs/evaluation-datasets#what-are-goldens)
@@ -17918,7 +17918,7 @@ You can run component=level LLM evaluations in either:
 - **CI/CD pipelines** using `deepeval test run`, or
 - **Python scripts** using the `evaluate()` function
 
-Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/llm-evaluation/evaluation-features/testing-reports)
+Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
 ### Use `evaluate()` in Python scripts [​](https://deepeval.com/docs/evaluation-component-level-llm-evals\#use-evaluate-in-python-scripts "Direct link to use-evaluate-in-python-scripts")
 
@@ -19519,7 +19519,7 @@ The `ConversationCompletenessMetric` can be used as a proxy to measure user sati
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-conversation-completeness\#required-arguments "Direct link to Required Arguments")
 
-To use the `ConversationCompletenessMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-test-cases#conversational-test-case):
+To use the `ConversationCompletenessMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
@@ -21378,7 +21378,7 @@ convo_test_case = ConversationalTestCase(name="my-external-unique-id", ...)
   - [Expected Tools](https://deepeval.com/docs/evaluation-test-cases#expected-tools)
   - [Token cost](https://deepeval.com/docs/evaluation-test-cases#token-cost)
   - [Completion Time](https://deepeval.com/docs/evaluation-test-cases#completion-time)
-- [Conversational Test Case](https://deepeval.com/docs/evaluation-test-cases#conversational-test-case)
+- [Conversational Test Case](https://deepeval.com/docs/evaluation-multiturn-test-cases)
   - [Turns](https://deepeval.com/docs/evaluation-test-cases#turns)
   - [Chatbot Role](https://deepeval.com/docs/evaluation-test-cases#chatbot-role)
 - [MLLM Test Case](https://deepeval.com/docs/evaluation-test-cases#mllm-test-case)
@@ -22094,7 +22094,7 @@ Confident AI supports all core observability needs, including:
 - **Application Tracing**
 - **Human-in-the-Loop Integration**
 
-(Documentation [here](https://documentation.confident-ai.com/))
+(Documentation [here](https://documentation.confident-ai.com/docs/))
 
 We are continuously evolving our platform to include better features. By integrating with Confident AI, you can significantly improve the observability and operational efficiency of your LLM systems, ensuring they remain aligned with your business objectives and user expectations. [Get started now](https://www.confident-ai.com/).
 
@@ -22277,7 +22277,7 @@ The knowledge retention metric is a conversational metric that determines whethe
 
 ## Required Arguments [​](https://deepeval.com/docs/metrics-knowledge-retention\#required-arguments "Direct link to Required Arguments")
 
-To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-test-cases#conversational-test-case):
+To use the `KnowledgeRetentionMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
@@ -22578,7 +22578,7 @@ You can run end-to-end LLM evaluations in either:
 - **CI/CD pipelines** using `deepeval test run`, or
 - **Python scripts** using the `evaluate()` function
 
-Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://documentation.confident-ai.com/llm-evaluation/evaluation-features/testing-reports)
+Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
 ### Use `evaluate()` in Python scripts [​](https://deepeval.com/docs/evaluation-end-to-end-llm-evals\#use-evaluate-in-python-scripts "Direct link to use-evaluate-in-python-scripts")
 
@@ -22625,7 +22625,7 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 
 caution
 
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](https://deepeval.com/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ( [example here](https://documentation.confident-ai.com/llm-evaluation/evaluation-features/unit-testing-in-cicd)).
+The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](https://deepeval.com/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ( [example here](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/unit-testing-in-cicd)).
 
 `deepeval` allows you to unit-test in CI/CD pipelines using the `deepeval test run` command as if you're using Pytest via `deepeval`'s Pytest integration.
 
@@ -22665,7 +22665,7 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 
 tip
 
-If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/llm-evaluation/evaluation-features/testing-reports) on the cloud. Run this in the CLI:
+If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports) on the cloud. Run this in the CLI:
 
 ```codeBlockLines_e6Vv
 deepeval login

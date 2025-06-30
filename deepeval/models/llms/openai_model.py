@@ -394,5 +394,5 @@ class GPTModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(api_key=self._openai_api_key)
-        return AsyncOpenAI(api_key=self._openai_api_key)
+            return OpenAI(api_key=self._openai_api_key, base_url=self.base_url)
+        return AsyncOpenAI(api_key=self._openai_api_key, base_url=self.base_url)

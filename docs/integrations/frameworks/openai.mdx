@@ -19,47 +19,49 @@ To begin evaluating your OpenAI application, simply replace your OpenAI client w
 <Tabs>
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python showLineNumbers {2,8,17}
+```python showLineNumbers {2,18}
 from deepeval.tracing import observe
 from deepeval.openai import OpenAI
+from deepeval import test_run
 
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import Golden
-from deepeval import evaluate
 
 client = OpenAI()
-user_input = "Hello, how are you?"
 
-client.chat.completions.create(
-    model="gpt-4o",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": user_input}
-    ],
-    metrics=[AnswerRelevancyMetric(), BiasMetric()]
-)
+for golden in test_run(goldens=dataset.goldens):
+    # run OpenAI client
+    client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": golden.input}
+        ],
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
 ```
 
 </TabItem>
 <TabItem value="response" label="Responses">
 
-```python showLineNumbers {2,8,15}
+```python showLineNumbers {2,16}
 from deepeval.tracing import observe
 from deepeval.openai import OpenAI
+from deepeval import test_run
 
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import Golden
-from deepeval import evaluate
 
 client = OpenAI()
-user_input = "Hello, how are you?"
 
-client.responses.create(
-    model="gpt-4o",
-    instructions="You are a helpful assistant.",
-    input=user_input,
-    metrics=[AnswerRelevancyMetric(), BiasMetric()]
-)
+for golden in test_run(goldens=dataset.goldens):
+    # run OpenAI client
+    client.responses.create(
+        model="gpt-4o",
+        instructions="You are a helpful assistant.",
+        input=user_input,
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
 ```
 
 </TabItem>
@@ -84,7 +86,7 @@ You can also use DeepEval's OpenAI client **within component-level evaluations**
 <Tabs>
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python showLineNumbers {2,17,24}
+```python showLineNumbers {2,24}
 from deepeval.tracing import observe
 from deepeval.openai import OpenAI
 
@@ -112,13 +114,15 @@ def llm_app(input):
     )
     return response.choices[0].message.content
 
-evaluate(observed_callback=llm_app, goldens=[Golden(input="Tell me about Paris")])
+for golden in test_run(goldens=dataset.goldens):
+    # run your LLM application
+    llm_app(input=golden.input)
 ```
 
 </TabItem>
 <TabItem value="responses" label="Responses">
 
-```python showLineNumbers {2,17,22}
+```python showLineNumbers {2,22}
 from deepeval.tracing import observe
 from deepeval.openai import OpenAI
 
@@ -144,7 +148,9 @@ def llm_app(input):
     )
     return response.output_text
 
-evaluate(observed_callback=llm_app, goldens=[Golden(input="Tell me about Paris")])
+for golden in test_run(goldens=dataset.goldens):
+    # run your LLM application
+    llm_app(input=golden.input)
 ```
 
 </TabItem>

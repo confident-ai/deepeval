@@ -177,6 +177,7 @@ def create_api_test_case(
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,
                 completionTime=test_case.completion_time,
+                tags=test_case.tags,
                 success=success,
                 metricsData=metrics_data,
                 runDuration=None,
@@ -189,8 +190,12 @@ def create_api_test_case(
         elif isinstance(test_case, MLLMTestCase):
             api_test_case = LLMApiTestCase(
                 name=name,
+                input="",
                 multimodalInput=test_case.input,
                 multimodalActualOutput=test_case.actual_output,
+                multimodalExpectedOutput=test_case.expected_output,
+                multimodalRetrievalContext=test_case.retrieval_context,
+                multimodalContext=test_case.context,
                 toolsCalled=test_case.tools_called,
                 expectedTools=test_case.expected_tools,
                 tokenCost=test_case.token_cost,
@@ -462,7 +467,9 @@ def write_test_result_to_file(
                 f"  - retrieval context: {test_result.retrieval_context}\n"
             )
 
-    aggregate_metric_pass_rates_to_file(test_result)
+    aggregate_metric_pass_rates_to_file(
+        [test_result] if not isinstance(test_result, list) else test_result
+    )
 
 
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:

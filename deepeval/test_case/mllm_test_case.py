@@ -1,8 +1,10 @@
-import os
-from urllib.parse import urlparse
-from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Union
+from urllib.parse import urlparse, unquote
+from dataclasses import dataclass, field
 from enum import Enum
+import mimetypes
+import base64
+import os
 
 from deepeval.test_case import ToolCall
 
@@ -11,21 +13,60 @@ from deepeval.test_case import ToolCall
 class MLLMImage:
     url: str
     local: Optional[bool] = None
+    filename: Optional[str] = field(default=None, init=False, repr=False)
+    mimeType: Optional[str] = field(default=None, init=False, repr=False)
+    dataBase64: Optional[str] = field(default=None, init=False, repr=False)
 
     def __post_init__(self):
-        if self.local == None:
-            self.local = self.is_local_path(self.url)
+        is_local = self.is_local_path(self.url)
+        if self.local is not None:
+            assert self.local == is_local, "Local path mismatch"
+        else:
+            self.local = is_local
+
+        # compute filename, mime_type, and Base64 data
+        if self.local:
+            path = self.process_url(self.url)
+            self.filename = os.path.basename(path)
+            self.mimeType = (
+                mimetypes.guess_type(path)[0] or "application/octet-stream"
+            )
+            with open(path, "rb") as f:
+                raw = f.read()
+            self.dataBase64 = base64.b64encode(raw).decode("ascii")
+        else:
+            self.filename = None
+            self.mimeType = None
+            self.dataBase64 = None
 
     @staticmethod
-    def is_local_path(url):
-        # Parse the URL
-        parsed_url = urlparse(url)
+    def process_url(url: str) -> str:
+        if os.path.exists(url):
+            return url
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            path = unquote(raw_path)
+            return path
+        return url
 
-        # Check if it's a file scheme or an empty scheme with a local path
-        if parsed_url.scheme == "file" or parsed_url.scheme == "":
-            # Check if the path exists on the filesystem
-            return os.path.exists(parsed_url.path)
-
+    @staticmethod
+    def is_local_path(url: str) -> bool:
+        if os.path.exists(url):
+            return True
+        parsed = urlparse(url)
+        if parsed.scheme == "file":
+            raw_path = (
+                f"//{parsed.netloc}{parsed.path}"
+                if parsed.netloc
+                else parsed.path
+            )
+            path = unquote(raw_path)
+            return os.path.exists(path)
         return False
 
 

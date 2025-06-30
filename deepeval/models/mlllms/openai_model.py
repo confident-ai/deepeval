@@ -13,7 +13,12 @@ from tenacity import (
     RetryCallState,
 )
 
+from deepeval.models.llms.openai_model import (
+    model_pricing,
+    structured_outputs_models,
+)
 from deepeval.models import DeepEvalBaseMLLM
+from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.test_case import MLLMImage
 from deepeval.models.utils import parse_model_name
 
@@ -32,31 +37,6 @@ def log_retry_error(retry_state: RetryCallState):
     )
 
 
-model_pricing = {
-    "gpt-4o-mini": {"input": 0.150 / 1e6, "output": 0.600 / 1e6},
-    "gpt-4o": {"input": 2.50 / 1e6, "output": 10.00 / 1e6},
-    "gpt-4-turbo": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4-turbo-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4-0125-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4-1106-preview": {"input": 10.00 / 1e6, "output": 30.00 / 1e6},
-    "gpt-4": {"input": 30.00 / 1e6, "output": 60.00 / 1e6},
-    "gpt-4-32k": {"input": 60.00 / 1e6, "output": 120.00 / 1e6},
-    "gpt-3.5-turbo-1106": {"input": 1.00 / 1e6, "output": 2.00 / 1e6},
-    "gpt-3.5-turbo": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
-    "gpt-3.5-turbo-16k": {"input": 3.00 / 1e6, "output": 4.00 / 1e6},
-    "gpt-3.5-turbo-0125": {"input": 0.50 / 1e6, "output": 1.50 / 1e6},
-    "gpt-3.5-turbo-instruct": {"input": 1.50 / 1e6, "output": 2.00 / 1e6},
-    "o1": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
-    "o1-preview": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
-    "o1-2024-12-17": {"input": 15.00 / 1e6, "output": 60.00 / 1e6},
-    "o3-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "o3-mini-2025-01-31": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
-    "gpt-4.5-preview-2025-02-27": {
-        "input": 75.00 / 1e6,
-        "output": 150.00 / 1e6,
-    },
-}
-
 valid_multimodal_gpt_models = [
     "gpt-4o",
     "gpt-4o-2024-05-13",
@@ -64,9 +44,27 @@ valid_multimodal_gpt_models = [
     "gpt-4o-2024-11-20",
     "gpt-4o-mini",
     "gpt-4o-mini-2024-07-18",
+    "gpt-4.1",
+    "gpt-4.1-mini",
+    "gpt-4.1-nano",
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+    "o1-preview-2024-09-12",
+    "gpt-4.5-preview-2025-02-27",
+    "o4-mini",
 ]
 
 default_multimodal_gpt_model = "gpt-4o"
+
+unsupported_log_probs_multimodal_gpt_models = [
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+    "o1-preview-2024-09-12",
+    "gpt-4.5-preview-2025-02-27",
+    "o4-mini",
+]
 
 
 class MultimodalOpenAIModel(DeepEvalBaseMLLM):
@@ -109,17 +107,34 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     ) -> Tuple[str, float]:
         client = OpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
-        messages = [{"role": "user", "content": prompt}]
-        response = client.beta.chat.completions.parse(
+
+        if schema:
+            if self.model_name in structured_outputs_models:
+                messages = [{"role": "user", "content": prompt}]
+                response = client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format=schema,
+                )
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+                total_cost = self.calculate_cost(input_tokens, output_tokens)
+                generated_text = response.choices[0].message.parsed
+                return generated_text, total_cost
+
+        completion = client.chat.completions.create(
             model=self.model_name,
-            messages=messages,
-            response_format=schema,
+            messages=[{"role": "user", "content": prompt}],
         )
-        input_tokens = response.usage.prompt_tokens
-        output_tokens = response.usage.completion_tokens
-        total_cost = self.calculate_cost(input_tokens, output_tokens)
-        generated_text = response.choices[0].message.parsed
-        return generated_text, total_cost
+        output = completion.choices[0].message.content
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
 
     @retry(
         wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
@@ -133,17 +148,34 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     ) -> Tuple[str, float]:
         client = AsyncOpenAI(api_key=self._openai_api_key)
         prompt = self.generate_prompt(multimodal_input)
-        messages = [{"role": "user", "content": prompt}]
-        response = await client.beta.chat.completions.parse(
+
+        if schema:
+            if self.model_name in structured_outputs_models:
+                messages = [{"role": "user", "content": prompt}]
+                response = await client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format=schema,
+                )
+                input_tokens = response.usage.prompt_tokens
+                output_tokens = response.usage.completion_tokens
+                total_cost = self.calculate_cost(input_tokens, output_tokens)
+                generated_text = response.choices[0].message.parsed
+                return generated_text, total_cost
+
+        completion = await client.chat.completions.create(
             model=self.model_name,
-            messages=messages,
-            response_format=schema,
+            messages=[{"role": "user", "content": prompt}],
         )
-        input_tokens = response.usage.prompt_tokens
-        output_tokens = response.usage.completion_tokens
-        total_cost = self.calculate_cost(input_tokens, output_tokens)
-        generated_text = response.choices[0].message.parsed
-        return generated_text, total_cost
+        output = completion.choices[0].message.content
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
 
     ###############################################
     # Other generate functions

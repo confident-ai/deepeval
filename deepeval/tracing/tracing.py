@@ -25,7 +25,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
-    SpanTestCase,
+    TraceSpanTestCase,
     TraceApi,
     TraceTestCase,
 )
@@ -135,7 +135,11 @@ class TraceManager:
             self.openai_client = openai_client
             patch_openai_client(openai_client)
 
-    def start_new_trace(self) -> Trace:
+    def start_new_trace(
+        self,
+        metric_collection: Optional[str] = None,
+        metrics: Optional[List[BaseMetric]] = None,
+    ) -> Trace:
         """Start a new trace and set it as the current trace."""
         trace_uuid = str(uuid.uuid4())
         new_trace = Trace(
@@ -145,6 +149,8 @@ class TraceManager:
             start_time=perf_counter(),
             end_time=None,
             confident_api_key=self.confident_api_key,
+            metric_collection=metric_collection,
+            metrics=metrics,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -497,30 +503,30 @@ class TraceManager:
         retriever_spans = []
         tool_spans = []
 
-        # Process all spans in the trace
-        def process_spans(spans):
-            for span in spans:
-                # Convert BaseSpan to BaseApiSpan
-                api_span = self._convert_span_to_api_span(span)
+        # Process all spans in the trace iteratively
+        span_stack = list(trace.root_spans)  # Start with root spans
 
-                # Categorize spans by type
-                if isinstance(span, AgentSpan):
-                    agent_spans.append(api_span)
-                elif isinstance(span, LlmSpan):
-                    llm_spans.append(api_span)
-                elif isinstance(span, RetrieverSpan):
-                    retriever_spans.append(api_span)
-                elif isinstance(span, ToolSpan):
-                    tool_spans.append(api_span)
-                else:
-                    base_spans.append(api_span)
+        while span_stack:
+            span = span_stack.pop()
 
-                # Process children recursively
-                if span.children:
-                    process_spans(span.children)
+            # Convert BaseSpan to BaseApiSpan
+            api_span = self._convert_span_to_api_span(span)
 
-        # Start processing from root spans
-        process_spans(trace.root_spans)
+            # Categorize spans by type
+            if isinstance(span, AgentSpan):
+                agent_spans.append(api_span)
+            elif isinstance(span, LlmSpan):
+                llm_spans.append(api_span)
+            elif isinstance(span, RetrieverSpan):
+                retriever_spans.append(api_span)
+            elif isinstance(span, ToolSpan):
+                tool_spans.append(api_span)
+            else:
+                base_spans.append(api_span)
+
+            # Add children to the stack for processing
+            if span.children:
+                span_stack.extend(span.children)
 
         # Convert perf_counter values to ISO 8601 strings
         start_time = (
@@ -534,12 +540,8 @@ class TraceManager:
             else None
         )
 
-        is_metric_strings = None
-        if trace.metrics:
-            is_metric_strings = isinstance(trace.metrics[0], str)
-
         trace_test_case = (
-            TraceTestCase(
+            TraceSpanTestCase(
                 input=trace.llm_test_case.input,
                 actualOutput=trace.llm_test_case.actual_output,
                 expectedOutput=trace.llm_test_case.expected_output,
@@ -573,6 +575,10 @@ class TraceManager:
                 trace.metrics if is_metric_strings else None
             feedback=convert_feedback_to_api_feedback(
                 trace.feedback, trace_uuid=trace.uuid
+            ),
+            traceTestCase=trace_test_case,
+            metricCollection=(
+                trace.metric_collection if trace.llm_test_case else None
             ),
         )
 
@@ -621,11 +627,8 @@ class TraceManager:
             else None
         )
 
-        is_metric_strings = None
-        if span.metrics:
-            is_metric_strings = isinstance(span.metrics[0], str)
         span_test_case = (
-            SpanTestCase(
+            TraceSpanTestCase(
                 input=span.llm_test_case.input,
                 actualOutput=span.llm_test_case.actual_output,
                 expectedOutput=span.llm_test_case.expected_output,
@@ -653,9 +656,7 @@ class TraceManager:
             metadata=span.metadata,
             error=span.error,
             spanTestCase=span_test_case,
-            metrics=(
-                span.metrics if is_metric_strings else None
-            ),  # only need metric name if online evals
+            metricCollection=span.metric_collection,
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
             ),
@@ -698,6 +699,7 @@ class Observer:
         ],
         func_name: str,
         metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+        metric_collection: Optional[str] = None,
         _progress: Optional[Progress] = None,
         _pbar_callback_id: Optional[int] = None,
         **kwargs,
@@ -719,11 +721,13 @@ class Observer:
 
         self.name: str = self.observe_kwargs.get("name", func_name)
         self.metrics = metrics
+        self.metric_collection = metric_collection
         self.span_type: SpanType | str = (
             self.name if span_type is None else span_type
         )
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
+        self.update_span_properties: Optional[Callable] = None
 
     def __enter__(self):
         """Enter the tracer context, creating a new span and setting up parent-child relationships."""
@@ -741,7 +745,10 @@ class Observer:
             if current_trace:
                 self.trace_uuid = current_trace.uuid
             else:
-                trace = trace_manager.start_new_trace()
+                trace = trace_manager.start_new_trace(
+                    metric_collection=self.metric_collection,
+                    metrics=self.metrics,
+                )
                 self.trace_uuid = trace.uuid
                 current_trace_context.set(trace)
 
@@ -754,7 +761,6 @@ class Observer:
 
         # Set this span as the current span in the context
         current_span_context.set(span_instance)
-
         if (
             parent_span
             and parent_span.progress is not None
@@ -771,6 +777,7 @@ class Observer:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit the tracer context, updating the span status and handling trace completion."""
+
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID
         current_span = current_span_context.get()
@@ -790,7 +797,11 @@ class Observer:
         else:
             current_span.status = TraceSpanStatus.SUCCESS
 
-        self.update_span_attributes(current_span)
+        if self.update_span_properties is not None:
+            self.update_span_properties(current_span)
+        else:
+            self.update_span_attributes(current_span)
+
         if current_span.input is None:
             current_span.input = self.function_kwargs
         if current_span.output is None:
@@ -843,6 +854,7 @@ class Observer:
             "input": None,
             "output": None,
             "metrics": self.metrics,
+            "metric_collection": self.metric_collection,
         }
 
         if self.span_type == SpanType.AGENT.value:
@@ -859,7 +871,7 @@ class Observer:
             model = self.observe_kwargs.get("model", None)
             if model is None and not trace_manager.openai_client:
                 raise ValueError(
-                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/llm-tracing/integrations/openai"
+                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/docs/llm-tracing/integrations/openai"
                 )
             return LlmSpan(**span_kwargs, attributes=None, model=model)
         elif self.span_type == SpanType.RETRIEVER.value:
@@ -943,7 +955,8 @@ class Observer:
 def observe(
     _func: Optional[Callable] = None,
     *,
-    metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
+    metrics: Optional[List[BaseMetric]] = None,
+    metric_collection: Optional[str] = None,
     type: Optional[
         Union[Literal["agent", "llm", "retriever", "tool"], str]
     ] = None,
@@ -981,6 +994,7 @@ def observe(
                 with Observer(
                     type,
                     metrics=metrics,
+                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:

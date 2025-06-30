@@ -38,33 +38,27 @@ The `input` and `actual_output` are required to create an `MLLMTestCase` (and he
 ## Usage
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import ImageReferenceMetric
 from deepeval.test_case import MLLMTestCase, MLLMImage
-
-# Replace this with your actual MLLM application output
-actual_output=[
-    "1. Take the sheet of paper and fold it lengthwise",
-    MLLMImage(url="./paper_plane_1", local=True),
-    "2. Unfold the paper. Fold the top left and right corners towards the center.",
-    MLLMImage(url="./paper_plane_2", local=True),
-    ...
-]
+from deepeval.metrics import ImageReferenceMetric
+from deepeval import evaluate
 
 metric = ImageReferenceMetric(
     threshold=0.7,
     include_reason=True,
 )
-test_case = MLLMTestCase(
+m_test_case = MLLMTestCase(
     input=["Provide step-by-step instructions on how to fold a paper airplane."],
-    actual_output=actual_output,
+    # Replace with your MLLM app output
+    actual_output=[
+      "1. Take the sheet of paper and fold it lengthwise",
+      MLLMImage(url="./paper_plane_1", local=True),
+      "2. Unfold the paper. Fold the top left and right corners towards the center.",
+      MLLMImage(url="./paper_plane_2", local=True),
+  ],
 )
 
-metric.measure(test_case)
-print(metric.score, metric.reason)
 
-# or evaluate test cases in bulk
-evaluate([test_case], [metric])
+evaluate(test_cases=[m_test_case], metrics=[metric])
 ```
 
 There are **FIVE** optional parameters when creating a `ImageReferenceMetric`:
@@ -74,6 +68,17 @@ There are **FIVE** optional parameters when creating a `ImageReferenceMetric`:
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `max_context_size`: a number representing the maximum number of characters in each context, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `None`.
+
+### As a standalone
+
+You can also run the `ImageReferenceMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(m_test_case)
+print(metric.score, metric.reason)
+```
 
 ## How Is It Calculated?
 

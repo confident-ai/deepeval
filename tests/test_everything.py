@@ -291,12 +291,13 @@ def test_everything():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
+        tags=["test", "test2"],
     )
     # c_test_case = ConversationalTestCase(
     #     turns=[test_case, test_case], chatbot_role="have a conversation"
     # )
     assert_test(
-        test_case=test_case_1,
+        test_case=test_case,
         metrics=[
             # metric1,
             # metric2,
@@ -307,11 +308,11 @@ def test_everything():
             # metric7,
             # metric8,
             # metric9,
-            # metric10,
+            metric10,
             # metric11,
             # metric12,
             # # metric13,
-            metric14,
+            # metric14,
             # metric15,
             # metric16,
             # metric17,
@@ -321,7 +322,7 @@ def test_everything():
     )
 
 
-@pytest.mark.skip(reason="openapi is expensive")
+# @pytest.mark.skip(reason="openapi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -354,10 +355,11 @@ def test_everything_2():
         expected_output="this is a mocha",
         retrieval_context=["I love coffee"],
         context=["I love coffee"],
+        tags=["test3", "test4"],
     )
     metric12 = ConversationRelevancyMetric(model=eval_model)
     assert_test(
-        test_case_2,
+        test_case,
         [
             # metric1,
             # metric2,
@@ -365,12 +367,12 @@ def test_everything_2():
             # metric4,
             # metric5,
             # metric6,
-            # metric7,
+            metric7,
             # metric8,
             # metric9,
             # metric10,
             # metric11,
-            metric12,
+            # metric12,
         ],
         # run_async=False,
     )

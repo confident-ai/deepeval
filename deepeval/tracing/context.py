@@ -41,7 +41,7 @@ def update_current_trace(
     input: Optional[Any] = None,
     output: Optional[Any] = None,
     test_case: Optional[LLMTestCase] = None,
-    metrics: Optional[Union[List[str], List[BaseMetric]]] = None
+    metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
     feedback: Optional[Feedback] = None,
 ):
     current_trace = current_trace_context.get()
@@ -65,3 +65,5 @@ def update_current_trace(
         current_trace.metrics = metrics
     if feedback:
         current_trace.feedback = feedback
+    if test_case:
+        current_trace.llm_test_case = test_case

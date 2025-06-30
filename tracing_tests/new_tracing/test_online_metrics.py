@@ -10,17 +10,18 @@ import asyncio
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[
-        "Answer Relevancy",
-        "Faithfulness",
-        # "Helpfulness",
-        # "Verbosity",
-        # "Contextual Precision",
-        # "Contextual Recall",
-        # "Tool Correctness",
-        # "Contextual Relevancy",
-        # "Hallucination"
-    ],
+    # metrics=[
+    #     "Answer Relevancy",
+    #     "Faithfulness",
+    #     # "Helpfulness",
+    #     # "Verbosity",
+    #     # "Contextual Precision",
+    #     # "Contextual Recall",
+    #     # "Tool Correctness",
+    #     # "Contextual Relevancy",
+    #     # "Hallucination"
+    # ],
+    metric_collection="Test",
 )
 async def meta_agent(query: str):
     update_current_span(
@@ -39,6 +40,15 @@ async def meta_agent(query: str):
         metadata={"input": "input"},
         thread_id="131324ljihfsadiuyip",
         user_id="111",
+        test_case=LLMTestCase(
+            input="What is this again?",
+            actual_output="this is a latte",
+            expected_output="this is a mocha",
+            retrieval_context=["I love coffee"],
+            context=["I love coffee"],
+            tools_called=[ToolCall(name="test")],
+            expected_tools=[ToolCall(name="test")],
+        ),
     )
     print("query")
     return query
