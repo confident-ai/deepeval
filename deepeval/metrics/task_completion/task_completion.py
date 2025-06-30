@@ -29,14 +29,14 @@ class TaskCompletionMetric(BaseMetric):
     def __init__(
         self,
         threshold: float = 0.5,
-        user_goal: Optional[str] = None,
+        task: Optional[str] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self.user_goal = user_goal
+        self.user_goal = task
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
