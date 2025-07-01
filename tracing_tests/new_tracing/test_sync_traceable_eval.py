@@ -143,6 +143,17 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
+from deepeval import test_run
+from deepeval.dataset import Golden
+
+goldens = [
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+]
+
+for golden in test_run(goldens):
+    meta_agent(golden.input)
+
 # # Run Async
 # evaluate(
 #     goldens=goldens,

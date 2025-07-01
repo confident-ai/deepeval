@@ -1,4 +1,5 @@
-from typing import Callable, List, Optional, Union, Dict, Any, Awaitable
+from typing import Callable, List, Optional, Union, Dict, Any, Awaitable, Iterator
+from contextlib import contextmanager
 import time
 from rich.console import Console
 
@@ -46,8 +47,9 @@ from deepeval.test_run import (
     MetricData,
 )
 from deepeval.utils import get_is_running_deepeval
-from deepeval.evaluate.types import EvaluationResult
+from deepeval.evaluate.types import EvaluationResult, TestResult
 from deepeval.evaluate.execute import (
+    execute_agentic_test_cases_from_loop,
     a_execute_agentic_test_cases,
     a_execute_test_cases,
     execute_agentic_test_cases,
@@ -325,3 +327,51 @@ def evaluate(
         return EvaluationResult(
             test_results=test_results, confident_link=confident_link
         )
+
+
+def test_run(
+    goldens: List[Golden],
+    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
+    identifier: Optional[str] = None,
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
+) -> Iterator[Golden]:
+    with capture_evaluation_run("looped evaluate()"):
+        global_test_run_manager.reset()
+        start_time = time.perf_counter()
+        test_results: List[TestResult] = []
+        try:
+            yield from execute_agentic_test_cases_from_loop(
+                goldens=goldens,
+                verbose_mode=display_config.verbose_mode,
+                ignore_errors=error_config.ignore_errors,
+                skip_on_missing_params=error_config.skip_on_missing_params,
+                show_indicator=display_config.show_indicator,
+                test_results=test_results,
+                save_to_disk=cache_config.write_cache,
+                identifier=identifier,
+            )
+        finally:
+            end_time = time.perf_counter()
+            run_duration = end_time - start_time
+            if display_config.print_results:
+                for test_result in test_results:
+                    print_test_result(test_result, display_config.display_option)
+                    aggregate_metric_pass_rates(test_results)
+            if display_config.file_output_dir is not None:
+                for test_result in test_results:
+                    write_test_result_to_file(
+                        test_result,
+                        display_config.display_option,
+                        display_config.file_output_dir,
+                    )
+            test_run = global_test_run_manager.get_test_run()
+            test_run.hyperparameters = process_hyperparameters(hyperparameters)
+            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+            confident_link = global_test_run_manager.wrap_up_test_run(
+                run_duration, display_table=False
+            )
+            return EvaluationResult(
+                test_results=test_results, confident_link=confident_link
+            )
