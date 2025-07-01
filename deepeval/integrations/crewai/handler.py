@@ -80,16 +80,20 @@ class CrewAIEventsListener(BaseEventListener):
                 self.active_trace_id = None
 
         @crewai_event_bus.on(AgentExecutionStartedEvent)
-        def on_agent_started(source, event):
+        def on_agent_started(source, event: AgentExecutionStartedEvent):
             base_span = BaseSpan(
-                uuid=str(source.id),
+                uuid=str(event.agent.id),
                 status=TraceSpanStatus.IN_PROGRESS,
                 children=[],
                 trace_uuid=self.active_trace_id,
-                parent_uuid=str(source.crew.id),
+                parent_uuid=str(event.agent.crew.id),
                 start_time=perf_counter(),
-                name="(agent) "+source.role
+                name="(agent) "+event.agent.role,
+                metadata={
+                    "llm_id": str(id(event.agent.llm))
+                }
             )
+
             trace_manager.add_span(base_span)
             trace_manager.add_span_to_trace(base_span)
             
@@ -104,48 +108,22 @@ class CrewAIEventsListener(BaseEventListener):
             base_span.status = TraceSpanStatus.SUCCESS
             trace_manager.remove_span(base_span.uuid)
 
-        @crewai_event_bus.on(TaskStartedEvent)
-        def on_task_started(source, event):
-            base_span = BaseSpan(
-                uuid=str(source.__hash__),
-                status=TraceSpanStatus.IN_PROGRESS,
-                children=[],
-                trace_uuid=self.active_trace_id,
-                parent_uuid=str(source.agent.id),
-                start_time=perf_counter(),
-                name="(task) "+ source.description
-            )
-            trace_manager.add_span(base_span)
-            trace_manager.add_span_to_trace(base_span)
-
-        @crewai_event_bus.on(TaskCompletedEvent)
-        def on_task_completed(source, event):
-            base_span = trace_manager.get_span_by_uuid(str(source.__hash__))
-            if base_span is None:
-                return
-            
-            base_span.end_time = perf_counter()
-            base_span.status = TraceSpanStatus.SUCCESS
-            trace_manager.remove_span(base_span.uuid)
-
         @crewai_event_bus.on(LLMCallStartedEvent)
-        def on_llm_started(source, event):
-            pass
-            # print("--------------llm started------------------")
-            # print(source)
-            # print("--------------------------------")
-            # print(event)
-            # print("--------------------------------")
-        
+        def on_llm_started(source, event: LLMCallStartedEvent):
+            print(">>>>>>>llm started")
+            print(event)
+            print("--------------------------------")
+            print(source)
+            print("--------------------------------")
+
         @crewai_event_bus.on(LLMCallCompletedEvent)
-        def on_llm_completed(source, event):
-            pass
-            # print("--------------llm completed------------------")
-            # print(source)
-            # print("--------------------------------")
-            # print(event)
-            # print("--------------------------------")
-        
+        def on_llm_completed(source, event: LLMCallCompletedEvent):
+            print(">>>>>>>llm completed")
+            print(event)
+            print("--------------------------------")
+            print(source)
+            print("--------------------------------")
+
     def patch_crewai_LLM(self, method_to_patch: str):    
         original_methods = {}
 
