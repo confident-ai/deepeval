@@ -32,12 +32,7 @@ class IFEvalTemplate:
         Returns:
             Extracted response string
         """
-        response_indicators = [
-            "Response:",
-            "Answer:",
-            "Output:",
-            "Result:"
-        ]
+        response_indicators = ["Response:", "Answer:", "Output:", "Result:"]
 
         for indicator in response_indicators:
             if indicator in text:
@@ -58,7 +53,9 @@ class IFEvalTemplate:
         Returns:
             The instruction category (e.g., "punctuation")
         """
-        return instruction_id.split(":")[0] if ":" in instruction_id else "unknown"
+        return (
+            instruction_id.split(":")[0] if ":" in instruction_id else "unknown"
+        )
 
     @staticmethod
     def get_instruction_description(instruction_id: str) -> str:
@@ -90,13 +87,17 @@ class IFEvalTemplate:
             "detectable_content:first_word": "Must start with specified word",
             "structural_constraints:number_paragraphs": "Must have specified number of paragraphs",
             "structural_constraints:number_sections": "Must have specified number of sections",
-            "combination:repeat_prompt": "Must repeat the specified prompt"
+            "combination:repeat_prompt": "Must repeat the specified prompt",
         }
 
-        return descriptions.get(instruction_id, f"Unknown instruction: {instruction_id}")
+        return descriptions.get(
+            instruction_id, f"Unknown instruction: {instruction_id}"
+        )
 
     @staticmethod
-    def format_verification_report(instruction_scores: dict, prediction: str) -> str:
+    def format_verification_report(
+        instruction_scores: dict, prediction: str
+    ) -> str:
         """
         Format a detailed verification report for verbose output.
 
@@ -122,7 +123,8 @@ class IFEvalTemplate:
             for instruction_id, passed in instructions:
                 status = "✓ PASS" if passed else "✗ FAIL"
                 description = IFEvalTemplate.get_instruction_description(
-                    instruction_id)
+                    instruction_id
+                )
                 report += f"  {status}: {description} ({instruction_id})\n"
             report += "\n"
 

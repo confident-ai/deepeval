@@ -20,7 +20,9 @@ class IFEvalInstructionVerifier:
     """
 
     @staticmethod
-    def verify_punctuation_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_punctuation_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify punctuation-related constraints."""
         if instruction_id == "punctuation:no_comma":
             return "," not in response
@@ -33,7 +35,9 @@ class IFEvalInstructionVerifier:
         return True
 
     @staticmethod
-    def verify_length_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_length_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify length-related constraints."""
         if instruction_id == "length_constraints:number_words":
             num_words = kwargs.get("num_words")
@@ -78,7 +82,7 @@ class IFEvalInstructionVerifier:
             if num_sentences is None:
                 return True
 
-            sentences = re.split(r'[.!?]+', response)
+            sentences = re.split(r"[.!?]+", response)
             sentence_count = len([s for s in sentences if s.strip()])
 
             if relation == "exactly":
@@ -93,7 +97,9 @@ class IFEvalInstructionVerifier:
         return True
 
     @staticmethod
-    def verify_format_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_format_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify format-related constraints."""
         if instruction_id == "detectable_format:json":
             try:
@@ -103,22 +109,24 @@ class IFEvalInstructionVerifier:
                 return False
 
         elif instruction_id == "detectable_format:list":
-            lines = response.strip().split('\n')
-            return (len(lines) > 1 or
-                    response.strip().startswith('-') or
-                    response.strip().startswith('*') or
-                    response.strip().startswith('1.') or
-                    response.strip().startswith('•'))
+            lines = response.strip().split("\n")
+            return (
+                len(lines) > 1
+                or response.strip().startswith("-")
+                or response.strip().startswith("*")
+                or response.strip().startswith("1.")
+                or response.strip().startswith("•")
+            )
 
         elif instruction_id == "detectable_format:number_bullets":
             num_bullets = kwargs.get("num_bullets")
             if num_bullets is None:
                 return True
 
-            bullet_patterns = [r'^\s*[-*•]\s+', r'^\s*\d+\.\s+']
+            bullet_patterns = [r"^\s*[-*•]\s+", r"^\s*\d+\.\s+"]
             bullet_count = 0
 
-            for line in response.split('\n'):
+            for line in response.split("\n"):
                 for pattern in bullet_patterns:
                     if re.match(pattern, line):
                         bullet_count += 1
@@ -131,18 +139,20 @@ class IFEvalInstructionVerifier:
             if num_highlights is None:
                 return True
 
-            highlight_pattern = r'\*[^*]+\*'
+            highlight_pattern = r"\*[^*]+\*"
             highlights = re.findall(highlight_pattern, response)
             return len(highlights) >= num_highlights
 
         elif instruction_id == "detectable_format:title":
-            title_pattern = r'<<[^>]+>>'
+            title_pattern = r"<<[^>]+>>"
             return bool(re.search(title_pattern, response))
 
         return True
 
     @staticmethod
-    def verify_case_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_case_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify case-related constraints."""
         if instruction_id == "change_case:english_lowercase":
             return response.lower() == response and response.islower()
@@ -156,7 +166,9 @@ class IFEvalInstructionVerifier:
         return True
 
     @staticmethod
-    def verify_startend_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_startend_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify start/end constraints."""
         if instruction_id == "startend:start_with":
             start_text = kwargs.get("start_text")
@@ -173,22 +185,32 @@ class IFEvalInstructionVerifier:
         return True
 
     @staticmethod
-    def verify_keywords_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_keywords_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify keyword constraints."""
         if instruction_id == "keywords:must_include":
             required_keywords = kwargs.get("keywords", [])
             response_lower = response.lower()
-            return all(keyword.lower() in response_lower for keyword in required_keywords)
+            return all(
+                keyword.lower() in response_lower
+                for keyword in required_keywords
+            )
 
         elif instruction_id == "keywords:must_not_include":
             forbidden_keywords = kwargs.get("keywords", [])
             response_lower = response.lower()
-            return not any(keyword.lower() in response_lower for keyword in forbidden_keywords)
+            return not any(
+                keyword.lower() in response_lower
+                for keyword in forbidden_keywords
+            )
 
         return True
 
     @staticmethod
-    def verify_content_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_content_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify content-related constraints."""
         if instruction_id == "detectable_content:keyword_frequency":
             keyword = kwargs.get("keyword")
@@ -221,7 +243,7 @@ class IFEvalInstructionVerifier:
             if num_placeholders is None:
                 return True
 
-            placeholder_pattern = r'\[[^\]]+\]'
+            placeholder_pattern = r"\[[^\]]+\]"
             placeholders = re.findall(placeholder_pattern, response)
             return len(placeholders) >= num_placeholders
 
@@ -235,12 +257,17 @@ class IFEvalInstructionVerifier:
                 return True
 
             response_words = response.strip().split()
-            return response_words and response_words[0].lower() == first_word.lower()
+            return (
+                response_words
+                and response_words[0].lower() == first_word.lower()
+            )
 
         return True
 
     @staticmethod
-    def verify_structural_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_structural_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify structural constraints."""
         if instruction_id == "structural_constraints:number_paragraphs":
             num_paragraphs = kwargs.get("num_paragraphs")
@@ -249,7 +276,7 @@ class IFEvalInstructionVerifier:
             if num_paragraphs is None:
                 return True
 
-            paragraphs = [p for p in response.split('\n\n') if p.strip()]
+            paragraphs = [p for p in response.split("\n\n") if p.strip()]
             paragraph_count = len(paragraphs)
 
             if relation == "exactly":
@@ -268,15 +295,16 @@ class IFEvalInstructionVerifier:
             if num_sections is None:
                 return True
 
-            sections = [s for s in response.split(
-                section_spliter) if s.strip()]
+            sections = [s for s in response.split(section_spliter) if s.strip()]
             section_count = len(sections)
             return section_count >= num_sections
 
         return True
 
     @staticmethod
-    def verify_combination_constraints(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> bool:
+    def verify_combination_constraints(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> bool:
         """Verify combination constraints."""
         if instruction_id == "combination:repeat_prompt":
             prompt_to_repeat = kwargs.get("prompt_to_repeat")
@@ -288,36 +316,53 @@ class IFEvalInstructionVerifier:
         return True
 
     @staticmethod
-    def verify_instruction_compliance(response: str, instruction_id: str, kwargs: Dict[str, Any]) -> Tuple[bool, str]:
+    def verify_instruction_compliance(
+        response: str, instruction_id: str, kwargs: Dict[str, Any]
+    ) -> Tuple[bool, str]:
         """Verify compliance with a single instruction."""
         try:
             if instruction_id.startswith("punctuation:"):
-                result = IFEvalInstructionVerifier.verify_punctuation_constraints(
-                    response, instruction_id, kwargs)
+                result = (
+                    IFEvalInstructionVerifier.verify_punctuation_constraints(
+                        response, instruction_id, kwargs
+                    )
+                )
             elif instruction_id.startswith("length_constraints:"):
                 result = IFEvalInstructionVerifier.verify_length_constraints(
-                    response, instruction_id, kwargs)
+                    response, instruction_id, kwargs
+                )
             elif instruction_id.startswith("detectable_format:"):
                 result = IFEvalInstructionVerifier.verify_format_constraints(
-                    response, instruction_id, kwargs)
+                    response, instruction_id, kwargs
+                )
             elif instruction_id.startswith("detectable_content:"):
                 result = IFEvalInstructionVerifier.verify_content_constraints(
-                    response, instruction_id, kwargs)
+                    response, instruction_id, kwargs
+                )
             elif instruction_id.startswith("structural_constraints:"):
-                result = IFEvalInstructionVerifier.verify_structural_constraints(
-                    response, instruction_id, kwargs)
+                result = (
+                    IFEvalInstructionVerifier.verify_structural_constraints(
+                        response, instruction_id, kwargs
+                    )
+                )
             elif instruction_id.startswith("combination:"):
-                result = IFEvalInstructionVerifier.verify_combination_constraints(
-                    response, instruction_id, kwargs)
+                result = (
+                    IFEvalInstructionVerifier.verify_combination_constraints(
+                        response, instruction_id, kwargs
+                    )
+                )
             elif instruction_id.startswith("change_case:"):
                 result = IFEvalInstructionVerifier.verify_case_constraints(
-                    response, instruction_id, kwargs)
+                    response, instruction_id, kwargs
+                )
             elif instruction_id.startswith("startend:"):
                 result = IFEvalInstructionVerifier.verify_startend_constraints(
-                    response, instruction_id, kwargs)
+                    response, instruction_id, kwargs
+                )
             elif instruction_id.startswith("keywords:"):
                 result = IFEvalInstructionVerifier.verify_keywords_constraints(
-                    response, instruction_id, kwargs)
+                    response, instruction_id, kwargs
+                )
             else:
                 return False, f"Unknown instruction type: {instruction_id}"
 
@@ -325,7 +370,10 @@ class IFEvalInstructionVerifier:
             return result, reason
 
         except Exception as e:
-            return False, f"Error verifying instruction '{instruction_id}': {str(e)}"
+            return (
+                False,
+                f"Error verifying instruction '{instruction_id}': {str(e)}",
+            )
 
 
 class IFEval(DeepEvalBaseBenchmark):
@@ -333,7 +381,7 @@ class IFEval(DeepEvalBaseBenchmark):
     IFEval (Instruction Following Evaluation) benchmark implementation.
 
     IFEval is a benchmark for evaluating instruction-following capabilities of language models.
-    It tests various aspects of instruction following including format compliance, constraint 
+    It tests various aspects of instruction following including format compliance, constraint
     adherence, output structure requirements, and specific instruction types.
 
     Based on the original IFEval paper: https://arxiv.org/abs/2311.07911
@@ -365,38 +413,37 @@ class IFEval(DeepEvalBaseBenchmark):
 
             goldens = self.load_benchmark_dataset()
             if self.n_problems and self.n_problems < len(goldens):
-                goldens = goldens[:self.n_problems]
+                goldens = goldens[: self.n_problems]
 
             overall_total_predictions = len(goldens)
 
             for idx, golden in enumerate(
-                tqdm(
-                    goldens, desc=f"Processing {len(goldens)} IFEval problems")
+                tqdm(goldens, desc=f"Processing {len(goldens)} IFEval problems")
             ):
                 prediction, score, instruction_scores = self.predict(
-                    model, golden)
+                    model, golden
+                )
                 if score:
                     overall_correct_predictions += 1
 
-                predictions_row.append(
-                    (golden.input, prediction, score)
-                )
+                predictions_row.append((golden.input, prediction, score))
 
-                for instruction_id, instruction_score in instruction_scores.items():
+                for (
+                    instruction_id,
+                    instruction_score,
+                ) in instruction_scores.items():
                     if instruction_id not in instruction_results:
                         instruction_results[instruction_id] = {
-                            "correct": 0, "total": 0}
+                            "correct": 0,
+                            "total": 0,
+                        }
                     instruction_results[instruction_id]["total"] += 1
                     if instruction_score:
                         instruction_results[instruction_id]["correct"] += 1
 
                 if self.verbose_mode:
                     self.print_verbose_logs(
-                        idx,
-                        golden.input,
-                        prediction,
-                        score,
-                        instruction_scores
+                        idx, golden.input, prediction, score, instruction_scores
                     )
 
             overall_accuracy = (
@@ -409,7 +456,8 @@ class IFEval(DeepEvalBaseBenchmark):
                 accuracy = results["correct"] / results["total"]
                 instruction_accuracies[instruction_id] = accuracy
                 print(
-                    f"Instruction '{instruction_id}' Accuracy: {accuracy:.4f}")
+                    f"Instruction '{instruction_id}' Accuracy: {accuracy:.4f}"
+                )
 
             self.predictions = pd.DataFrame(
                 predictions_row,
@@ -428,7 +476,9 @@ class IFEval(DeepEvalBaseBenchmark):
                 "predictions": self.predictions,
             }
 
-    def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Tuple[str, bool, Dict[str, bool]]:
+    def predict(
+        self, model: DeepEvalBaseLLM, golden: Golden
+    ) -> Tuple[str, bool, Dict[str, bool]]:
         """
         Generate prediction for a single IFEval test case and verify instruction compliance.
 
@@ -452,13 +502,15 @@ class IFEval(DeepEvalBaseBenchmark):
         all_instructions_passed = True
 
         metadata = golden.additional_metadata or {}
-        instruction_ids = metadata.get('instruction_ids', [])
-        kwargs_list = metadata.get('kwargs_list', [])
+        instruction_ids = metadata.get("instruction_ids", [])
+        kwargs_list = metadata.get("kwargs_list", [])
 
         for i, instruction_id in enumerate(instruction_ids):
             kwargs = kwargs_list[i] if i < len(kwargs_list) else {}
-            passed, reason = IFEvalInstructionVerifier.verify_instruction_compliance(
-                prediction, instruction_id, kwargs
+            passed, reason = (
+                IFEvalInstructionVerifier.verify_instruction_compliance(
+                    prediction, instruction_id, kwargs
+                )
             )
             instruction_scores[instruction_id] = passed
             if not passed:
@@ -490,13 +542,10 @@ class IFEval(DeepEvalBaseBenchmark):
             instruction_id_list = data.get("instruction_id_list", [])
             kwargs = data.get("kwargs", [])
 
-            golden = Golden(
-                input=prompt,
-                expected_output=""
-            )
+            golden = Golden(input=prompt, expected_output="")
             golden.additional_metadata = {
-                'instruction_ids': instruction_id_list,
-                'kwargs_list': kwargs
+                "instruction_ids": instruction_id_list,
+                "kwargs_list": kwargs,
             }
 
             goldens.append(golden)
@@ -527,9 +576,13 @@ class IFEval(DeepEvalBaseBenchmark):
         steps = [
             f"Input:\n{input}",
             f"Overall Score: {score}\nPrediction: {prediction[:200]}{'...' if len(prediction) > 200 else ''}",
-            "Instruction Breakdown:\n" +
-            "\n".join([f"  {inst}: {'✓' if passed else '✗'}" for inst,
-                      passed in instruction_scores.items()])
+            "Instruction Breakdown:\n"
+            + "\n".join(
+                [
+                    f"  {inst}: {'✓' if passed else '✗'}"
+                    for inst, passed in instruction_scores.items()
+                ]
+            ),
         ]
         verbose_logs = ""
         for i in range(len(steps) - 1):
