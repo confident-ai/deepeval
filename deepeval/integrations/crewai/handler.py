@@ -43,7 +43,7 @@ class CrewAIEventsListener(BaseEventListener):
     def setup_listeners(self, crewai_event_bus):
         
         # patch trace the classes
-        # self.patch_crewai_LLM("call")
+        self.patch_crewai_LLM("call")
         # self.patch_crewai_ToolUsage("use")
         
         @crewai_event_bus.on(CrewKickoffStartedEvent)
