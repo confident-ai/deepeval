@@ -10,6 +10,7 @@ try:
         CrewKickoffCompletedEvent,
         AgentExecutionStartedEvent,
         AgentExecutionCompletedEvent,
+        ToolUsageFinishedEvent
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
 
@@ -94,7 +95,10 @@ class CrewAIEventsListener(BaseEventListener):
                 parent_uuid=str(event.agent.crew.id),
                 start_time=perf_counter(),
                 name="(agent) " + event.agent.role,
-                metadata={"llm_id": str(id(event.agent.llm))},
+                metadata={
+                    "llm_id": str(id(event.agent.llm)), # used to find parent span of llm
+                    "agent_key": str(event.agent.key) # used to find parent span of tool span
+                },
             )
 
             trace_manager.add_span(base_span)
@@ -109,6 +113,38 @@ class CrewAIEventsListener(BaseEventListener):
             base_span.end_time = perf_counter()
             base_span.status = TraceSpanStatus.SUCCESS
             trace_manager.remove_span(base_span.uuid)
+
+        @crewai_event_bus.on(ToolUsageFinishedEvent)
+        def on_tool_usage_finished(source, event: ToolUsageFinishedEvent):
+            #find the parent span of the tool usage
+            target_agent_key = str(event.agent_key)
+            matching_span = None
+            for span_uuid, span in trace_manager.active_spans.items():
+                if span.metadata and "agent_key" in span.metadata and span.metadata["agent_key"] == target_agent_key:
+                    matching_span = span
+                    break
+            
+            # create a tool span
+            tool_span = ToolSpan(
+                uuid=str(uuid4()),
+                status=TraceSpanStatus.SUCCESS,
+                children=[],
+                trace_uuid=self.active_trace_id,
+                parent_uuid=matching_span.uuid if matching_span else None,
+                
+                start_time=event.started_at.timestamp(), # start time of the tool usage (conver datetime to epoch)
+                end_time=event.finished_at.timestamp(), # end time of the tool usage (conver datetime to epoch)
+                name=event.tool_name, # name of the tool
+                input=event.tool_args, # from the event
+                output=event.output # from the event
+            )
+
+            # add the tool span to the trace
+            trace_manager.add_span(tool_span)
+            trace_manager.add_span_to_trace(tool_span)
+
+            # remove the tool span from the trace, since it is a completed span
+            trace_manager.remove_span(tool_span.uuid)
 
     def patch_crewai_LLM(self, method_to_patch: str):
         original_methods = {}
@@ -132,18 +168,14 @@ class CrewAIEventsListener(BaseEventListener):
                         and span.metadata["llm_id"] == target_llm_id
                     ):
                         matching_span = span
-
-                if matching_span is None:
-                    raise ValueError(
-                        f"LLM instance with id {target_llm_id} not found in active spans"
-                    )
+                        break
 
                 llm_span = LlmSpan(
                     uuid=str(uuid4()),
                     status=TraceSpanStatus.IN_PROGRESS,
                     children=[],
                     trace_uuid=self.active_trace_id,
-                    parent_uuid=matching_span.uuid,
+                    parent_uuid=matching_span.uuid if matching_span else None,
                     start_time=perf_counter(),
                     name="crewai_llm_span_" + str(uuid4()),
                     # TODO: why model is coming unknown?
