@@ -51,7 +51,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             trace_uuid=self.active_trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
-            name="llama-index", # add the name of the class
+            name=instance.__class__.__name__ if instance else None, # add the name of the class
             input=None, # add the input 
         )
 
