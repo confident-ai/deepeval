@@ -3,6 +3,7 @@ from rich.console import Console
 import asyncio
 import time
 
+from deepeval.dataset.dataset import EvaluationDataset
 from deepeval.evaluate.configs import (
     AsyncConfig,
     DisplayConfig,
@@ -344,6 +345,11 @@ def dataset(
         raise ValueError(
             "You must provide either 'goldens' or 'alias' to dataset()."
         )
+    
+    if alias:
+        dataset = EvaluationDataset()
+        dataset.pull(alias)
+        goldens = dataset.goldens
 
     with capture_evaluation_run("looped evaluate()"):
         global_test_run_manager.reset()

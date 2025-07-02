@@ -18,6 +18,6 @@ goldens = [
 # for golden in dataset(goldens=goldens, async_config=AsyncConfig(run_async=False)):
 #     sync_meta_agent(golden.input)
 
-for golden in dataset(goldens=goldens, async_config=AsyncConfig(run_async=False)):
+for golden in dataset(alias="Expanded QA Dataset"):
     task = asyncio.create_task(async_meta_agent(golden.input))
     test_run.append(task)
