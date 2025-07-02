@@ -1,10 +1,10 @@
 from typing import Optional
 import functools
 import deepeval
+from deepeval.tracing.attributes import RetrieverAttributes
 
 try:
     from crewai import LLM
-    from crewai.tools.tool_usage import ToolUsage
     from crewai.utilities.events import (
         CrewKickoffStartedEvent,
         CrewKickoffCompletedEvent,
@@ -13,7 +13,8 @@ try:
         ToolUsageFinishedEvent
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
-
+    from crewai.memory.memory import Memory
+    
     crewai_installed = True
 except:
     crewai_installed = False
@@ -25,6 +26,7 @@ from deepeval.tracing.types import (
     LlmAttributes,
     ToolSpan,
     TraceSpanStatus,
+    RetrieverSpan
 )
 from uuid import uuid4
 from time import perf_counter
@@ -50,6 +52,7 @@ class CrewAIEventsListener(BaseEventListener):
 
         # patch trace the classes
         self.patch_crewai_LLM("call")
+        self.patch_crewai_Memory("search")
         # self.patch_crewai_ToolUsage("use")
 
         @crewai_event_bus.on(CrewKickoffStartedEvent)
@@ -200,43 +203,46 @@ class CrewAIEventsListener(BaseEventListener):
 
             setattr(LLM, method_to_patch, wrapped_method)
 
-    def patch_crewai_ToolUsage(self, method_to_patch: str):
-
+    def patch_crewai_Memory(self, method_to_patch: str):
         original_methods = {}
-
-        method = getattr(ToolUsage, method_to_patch)
+        method = getattr(Memory, method_to_patch)
         if callable(method) and not isinstance(method, type):
             original_methods[method_to_patch] = method
-
+            
             @functools.wraps(method)
             def wrapped_method(*args, original_method=method, **kwargs):
-                tool_calling = args[1]
-
-                tool_span = ToolSpan(
+                # prepare retriver span
+                retriever_span = RetrieverSpan(
                     uuid=str(uuid4()),
                     status=TraceSpanStatus.IN_PROGRESS,
                     children=[],
                     trace_uuid=self.active_trace_id,
-                    parent_uuid=None,
+                    parent_uuid=None, # none for now, all the memory insances are part of crew,
                     start_time=perf_counter(),
-                    name=tool_calling.tool_name,
-                    input=tool_calling.arguments,
+                    name="crewai_retriever_span",
+                    embedder="unknown"
                 )
-                trace_manager.add_span(tool_span)
-                trace_manager.add_span_to_trace(tool_span)
+
+                trace_manager.add_span(retriever_span)
+                trace_manager.add_span_to_trace(retriever_span)
 
                 response = original_method(*args, **kwargs)
-
-                tool_span.end_time = perf_counter()
-                tool_span.status = TraceSpanStatus.SUCCESS
-                tool_span.output = response
-
-                trace_manager.remove_span(tool_span.uuid)
-
+                # end retriever span
+                retriever_span.end_time = perf_counter()
+                retriever_span.status = TraceSpanStatus.SUCCESS
+                
+                # Convert response to List[str] by stringifying each item
+                response_str_list = [str(item) for item in response]
+                retriever_span.set_attributes(
+                    RetrieverAttributes(
+                        embedding_input=args[1], retrieval_context=response_str_list
+                    )
+                )
+                trace_manager.remove_span(retriever_span.uuid)
+                
                 return response
-
-            setattr(ToolUsage, method_to_patch, wrapped_method)
-
+            
+            setattr(Memory, method_to_patch, wrapped_method)
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
