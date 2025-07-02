@@ -20,6 +20,7 @@ from deepeval.test_run.api import (
     TestRunHttpResponse,
     MetricData,
 )
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing.api import SpanApiType, span_api_type_literals
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
@@ -395,7 +396,7 @@ class TestRunEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Enum):
             return obj.value
-        return super().default(obj)
+        return make_json_serializable(obj)
 
 
 class TestRunManager:
@@ -738,6 +739,9 @@ class TestRunManager:
         except AttributeError:
             # Pydantic version below 2.0
             body = test_run.dict(by_alias=True, exclude_none=True)
+
+        json_str = json.dumps(body, cls=TestRunEncoder)
+        body = json.loads(json_str)
 
         api = Api()
         result = api.send_request(
