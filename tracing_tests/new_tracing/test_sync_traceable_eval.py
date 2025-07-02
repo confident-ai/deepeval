@@ -143,6 +143,14 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
+from deepeval import test_run
+from deepeval.dataset import Golden
+
+goldens = [
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+]
+
 # # Run Async
 # evaluate(
 #     goldens=goldens,
