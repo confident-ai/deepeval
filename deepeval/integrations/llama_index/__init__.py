@@ -1,1 +1,1 @@
-from .handler import instrument_llama_index
+from .handler import instrumentator

@@ -1,10 +1,10 @@
 from time import perf_counter
 import inspect
 from typing import Any, Dict, Optional, TypeVar
+import deepeval
 
 try:
     from llama_index_instrumentation.base import BaseEvent
-    from llama_index_instrumentation.dispatcher import Dispatcher
     from llama_index.core.instrumentation.event_handlers.base import (
         BaseEventHandler,
     )
@@ -21,6 +21,7 @@ try:
     )
     from llama_index.core.instrumentation.events.span import SpanDropEvent
     from llama_index.core.instrumentation.span.base import BaseSpan
+    import llama_index.core.instrumentation as instrument
 
     T = TypeVar("T", bound=BaseSpan)
     llama_index_installed = True
@@ -216,7 +217,9 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         pass
 
 
-def instrument_llama_index(dispatcher: Dispatcher):
-    is_llama_index_installed()
+def instrumentator(api_key: Optional[str] = None):
+    if api_key:
+        deepeval.login_with_confident_api_key(api_key)
+    dispatcher = instrument.get_dispatcher()
     dispatcher.add_event_handler(LLamaIndexEventHandler())
     dispatcher.add_span_handler(LLamaIndexSpanHandler())
