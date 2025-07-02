@@ -151,9 +151,6 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
-for golden in test_run(goldens):
-    meta_agent(golden.input)
-
 # # Run Async
 # evaluate(
 #     goldens=goldens,
