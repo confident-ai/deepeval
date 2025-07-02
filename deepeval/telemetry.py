@@ -579,7 +579,7 @@ def capture_tracing_integration(integration_name: str):
             ),
         }
         set_last_feature(Feature.TRACING_INTEGRATION)
-        
+
         # capture posthog
         posthog.capture(
             distinct_id=distinct_id, event=event, properties=properties
