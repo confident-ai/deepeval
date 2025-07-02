@@ -48,7 +48,8 @@ metric = DAGMetric(dag=dag, name="DAG")
 ## Example ############################################
 #######################################################
 
-class AIAgent():
+
+class AIAgent:
 
     @observe(type="llm", model="gpt-4o")
     async def generate_text(self, prompt: str):
@@ -62,7 +63,6 @@ class AIAgent():
         update_current_span(attributes=attributes)
         await sleep(random.uniform(1, 3))
         return generated_text
-
 
     # Example of a retrieval node with embedded embedder
     @observe(type="retriever", embedder="text-embedding-ada-002")
@@ -80,16 +80,16 @@ class AIAgent():
         )
         return documents
 
-
     @observe("CustomEmbedder")
     async def custom_embed(self, text: str, model: str = "custom-model"):
         embedding = [0.1, 0.2, 0.3]
         await sleep(random.uniform(1, 3))
         return embedding
 
-
     @observe("CustomRetriever", name="custom retriever")
-    async def custom_retrieve(self, query: str, embedding_model: str = "custom-model"):
+    async def custom_retrieve(
+        self, query: str, embedding_model: str = "custom-model"
+    ):
         embedding = await self.custom_embed(query, embedding_model)
         documents = [
             f"Custom doc 1 about {query}",
@@ -97,15 +97,15 @@ class AIAgent():
         ]
         await sleep(random.uniform(1, 3))
 
-
     @observe("CustomLLM")
     async def custom_generate(self, prompt: str, model: str = "custom-model"):
         response = f"Custom response for: {prompt}"
         await sleep(random.uniform(1, 3))
         return response
 
-
-    @observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
+    @observe(
+        type="agent", available_tools=["custom_retrieve", "custom_generate"]
+    )
     async def custom_research_agent(self, query: str):
         if random.random() < 0.5:
             docs = await self.custom_retrieve(query)
@@ -115,7 +115,6 @@ class AIAgent():
         else:
             await sleep(random.uniform(1, 3))
             return "Research information unavailable"
-
 
     @observe(
         type="agent",
@@ -131,8 +130,9 @@ class AIAgent():
         await sleep(random.uniform(1, 3))
         return "Weather information unavailable"
 
-
-    @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
+    @observe(
+        type="agent", available_tools=["retrieve_documents", "generate_text"]
+    )
     async def research_agent(self, query: str):
         if random.random() < 0.5:
             docs = await self.retrieve_documents(query)
@@ -145,10 +145,13 @@ class AIAgent():
             await sleep(random.uniform(1, 3))
             return "Research information unavailable"
 
-
     @observe(
         type="agent",
-        agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+        agent_handoffs=[
+            "weather_agent",
+            "research_agent",
+            "custom_research_agent",
+        ],
         metrics=[AnswerRelevancyMetric(), BiasMetric()],
         metric_collection="Test",
     )
@@ -168,9 +171,11 @@ class AIAgent():
         )
         return final_response
 
+
 @observe(type="agent", agent_handoffs=["meta_agent"])
 async def meta_agent(input: str):
     return await AIAgent().meta_agent(input)
+
 
 ###################################v
 
@@ -184,11 +189,11 @@ goldens = [
 
 # Run Async
 evaluate(
-   goldens=goldens * 2,
-   observed_callback=meta_agent,
-   async_config=AsyncConfig(run_async=True, max_concurrent=40),
-   cache_config=CacheConfig(write_cache=True),
-   # display_config=DisplayConfig(show_indicator=False),
+    goldens=goldens * 2,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True, max_concurrent=40),
+    cache_config=CacheConfig(write_cache=True),
+    # display_config=DisplayConfig(show_indicator=False),
 )
 
 
