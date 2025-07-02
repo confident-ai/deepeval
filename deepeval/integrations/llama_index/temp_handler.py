@@ -1,6 +1,9 @@
 from typing import Any, Dict, Optional
 import inspect
+
 import deepeval
+from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing import trace_manager
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
     from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
@@ -10,18 +13,23 @@ try:
     llama_index_installed = True
 except:
     llama_index_installed = False
-    
 
 def is_llama_index_installed():
     if not llama_index_installed:
         raise ImportError("llama-index is neccesary for this functionality. Please install it with `pip install llama-index` or with package manager of choice.")
 
 
-class LLamaIndexEventHandler(BaseEventHandler):
+class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
+    active_trace_uuid: Optional[str] = None
+    
+    def __init__(self):
+        capture_tracing_integration("llama-index")
+        is_llama_index_installed()
+        super().__init__()
+
     def handle(self, event: BaseEvent, **kwargs) -> Any:
         print("----handle----")
-
-class LLamaIndexSpanHandler(BaseSpanHandler):
+    
     def new_span(
         self,
         id_: str,
@@ -42,7 +50,7 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         **kwargs: Any,
     ) -> Optional[BaseSpan]:
         print("----prepare_to_exit_span----")
-
+    
     def prepare_to_drop_span(
         self,
         id_: str,
@@ -51,24 +59,16 @@ class LLamaIndexSpanHandler(BaseSpanHandler):
         err: Optional[BaseException] = None,
         **kwargs: Any,
     ) -> Optional[BaseSpan]:
-        print("----prepare_to_drop_span----")
-
-
-class LLamaIndexHandler():
-    def __init__(self):
-        
-        is_llama_index_installed()
-        self.event_handler = LLamaIndexEventHandler()
-        self.span_handler = LLamaIndexSpanHandler()
-        
-        self.dispatcher = instrument.get_dispatcher()
-        self.dispatcher.add_event_handler(self.event_handler)
-        self.dispatcher.add_span_handler(self.span_handler)
+        pass
 
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
         deepeval.login_with_confident_api_key(api_key)
     
-    LLamaIndexHandler()
+    handler = LLamaIndexHandler()
+    
+    dispatcher = instrument.get_dispatcher()
+    dispatcher.add_event_handler(handler)
+    dispatcher.add_span_handler(handler)
     return None
