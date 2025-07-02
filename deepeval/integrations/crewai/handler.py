@@ -108,41 +108,41 @@ class CrewAIEventsListener(BaseEventListener):
             base_span.status = TraceSpanStatus.SUCCESS
             trace_manager.remove_span(base_span.uuid)
 
-        @crewai_event_bus.on(LLMCallStartedEvent)
-        def on_llm_started(source: LLM, event: LLMCallStartedEvent):
-            # find the source id in agent span of llm
-            target_llm_id = str(id(source))
+        # @crewai_event_bus.on(LLMCallStartedEvent)
+        # def on_llm_started(source: LLM, event: LLMCallStartedEvent):
+        #     # find the source id in agent span of llm
+        #     target_llm_id = str(id(source))
             
-            # Search through all active spans to find one with matching llm_id in metadata
-            matching_span = None
-            for span_uuid, span in trace_manager.active_spans.items():
-                if (span.metadata and 
-                    "llm_id" in span.metadata and 
-                    span.metadata["llm_id"] == target_llm_id):
-                    matching_span = span
-                    break
+        #     # Search through all active spans to find one with matching llm_id in metadata
+        #     matching_span = None
+        #     for span_uuid, span in trace_manager.active_spans.items():
+        #         if (span.metadata and 
+        #             "llm_id" in span.metadata and 
+        #             span.metadata["llm_id"] == target_llm_id):
+        #             matching_span = span
+        #             break
             
-            if matching_span:
-                # Found the agent span that contains this LLM
-                # Now create the LLM span as a child of this agent span
-                llm_span = LlmSpan(
-                    uuid=str(uuid4()),
-                    status=TraceSpanStatus.IN_PROGRESS,
-                    children=[],
-                    trace_uuid=matching_span.trace_uuid,
-                    parent_uuid=matching_span.uuid,  # Set parent to the agent span
-                    start_time=perf_counter(),
-                    name="crewai_llm_call",
-                    model=source.model,
-                    attributes=LlmAttributes(input=event.messages, output=""),
-                )
-                trace_manager.add_span(llm_span)
-                trace_manager.add_span_to_trace(llm_span)
+        #     if matching_span:
+        #         # Found the agent span that contains this LLM
+        #         # Now create the LLM span as a child of this agent span
+        #         llm_span = LlmSpan(
+        #             uuid=str(uuid4()),
+        #             status=TraceSpanStatus.IN_PROGRESS,
+        #             children=[],
+        #             trace_uuid=matching_span.trace_uuid,
+        #             parent_uuid=matching_span.uuid,  # Set parent to the agent span
+        #             start_time=perf_counter(),
+        #             name="crewai_llm_call",
+        #             model=source.model,
+        #             attributes=LlmAttributes(input=event.messages, output=""),
+        #         )
+        #         trace_manager.add_span(llm_span)
+        #         trace_manager.add_span_to_trace(llm_span)
 
-        @crewai_event_bus.on(LLMCallCompletedEvent)
-        def on_llm_completed(source: LLM, event: LLMCallCompletedEvent):
+        # @crewai_event_bus.on(LLMCallCompletedEvent)
+        # def on_llm_completed(source: LLM, event: LLMCallCompletedEvent):
 
-            llm_span = trace_manager.get_span_by_uuid(str(source.id))
+        #     llm_span = trace_manager.get_span_by_uuid(str(source.id))
             
 
     def patch_crewai_LLM(self, method_to_patch: str):    
@@ -157,12 +157,25 @@ class CrewAIEventsListener(BaseEventListener):
                 if self.active_trace_id is None:
                     self.active_trace_id = trace_manager.start_new_trace().uuid
                 
+                # find the parent agent if which this LLM instance is a part
+                # find the source id in agent span of llm
+                target_llm_id = str(id(args[0]))
+                matching_span = None
+                for span_uuid, span in trace_manager.active_spans.items():
+                    if (span.metadata and 
+                        "llm_id" in span.metadata and 
+                        span.metadata["llm_id"] == target_llm_id):
+                        matching_span = span
+                
+                if matching_span is None:
+                    raise ValueError(f"LLM instance with id {target_llm_id} not found in active spans")
+                
                 llm_span = LlmSpan(
                     uuid=str(uuid4()),
                     status=TraceSpanStatus.IN_PROGRESS,
                     children=[],
                     trace_uuid=self.active_trace_id,
-                    parent_uuid=None,
+                    parent_uuid=matching_span.uuid,
                     start_time=perf_counter(),
                     name="crewai_llm_span_" + str(uuid4()),
                     # TODO: why model is coming unknown?
