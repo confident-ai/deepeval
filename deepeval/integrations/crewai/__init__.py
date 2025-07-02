@@ -1,1 +1,1 @@
-from .patchers import CrewAILogger
+from .handler import instrumentator
