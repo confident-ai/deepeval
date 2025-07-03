@@ -5,8 +5,8 @@ import uuid
 import deepeval
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import LlmAttributes
-from deepeval.tracing.types import BaseSpan, LlmSpan, TraceSpanStatus
+from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
+from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan, TraceSpanStatus
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
     from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
@@ -17,6 +17,7 @@ try:
         LLMChatStartEvent,
         LLMChatEndEvent,
     )
+    from llama_index.core.tools.function_tool import AsyncBaseTool
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -75,7 +76,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 if llm_span:
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
-                    llm_span.output = event.response
+                    llm_span.output = event.response # only takes the message response ouput, but what if the response is a tool?
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
@@ -105,6 +106,27 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         trace_manager.add_span(base_span)
         trace_manager.add_span_to_trace(base_span)
         
+        if isinstance(instance, AsyncBaseTool):
+            tool_span = ToolSpan(
+                uuid=str(uuid.uuid4()),
+                name=instance.metadata.name,
+                status=TraceSpanStatus.IN_PROGRESS,
+                description=instance.metadata.description,
+                children=[],
+                trace_uuid=self.active_trace_uuid,
+                parent_uuid=base_span.uuid,
+                start_time=perf_counter(), 
+                input=bound_args.arguments,
+            )
+
+            trace_manager.add_span(tool_span)
+            trace_manager.add_span_to_trace(tool_span)
+
+            #adding this tool span id to the metadata of the parent span
+            trace_manager.get_span_by_uuid(base_span.uuid).metadata = {
+                "tool_span_id": tool_span.uuid
+            }
+
         return base_span
 
     def prepare_to_exit_span(
@@ -120,6 +142,16 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         if base_span is None:
             return None
         
+        if isinstance(instance, AsyncBaseTool):
+            tool_span_id = base_span.metadata.get("tool_span_id")
+            if tool_span_id:
+                tool_span = trace_manager.get_span_by_uuid(tool_span_id)
+                if tool_span: 
+                    tool_span.end_time = perf_counter()
+                    tool_span.status = TraceSpanStatus.SUCCESS
+                    tool_span.output = result
+                    trace_manager.remove_span(tool_span.uuid)
+                
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = result
