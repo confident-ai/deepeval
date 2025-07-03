@@ -51,8 +51,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             trace_uuid=self.active_trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
-            name=instance.__class__.__name__ if instance else None, # add the name of the class
-            input=None, # add the input 
+            name=instance.__class__.__name__ if instance else None,
+            input=bound_args.arguments,
         )
 
         trace_manager.add_span(base_span)
@@ -74,7 +74,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
-        base_span.output = None # add the output
+        base_span.output = result
         trace_manager.remove_span(base_span.uuid)
 
         if base_span.parent_uuid is None:
