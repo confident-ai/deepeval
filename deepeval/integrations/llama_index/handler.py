@@ -1,17 +1,22 @@
 from typing import Any, Dict, Optional
 import inspect
 from time import perf_counter
-
+import uuid
 import deepeval
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.types import BaseSpan, TraceSpanStatus
+from deepeval.tracing.attributes import LlmAttributes
+from deepeval.tracing.types import BaseSpan, LlmSpan, TraceSpanStatus
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
     from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
     from llama_index.core.instrumentation.span_handlers.base import BaseSpanHandler
     from llama_index.core.instrumentation.span.base import BaseSpan as LlamaIndexBaseSpan
     import llama_index.core.instrumentation as instrument
+    from llama_index.core.instrumentation.events.llm import (
+        LLMChatStartEvent,
+        LLMChatEndEvent,
+    )
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -23,6 +28,7 @@ def is_llama_index_installed():
 
 class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     active_trace_uuid: Optional[str] = None
+    open_ai_astream_to_llm_span_map: Dict[str, str] = {}
     
     def __init__(self):
         capture_tracing_integration("llama-index")
@@ -30,8 +36,49 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         super().__init__()
 
     def handle(self, event: BaseEvent, **kwargs) -> Any:
-        pass
-    
+        
+        if isinstance(event, LLMChatStartEvent): 
+            # prepare the input messages
+            input_messages = []
+            for msg in event.messages:
+                role = msg.role.value
+                content = " ".join(
+                    block.text
+                    for block in msg.blocks
+                    if getattr(block, "block_type", None) == "text"
+                ).strip()
+                input_messages.append({"role": role, "content": content})
+
+            # create the span
+            llm_span = LlmSpan(
+                name="ConfidentLLMSpan",
+                uuid=str(uuid.uuid4()),
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=self.active_trace_uuid,
+                parent_uuid=event.span_id,
+                start_time=perf_counter(),
+                model=getattr(event, "model_dict", {}).get("model", "unknown"), # check the model name not coming in this option
+                attributes=LlmAttributes(input=input_messages, output=""),
+            )
+            trace_manager.add_span(llm_span)
+            trace_manager.add_span_to_trace(llm_span)
+
+            # maintaining this since span exits before end llm chat end event
+            self.open_ai_astream_to_llm_span_map[event.span_id] = llm_span.uuid
+
+        if isinstance(event, LLMChatEndEvent):
+            llm_span_uuid = self.open_ai_astream_to_llm_span_map.get(event.span_id)
+            
+            if llm_span_uuid:
+                llm_span = trace_manager.get_span_by_uuid(llm_span_uuid)
+                if llm_span:
+                    llm_span.status = TraceSpanStatus.SUCCESS
+                    llm_span.end_time = perf_counter()
+                    llm_span.output = event.response
+                    trace_manager.remove_span(llm_span.uuid)
+                    del self.open_ai_astream_to_llm_span_map[event.span_id]
+
     def new_span(
         self,
         id_: str,
@@ -69,6 +116,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         **kwargs: Any,
     ) -> Optional[LlamaIndexBaseSpan]:
         base_span = trace_manager.get_span_by_uuid(id_)
+        
         if base_span is None:
             return None
         
