@@ -75,7 +75,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 if llm_span:
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
-                    llm_span.set_attributes(LlmAttributes(input=llm_span.attributes.input, output=event.response.message.blocks[0].text))
+                    llm_span.set_attributes(LlmAttributes(input=llm_span.attributes.input, output=event.response.message.blocks[0].text)) # only takes the message response ouput, but what if the response is a tool?
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
