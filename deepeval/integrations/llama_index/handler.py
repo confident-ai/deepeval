@@ -70,13 +70,12 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         if isinstance(event, LLMChatEndEvent):
             llm_span_uuid = self.open_ai_astream_to_llm_span_map.get(event.span_id)
-            
             if llm_span_uuid:
                 llm_span = trace_manager.get_span_by_uuid(llm_span_uuid)
                 if llm_span:
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
-                    llm_span.output = event.response # only takes the message response ouput, but what if the response is a tool?
+                    llm_span.set_attributes(LlmAttributes(input=llm_span.attributes.input, output=event.response.message.blocks[0].text))
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
