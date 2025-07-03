@@ -81,7 +81,8 @@ from deepeval.evaluate.utils import (
     count_metrics_in_trace,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
-
+from deepeval.openai.utils import TestCaseMetricPair, openai_test_case_pairs
+from deepeval.test_run.hyperparameters import process_hyperparameters
 
 def execute_test_cases(
     test_cases: Union[
@@ -1609,7 +1610,7 @@ def a_execute_agentic_test_cases_from_loop(
 
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = save_to_disk
-    test_run_manager.get_test_run(identifier=identifier)
+    test_run = test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
@@ -1619,25 +1620,21 @@ def a_execute_agentic_test_cases_from_loop(
         async with semaphore:
             return await coroutine
     
-    async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
-        async with semaphore:
-            return await func(*args, **kwargs)
-
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         pbar_callback_id: Optional[int] = None,
     ):        
         # Invoke LLM app
-        def create_callback_task(coro):
+        def create_callback_task(coro, **kwargs):
             def on_task_done(t: asyncio.Task):
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
             task = loop.create_task(execute_callback_with_semaphore(coro))
             task.add_done_callback(on_task_done)
             return task
+            
         asyncio.create_task = create_callback_task
-
         for golden in goldens:
             yield golden
             if global_test_run_tasks.num_tasks() == 0:
@@ -1648,31 +1645,42 @@ def a_execute_agentic_test_cases_from_loop(
 
         # Evaluate traces
         asyncio.create_task = loop.create_task
-        async def evaluate_traces(traces_to_evaluate: List[Trace]):
-            eval_tasks = []
-            for count, trace in enumerate(traces_to_evaluate):
-                golden = goldens[count]
-                with capture_evaluation_run("golden"):
-                    task = execute_evals_with_semaphore(
-                        func=a_execute_agentic_test_case,
-                        golden=golden,
-                        trace=trace,
-                        test_run_manager=test_run_manager,
-                        test_results=test_results,
-                        count=count,
-                        verbose_mode=verbose_mode,
-                        ignore_errors=ignore_errors,
-                        skip_on_missing_params=skip_on_missing_params,
-                        show_indicator=show_indicator,
-                        _use_bar_indicator=_use_bar_indicator,
-                        _is_assert_test=_is_assert_test,
-                        progress=progress,
-                        pbar_id=pbar_id,
-                    )
-                    eval_tasks.append(asyncio.create_task(task))
-                    await asyncio.sleep(throttle_value)
-            await asyncio.gather(*eval_tasks)
-        loop.run_until_complete(evaluate_traces(trace_manager.traces_to_evaluate))
+        if trace_manager.traces_to_evaluate:
+            loop.run_until_complete(
+                evaluate_traces(
+                    traces_to_evaluate=trace_manager.traces_to_evaluate,
+                    goldens=goldens,
+                    test_run_manager=test_run_manager,
+                    test_results=test_results,
+                    verbose_mode=verbose_mode,
+                    ignore_errors=ignore_errors,
+                    skip_on_missing_params=skip_on_missing_params,
+                    show_indicator=show_indicator,
+                    _use_bar_indicator=_use_bar_indicator,
+                    _is_assert_test=_is_assert_test,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    throttle_value=throttle_value,
+                    max_concurrent=max_concurrent,
+                )
+            )
+        elif openai_test_case_pairs:
+            loop.run_until_complete(evaluate_test_case_pairs(
+                test_case_pairs=openai_test_case_pairs,
+                test_run=test_run,
+                test_run_manager=test_run_manager,
+                test_results=test_results,
+                ignore_errors=ignore_errors,
+                skip_on_missing_params=skip_on_missing_params,
+                show_indicator=show_indicator,
+                verbose_mode=verbose_mode,
+                _use_bar_indicator=_use_bar_indicator,
+                _is_assert_test=_is_assert_test,
+                progress=progress,
+                pbar_id=pbar_id,
+                throttle_value=throttle_value,
+                max_concurrent=max_concurrent,
+            ))
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(
@@ -1707,3 +1715,101 @@ def a_execute_agentic_test_cases_from_loop(
     local_trace_manager.traces_to_evaluate = []
     global_test_run_tasks.clear_tasks()
     asyncio.create_task = orig_create_task
+
+
+async def evaluate_traces(
+    traces_to_evaluate: List[Trace],
+    goldens: List[Golden],
+    test_run_manager: TestRunManager,
+    test_results: List[TestResult],
+    verbose_mode: Optional[bool],
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    _use_bar_indicator: bool,
+    _is_assert_test: bool,
+    progress: Optional[Progress],
+    pbar_id: Optional[int],
+    throttle_value: int,
+    max_concurrent: int,
+):
+    semaphore = asyncio.Semaphore(max_concurrent)
+    async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+    eval_tasks = []
+    for count, trace in enumerate(traces_to_evaluate):
+        golden = goldens[count]
+        with capture_evaluation_run("golden"):
+            task = execute_evals_with_semaphore(
+                func=a_execute_agentic_test_case,
+                golden=golden,
+                trace=trace,
+                test_run_manager=test_run_manager,
+                test_results=test_results,
+                count=count,
+                verbose_mode=verbose_mode,
+                ignore_errors=ignore_errors,
+                skip_on_missing_params=skip_on_missing_params,
+                show_indicator=show_indicator,
+                _use_bar_indicator=_use_bar_indicator,
+                _is_assert_test=_is_assert_test,
+                progress=progress,
+                pbar_id=pbar_id,
+            )
+            eval_tasks.append(asyncio.create_task(task))
+            await asyncio.sleep(throttle_value)
+    await asyncio.gather(*eval_tasks)
+
+async def evaluate_test_case_pairs(
+    test_case_pairs: List[TestCaseMetricPair],
+    test_run: TestRun,
+    test_run_manager: TestRunManager,
+    test_results: List[TestResult],
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    verbose_mode: Optional[bool],
+    _use_bar_indicator: bool,
+    _is_assert_test: bool,
+    progress: Optional[Progress],
+    pbar_id: Optional[int],
+    throttle_value: int,
+    max_concurrent: int,
+):
+    semaphore = asyncio.Semaphore(max_concurrent)
+    async def execute_with_semaphore(func: Callable, *args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+    tasks = []
+    for count, test_case_pair in enumerate(test_case_pairs):
+        with capture_evaluation_run("test case"):
+            if len(test_case_pair.metrics) == 0:
+                update_pbar(progress, pbar_id)
+                continue
+            if verbose_mode is not None:
+                for metric in test_case_pair.metrics:
+                    metric.verbose_mode = verbose_mode
+            copied_llm_metrics: List[BaseMetric] = copy_metrics(test_case_pair.metrics)
+            task = execute_with_semaphore(
+                func=a_execute_llm_test_cases,
+                metrics=copied_llm_metrics,
+                test_case=test_case_pair.test_case,
+                test_run_manager=test_run_manager,
+                test_results=test_results,
+                count=count,
+                test_run=test_run,
+                ignore_errors=ignore_errors,
+                skip_on_missing_params=skip_on_missing_params,
+                use_cache=False,
+                show_indicator=show_indicator,
+                _use_bar_indicator=_use_bar_indicator,
+                _is_assert_test=_is_assert_test,
+                progress=progress,
+                pbar_id=pbar_id,
+            )
+            tasks.append(asyncio.create_task(task))
+            await asyncio.sleep(throttle_value)
+    await asyncio.gather(*tasks)
