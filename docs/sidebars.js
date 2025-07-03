@@ -58,10 +58,7 @@ module.exports = {
             {
               type: "category",
               label: "Agentic Metrics",
-              items: [
-                "metrics-task-completion",
-                "metrics-tool-correctness",
-              ],
+              items: ["metrics-task-completion", "metrics-tool-correctness"],
               collapsed: false,
             },
             {
@@ -116,7 +113,7 @@ module.exports = {
       ],
       collapsed: false,
     },
-    {      
+    {
       type: "category",
       label: "Synthetic Data Generation",
       className: "sidebar-item-icon-synthetic-data",
