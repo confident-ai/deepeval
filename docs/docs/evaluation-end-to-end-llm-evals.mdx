@@ -4,6 +4,9 @@ title: End-to-End
 sidebar_label: End-to-End
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box. For simple LLM applications like basic RAG pipelines with "flat" architectures that can be represented by a single `LLMTestCase`, end-to-end evaluation is ideal:
 
 ![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/end-to-end-evals:simple-system.png)
@@ -101,6 +104,9 @@ Both gives you exactly the same functionality, and integrates 100% with Confiden
 
 `deepeval` offers an `evaluate()` function that allows you to evaluate end-to-end LLM interactions through a list of test cases and metrics. Each test case will be evaluated by each and every metric you define in `metrics`, and a test case passes only if all `metrics` passes.
 
+<Tabs>
+<TabItem value="python" label="Python">
+
 ```python title="main.py" showLineNumbers {15}
 from somewhere import your_llm_app # Replace with your LLM app
 
@@ -122,7 +128,38 @@ for golden in goldens:
 
 # Evaluate end-to-end
 evaluate(test_cases=test_cases, metrics=[AnswerRelevancyMetric()])
+
 ```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI">
+
+```python title="main.py" showLineNumbers {1,20}
+from deepeval.openai import OpenAI # import OpenAI from deepeval instead
+
+from deepeval.dataset import Golden
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.evaluate import dataset
+
+goldens = [Golden(input="...")]
+client = OpenAI()
+
+
+# Evaluate end-to-end
+for golden in dataset(goldens=goldens):
+    client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": golden.input}
+        ],
+        metrics=[AnswerRelevancyMetric()]
+    )
+```
+
+</TabItem>
+</Tabs>
 
 There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function for **END-TO-END** evaluation:
 

@@ -6,7 +6,7 @@ import re
 from ._version import __version__
 
 from deepeval.feedback import collect_feedback, a_collect_feedback
-from deepeval.evaluate import evaluate, assert_test
+from deepeval.evaluate import evaluate, assert_test, test_run
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login_with_confident_api_key
 from deepeval.telemetry import *

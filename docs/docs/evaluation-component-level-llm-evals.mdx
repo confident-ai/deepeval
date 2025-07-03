@@ -4,6 +4,9 @@ title: Component-Level
 sidebar_label: Component-Level
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
 
 :::note
@@ -115,9 +118,55 @@ flowchart LR
 You can run component=level LLM evaluations in either:
 
 - **CI/CD pipelines** using `deepeval test run`, or
-- **Python scripts** using the `evaluate()` function
+- **Python scripts** using the `evaluate()` function or
+- **Python scripts** using the `dataset` iterator
 
-Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
+All 3 methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
+
+### Use `dataset` iterator in Python scripts
+
+To use the `dataset` iterator for component-level testing, supply your dataset alias or a list of `Golden`s to the iterator, then invoke your `@observe` decorated LLM application within the loop.
+
+<Tabs>
+
+<TabItem value="async" label="Asynchronous">
+
+```python title="main.py"
+from somewhere import your_async_llm_app # Replace with your async LLM app
+from deepeval import dataset, test_run
+
+for golden in dataset(alias="Your Dataset Name"):
+    # Create task to invoke your async LLM app
+    task = asyncio.create_task(your_async_llm_app(golden.input))
+    test_run.append(task)
+```
+
+</TabItem>
+
+<TabItem value="sync" label="Synchronous">
+
+```python title="main.py"
+from somewhere import your_llm_app # Replace with your LLM app
+from deepeval import dataset
+
+for golden in dataset(alias="Your Dataset Name"):
+    # Invoke your LLM app
+    your_llm_app(golden.input)
+```
+
+</TabItem>
+
+</Tabs>
+
+There are **SEVEN** optional parameters when calling the `dataset` iterator for **COMPONENT-LEVEL** evaluation:
+
+- [Optional] `alias`: the alias of the dataset you wish to use as inputs to your LLM application.
+- [Optional] `goldens`: a list of `Golden`s that you wish to use as inputs to your LLM application. Must be supplied if `alias` is not provided.
+- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
+- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
+- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
+- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
+- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
 ### Use `evaluate()` in Python scripts
 
@@ -138,7 +187,7 @@ evaluate(goldens=goldens, observed_callback=your_llm_app)
 
 There are **TWO** mandatory and **FIVE** optional parameters when calling the `evaluate()` function for **COMPONENT-LEVEL** evaluation:
 
-- `golden`: a list of `Golden`s that you wish to invoke your `observed_callback` with.
+- `goldens`: a list of `Golden`s that you wish to invoke your `observed_callback` with.
 - `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
