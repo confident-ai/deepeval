@@ -1,1 +1,0 @@
-from .graphic_content import GraphicContentMetric 

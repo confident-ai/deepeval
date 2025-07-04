@@ -15,11 +15,11 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.metrics.intellectual_property.template import IntellectualPropertyTemplate
-from deepeval.metrics.intellectual_property.schema import *
+from deepeval.metrics.non_advice.template import NonAdviceTemplate
+from deepeval.metrics.non_advice.schema import *
 
 
-class IntellectualPropertyMetric(BaseMetric):
+class NonAdviceMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -33,7 +33,7 @@ class IntellectualPropertyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[IntellectualPropertyTemplate] = IntellectualPropertyTemplate,
+        evaluation_template: Type[NonAdviceTemplate] = NonAdviceTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -70,7 +70,7 @@ class IntellectualPropertyMetric(BaseMetric):
                 self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
-                self.verdicts: List[IntellectualPropertyVerdict] = self._generate_verdicts()
+                self.verdicts: List[NonAdviceVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
@@ -104,7 +104,7 @@ class IntellectualPropertyMetric(BaseMetric):
             self.opinions: List[str] = await self._a_generate_opinions(
                 test_case.actual_output
             )
-            self.verdicts: List[IntellectualPropertyVerdict] = await self._a_generate_verdicts()
+            self.verdicts: List[NonAdviceVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
@@ -123,13 +123,13 @@ class IntellectualPropertyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        ip_violations = []
+        non_advice_violations = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                ip_violations.append(verdict.reason)
+                non_advice_violations.append(verdict.reason)
 
         prompt: dict = self.evaluation_template.generate_reason(
-            ip_violations=ip_violations,
+            non_advice_violations=non_advice_violations,
             score=format(self.score, ".2f"),
         )
 
@@ -150,13 +150,13 @@ class IntellectualPropertyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        ip_violations = []
+        non_advice_violations = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                ip_violations.append(verdict.reason)
+                non_advice_violations.append(verdict.reason)
 
         prompt: dict = self.evaluation_template.generate_reason(
-            ip_violations=ip_violations,
+            non_advice_violations=non_advice_violations,
             score=format(self.score, ".2f"),
         )
 
@@ -173,11 +173,11 @@ class IntellectualPropertyMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    async def _a_generate_verdicts(self) -> List[IntellectualPropertyVerdict]:
+    async def _a_generate_verdicts(self) -> List[NonAdviceVerdict]:
         if len(self.opinions) == 0:
             return []
 
-        verdicts: List[IntellectualPropertyVerdict] = []
+        verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             opinions=self.opinions
         )
@@ -196,14 +196,14 @@ class IntellectualPropertyMetric(BaseMetric):
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [IntellectualPropertyVerdict(**item) for item in data["verdicts"]]
+                verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
-    def _generate_verdicts(self) -> List[IntellectualPropertyVerdict]:
+    def _generate_verdicts(self) -> List[NonAdviceVerdict]:
         if len(self.opinions) == 0:
             return []
 
-        verdicts: List[IntellectualPropertyVerdict] = []
+        verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             opinions=self.opinions
         )
@@ -220,7 +220,7 @@ class IntellectualPropertyMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [IntellectualPropertyVerdict(**item) for item in data["verdicts"]]
+                verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
@@ -256,12 +256,12 @@ class IntellectualPropertyMetric(BaseMetric):
         if number_of_verdicts == 0:
             return 0
 
-        ip_violation_count = 0
+        non_advice_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                ip_violation_count += 1
+                non_advice_count += 1
 
-        score = ip_violation_count / number_of_verdicts
+        score = non_advice_count / number_of_verdicts
         return 0 if self.strict_mode and score > 0 else score
 
     def is_successful(self) -> bool:
@@ -276,4 +276,4 @@ class IntellectualPropertyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "IntellectualProperty" 
+        return "NonAdvice" 

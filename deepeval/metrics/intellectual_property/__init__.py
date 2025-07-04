@@ -1,1 +1,0 @@
-from .intellectual_property import IntellectualPropertyMetric 

@@ -2,13 +2,13 @@ from typing import List
 from pydantic import BaseModel
 
 
-class GraphicContentVerdict(BaseModel):
+class PIILeakageVerdict(BaseModel):
     verdict: str
     reason: str
 
 
 class Verdicts(BaseModel):
-    verdicts: List[GraphicContentVerdict]
+    verdicts: List[PIILeakageVerdict]
 
 
 class Reason(BaseModel):

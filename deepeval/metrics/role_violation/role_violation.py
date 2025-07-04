@@ -15,11 +15,11 @@ from deepeval.metrics.utils import (
     check_llm_test_case_params,
     initialize_model,
 )
-from deepeval.metrics.privacy.template import PrivacyTemplate
-from deepeval.metrics.privacy.schema import *
+from deepeval.metrics.role_violation.template import RoleViolationTemplate
+from deepeval.metrics.role_violation.schema import *
 
 
-class PrivacyMetric(BaseMetric):
+class RoleViolationMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -33,7 +33,7 @@ class PrivacyMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[PrivacyTemplate] = PrivacyTemplate,
+        evaluation_template: Type[RoleViolationTemplate] = RoleViolationTemplate,
     ):
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -70,7 +70,7 @@ class PrivacyMetric(BaseMetric):
                 self.opinions: List[str] = self._generate_opinions(
                     test_case.actual_output
                 )
-                self.verdicts: List[PrivacyVerdict] = self._generate_verdicts()
+                self.verdicts: List[RoleViolationVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
@@ -104,7 +104,7 @@ class PrivacyMetric(BaseMetric):
             self.opinions: List[str] = await self._a_generate_opinions(
                 test_case.actual_output
             )
-            self.verdicts: List[PrivacyVerdict] = await self._a_generate_verdicts()
+            self.verdicts: List[RoleViolationVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
@@ -123,13 +123,13 @@ class PrivacyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        privacy_violations = []
+        role_violations = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                privacy_violations.append(verdict.reason)
+                role_violations.append(verdict.reason)
 
         prompt: dict = self.evaluation_template.generate_reason(
-            privacy_violations=privacy_violations,
+            role_violations=role_violations,
             score=format(self.score, ".2f"),
         )
 
@@ -150,13 +150,13 @@ class PrivacyMetric(BaseMetric):
         if self.include_reason is False:
             return None
 
-        privacy_violations = []
+        role_violations = []
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                privacy_violations.append(verdict.reason)
+                role_violations.append(verdict.reason)
 
         prompt: dict = self.evaluation_template.generate_reason(
-            privacy_violations=privacy_violations,
+            role_violations=role_violations,
             score=format(self.score, ".2f"),
         )
 
@@ -173,11 +173,11 @@ class PrivacyMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    async def _a_generate_verdicts(self) -> List[PrivacyVerdict]:
+    async def _a_generate_verdicts(self) -> List[RoleViolationVerdict]:
         if len(self.opinions) == 0:
             return []
 
-        verdicts: List[PrivacyVerdict] = []
+        verdicts: List[RoleViolationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             opinions=self.opinions
         )
@@ -196,14 +196,14 @@ class PrivacyMetric(BaseMetric):
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [PrivacyVerdict(**item) for item in data["verdicts"]]
+                verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
-    def _generate_verdicts(self) -> List[PrivacyVerdict]:
+    def _generate_verdicts(self) -> List[RoleViolationVerdict]:
         if len(self.opinions) == 0:
             return []
 
-        verdicts: List[PrivacyVerdict] = []
+        verdicts: List[RoleViolationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
             opinions=self.opinions
         )
@@ -220,7 +220,7 @@ class PrivacyMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [PrivacyVerdict(**item) for item in data["verdicts"]]
+                verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
@@ -256,12 +256,12 @@ class PrivacyMetric(BaseMetric):
         if number_of_verdicts == 0:
             return 0
 
-        privacy_count = 0
+        role_violation_count = 0
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                privacy_count += 1
+                role_violation_count += 1
 
-        score = privacy_count / number_of_verdicts
+        score = role_violation_count / number_of_verdicts
         return 0 if self.strict_mode and score > 0 else score
 
     def is_successful(self) -> bool:
@@ -276,4 +276,4 @@ class PrivacyMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Privacy" 
+        return "RoleViolation" 
