@@ -78,7 +78,6 @@ class TraceManager:
         self._daemon = (
             False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
         )
-        self.evaluating = False
 
         # trace manager attributes
         self.confident_api_key = None
@@ -91,6 +90,12 @@ class TraceManager:
         self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
         validate_sampling_rate(self.sampling_rate)
         self.openai_client = None
+
+        # Evals
+        self.evaluating = False
+        self.evaluation_loop = False
+        self.traces_to_evaluate_order: List[str] = []
+        self.traces_to_evaluate: List[Trace] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -153,6 +158,9 @@ class TraceManager:
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
+        if self.evaluation_loop:
+            self.traces_to_evaluate_order.append(trace_uuid)
+            
         return new_trace
 
     def end_trace(self, trace_uuid: str):
@@ -172,11 +180,18 @@ class TraceManager:
             if not self.evaluating:
                 self.post_trace(trace)
             else:
-                # print(f"Ending trace: {trace.root_spans}")
-                self.environment = Environment.TESTING
-                trace.root_spans = [trace.root_spans[0].children[0]]
-                for root_span in trace.root_spans:
-                    root_span.parent_uuid = None
+                if self.evaluation_loop:
+                    if trace_uuid in self.traces_to_evaluate_order:
+                        self.traces_to_evaluate.append(trace)
+                        self.traces_to_evaluate.sort(
+                            key=lambda t: self.traces_to_evaluate_order.index(t.uuid) 
+                        )
+                else:
+                    # print(f"Ending trace: {trace.root_spans}")
+                    self.environment = Environment.TESTING
+                    trace.root_spans = [trace.root_spans[0].children[0]]
+                    for root_span in trace.root_spans:
+                        root_span.parent_uuid = None
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
