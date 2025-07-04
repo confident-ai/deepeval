@@ -8,6 +8,16 @@ from .base_metric import (
 from .dag.dag import DAGMetric
 from .bias.bias import BiasMetric
 from .toxicity.toxicity import ToxicityMetric
+from .privacy.privacy import PrivacyMetric
+from .safety.safety import SafetyMetric
+from .misinformation.misinformation import MisinformationMetric
+from .graphic_content.graphic_content import GraphicContentMetric
+from .illegal_activity.illegal_activity import IllegalActivityMetric
+from .unauthorized_execution.unauthorized_execution import UnauthorizedExecutionMetric
+from .prompt_extraction.prompt_extraction import PromptExtractionMetric
+from .boundary_violation.boundary_violation import BoundaryViolationMetric
+from .intellectual_property.intellectual_property import IntellectualPropertyMetric
+from .manipulation.manipulation import ManipulationMetric
 from .hallucination.hallucination import HallucinationMetric
 from .answer_relevancy.answer_relevancy import AnswerRelevancyMetric
 from .summarization.summarization import SummarizationMetric
