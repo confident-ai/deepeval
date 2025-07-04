@@ -70,4 +70,4 @@ Example JSON:
 {{
     "opinions": ["Statement 1", "Statement 2", ...]
 }}
-""" 
+"""

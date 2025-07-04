@@ -12,4 +12,4 @@ class Verdicts(BaseModel):
 
 
 class Reason(BaseModel):
-    reason: str 
+    reason: str

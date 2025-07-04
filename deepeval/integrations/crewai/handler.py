@@ -10,11 +10,11 @@ try:
         CrewKickoffCompletedEvent,
         AgentExecutionStartedEvent,
         AgentExecutionCompletedEvent,
-        ToolUsageFinishedEvent
+        ToolUsageFinishedEvent,
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.memory.memory import Memory
-    
+
     crewai_installed = True
 except:
     crewai_installed = False
@@ -26,7 +26,7 @@ from deepeval.tracing.types import (
     LlmAttributes,
     ToolSpan,
     TraceSpanStatus,
-    RetrieverSpan
+    RetrieverSpan,
 )
 from uuid import uuid4
 from time import perf_counter
@@ -99,8 +99,12 @@ class CrewAIEventsListener(BaseEventListener):
                 start_time=perf_counter(),
                 name="(agent) " + event.agent.role,
                 metadata={
-                    "llm_id": str(id(event.agent.llm)), # used to find parent span of llm
-                    "agent_key": str(event.agent.key) # used to find parent span of tool span
+                    "llm_id": str(
+                        id(event.agent.llm)
+                    ),  # used to find parent span of llm
+                    "agent_key": str(
+                        event.agent.key
+                    ),  # used to find parent span of tool span
                 },
             )
 
@@ -119,14 +123,18 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(ToolUsageFinishedEvent)
         def on_tool_usage_finished(source, event: ToolUsageFinishedEvent):
-            #find the parent span of the tool usage
+            # find the parent span of the tool usage
             target_agent_key = str(event.agent_key)
             matching_span = None
             for span_uuid, span in trace_manager.active_spans.items():
-                if span.metadata and "agent_key" in span.metadata and span.metadata["agent_key"] == target_agent_key:
+                if (
+                    span.metadata
+                    and "agent_key" in span.metadata
+                    and span.metadata["agent_key"] == target_agent_key
+                ):
                     matching_span = span
                     break
-            
+
             # create a tool span
             tool_span = ToolSpan(
                 uuid=str(uuid4()),
@@ -134,12 +142,11 @@ class CrewAIEventsListener(BaseEventListener):
                 children=[],
                 trace_uuid=self.active_trace_id,
                 parent_uuid=matching_span.uuid if matching_span else None,
-                
-                start_time=event.started_at.timestamp(), # start time of the tool usage (conver datetime to epoch)
-                end_time=event.finished_at.timestamp(), # end time of the tool usage (conver datetime to epoch)
-                name=event.tool_name, # name of the tool
-                input=event.tool_args, # from the event
-                output=event.output # from the event
+                start_time=event.started_at.timestamp(),  # start time of the tool usage (conver datetime to epoch)
+                end_time=event.finished_at.timestamp(),  # end time of the tool usage (conver datetime to epoch)
+                name=event.tool_name,  # name of the tool
+                input=event.tool_args,  # from the event
+                output=event.output,  # from the event
             )
 
             # add the tool span to the trace
@@ -208,7 +215,7 @@ class CrewAIEventsListener(BaseEventListener):
         method = getattr(Memory, method_to_patch)
         if callable(method) and not isinstance(method, type):
             original_methods[method_to_patch] = method
-            
+
             @functools.wraps(method)
             def wrapped_method(*args, original_method=method, **kwargs):
                 # prepare retriver span
@@ -217,10 +224,10 @@ class CrewAIEventsListener(BaseEventListener):
                     status=TraceSpanStatus.IN_PROGRESS,
                     children=[],
                     trace_uuid=self.active_trace_id,
-                    parent_uuid=None, # none for now, all the memory insances are part of crew,
+                    parent_uuid=None,  # none for now, all the memory insances are part of crew,
                     start_time=perf_counter(),
                     name="crewai_retriever_span",
-                    embedder="unknown"
+                    embedder="unknown",
                 )
 
                 trace_manager.add_span(retriever_span)
@@ -230,19 +237,21 @@ class CrewAIEventsListener(BaseEventListener):
                 # end retriever span
                 retriever_span.end_time = perf_counter()
                 retriever_span.status = TraceSpanStatus.SUCCESS
-                
+
                 # Convert response to List[str] by stringifying each item
                 response_str_list = [str(item) for item in response]
                 retriever_span.set_attributes(
                     RetrieverAttributes(
-                        embedding_input=args[1], retrieval_context=response_str_list
+                        embedding_input=args[1],
+                        retrieval_context=response_str_list,
                     )
                 )
                 trace_manager.remove_span(retriever_span.uuid)
-                
+
                 return response
-            
+
             setattr(Memory, method_to_patch, wrapped_method)
+
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
