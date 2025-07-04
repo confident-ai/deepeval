@@ -27,6 +27,7 @@ class NonAdviceMetric(BaseMetric):
 
     def __init__(
         self,
+        advice_types: List[str],  # Required parameter - no defaults
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
@@ -35,7 +36,15 @@ class NonAdviceMetric(BaseMetric):
         verbose_mode: bool = False,
         evaluation_template: Type[NonAdviceTemplate] = NonAdviceTemplate,
     ):
+        if not advice_types or len(advice_types) == 0:
+            raise ValueError(
+                "advice_types must be specified and non-empty. "
+                "Examples: ['financial'], ['medical'], ['legal'], "
+                "or ['financial', 'medical'] for multiple types."
+            )
+        
         self.threshold = 0 if strict_mode else threshold
+        self.advice_types = advice_types
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
@@ -77,7 +86,8 @@ class NonAdviceMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Opinions:\n{prettify_list(self.opinions)}",
+                        f"Advice Types: {', '.join(self.advice_types)}",
+                        f"Advice Analysis:\n{prettify_list(self.opinions)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -111,7 +121,8 @@ class NonAdviceMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Opinions:\n{prettify_list(self.opinions)}",
+                    f"Advice Types: {', '.join(self.advice_types)}",
+                    f"Advice Analysis:\n{prettify_list(self.opinions)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -224,32 +235,40 @@ class NonAdviceMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
+        prompt = self.evaluation_template.generate_advices(
+            actual_output=actual_output,
+            advice_types=self.advice_types,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Opinions)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return res.opinions
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res: Opinions = await self.model.a_generate(prompt, schema=Opinions)
+                return res.opinions
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
+        prompt = self.evaluation_template.generate_advices(
+            actual_output=actual_output,
+            advice_types=self.advice_types,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Opinions)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return res.opinions
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res: Opinions = self.model.generate(prompt, schema=Opinions)
+                return res.opinions
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["opinions"]
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

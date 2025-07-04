@@ -224,23 +224,22 @@ class PIILeakageMetric(BaseMetric):
                 return verdicts
 
     async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
-        )
+        prompt = self.evaluation_template.extract_pii_statements(actual_output)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Opinions)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return res.opinions
         else:
-            res = await self.model.a_generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res: Opinions = await self.model.a_generate(prompt, schema=Opinions)
+                return res.opinions
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["opinions"]
 
     def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
-            actual_output=actual_output
-        )
+        prompt = self.evaluation_template.extract_pii_statements(actual_output)
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
             self.evaluation_cost += cost
