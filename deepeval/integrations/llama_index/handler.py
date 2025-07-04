@@ -2,7 +2,6 @@ from typing import Any, Dict, Optional
 import inspect
 from time import perf_counter
 import uuid
-import deepeval
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
@@ -12,12 +11,12 @@ try:
     from llama_index.core.instrumentation.event_handlers.base import BaseEventHandler
     from llama_index.core.instrumentation.span_handlers.base import BaseSpanHandler
     from llama_index.core.instrumentation.span.base import BaseSpan as LlamaIndexBaseSpan
-    import llama_index.core.instrumentation as instrument
     from llama_index.core.instrumentation.events.llm import (
         LLMChatStartEvent,
         LLMChatEndEvent,
     )
     from llama_index.core.tools.function_tool import AsyncBaseTool
+    from llama_index_instrumentation.dispatcher import Dispatcher
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -184,13 +183,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         return base_span
 
 
-def instrumentator(api_key: Optional[str] = None):
-    if api_key:
-        deepeval.login_with_confident_api_key(api_key)
-    
+def instrument_llama_index(dispatcher: Dispatcher):
     handler = LLamaIndexHandler()
-    
-    dispatcher = instrument.get_dispatcher()
     dispatcher.add_event_handler(handler)
     dispatcher.add_span_handler(handler)
     return None
