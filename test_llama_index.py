@@ -1,12 +1,16 @@
 import os
 import asyncio
 import time
+import deepeval
 from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.llms.openai import OpenAI
-from deepeval.integrations.llama_index import instrumentator
+from deepeval.integrations.llama_index import instrument_llama_index
+import llama_index.core.instrumentation as instrument
 
 os.environ["OPENAI_API_KEY"] = "<your_openai_api_key>"
-instrumentator(api_key="<your_deepeval_api_key>")
+deepeval.login_with_confident_api_key("<your_deepeval_api_key>")
+
+instrument_llama_index(instrument.get_dispatcher())
 
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
