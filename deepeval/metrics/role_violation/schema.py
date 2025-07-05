@@ -11,8 +11,8 @@ class Verdicts(BaseModel):
     verdicts: List[RoleViolationVerdict]
 
 
-class Opinions(BaseModel):
-    opinions: List[str]
+class RoleViolations(BaseModel):
+    role_violations: List[str]
 
 
 class Reason(BaseModel):

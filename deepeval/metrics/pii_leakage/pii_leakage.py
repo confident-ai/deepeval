@@ -67,7 +67,7 @@ class PIILeakageMetric(BaseMetric):
                     )
                 )
             else:
-                self.opinions: List[str] = self._generate_opinions(
+                self.pii_statements: List[str] = self._extract_pii_statements(
                     test_case.actual_output
                 )
                 self.verdicts: List[PIILeakageVerdict] = self._generate_verdicts()
@@ -77,7 +77,7 @@ class PIILeakageMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Opinions:\n{prettify_list(self.opinions)}",
+                        f"PII Analysis:\n{prettify_list(self.pii_statements)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -101,7 +101,7 @@ class PIILeakageMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.opinions: List[str] = await self._a_generate_opinions(
+            self.pii_statements: List[str] = await self._a_extract_pii_statements(
                 test_case.actual_output
             )
             self.verdicts: List[PIILeakageVerdict] = await self._a_generate_verdicts()
@@ -111,7 +111,7 @@ class PIILeakageMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Opinions:\n{prettify_list(self.opinions)}",
+                    f"PII Analysis:\n{prettify_list(self.pii_statements)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -174,12 +174,12 @@ class PIILeakageMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(self) -> List[PIILeakageVerdict]:
-        if len(self.opinions) == 0:
+        if len(self.pii_statements) == 0:
             return []
 
         verdicts: List[PIILeakageVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+            opinions=self.pii_statements
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -200,12 +200,12 @@ class PIILeakageMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(self) -> List[PIILeakageVerdict]:
-        if len(self.opinions) == 0:
+        if len(self.pii_statements) == 0:
             return []
 
         verdicts: List[PIILeakageVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+            opinions=self.pii_statements
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -223,32 +223,35 @@ class PIILeakageMetric(BaseMetric):
                 verdicts = [PIILeakageVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
-    async def _a_generate_opinions(self, actual_output: str) -> List[str]:
+    async def _a_extract_pii_statements(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.extract_pii_statements(actual_output)
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Opinions)
+            res, cost = await self.model.a_generate(prompt, schema=PIIStatements)
             self.evaluation_cost += cost
-            return res.opinions
+            return res.pii_statements
         else:
             try:
-                res: Opinions = await self.model.a_generate(prompt, schema=Opinions)
-                return res.opinions
+                res: PIIStatements = await self.model.a_generate(prompt, schema=PIIStatements)
+                return res.pii_statements
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["opinions"]
+                return data["pii_statements"]
 
-    def _generate_opinions(self, actual_output: str) -> List[str]:
+    def _extract_pii_statements(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.extract_pii_statements(actual_output)
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=PIIStatements)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return res.pii_statements
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res: PIIStatements = self.model.generate(prompt, schema=PIIStatements)
+                return res.pii_statements
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["pii_statements"]
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

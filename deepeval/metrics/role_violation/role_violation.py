@@ -72,7 +72,7 @@ class RoleViolationMetric(BaseMetric):
                     )
                 )
             else:
-                self.opinions: List[str] = self._generate_opinions(
+                self.role_violations: List[str] = self._detect_role_violations(
                     test_case.actual_output
                 )
                 self.verdicts: List[RoleViolationVerdict] = self._generate_verdicts()
@@ -82,9 +82,9 @@ class RoleViolationMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Expected Role: {self.role}",
-                        f"Analysis:\n{prettify_list(self.opinions)}",
-                        f"Verdict: {'VIOLATION' if self.score > self.threshold else 'COMPLIANT'}",
+                        f"Role: {self.role}",
+                        f"Role Violation Analysis:\n{prettify_list(self.role_violations)}",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -107,7 +107,7 @@ class RoleViolationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.opinions: List[str] = await self._a_generate_opinions(
+            self.role_violations: List[str] = await self._a_detect_role_violations(
                 test_case.actual_output
             )
             self.verdicts: List[RoleViolationVerdict] = await self._a_generate_verdicts()
@@ -117,9 +117,9 @@ class RoleViolationMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Expected Role: {self.role}",
-                    f"Analysis:\n{prettify_list(self.opinions)}",
-                    f"Verdict: {'VIOLATION' if self.score > self.threshold else 'COMPLIANT'}",
+                    f"Role: {self.role}",
+                    f"Role Violation Analysis:\n{prettify_list(self.role_violations)}",
+                    f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -181,12 +181,12 @@ class RoleViolationMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(self) -> List[RoleViolationVerdict]:
-        if len(self.opinions) == 0:
+        if len(self.role_violations) == 0:
             return []
 
         verdicts: List[RoleViolationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+            opinions=self.role_violations
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -207,12 +207,12 @@ class RoleViolationMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(self) -> List[RoleViolationVerdict]:
-        if len(self.opinions) == 0:
+        if len(self.role_violations) == 0:
             return []
 
         verdicts: List[RoleViolationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+            opinions=self.role_violations
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -230,36 +230,39 @@ class RoleViolationMetric(BaseMetric):
                 verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
-    async def _a_generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
+    async def _a_detect_role_violations(self, actual_output: str) -> List[str]:
+        prompt = self.evaluation_template.detect_role_violations(
             actual_output, self.role
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Opinions)
+            res, cost = await self.model.a_generate(prompt, schema=RoleViolations)
             self.evaluation_cost += cost
-            return res.opinions
+            return res.role_violations
         else:
             try:
-                res: Opinions = await self.model.a_generate(prompt, schema=Opinions)
-                return res.opinions
+                res: RoleViolations = await self.model.a_generate(prompt, schema=RoleViolations)
+                return res.role_violations
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["opinions"]
+                return data["role_violations"]
 
-    def _generate_opinions(self, actual_output: str) -> List[str]:
-        prompt = self.evaluation_template.generate_opinions(
+    def _detect_role_violations(self, actual_output: str) -> List[str]:
+        prompt = self.evaluation_template.detect_role_violations(
             actual_output, self.role
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=RoleViolations)
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            return res.role_violations
         else:
-            res = self.model.generate(prompt)
-            data = trimAndLoadJson(res, self)
-            return data["opinions"]
+            try:
+                res: RoleViolations = self.model.generate(prompt, schema=RoleViolations)
+                return res.role_violations
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["role_violations"]
 
     def _calculate_score(self) -> float:
         # Role violation should be binary: either there's a violation (1) or not (0)

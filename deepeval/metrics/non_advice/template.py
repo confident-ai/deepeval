@@ -73,11 +73,11 @@ Avoid flagging:
 Return a list of these advice statements.
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'opinions' key. No words or explanation is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the 'advice_statements' key. No words or explanation is needed.
 **
 
 Example JSON:
 {{
-    "opinions": ["Statement 1", "Statement 2", ...]
+    "advice_statements": ["Statement 1", "Statement 2", ...]
 }}
 """ 

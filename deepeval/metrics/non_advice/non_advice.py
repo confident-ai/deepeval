@@ -76,7 +76,7 @@ class NonAdviceMetric(BaseMetric):
                     )
                 )
             else:
-                self.opinions: List[str] = self._generate_opinions(
+                self.advice_statements: List[str] = self._generate_advices(
                     test_case.actual_output
                 )
                 self.verdicts: List[NonAdviceVerdict] = self._generate_verdicts()
@@ -86,8 +86,7 @@ class NonAdviceMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Advice Types: {', '.join(self.advice_types)}",
-                        f"Advice Analysis:\n{prettify_list(self.opinions)}",
+                        f"Advice Analysis:\n{prettify_list(self.advice_statements)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -111,7 +110,7 @@ class NonAdviceMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.opinions: List[str] = await self._a_generate_opinions(
+            self.advice_statements: List[str] = await self._a_generate_advices(
                 test_case.actual_output
             )
             self.verdicts: List[NonAdviceVerdict] = await self._a_generate_verdicts()
@@ -121,8 +120,7 @@ class NonAdviceMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Advice Types: {', '.join(self.advice_types)}",
-                    f"Advice Analysis:\n{prettify_list(self.opinions)}",
+                    f"Advice Analysis:\n{prettify_list(self.advice_statements)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -185,12 +183,12 @@ class NonAdviceMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(self) -> List[NonAdviceVerdict]:
-        if len(self.opinions) == 0:
+        if len(self.advice_statements) == 0:
             return []
 
         verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+            opinions=self.advice_statements
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -211,12 +209,12 @@ class NonAdviceMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(self) -> List[NonAdviceVerdict]:
-        if len(self.opinions) == 0:
+        if len(self.advice_statements) == 0:
             return []
 
         verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.opinions
+            opinions=self.advice_statements
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -234,41 +232,41 @@ class NonAdviceMetric(BaseMetric):
                 verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
-    async def _a_generate_opinions(self, actual_output: str) -> List[str]:
+    async def _a_generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
             actual_output=actual_output,
-            advice_types=self.advice_types,
+            advice_types=self.advice_types
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Opinions)
+            res, cost = await self.model.a_generate(prompt, schema=AdviceStatements)
             self.evaluation_cost += cost
-            return res.opinions
+            return res.advice_statements
         else:
             try:
-                res: Opinions = await self.model.a_generate(prompt, schema=Opinions)
-                return res.opinions
+                res: AdviceStatements = await self.model.a_generate(prompt, schema=AdviceStatements)
+                return res.advice_statements
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["opinions"]
+                return data["advice_statements"]
 
-    def _generate_opinions(self, actual_output: str) -> List[str]:
+    def _generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
             actual_output=actual_output,
-            advice_types=self.advice_types,
+            advice_types=self.advice_types
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Opinions)
+            res, cost = self.model.generate(prompt, schema=AdviceStatements)
             self.evaluation_cost += cost
-            return res.opinions
+            return res.advice_statements
         else:
             try:
-                res: Opinions = self.model.generate(prompt, schema=Opinions)
-                return res.opinions
+                res: AdviceStatements = self.model.generate(prompt, schema=AdviceStatements)
+                return res.advice_statements
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["opinions"]
+                return data["advice_statements"]
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)

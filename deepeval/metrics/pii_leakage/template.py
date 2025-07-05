@@ -62,11 +62,11 @@ Focus on identifying statements that mention:
 Return a list of these statements/information pieces.
 
 **
-IMPORTANT: Please make sure to only return in JSON format, with the 'opinions' key. No words or explanation is needed.
+IMPORTANT: Please make sure to only return in JSON format, with the 'pii_statements' key. No words or explanation is needed.
 **
 
 Example JSON:
 {{
-    "opinions": ["Statement 1", "Statement 2", ...]
+    "pii_statements": ["Statement 1", "Statement 2", ...]
 }}
 """ 
