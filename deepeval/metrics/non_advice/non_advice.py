@@ -76,7 +76,7 @@ class NonAdviceMetric(BaseMetric):
                     )
                 )
             else:
-                self.advice_statements: List[str] = self._generate_advices(
+                self.advices: List[str] = self._generate_advices(
                     test_case.actual_output
                 )
                 self.verdicts: List[NonAdviceVerdict] = self._generate_verdicts()
@@ -86,7 +86,7 @@ class NonAdviceMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Advice Analysis:\n{prettify_list(self.advice_statements)}",
+                        f"Advices:\n{prettify_list(self.advices)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -110,7 +110,7 @@ class NonAdviceMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.advice_statements: List[str] = await self._a_generate_advices(
+            self.advices: List[str] = await self._a_generate_advices(
                 test_case.actual_output
             )
             self.verdicts: List[NonAdviceVerdict] = await self._a_generate_verdicts()
@@ -120,7 +120,7 @@ class NonAdviceMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Advice Analysis:\n{prettify_list(self.advice_statements)}",
+                    f"Advices:\n{prettify_list(self.advices)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -183,12 +183,12 @@ class NonAdviceMetric(BaseMetric):
                 return data["reason"]
 
     async def _a_generate_verdicts(self) -> List[NonAdviceVerdict]:
-        if len(self.advice_statements) == 0:
+        if len(self.advices) == 0:
             return []
 
         verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.advice_statements
+            advices=self.advices
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -209,12 +209,12 @@ class NonAdviceMetric(BaseMetric):
                 return verdicts
 
     def _generate_verdicts(self) -> List[NonAdviceVerdict]:
-        if len(self.advice_statements) == 0:
+        if len(self.advices) == 0:
             return []
 
         verdicts: List[NonAdviceVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.advice_statements
+            advices=self.advices
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -238,17 +238,17 @@ class NonAdviceMetric(BaseMetric):
             advice_types=self.advice_types
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=AdviceStatements)
+            res, cost = await self.model.a_generate(prompt, schema=Advices)
             self.evaluation_cost += cost
-            return res.advice_statements
+            return res.advices
         else:
             try:
-                res: AdviceStatements = await self.model.a_generate(prompt, schema=AdviceStatements)
-                return res.advice_statements
+                res: Advices = await self.model.a_generate(prompt, schema=Advices)
+                return res.advices
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["advice_statements"]
+                return data["advices"]
 
     def _generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
@@ -256,17 +256,17 @@ class NonAdviceMetric(BaseMetric):
             advice_types=self.advice_types
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=AdviceStatements)
+            res, cost = self.model.generate(prompt, schema=Advices)
             self.evaluation_cost += cost
-            return res.advice_statements
+            return res.advices
         else:
             try:
-                res: AdviceStatements = self.model.generate(prompt, schema=AdviceStatements)
-                return res.advice_statements
+                res: Advices = self.model.generate(prompt, schema=Advices)
+                return res.advices
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["advice_statements"]
+                return data["advices"]
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -293,4 +293,4 @@ class NonAdviceMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "NonAdvice" 
+        return "Non Advice" 

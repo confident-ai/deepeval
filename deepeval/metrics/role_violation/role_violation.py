@@ -83,7 +83,7 @@ class RoleViolationMetric(BaseMetric):
                     self,
                     steps=[
                         f"Role: {self.role}",
-                        f"Role Violation Analysis:\n{prettify_list(self.role_violations)}",
+                        f"Role Violations:\n{prettify_list(self.role_violations)}",
                         f"Verdicts:\n{prettify_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -118,7 +118,7 @@ class RoleViolationMetric(BaseMetric):
                 self,
                 steps=[
                     f"Role: {self.role}",
-                    f"Role Violation Analysis:\n{prettify_list(self.role_violations)}",
+                    f"Role Violations:\n{prettify_list(self.role_violations)}",
                     f"Verdicts:\n{prettify_list(self.verdicts)}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -186,7 +186,7 @@ class RoleViolationMetric(BaseMetric):
 
         verdicts: List[RoleViolationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.role_violations
+            role_violations=self.role_violations
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -212,7 +212,7 @@ class RoleViolationMetric(BaseMetric):
 
         verdicts: List[RoleViolationVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            opinions=self.role_violations
+            role_violations=self.role_violations
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -289,4 +289,4 @@ class RoleViolationMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "RoleViolation" 
+        return "Role Violation" 
