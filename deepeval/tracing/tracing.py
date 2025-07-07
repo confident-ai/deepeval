@@ -481,26 +481,26 @@ class TraceManager:
 
         # Remove specific keys
         for key in (
-            'uuid', 
-            'trace_uuid', 
-            'parent_uuid', 
-            'end_time', 
-            'start_time',
-            'status',
-            'span_test_case',
-            'metrics_data',
-            'metric_collection',
-            'metadata'
+            "uuid",
+            "trace_uuid",
+            "parent_uuid",
+            "end_time",
+            "start_time",
+            "status",
+            "span_test_case",
+            "metrics_data",
+            "metric_collection",
+            "metadata",
         ):
             trace_dict.pop(key, None)
 
         # Remove all keys with None values
         trace_dict = {k: v for k, v in trace_dict.items() if v is not None}
 
-        trace_dict['children'] = []
+        trace_dict["children"] = []
         for child in span.children or []:
             child_api_span = self.create_nested_spans_dict(child)
-            trace_dict['children'].append(child_api_span)
+            trace_dict["children"].append(child_api_span)
 
         return trace_dict
 

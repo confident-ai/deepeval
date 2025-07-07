@@ -75,7 +75,7 @@ class TaskCompletionTemplate:
             JSON:
         """
         )
-    
+
     @staticmethod
     def extract_goal_and_outcome_from_trace(trace: dict) -> str:
         return textwrap.dedent(
@@ -233,7 +233,9 @@ class TaskCompletionTemplate:
         )
 
     @staticmethod
-    def generate_suggested_fixes(verdict: float, reason: str, trace: dict) -> str:
+    def generate_suggested_fixes(
+        verdict: float, reason: str, trace: dict
+    ) -> str:
         return textwrap.dedent(
             f"""You are an LLM evaluation expert tasked with helping developers improve their AI agents.
 

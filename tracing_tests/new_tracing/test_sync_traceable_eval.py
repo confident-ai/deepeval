@@ -8,6 +8,7 @@ from deepeval.tracing import (
     LlmAttributes,
     trace_manager,
 )
+
 fo
 from time import sleep, perf_counter
 import random

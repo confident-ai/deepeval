@@ -18,6 +18,7 @@ from deepeval.metrics.task_completion.template import TaskCompletionTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.task_completion.schema import *
 
+
 class TaskCompletionMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
@@ -72,7 +73,9 @@ class TaskCompletionMetric(BaseMetric):
                 user_goal, task_outcome = self._extract_goal_and_outcome(
                     test_case
                 )
-                self.user_goal = user_goal if self.user_goal is None else self.user_goal
+                self.user_goal = (
+                    user_goal if self.user_goal is None else self.user_goal
+                )
                 self.task_outcome = task_outcome
                 verdict, reason = self._generate_verdicts()
                 self.verdict = verdict
@@ -80,7 +83,9 @@ class TaskCompletionMetric(BaseMetric):
                 self.score = self._calculate_score()
                 self.success = self.score >= self.threshold
                 if has_trace:
-                    self.suggested_fixes = self._generate_suggested_fixes(test_case)
+                    self.suggested_fixes = self._generate_suggested_fixes(
+                        test_case
+                    )
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -111,7 +116,9 @@ class TaskCompletionMetric(BaseMetric):
             user_goal, task_outcome = await self._a_extract_goal_and_outcome(
                 test_case
             )
-            self.user_goal = user_goal if self.user_goal is None else self.user_goal
+            self.user_goal = (
+                user_goal if self.user_goal is None else self.user_goal
+            )
             self.task_outcome = task_outcome
             verdict, reason = await self._a_generate_verdicts()
             self.verdict = verdict
@@ -119,7 +126,9 @@ class TaskCompletionMetric(BaseMetric):
             self.score = self._calculate_score()
             self.success = self.score >= self.threshold
             if has_trace:
-                self.suggested_fixes = await self._a_generate_suggested_fixes(test_case)
+                self.suggested_fixes = await self._a_generate_suggested_fixes(
+                    test_case
+                )
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -180,7 +189,9 @@ class TaskCompletionMetric(BaseMetric):
     ) -> Tuple:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if has_trace:
-            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(trace=test_case._trace_dict)
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(
+                trace=test_case._trace_dict
+            )
         else:
             prompt = TaskCompletionTemplate.extract_goal_and_outcome(
                 input=test_case.input,
@@ -210,7 +221,9 @@ class TaskCompletionMetric(BaseMetric):
     ) -> Tuple:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if has_trace:
-            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(trace=test_case._trace_dict)
+            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(
+                trace=test_case._trace_dict
+            )
         else:
             prompt = TaskCompletionTemplate.extract_goal_and_outcome(
                 input=test_case.input,
@@ -239,7 +252,9 @@ class TaskCompletionMetric(BaseMetric):
             trace=test_case._trace_dict,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=SuggestedFixes)
+            res, cost = await self.model.a_generate(
+                prompt, schema=SuggestedFixes
+            )
             self.evaluation_cost += cost
             return res.suggested_fixes
         else:

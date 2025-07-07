@@ -966,18 +966,28 @@ def execute_agentic_test_cases(
 
                     if span.metrics is None:
                         return
-                    has_task_completion = any(isinstance(metric, TaskCompletionMetric) for metric in span.metrics)
-                    has_only_task_completion = has_task_completion and len(span.metrics) == 1
-                    if span.llm_test_case is None and not has_only_task_completion:
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in span.metrics
+                    )
+                    has_only_task_completion = (
+                        has_task_completion and len(span.metrics) == 1
+                    )
+                    if (
+                        span.llm_test_case is None
+                        and not has_only_task_completion
+                    ):
                         raise ValueError(
                             "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
                         )
 
-                     # add trace if task completion
+                    # add trace if task completion
                     if has_task_completion:
-                        test_case.input =test_case.input or ""
-                        test_case.actual_output =test_case.actual_output or ""
-                        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+                        test_case.input = test_case.input or ""
+                        test_case.actual_output = test_case.actual_output or ""
+                        test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(span)
+                        )
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
@@ -1313,7 +1323,9 @@ async def a_execute_span_test_case(
     if span.metrics is None:
         return
 
-    has_task_completion = any(isinstance(metric, TaskCompletionMetric) for metric in span.metrics)
+    has_task_completion = any(
+        isinstance(metric, TaskCompletionMetric) for metric in span.metrics
+    )
     has_only_task_completion = has_task_completion and len(span.metrics) == 1
     if span.llm_test_case is None and not has_only_task_completion:
         raise ValueError(
@@ -1326,10 +1338,10 @@ async def a_execute_span_test_case(
 
     # add trace if task completion
     if has_task_completion:
-        test_case.input =test_case.input or ""
-        test_case.actual_output =test_case.actual_output or ""
+        test_case.input = test_case.input or ""
+        test_case.actual_output = test_case.actual_output or ""
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-    
+
     for metric in metrics:
         metric.skipped = False
         metric.error = None  # Reset metric error
