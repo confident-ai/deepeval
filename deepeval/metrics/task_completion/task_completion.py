@@ -82,10 +82,6 @@ class TaskCompletionMetric(BaseMetric):
                 self.reason = reason
                 self.score = self._calculate_score()
                 self.success = self.score >= self.threshold
-                if has_trace:
-                    self.suggested_fixes = self._generate_suggested_fixes(
-                        test_case
-                    )
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -125,10 +121,6 @@ class TaskCompletionMetric(BaseMetric):
             self.reason = reason
             self.score = self._calculate_score()
             self.success = self.score >= self.threshold
-            if has_trace:
-                self.suggested_fixes = await self._a_generate_suggested_fixes(
-                    test_case
-                )
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -244,50 +236,6 @@ class TaskCompletionMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["user_goal"], data["task_outcome"]
-
-    async def _a_generate_suggested_fixes(self, test_case: LLMTestCase):
-        prompt = TaskCompletionTemplate.generate_suggested_fixes(
-            verdict=self.verdict,
-            reason=self.reason,
-            trace=test_case._trace_dict,
-        )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=SuggestedFixes
-            )
-            self.evaluation_cost += cost
-            return res.suggested_fixes
-        else:
-            try:
-                res: SuggestedFixes = await self.model.a_generate(
-                    prompt, schema=SuggestedFixes
-                )
-                return res.suggested_fixes
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["suggested_fixes"]
-
-    def _generate_suggested_fixes(self, test_case: LLMTestCase):
-        prompt = TaskCompletionTemplate.generate_suggested_fixes(
-            verdict=self.verdict,
-            reason=self.reason,
-            trace=test_case._trace_dict,
-        )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=SuggestedFixes)
-            self.evaluation_cost += cost
-            return res.suggested_fixes
-        else:
-            try:
-                res: SuggestedFixes = self.model.generate(
-                    prompt, schema=SuggestedFixes
-                )
-                return res.suggested_fixes
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["suggested_fixes"]
 
     def _calculate_score(self):
         return (

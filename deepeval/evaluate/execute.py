@@ -970,13 +970,7 @@ def execute_agentic_test_cases(
                         isinstance(metric, TaskCompletionMetric)
                         for metric in span.metrics
                     )
-                    has_only_task_completion = (
-                        has_task_completion and len(span.metrics) == 1
-                    )
-                    if (
-                        span.llm_test_case is None
-                        and not has_only_task_completion
-                    ):
+                    if span.llm_test_case is None and not has_task_completion:
                         raise ValueError(
                             "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
                         )
@@ -1326,8 +1320,7 @@ async def a_execute_span_test_case(
     has_task_completion = any(
         isinstance(metric, TaskCompletionMetric) for metric in span.metrics
     )
-    has_only_task_completion = has_task_completion and len(span.metrics) == 1
-    if span.llm_test_case is None and not has_only_task_completion:
+    if span.llm_test_case is None and not has_task_completion:
         raise ValueError(
             "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
         )
