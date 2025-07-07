@@ -11,7 +11,7 @@ import time
 import ast
 
 from deepeval.metrics import (
-    BaseConversationalMetric, 
+    BaseConversationalMetric,
     BaseMetric,
     BaseMultimodalMetric,
 )
