@@ -299,9 +299,9 @@ def test_everything():
     assert_test(
         test_case=test_case,
         metrics=[
-            # metric1,
-            # metric2,
-            # metric3,
+            metric1,
+            metric2,
+            metric3,
             # metric4,
             # metric5,
             # metric6,

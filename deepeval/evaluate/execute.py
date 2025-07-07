@@ -946,7 +946,7 @@ def execute_agentic_test_cases(
                 ):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
-                    test_case: LLMTestCase = span.llm_test_case
+                    test_case: Optional[LLMTestCase] = span.llm_test_case
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
@@ -977,8 +977,10 @@ def execute_agentic_test_cases(
 
                     # add trace if task completion
                     if has_task_completion:
-                        test_case.input = test_case.input or ""
-                        test_case.actual_output = test_case.actual_output or ""
+                        if test_case is None:
+                            test_case = LLMTestCase(
+                                input="None", actual_output="None"
+                            )
                         test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(span)
                         )
@@ -1327,12 +1329,12 @@ async def a_execute_span_test_case(
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     metrics: List[BaseMetric] = span.metrics
-    test_case: LLMTestCase = span.llm_test_case
+    test_case: Optional[LLMTestCase] = span.llm_test_case
 
     # add trace if task completion
     if has_task_completion:
-        test_case.input = test_case.input or ""
-        test_case.actual_output = test_case.actual_output or ""
+        if test_case is None:
+            test_case = LLMTestCase(input="None", actual_output="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
 
     for metric in metrics:

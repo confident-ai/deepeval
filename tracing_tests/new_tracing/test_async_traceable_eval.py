@@ -123,11 +123,11 @@ async def custom_research_agent(query: str):
     metrics=[TaskCompletionMetric()],
 )
 async def weather_agent(query: str):
-    update_current_span(
-        test_case=LLMTestCase(
-            input=query, actual_output="Weather information unavailable"
-        )
-    )
+    # update_current_span(
+    #     test_case=LLMTestCase(
+    #         input=query, actual_output="Weather information unavailable"
+    #     )
+    # )
     await sleep(random.uniform(1, 3))
     return "Weather information unavailable"
 
@@ -149,7 +149,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["research_agent", "custom_research_agent"],
-    metrics=[TaskCompletionMetric(task="Get the weather")],
+    metrics=[TaskCompletionMetric(task="Get the weather"), geval_metric],
     metric_collection="Test",
 )
 async def meta_agent(input: str):
