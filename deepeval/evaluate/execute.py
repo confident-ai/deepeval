@@ -5,9 +5,15 @@ from rich.progress import (
     TimeElapsedColumn,
     TaskProgressColumn,
 )
-from typing import Callable, List, Optional, Union, Any, Awaitable
-from rich.console import Console
-from rich.theme import Theme
+from typing import (
+    Callable,
+    List,
+    Optional,
+    Union,
+    Any,
+    Awaitable,
+    Iterator,
+)
 from copy import deepcopy
 import inspect
 import asyncio
@@ -64,7 +70,10 @@ from deepeval.test_run.cache import (
     CachedTestCase,
     CachedMetricData,
 )
-from deepeval.evaluate.types import TestResult
+from deepeval.evaluate.types import (
+    TestResult,
+    global_test_run_tasks,
+)
 from deepeval.evaluate.utils import (
     create_metric_data,
     create_test_result,
@@ -833,6 +842,10 @@ async def a_execute_conversational_test_cases(
     update_pbar(progress, pbar_id)
 
 
+###########################################
+### Component-Level Evals
+###########################################
+
 def execute_agentic_test_cases(
     goldens: List[Golden],
     observed_callback: Union[
@@ -1156,9 +1169,6 @@ async def a_execute_agentic_test_cases(
 
 async def a_execute_agentic_test_case(
     golden: Golden,
-    observed_callback: Union[
-        Callable[[str], Any], Callable[[str], Awaitable[Any]]
-    ],
     test_run_manager: TestRunManager,
     test_results: List[Union[TestResult, MLLMTestCase]],
     count: int,
@@ -1168,31 +1178,40 @@ async def a_execute_agentic_test_case(
     show_indicator: bool,
     _use_bar_indicator: bool,
     _is_assert_test: bool,
+    observed_callback: Optional[
+        Union[
+            Callable[[str], Any], Callable[[str], Awaitable[Any]]
+        ]
+    ] = None,
+    trace: Optional[Trace] = None,
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
-    total_tags = count_observe_decorators_in_module(observed_callback)
-    pbar_tags_id = add_pbar(
-        progress,
-        f"     ⚡ Invoking observed callback (#{count})",
-        total=total_tags,
-    )
+    if observed_callback:
+        total_tags = count_observe_decorators_in_module(observed_callback)
+        pbar_tags_id = add_pbar(
+            progress,
+            f"     ⚡ Invoking observed callback (#{count})",
+            total=total_tags,
+        )
 
-    # Call callback and extract trace
-    with Observer(
-        "custom",
-        func_name="Test Wrapper",
-        _progress=progress,
-        _pbar_callback_id=pbar_tags_id,
-    ):
-        if asyncio.iscoroutinefunction(observed_callback):
-            await observed_callback(golden.input)
-        else:
-            observed_callback(golden.input)
-        current_trace: Trace = current_trace_context.get()
+        # Call callback and extract trace
+        with Observer(
+            "custom",
+            func_name="Test Wrapper",
+            _progress=progress,
+            _pbar_callback_id=pbar_tags_id,
+        ):
+            if asyncio.iscoroutinefunction(observed_callback):
+                await observed_callback(golden.input)
+            else:
+                observed_callback(golden.input)
+            current_trace: Trace = current_trace_context.get()
 
-    update_pbar(progress, pbar_tags_id, advance=total_tags)
-    update_pbar(progress, pbar_id)
+        update_pbar(progress, pbar_tags_id, advance=total_tags)
+        update_pbar(progress, pbar_id)
+    elif trace:
+        current_trace = trace
 
     # run evals through DFS
     trace_api = TraceApi(
@@ -1351,3 +1370,340 @@ def count_observe_decorators_in_module(func: Callable) -> int:
                 ):
                     count += 1
     return count
+
+
+###########################################
+### Looped Evals
+###########################################
+
+def execute_agentic_test_cases_from_loop(
+    goldens: List[Golden],
+    verbose_mode: Optional[bool],
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    test_results: List[TestResult],
+    save_to_disk: bool = False,
+    identifier: Optional[str] = None,
+    _use_bar_indicator: bool = True,
+    _is_assert_test: bool = False,
+) -> Iterator[TestResult]:
+
+    test_run_manager = global_test_run_manager
+    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.get_test_run(identifier=identifier)
+
+    local_trace_manager = trace_manager
+    local_trace_manager.evaluating = True
+    
+    def evaluate_test_cases(
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None,
+    ) -> Iterator[Golden]:
+        count = 0
+        show_metric_indicator = show_indicator and not _use_bar_indicator
+
+        for golden in goldens:
+            with capture_evaluation_run("golden"):
+                # yield golden
+                count += 1
+                pbar_tags_id = add_pbar(progress, f"\t⚡ Invoking observed callback (#{count})")
+                with Observer(
+                    "custom",
+                    func_name="Test Wrapper",
+                    _progress=progress,
+                    _pbar_callback_id=pbar_tags_id,
+                ):
+                    yield golden
+                    current_trace: Trace = current_trace_context.get()
+                    
+                update_pbar(progress, pbar_tags_id)
+                update_pbar(progress, pbar_id)
+
+                # Create empty trace api for llm api test case
+                trace_api = TraceApi(
+                    uuid=current_trace.uuid,
+                    baseSpans=[],
+                    agentSpans=[],
+                    llmSpans=[],
+                    retrieverSpans=[],
+                    toolSpans=[],
+                    startTime=(
+                        to_zod_compatible_iso(
+                            perf_counter_to_datetime(current_trace.start_time)
+                        )
+                        if current_trace.start_time
+                        else None
+                    ),
+                    endTime=(
+                        to_zod_compatible_iso(
+                            perf_counter_to_datetime(current_trace.end_time)
+                        )
+                        if current_trace.end_time
+                        else None
+                    ),
+                )
+
+                # Format golden as test case to create llm api test case
+                test_case = LLMTestCase(
+                    input=golden.input,
+                    actual_output=golden.actual_output or "TODO",
+                    expected_output=golden.expected_output,
+                    context=golden.context,
+                    retrieval_context=golden.retrieval_context,
+                    additional_metadata=golden.additional_metadata,
+                    tools_called=golden.tools_called,
+                    expected_tools=golden.expected_tools,
+                    comments=golden.comments,
+                    name=golden.name,
+                    _dataset_alias=golden._dataset_alias,
+                    _dataset_id=golden._dataset_id,
+                )
+                api_test_case = create_api_test_case(
+                    test_case=test_case,
+                    trace=trace_api,
+                    index=count if not _is_assert_test else None,
+                )
+
+                # Run DFS to calculate metrics synchronously
+                def dfs(
+                    span: BaseSpan,
+                    progress: Optional[Progress] = None,
+                    pbar_eval_id: Optional[int] = None,
+                ):
+                    # Create API Span
+                    metrics: List[BaseMetric] = span.metrics
+                    test_case: LLMTestCase = span.llm_test_case
+                    api_span: BaseApiSpan = (
+                        trace_manager._convert_span_to_api_span(span)
+                    )
+                    if isinstance(span, AgentSpan):
+                        trace_api.agent_spans.append(api_span)
+                    elif isinstance(span, LlmSpan):
+                        trace_api.llm_spans.append(api_span)
+                    elif isinstance(span, RetrieverSpan):
+                        trace_api.retriever_spans.append(api_span)
+                    elif isinstance(span, ToolSpan):
+                        trace_api.tool_spans.append(api_span)
+                    else:
+                        trace_api.base_spans.append(api_span)
+
+                    for child in span.children:
+                        dfs(child, progress, pbar_eval_id)
+
+                    if span.metrics == None or span.llm_test_case == None:
+                        return
+
+                    # Preparing metric calculation
+                    api_span.metrics_data = []
+                    for metric in metrics:
+                        metric.skipped = False
+                        metric.error = None
+                        if verbose_mode is not None:
+                            metric.verbose_mode = verbose_mode
+
+                    # Metric calculation
+                    for metric in metrics:
+                        metric_data = None
+                        try:
+                            metric.measure(
+                                test_case,
+                                _show_indicator=show_metric_indicator,
+                                _in_component=True,
+                            )
+                        except MissingTestCaseParamsError as e:
+                            if skip_on_missing_params:
+                                continue
+                            else:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                        except TypeError:
+                            try:
+                                metric.measure(test_case, _in_component=True)
+                            except MissingTestCaseParamsError as e:
+                                if skip_on_missing_params:
+                                    continue
+                                else:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
+                            except Exception as e:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                        except Exception as e:
+                            if ignore_errors:
+                                metric.error = str(e)
+                                metric.success = False
+                            else:
+                                raise
+                        metric_data = create_metric_data(metric)
+                        api_span.metrics_data.append(metric_data)
+                        api_test_case.update_status(metric_data.success)
+                        update_pbar(progress, pbar_eval_id)
+
+                pbar_eval_id = add_pbar(
+                    progress,
+                    f"     🎯 Evaluating component(s) (#{count})",
+                    total=count_metrics_in_trace(trace=current_trace),
+                )
+
+                start_time = time.perf_counter()
+                dfs(current_trace.root_spans[0], progress, pbar_eval_id)
+                end_time = time.perf_counter()
+                run_duration = end_time - start_time
+
+                # Update test run
+                api_test_case.update_run_duration(run_duration)
+                test_run_manager.update_test_run(api_test_case, test_case)
+                test_results.append(create_test_result(api_test_case))
+
+                update_pbar(progress, pbar_id)
+
+    if show_indicator and _use_bar_indicator:
+        progress = Progress(
+            TextColumn("{task.description}"),
+            BarColumn(bar_width=60),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=custom_console,
+        )
+        with progress:
+            pbar_id = add_pbar(
+                progress,
+                f"Running Component-Level Evals (sync)",
+                total=len(goldens) * 2,
+            )
+            yield from evaluate_test_cases(progress=progress, pbar_id=pbar_id)
+    else:
+        yield from evaluate_test_cases()
+
+    local_trace_manager.evaluating = False
+
+
+def a_execute_agentic_test_cases_from_loop(
+    goldens: List[Golden],
+    verbose_mode: Optional[bool],
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    test_results: List[TestResult],
+    loop: asyncio.AbstractEventLoop,
+    throttle_value: int,
+    max_concurrent: int,
+    save_to_disk: bool = False,
+    identifier: Optional[str] = None,
+    _use_bar_indicator: bool = True,
+    _is_assert_test: bool = False,
+) -> Iterator[TestResult]:
+
+    semaphore = asyncio.Semaphore(max_concurrent)
+    orig_create_task = asyncio.create_task
+
+    test_run_manager = global_test_run_manager
+    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.get_test_run(identifier=identifier)
+
+    local_trace_manager = trace_manager
+    local_trace_manager.evaluating = True
+    local_trace_manager.evaluation_loop = True
+
+    async def execute_callback_with_semaphore(coroutine: Awaitable):
+        async with semaphore:
+            return await coroutine
+    
+    async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+    def evaluate_test_cases(
+        progress: Optional[Progress] = None,
+        pbar_id: Optional[int] = None,
+        pbar_callback_id: Optional[int] = None,
+    ):        
+        # Invoke LLM app
+        def create_callback_task(coro):
+            def on_task_done(t: asyncio.Task):
+                update_pbar(progress, pbar_callback_id)
+                update_pbar(progress, pbar_id)
+            task = loop.create_task(execute_callback_with_semaphore(coro))
+            task.add_done_callback(on_task_done)
+            return task
+        asyncio.create_task = create_callback_task
+
+        for golden in goldens:
+            yield golden
+            if global_test_run_tasks.num_tasks() == 0:
+                update_pbar(progress, pbar_callback_id)
+                update_pbar(progress, pbar_id)
+        if global_test_run_tasks.num_tasks() > 0:
+            loop.run_until_complete(asyncio.gather(*global_test_run_tasks.get_tasks()))
+
+        # Evaluate traces
+        asyncio.create_task = loop.create_task
+        async def evaluate_traces(traces_to_evaluate: List[Trace]):
+            eval_tasks = []
+            for count, trace in enumerate(traces_to_evaluate):
+                golden = goldens[count]
+                with capture_evaluation_run("golden"):
+                    task = execute_evals_with_semaphore(
+                        func=a_execute_agentic_test_case,
+                        golden=golden,
+                        trace=trace,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        count=count,
+                        verbose_mode=verbose_mode,
+                        ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
+                        show_indicator=show_indicator,
+                        _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
+                        progress=progress,
+                        pbar_id=pbar_id,
+                    )
+                    eval_tasks.append(asyncio.create_task(task))
+                    await asyncio.sleep(throttle_value)
+            await asyncio.gather(*eval_tasks)
+        loop.run_until_complete(evaluate_traces(trace_manager.traces_to_evaluate))
+
+    if show_indicator and _use_bar_indicator:
+        progress = Progress(
+            TextColumn("{task.description}"),
+            BarColumn(bar_width=60),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=custom_console,
+        )
+        with progress:
+            pbar_id = add_pbar(
+                progress,
+                f"Running Component-Level Evals (async)",
+                total=len(goldens) * 2,
+            )
+            pbar_callback_id = add_pbar(
+                progress,
+                f"\t⚡ Invoking your LLM application",
+                total=len(goldens),
+            )
+            yield from evaluate_test_cases(
+                progress=progress,
+                pbar_id=pbar_id,
+                pbar_callback_id=pbar_callback_id,
+            )
+    else:
+        yield from evaluate_test_cases()
+
+    # Clean up
+    local_trace_manager.evaluating = False
+    local_trace_manager.traces_to_evaluate_order = []
+    local_trace_manager.traces_to_evaluate = []
+    global_test_run_tasks.clear_tasks()
+    asyncio.create_task = orig_create_task
