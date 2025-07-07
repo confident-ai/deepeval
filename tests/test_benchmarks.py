@@ -59,7 +59,7 @@ from deepeval.benchmarks import *
 from typing import List
 
 gpt_model = GPTModel(model="gpt-4o")
-n_problems = 2
+n_problems = 5
 verbose_mode = True
 
 ########################################
@@ -129,11 +129,14 @@ benchmark_winogrande = Winogrande(
     n_problems=n_problems, verbose_mode=verbose_mode
 )
 
+benchmark_ifeval = IFEval(n_problems=n_problems, verbose_mode=verbose_mode)
+
 ########################################
 ## Evaluate ############################
 ########################################
 
 benchmarks: List[DeepEvalBaseBenchmark] = [
+    benchmark_ifeval,
     benchmark_mmlu,
     benchmark_hellaswag,
     benchmark_bbh,
@@ -153,7 +156,7 @@ benchmarks: List[DeepEvalBaseBenchmark] = [
 
 for benchmark in benchmarks:
     try:
-        benchmark.evaluate(model=gpt_model, k=2)
+        benchmark.evaluate(model=gpt_model)
     except TypeError:
         benchmark.evaluate(model=gpt_model)
     print(benchmark.predictions)

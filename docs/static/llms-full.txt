@@ -1450,7 +1450,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 
 - \[Optional\] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -1884,7 +1884,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **SIX** optional parameters when creating a `BiasMetric`:
 
 - \[Optional\] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -2247,7 +2247,7 @@ There are **TWO** mandatory and **SIX** optional parameters when creating a `DAG
 - `name`: name of metric.
 - `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree.
 - \[Optional\] `threshold`: a float representing the minimum passing threshold. Defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -2961,7 +2961,7 @@ from deepeval import evaluate
 evaluate(
     test_cases=[...],
     metrics=[...],
-    hyperparameters={"model": "gpt-4o", "prompt template": "..."}
+    hyperparameters={"model": "gpt-4.1", "prompt template": "..."}
 )
 
 ```
@@ -2976,13 +2976,15 @@ Confident AI allows anyone to [monitor, trace, and evaluate LLM outputs in real-
 import openai
 import deepeval
 
+client = OpenAI()
+
 def sync_without_stream(user_message: str):
     model = "gpt-4-turbo"
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
       model=model,
       messages=[{"role": "user", "content": user_message}]
     )
-    output = response["choices"][0]["message"]["content"]
+    output = response.choices[0].message.content
 
     # Run monitor() synchronously
     deepeval.monitor(input=user_message, output=output, model=model, event_name="RAG chatbot")
@@ -3354,7 +3356,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **SIX** optional parameters when creating a `ToxicityMetric`:
 
 - \[Optional\] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
-- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
@@ -3500,7 +3502,7 @@ For more help on enabling LM Studio’s server or configuring models, check out 
 
 On this page
 
-By default, DeepEval uses `gpt-4o` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
+By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To enable this, you’ll need to set up your OpenAI API key. DeepEval also supports all other OpenAI models, which can be configured directly in Python.
 
 ### Setting Up Your API Key [​](https://deepeval.com/integrations/models/openai\#setting-up-your-api-key "Direct link to Setting Up Your API Key")
 
@@ -3520,11 +3522,11 @@ Alternatively, if you're working in a notebook environment (Jupyter or Colab), s
 
 ### Python [​](https://deepeval.com/integrations/models/openai\#python "Direct link to Python")
 
-You may use OpenAI models other than `gpt-4o`, which can be configured directly in python code through DeepEval's `GPTModel`.
+You may use OpenAI models other than `gpt-4.1`, which can be configured directly in python code through DeepEval's `GPTModel`.
 
 info
 
-You may want to use stronger reasoning models like `gpt-4o` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
+You may want to use stronger reasoning models like `gpt-4.1` for metrics that require a high level of reasoning — for example, a custom GEval for mathematical correctness.
 
 ```codeBlockLines_e6Vv
 from deepeval.models import GPTModel
@@ -3540,7 +3542,7 @@ answer_relevancy = AnswerRelevancyMetric(model=model)
 
 There are **ONE** mandatory and **ONE** optional parameters when creating a `GPTModel`:
 
-- `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4o`.
+- `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4.1`.
 - \[Optional\] `temperature`: A float specifying the model temperature. Defaulted to 0.
 
 ### Available OpenAI Models [​](https://deepeval.com/integrations/models/openai\#available-openai-models "Direct link to Available OpenAI Models")
@@ -3551,6 +3553,7 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used OpenAI models:
 
+- `gpt-4.1`
 - `gpt-4.5-preview`
 - `gpt-4o`
 - `gpt-4o-mini`
@@ -9706,7 +9709,7 @@ Even if you’re not using Confident AI, you can [join our discord community](ht
 This documentation is designed to teach you how to use Confident AI to evaluate your LLM apps with as little fluff as possible. The:
 
 - **Concepts** [section](https://documentation.confident-ai.com/docs/concepts/test-cases) covers essential terminology for understanding LLM evaluation - recommended starting point for beginners
-- **Quickstart** [section](https://documentation.confident-ai.com/docs/getting-started/create-account) provides the fundamentals needed to begin using the platform effectively
+- **Quickstart** [section](https://documentation.confident-ai.com/docs/getting-started/setup) provides the fundamentals needed to begin using the platform effectively
 - **Data Handling** [page](https://documentation.confident-ai.com/docs/data-handling) explains data organization, privacy controls, and residency options
 - **Platform Features** section details the complete suite of Confident AI capabilities:
   - [LLM Evaluations](https://documentation.confident-ai.com/docs/llm-evaluation/introduction)
@@ -9917,13 +9920,16 @@ Tracing only runs when you want it to run, and takes 3 lines of code:
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": query}]
-    ).choices[0].message["content"]
+    ).choices[0].message.content
 
     update_current_span(test_case=LLMTestCase(input=query, output=response))
     return response
@@ -9951,10 +9957,13 @@ The `@observe` decorator creates spans, and a call to your LLM application decor
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.tracing import observe, update_current_span
+from openai import OpenAI
+
+client = OpenAI()
 
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = openai.ChatCompletion.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message["content"]
+  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
 
   update_current_span(
     test_case=LLMTestCase(input=query, output=response)
@@ -16144,7 +16153,7 @@ Visit the [end-to-end LLM evals section](https://deepeval.com/docs/evaluation-en
 
 ### On Confident AI [​](https://deepeval.com/docs/evaluation-datasets\#on-confident-ai-1 "Direct link to On Confident AI")
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/create-account):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/setup):
 
 ```codeBlockLines_e6Vv
 deepeval login
@@ -17866,19 +17875,21 @@ from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
+client = OpenAI()
+
 def your_llm_app(input: str):
     def retriever(input: str):
         return ["Hardcoded text chunks from your vector database"]
 
     @observe(metrics=[AnswerRelevancyMetric()])
     def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model="gpt-4o",
             messages=[\
                 {"role": "system", "content": "Use the provided context to answer the question."},\
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}\
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
 
         # Create test case at runtime
         update_current_span(test_case=LLMTestCase(input=input, actual_output=res))
@@ -22530,20 +22541,22 @@ somewhere.py
 
 ```codeBlockLines_e6Vv codeBlockLinesWithNumbering_o6Pm
 from typing import List
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 def your_llm_app(input: str):
     def retriever(input: str):
         return ["Hardcoded text chunks from your vector database"]
 
     def generator(input: str, retrieved_chunks: List[str]):
-        res = openai.ChatCompletion.create(
+        res = client.chat.completions.create(
             model="gpt-4o",
             messages=[\
                 {"role": "system", "content": "Use the provided context to answer the question."},\
                 {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}\
             ]
-        ).choices[0].message["content"]
+        ).choices[0].message.content
         return res
 
     retrieval_context = retriever(input)

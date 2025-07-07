@@ -57,7 +57,7 @@ The remaining **20 optional parameters** can be broken down into evaluation, syn
 
 **Optional Synthesizer Parameters:**
 
-- [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4o`.
+- [Optional] `synthesizer_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
 - [Optional] `filtration_config`: an instance of type `FiltrationConfig` that allows you to [customize the degree of which goldens are filtered](synthesizer-introduction#filtration-quality) during generation. Defaulted to the default `FiltrationConfig` values.
 - [Optional] `evolution_config`: an instance of type `EvolutionConfig` that allows you to [customize the complexity of evolutions applied](synthesizer-introduction#evolution-complexity) during generation. Defaulted to the default `EvolutionConfig` values.
 - [Optional] `styling_config`: an instance of type `StylingConfig` that allows you to [customize the styles and formats](synthesizer-introduction#styling-options) of generations. Defaulted to the default `StylingConfig` values.
@@ -238,7 +238,7 @@ from deepeval.integrations.llama_index import DeepEvalAnswerRelevancyEvaluator
 evaluator = DeepEvalAnswerRelevancyEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4o'.
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4.1'.
     model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
@@ -255,7 +255,7 @@ from deepeval.integrations.llama_index import DeepEvalFaithfulnessEvaluator
 evaluator = DeepEvalFaithfulnessEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4o'.
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4.1'.
     model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
@@ -272,7 +272,7 @@ from deepeval.integrations.llama_index import DeepEvalContextualRelevancyEvaluat
 evaluator = DeepEvalContextualRelevancyEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4o'.
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4.1'.
     model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
@@ -289,7 +289,7 @@ from deepeval.integrations.llama_index import DeepEvalSummarizationEvaluator
 evaluator = DeepEvalSummarizationEvaluator(
     # Optional. A float representing the minimum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4o'.
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4.1'.
     model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
@@ -306,7 +306,7 @@ from deepeval.integrations.llama_index import DeepEvalBiasEvaluator
 evaluator = DeepEvalBiasEvaluator(
     # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4o'.
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4.1'.
     model="gpt-4-0125-preview",
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
@@ -323,7 +323,7 @@ from deepeval.integrations.llama_index import DeepEvalToxicityEvaluator
 evaluator = DeepEvalToxicityEvaluator(
     # Optional. A float representing the maximum passing threshold, defaulted to 0.5.
     threshold=0.5,
-    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4o'.
+    # Optional. A string specifying which of OpenAI's GPT models to use, defaulted to 'gpt-4.1'.
     # Optional. A boolean which when set to `True`, will include a reason for its evaluation score, defaulted to `True`.
     include_reason=True
 )

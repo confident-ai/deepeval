@@ -173,6 +173,7 @@ module.exports = {
         "benchmarks-drop",
         "benchmarks-truthful-qa",
         "benchmarks-human-eval",
+        "benchmarks-ifeval",
         "benchmarks-squad",
         "benchmarks-gsm8k",
         "benchmarks-math-qa",

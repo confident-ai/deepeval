@@ -14,7 +14,7 @@ Run the following command in your terminal to configure your deepeval environmen
 deepeval set-azure-openai \
     --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
     --openai-api-key=<api_key> \
-    --openai-model-name=<model_name> \ # e.g. gpt-4o
+    --openai-model-name=<model_name> \ # e.g. gpt-4.1
     --deployment-name=<deployment_name> \  # e.g. Test Deployment
     --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
 ```
@@ -41,7 +41,7 @@ from deepeval.models import AzureOpenAIModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = AzureOpenAIModel(
-    model_name="gpt-4o",
+    model_name="gpt-4.1",
     deployment_name="Test Deployment",
     azure_openai_api_key="Your Azure OpenAI API Key",
     openai_api_version="2025-01-01-preview",
@@ -69,6 +69,7 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used Azure OpenAI models:
 
+- `gpt-4.1`
 - `gpt-4.5-preview`
 - `gpt-4o`
 - `gpt-4o-mini`

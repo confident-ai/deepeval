@@ -1,17 +1,14 @@
 import os
 import asyncio
 import time
-
+import deepeval
 from llama_index.core.agent.workflow import FunctionAgent
 from llama_index.llms.openai import OpenAI
+from deepeval.integrations.llama_index import instrument_llama_index
 import llama_index.core.instrumentation as instrument
 
-import deepeval
-from deepeval.integrations import instrument_llama_index
-
-os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
-
-deepeval.login_with_confident_api_key("<YOUR_CONFIDENT_API_KEY>")
+os.environ["OPENAI_API_KEY"] = "<your_openai_api_key>"
+deepeval.login_with_confident_api_key("<your_deepeval_api_key>")
 
 instrument_llama_index(instrument.get_dispatcher())
 
@@ -36,4 +33,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    time.sleep(12)
+    time.sleep(8)

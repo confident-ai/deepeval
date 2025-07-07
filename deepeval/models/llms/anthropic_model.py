@@ -94,28 +94,27 @@ class AnthropicModel(DeepEvalBaseLLM):
     # Utilities
     ###############################################
 
+    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        pricing = model_pricing.get(self.model_name)
 
-def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-    pricing = model_pricing.get(self.model_name)
+        if pricing is None:
+            # Calculate average cost from all known models
+            avg_input_cost = sum(
+                p["input"] for p in model_pricing.values()
+            ) / len(model_pricing)
+            avg_output_cost = sum(
+                p["output"] for p in model_pricing.values()
+            ) / len(model_pricing)
+            pricing = {"input": avg_input_cost, "output": avg_output_cost}
 
-    if pricing is None:
-        # Calculate average cost from all known models
-        avg_input_cost = sum(p["input"] for p in model_pricing.values()) / len(
-            model_pricing
-        )
-        avg_output_cost = sum(
-            p["output"] for p in model_pricing.values()
-        ) / len(model_pricing)
-        pricing = {"input": avg_input_cost, "output": avg_output_cost}
+            warnings.warn(
+                f"[Warning] Pricing not defined for model '{self.model_name}'. "
+                "Using average input/output token costs from existing model_pricing."
+            )
 
-        warnings.warn(
-            f"[Warning] Pricing not defined for model '{self.model_name}'. "
-            "Using average input/output token costs from existing model_pricing."
-        )
-
-    input_cost = input_tokens * pricing["input"]
-    output_cost = output_tokens * pricing["output"]
-    return input_cost + output_cost
+        input_cost = input_tokens * pricing["input"]
+        output_cost = output_tokens * pricing["output"]
+        return input_cost + output_cost
 
     ###############################################
     # Model
