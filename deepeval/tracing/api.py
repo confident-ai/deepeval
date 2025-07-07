@@ -113,6 +113,7 @@ class TraceApi(BaseModel):
     tool_spans: List[BaseApiSpan] = Field(alias="toolSpans")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
+    name: Optional[str] = Field(None)
     metadata: Optional[Dict[str, Any]] = Field(None)
     tags: Optional[List[str]] = Field(None)
     environment: Optional[str] = Field(None)

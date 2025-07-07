@@ -106,6 +106,7 @@ class Trace(BaseModel):
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
     start_time: float = Field(serialization_alias="startTime")
     end_time: Union[float, None] = Field(None, serialization_alias="endTime")
+    name: Optional[str] = None
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
