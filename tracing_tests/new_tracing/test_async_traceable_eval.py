@@ -148,8 +148,8 @@ async def research_agent(query: str):
 
 @observe(
     type="agent",
-    agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[TaskCompletionMetric(user_goal="Get the weather")],
+    agent_handoffs=["research_agent", "custom_research_agent"],
+    metrics=[TaskCompletionMetric(task="Get the weather")],
     metric_collection="Test",
 )
 async def meta_agent(input: str):
@@ -197,7 +197,7 @@ goldens = [
 evaluate(
     goldens=goldens,
     observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=False),
+    async_config=AsyncConfig(run_async=True),
     display_config=DisplayConfig(show_indicator=True),
 )
 # evaluate(

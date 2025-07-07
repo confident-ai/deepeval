@@ -11,7 +11,7 @@ class TaskCompletionTemplate:
         input: str, actual_output: str, tools_called: list
     ) -> str:
         return textwrap.dedent(
-            f"""Given an agentic workflow comprised of a human input, AI response, and tools used by the AI, identify the user_goal (the task or objective the user wants to achieve) and the task_outcome (the final outcome or result of the workflow).
+            f"""Given an agentic workflow comprised of a human input, AI response, and tools used by the AI, identify the task (or objective the user wants to achieve) and the task_outcome (the final outcome or result of the workflow).
             The task outcome should be solely factual, derived strictly from the workflow (input, response, and tools called), without any reasoning involved.
 
             ``Example:
