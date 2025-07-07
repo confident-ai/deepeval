@@ -172,7 +172,14 @@ class EvaluationDataset:
     def __iter__(self):
         return iter(self.test_cases)
 
-    def evaluate(self, metrics: List[BaseMetric]):
+    def evaluate(
+        self, 
+        metrics: Union[
+            List[BaseMetric],
+            List[BaseConversationalMetric],
+            List[BaseMultimodalMetric],
+        ],
+    ) -> "EvaluationResult":
         from deepeval import evaluate
 
         if len(self.test_cases) == 0:
