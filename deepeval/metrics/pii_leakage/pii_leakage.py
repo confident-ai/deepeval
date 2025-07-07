@@ -239,7 +239,9 @@ class PIILeakageMetric(BaseMetric):
             return res.extracted_pii
         else:
             try:
-                res: ExtractedPII = await self.model.a_generate(prompt, schema=ExtractedPII)
+                res: ExtractedPII = await self.model.a_generate(
+                    prompt, schema=ExtractedPII
+                )
                 return res.extracted_pii
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -254,7 +256,9 @@ class PIILeakageMetric(BaseMetric):
             return res.extracted_pii
         else:
             try:
-                res: ExtractedPII = self.model.generate(prompt, schema=ExtractedPII)
+                res: ExtractedPII = self.model.generate(
+                    prompt, schema=ExtractedPII
+                )
                 return res.extracted_pii
             except TypeError:
                 res = self.model.generate(prompt)
@@ -286,4 +290,4 @@ class PIILeakageMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "PII Leakage" 
+        return "PII Leakage"

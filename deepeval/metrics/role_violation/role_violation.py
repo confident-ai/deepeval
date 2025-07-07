@@ -39,8 +39,10 @@ class RoleViolationMetric(BaseMetric):
         ] = RoleViolationTemplate,
     ):
         if role is None:
-            raise ValueError("Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)")
-        
+            raise ValueError(
+                "Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)"
+            )
+
         self.threshold = 0 if strict_mode else threshold
         self.role = role
         self.model, self.using_native_model = initialize_model(model)
@@ -111,8 +113,8 @@ class RoleViolationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.role_violations: List[str] = await self._a_detect_role_violations(
-                test_case.actual_output
+            self.role_violations: List[str] = (
+                await self._a_detect_role_violations(test_case.actual_output)
             )
             self.verdicts: List[RoleViolationVerdict] = (
                 await self._a_generate_verdicts()
@@ -245,12 +247,16 @@ class RoleViolationMetric(BaseMetric):
             actual_output, self.role
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=RoleViolations)
+            res, cost = await self.model.a_generate(
+                prompt, schema=RoleViolations
+            )
             self.evaluation_cost += cost
             return res.role_violations
         else:
             try:
-                res: RoleViolations = await self.model.a_generate(prompt, schema=RoleViolations)
+                res: RoleViolations = await self.model.a_generate(
+                    prompt, schema=RoleViolations
+                )
                 return res.role_violations
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -267,7 +273,9 @@ class RoleViolationMetric(BaseMetric):
             return res.role_violations
         else:
             try:
-                res: RoleViolations = self.model.generate(prompt, schema=RoleViolations)
+                res: RoleViolations = self.model.generate(
+                    prompt, schema=RoleViolations
+                )
                 return res.role_violations
             except TypeError:
                 res = self.model.generate(prompt)
@@ -284,7 +292,7 @@ class RoleViolationMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
                 return 1.0  # Role violation detected
-        
+
         return 0.0  # No role violation
 
     def is_successful(self) -> bool:
@@ -299,4 +307,4 @@ class RoleViolationMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Role Violation" 
+        return "Role Violation"

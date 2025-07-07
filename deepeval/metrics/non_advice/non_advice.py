@@ -42,7 +42,7 @@ class NonAdviceMetric(BaseMetric):
                 "Examples: ['financial'], ['medical'], ['legal'], "
                 "or ['financial', 'medical'] for multiple types."
             )
-        
+
         self.threshold = 0 if strict_mode else threshold
         self.advice_types = advice_types
         self.model, self.using_native_model = initialize_model(model)
@@ -242,8 +242,7 @@ class NonAdviceMetric(BaseMetric):
 
     async def _a_generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
-            actual_output=actual_output,
-            advice_types=self.advice_types
+            actual_output=actual_output, advice_types=self.advice_types
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Advices)
@@ -251,7 +250,9 @@ class NonAdviceMetric(BaseMetric):
             return res.advices
         else:
             try:
-                res: Advices = await self.model.a_generate(prompt, schema=Advices)
+                res: Advices = await self.model.a_generate(
+                    prompt, schema=Advices
+                )
                 return res.advices
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -260,8 +261,7 @@ class NonAdviceMetric(BaseMetric):
 
     def _generate_advices(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_advices(
-            actual_output=actual_output,
-            advice_types=self.advice_types
+            actual_output=actual_output, advice_types=self.advice_types
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Advices)
@@ -301,4 +301,4 @@ class NonAdviceMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Non-Advice" 
+        return "Non-Advice"
