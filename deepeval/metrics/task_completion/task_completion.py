@@ -70,19 +70,16 @@ class TaskCompletionMetric(BaseMetric):
                     )
                 )
             else:
-                task, task_outcome = self._extract_goal_and_outcome(test_case)
+                task, self.outcome = self._extract_task_and_outcome(test_case)
                 self.task = task if self.task is None else self.task
-                self.task_outcome = task_outcome
-                verdict, reason = self._generate_verdicts()
-                self.verdict = verdict
-                self.reason = reason
+                self.verdict, self.reason = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Task: {task}",
-                        f"Task Outcome: {task_outcome}",
+                        f"Task: {self.task}",
+                        f"Outcome: {self.outcome}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
@@ -105,21 +102,18 @@ class TaskCompletionMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            task, task_outcome = await self._a_extract_goal_and_outcome(
+            task, self.outcome = await self._a_extract_task_and_outcome(
                 test_case
             )
             self.task = task if self.task is None else self.task
-            self.task_outcome = task_outcome
-            verdict, reason = await self._a_generate_verdicts()
-            self.verdict = verdict
-            self.reason = reason
+            self.verdict, self.reason = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Task: {task}",
-                    f"Task Outcome: {task_outcome}",
+                    f"Task: {self.task}",
+                    f"Outcome: {self.outcome}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -128,7 +122,7 @@ class TaskCompletionMetric(BaseMetric):
     async def _a_generate_verdicts(self) -> Tuple:
         prompt = TaskCompletionTemplate.generate_verdict(
             task=self.task,
-            actual_outcome=self.task_outcome,
+            actual_outcome=self.outcome,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -150,7 +144,7 @@ class TaskCompletionMetric(BaseMetric):
     def _generate_verdicts(self) -> Tuple:
         prompt = TaskCompletionTemplate.generate_verdict(
             task=self.task,
-            actual_outcome=self.task_outcome,
+            actual_outcome=self.outcome,
         )
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -169,16 +163,17 @@ class TaskCompletionMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return data["verdict"], data["reason"]
 
-    async def _a_extract_goal_and_outcome(
+    async def _a_extract_task_and_outcome(
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if has_trace:
-            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(
+            prompt = TaskCompletionTemplate.extract_task_and_outcome_from_trace(
                 trace=test_case._trace_dict
             )
         else:
+            # TODO: Deprecate this soon
             prompt = TaskCompletionTemplate.extract_goal_and_outcome(
                 input=test_case.input,
                 actual_output=test_case.actual_output,
@@ -186,50 +181,51 @@ class TaskCompletionMetric(BaseMetric):
             )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=GoalAndOutcome
+                prompt, schema=TaskAndOutcome
             )
             self.evaluation_cost += cost
-            return res.task, res.task_outcome
+            return res.task, res.outcome
         else:
             try:
-                res: GoalAndOutcome = await self.model.a_generate(
-                    prompt, schema=GoalAndOutcome
+                res: TaskAndOutcome = await self.model.a_generate(
+                    prompt, schema=TaskAndOutcome
                 )
-                return res.task, res.task_outcome
+                return res.task, res.outcome
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["task"], data["task_outcome"]
+                return data["task"], data["outcome"]
 
-    def _extract_goal_and_outcome(
+    def _extract_task_and_outcome(
         self,
         test_case: LLMTestCase,
     ) -> Tuple:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if has_trace:
-            prompt = TaskCompletionTemplate.extract_goal_and_outcome_from_trace(
+            prompt = TaskCompletionTemplate.extract_task_and_outcome_from_trace(
                 trace=test_case._trace_dict
             )
         else:
+            # TODO: Deprecate this soon
             prompt = TaskCompletionTemplate.extract_goal_and_outcome(
                 input=test_case.input,
                 actual_output=test_case.actual_output,
                 tools_called=test_case.tools_called,
             )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=GoalAndOutcome)
+            res, cost = self.model.generate(prompt, schema=TaskAndOutcome)
             self.evaluation_cost += cost
-            return res.task, res.task_outcome
+            return res.task, res.outcome
         else:
             try:
-                res: GoalAndOutcome = self.model.generate(
-                    prompt, schema=GoalAndOutcome
+                res: TaskAndOutcome = self.model.generate(
+                    prompt, schema=TaskAndOutcome
                 )
-                return res.task, res.task_outcome
+                return res.task, res.outcome
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["task"], data["task_outcome"]
+                return data["task"], data["outcome"]
 
     def _calculate_score(self):
         return (
