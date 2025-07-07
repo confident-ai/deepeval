@@ -37,7 +37,7 @@ class TaskCompletionMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
-        self.user_goal = task
+        self.task = task
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -70,12 +70,8 @@ class TaskCompletionMetric(BaseMetric):
                     )
                 )
             else:
-                user_goal, task_outcome = self._extract_goal_and_outcome(
-                    test_case
-                )
-                self.user_goal = (
-                    user_goal if self.user_goal is None else self.user_goal
-                )
+                task, task_outcome = self._extract_goal_and_outcome(test_case)
+                self.task = task if self.task is None else self.task
                 self.task_outcome = task_outcome
                 verdict, reason = self._generate_verdicts()
                 self.verdict = verdict
@@ -85,7 +81,7 @@ class TaskCompletionMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"User Goal: {user_goal}",
+                        f"Task: {task}",
                         f"Task Outcome: {task_outcome}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
@@ -109,12 +105,10 @@ class TaskCompletionMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            user_goal, task_outcome = await self._a_extract_goal_and_outcome(
+            task, task_outcome = await self._a_extract_goal_and_outcome(
                 test_case
             )
-            self.user_goal = (
-                user_goal if self.user_goal is None else self.user_goal
-            )
+            self.task = task if self.task is None else self.task
             self.task_outcome = task_outcome
             verdict, reason = await self._a_generate_verdicts()
             self.verdict = verdict
@@ -124,7 +118,7 @@ class TaskCompletionMetric(BaseMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"User Goal: {user_goal}",
+                    f"Task: {task}",
                     f"Task Outcome: {task_outcome}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -133,7 +127,7 @@ class TaskCompletionMetric(BaseMetric):
 
     async def _a_generate_verdicts(self) -> Tuple:
         prompt = TaskCompletionTemplate.generate_verdict(
-            user_goal=self.user_goal,
+            task=self.task,
             actual_outcome=self.task_outcome,
         )
         if self.using_native_model:
@@ -155,7 +149,7 @@ class TaskCompletionMetric(BaseMetric):
 
     def _generate_verdicts(self) -> Tuple:
         prompt = TaskCompletionTemplate.generate_verdict(
-            user_goal=self.user_goal,
+            task=self.task,
             actual_outcome=self.task_outcome,
         )
         if self.using_native_model:
@@ -195,17 +189,17 @@ class TaskCompletionMetric(BaseMetric):
                 prompt, schema=GoalAndOutcome
             )
             self.evaluation_cost += cost
-            return res.user_goal, res.task_outcome
+            return res.task, res.task_outcome
         else:
             try:
                 res: GoalAndOutcome = await self.model.a_generate(
                     prompt, schema=GoalAndOutcome
                 )
-                return res.user_goal, res.task_outcome
+                return res.task, res.task_outcome
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["user_goal"], data["task_outcome"]
+                return data["task"], data["task_outcome"]
 
     def _extract_goal_and_outcome(
         self,
@@ -225,17 +219,17 @@ class TaskCompletionMetric(BaseMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=GoalAndOutcome)
             self.evaluation_cost += cost
-            return res.user_goal, res.task_outcome
+            return res.task, res.task_outcome
         else:
             try:
                 res: GoalAndOutcome = self.model.generate(
                     prompt, schema=GoalAndOutcome
                 )
-                return res.user_goal, res.task_outcome
+                return res.task, res.task_outcome
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["user_goal"], data["task_outcome"]
+                return data["task"], data["task_outcome"]
 
     def _calculate_score(self):
         return (

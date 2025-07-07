@@ -45,6 +45,7 @@ from deepeval.test_case import (
     MLLMImage,
     Turn,
     ArenaTestCase,
+    ToolCall,
 )
 
 
@@ -98,6 +99,22 @@ def convert_turn_to_dict(turn: Turn) -> Dict:
 def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
+
+
+def print_tools_called(tools_called_list: List[ToolCall]):
+    string = "[\n"
+    for index, tools_called in enumerate(tools_called_list):
+        json_string = json.dumps(tools_called.model_dump(), indent=4)
+        indented_json_string = "\n".join(
+            "  " + line for line in json_string.splitlines()
+        )
+        string += indented_json_string
+        if index < len(tools_called_list) - 1:
+            string += ",\n"
+        else:
+            string += "\n"
+    string += "]"
+    return string
 
 
 def print_verbose_logs(metric: str, logs: str):

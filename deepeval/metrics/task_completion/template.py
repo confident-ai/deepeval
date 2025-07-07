@@ -1,3 +1,4 @@
+from deepeval.metrics.utils import print_tools_called
 from deepeval.test_case import ToolCall
 from typing import List, Dict
 import textwrap
@@ -6,8 +7,11 @@ import json
 
 class TaskCompletionTemplate:
 
+    # TODO: Deprecate this function soon
     @staticmethod
-    def extract_goal_and_outcome(input, actual_output, tools_called):
+    def extract_goal_and_outcome(
+        input: str, actual_output: str, tools_called: list
+    ) -> str:
         return textwrap.dedent(
             f"""Given an agentic workflow comprised of a human input, AI response, and tools used by the AI, identify the user_goal (the task or objective the user wants to achieve) and the task_outcome (the final outcome or result of the workflow).
             The task outcome should be solely factual, derived strictly from the workflow (input, response, and tools called), without any reasoning involved.
@@ -69,7 +73,7 @@ class TaskCompletionTemplate:
 
             input: {input}
             tools called:
-            {TaskCompletionTemplate.print_tools_called(tools_called)}
+            {print_tools_called(tools_called)}
             response: {actual_output}
 
             JSON:
@@ -81,7 +85,7 @@ class TaskCompletionTemplate:
         return textwrap.dedent(
             f"""Given a nested workflow trace whose spans may be of type `agent`, `tool`, `llm`, `retriever`, or `custom`, identify:
 
-            1. **user_goal** – the task or objective expressed by the user in the root agent’s input.  
+            1. **task** – the task or objective expressed by the user in the root agent’s input.  
             2. **task_outcome** – a strictly factual description of what the system did, based only on the trace.
 
             The task outcome should be solely factual, derived strictly from the trace.
@@ -185,13 +189,13 @@ class TaskCompletionTemplate:
             }}
             Example JSON:
             {{
-            "user_goal": "Plan a business trip to Chicago, including flights, lodging, meeting agenda, presentation review, and client preparation.",
+            "task": "Plan a business trip to Chicago, including flights, lodging, meeting agenda, presentation review, and client preparation.",
             "task_outcome": "The system invoked a tool to retrieve two flight options and another tool to find two hotels for the specified dates. An LLM with model 'gpt-4' generated a three-topic meeting agenda from a system/user prompt. A retriever extracted three slides using the embedding input 'presentation.pptx' with topK=3 and chunk size 512. A custom component generated vector embeddings for a client-related input string."
             }}
             ===== END OF EXAMPLE =====
 
             **
-            IMPORTANT – return only valid JSON with two keys: `user_goal` and `task_outcome`.
+            IMPORTANT – return only valid JSON with two keys: `task` and `task_outcome`.
             **
 
             trace:
@@ -202,9 +206,9 @@ class TaskCompletionTemplate:
         )
 
     @staticmethod
-    def generate_verdict(user_goal, actual_outcome):
+    def generate_verdict(task: str, actual_outcome: str):
         return textwrap.dedent(
-            f"""Given the user goal (desired outcome) and the actual achieved outcome, compare how well the actual outcome aligns with the user's intended goal.
+            f"""Given the task (desired outcome) and the actual achieved outcome, compare how well the actual outcome aligns with the user's intended goal.
 
                 Please return a JSON with two keys: `verdict` and `reason`.
                 - The `verdict` should be a score from 0 to 1, where 1 indicates the actual outcome perfectly achieves the user's goal, and 0 indicates it does not achieve the goal at all.
@@ -213,7 +217,7 @@ class TaskCompletionTemplate:
                 **
                 IMPORTANT: Please make sure to only return in JSON format, with `verdict` as a float between 0 and 1.
                 Example:
-                User goal: Have the system plan a weekend trip to New York, including travel, accommodation, and sightseeing.
+                Task: Have the system plan a weekend trip to New York, including travel, accommodation, and sightseeing.
                 Actual outcome: The system provided suggested flights departing on Saturday and returning on Sunday, identified hotels with check-in on Saturday and check-out on Sunday, and generated a list of sightseeing destinations in New York City.
                 Example JSON:
                 {{
@@ -222,8 +226,8 @@ class TaskCompletionTemplate:
                 }}
                 **
 
-                User goal:
-                {user_goal}
+                Task:
+                {task}
 
                 Actual outcome:
                 {actual_outcome}
@@ -231,62 +235,3 @@ class TaskCompletionTemplate:
                 JSON:
             """
         )
-
-    @staticmethod
-    def generate_suggested_fixes(
-        verdict: float, reason: str, trace: dict
-    ) -> str:
-        return textwrap.dedent(
-            f"""You are an LLM evaluation expert tasked with helping developers improve their AI agents.
-
-            Given:
-            - A `verdict` (score from 0 to 1) indicating how well the agent achieved the user’s goal.
-            - A `reason` explaining the gap between the user’s goal and the actual outcome.
-            - A `trace` representing the full execution of the agent, including its decisions, tool calls, and outputs.
-
-            Your job is to analyze the trace and reason to provide **concrete and actionable suggested fixes**. These may include:
-            - Improving prompt phrasing
-            - Changing tool input parameters
-            - Adding missing tool calls
-            - Adjusting the sequence of steps
-            - Fixing model outputs or logic issues
-
-            Only include suggestions that directly address the issues described in the reason and trace.
-
-            **
-            IMPORTANT: Please return a valid JSON with one key `suggested_fixes`, which contains a list of bullet points (strings).
-            **
-
-            Example JSON:
-            {{
-                "suggested_fixes": [
-                    "Update the flight search tool to include return date when round-trip is implied.",
-                    "Use a system prompt to clarify the goal before invoking the LLM for agenda generation.",
-                    "Add a final summarization step to combine all tool outputs into a cohesive plan."
-                ]
-            }}
-
-            verdict: {verdict}
-            reason: {reason}
-            trace:
-            {json.dumps(trace, indent=2)}
-
-            JSON:
-            """
-        )
-
-    @staticmethod
-    def print_tools_called(tools_called_list: List[ToolCall]):
-        string = "[\n"
-        for index, tools_called in enumerate(tools_called_list):
-            json_string = json.dumps(tools_called.model_dump(), indent=4)
-            indented_json_string = "\n".join(
-                "  " + line for line in json_string.splitlines()
-            )
-            string += indented_json_string
-            if index < len(tools_called_list) - 1:
-                string += ",\n"
-            else:
-                string += "\n"
-        string += "]"
-        return string
