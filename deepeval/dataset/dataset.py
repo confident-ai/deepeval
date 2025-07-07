@@ -173,7 +173,7 @@ class EvaluationDataset:
         return iter(self.test_cases)
 
     def evaluate(
-        self, 
+        self,
         metrics: Union[
             List[BaseMetric],
             List[BaseConversationalMetric],
