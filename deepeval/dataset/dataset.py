@@ -10,7 +10,7 @@ import datetime
 import time
 import ast
 
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseMetric, BaseConversationalMetric, BaseMultimodalMetric
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
