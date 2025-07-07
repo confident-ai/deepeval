@@ -2,11 +2,12 @@ from typing import Any, Optional
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
-from deepeval.integrations.langchain.utils import parse_prompts_to_messages
+from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
     from langchain_core.outputs import LLMResult
+    from langchain_core.outputs import ChatGeneration
 
     langchain_installed = True
 except:
@@ -145,16 +146,16 @@ class CallbackHandler(BaseCallbackHandler):
         if llm_span is None:
             return
 
-        # prepare output
-        response_str = ""
+        output_str = ""
         for generation in response.generations:
             for gen in generation:
-                response_str += gen.text + "\n"
+                if isinstance(gen, ChatGeneration):
+                    output_str += convert_chat_generation_to_string(gen) + "\n"
 
         llm_span.end_time = perf_counter()
         llm_span.status = TraceSpanStatus.SUCCESS
         llm_span.set_attributes(
-            LlmAttributes(input=llm_span.attributes.input, output=response_str)
+            LlmAttributes(input=llm_span.attributes.input, output=output_str)
         )
         trace_manager.remove_span(str(run_id))
 
