@@ -1,5 +1,5 @@
 from pydantic import BaseModel
 
 
-class Reason(BaseModel):
+class JsonCorrectnessScoreReason(BaseModel):
     reason: str
