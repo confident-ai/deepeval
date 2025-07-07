@@ -1,5 +1,5 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.evaluate import AsyncConfig, DisplayConfig
+from deepeval.evaluate import AsyncConfig, DisplayConfig, evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     update_current_span,
@@ -9,6 +9,7 @@ from deepeval.tracing import (
     trace_manager,
 )
 
+fo
 from time import sleep, perf_counter
 import random
 
@@ -136,20 +137,20 @@ def meta_agent(input: str):
 ###################################v
 
 from deepeval.dataset import Golden
-from deepeval import evaluate, assert_test
 
 goldens = [
     Golden(input="What's the weather like in SF?"),
     Golden(input="Tell me about Elon Musk."),
 ]
 
-# # Run Async
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=True),
-#     display_config=DisplayConfig(show_indicator=True),
-# )
+# Run Async
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=True),
+    display_config=DisplayConfig(show_indicator=True),
+)
+
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
@@ -171,12 +172,12 @@ goldens = [
 # )
 
 
-# Assert Test
-def test_meta_agent_0():
-    golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
+# # Assert Test
+# def test_meta_agent_0():
+#     golden = Golden(input="What's the weather like in SF?")
+#     assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
 
 
-def test_meta_agent_1():
-    golden = Golden(input="What's the weather like in SF?")
-    assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
+# def test_meta_agent_1():
+#     golden = Golden(input="What's the weather like in SF?")
+#     assert_test(golden=golden, observed_callback=meta_agent, run_async=False)

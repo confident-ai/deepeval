@@ -79,7 +79,9 @@ class NonAdviceMetric(BaseMetric):
                 self.advices: List[str] = self._generate_advices(
                     test_case.actual_output
                 )
-                self.verdicts: List[NonAdviceVerdict] = self._generate_verdicts()
+                self.verdicts: List[NonAdviceVerdict] = (
+                    self._generate_verdicts()
+                )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
@@ -113,7 +115,9 @@ class NonAdviceMetric(BaseMetric):
             self.advices: List[str] = await self._a_generate_advices(
                 test_case.actual_output
             )
-            self.verdicts: List[NonAdviceVerdict] = await self._a_generate_verdicts()
+            self.verdicts: List[NonAdviceVerdict] = (
+                await self._a_generate_verdicts()
+            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
@@ -205,7 +209,9 @@ class NonAdviceMetric(BaseMetric):
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    NonAdviceVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     def _generate_verdicts(self) -> List[NonAdviceVerdict]:
@@ -229,7 +235,9 @@ class NonAdviceMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    NonAdviceVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     async def _a_generate_advices(self, actual_output: str) -> List[str]:
@@ -293,4 +301,4 @@ class NonAdviceMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Non Advice" 
+        return "Non-Advice" 

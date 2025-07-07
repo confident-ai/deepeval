@@ -1,3 +1,3 @@
 from .non_advice import NonAdviceMetric
 
-__all__ = ["NonAdviceMetric"] 
+__all__ = ["NonAdviceMetric"]

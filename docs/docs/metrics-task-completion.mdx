@@ -16,25 +16,64 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer agent={true} referenceless={true} />
 
-The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task** as outlined in the `input`, based on `tools_called` and the `actual_output` of the agent. `deepeval`'s task completion metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The task completion metric uses LLM-as-a-judge to evaluate how effectively an **LLM agent accomplishes a task**. Task Completion is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
-## Required Arguments
-
-To use the `TaskCompletion`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
-
-- `input`
-- `actual_output`
-- `tools_called`
-
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
-
-:::tip
-To learn why each test case parameter is necessary in calculating the `TaskCompletion` score, see [how is it calculated](/docs/metrics-task-completion#how-is-it-calculated).
+:::info
+Task Completion analyzes your **agent's full trace** to determine task success, which requires [setting up tracing](/docs/evaluation-llm-tracing).
 :::
 
 ## Usage
 
-The `TaskCompletionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe
+
+task_completion = TaskCompletionMetric(
+    threshold=0.7,
+    model="gpt-4o",
+    include_reason=True
+)
+
+@observe(metrics=[task_completion])
+def trip_planner_agent(input):
+    destination = input.get("destination", "Paris")
+    days = input.get("days", 2)
+
+    @observe()
+    def restaurant_finder(city):
+        return ["Le Jules Verne", "Angelina Paris", "Septime"]
+
+    @observe()
+    def itinerary_generator(destination, days):
+        return ["Eiffel Tower", "Louvre Museum", "Montmartre"][:days]
+
+    itinerary = itinerary_generator(destination, days)
+    restaurants = restaurant_finder(destination)
+
+    output = []
+    for i in range(days):
+        output.append(f"{itinerary[i]} and eat at {restaurants[i]}")
+
+    return ". ".join(output) + "."
+
+evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Hi!")])
+```
+
+There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `task`: a string representing the task to be completed. If no task is supplied, it is automatically inferred from the trace. Defaulted to the `None`
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### End-to-End
+
+You can also run the `TaskCompletionMetric` for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation as a standalone, though this is not the recommended way to use it, since the full trace is required for thorough evaluation.
 
 ```python
 from deepeval import evaluate
@@ -80,53 +119,16 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating an `TaskCompletionMetric`:
+To use the `TaskCompletionMetric` for end-to-end evaluation, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
-- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
-- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- `input`
+- `actual_output`
+- `tools_called`
 
-### Within components
-
-You can also run the `TaskCompletionMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
-
-```python
-from deepeval.dataset import Golden
-from deepeval.tracing import observe, update_current_span
-...
-
-@observe(metrics=[metric])
-def inner_component():
-    # Set test case at runtime
-    test_case = LLMTestCase(input="...", actual_output="...")
-    update_current_span(test_case=test_case)
-    return
-
-@observe
-def llm_app(input: str):
-    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    inner_component()
-    return
-
-evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
-```
-
-### As a standalone
-
-You can also run the `TaskCompletionMetric` on a single test case as a standalone, one-off execution.
-
-```python
-...
-
-metric.measure(test_case)
-print(metric.score, metric.reason)
-```
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 :::caution
-This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+This is not recommended and will be deprecated soon as a test case does not represent the full execution of an agent.
 :::
 
 ## How Is It Calculated?
@@ -135,35 +137,5 @@ The `TaskCompletionMetric` score is calculated according to the following equati
 
 <Equation formula="\text{Task Completion Score} = \text{AlignmentScore}(\text{Task}, \text{Outcome})" />
 
-- **Task** and **Outcome** are extracted from the `input`, `actual_output`, and `tools_called` using an LLM.
-- The **Alignment Score** measures how well the outcome aligns with the task (or user-defined task), as judged by an LLM.
-
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  }}
->
-  <img
-    src="https://deepeval-docs.s3.amazonaws.com/task-completion.png"
-    alt="LangChain"
-    style={{
-      margin: "40px",
-      height: "auto",
-      maxHeight: "800px",
-    }}
-  />
-</div>
-
-:::note  
-While the task is primarily derived from the `input` and the outcome from the `actual_output`, these parameters alone are insufficient to calculate the **Task Completion Score**. See below for details.  
-:::
-
-#### What Is Task?
-
-The **task** represents the user’s goal or the action they want the agent to perform. The `input` alone often lacks the specificity needed to determine the full intent. For example, the input "Can you help me recover?" is unclear—it could mean recovering an account, a file, or something else. However, if the agent calls a recovery API, this action provides the necessary context to identify the task as assisting with account recovery, which is why the task is extracted from the entire `LLMTestCase`.
-
-#### What Is Outcome?
-
-The **outcome** refers to the agent’s actions in response to the user’s request. Like the task, the outcome cannot be derived from the `actual_output` alone. For example, if a restaurant reservation agent replies with "Booked for tonight," it’s impossible to confirm if the user’s goal was met without additional information such as the restaurant name, time, and tools used. These test case details (especially `tools_called`) are crucial to verify that the outcome aligns with the user’s intended task.
+- **Task** and **Outcome** are extracted from the trace (or test case for end-to-end) using an LLM.
+- The **Alignment Score** measures how well the outcome aligns with the extracted (or user-provided) task, as judged by an LLM.

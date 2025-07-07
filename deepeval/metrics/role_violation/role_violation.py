@@ -34,7 +34,9 @@ class RoleViolationMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[RoleViolationTemplate] = RoleViolationTemplate,
+        evaluation_template: Type[
+            RoleViolationTemplate
+        ] = RoleViolationTemplate,
     ):
         if role is None:
             raise ValueError("Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)")
@@ -75,7 +77,9 @@ class RoleViolationMetric(BaseMetric):
                 self.role_violations: List[str] = self._detect_role_violations(
                     test_case.actual_output
                 )
-                self.verdicts: List[RoleViolationVerdict] = self._generate_verdicts()
+                self.verdicts: List[RoleViolationVerdict] = (
+                    self._generate_verdicts()
+                )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
                 self.success = self.score <= self.threshold
@@ -110,7 +114,9 @@ class RoleViolationMetric(BaseMetric):
             self.role_violations: List[str] = await self._a_detect_role_violations(
                 test_case.actual_output
             )
-            self.verdicts: List[RoleViolationVerdict] = await self._a_generate_verdicts()
+            self.verdicts: List[RoleViolationVerdict] = (
+                await self._a_generate_verdicts()
+            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
@@ -203,7 +209,9 @@ class RoleViolationMetric(BaseMetric):
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    RoleViolationVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     def _generate_verdicts(self) -> List[RoleViolationVerdict]:
@@ -227,7 +235,9 @@ class RoleViolationMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
+                verdicts = [
+                    RoleViolationVerdict(**item) for item in data["verdicts"]
+                ]
                 return verdicts
 
     async def _a_detect_role_violations(self, actual_output: str) -> List[str]:

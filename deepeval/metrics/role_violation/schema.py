@@ -16,4 +16,4 @@ class RoleViolations(BaseModel):
 
 
 class Reason(BaseModel):
-    reason: str 
+    reason: str

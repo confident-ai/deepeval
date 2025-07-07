@@ -443,7 +443,9 @@ class ContextGenerator:
         )
 
         if context_size <= 1:
-            return random_chunks, scores
+            # Wrap each chunk in a list to maintain List[List[str]] structure
+            contexts = [[chunk] for chunk in random_chunks]
+            return contexts, scores
 
         # Find similar chunks for each context
         for random_chunk in random_chunks:
@@ -545,7 +547,9 @@ class ContextGenerator:
         )
 
         if context_size <= 1:
-            return random_chunks, scores
+            # Wrap each chunk in a list to maintain List[List[str]] structure
+            contexts = [[chunk] for chunk in random_chunks]
+            return contexts, scores
 
         # Find similar chunks for each context
         for random_chunk in random_chunks:

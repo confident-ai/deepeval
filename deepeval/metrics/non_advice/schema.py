@@ -16,4 +16,4 @@ class Advices(BaseModel):
 
 
 class Reason(BaseModel):
-    reason: str 
+    reason: str
