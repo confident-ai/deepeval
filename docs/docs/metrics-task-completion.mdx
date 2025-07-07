@@ -38,26 +38,25 @@ task_completion = TaskCompletionMetric(
 
 @observe(metrics=[task_completion])
 def trip_planner_agent(input):
+    destination = input.get("destination", "Paris")
+    days = input.get("days", 2)
 
     @observe()
     def restaurant_finder(city):
-        return ["Le Jules Verne", "Angelina Paris"]
+        return ["Le Jules Verne", "Angelina Paris", "Septime"]
 
     @observe()
     def itinerary_generator(destination, days):
-        return [
-            f"Day 1: Eiffel Tower, Le Jules Verne.",
-            f"Day 2: Louvre Museum, Angelina Paris.",
-        ]
+        return ["Eiffel Tower", "Louvre Museum", "Montmartre"][:days]
 
-    itinerary = itinerary_generator(destination="Paris", days=3)
-    restaurants = restaurant_finder(city="Paris")
-    output = (
-        "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
-        "Day 2: Louvre Museum, lunch at Angelina Paris. "
-    )
-    return output
+    itinerary = itinerary_generator(destination, days)
+    restaurants = restaurant_finder(destination)
 
+    output = []
+    for i in range(days):
+        output.append(f"{itinerary[i]} and eat at {restaurants[i]}")
+
+    return ". ".join(output) + "."
 
 evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Hi!")])
 ```
