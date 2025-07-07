@@ -2,6 +2,7 @@ from typing import Any, Optional
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
+from deepeval.integrations.langchain.utils import parse_prompts_to_messages
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -33,11 +34,10 @@ from deepeval.tracing.types import (
 )
 from deepeval.telemetry import capture_tracing_integration
 
-
 class CallbackHandler(BaseCallbackHandler):
 
     def __init__(self):
-        capture_tracing_integration("langchain")
+        capture_tracing_integration("deepeval.integrations.langchain.callback.CallbackHandler")
         is_langchain_installed()
         super().__init__()
 
@@ -115,8 +115,8 @@ class CallbackHandler(BaseCallbackHandler):
             if self.active_trace_id is None:
                 self.active_trace_id = trace_manager.start_new_trace().uuid
 
-        # prepare input
-        input = "\n".join(prompts) if prompts else ""
+        # extract input
+        input_messages = parse_prompts_to_messages(prompts)
 
         llm_span = LlmSpan(
             uuid=str(run_id),
@@ -128,7 +128,7 @@ class CallbackHandler(BaseCallbackHandler):
             name="langchain_llm_span_" + str(run_id),
             # TODO: why model is coming unknown?
             model=serialized.get("model_name", "unknown"),
-            attributes=LlmAttributes(input=input, output=""),
+            attributes=LlmAttributes(input=input_messages, output=""),
         )
         trace_manager.add_span(llm_span)
         trace_manager.add_span_to_trace(llm_span)
