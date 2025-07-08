@@ -147,12 +147,12 @@ class ContextualRelevancyMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=ContextualRelevancyScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: ContextualRelevancyScoreReason = await self.model.a_generate(prompt, schema=ContextualRelevancyScoreReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -179,12 +179,12 @@ class ContextualRelevancyMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=ContextualRelevancyScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: ContextualRelevancyScoreReason = self.model.generate(prompt, schema=ContextualRelevancyScoreReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

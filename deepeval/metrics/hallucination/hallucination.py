@@ -141,12 +141,12 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=HallucinationScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: HallucinationScoreReason = await self.model.a_generate(prompt, schema=HallucinationScoreReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -172,12 +172,12 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=HallucinationScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: HallucinationScoreReason = self.model.generate(prompt, schema=HallucinationScoreReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)
