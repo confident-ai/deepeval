@@ -1,56 +1,98 @@
 ---
 id: tutorial-introduction
-title: Tutorial Introduction
-sidebar_label: Tutorial Introduction
+title: Introduction
+sidebar_label: Introduction
 ---
 
-**DeepEval** is the open-source LLM evaluation framework and in this complete end-to-end tutorial, we'll show you exactly how you can use DeepEval to improve your LLM application one step at a time. This tutorial will walk you through how to evaluate and test your LLM application all the way from the initial development stages to post-production.
+**DeepEval** is a powerful open-source LLM evaluation framework. In these tutorials we'll show you how you can use DeepEval to improve your LLM application one step at a time. These tutorials walk you through how to evaluate and test your LLM applications all the way from the initial development stages to post-production.
 
-:::info
-Before we begin, run the following code to set up your Confident AI account and **retrieve your API key**.
+Want to get started right away? [Click here](#tutorials) to look at the list of available tutorials.
 
-```
-deepeval login
-```
+## What You'll Learn
 
+DeepEval tutorials cover the best practices for evaluating LLM applications across both development and production.
+
+### Evaluation in development
+
+You'll learn how to:
+
+- Select evaluation metrics that align with your task
+- Use `deepeval` to measure and track LLM performance
+- Interpret results to tune prompts, models, and other system hyperparameters
+- Scale evaluations to cover diverse inputs and edge cases
+
+### Evaluation in production
+
+You'll also see how to:
+
+- Continuously evaluate your LLM's performance in production
+- Run A/B tests on different models or configurations using real data
+- Feed production insights back into your development workflow to improve future releases
+
+:::tip 
+LLM evaluation isn't a one-time step — it's a continuous loop. Production data sharpens development. Development precision strengthens production. Which is why it is crucial to do both, DeepEval helps you do just that.
 :::
 
-For **LLM evaluation in development**, we'll cover:
+<details>
 
-- How to choose your LLM evaluation metrics and use them in `deepeval`
-- How to run evaluations in `deepeval` to quantify LLM application performance
-- How to use evaluation results to identify system hyperparameters (such as LLMs and prompts) to iterate on
-- How to make your evaluation results more robust by scaling it out to cover more edge cases
+<summary><strong>Here are a few key terminologies to keep in mind for LLM evaluations</strong></summary>
 
-Once your LLM is ready for deployment, for **LLM evaluation in production**, we'll cover:
+- **Hyperparameters**: The configuration values that shape your LLM application. This includes system prompts, user prompts, model choice, temperature, chunk size (for RAG), and more.
+- **System Prompt**: A prompt that defines the overall behavior of your LLM across all interactions.
+- **Generation Model**: The model used to generate responses — this is the LLM you're evaluating. Throughout the tutorials, we'll simply call it the *model*.
+- **Evaluation Model**: A separate LLM used to score, critique, or assess the outputs of your generation model. This is **not** the model being evaluated.
 
-- How to continuously evaluate your LLM application in production (post-deployment, online evaluation)
-- How to use evaluation data in production to A/B test different system hyperparameters (such as LLMs and prompts)
-- How to use production data to improve your development evaluation workflow over time
+</details>
 
-:::tip
-Just because your LLM application is in production doesn't mean you don't need LLM evaluation during development, and the same is true the other way around.
-:::
+## What DeepEval Offers
 
-## Terminologies
+DeepEval supports a wide range of LLM evaluation use cases with task-specific metrics, including:
+- **RAG applications (Retrieval-Augmented Generation)**
+- **Conversational applications**
+- **Agentic applications**
 
-Before diving into the tutorial, let's go over the terminology used commonly used in LLM evaluation:
+[Click here](https://deepeval.com/docs/metrics-introduction) to explore all the metrics `deepeval` offers.
 
-- **Hyperparameters**: this refers to the parameters that make up your LLM system. Some examples include system prompts, user prompts, models used for generation, temperature, chunk size (for RAG), etc.
-- **System Prompt**: this refers to the prompt that sets the overarching instructions that define how your LLM should behave across all interactions.
-- **Generation model**: this refers to the model used to generate LLM responses based on some input, and also the LLM to be evaluated. We'll be referring to this as simply model throughout this tutorial.
-- **Evaluation model**: this refers to the LLM used for evaluation, **NOT** the LLM to be evaluated.
+Throughout these tutorials, we'll walk through best practices for evaluating various use cases using `deepeval`. Your application may differ — and that's expected. 
+The evaluation approach remains the same: **define your criteria, choose the right metrics, and iterate based on the results.**
 
-## Which Use Cases Will Be Evaluated?
+## Who This Is For
 
-We'll be going through a few use cases in this tutorial including:
+Whether you're building chatbots, summarizers, or agent systems powered by LLMs, these tutorials are designed for:
 
-- Legal document summarization
-- Medical chatbot
-- RAG QA Agent
+- Developers shipping LLM features in real products
+- Researchers testing prompts or model variations
+- Teams optimizing LLM outputs at scale
 
-Your use case might not be either one, and your evaluation criteria for each could be different, but that's OK. The concept is the same for all use cases - you pick a criteria, you use the metrics `deepeval` offers based on your criteria, and you iterate based on the results of these evaluations.
+Whether you're just experimenting or managing LLMs in production, these tutorials will help you test reliably, iterate faster, and ship with more confidence.
 
-## Who Is This Tutorial For?
+## Tutorials
 
-If you're building applications powered by LLMs, this tutorial is for you. Why? Because LLMs are prone to errors, and this tutorial will teach you exactly how to improve your LLM systems through a systematic evaluation-guided, data-first approach.
+Below is a curated set of tutorials — each focused on real-world tasks, metrics, and best practices for reliable LLM evaluation. Start with the basics, or jump straight to your use case.
+
+import TutorialCardSection from "@site/src/components/TutorialCardSection"
+
+<TutorialCardSection
+  tutorials={[
+    {
+        title: 'Start Here: Setup + Installation',
+        description: 'Not sure where to begin? Click here to get started and run your first evaluation with DeepEval',
+        to: '/tutorials/tutorial-setup',
+    },
+    {
+        title: 'Summarization Agent',
+        description: 'Learn how to evaluate a summarization agent using DeepEval metrics.',
+        to: '/tutorials/doc-summarization-introduction',
+    },
+    {
+        title: 'RAG QA Agent',
+        description: 'Evaluate your RAG pipeline for accuracy, relevance, and completeness.',
+        to: '/tutorials/qa-agent-introduction',
+    },
+    {
+        title: 'Medical Chatbot',
+        description: 'Test a healthcare-focused LLM chatbot for hallucinations and safety.',
+        to: '/tutorials/tutorial-llm-application-example',
+    },
+  ]}
+/>
