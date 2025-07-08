@@ -124,9 +124,8 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        if parent_run_id is None:
-            if self.active_trace_id is None:
-                self.active_trace_id = trace_manager.start_new_trace().uuid
+        
+        self.check_active_trace_id()
 
         # extract input
         input_messages = parse_prompts_to_messages(prompts)
@@ -143,8 +142,8 @@ class CallbackHandler(BaseCallbackHandler):
             model=serialized.get("model_name", "unknown"),
             attributes=LlmAttributes(input=input_messages, output=""),
         )
-        trace_manager.add_span(llm_span)
-        trace_manager.add_span_to_trace(llm_span)
+
+        self.add_span_to_trace(llm_span)
 
     def on_llm_end(
         self,
@@ -164,22 +163,14 @@ class CallbackHandler(BaseCallbackHandler):
                 if isinstance(gen, ChatGeneration):
                     output_str += convert_chat_generation_to_string(gen) + "\n"
 
-        llm_span.end_time = perf_counter()
-        llm_span.status = TraceSpanStatus.SUCCESS
         llm_span.set_attributes(
             LlmAttributes(input=llm_span.attributes.input, output=output_str)
         )
-        trace_manager.remove_span(str(run_id))
+        
+        self.end_span(llm_span)
 
         if parent_run_id is None:
-            current_trace = trace_manager.get_trace_by_uuid(
-                self.active_trace_id
-            )
-            if current_trace is not None:
-                current_trace.input = llm_span.input
-                current_trace.output = llm_span.output
-            trace_manager.end_trace(self.active_trace_id)
-            self.active_trace_id = None
+            self.end_trace(llm_span)
 
     def on_tool_start(
         self,
@@ -194,9 +185,7 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> Any:
 
-        if parent_run_id is None:
-            if self.active_trace_id is None:
-                self.active_trace_id = trace_manager.start_new_trace().uuid
+        self.check_active_trace_id()
 
         tool_span = ToolSpan(
             uuid=str(run_id),
@@ -208,8 +197,7 @@ class CallbackHandler(BaseCallbackHandler):
             name="langchain_tool_span_" + str(run_id),
             input=input_str,
         )
-        trace_manager.add_span(tool_span)
-        trace_manager.add_span_to_trace(tool_span)
+        self.add_span_to_trace(tool_span)
 
     def on_tool_end(
         self,
@@ -221,24 +209,15 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
 
         tool_span = trace_manager.get_span_by_uuid(str(run_id))
-
         if tool_span is None:
             return
 
-        tool_span.end_time = perf_counter()
-        tool_span.status = TraceSpanStatus.SUCCESS
         tool_span.output = output
-        trace_manager.remove_span(str(run_id))
+        
+        self.end_span(tool_span)
 
         if parent_run_id is None:
-            current_trace = trace_manager.get_trace_by_uuid(
-                self.active_trace_id
-            )
-            if current_trace is not None:
-                current_trace.input = tool_span.input
-                current_trace.output = tool_span.output
-            trace_manager.end_trace(self.active_trace_id)
-            self.active_trace_id = None
+            self.end_trace(tool_span)
 
     def on_retriever_start(
         self,
@@ -252,9 +231,7 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> Any:
 
-        if parent_run_id is None:
-            if self.active_trace_id is None:
-                self.active_trace_id = trace_manager.start_new_trace().uuid
+        self.check_active_trace_id()
 
         retriever_span = RetrieverSpan(
             uuid=str(run_id),
@@ -269,8 +246,8 @@ class CallbackHandler(BaseCallbackHandler):
         retriever_span.set_attributes(
             RetrieverAttributes(embedding_input=query, retrieval_context=[])
         )
-        trace_manager.add_span(retriever_span)
-        trace_manager.add_span_to_trace(retriever_span)
+
+        self.add_span_to_trace(retriever_span)
 
     def on_retriever_end(
         self,
@@ -293,23 +270,15 @@ class CallbackHandler(BaseCallbackHandler):
                 output_list.append(str(item))
         else:
             output_list.append(str(output))
-
-        retriever_span.end_time = perf_counter()
-        retriever_span.status = TraceSpanStatus.SUCCESS
+        
         retriever_span.set_attributes(
             RetrieverAttributes(
                 embedding_input=retriever_span.attributes.embedding_input,
                 retrieval_context=output_list,
             )
         )
-        trace_manager.remove_span(str(run_id))
+        
+        self.end_span(retriever_span)
 
         if parent_run_id is None:
-            current_trace = trace_manager.get_trace_by_uuid(
-                self.active_trace_id
-            )
-            if current_trace is not None:
-                current_trace.input = retriever_span.input
-                current_trace.output = retriever_span.output
-            trace_manager.end_trace(self.active_trace_id)
-            self.active_trace_id = None
+            self.end_trace(retriever_span)
