@@ -81,7 +81,6 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         
         self.check_active_trace_id()
-
         base_span = BaseSpan(
             uuid=str(run_id),
             status=TraceSpanStatus.IN_PROGRESS,
@@ -89,7 +88,7 @@ class CallbackHandler(BaseCallbackHandler):
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
-            name="langchain_chain_span_" + str(run_id),
+            name=tags[0] if tags is not None and len(tags) > 0 else "chain_span",
             input=inputs,
             metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
         )
