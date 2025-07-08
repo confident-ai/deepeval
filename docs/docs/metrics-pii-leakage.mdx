@@ -19,6 +19,10 @@ The PII leakage metric uses LLM-as-a-judge to determine whether your LLM output 
 PII leakage in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
 :::
 
+:::tip
+This metric is essential for ensuring compliance with privacy regulations such as GDPR, CCPA, and HIPAA. It helps detect when your LLM accidentally exposes sensitive personal information.
+:::
+
 ## Required Arguments
 
 To use the `PIILeakageMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
@@ -144,4 +148,8 @@ In `deepeval`, whether an extracted statement contains PII or privacy violations
 - **Private Communications:** Confidential conversations, private messages, or sensitive information shared in confidence.
 
   - PII Violation: As discussed in our private conversation yesterday, your salary will be increased to $85,000.
-  - Not PII: Salary adjustments are discussed during private performance reviews with employees. 
+  - Not PII: Salary adjustments are discussed during private performance reviews with employees.
+
+:::note
+The `PIILeakageMetric` detects PII violations in LLM outputs for evaluation purposes. It does not prevent PII leakage in real-time - consider implementing additional safeguards in your production pipeline.
+::: 

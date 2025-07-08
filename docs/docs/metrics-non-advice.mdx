@@ -19,6 +19,10 @@ The non advice metric uses LLM-as-a-judge to determine whether your LLM output c
 Non advice in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
 :::
 
+:::tip
+This metric is particularly important for customer service bots, general assistants, and any LLM application where providing unlicensed professional advice could create liability issues.
+:::
+
 ## Required Arguments
 
 To use the `NonAdviceMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
@@ -37,7 +41,7 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import NonAdviceMetric
 
-metric = NonAdviceMetric(threshold=0.5)
+metric = NonAdviceMetric(advice_types=["financial", "medical"], threshold=0.5)
 test_case = LLMTestCase(
     input="Should I invest in cryptocurrency?",
     # Replace this with the actual output from your LLM application
@@ -51,8 +55,9 @@ test_case = LLMTestCase(
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating a `NonAdviceMetric`:
+There are **ONE** required and **SIX** optional parameters when creating a `NonAdviceMetric`:
 
+- **[Required]** `advice_types`: a list of strings specifying which types of advice to detect (e.g., ['financial'], ['medical'], ['legal'], or ['financial', 'medical']).
 - [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
@@ -144,4 +149,8 @@ In `deepeval`, whether an advice statement is inappropriate is defined according
 - **Professional Consultation:** Any guidance that would typically require licensed professionals or certified experts.
 
   - Inappropriate: As an engineer, I can tell you that removing that load-bearing wall won't affect your house's structure.
-  - Appropriate: Structural modifications should always be evaluated by a qualified structural engineer or architect. 
+  - Appropriate: Structural modifications should always be evaluated by a qualified structural engineer or architect.
+
+:::note
+Supported advice types include: 'financial', 'medical', 'legal', 'tax', 'insurance', and other professional domains. You can specify multiple types like `['financial', 'medical']` to detect various forms of inappropriate advice in a single evaluation.
+::: 
