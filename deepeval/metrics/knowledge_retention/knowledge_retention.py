@@ -17,7 +17,7 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
     KnowledgeRetentionVerdict,
-    Reason,
+    KnowledgeRetentionReason,
 )
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
@@ -136,7 +136,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             return data["reason"]
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: KnowledgeRetentionReason = await self.model.a_generate(prompt, schema=KnowledgeRetentionReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -163,7 +163,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             return data["reason"]
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: KnowledgeRetentionReason = self.model.generate(prompt, schema=KnowledgeRetentionReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

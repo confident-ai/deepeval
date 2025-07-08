@@ -15,5 +15,5 @@ class RoleViolations(BaseModel):
     role_violations: List[str]
 
 
-class Reason(BaseModel):
-    reason: str 
+class RoleViolationReason(BaseModel):
+    reason: str

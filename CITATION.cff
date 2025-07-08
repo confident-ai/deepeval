@@ -6,7 +6,7 @@ authors:
   - family-names: Vongthongsri
     given-names: Kritin
 title: deepeval
-version: 3.2.3
+version: 3.2.4
 date-released: "2025-06-19"
 url: https://confident-ai.com
 repository-code: https://github.com/confident-ai/deepeval

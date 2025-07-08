@@ -19,5 +19,5 @@ class Claims(BaseModel):
     claims: List[str]
 
 
-class Reason(BaseModel):
+class FaithfulnessReason(BaseModel):
     reason: str

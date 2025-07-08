@@ -17,7 +17,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
-from deepeval.metrics.json_correctness.schema import Reason
+from deepeval.metrics.json_correctness.schema import JsonCorrectnessReason
 from deepeval.utils import get_or_create_event_loop
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
@@ -147,12 +147,12 @@ class JsonCorrectnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=JsonCorrectnessReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: JsonCorrectnessReason = await self.model.a_generate(prompt, schema=JsonCorrectnessReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -176,12 +176,12 @@ class JsonCorrectnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=JsonCorrectnessReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: JsonCorrectnessReason = self.model.generate(prompt, schema=JsonCorrectnessReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

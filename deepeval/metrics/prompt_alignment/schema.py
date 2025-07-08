@@ -11,5 +11,5 @@ class Verdicts(BaseModel):
     verdicts: List[PromptAlignmentVerdict]
 
 
-class Reason(BaseModel):
+class PromptAlignmentReason(BaseModel):
     reason: str

@@ -134,12 +134,12 @@ class PIILeakageMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=PIILeakageReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: PIILeakageReason = await self.model.a_generate(prompt, schema=PIILeakageReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -161,12 +161,12 @@ class PIILeakageMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=PIILeakageReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: PIILeakageReason = self.model.generate(prompt, schema=PIILeakageReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)
@@ -231,7 +231,9 @@ class PIILeakageMetric(BaseMetric):
             return res.extracted_pii
         else:
             try:
-                res: ExtractedPII = await self.model.a_generate(prompt, schema=ExtractedPII)
+                res: ExtractedPII = await self.model.a_generate(
+                    prompt, schema=ExtractedPII
+                )
                 return res.extracted_pii
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -246,7 +248,9 @@ class PIILeakageMetric(BaseMetric):
             return res.extracted_pii
         else:
             try:
-                res: ExtractedPII = self.model.generate(prompt, schema=ExtractedPII)
+                res: ExtractedPII = self.model.generate(
+                    prompt, schema=ExtractedPII
+                )
                 return res.extracted_pii
             except TypeError:
                 res = self.model.generate(prompt)
@@ -278,4 +282,4 @@ class PIILeakageMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "PII Leakage" 
+        return "PII Leakage"

@@ -16,5 +16,5 @@ class Verdicts(BaseModel):
     verdicts: List[BiasVerdict]
 
 
-class Reason(BaseModel):
+class BiasReason(BaseModel):
     reason: str

@@ -2,7 +2,7 @@ from typing import Literal, Dict, Union
 from pydantic import BaseModel
 
 
-class Reason(BaseModel):
+class MetricReason(BaseModel):
     reason: str
 
 

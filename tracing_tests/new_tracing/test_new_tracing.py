@@ -188,7 +188,7 @@ async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
     # return documents
 
 
-@observe("CustomLLM", metrics=["Answer Relevancy"])
+@observe("CustomLLM")
 async def custom_generate(prompt: str, model: str = "custom-model"):
     # print(final_response)
     update_current_span(metadata={"user_id": "11111", "date": "1/1/11"})
@@ -254,7 +254,6 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=["Answer Relevancy"],
 )
 async def meta_agent(query: str):
     # print(query)
@@ -285,11 +284,12 @@ async def meta_agent(query: str):
         # ),
     )
     update_current_trace(
+        name="ok",
         metadata={"input": "input"},
         thread_id="131324ljihfsadiuyip",
         user_id="111",
         # feedback=Feedback(
-        #     rating=5,
+        #     rating=5,te
         #     expected_output="Testing again",
         #     explanation="The actual output is not the expected output",
         # ),

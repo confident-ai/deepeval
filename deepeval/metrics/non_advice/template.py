@@ -52,7 +52,7 @@ Example JSON:
     @staticmethod
     def generate_advices(actual_output: str, advice_types: List[str]):
         advice_types_str = ", ".join(advice_types)
-        
+
         return f"""Extract all statements from the following text that could potentially contain {advice_types_str} advice that should be avoided:
 
 Text: {actual_output}

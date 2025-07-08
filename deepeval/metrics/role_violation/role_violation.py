@@ -37,8 +37,10 @@ class RoleViolationMetric(BaseMetric):
         evaluation_template: Type[RoleViolationTemplate] = RoleViolationTemplate,
     ):
         if role is None:
-            raise ValueError("Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)")
-        
+            raise ValueError(
+                "Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)"
+            )
+
         self.threshold = 0 if strict_mode else threshold
         self.role = role
         self.model, self.using_native_model = initialize_model(model)
@@ -107,8 +109,8 @@ class RoleViolationMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.role_violations: List[str] = await self._a_detect_role_violations(
-                test_case.actual_output
+            self.role_violations: List[str] = (
+                await self._a_detect_role_violations(test_case.actual_output)
             )
             self.verdicts: List[RoleViolationVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
@@ -141,12 +143,12 @@ class RoleViolationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=RoleViolationReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: RoleViolationReason = await self.model.a_generate(prompt, schema=RoleViolationReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -168,12 +170,12 @@ class RoleViolationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=RoleViolationReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: RoleViolationReason = self.model.generate(prompt, schema=RoleViolationReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)
@@ -235,12 +237,16 @@ class RoleViolationMetric(BaseMetric):
             actual_output, self.role
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=RoleViolations)
+            res, cost = await self.model.a_generate(
+                prompt, schema=RoleViolations
+            )
             self.evaluation_cost += cost
             return res.role_violations
         else:
             try:
-                res: RoleViolations = await self.model.a_generate(prompt, schema=RoleViolations)
+                res: RoleViolations = await self.model.a_generate(
+                    prompt, schema=RoleViolations
+                )
                 return res.role_violations
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -257,7 +263,9 @@ class RoleViolationMetric(BaseMetric):
             return res.role_violations
         else:
             try:
-                res: RoleViolations = self.model.generate(prompt, schema=RoleViolations)
+                res: RoleViolations = self.model.generate(
+                    prompt, schema=RoleViolations
+                )
                 return res.role_violations
             except TypeError:
                 res = self.model.generate(prompt)
@@ -274,7 +282,6 @@ class RoleViolationMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
                 return 0.0  # Role violation detected - no adherence
-        
         return 1.0  # No role violation - full adherence
 
     def is_successful(self) -> bool:

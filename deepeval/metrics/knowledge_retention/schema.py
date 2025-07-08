@@ -11,5 +11,5 @@ class KnowledgeRetentionVerdict(BaseModel):
     reason: Optional[str] = None
 
 
-class Reason(BaseModel):
+class KnowledgeRetentionReason(BaseModel):
     reason: str

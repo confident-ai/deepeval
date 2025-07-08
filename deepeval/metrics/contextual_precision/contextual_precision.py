@@ -144,12 +144,12 @@ class ContextualPrecisionMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=ContextualPrecisionReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: ContextualPrecisionReason = await self.model.a_generate(prompt, schema=ContextualPrecisionReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -171,12 +171,12 @@ class ContextualPrecisionMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=ContextualPrecisionReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: ContextualPrecisionReason = self.model.generate(prompt, schema=ContextualPrecisionReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

@@ -140,12 +140,12 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             score=self.score, irrelevancies=irrelevancies
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(prompt, schema=ConversationRelevancyReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: ConversationRelevancyReason = await self.model.a_generate(prompt, schema=ConversationRelevancyReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -164,12 +164,12 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             score=self.score, irrelevancies=irrelevancies
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=ConversationRelevancyReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: ConversationRelevancyReason = self.model.generate(prompt, schema=ConversationRelevancyReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

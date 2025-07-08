@@ -573,6 +573,7 @@ class TraceManager:
             startTime=start_time,
             endTime=end_time,
             metadata=trace.metadata,
+            name=trace.name,
             tags=trace.tags,
             environment=self.environment,
             threadId=trace.thread_id,

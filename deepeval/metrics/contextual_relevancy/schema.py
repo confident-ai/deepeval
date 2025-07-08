@@ -12,5 +12,5 @@ class ContextualRelevancyVerdicts(BaseModel):
     verdicts: List[ContextualRelevancyVerdict]
 
 
-class Reason(BaseModel):
+class ContextualRelevancyReason(BaseModel):
     reason: str

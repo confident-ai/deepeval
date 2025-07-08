@@ -4,7 +4,7 @@ from pydantic import create_model
 import asyncio
 
 from deepeval.metrics.dag.schema import (
-    Reason,
+    MetricReason,
     BinaryJudgementVerdict,
     NonBinaryJudgementVerdict,
     TaskNodeOutput,
@@ -215,15 +215,15 @@ class VerdictNode(BaseNode):
             name=metric.__name__,
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(prompt, schema=Reason)
+            res, cost = metric.model.generate(prompt, schema=MetricReason)
             metric.evaluation_cost += cost
         else:
             try:
-                res: Reason = metric.model.generate(prompt, schema=Reason)
+                res: MetricReason = metric.model.generate(prompt, schema=MetricReason)
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                res = Reason(**data)
+                res = MetricReason(**data)
 
         return res.reason
 
@@ -234,17 +234,17 @@ class VerdictNode(BaseNode):
             name=metric.__name__,
         )
         if metric.using_native_model:
-            res, cost = await metric.model.a_generate(prompt, schema=Reason)
+            res, cost = await metric.model.a_generate(prompt, schema=MetricReason)
             metric.evaluation_cost += cost
         else:
             try:
-                res: Reason = await metric.model.a_generate(
-                    prompt, schema=Reason
+                res: MetricReason = await metric.model.a_generate(
+                    prompt, schema=MetricReason
                 )
             except TypeError:
                 res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                res = Reason(**data)
+                res = MetricReason(**data)
 
         return res.reason
 
