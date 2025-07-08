@@ -141,6 +141,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name="langchain_llm_span_" + str(run_id),
             attributes=LlmAttributes(input=input_messages, output=""),
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
         )
 
         self.add_span_to_trace(llm_span)
@@ -151,7 +152,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
+        **kwargs: Any, #un-logged kwargs
     ) -> Any:
         llm_span = trace_manager.get_span_by_uuid(str(run_id))
         if llm_span is None:
@@ -199,6 +200,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name="langchain_tool_span_" + str(run_id),
             input=input_str,
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
         )
         self.add_span_to_trace(tool_span)
 
@@ -208,7 +210,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
+        **kwargs: Any, #un-logged kwargs
     ) -> Any:
 
         tool_span = trace_manager.get_span_by_uuid(str(run_id))
@@ -231,7 +233,7 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, Any]] = None,
-        **kwargs: Any,
+        **kwargs: Any, #un-logged kwargs
     ) -> Any:
 
         self.check_active_trace_id()
@@ -245,6 +247,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name="langchain_retriever_span_" + str(run_id),
             embedder=metadata.get("ls_embedding_provider", "unknown"),
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
         )
         retriever_span.set_attributes(
             RetrieverAttributes(embedding_input=query, retrieval_context=[])
@@ -258,7 +261,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
+        **kwargs: Any, #un-logged kwargs
     ) -> Any:
 
         retriever_span = trace_manager.get_span_by_uuid(str(run_id))
