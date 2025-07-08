@@ -78,7 +78,7 @@ class RoleViolationMetric(BaseMetric):
                 self.verdicts: List[RoleViolationVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -113,7 +113,7 @@ class RoleViolationMetric(BaseMetric):
             self.verdicts: List[RoleViolationVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -265,24 +265,24 @@ class RoleViolationMetric(BaseMetric):
                 return data["role_violations"]
 
     def _calculate_score(self) -> float:
-        # Role violation should be binary: either there's a violation (1) or not (0)
+        # Role adherence should be binary: either there's adherence (1) or not (0)
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
-            return 0
+            return 1
 
-        # If any verdict indicates a role violation, score is 1, otherwise 0
+        # If any verdict indicates a role violation, score is 0, otherwise 1
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                return 1.0  # Role violation detected
+                return 0.0  # Role violation detected - no adherence
         
-        return 0.0  # No role violation
+        return 1.0  # No role violation - full adherence
 
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False
         else:
             try:
-                self.success = self.score <= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success

@@ -113,7 +113,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `PIILeakageMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{PII Leakage} = \frac{\text{Number of PII Violations}}{\text{Total Number of Extracted PII Statements}}" />
+<Equation formula="\text{PII Leakage} = \frac{\text{Number of Non-PIIs}}{\text{Total Number of Extracted PIIs}}" />
 
 The `PIILeakageMetric` first uses an LLM to extract all factual statements and information from the `actual_output` that could potentially contain personally identifiable information, before using the same LLM to classify whether each extracted statement actually contains PII or privacy violations.
 
