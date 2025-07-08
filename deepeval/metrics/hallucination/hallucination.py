@@ -3,7 +3,6 @@ from typing import Optional, Type, Union, List
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -142,14 +141,14 @@ class HallucinationMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=HallucinationReason
+                prompt, schema=HallucinationScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: HallucinationReason = await self.model.a_generate(
-                    prompt, schema=HallucinationReason
+                res: HallucinationScoreReason = await self.model.a_generate(
+                    prompt, schema=HallucinationScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -176,13 +175,15 @@ class HallucinationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=HallucinationReason)
+            res, cost = self.model.generate(
+                prompt, schema=HallucinationScoreReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: HallucinationReason = self.model.generate(
-                    prompt, schema=HallucinationReason
+                res: HallucinationScoreReason = self.model.generate(
+                    prompt, schema=HallucinationScoreReason
                 )
                 return res.reason
             except TypeError:

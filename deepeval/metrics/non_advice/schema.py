@@ -15,5 +15,5 @@ class Advices(BaseModel):
     advices: List[str]
 
 
-class NonAdviceReason(BaseModel):
+class NonAdviceScoreReason(BaseModel):
     reason: str

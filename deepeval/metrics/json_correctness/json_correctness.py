@@ -5,7 +5,6 @@ from pydantic import BaseModel, ValidationError
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.metrics.utils import (
@@ -17,7 +16,7 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.json_correctness.template import JsonCorrectnessTemplate
-from deepeval.metrics.json_correctness.schema import JsonCorrectnessReason
+from deepeval.metrics.json_correctness.schema import JsonCorrectnessScoreReason
 from deepeval.utils import get_or_create_event_loop
 
 DEFAULT_CORRECT_REASON = "The generated Json matches and is syntactically correct to the expected schema."
@@ -148,14 +147,14 @@ class JsonCorrectnessMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=JsonCorrectnessReason
+                prompt, schema=JsonCorrectnessScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: JsonCorrectnessReason = await self.model.a_generate(
-                    prompt, schema=JsonCorrectnessReason
+                res: JsonCorrectnessScoreReason = await self.model.a_generate(
+                    prompt, schema=JsonCorrectnessScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -181,14 +180,14 @@ class JsonCorrectnessMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=JsonCorrectnessReason
+                prompt, schema=JsonCorrectnessScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: JsonCorrectnessReason = self.model.generate(
-                    prompt, schema=JsonCorrectnessReason
+                res: JsonCorrectnessScoreReason = self.model.generate(
+                    prompt, schema=JsonCorrectnessScoreReason
                 )
                 return res.reason
             except TypeError:

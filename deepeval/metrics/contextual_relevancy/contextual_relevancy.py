@@ -11,7 +11,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -148,14 +147,16 @@ class ContextualRelevancyMetric(BaseMetric):
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRelevancyReason
+                prompt, schema=ContextualRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualRelevancyReason = await self.model.a_generate(
-                    prompt, schema=ContextualRelevancyReason
+                res: ContextualRelevancyScoreReason = (
+                    await self.model.a_generate(
+                        prompt, schema=ContextualRelevancyScoreReason
+                    )
                 )
                 return res.reason
             except TypeError:
@@ -184,14 +185,14 @@ class ContextualRelevancyMetric(BaseMetric):
         )
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=ContextualRelevancyReason
+                prompt, schema=ContextualRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualRelevancyReason = self.model.generate(
-                    prompt, schema=ContextualRelevancyReason
+                res: ContextualRelevancyScoreReason = self.model.generate(
+                    prompt, schema=ContextualRelevancyScoreReason
                 )
                 return res.reason
             except TypeError:

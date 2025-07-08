@@ -4,7 +4,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
@@ -134,13 +133,15 @@ class BiasMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=BiasReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=BiasScoreReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: BiasReason = await self.model.a_generate(
-                    prompt, schema=BiasReason
+                res: BiasScoreReason = await self.model.a_generate(
+                    prompt, schema=BiasScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -163,12 +164,14 @@ class BiasMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=BiasReason)
+            res, cost = self.model.generate(prompt, schema=BiasScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: BiasReason = self.model.generate(prompt, schema=BiasReason)
+                res: BiasScoreReason = self.model.generate(
+                    prompt, schema=BiasScoreReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

@@ -10,7 +10,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -147,14 +146,14 @@ class ContextualRecallMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=ContextualRecallReason
+                prompt, schema=ContextualRecallScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualRecallReason = await self.model.a_generate(
-                    prompt, schema=ContextualRecallReason
+                res: ContextualRecallScoreReason = await self.model.a_generate(
+                    prompt, schema=ContextualRecallScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -183,14 +182,14 @@ class ContextualRecallMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=ContextualRecallReason
+                prompt, schema=ContextualRecallScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualRecallReason = self.model.generate(
-                    prompt, schema=ContextualRecallReason
+                res: ContextualRecallScoreReason = self.model.generate(
+                    prompt, schema=ContextualRecallScoreReason
                 )
                 return res.reason
             except TypeError:

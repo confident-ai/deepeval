@@ -10,7 +10,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -142,14 +141,14 @@ class PromptAlignmentMetric(BaseMetric):
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=PromptAlignmentReason
+                prompt, schema=PromptAlignmentScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: PromptAlignmentReason = await self.model.a_generate(
-                    prompt=prompt, schema=PromptAlignmentReason
+                res: PromptAlignmentScoreReason = await self.model.a_generate(
+                    prompt=prompt, schema=PromptAlignmentScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -174,14 +173,14 @@ class PromptAlignmentMetric(BaseMetric):
         )
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=PromptAlignmentReason
+                prompt, schema=PromptAlignmentScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: PromptAlignmentReason = self.model.generate(
-                    prompt=prompt, schema=PromptAlignmentReason
+                res: PromptAlignmentScoreReason = self.model.generate(
+                    prompt=prompt, schema=PromptAlignmentScoreReason
                 )
                 return res.reason
             except TypeError:

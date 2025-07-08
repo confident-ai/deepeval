@@ -4,7 +4,6 @@ import asyncio
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.utils import get_or_create_event_loop, prettify_list
@@ -20,7 +19,7 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.faithfulness.schema import (
     FaithfulnessVerdict,
     Verdicts,
-    FaithfulnessReason,
+    FaithfulnessScoreReason,
     Truths,
     Claims,
 )
@@ -150,14 +149,14 @@ class FaithfulnessMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=FaithfulnessReason
+                prompt, schema=FaithfulnessScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: FaithfulnessReason = await self.model.a_generate(
-                    prompt, schema=FaithfulnessReason
+                res: FaithfulnessScoreReason = await self.model.a_generate(
+                    prompt, schema=FaithfulnessScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -180,13 +179,15 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=FaithfulnessReason)
+            res, cost = self.model.generate(
+                prompt, schema=FaithfulnessScoreReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: FaithfulnessReason = self.model.generate(
-                    prompt, schema=FaithfulnessReason
+                res: FaithfulnessScoreReason = self.model.generate(
+                    prompt, schema=FaithfulnessScoreReason
                 )
                 return res.reason
             except TypeError:

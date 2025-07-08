@@ -144,15 +144,15 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=MultimodelContextualRelevancyReason
+                prompt, schema=MultimodelContextualRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodelContextualRelevancyReason = (
+                res: MultimodelContextualRelevancyScoreReason = (
                     await self.model.a_generate(
-                        prompt, schema=MultimodelContextualRelevancyReason
+                        prompt, schema=MultimodelContextualRelevancyScoreReason
                     )
                 )
                 return res.reason
@@ -182,14 +182,16 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
         )
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=MultimodelContextualRelevancyReason
+                prompt, schema=MultimodelContextualRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodelContextualRelevancyReason = self.model.generate(
-                    prompt, schema=MultimodelContextualRelevancyReason
+                res: MultimodelContextualRelevancyScoreReason = (
+                    self.model.generate(
+                        prompt, schema=MultimodelContextualRelevancyScoreReason
+                    )
                 )
                 return res.reason
             except TypeError:

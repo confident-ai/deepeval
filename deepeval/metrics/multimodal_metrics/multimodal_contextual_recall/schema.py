@@ -11,5 +11,5 @@ class Verdicts(BaseModel):
     verdicts: List[ContextualRecallVerdict]
 
 
-class MultimodalContextualRecallReason(BaseModel):
+class MultimodalContextualRecallScoreReason(BaseModel):
     reason: str

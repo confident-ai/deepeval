@@ -15,5 +15,5 @@ class Verdicts(BaseModel):
     verdicts: List[AnswerRelevancyVerdict]
 
 
-class AnswerRelevancyReason(BaseModel):
+class AnswerRelevancyScoreReason(BaseModel):
     reason: str

@@ -148,14 +148,14 @@ class NonAdviceMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=NonAdviceReason
+                prompt, schema=NonAdviceScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: NonAdviceReason = await self.model.a_generate(
-                    prompt, schema=NonAdviceReason
+                res: NonAdviceScoreReason = await self.model.a_generate(
+                    prompt, schema=NonAdviceScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -178,13 +178,13 @@ class NonAdviceMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=NonAdviceReason)
+            res, cost = self.model.generate(prompt, schema=NonAdviceScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: NonAdviceReason = self.model.generate(
-                    prompt, schema=NonAdviceReason
+                res: NonAdviceScoreReason = self.model.generate(
+                    prompt, schema=NonAdviceScoreReason
                 )
                 return res.reason
             except TypeError:

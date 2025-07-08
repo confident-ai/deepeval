@@ -132,14 +132,14 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=RoleAdherenceReason
+                prompt, schema=RoleAdherenceScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: RoleAdherenceReason = await self.model.a_generate(
-                    prompt, schema=RoleAdherenceReason
+                res: RoleAdherenceScoreReason = await self.model.a_generate(
+                    prompt, schema=RoleAdherenceScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -157,13 +157,15 @@ class RoleAdherenceMetric(BaseConversationalMetric):
             ],
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=RoleAdherenceReason)
+            res, cost = self.model.generate(
+                prompt, schema=RoleAdherenceScoreReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: RoleAdherenceReason = self.model.generate(
-                    prompt, schema=RoleAdherenceReason
+                res: RoleAdherenceScoreReason = self.model.generate(
+                    prompt, schema=RoleAdherenceScoreReason
                 )
                 return res.reason
             except TypeError:

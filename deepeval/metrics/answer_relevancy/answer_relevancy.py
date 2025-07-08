@@ -10,7 +10,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
@@ -141,14 +140,14 @@ class AnswerRelevancyMetric(BaseMetric):
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=AnswerRelevancyReason
+                prompt, schema=AnswerRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: AnswerRelevancyReason = await self.model.a_generate(
-                    prompt=prompt, schema=AnswerRelevancyReason
+                res: AnswerRelevancyScoreReason = await self.model.a_generate(
+                    prompt=prompt, schema=AnswerRelevancyScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -173,14 +172,14 @@ class AnswerRelevancyMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=AnswerRelevancyReason
+                prompt, schema=AnswerRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: AnswerRelevancyReason = self.model.generate(
-                    prompt=prompt, schema=AnswerRelevancyReason
+                res: AnswerRelevancyScoreReason = self.model.generate(
+                    prompt=prompt, schema=AnswerRelevancyScoreReason
                 )
                 return res.reason
             except TypeError:

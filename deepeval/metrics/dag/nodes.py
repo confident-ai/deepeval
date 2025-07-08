@@ -4,7 +4,7 @@ from pydantic import create_model
 import asyncio
 
 from deepeval.metrics.dag.schema import (
-    MetricReason,
+    MetricScoreReason,
     BinaryJudgementVerdict,
     NonBinaryJudgementVerdict,
     TaskNodeOutput,
@@ -215,17 +215,17 @@ class VerdictNode(BaseNode):
             name=metric.__name__,
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(prompt, schema=MetricReason)
+            res, cost = metric.model.generate(prompt, schema=MetricScoreReason)
             metric.evaluation_cost += cost
         else:
             try:
-                res: MetricReason = metric.model.generate(
-                    prompt, schema=MetricReason
+                res: MetricScoreReason = metric.model.generate(
+                    prompt, schema=MetricScoreReason
                 )
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                res = MetricReason(**data)
+                res = MetricScoreReason(**data)
 
         return res.reason
 
@@ -237,18 +237,18 @@ class VerdictNode(BaseNode):
         )
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(
-                prompt, schema=MetricReason
+                prompt, schema=MetricScoreReason
             )
             metric.evaluation_cost += cost
         else:
             try:
-                res: MetricReason = await metric.model.a_generate(
-                    prompt, schema=MetricReason
+                res: MetricScoreReason = await metric.model.a_generate(
+                    prompt, schema=MetricScoreReason
                 )
             except TypeError:
                 res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                res = MetricReason(**data)
+                res = MetricScoreReason(**data)
 
         return res.reason
 

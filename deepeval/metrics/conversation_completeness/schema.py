@@ -11,5 +11,5 @@ class ConversationCompletenessVerdict(BaseModel):
     reason: Optional[str] = Field(default=None)
 
 
-class ConversationCompletenessReason(BaseModel):
+class ConversationCompletenessScoreReason(BaseModel):
     reason: str
