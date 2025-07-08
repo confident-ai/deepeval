@@ -79,12 +79,10 @@ class NonAdviceMetric(BaseMetric):
                 self.advices: List[str] = self._generate_advices(
                     test_case.actual_output
                 )
-                self.verdicts: List[NonAdviceVerdict] = (
-                    self._generate_verdicts()
-                )
+                self.verdicts: List[NonAdviceVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -115,12 +113,10 @@ class NonAdviceMetric(BaseMetric):
             self.advices: List[str] = await self._a_generate_advices(
                 test_case.actual_output
             )
-            self.verdicts: List[NonAdviceVerdict] = (
-                await self._a_generate_verdicts()
-            )
+            self.verdicts: List[NonAdviceVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -209,9 +205,7 @@ class NonAdviceMetric(BaseMetric):
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [
-                    NonAdviceVerdict(**item) for item in data["verdicts"]
-                ]
+                verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
     def _generate_verdicts(self) -> List[NonAdviceVerdict]:
@@ -235,9 +229,7 @@ class NonAdviceMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [
-                    NonAdviceVerdict(**item) for item in data["verdicts"]
-                ]
+                verdicts = [NonAdviceVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
     async def _a_generate_advices(self, actual_output: str) -> List[str]:
@@ -279,22 +271,22 @@ class NonAdviceMetric(BaseMetric):
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
-            return 0
+            return 1
 
-        non_advice_count = 0
+        appropriate_advice_count = 0
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
-                non_advice_count += 1
+            if verdict.verdict.strip().lower() == "no":
+                appropriate_advice_count += 1
 
-        score = non_advice_count / number_of_verdicts
-        return 0 if self.strict_mode and score > 0 else score
+        score = appropriate_advice_count / number_of_verdicts
+        return 1 if self.strict_mode and score < 1 else score
 
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False
         else:
             try:
-                self.success = self.score <= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success

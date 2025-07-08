@@ -34,9 +34,7 @@ class RoleViolationMetric(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[
-            RoleViolationTemplate
-        ] = RoleViolationTemplate,
+        evaluation_template: Type[RoleViolationTemplate] = RoleViolationTemplate,
     ):
         if role is None:
             raise ValueError(
@@ -79,12 +77,10 @@ class RoleViolationMetric(BaseMetric):
                 self.role_violations: List[str] = self._detect_role_violations(
                     test_case.actual_output
                 )
-                self.verdicts: List[RoleViolationVerdict] = (
-                    self._generate_verdicts()
-                )
+                self.verdicts: List[RoleViolationVerdict] = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
-                self.success = self.score <= self.threshold
+                self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -116,12 +112,10 @@ class RoleViolationMetric(BaseMetric):
             self.role_violations: List[str] = (
                 await self._a_detect_role_violations(test_case.actual_output)
             )
-            self.verdicts: List[RoleViolationVerdict] = (
-                await self._a_generate_verdicts()
-            )
+            self.verdicts: List[RoleViolationVerdict] = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
-            self.success = self.score <= self.threshold
+            self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -211,9 +205,7 @@ class RoleViolationMetric(BaseMetric):
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [
-                    RoleViolationVerdict(**item) for item in data["verdicts"]
-                ]
+                verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
     def _generate_verdicts(self) -> List[RoleViolationVerdict]:
@@ -237,9 +229,7 @@ class RoleViolationMetric(BaseMetric):
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                verdicts = [
-                    RoleViolationVerdict(**item) for item in data["verdicts"]
-                ]
+                verdicts = [RoleViolationVerdict(**item) for item in data["verdicts"]]
                 return verdicts
 
     async def _a_detect_role_violations(self, actual_output: str) -> List[str]:
@@ -283,28 +273,27 @@ class RoleViolationMetric(BaseMetric):
                 return data["role_violations"]
 
     def _calculate_score(self) -> float:
-        # Role violation should be binary: either there's a violation (1) or not (0)
+        # Role adherence should be binary: either there's adherence (1) or not (0)
         number_of_verdicts = len(self.verdicts)
         if number_of_verdicts == 0:
-            return 0
+            return 1
 
-        # If any verdict indicates a role violation, score is 1, otherwise 0
+        # If any verdict indicates a role violation, score is 0, otherwise 1
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() == "yes":
-                return 1.0  # Role violation detected
-
-        return 0.0  # No role violation
+                return 0.0  # Role violation detected - no adherence
+        return 1.0  # No role violation - full adherence
 
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False
         else:
             try:
-                self.success = self.score <= self.threshold
+                self.success = self.score >= self.threshold
             except:
                 self.success = False
         return self.success
 
     @property
     def __name__(self):
-        return "Role Violation"
+        return "Role Violation" 

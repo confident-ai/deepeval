@@ -82,6 +82,9 @@ module.exports = {
               items: [
                 "metrics-bias",
                 "metrics-toxicity",
+                "metrics-non-advice",
+                "metrics-pii-leakage",
+                "metrics-role-violation",
                 "metrics-summarization",
                 "metrics-prompt-alignment",
                 "metrics-hallucination",
