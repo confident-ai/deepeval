@@ -219,7 +219,9 @@ class VerdictNode(BaseNode):
             metric.evaluation_cost += cost
         else:
             try:
-                res: MetricReason = metric.model.generate(prompt, schema=MetricReason)
+                res: MetricReason = metric.model.generate(
+                    prompt, schema=MetricReason
+                )
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
@@ -234,7 +236,9 @@ class VerdictNode(BaseNode):
             name=metric.__name__,
         )
         if metric.using_native_model:
-            res, cost = await metric.model.a_generate(prompt, schema=MetricReason)
+            res, cost = await metric.model.a_generate(
+                prompt, schema=MetricReason
+            )
             metric.evaluation_cost += cost
         else:
             try:

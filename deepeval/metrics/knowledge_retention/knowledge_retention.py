@@ -136,7 +136,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             return data["reason"]
         else:
             try:
-                res: KnowledgeRetentionReason = await self.model.a_generate(prompt, schema=KnowledgeRetentionReason)
+                res: KnowledgeRetentionReason = await self.model.a_generate(
+                    prompt, schema=KnowledgeRetentionReason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -163,7 +165,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             return data["reason"]
         else:
             try:
-                res: KnowledgeRetentionReason = self.model.generate(prompt, schema=KnowledgeRetentionReason)
+                res: KnowledgeRetentionReason = self.model.generate(
+                    prompt, schema=KnowledgeRetentionReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

@@ -137,12 +137,18 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intentions=self.user_intentions,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ConversationCompletenessReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ConversationCompletenessReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ConversationCompletenessReason = await self.model.a_generate(prompt, schema=ConversationCompletenessReason)
+                res: ConversationCompletenessReason = (
+                    await self.model.a_generate(
+                        prompt, schema=ConversationCompletenessReason
+                    )
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -164,12 +170,16 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
             intentions=self.user_intentions,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ConversationCompletenessReason)
+            res, cost = self.model.generate(
+                prompt, schema=ConversationCompletenessReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ConversationCompletenessReason = self.model.generate(prompt, schema=ConversationCompletenessReason)
+                res: ConversationCompletenessReason = self.model.generate(
+                    prompt, schema=ConversationCompletenessReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

@@ -146,12 +146,16 @@ class ContextualRecallMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ContextualRecallReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ContextualRecallReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualRecallReason = await self.model.a_generate(prompt, schema=ContextualRecallReason)
+                res: ContextualRecallReason = await self.model.a_generate(
+                    prompt, schema=ContextualRecallReason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -178,12 +182,16 @@ class ContextualRecallMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ContextualRecallReason)
+            res, cost = self.model.generate(
+                prompt, schema=ContextualRecallReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualRecallReason = self.model.generate(prompt, schema=ContextualRecallReason)
+                res: ContextualRecallReason = self.model.generate(
+                    prompt, schema=ContextualRecallReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

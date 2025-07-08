@@ -141,7 +141,9 @@ class PromptAlignmentMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=PromptAlignmentReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=PromptAlignmentReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
@@ -171,12 +173,16 @@ class PromptAlignmentMetric(BaseMetric):
             score=format(self.score, ".2f"),
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=PromptAlignmentReason)
+            res, cost = self.model.generate(
+                prompt, schema=PromptAlignmentReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: PromptAlignmentReason = self.model.generate(prompt=prompt, schema=PromptAlignmentReason)
+                res: PromptAlignmentReason = self.model.generate(
+                    prompt=prompt, schema=PromptAlignmentReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

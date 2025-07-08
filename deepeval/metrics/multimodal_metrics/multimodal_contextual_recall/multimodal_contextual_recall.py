@@ -144,12 +144,18 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=MultimodalContextualRecallReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=MultimodalContextualRecallReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodalContextualRecallReason = await self.model.a_generate(prompt, schema=MultimodalContextualRecallReason)
+                res: MultimodalContextualRecallReason = (
+                    await self.model.a_generate(
+                        prompt, schema=MultimodalContextualRecallReason
+                    )
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -176,12 +182,16 @@ class MultimodalContextualRecallMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=MultimodalContextualRecallReason)
+            res, cost = self.model.generate(
+                prompt, schema=MultimodalContextualRecallReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodalContextualRecallReason = self.model.generate(prompt, schema=MultimodalContextualRecallReason)
+                res: MultimodalContextualRecallReason = self.model.generate(
+                    prompt, schema=MultimodalContextualRecallReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

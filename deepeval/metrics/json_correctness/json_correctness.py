@@ -147,12 +147,16 @@ class JsonCorrectnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=JsonCorrectnessReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=JsonCorrectnessReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: JsonCorrectnessReason = await self.model.a_generate(prompt, schema=JsonCorrectnessReason)
+                res: JsonCorrectnessReason = await self.model.a_generate(
+                    prompt, schema=JsonCorrectnessReason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -176,12 +180,16 @@ class JsonCorrectnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=JsonCorrectnessReason)
+            res, cost = self.model.generate(
+                prompt, schema=JsonCorrectnessReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: JsonCorrectnessReason = self.model.generate(prompt, schema=JsonCorrectnessReason)
+                res: JsonCorrectnessReason = self.model.generate(
+                    prompt, schema=JsonCorrectnessReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

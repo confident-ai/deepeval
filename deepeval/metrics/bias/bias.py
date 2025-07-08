@@ -139,7 +139,9 @@ class BiasMetric(BaseMetric):
             return res.reason
         else:
             try:
-                res: BiasReason = await self.model.a_generate(prompt, schema=BiasReason)
+                res: BiasReason = await self.model.a_generate(
+                    prompt, schema=BiasReason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)

@@ -149,12 +149,16 @@ class FaithfulnessMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=FaithfulnessReason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=FaithfulnessReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: FaithfulnessReason = await self.model.a_generate(prompt, schema=FaithfulnessReason)
+                res: FaithfulnessReason = await self.model.a_generate(
+                    prompt, schema=FaithfulnessReason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -181,7 +185,9 @@ class FaithfulnessMetric(BaseMetric):
             return res.reason
         else:
             try:
-                res: FaithfulnessReason = self.model.generate(prompt, schema=FaithfulnessReason)
+                res: FaithfulnessReason = self.model.generate(
+                    prompt, schema=FaithfulnessReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)
