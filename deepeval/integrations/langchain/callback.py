@@ -8,7 +8,7 @@ try:
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
     # contains langchain imports
-    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string
+    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string, prepare_dict
 
     langchain_installed = True
 except:
@@ -91,6 +91,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name="langchain_chain_span_" + str(run_id),
             input=inputs,
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
         )
 
         self.add_span_to_trace(base_span)
@@ -101,7 +102,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
+        **kwargs: Any, #un-logged kwargs
     ) -> Any:
         
         base_span = trace_manager.get_span_by_uuid(str(run_id))

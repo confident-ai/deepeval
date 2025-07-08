@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Any, List, Dict
 from langchain_core.outputs import ChatGeneration
 
 def parse_prompts_to_messages(prompts: list[str]) -> List[Dict[str, str]]:
@@ -21,3 +21,6 @@ def parse_prompts_to_messages(prompts: list[str]) -> List[Dict[str, str]]:
 
 def convert_chat_generation_to_string(gen: ChatGeneration) -> str:
     return gen.message.pretty_repr()
+
+def prepare_dict(**kwargs: Any) -> dict[str, Any]:
+    return {k: v for k, v in kwargs.items() if v is not None}
