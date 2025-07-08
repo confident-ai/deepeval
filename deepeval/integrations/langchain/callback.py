@@ -2,12 +2,13 @@ from typing import Any, Optional
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
-from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
+    # contains langchain imports
+    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string
 
     langchain_installed = True
 except:
@@ -138,8 +139,6 @@ class CallbackHandler(BaseCallbackHandler):
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
             name="langchain_llm_span_" + str(run_id),
-            # TODO: why model is coming unknown?
-            model=serialized.get("model_name", "unknown"),
             attributes=LlmAttributes(input=input_messages, output=""),
         )
 
@@ -161,14 +160,17 @@ class CallbackHandler(BaseCallbackHandler):
         for generation in response.generations:
             for gen in generation:
                 if isinstance(gen, ChatGeneration):
+                    # set model for any generation
+                    if llm_span.model is None or llm_span.model == "unknown":
+                        llm_span.model = gen.message.response_metadata.get("model_name", "unknown")
+                    
                     output_str += convert_chat_generation_to_string(gen) + "\n"
-
+        
         llm_span.set_attributes(
             LlmAttributes(input=llm_span.attributes.input, output=output_str)
         )
         
         self.end_span(llm_span)
-
         if parent_run_id is None:
             self.end_trace(llm_span)
 
