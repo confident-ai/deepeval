@@ -11,5 +11,5 @@ class Verdicts(BaseModel):
     verdicts: List[HallucinationVerdict]
 
 
-class HallucinationScoreReason(BaseModel):
+class HallucinationReason(BaseModel):
     reason: str

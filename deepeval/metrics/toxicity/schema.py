@@ -16,5 +16,5 @@ class Verdicts(BaseModel):
     verdicts: List[ToxicityVerdict]
 
 
-class ToxicityScoreReason(BaseModel):
+class ToxicityReason(BaseModel):
     reason: str

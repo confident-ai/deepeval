@@ -138,12 +138,12 @@ class PIILeakageMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=PIILeakageScoreReason)
+            res, cost = await self.model.a_generate(prompt, schema=PIILeakageReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: PIILeakageScoreReason = await self.model.a_generate(prompt, schema=PIILeakageScoreReason)
+                res: PIILeakageReason = await self.model.a_generate(prompt, schema=PIILeakageReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -165,12 +165,12 @@ class PIILeakageMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=PIILeakageScoreReason)
+            res, cost = self.model.generate(prompt, schema=PIILeakageReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: PIILeakageScoreReason = self.model.generate(prompt, schema=PIILeakageScoreReason)
+                res: PIILeakageReason = self.model.generate(prompt, schema=PIILeakageReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

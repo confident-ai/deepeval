@@ -11,5 +11,5 @@ class Verdicts(BaseModel):
     verdicts: List[ContextualPrecisionVerdict]
 
 
-class MultimodelContextualPrecisionScoreReason(BaseModel):
+class MultimodelContextualPrecisionReason(BaseModel):
     reason: str

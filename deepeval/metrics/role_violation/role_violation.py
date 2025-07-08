@@ -149,12 +149,12 @@ class RoleViolationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=RoleViolationScoreReason)
+            res, cost = await self.model.a_generate(prompt, schema=RoleViolationReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: RoleViolationScoreReason = await self.model.a_generate(prompt, schema=RoleViolationScoreReason)
+                res: RoleViolationReason = await self.model.a_generate(prompt, schema=RoleViolationReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -176,12 +176,12 @@ class RoleViolationMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=RoleViolationScoreReason)
+            res, cost = self.model.generate(prompt, schema=RoleViolationReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: RoleViolationScoreReason = self.model.generate(prompt, schema=RoleViolationScoreReason)
+                res: RoleViolationReason = self.model.generate(prompt, schema=RoleViolationReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

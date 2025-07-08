@@ -140,12 +140,12 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=MultimodelContextualPrecisionScoreReason)
+            res, cost = await self.model.a_generate(prompt, schema=MultimodelContextualPrecisionReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodelContextualPrecisionScoreReason = await self.model.a_generate(prompt, schema=MultimodelContextualPrecisionScoreReason)
+                res: MultimodelContextualPrecisionReason = await self.model.a_generate(prompt, schema=MultimodelContextualPrecisionReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -167,12 +167,12 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=MultimodelContextualPrecisionScoreReason)
+            res, cost = self.model.generate(prompt, schema=MultimodelContextualPrecisionReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodelContextualPrecisionScoreReason = self.model.generate(prompt, schema=MultimodelContextualPrecisionScoreReason)
+                res: MultimodelContextualPrecisionReason = self.model.generate(prompt, schema=MultimodelContextualPrecisionReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

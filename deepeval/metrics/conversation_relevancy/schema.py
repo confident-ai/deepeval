@@ -8,5 +8,5 @@ class ConversationRelevancyVerdict(BaseModel):
     reason: Optional[str] = Field(default=None)
 
 
-class ConversationRelevancyScoreReason(BaseModel):
+class ConversationRelevancyReason(BaseModel):
     reason: str

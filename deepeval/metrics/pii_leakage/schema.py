@@ -15,5 +15,5 @@ class ExtractedPII(BaseModel):
     extracted_pii: List[str]
 
 
-class PIILeakageScoreReason(BaseModel):
+class PIILeakageReason(BaseModel):
     reason: str

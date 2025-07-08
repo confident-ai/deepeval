@@ -140,12 +140,12 @@ class ToxicityMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ToxicityScoreReason)
+            res, cost = await self.model.a_generate(prompt, schema=ToxicityReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ToxicityScoreReason = await self.model.a_generate(prompt, schema=ToxicityScoreReason)
+                res: ToxicityReason = await self.model.a_generate(prompt, schema=ToxicityReason)
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -167,12 +167,12 @@ class ToxicityMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ToxicityScoreReason)
+            res, cost = self.model.generate(prompt, schema=ToxicityReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ToxicityScoreReason = self.model.generate(prompt, schema=ToxicityScoreReason)
+                res: ToxicityReason = self.model.generate(prompt, schema=ToxicityReason)
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)

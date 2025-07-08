@@ -19,5 +19,5 @@ class Claims(BaseModel):
     claims: List[str]
 
 
-class MultimodalFaithfulnessScoreReason(BaseModel):
+class MultimodalFaithfulnessReason(BaseModel):
     reason: str
