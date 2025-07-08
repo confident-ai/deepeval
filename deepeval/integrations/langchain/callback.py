@@ -44,6 +44,29 @@ class CallbackHandler(BaseCallbackHandler):
 
     active_trace_id: Optional[str] = None
 
+    def check_active_trace_id(self):
+        if self.active_trace_id is None:
+            self.active_trace_id = trace_manager.start_new_trace().uuid
+
+    def add_span_to_trace(self, span: BaseSpan):
+        trace_manager.add_span(span)
+        trace_manager.add_span_to_trace(span)
+
+    def end_span(self, span: BaseSpan):
+        span.end_time = perf_counter()
+        span.status = TraceSpanStatus.SUCCESS
+        trace_manager.remove_span(str(span.uuid))
+
+    def end_trace(self, span: BaseSpan):
+        current_trace = trace_manager.get_trace_by_uuid(
+            self.active_trace_id
+        )
+        if current_trace is not None:
+            current_trace.input = span.input
+            current_trace.output = span.output
+        trace_manager.end_trace(self.active_trace_id)
+        self.active_trace_id = None
+
     def on_chain_start(
         self,
         serialized: dict[str, Any],
@@ -55,10 +78,8 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-
-        if parent_run_id is None:
-            if self.active_trace_id is None:
-                self.active_trace_id = trace_manager.start_new_trace().uuid
+        
+        self.check_active_trace_id()
 
         base_span = BaseSpan(
             uuid=str(run_id),
@@ -70,8 +91,8 @@ class CallbackHandler(BaseCallbackHandler):
             name="langchain_chain_span_" + str(run_id),
             input=inputs,
         )
-        trace_manager.add_span(base_span)
-        trace_manager.add_span_to_trace(base_span)
+
+        self.add_span_to_trace(base_span)
 
     def on_chain_end(
         self,
@@ -81,25 +102,16 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
+        
         base_span = trace_manager.get_span_by_uuid(str(run_id))
-
         if base_span is None:
             return
 
-        base_span.end_time = perf_counter()
-        base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = outputs
-        trace_manager.remove_span(str(run_id))
+        self.end_span(base_span)
 
         if parent_run_id is None:
-            current_trace = trace_manager.get_trace_by_uuid(
-                self.active_trace_id
-            )
-            if current_trace is not None:
-                current_trace.input = base_span.input
-                current_trace.output = base_span.output
-            trace_manager.end_trace(self.active_trace_id)
-            self.active_trace_id = None
+            self.end_trace(base_span)
 
     def on_llm_start(
         self,
