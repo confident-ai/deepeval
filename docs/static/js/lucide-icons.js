@@ -85,7 +85,7 @@ function addLucideIcons() {
       currentPath = newPath;
       
       // Only act on doc paths
-      if (currentPath.startsWith('/docs') || currentPath === '/') {
+      if (currentPath.startsWith('/docs') || currentPath === '/' || currentPath.startsWith('/tutorials')) {
         // Wait for React to render the sidebar
         setTimeout(addLucideIcons, 200);
       }

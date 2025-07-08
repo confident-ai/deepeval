@@ -1,8 +1,12 @@
 module.exports = {
   tutorials: [
-    "tutorial-introduction",
-    // "use-cases",
-    "tutorial-setup",
+    {
+      type: "category",
+      label: "Getting Started",
+      className: "sidebar-item-getting-started",
+      items: ["tutorial-introduction", "tutorial-setup"],
+      collapsed: false,
+    },
     {
       type: "category",
       label: "Legal Doc Summarization",

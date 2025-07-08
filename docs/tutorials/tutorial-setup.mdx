@@ -1,28 +1,78 @@
 ---
 id: tutorial-setup
-title: Setting Up
+title: Setup & Installation
 sidebar_label: Setting Up
 ---
 
-In this tutorial series, we’ll guide you through using **DeepEval** and **Confident AI** to evaluate an agentic RAG application, from start to finish. DeepEval provides the foundation for evaluation, while Confident AI enhances its capabilities with tools for development, evaluation, and production monitoring.
-
 ## Installing DeepEval
+
+**DeepEval** is a powerful LLM evaluation framework. Here's how you can easily get started by installing and running your first evaluation using DeepEval.
 
 Start by installing DeepEval using pip:
 
 ```bash
-pip install deepeval
+pip install -U deepeval
 ```
 
-## Getting Your Confident AI API Key
+### Write your first test
 
-Next, set up an account on **Confident AI**. You can [sign up here](https://www.confident-ai.com) or use the following CLI command if you already have DeepEval installed:
+Let's evaluate the correctness of an LLM output using [`GEval`](https://deepeval.com/docs/metrics-llm-evals), a powerful metric based on LLM-as-a-judge evaluation.
+
+:::note
+
+All `deepeval` test files must start with the prefix of `test_`, so create a file named `test_app.py` and paste the following code in the file.
+
+:::
+
+```python title="test_app.py"
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import GEval
+
+correctness_metric = GEval(
+    name="Correctness",
+    criteria="Determine if the 'actual output' is correct based on the 'expected output'.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    threshold=0.5
+)
+
+test_case = LLMTestCase(
+    input="I have a persistent cough and fever. Should I be worried?",
+    # Replace this with the actual output from your LLM application
+    actual_output="A persistent cough and fever could signal various illnesses, from minor infections to more serious conditions like pneumonia or COVID-19. It's advisable to seek medical attention if symptoms worsen, persist beyond a few days, or if you experience difficulty breathing, chest pain, or other concerning signs.",
+    expected_output="A persistent cough and fever could indicate a range of illnesses, from a mild viral infection to more serious conditions like pneumonia or COVID-19. You should seek medical attention if your symptoms worsen, persist for more than a few days, or are accompanied by difficulty breathing, chest pain, or other concerning signs."
+)
+
+evaluate([test_case], [correctness_metric])
+```
+
+You can run your first evaluation by running the following command in your terminal.
+
+```bash
+deepeval test run test_app.py
+```
+
+:::note
+DeepEval's powerful **LLM-as-a-judge** metrics (like `GEval` used in this example) rely on an underlying LLM called the _Evaluation Model_ to perform evaluations. By default, DeepEval uses OpenAI's models for this purpose.
+
+So you'll set your `OPENAI_API_KEY` as an environment variable.
+
+To use ANY custom LLM of your choice, [Check out our docs on custom evaluation models](https://deepeval.com/guides/guides-using-custom-llms).
+:::
+
+Congratulations! You've successfully run your first LLM evaluation with DeepEval.
+
+## Setting Up Confident AI
+
+While DeepEval works great standalone, you can connect it to [Confident AI](https://www.confident-ai.com) — our cloud platform for LLM evaluation dashboards, logging, team collaboration and many more. **Best of all, it's free to get started!** _(No credit card required.)_
+
+You can [sign up here](https://www.confident-ai.com), or you can run the following command
 
 ```bash
 deepeval login
 ```
 
-Navigate to your Settings page and copy your **Confident AI API Key** from the Project API Key box. If you used the `deepeval login` command to log in, you'll be prompted to paste your Confident AI API Key after creating an account.
+Navigate to your Settings page and copy your Confident AI API Key from the Project API Key box. If you used the `deepeval login` command to log in, you'll be prompted to paste your Confident AI API Key after creating an account.
 
 <div
   style={{
@@ -54,4 +104,4 @@ Or through the CLI:
 deepeval login --confident-api-key "your-confident-api-key"
 ```
 
-With this, you’re all set up! With DeepEval and Confident AI configured, let’s begin building and evaluating our Agentic RAG application.
+You're all set! You can now evaluate LLMs locally and monitor them in Confident AI.
