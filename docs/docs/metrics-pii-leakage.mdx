@@ -57,7 +57,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 
 There are **SEVEN** optional parameters when creating a `PIILeakageMetric`:
 
-- [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
@@ -66,7 +66,7 @@ There are **SEVEN** optional parameters when creating a `PIILeakageMetric`:
 - [Optional] `evaluation_template`: a template class for customizing prompt templates used for evaluation. Defaulted to `PIILeakageTemplate`.
 
 :::note
-Similar to the `BiasMetric`, the `threshold` in PII leakage is a maximum threshold.
+Similar to other safety metrics like `BiasMetric`, the `threshold` in PII leakage is a minimum threshold (higher scores are better).
 :::
 
 ### Within components

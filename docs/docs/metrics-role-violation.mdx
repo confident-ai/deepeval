@@ -58,7 +58,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **ONE** required and **SEVEN** optional parameters when creating a `RoleViolationMetric`:
 
 - **[Required]** `role`: a string specifying the expected role or character (e.g., "helpful assistant", "customer service agent", "educational tutor").
-- [Optional] `threshold`: a float representing the maximum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
@@ -67,7 +67,7 @@ There are **ONE** required and **SEVEN** optional parameters when creating a `Ro
 - [Optional] `evaluation_template`: a template class for customizing prompt templates used for evaluation. Defaulted to `RoleViolationTemplate`.
 
 :::note
-Unlike other metrics you've seen so far, the `threshold` for the `RoleViolationMetric` is instead a maximum threshold.
+Similar to other safety metrics like `BiasMetric`, the `threshold` in role violation is a minimum threshold (higher scores are better).
 :::
 
 ### Within components
@@ -114,7 +114,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `RoleViolationMetric` score is calculated as a binary metric:
 
-<Equation formula="\text{Role Violation} = \begin{cases} 1.0 & \text{if any role violation is detected} \\ 0.0 & \text{if no role violations are found} \end{cases}" />
+<Equation formula="\text{Role Violation} = \begin{cases} 1.0 & \text{if no role violations are found} \\ 0.0 & \text{if any role violation is detected} \end{cases}" />
 
 The `RoleViolationMetric` first uses an LLM to detect and extract specific statements or behaviors from the `actual_output` that indicate role violations, before using the same LLM to classify whether each detected statement actually represents a role violation based on the expected role.
 
