@@ -1,7 +1,7 @@
 ---
 id: tutorial-setup
-title: Setup & Installation
-sidebar_label: Setting Up
+title: Set Up
+sidebar_label: Set Up
 ---
 
 ## Installing DeepEval
@@ -19,9 +19,7 @@ pip install -U deepeval
 Let's evaluate the correctness of an LLM output using [`GEval`](https://deepeval.com/docs/metrics-llm-evals), a powerful metric based on LLM-as-a-judge evaluation.
 
 :::note
-
-All `deepeval` test files must start with the prefix of `test_`, so create a file named `test_app.py` and paste the following code in the file.
-
+Your test file must be named with a `test_` prefix (like `test_app.py`) for DeepEval to recognize and run it.
 :::
 
 ```python title="test_app.py"
@@ -46,7 +44,7 @@ test_case = LLMTestCase(
 evaluate([test_case], [correctness_metric])
 ```
 
-You can run your first evaluation by running the following command in your terminal.
+To run your first evaluation, enter the following command in your terminal:
 
 ```bash
 deepeval test run test_app.py
@@ -55,7 +53,11 @@ deepeval test run test_app.py
 :::note
 DeepEval's powerful **LLM-as-a-judge** metrics (like `GEval` used in this example) rely on an underlying LLM called the _Evaluation Model_ to perform evaluations. By default, DeepEval uses OpenAI's models for this purpose.
 
-So you'll set your `OPENAI_API_KEY` as an environment variable.
+So you'll have to set your `OPENAI_API_KEY` as an environment variable as shown below.
+
+```bash
+export OPENAI_API_KEY="your_api_key"
+```
 
 To use ANY custom LLM of your choice, [Check out our docs on custom evaluation models](https://deepeval.com/guides/guides-using-custom-llms).
 :::
@@ -64,7 +66,7 @@ Congratulations! You've successfully run your first LLM evaluation with DeepEval
 
 ## Setting Up Confident AI
 
-While DeepEval works great standalone, you can connect it to [Confident AI](https://www.confident-ai.com) — our cloud platform for LLM evaluation dashboards, logging, team collaboration and many more. **Best of all, it's free to get started!** _(No credit card required.)_
+While DeepEval works great standalone, you can connect it to [Confident AI](https://www.confident-ai.com) — our cloud platform for dashboards, logging, collaboration, and more — built for LLM evaluation. **Best of all, it's free to get started!** _(No credit card required.)_
 
 You can [sign up here](https://www.confident-ai.com), or you can run the following command
 
