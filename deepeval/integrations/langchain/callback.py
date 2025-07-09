@@ -8,7 +8,7 @@ try:
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
     # contains langchain imports
-    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string, prepare_dict
+    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string, prepare_dict, extract_token_usage
 
     langchain_installed = True
 except:
@@ -158,9 +158,16 @@ class CallbackHandler(BaseCallbackHandler):
             return
 
         output_str = ""
+        total_input_tokens = 0
+        total_output_tokens = 0
+        
         for generation in response.generations:
             for gen in generation:
                 if isinstance(gen, ChatGeneration):
+                    input_tokens, output_tokens = extract_token_usage(gen.message.response_metadata)
+                    total_input_tokens += input_tokens
+                    total_output_tokens += output_tokens
+                    
                     # set model for any generation
                     if llm_span.model is None or llm_span.model == "unknown":
                         llm_span.model = gen.message.response_metadata.get("model_name", "unknown")
@@ -168,9 +175,14 @@ class CallbackHandler(BaseCallbackHandler):
                     output_str += convert_chat_generation_to_string(gen) + "\n"
         
         llm_span.set_attributes(
-            LlmAttributes(input=llm_span.attributes.input, output=output_str)
+            LlmAttributes(
+                input=llm_span.attributes.input, 
+                output=output_str, 
+                input_token_count=total_input_tokens, 
+                output_token_count=total_output_tokens
+            )
         )
-        
+         
         self.end_span(llm_span)
         if parent_run_id is None:
             self.end_trace(llm_span)

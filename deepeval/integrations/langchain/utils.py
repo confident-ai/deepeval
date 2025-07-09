@@ -24,3 +24,9 @@ def convert_chat_generation_to_string(gen: ChatGeneration) -> str:
 
 def prepare_dict(**kwargs: Any) -> dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not None}
+
+def extract_token_usage(response_metadata: dict[str, Any]) -> tuple[int, int]:
+    if "token_usage" in response_metadata:
+        return response_metadata["token_usage"].get("prompt_tokens", 0), response_metadata["token_usage"].get("completion_tokens", 0)
+    return 0, 0
+    
