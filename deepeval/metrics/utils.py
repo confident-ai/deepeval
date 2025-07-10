@@ -365,9 +365,11 @@ def should_use_gemini_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
+
 def should_use_openai_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_OPENAI_MODEL)
     return value.lower() == "yes" if value is not None else False
+
 
 def should_use_litellm():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LITELLM)

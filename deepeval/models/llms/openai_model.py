@@ -162,9 +162,23 @@ class GPTModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         model_name = None
-        model = model or KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_MODEL_NAME)
-        cost_per_input_token = cost_per_input_token if cost_per_input_token is not None else KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_COST_PER_INPUT_TOKEN)
-        cost_per_output_token = cost_per_output_token if cost_per_output_token is not None else KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN)
+        model = model or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.OPENAI_MODEL_NAME
+        )
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else KEY_FILE_HANDLER.fetch_data(
+                KeyValues.OPENAI_COST_PER_INPUT_TOKEN
+            )
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else KEY_FILE_HANDLER.fetch_data(
+                KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
+            )
+        )
 
         if isinstance(model, str):
             model_name = parse_model_name(model)
@@ -185,7 +199,7 @@ class GPTModel(DeepEvalBaseLLM):
                     "input": float(cost_per_input_token),
                     "output": float(cost_per_output_token),
                 }
-            
+
         elif model is None:
             model_name = default_gpt_model
 
