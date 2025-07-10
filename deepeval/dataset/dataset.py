@@ -10,7 +10,11 @@ import datetime
 import time
 import ast
 
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import (
+    BaseConversationalMetric,
+    BaseMetric,
+    BaseMultimodalMetric,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -172,7 +176,14 @@ class EvaluationDataset:
     def __iter__(self):
         return iter(self.test_cases)
 
-    def evaluate(self, metrics: List[BaseMetric]):
+    def evaluate(
+        self,
+        metrics: Union[
+            List[BaseMetric],
+            List[BaseConversationalMetric],
+            List[BaseMultimodalMetric],
+        ],
+    ) -> "EvaluationResult":
         from deepeval import evaluate
 
         if len(self.test_cases) == 0:

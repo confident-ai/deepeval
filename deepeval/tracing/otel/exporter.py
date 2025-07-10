@@ -77,7 +77,6 @@ class ConfidentSpanExporter(SpanExporter):
             name=name,
             status=status,
             type=SpanApiType.BASE,
-            traceUuid=trace_uuid,
             parentUuid=parent_uuid,
             startTime=start_time,
             endTime=end_time,
