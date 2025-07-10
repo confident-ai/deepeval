@@ -365,6 +365,9 @@ def should_use_gemini_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
+def should_use_openai_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_OPENAI_MODEL)
+    return value.lower() == "yes" if value is not None else False
 
 def should_use_litellm():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LITELLM)
@@ -388,6 +391,8 @@ def initialize_model(
     # If model is a DeepEvalBaseLLM but not a native model, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
+    if should_use_openai_model():
+        return GPTModel(), True
     if should_use_gemini_model():
         return GeminiModel(), True
     if should_use_litellm():
