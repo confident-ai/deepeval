@@ -7,8 +7,15 @@ try:
     from langchain_core.callbacks.base import BaseCallbackHandler
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
+
     # contains langchain imports
-    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string, prepare_dict, extract_token_usage, extract_name
+    from deepeval.integrations.langchain.utils import (
+        parse_prompts_to_messages,
+        convert_chat_generation_to_string,
+        prepare_dict,
+        extract_token_usage,
+        extract_name,
+    )
 
     langchain_installed = True
 except:
@@ -36,10 +43,13 @@ from deepeval.tracing.types import (
 )
 from deepeval.telemetry import capture_tracing_integration
 
+
 class CallbackHandler(BaseCallbackHandler):
 
     def __init__(self):
-        capture_tracing_integration("deepeval.integrations.langchain.callback.CallbackHandler")
+        capture_tracing_integration(
+            "deepeval.integrations.langchain.callback.CallbackHandler"
+        )
         is_langchain_installed()
         super().__init__()
 
@@ -59,9 +69,7 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.remove_span(str(span.uuid))
 
     def end_trace(self, span: BaseSpan):
-        current_trace = trace_manager.get_trace_by_uuid(
-            self.active_trace_id
-        )
+        current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
         if current_trace is not None:
             current_trace.input = span.input
             current_trace.output = span.output
@@ -79,7 +87,7 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        
+
         self.check_active_trace_id()
         base_span = BaseSpan(
             uuid=str(run_id),
@@ -90,7 +98,9 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=extract_name(serialized, **kwargs),
             input=inputs,
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
+            metadata=prepare_dict(
+                serialized=serialized, tags=tags, metadata=metadata, **kwargs
+            ),
         )
 
         self.add_span_to_trace(base_span)
@@ -101,9 +111,9 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any, #un-logged kwargs
+        **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        
+
         base_span = trace_manager.get_span_by_uuid(str(run_id))
         if base_span is None:
             return
@@ -125,7 +135,7 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-        
+
         self.check_active_trace_id()
 
         # extract input
@@ -140,7 +150,9 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=extract_name(serialized, **kwargs),
             attributes=LlmAttributes(input=input_messages, output=""),
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
+            metadata=prepare_dict(
+                serialized=serialized, tags=tags, metadata=metadata, **kwargs
+            ),
         )
 
         self.add_span_to_trace(llm_span)
@@ -151,7 +163,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any, #un-logged kwargs
+        **kwargs: Any,  # un-logged kwargs
     ) -> Any:
         llm_span = trace_manager.get_span_by_uuid(str(run_id))
         if llm_span is None:
@@ -160,29 +172,33 @@ class CallbackHandler(BaseCallbackHandler):
         output_str = ""
         total_input_tokens = 0
         total_output_tokens = 0
-        
+
         for generation in response.generations:
             for gen in generation:
                 if isinstance(gen, ChatGeneration):
-                    input_tokens, output_tokens = extract_token_usage(gen.message.response_metadata)
+                    input_tokens, output_tokens = extract_token_usage(
+                        gen.message.response_metadata
+                    )
                     total_input_tokens += input_tokens
                     total_output_tokens += output_tokens
-                    
+
                     # set model for any generation
                     if llm_span.model is None or llm_span.model == "unknown":
-                        llm_span.model = gen.message.response_metadata.get("model_name", "unknown")
-                    
+                        llm_span.model = gen.message.response_metadata.get(
+                            "model_name", "unknown"
+                        )
+
                     output_str += convert_chat_generation_to_string(gen) + "\n"
-        
+
         llm_span.set_attributes(
             LlmAttributes(
-                input=llm_span.attributes.input, 
-                output=output_str, 
-                input_token_count=total_input_tokens, 
-                output_token_count=total_output_tokens
+                input=llm_span.attributes.input,
+                output=output_str,
+                input_token_count=total_input_tokens,
+                output_token_count=total_output_tokens,
             )
         )
-         
+
         self.end_span(llm_span)
         if parent_run_id is None:
             self.end_trace(llm_span)
@@ -211,7 +227,9 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=extract_name(serialized, **kwargs),
             input=input_str,
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
+            metadata=prepare_dict(
+                serialized=serialized, tags=tags, metadata=metadata, **kwargs
+            ),
         )
         self.add_span_to_trace(tool_span)
 
@@ -221,7 +239,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any, #un-logged kwargs
+        **kwargs: Any,  # un-logged kwargs
     ) -> Any:
 
         tool_span = trace_manager.get_span_by_uuid(str(run_id))
@@ -229,7 +247,7 @@ class CallbackHandler(BaseCallbackHandler):
             return
 
         tool_span.output = output
-        
+
         self.end_span(tool_span)
 
         if parent_run_id is None:
@@ -244,7 +262,7 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, Any]] = None,
-        **kwargs: Any, #un-logged kwargs
+        **kwargs: Any,  # un-logged kwargs
     ) -> Any:
 
         self.check_active_trace_id()
@@ -258,7 +276,9 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=extract_name(serialized, **kwargs),
             embedder=metadata.get("ls_embedding_provider", "unknown"),
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
+            metadata=prepare_dict(
+                serialized=serialized, tags=tags, metadata=metadata, **kwargs
+            ),
         )
         retriever_span.set_attributes(
             RetrieverAttributes(embedding_input=query, retrieval_context=[])
@@ -272,7 +292,7 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any, #un-logged kwargs
+        **kwargs: Any,  # un-logged kwargs
     ) -> Any:
 
         retriever_span = trace_manager.get_span_by_uuid(str(run_id))
@@ -287,14 +307,14 @@ class CallbackHandler(BaseCallbackHandler):
                 output_list.append(str(item))
         else:
             output_list.append(str(output))
-        
+
         retriever_span.set_attributes(
             RetrieverAttributes(
                 embedding_input=retriever_span.attributes.embedding_input,
                 retrieval_context=output_list,
             )
         )
-        
+
         self.end_span(retriever_span)
 
         if parent_run_id is None:
