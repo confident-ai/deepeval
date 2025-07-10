@@ -90,7 +90,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=tags[0] if tags is not None and len(tags) > 0 else "chain_span",
             input=inputs,
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
 
         self.add_span_to_trace(base_span)
@@ -140,7 +140,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=tags[0] if tags is not None and len(tags) > 0 else "llm_span",
             attributes=LlmAttributes(input=input_messages, output=""),
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
 
         self.add_span_to_trace(llm_span)
@@ -211,7 +211,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=tags[0] if tags is not None and len(tags) > 0 else "tool_span",
             input=input_str,
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
         self.add_span_to_trace(tool_span)
 
@@ -258,7 +258,7 @@ class CallbackHandler(BaseCallbackHandler):
             start_time=perf_counter(),
             name=tags[0] if tags is not None and len(tags) > 0 else "retriever_span",
             embedder=metadata.get("ls_embedding_provider", "unknown"),
-            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata),
+            metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
         retriever_span.set_attributes(
             RetrieverAttributes(embedding_input=query, retrieval_context=[])
