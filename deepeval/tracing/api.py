@@ -57,7 +57,6 @@ class BaseApiSpan(BaseModel):
     name: str = None
     status: TraceSpanApiStatus
     type: SpanApiType
-    trace_uuid: str = Field(alias="traceUuid")
     parent_uuid: Optional[str] = Field(None, alias="parentUuid")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
@@ -90,8 +89,8 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    span_test_case: Optional[TraceSpanTestCase] = Field(
-        None, alias="spanTestCase"
+    llm_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="llmTestCase"
     )
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
@@ -106,11 +105,13 @@ class BaseApiSpan(BaseModel):
 
 class TraceApi(BaseModel):
     uuid: str
-    base_spans: List[BaseApiSpan] = Field(alias="baseSpans")
-    agent_spans: List[BaseApiSpan] = Field(alias="agentSpans")
-    llm_spans: List[BaseApiSpan] = Field(alias="llmSpans")
-    retriever_spans: List[BaseApiSpan] = Field(alias="retrieverSpans")
-    tool_spans: List[BaseApiSpan] = Field(alias="toolSpans")
+    base_spans: Optional[List[BaseApiSpan]] = Field(None, alias="baseSpans")
+    agent_spans: Optional[List[BaseApiSpan]] = Field(None, alias="agentSpans")
+    llm_spans: Optional[List[BaseApiSpan]] = Field(None, alias="llmSpans")
+    retriever_spans: Optional[List[BaseApiSpan]] = Field(
+        None, alias="retrieverSpans"
+    )
+    tool_spans: Optional[List[BaseApiSpan]] = Field(None, alias="toolSpans")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
     name: Optional[str] = Field(None)
@@ -124,8 +125,8 @@ class TraceApi(BaseModel):
     feedback: Optional[APIFeedback] = Field(None)
 
     # evals
-    trace_test_case: Optional[TraceSpanTestCase] = Field(
-        None, alias="traceTestCase"
+    llm_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="llmTestCase"
     )
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
