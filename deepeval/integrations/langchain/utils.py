@@ -30,3 +30,11 @@ def extract_token_usage(response_metadata: dict[str, Any]) -> tuple[int, int]:
         return response_metadata["token_usage"].get("prompt_tokens", 0), response_metadata["token_usage"].get("completion_tokens", 0)
     return 0, 0
     
+def extract_name(serialized: dict[str, Any], **kwargs: Any) -> str:
+    if "name" in kwargs and kwargs["name"]:
+        return kwargs["name"]
+    
+    if "name" in serialized:
+        return serialized["name"]
+    
+    return "unknown"

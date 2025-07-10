@@ -8,7 +8,7 @@ try:
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
     # contains langchain imports
-    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string, prepare_dict, extract_token_usage
+    from deepeval.integrations.langchain.utils import parse_prompts_to_messages, convert_chat_generation_to_string, prepare_dict, extract_token_usage, extract_name
 
     langchain_installed = True
 except:
@@ -88,7 +88,7 @@ class CallbackHandler(BaseCallbackHandler):
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
-            name=tags[0] if tags is not None and len(tags) > 0 else "chain_span",
+            name=extract_name(serialized, **kwargs),
             input=inputs,
             metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
@@ -138,7 +138,7 @@ class CallbackHandler(BaseCallbackHandler):
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
-            name=tags[0] if tags is not None and len(tags) > 0 else "llm_span",
+            name=extract_name(serialized, **kwargs),
             attributes=LlmAttributes(input=input_messages, output=""),
             metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
@@ -209,7 +209,7 @@ class CallbackHandler(BaseCallbackHandler):
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
-            name=tags[0] if tags is not None and len(tags) > 0 else "tool_span",
+            name=extract_name(serialized, **kwargs),
             input=input_str,
             metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
@@ -256,7 +256,7 @@ class CallbackHandler(BaseCallbackHandler):
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
-            name=tags[0] if tags is not None and len(tags) > 0 else "retriever_span",
+            name=extract_name(serialized, **kwargs),
             embedder=metadata.get("ls_embedding_provider", "unknown"),
             metadata=prepare_dict(serialized=serialized, tags=tags, metadata=metadata, **kwargs),
         )
