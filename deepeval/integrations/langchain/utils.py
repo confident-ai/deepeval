@@ -1,7 +1,7 @@
 from typing import Any, List, Dict
 from langchain_core.outputs import ChatGeneration
 
-def parse_prompts_to_messages(prompts: list[str]) -> List[Dict[str, str]]:
+def parse_prompts_to_messages(prompts: list[str], **kwargs) -> List[Dict[str, str]]:
     messages = []
     for prompt in prompts:
         for message in prompt.split("\n"):
@@ -16,7 +16,15 @@ def parse_prompts_to_messages(prompts: list[str]) -> List[Dict[str, str]]:
                     "role": "Human",
                     "content": message.strip()
                 })
-    
+        
+        tools = kwargs.get("invocation_params", {}).get("tools", None)
+        if tools and isinstance(tools, list):
+            for tool in tools:
+                messages.append({
+                    "role": "Tool Input",
+                    "content": str(tool)
+                })
+                
     return messages
 
 def convert_chat_generation_to_string(gen: ChatGeneration) -> str:

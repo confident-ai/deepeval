@@ -129,7 +129,7 @@ class CallbackHandler(BaseCallbackHandler):
         self.check_active_trace_id()
 
         # extract input
-        input_messages = parse_prompts_to_messages(prompts)
+        input_messages = parse_prompts_to_messages(prompts, **kwargs)
 
         llm_span = LlmSpan(
             uuid=str(run_id),
