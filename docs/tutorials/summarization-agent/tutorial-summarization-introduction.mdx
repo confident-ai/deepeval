@@ -59,7 +59,7 @@ The agent we'll be building processes meeting-style transcripts and generates:
 Our summarization agent takes the entire conversation transcription as `input` and outputs a concise summary along with clear action items. The goal is to ensure it captures key decisions and follow-ups accurately—without missing context, misinterpreting information, or including unnecessary detail.
 
 :::info
-We'll be using `gpt-3.5` to power our LLM summarizer. Here's the prompt template used to guide the model's summaries:
+We'll be using OpenAI's LLM models to power our summarizer. Here's the prompt template used to guide the model's summaries:
 ```text
 You are an AI assistant tasked with summarizing meeting transcripts clearly 
 and accurately. Given the following conversation, generate a concise summary 

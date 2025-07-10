@@ -12,7 +12,7 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Summarization Agent",
+      label: "Meeting Summarizer",
       className: "sidebar-item-icon-agent",
       items: [
         "summarization-agent/tutorial-summarization-introduction", 
