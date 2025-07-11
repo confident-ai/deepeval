@@ -347,9 +347,9 @@ trace_manager.configure(mask=mask_function, environment="production")
 async def run_parallel_examples():
     tasks = [
         meta_agent("How tall is Mount Everest?"),
-        # meta_agent("What's the capital of Brazil?"),
-        # meta_agent("Who won the last World Cup?"),
-        # meta_agent("Explain quantum entanglement."),
+        meta_agent("What's the capital of Brazil?"),
+        meta_agent("Who won the last World Cup?"),
+        meta_agent("Explain quantum entanglement."),
         # meta_agent("What's the latest iPhone model?"),
         # meta_agent("How do I cook a perfect steak?"),
         # meta_agent("Tell me a joke about robots."),
