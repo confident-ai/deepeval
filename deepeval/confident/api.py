@@ -63,6 +63,8 @@ class Endpoints(Enum):
     GUARDRAILS_ENDPOINT = "/guardrails"
     BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks"
     EVALUATE_THREAD_ENDPOINT = "/v1/evaluate/threads/:threadId"
+    EVALUATE_TRACE_ENDPOINT = "/v1/evaluate/traces/:traceUuid"
+    EVALUATE_SPAN_ENDPOINT = "/v1/evaluate/spans/:spanUuid"
 
     # DEPRECATED
     TRACING_ENDPOINT = "/v1/tracing"
