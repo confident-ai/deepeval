@@ -186,6 +186,9 @@ class GPTModel(DeepEvalBaseLLM):
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
+        elif model is None:
+            model_name = default_gpt_model
+
         if model_name not in model_pricing:
             if cost_per_input_token is None or cost_per_output_token is None:
                 raise ValueError(
