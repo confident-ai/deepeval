@@ -156,7 +156,9 @@ def evaluate_thread(thread_id: str, metric_collection: str):
         )
     except AttributeError:
         # Pydantic version below 2.0
-        body = evaluate_thread_request_body.dict(by_alias=True, exclude_none=True)
+        body = evaluate_thread_request_body.dict(
+            by_alias=True, exclude_none=True
+        )
 
     api = Api(api_key=api_key)
     api.send_request(
@@ -186,7 +188,9 @@ async def a_evaluate_thread(thread_id: str, metric_collection: str):
         )
     except AttributeError:
         # Pydantic version below 2.0
-        body = evaluate_thread_request_body.dict(by_alias=True, exclude_none=True)
+        body = evaluate_thread_request_body.dict(
+            by_alias=True, exclude_none=True
+        )
 
     api = Api(api_key=api_key)
     await api.a_send_request(
@@ -195,4 +199,3 @@ async def a_evaluate_thread(thread_id: str, metric_collection: str):
         body=body,
         url_params={"threadId": thread_id},
     )
-

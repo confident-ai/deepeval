@@ -83,9 +83,10 @@ legal_sovereignty = GEval(
 async def main():
     tasks = [run_golden(golden) for golden in dataset.goldens]
     results = await asyncio.gather(*tasks)
-    dataset.test_cases.append(results)
+    for result in results:
+        dataset.add_test_case(result)
     evaluate(
-        dataset,
+        test_cases=dataset.test_cases,
         metrics=[transparency, explainability, safety, legal_sovereignty],
         hyperparameters={"Model": model, "Prompt Version": "v1-transparency"},
     )
