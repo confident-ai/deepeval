@@ -62,7 +62,7 @@ class Endpoints(Enum):
     GUARD_ENDPOINT = "/guard"
     GUARDRAILS_ENDPOINT = "/guardrails"
     BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks"
-    THREAD_METRICS_ENDPOINT = "/v1/thread-metrics"
+    EVALUATE_THREAD_ENDPOINT = "/v1/evaluate/threads/:threadId"
 
     # DEPRECATED
     TRACING_ENDPOINT = "/v1/tracing"
@@ -105,9 +105,22 @@ class Api:
         )
 
     def send_request(
-        self, method: HttpMethods, endpoint: Endpoints, body=None, params=None
+        self,
+        method: HttpMethods,
+        endpoint: Endpoints,
+        body=None,
+        params=None,
+        url_params=None,
     ):
         url = f"{self.base_api_url}{endpoint.value}"
+
+        # Replace URL parameters if provided
+        if url_params:
+            for key, value in url_params.items():
+                placeholder = f":{key}"
+                if placeholder in url:
+                    url = url.replace(placeholder, str(value))
+
         res = self._http_request(
             method=method.value,
             url=url,
@@ -147,9 +160,22 @@ class Api:
             raise Exception(res.json().get("error", res.text))
 
     async def a_send_request(
-        self, method: HttpMethods, endpoint: Endpoints, body=None, params=None
+        self,
+        method: HttpMethods,
+        endpoint: Endpoints,
+        body=None,
+        params=None,
+        url_params=None,
     ):
         url = f"{self.base_api_url}{endpoint.value}"
+
+        # Replace URL parameters if provided
+        if url_params:
+            for key, value in url_params.items():
+                placeholder = f":{key}"
+                if placeholder in url:
+                    url = url.replace(placeholder, str(value))
+
         async with aiohttp.ClientSession() as session:
             async with session.request(
                 method=method.value,

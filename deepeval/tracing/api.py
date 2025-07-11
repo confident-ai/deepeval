@@ -161,8 +161,9 @@ def evaluate_thread(thread_id: str, metric_collection: str):
     api = Api(api_key=api_key)
     api.send_request(
         method=HttpMethods.POST,
-        endpoint=Endpoints.THREAD_METRICS_ENDPOINT,
+        endpoint=Endpoints.EVALUATE_THREAD_ENDPOINT,
         body=body,
+        url_params={"threadId": thread_id},
     )
 
 
@@ -190,6 +191,7 @@ async def a_evaluate_thread(thread_id: str, metric_collection: str):
     api = Api(api_key=api_key)
     await api.a_send_request(
         method=HttpMethods.POST,
-        endpoint=Endpoints.THREAD_METRICS_ENDPOINT,
+        endpoint=Endpoints.EVALUATE_THREAD_ENDPOINT,
         body=body,
+        url_params={"threadId": thread_id},
     )
