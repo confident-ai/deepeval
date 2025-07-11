@@ -1,20 +1,20 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
-import styles from './TutorialCardSection.module.css';
+import styles from './LinkCards.module.css';
 
-const TutorialCardSection = ({ tutorials }) => {
+const LinkCards = ({ tutorials }) => {
   return (
     <div className={styles.section}>
       <div className={styles.grid}>
         {tutorials.map((tutorial) => (
-          <TutorialCard key={tutorial.to} {...tutorial} />
+          <LinkCard key={tutorial.to} {...tutorial} />
         ))}
       </div>
     </div>
   );
 }
 
-const TutorialCard = ({ title, description, to }) => {
+const LinkCard = ({ title, description, to }) => {
   return (
     <Link to={to} className={styles.card}>
       <div className={styles.cardContent}>
@@ -25,4 +25,4 @@ const TutorialCard = ({ title, description, to }) => {
   );
 }
 
-export default TutorialCardSection;
+export default LinkCards;

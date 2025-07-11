@@ -1,0 +1,140 @@
+---
+id: tutorial-summarization-improvement
+title: Improvement
+sidebar_label: Improvement
+---
+
+In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. Like most LLM applications, our summarizer includes tunable hyperparameters that can significantly influence performance.
+In our case, the key hyperparameters for the `MeetingSummarizer` are:
+
+- Prompt template
+- Generation model
+- Temperature of the model
+
+## Iterating On Hyperparameters
+To identify the best configuration, we can experiment with different hyperparameter values and evaluate the results using `deepeval`. Here's how you can do that:
+
+```python
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import SummarizationMetric, GEval
+from deepeval import evaluate
+
+prompt_templates = [
+    "You are an AI assistant tasked with summarizing meeting transcripts. Summarize what was discussed and include any action items mentioned. Keep it short, accurate, and factual. Transcript:\n{transcript}",
+    "You are an AI assistant summarizing meetings to help teams quickly understand what was discussed. Your output must include a concise summary of key discussion points, followed by a list of action items. Be factual, avoid unnecessary detail, and only include relevant information. Transcript:\n{transcript}",
+    "You are an AI assistant that processes meeting transcripts and provides structured, actionable output. Your job is to produce a concise summary of the main points discussed and a complete list of action items, each reflecting a clear next step or responsibility mentioned in the meeting. Avoid interpretation or unnecessary details. Respond strictly using the format below:\n\nSummary of Meeting:\n<Your summary here>\n\nAction Items:\n- <Item 1>\n- <Item 2>\n- ...\n\nTranscript:\n{transcript}"
+]
+temperatures = [0, 0.3, 0.5, 0.7, 0.9]
+models = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo"]
+
+with open("meeting_transcript.txt", "r") as file:
+    transcript = file.read().strip()
+
+metrics = [...] # Use the same metrics defined in earlier stages
+
+for model in models:
+    for temperature in temperatures:
+        for prompt_template in prompt_templates:
+            summarizer = MeetingSummarizer(
+                model=model,
+                temperature=temperature,
+                prompt_template=prompt_template
+            )
+            summary = summarizer.summarize(transcript=transcript)
+            testcase = LLMTestCase(
+                input=transcript,
+                actual_output=summary
+            )
+            evaluate(
+                test_cases=[testcase],
+                metrics=metrics,
+                hyperparameters={
+                    "prompt_template": prompt_template,
+                    "model": model,
+                    "temperature": temperature
+                }
+            ) # Evaluate summarizer with the current configuration
+```
+
+:::tip
+By logging hyperparameters in the evaluate function, you can easily compare performance across runs in [Confident AI](https://www.confident-ai.com) and trace score changes back to specific hyperparameter adjustments. Learn more about [the evaluate function here](https://deepeval.com/docs/evaluation-introduction#evaluating-without-pytest).
+
+Here's an example of how you can set up [**Confident AI**](https://deepeval.com/tutorials/tutorial-setup) to check the results in a report format that also provides details on hyperparameters used for test runs:
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: "20px",
+  }}
+>
+  <video width="100%" autoPlay loop muted playsInlines>
+    <source
+      src="https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorial-legal-document-summarizer-hyperparameters.mp4"
+      type="video/mp4"
+    />
+  </video>
+</div>
+
+To get started, run the following command:
+```bash
+deepeval login
+```
+:::
+
+## DeepEval's Datasets
+
+Iterating on hyperparameters and finding the best configuration for your summarization agent is great. However, this approach has a key limitation: it evaluates performance on only a single meeting transcript.
+To build a robust and reliable summarization agent, you need to test it across a variety of meeting transcripts — something that's difficult to manage manually. deepeval solves this with [datasets](https://deepeval.com/docs/evaluation-datasets), which allow for scalable and repeatable evaluation.
+Here's how you can create and maintain datasets that can be used to evaluate your summarization agent with the help of `deepeval`:
+
+### Creating Datasets
+
+If you're building a summarization agent, you may already have a folder of documents or transcripts waiting to be summarized. If that's the case, you'll first want to parse these documents into strings that can be passed into your LLM summarizer. Here's how you can do that:
+
+```python
+import os
+
+documents_path = "path/to/documents/folder"
+transcripts = []
+
+for document in os.listdir(documents_path):
+    if document.endswith(".txt"):
+        file_path = os.path.join(documents_path, document)
+        with open(file_path, "r") as file:
+            transcript = file.read().strip()
+        transcripts.append(transcript)
+```
+
+Next, we'll generate test cases using our `MeetingSummarizer`. We'll only need to do this once, and we can reuse the dataset for all future evaluations. Here's how we can create a dataset with the test cases we'll create:
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+
+summarizer = MeetingSummarizer() # Initialize with your best configuration
+
+test_cases = [LLMTestCase(input=transcript, actual_output=summarizer.summarize(transcript)) for transcript in transcripts]
+
+dataset = EvaluationDataset(test_cases=test_cases)
+```
+
+### Maintaining Datasets
+
+Now that you've created your datasets, you can save them to the cloud and reuse them anytime. Here's how you can save the dataset on Confident AI:
+
+```python
+print(dataset.test_cases[0])  # Optional: preview a test case before pushing the dataset
+dataset.push(alias="MeetingSummarizer Dataset")
+```
+
+It's as simple as that! Make sure you've already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work. [Click here](https://deepeval.com/docs/evaluation-datasets) to learn more about datasets.
+
+:::note
+You must be logged in to your [Confident AI](https://confident-ai.com) account to manage datasets. Set up Confident AI as shown [here](https://deepeval.com/tutorials/tutorial-setup#setting-up-confident-ai) or just run the following code in your terminal to get started:
+```bash
+deepeval login
+```
+:::
+
+In the next section, we'll see how to integrate these datasets with CI/CD workflows to [prepare your summarization agent for production](tutorial-summarization-production).

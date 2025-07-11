@@ -1,0 +1,73 @@
+---
+id: tutorial-summarization-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+In this tutorial, we'll go through the entire process of building a robust **LLM-powered summarization agent using DeepEval**, from development to production.
+
+:::tip
+If you're working with LLMs for summarization, this tutorial is for you. While we'll specifically focus on evaluating a meeting summarizer, the concepts and practices here can be applied to **any LLM application that generates summaries**.
+:::
+
+Here are the links to jump to different stages of this tutorial:
+
+import LinkCards from "@site/src/components/LinkCards"
+
+<LinkCards
+    tutorials={[
+        {
+            title: 'Development',
+            description: 'Go to the Development stage',
+            to: '/tutorials/summarization-agent/tutorial-summarization-development',
+        },
+        {
+            title: 'Evaluation',
+            description: 'Go to the Evaluation stage',
+            to: '/tutorials/summarization-agent/tutorial-summarization-evaluation',
+        },
+        {
+            title: 'Improvement',
+            description: 'Go to the Improvement stage',
+            to: '/tutorials/summarization-agent/tutorial-summarization-improvement',
+        },
+        {
+            title: 'Production',
+            description: 'Go to the Production stage',
+            to: '/tutorials/summarization-agent/tutorial-summarization-production',
+        },
+    ]}
+/>
+
+## What You'll Learn
+
+In this tutorial, you'll learn:
+
+- How to build a summarization agent.
+- How to define summarization criteria and choose the right evaluation metrics.
+- How to evaluate your summarization agent using **DeepEval**.
+- How to improve your summarization agent using evaluation results.
+- How to prepare your summarization agent for production.
+
+## Meeting Summarizer
+
+The agent we'll be building processes meeting-style transcripts and generates:
+
+- A brief summary of the discussion.
+- A list of action items.
+
+Our summarization agent takes the entire conversation transcription as `input` and outputs a concise summary along with clear action items. The goal is to ensure it captures key decisions and follow-ups accurately—without missing context, misinterpreting information, or including unnecessary detail.
+
+:::info
+We'll be using OpenAI's LLM models to power our summarizer. Here's the prompt template used to guide the model's summaries:
+```text
+You are an AI assistant tasked with summarizing meeting transcripts clearly 
+and accurately. Given the following conversation, generate a concise summary 
+that captures the key points discussed, along with a set of action items 
+reflecting the concrete next steps mentioned. Keep the tone neutral and 
+factual, avoid unnecessary detail, and do not add interpretation beyond 
+the content of the conversation.
+```
+:::
+
+Ready to get started? Let's move on to [developing the summarization agent](tutorial-summarization-development).
