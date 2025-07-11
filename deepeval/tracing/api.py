@@ -132,7 +132,7 @@ class TraceApi(BaseModel):
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
 
-class RunThreadMetricApi(BaseModel):
+class EvaluateThreadRequestBody(BaseModel):
     thread_supplied_id: str = Field(alias="threadSuppliedId")
     metric_collection: str = Field(alias="metricCollection")
 
@@ -145,18 +145,18 @@ def evaluate_thread(thread_id: str, metric_collection: str):
     if not api_key and not is_confident():
         return
 
-    run_thread_metric_api = RunThreadMetricApi(
+    evaluate_thread_request_body = EvaluateThreadRequestBody(
         threadSuppliedId=thread_id,
         metricCollection=metric_collection,
     )
     try:
-        body = run_thread_metric_api.model_dump(
+        body = evaluate_thread_request_body.model_dump(
             by_alias=True,
             exclude_none=True,
         )
     except AttributeError:
         # Pydantic version below 2.0
-        body = run_thread_metric_api.dict(by_alias=True, exclude_none=True)
+        body = evaluate_thread_request_body.dict(by_alias=True, exclude_none=True)
 
     api = Api(api_key=api_key)
     api.send_request(
@@ -175,18 +175,18 @@ async def a_evaluate_thread(thread_id: str, metric_collection: str):
     if not api_key and not is_confident():
         return
 
-    run_thread_metric_api = RunThreadMetricApi(
+    evaluate_thread_request_body = EvaluateThreadRequestBody(
         threadSuppliedId=thread_id,
         metricCollection=metric_collection,
     )
     try:
-        body = run_thread_metric_api.model_dump(
+        body = evaluate_thread_request_body.model_dump(
             by_alias=True,
             exclude_none=True,
         )
     except AttributeError:
         # Pydantic version below 2.0
-        body = run_thread_metric_api.dict(by_alias=True, exclude_none=True)
+        body = evaluate_thread_request_body.dict(by_alias=True, exclude_none=True)
 
     api = Api(api_key=api_key)
     await api.a_send_request(
@@ -195,3 +195,4 @@ async def a_evaluate_thread(thread_id: str, metric_collection: str):
         body=body,
         url_params={"threadId": thread_id},
     )
+
