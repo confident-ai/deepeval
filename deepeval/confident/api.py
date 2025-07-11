@@ -54,8 +54,7 @@ class Endpoints(Enum):
     DATASET_ENDPOINT = "/v1/dataset"
     DATASET_QUEUE_ENDPOINT = "/v1/dataset/queue"
     TEST_RUN_ENDPOINT = "/v1/test-run"
-    TRACING_ENDPOINT = "/v1/tracing"
-    EVENT_ENDPOINT = "/v1/event"
+    TRACES_ENDPOINT = "/v1/traces"
     FEEDBACK_ENDPOINT = "/v1/feedback"
     PROMPT_ENDPOINT = "/v1/prompt"
     RECOMMEND_ENDPOINT = "/v1/recommend-metrics"
@@ -64,6 +63,9 @@ class Endpoints(Enum):
     GUARDRAILS_ENDPOINT = "/guardrails"
     BASELINE_ATTACKS_ENDPOINT = "/generate-baseline-attacks"
     THREAD_METRICS_ENDPOINT = "/v1/thread-metrics"
+
+    # DEPRECATED
+    TRACING_ENDPOINT = "/v1/tracing"
 
 
 class Api:

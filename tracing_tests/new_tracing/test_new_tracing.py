@@ -254,6 +254,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+    metric_collection="My Metrics",
 )
 async def meta_agent(query: str):
     # print(query)
