@@ -360,6 +360,8 @@ class TraceManager:
                         by_alias=True,
                         exclude_none=True,
                     )
+                    print(body)
+                    return
                 except AttributeError:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
