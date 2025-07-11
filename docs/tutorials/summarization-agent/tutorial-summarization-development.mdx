@@ -18,7 +18,7 @@ the content of the conversation.
 
 And so we are now going to create a `MeetingSummarizer` agent that takes the transcript of a meeting and returns the summary along with action items.
 
-Here's the definition of `MeetingSummarizer`:
+## Creating Meeting Summarizer
 
 ```python
 import os
@@ -28,11 +28,15 @@ from openai import OpenAI
 load_dotenv()
 
 class MeetingSummarizer:
-    def __init__(self, model: str = "gpt-4", temperature: float = 0.3):
+    def __init__(
+        self, model: str = "gpt-4", 
+        temperature: float = 0.3, 
+        prompt_template: str
+    ):
         self.model = model
         self.temperature = temperature
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.prompt_template = (
+        self.prompt_template = prompt_template or (
             "You are an AI assistant tasked with summarizing meeting transcripts clearly "
             "and accurately. Given the following conversation, generate a concise summary "
             "that captures the key points discussed, along with a set of action items "
@@ -58,6 +62,8 @@ class MeetingSummarizer:
 :::note
 You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
 :::
+
+### Generating summaries
 
 Now that we've defined our summarization agent, we can use the following code to generate the summary
 
