@@ -260,17 +260,17 @@ async def meta_agent(query: str):
     # print(query)
     # raise ValueError("Test Error")
     # 50% probability of executing the function
-    weather_info = await weather_agent(query)
-    research_info = await research_agent(query)
-    custom_info = await custom_research_agent(query)
-    final_response = f"""
-    Weather: {weather_info}
-    Research: {research_info}
-    Custom Analysis: {custom_info}
-    """
+    # weather_info = await weather_agent(query)
+    # research_info = await research_agent(query)
+    # custom_info = await custom_research_agent(query)
+    # final_response = f"""
+    # Weather: {weather_info}
+    # Research: {research_info}
+    # Custom Analysis: {custom_info}
+    # """
     # print(final_response)
     update_current_span(
-        metadata={"user_id": "11111", "date": "1/1/11"},
+        # metadata={"user_id": "11111", "date": "1/1/11"},
         test_case=LLMTestCase(
             input="What is this again?",
             actual_output="this is a latte",
@@ -286,9 +286,9 @@ async def meta_agent(query: str):
     )
     update_current_trace(
         name="ok",
-        metadata={"input": "input"},
-        thread_id="131324ljihfsadiuyip",
-        user_id="111",
+        # metadata={"input": "input"},
+        # thread_id="131324ljihfsadiuyip",
+        # user_id="111",
         # feedback=Feedback(
         #     rating=5,te
         #     expected_output="Testing again",
@@ -296,7 +296,7 @@ async def meta_agent(query: str):
         # ),
     )
 
-    return LLMTestCase(input="..", actual_output=final_response)
+    # return LLMTestCase(input="..", actual_output=final_response)
 
 
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -309,23 +309,23 @@ from deepeval.metrics.dag import (
 )
 from deepeval.metrics import DAGMetric, GEval
 
-geval_metric = GEval(
-    name="Persuasiveness",
-    criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
-    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
-)
+# geval_metric = GEval(
+#     name="Persuasiveness",
+#     criteria="Determine how persuasive the `actual output` is to getting a user booking in a call.",
+#     evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT],
+# )
 
-conciseness_node = BinaryJudgementNode(
-    criteria="Does the actual output contain less than or equal to 4 sentences?",
-    children=[
-        VerdictNode(verdict=False, score=0),
-        VerdictNode(verdict=True, child=geval_metric),
-    ],
-)
+# conciseness_node = BinaryJudgementNode(
+#     criteria="Does the actual output contain less than or equal to 4 sentences?",
+#     children=[
+#         VerdictNode(verdict=False, score=0),
+#         VerdictNode(verdict=True, child=geval_metric),
+#     ],
+# )
 
-# create the DAG
-dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
-metric = DAGMetric(dag=dag, name="Persuasiveness")
+# # create the DAG
+# dag = DeepAcyclicGraph(root_nodes=[conciseness_node])
+# metric = DAGMetric(dag=dag, name="Persuasiveness")
 
 
 ###################################
@@ -347,17 +347,17 @@ trace_manager.configure(mask=mask_function, environment="production")
 async def run_parallel_examples():
     tasks = [
         meta_agent("How tall is Mount Everest?"),
-        meta_agent("What's the capital of Brazil?"),
-        meta_agent("Who won the last World Cup?"),
-        meta_agent("Explain quantum entanglement."),
-        meta_agent("What's the latest iPhone model?"),
-        meta_agent("How do I cook a perfect steak?"),
-        meta_agent("Tell me a joke about robots."),
-        meta_agent("What causes lightning?"),
-        meta_agent("Who painted the Mona Lisa?"),
-        meta_agent("What's the population of Japan?"),
-        meta_agent("How do vaccines work?"),
-        meta_agent("Recommend a good sci-fi movie."),
+        # meta_agent("What's the capital of Brazil?"),
+        # meta_agent("Who won the last World Cup?"),
+        # meta_agent("Explain quantum entanglement."),
+        # meta_agent("What's the latest iPhone model?"),
+        # meta_agent("How do I cook a perfect steak?"),
+        # meta_agent("Tell me a joke about robots."),
+        # meta_agent("What causes lightning?"),
+        # meta_agent("Who painted the Mona Lisa?"),
+        # meta_agent("What's the population of Japan?"),
+        # meta_agent("How do vaccines work?"),
+        # meta_agent("Recommend a good sci-fi movie."),
     ]
     await asyncio.gather(*tasks)
 
