@@ -530,6 +530,18 @@ def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     # extract base span results
     for span in trace_api.base_spans:
         test_results.extend(extract_span_test_results(span))
+    # extract agent span results
+    for span in trace_api.agent_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract llm span results
+    for span in trace_api.llm_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract retriever span results
+    for span in trace_api.retriever_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract tool span results
+    for span in trace_api.tool_spans:
+        test_results.extend(extract_span_test_results(span))
     
     return test_results
 
