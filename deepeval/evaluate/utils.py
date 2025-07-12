@@ -509,3 +509,29 @@ def count_metrics_in_trace(trace: Trace) -> int:
         return count
 
     return sum(count_metrics_recursive(span) for span in trace.root_spans)
+
+def extract_span_test_results(trace_api: TraceApi) -> List[TestResult]:
+    test_results: List[TestResult] = []
+    # extract trace result
+    if trace_api.metrics_data:
+        test_results.append(
+            TestResult(
+                name=trace_api.name,
+                success=True,
+                metrics_data=trace_api.metrics_data,
+                conversational=False,
+            )
+        )
+    # extract base span results
+    for span in trace_api.base_spans:
+        if span.metrics_data:
+            test_results.append(
+                TestResult(
+                    name=span.name,
+                    success=span.status == "SUCCESS",
+                    metrics_data=span.metrics_data,
+                    conversational=False,
+                )
+            )
+    
+    return test_results
