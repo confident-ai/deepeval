@@ -23,7 +23,7 @@ from deepeval.test_run import (
     MetricData,
 )
 from deepeval.evaluate.types import TestResult
-from deepeval.tracing.api import TraceApi
+from deepeval.tracing.api import TraceApi, BaseApiSpan
 from deepeval.tracing.tracing import BaseSpan, Trace
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
@@ -510,28 +510,43 @@ def count_metrics_in_trace(trace: Trace) -> int:
 
     return sum(count_metrics_recursive(span) for span in trace.root_spans)
 
-def extract_span_test_results(trace_api: TraceApi) -> List[TestResult]:
+def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
     # extract trace result
-    if trace_api.metrics_data:
+    if trace_api.metrics_data and trace_api.llm_test_case:
         test_results.append(
             TestResult(
                 name=trace_api.name,
                 success=True,
                 metrics_data=trace_api.metrics_data,
                 conversational=False,
+                input=trace_api.llm_test_case.input,
+                actual_output=trace_api.llm_test_case.actual_output,
+                expected_output=trace_api.llm_test_case.expected_output,
+                context=trace_api.llm_test_case.context,
+                retrieval_context=trace_api.llm_test_case.retrieval_context,
             )
         )
     # extract base span results
     for span in trace_api.base_spans:
-        if span.metrics_data:
-            test_results.append(
-                TestResult(
-                    name=span.name,
-                    success=span.status == "SUCCESS",
-                    metrics_data=span.metrics_data,
-                    conversational=False,
-                )
-            )
+        test_results.extend(extract_span_test_results(span))
     
+    return test_results
+
+def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
+    test_results: List[TestResult] = []
+    if span_api.metrics_data and span_api.llm_test_case:
+        test_results.append(    
+            TestResult(
+                name=span_api.name,
+                success=span_api.status == "SUCCESS",
+                metrics_data=span_api.metrics_data,
+                input=span_api.llm_test_case.input,
+                actual_output=span_api.llm_test_case.actual_output,
+                expected_output=span_api.llm_test_case.expected_output,
+                context=span_api.llm_test_case.context,
+                retrieval_context=span_api.llm_test_case.retrieval_context, 
+                conversational=False
+            )
+        )
     return test_results
