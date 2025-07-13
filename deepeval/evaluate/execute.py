@@ -1291,7 +1291,7 @@ async def a_execute_agentic_test_case(
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
     test_results.extend(extract_trace_test_results(trace_api))
-    
+
     update_pbar(progress, pbar_id)
 
 

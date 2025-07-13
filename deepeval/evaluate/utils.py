@@ -510,6 +510,7 @@ def count_metrics_in_trace(trace: Trace) -> int:
 
     return sum(count_metrics_recursive(span) for span in trace.root_spans)
 
+
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
     # extract trace result
@@ -542,13 +543,14 @@ def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     # extract tool span results
     for span in trace_api.tool_spans:
         test_results.extend(extract_span_test_results(span))
-    
+
     return test_results
+
 
 def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
     test_results: List[TestResult] = []
     if span_api.metrics_data and span_api.llm_test_case:
-        test_results.append(    
+        test_results.append(
             TestResult(
                 name=span_api.name,
                 success=span_api.status == "SUCCESS",
@@ -557,8 +559,8 @@ def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
                 actual_output=span_api.llm_test_case.actual_output,
                 expected_output=span_api.llm_test_case.expected_output,
                 context=span_api.llm_test_case.context,
-                retrieval_context=span_api.llm_test_case.retrieval_context, 
-                conversational=False
+                retrieval_context=span_api.llm_test_case.retrieval_context,
+                conversational=False,
             )
         )
     return test_results
