@@ -71,6 +71,7 @@ from deepeval.evaluate.utils import (
     create_test_result,
     create_api_test_case,
     count_metrics_in_trace,
+    extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 
@@ -1055,6 +1056,7 @@ def execute_agentic_test_cases(
                 api_test_case.update_run_duration(run_duration)
                 test_run_manager.update_test_run(api_test_case, test_case)
                 test_results.append(create_test_result(api_test_case))
+                test_results.extend(extract_trace_test_results(trace_api))
 
                 update_pbar(progress, pbar_id)
 
@@ -1288,7 +1290,8 @@ async def a_execute_agentic_test_case(
     api_test_case.update_run_duration(run_duration)
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
-
+    test_results.extend(extract_trace_test_results(trace_api))
+    
     update_pbar(progress, pbar_id)
 
 
