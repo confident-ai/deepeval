@@ -357,15 +357,15 @@ test_case = LLMTestCase(
     # Replace this with the tools that were actually used
     tools_called=[
         ToolCall(
-            name="Calculator Tool"
+            name="Calculator Tool",
             description="A tool that calculates mathematical equations or expressions.",
-            input={"user_input": "2+3"}
+            input={"user_input": "2+3"},
             output=5
         ),
         ToolCall(
-            name="WebSearch Tool"
-            reasoning="Knowledge base does not detail why the chicken crossed the road."
-            input={"search_query": "Why did the chicken crossed the road?"}
+            name="WebSearch Tool",
+            reasoning="Knowledge base does not detail why the chicken crossed the road.",
+            input={"search_query": "Why did the chicken crossed the road?"},
             output="Because it wanted to, duh."
         )
     ]
@@ -392,23 +392,23 @@ test_case = LLMTestCase(
     # Replace this with the tools that were actually used
     tools_called=[
         ToolCall(
-            name="Calculator Tool"
+            name="Calculator Tool",
             description="A tool that calculates mathematical equations or expressions.",
-            input={"user_input": "2+3"}
+            input={"user_input": "2+3"},
             output=5
         ),
         ToolCall(
-            name="WebSearch Tool"
-            reasoning="Knowledge base does not detail why the chicken crossed the road."
-            input={"search_query": "Why did the chicken crossed the road?"}
+            name="WebSearch Tool",
+            reasoning="Knowledge base does not detail why the chicken crossed the road.",
+            input={"search_query": "Why did the chicken crossed the road?"},
             output="Because it wanted to, duh."
         )
     ]
     expected_tools=[
         ToolCall(
-            name="WebSearch Tool"
-            reasoning="Knowledge base does not detail why the chicken crossed the road."
-            input={"search_query": "Why did the chicken crossed the road?"}
+            name="WebSearch Tool",
+            reasoning="Knowledge base does not detail why the chicken crossed the road.",
+            input={"search_query": "Why did the chicken crossed the road?"},
             output="Because it needed to escape from the hungry humans."
         )
     ]
