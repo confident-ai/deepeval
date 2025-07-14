@@ -79,6 +79,7 @@ You can also run the `TaskCompletionMetric` for [end-to-end](/docs/evaluation-en
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import TaskCompletionMetric
+from deepeval.test_case import ToolCall
 
 metric = TaskCompletionMetric(
     threshold=0.7,
