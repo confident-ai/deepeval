@@ -94,10 +94,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add schema if provided
         if schema:
-            completion_params["response_format"] = {
-                "type": "json_object",
-                "schema": schema.model_json_schema()
-            }
+            completion_params["response_format"] = {"type": "json_object", "schema": schema.model_json_schema()}
             # completion_params["json_schema"] = schema.model_json_schema()
 
         # Add any additional parameters
@@ -140,10 +137,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add schema if provided
         if schema:
-            completion_params["response_format"] = {
-                "type": "json_object",
-                "schema": schema.model_json_schema()
-            }
+            completion_params["response_format"] = {"type": "json_object", "schema": schema.model_json_schema()}
             # completion_params["json_schema"] = schema.model_json_schema()
 
         # Add any additional parameters
