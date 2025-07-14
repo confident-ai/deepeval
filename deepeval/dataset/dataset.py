@@ -78,6 +78,8 @@ class EvaluationDataset:
 
         self._goldens = goldens_list
         self._conversational_goldens = conversational_goldens_list
+        self._llm_test_cases = []
+        self._conversational_test_cases = []
 
     def __repr__(self):
         return (
@@ -717,18 +719,24 @@ class EvaluationDataset:
                 )
 
     def queue(
-        self, alias: str, goldens: List[Golden], print_response: bool = True
+        self,
+        alias: str,
+        goldens: Union[List[Golden], List[ConversationalGolden]],
+        print_response: bool = True,
     ):
         if len(goldens) == 0:
             raise ValueError(
                 f"Can't queue empty list of goldens to dataset with alias: {alias} on Confident AI."
             )
 
+        multi_turn = isinstance(goldens[0], ConversationalGolden)
+
         if is_confident():
             api = Api()
             api_dataset = APIQueueDataset(
                 alias=alias,
-                goldens=goldens,
+                goldens=goldens if not multi_turn else None,
+                conversationalGoldens=goldens if multi_turn else None,
             )
             try:
                 body = api_dataset.model_dump(by_alias=True, exclude_none=True)
@@ -736,11 +744,14 @@ class EvaluationDataset:
                 # Pydantic version below 2.0
                 body = api_dataset.dict(by_alias=True, exclude_none=True)
 
+            print(body, "@@")
+
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,
                 endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
                 body=body,
+                url_params={"alias": alias},
             )
             if result and print_response:
                 response = CreateDatasetHttpResponse(

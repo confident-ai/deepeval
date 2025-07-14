@@ -15,7 +15,10 @@ class APIDataset(BaseModel):
 
 class APIQueueDataset(BaseModel):
     alias: str
-    goldens: List[Golden]
+    goldens: Optional[List[Golden]] = Field(None)
+    conversational_goldens: Optional[List[ConversationalGolden]] = Field(
+        None, alias="conversationalGoldens"
+    )
 
 
 class CreateDatasetHttpResponse(BaseModel):

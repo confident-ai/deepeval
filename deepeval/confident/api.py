@@ -52,7 +52,8 @@ class HttpMethods(Enum):
 
 class Endpoints(Enum):
     DATASET_ENDPOINT = "/v1/datasets"
-    DATASET_QUEUE_ENDPOINT = "/v1/datasets/queue"
+    DATASET_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue"
+
     TEST_RUN_ENDPOINT = "/v1/test-run"
     TRACES_ENDPOINT = "/v1/traces"
     FEEDBACK_ENDPOINT = "/v1/feedback"
