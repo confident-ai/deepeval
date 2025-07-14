@@ -29,6 +29,8 @@ To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `
 ```python
 from deepeval.metrics import TaskCompletionMetric
 from deepeval.tracing import observe
+from deepeval.dataset import Golden
+from deepeval import evaluate
 
 task_completion = TaskCompletionMetric(
     threshold=0.7,
