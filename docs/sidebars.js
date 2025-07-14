@@ -83,6 +83,7 @@ module.exports = {
                 "metrics-bias",
                 "metrics-toxicity",
                 "metrics-non-advice",
+                "metrics-misuse",
                 "metrics-pii-leakage",
                 "metrics-role-violation",
                 "metrics-summarization",
