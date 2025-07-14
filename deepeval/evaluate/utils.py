@@ -138,10 +138,11 @@ def create_api_test_case(
             runDuration=0,
             evaluationCost=None,
             order=order,
-            testCases=[],
+            scenario=test_case.scenario,
+            userDescription=test_case.user_description,
+            comments=test_case.comments,
             additionalMetadata=test_case.additional_metadata,
         )
-        # api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [
             create_api_turn(
                 turn=turn,

@@ -1,8 +1,10 @@
 from typing import List, Optional, Any
-from deepeval.dataset.api import Golden, ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 import json
 import re
+
+from deepeval.dataset.api import Golden
+from deepeval.dataset.golden import ConversationalGolden
+from deepeval.test_case import LLMTestCase, ConversationalTestCase
 
 
 def convert_test_cases_to_goldens(
@@ -36,11 +38,11 @@ def convert_goldens_to_test_cases(
             expected_output=golden.expected_output,
             context=golden.context,
             retrieval_context=golden.retrieval_context,
-            additional_metadata=golden.additional_metadata,
             tools_called=golden.tools_called,
             expected_tools=golden.expected_tools,
             name=golden.name,
             comments=golden.comments,
+            additional_metadata=golden.additional_metadata,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
@@ -50,22 +52,25 @@ def convert_goldens_to_test_cases(
 
 
 def convert_convo_goldens_to_convo_test_cases(
-    convo_goldens: List[ConversationalGolden],
+    goldens: List[ConversationalGolden],
     _alias: Optional[str] = None,
     _id: Optional[str] = None,
 ) -> List[ConversationalTestCase]:
-    conv_test_cases = []
-    for index, convo_golden in enumerate(convo_goldens):
-        conv_test_case = ConversationalTestCase(
-            additional_metadata=convo_golden.additional_metadata,
-            comments=convo_golden.comments,
-            turns=convert_goldens_to_test_cases(convo_golden.turns),
+    test_cases = []
+    for index, golden in enumerate(goldens):
+        test_case = ConversationalTestCase(
+            turns=[],
+            scenario=golden.scenario,
+            user_description=golden.user_description,
+            name=golden.name,
+            additional_metadata=golden.additional_metadata,
+            comments=golden.comments,
             _dataset_alias=_alias,
             _dataset_id=_id,
             _dataset_rank=index,
         )
-        conv_test_cases.append(conv_test_case)
-    return conv_test_cases
+        test_cases.append(test_case)
+    return test_cases
 
 
 def trimAndLoadJson(input_string: str) -> Any:
