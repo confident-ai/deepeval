@@ -9,6 +9,19 @@
   margin-bottom: 0.5rem;
 }
 
+.number {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px;
+  border-color: black;
+  border-style: solid;
+  width: 3rem;
+  padding: 3px;
+  border-radius: 1.5rem;
+  font-weight: 500;
+}
+
 .description {
   color: #6b7280;
   font-size: 0.95rem;

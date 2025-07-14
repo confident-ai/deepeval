@@ -14,10 +14,11 @@ const LinkCards = ({ tutorials }) => {
   );
 }
 
-const LinkCard = ({ title, description, to }) => {
+const LinkCard = ({ title, description, to, number }) => {
   return (
     <Link to={to} className={styles.card}>
       <div className={styles.cardContent}>
+        {number && <h4 className={styles.number}>{number}</h4>}
         <h3 className={styles.cardTitle}>{title}</h3>
         {description && <p className={styles.cardDescription}>{description}</p>}
       </div>

@@ -17,21 +17,25 @@ import LinkCards from "@site/src/components/LinkCards"
 <LinkCards
     tutorials={[
         {
+            number: 1,
             title: 'Development',
             description: 'Go to the Development stage',
             to: '/tutorials/summarization-agent/tutorial-summarization-development',
         },
         {
+            number: 2,
             title: 'Evaluation',
             description: 'Go to the Evaluation stage',
             to: '/tutorials/summarization-agent/tutorial-summarization-evaluation',
         },
         {
+            number: 3,
             title: 'Improvement',
             description: 'Go to the Improvement stage',
             to: '/tutorials/summarization-agent/tutorial-summarization-improvement',
         },
         {
+            number: 4,
             title: 'Production',
             description: 'Go to the Production stage',
             to: '/tutorials/summarization-agent/tutorial-summarization-production',
@@ -45,29 +49,42 @@ In this tutorial, you'll learn:
 
 - How to build a summarization agent.
 - How to define summarization criteria and choose the right evaluation metrics.
-- How to evaluate your summarization agent using **DeepEval**.
+- How to run evals on your summarization agent using `deepeval`
 - How to improve your summarization agent using evaluation results.
 - How to prepare your summarization agent for production.
 
 ## Meeting Summarizer
 
-The agent we'll be building processes meeting-style transcripts and generates:
+Imagine you're building an industry standard meeting summarization agent. Your meeting summarizer takes the entire conversation transcription as `input` and outputs the following:
 
 - A brief summary of the discussion.
 - A list of action items.
 
-Our summarization agent takes the entire conversation transcription as `input` and outputs a concise summary along with clear action items. The goal is to ensure it captures key decisions and follow-ups accurately—without missing context, misinterpreting information, or including unnecessary detail.
+Your goal is to build a summarizer that can be used by multiple teams to improve their productivity. Hence, you need to ensure the summarizer captures key decisions and follow-ups accurately—without missing context, misinterpreting information, or including unnecessary details.
 
-:::info
-We'll be using OpenAI's LLM models to power our summarizer. Here's the prompt template used to guide the model's summaries:
-```text
-You are an AI assistant tasked with summarizing meeting transcripts clearly 
-and accurately. Given the following conversation, generate a concise summary 
-that captures the key points discussed, along with a set of action items 
-reflecting the concrete next steps mentioned. Keep the tone neutral and 
-factual, avoid unnecessary detail, and do not add interpretation beyond 
-the content of the conversation.
-```
+## What You'll Build
+
+Most meeting summarization SaaS platforms aim to give valuable information from different meetings they handle in a way that is more accessible to users. For example some platforms summarize meetings and create a list of action items in the form of tick boxes which can be used to track team progress and ultimately improve productivity.
+
+:::tip Example
+An end product of a summarization agent might look as shown below:
+
+**On the platform**
+![Webpage Image](./images/webpage.png)
+
+The above image shows what you might see on the webpage of your meeting summarization agent platform. **An overview of the meeting, transcript, the summary and the action items concerning everyone involved.**
+
+Most meeting summarization platforms also send emails to the relevant team members with their assigned action items to be performed. These emails might look as shown below:
+
+**Maya's email**
+![Maya's email](./images/maya-mail.png)
+
+**Ethan's email**
+![Ethan's email](./images/ethan-mail.png)
+
+This is an example of how you'll be using your meeting summarizer's responses to create an appealing meeting summarization platform that helps increase productivity of teams.
 :::
+
+In the rest of this tutorial series, you'll build a summarization agent that outputs summaries and action items — ready to be used in any kind of interactive platform or SaaS product.
 
 Ready to get started? Let's move on to [developing the summarization agent](tutorial-summarization-development).
