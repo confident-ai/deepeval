@@ -712,6 +712,7 @@ class EvaluationDataset:
                     progress.update(
                         task_id,
                         description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+                        completed=100,
                     )
             else:
                 raise Exception(
