@@ -51,7 +51,7 @@ You should first read the [metrics section](/docs/metrics-introduction) to under
 You'll need to setup your LLM application to return the test case parameters required by the metrics you've chosen. Alternatively, [setup LLM tracing](/docs/evaluation-llm-tracing) to avoid making changes to your LLM app.
 
 <details>
-  <summary>How to set up your LLM application?</summary>
+  <summary>Guidelines to set up your LLM application</summary>
 
 You'll need to make sure your application returns all fields required by your selected metrics, in order to create a valid end-to-end `LLMTestCase`. For example, if you’re using `AnswerRelevancyMetric` and `FaithfulnessMetric`, your application must return:
 
