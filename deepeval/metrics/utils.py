@@ -316,9 +316,16 @@ def check_matching_llm_test_case_inputs(test_cases: List[LLMTestCase]):
 
 
 def trimAndLoadJson(
-    input_string: str,
+    input_string: Any,
     metric: Optional[BaseMetric] = None,
 ) -> Any:
+    if isinstance(input_string, str):
+        input_string = input_string
+    elif isinstance(input_string, tuple):
+        if isinstance(input_string[0], str):
+            input_string = input_string[0]
+        elif isinstance(input_string[1], str):
+            input_string = input_string[1]
     start = input_string.find("{")
     end = input_string.rfind("}") + 1
 
