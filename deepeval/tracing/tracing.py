@@ -183,7 +183,9 @@ class TraceManager:
                     if trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
                         self.traces_to_evaluate.sort(
-                            key=lambda t: self.traces_to_evaluate_order.index(t.uuid) 
+                            key=lambda t: self.traces_to_evaluate_order.index(
+                                t.uuid
+                            )
                         )
                 else:
                     # print(f"Ending trace: {trace.root_spans}")

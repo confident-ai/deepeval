@@ -68,6 +68,7 @@ from deepeval.evaluate.execute import (
 )
 from deepeval.openai.utils import openai_test_case_pairs
 
+
 def assert_test(
     test_case: Optional[
         Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
@@ -410,7 +411,9 @@ def dataset(
         test_run = global_test_run_manager.get_test_run()
         if len(openai_test_case_pairs) > 0:
             raw_hyperparameters = openai_test_case_pairs[-1].hyperparameters
-            test_run.hyperparameters = process_hyperparameters(raw_hyperparameters)
+            test_run.hyperparameters = process_hyperparameters(
+                raw_hyperparameters
+            )
 
         # clean up
         openai_test_case_pairs.clear()

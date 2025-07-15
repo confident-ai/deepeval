@@ -86,6 +86,7 @@ from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import TestCaseMetricPair, openai_test_case_pairs
 from deepeval.test_run.hyperparameters import process_hyperparameters
 
+
 def execute_test_cases(
     test_cases: Union[
         List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
@@ -849,6 +850,7 @@ async def a_execute_conversational_test_cases(
 ### Component-Level Evals
 ###########################################
 
+
 def execute_agentic_test_cases(
     goldens: List[Golden],
     observed_callback: Union[
@@ -1201,9 +1203,7 @@ async def a_execute_agentic_test_case(
     _use_bar_indicator: bool,
     _is_assert_test: bool,
     observed_callback: Optional[
-        Union[
-            Callable[[str], Any], Callable[[str], Awaitable[Any]]
-        ]
+        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
     trace: Optional[Trace] = None,
     progress: Optional[Progress] = None,
@@ -1409,6 +1409,7 @@ def count_observe_decorators_in_module(func: Callable) -> int:
 ### Looped Evals
 ###########################################
 
+
 def execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
     verbose_mode: Optional[bool],
@@ -1429,7 +1430,6 @@ def execute_agentic_test_cases_from_loop(
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
 
-    
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
@@ -1659,21 +1659,21 @@ def a_execute_agentic_test_cases_from_loop(
         async with semaphore:
             return await func(*args, **kwargs)
 
-
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         pbar_callback_id: Optional[int] = None,
-    ):        
+    ):
         # Invoke LLM app
         def create_callback_task(coro, **kwargs):
             def on_task_done(t: asyncio.Task):
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
+
             task = loop.create_task(execute_callback_with_semaphore(coro))
             task.add_done_callback(on_task_done)
             return task
-            
+
         asyncio.create_task = create_callback_task
         for golden in goldens:
             yield golden
@@ -1681,7 +1681,9 @@ def a_execute_agentic_test_cases_from_loop(
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
         if global_test_run_tasks.num_tasks() > 0:
-            loop.run_until_complete(asyncio.gather(*global_test_run_tasks.get_tasks()))
+            loop.run_until_complete(
+                asyncio.gather(*global_test_run_tasks.get_tasks())
+            )
 
         # Evaluate traces
         asyncio.create_task = loop.create_task
@@ -1705,22 +1707,24 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             )
         elif openai_test_case_pairs:
-            loop.run_until_complete(evaluate_test_case_pairs(
-                test_case_pairs=openai_test_case_pairs,
-                test_run=test_run,
-                test_run_manager=test_run_manager,
-                test_results=test_results,
-                ignore_errors=ignore_errors,
-                skip_on_missing_params=skip_on_missing_params,
-                show_indicator=show_indicator,
-                verbose_mode=verbose_mode,
-                _use_bar_indicator=_use_bar_indicator,
-                _is_assert_test=_is_assert_test,
-                progress=progress,
-                pbar_id=pbar_id,
-                throttle_value=throttle_value,
-                max_concurrent=max_concurrent,
-            ))
+            loop.run_until_complete(
+                evaluate_test_case_pairs(
+                    test_case_pairs=openai_test_case_pairs,
+                    test_run=test_run,
+                    test_run_manager=test_run_manager,
+                    test_results=test_results,
+                    ignore_errors=ignore_errors,
+                    skip_on_missing_params=skip_on_missing_params,
+                    show_indicator=show_indicator,
+                    verbose_mode=verbose_mode,
+                    _use_bar_indicator=_use_bar_indicator,
+                    _is_assert_test=_is_assert_test,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    throttle_value=throttle_value,
+                    max_concurrent=max_concurrent,
+                )
+            )
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(
@@ -1757,7 +1761,6 @@ def a_execute_agentic_test_cases_from_loop(
     asyncio.create_task = orig_create_task
 
 
-
 async def evaluate_traces(
     traces_to_evaluate: List[Trace],
     goldens: List[Golden],
@@ -1775,6 +1778,7 @@ async def evaluate_traces(
     max_concurrent: int,
 ):
     semaphore = asyncio.Semaphore(max_concurrent)
+
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
             return await func(*args, **kwargs)
@@ -1803,6 +1807,7 @@ async def evaluate_traces(
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*eval_tasks)
 
+
 async def evaluate_test_case_pairs(
     test_case_pairs: List[TestCaseMetricPair],
     test_run: TestRun,
@@ -1820,6 +1825,7 @@ async def evaluate_test_case_pairs(
     max_concurrent: int,
 ):
     semaphore = asyncio.Semaphore(max_concurrent)
+
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
             return await func(*args, **kwargs)
@@ -1833,7 +1839,9 @@ async def evaluate_test_case_pairs(
             if verbose_mode is not None:
                 for metric in test_case_pair.metrics:
                     metric.verbose_mode = verbose_mode
-            copied_llm_metrics: List[BaseMetric] = copy_metrics(test_case_pair.metrics)
+            copied_llm_metrics: List[BaseMetric] = copy_metrics(
+                test_case_pair.metrics
+            )
             task = execute_with_semaphore(
                 func=a_execute_llm_test_cases,
                 metrics=copied_llm_metrics,

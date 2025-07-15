@@ -12,7 +12,7 @@ from deepeval.openai.extractors import (
     extract_output_parameters,
     extract_input_parameters,
     InputParameters,
-    ToolCall
+    ToolCall,
 )
 from deepeval.tracing.context import update_current_span
 from deepeval.tracing import trace_manager, observe
@@ -35,38 +35,36 @@ def patch_openai(openai_module):
         patch_openai_client(async_openai_class, is_async=True)
 
 
-def patch_openai_client(
-        openai_class,
-        is_async: bool
-    ):
-        original_init = openai_class.__init__
+def patch_openai_client(openai_class, is_async: bool):
+    original_init = openai_class.__init__
 
-        @wraps(original_init)
-        def new_init(self, *args, **kwargs):
-            original_init(self, *args, **kwargs)
-            method_paths = {
-                # path → is_completion_method
-                "chat.completions.create": True,
-                "beta.chat.completions.parse": True,
-                "responses.create": False,
-            }
-            for path, is_completion in method_paths.items():
-                method = get_attr_path(self, path)
-                if not callable(method): continue
-                if is_async:
-                    patched_method = patch_async_openai_client_method(
-                        orig_method=method,
-                        is_completion_method=is_completion,
-                    )
-                else:
-                    patched_method = patch_sync_openai_client_method(
-                        orig_method=method,
-                        is_completion_method=is_completion,
-                    )
-                set_attr_path(self, path, patched_method)
+    @wraps(original_init)
+    def new_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        method_paths = {
+            # path → is_completion_method
+            "chat.completions.create": True,
+            "beta.chat.completions.parse": True,
+            "responses.create": False,
+        }
+        for path, is_completion in method_paths.items():
+            method = get_attr_path(self, path)
+            if not callable(method):
+                continue
+            if is_async:
+                patched_method = patch_async_openai_client_method(
+                    orig_method=method,
+                    is_completion_method=is_completion,
+                )
+            else:
+                patched_method = patch_sync_openai_client_method(
+                    orig_method=method,
+                    is_completion_method=is_completion,
+                )
+            set_attr_path(self, path, patched_method)
 
-        openai_class.__init__ = new_init    
-        
+    openai_class.__init__ = new_init
+
 
 def patch_async_openai_client_method(
     orig_method: Callable,
@@ -82,17 +80,18 @@ def patch_async_openai_client_method(
         *args,
         **kwargs
     ):
-        input_parameters: InputParameters = extract_input_parameters(is_completion_method, kwargs)
+        input_parameters: InputParameters = extract_input_parameters(
+            is_completion_method, kwargs
+        )
         is_traced = len(trace_manager.traces) > 0
 
         if is_traced:
+
             @observe(type="llm", model=input_parameters.model, metrics=metrics)
             async def llm_generation(*args, **kwargs):
                 response = await orig_method(*args, **kwargs)
                 output_parameters = extract_output_parameters(
-                    is_completion_method,
-                    response,
-                    input_parameters
+                    is_completion_method, response, input_parameters
                 )
                 update_current_span(
                     test_case=LLMTestCase(
@@ -102,14 +101,16 @@ def patch_async_openai_client_method(
                         retrieval_context=retrieval_context,
                         context=context,
                         tools_called=output_parameters.tools_called,
-                        expected_tools=expected_tools
+                        expected_tools=expected_tools,
                     ),
                     attributes=LlmAttributes(
-                        input=input_parameters.input or input_parameters.messages or "NA",
+                        input=input_parameters.input
+                        or input_parameters.messages
+                        or "NA",
                         output=output_parameters.output or "NA",
                         input_token_count=output_parameters.prompt_tokens,
                         output_token_count=output_parameters.completion_tokens,
-                    )
+                    ),
                 )
                 create_child_tool_spans(output_parameters)
                 return response
@@ -118,9 +119,7 @@ def patch_async_openai_client_method(
         else:
             response = await orig_method(*args, **kwargs)
             output_parameters = extract_output_parameters(
-                is_completion_method,
-                response,
-                input_parameters
+                is_completion_method, response, input_parameters
             )
             test_case = LLMTestCase(
                 input=input_parameters.input,
@@ -129,12 +128,12 @@ def patch_async_openai_client_method(
                 retrieval_context=retrieval_context,
                 context=context,
                 tools_called=output_parameters.tools_called,
-                expected_tools=expected_tools
+                expected_tools=expected_tools,
             )
             add_test_case(
                 test_case=test_case,
                 metrics=metrics,
-                input_parameters=input_parameters
+                input_parameters=input_parameters,
             )
             return response
 
@@ -155,17 +154,18 @@ def patch_sync_openai_client_method(
         *args,
         **kwargs
     ):
-        input_parameters: InputParameters = extract_input_parameters(is_completion_method, kwargs)
+        input_parameters: InputParameters = extract_input_parameters(
+            is_completion_method, kwargs
+        )
         is_traced = len(trace_manager.traces) > 0
 
         if is_traced:
+
             @observe(type="llm", model=input_parameters.model, metrics=metrics)
             def llm_generation(*args, **kwargs):
                 response = orig_method(*args, **kwargs)
                 output_parameters = extract_output_parameters(
-                    is_completion_method,
-                    response,
-                    input_parameters
+                    is_completion_method, response, input_parameters
                 )
                 update_current_span(
                     test_case=LLMTestCase(
@@ -175,14 +175,16 @@ def patch_sync_openai_client_method(
                         retrieval_context=retrieval_context,
                         context=context,
                         tools_called=output_parameters.tools_called,
-                        expected_tools=expected_tools
+                        expected_tools=expected_tools,
                     ),
                     attributes=LlmAttributes(
-                        input=input_parameters.input or input_parameters.messages or "NA",
+                        input=input_parameters.input
+                        or input_parameters.messages
+                        or "NA",
                         output=output_parameters.output or "NA",
                         input_token_count=output_parameters.prompt_tokens,
                         output_token_count=output_parameters.completion_tokens,
-                    )
+                    ),
                 )
                 create_child_tool_spans(output_parameters)
                 return response
@@ -191,9 +193,7 @@ def patch_sync_openai_client_method(
         else:
             response = orig_method(*args, **kwargs)
             output_parameters = extract_output_parameters(
-                is_completion_method,
-                response,
-                input_parameters
+                is_completion_method, response, input_parameters
             )
             test_case = LLMTestCase(
                 input=input_parameters.input,
@@ -202,12 +202,12 @@ def patch_sync_openai_client_method(
                 retrieval_context=retrieval_context,
                 context=context,
                 tools_called=output_parameters.tools_called,
-                expected_tools=expected_tools
+                expected_tools=expected_tools,
             )
             add_test_case(
                 test_case=test_case,
                 metrics=metrics,
-                input_parameters=input_parameters
+                input_parameters=input_parameters,
             )
             return response
 

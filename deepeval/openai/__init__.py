@@ -24,6 +24,7 @@ def load_and_patch_openai():
     patch_openai(deepeval_openai)
     return deepeval_openai
 
+
 patched_openai = load_and_patch_openai()
 openai = patched_openai
 OpenAI = patched_openai.OpenAI
@@ -31,6 +32,6 @@ AsyncOpenAI = patched_openai.AsyncOpenAI
 
 __all__ = [
     "openai",
-    "OpenAI", 
+    "OpenAI",
     "AsyncOpenAI",
 ]

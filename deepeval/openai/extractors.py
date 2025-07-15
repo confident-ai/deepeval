@@ -12,9 +12,9 @@ class InputParameters(BaseModel):
     input: Optional[str] = None
     instructions: Optional[str] = None
     messages: Optional[List[Dict]] = None
-    tool_descriptions: Optional[Dict[str, str]]=None
+    tool_descriptions: Optional[Dict[str, str]] = None
 
-    
+
 class OutputParameters(BaseModel):
     output: Optional[str] = None
     prompt_tokens: Optional[int] = None
@@ -23,22 +23,23 @@ class OutputParameters(BaseModel):
 
 
 def extract_input_parameters(
-    is_completion: bool, 
-    kwargs: Dict
+    is_completion: bool, kwargs: Dict
 ) -> InputParameters:
     if is_completion:
         return extract_input_parameters_from_completion(kwargs)
     else:
         return extract_input_parameters_from_response(kwargs)
 
-def extract_input_parameters_from_completion(
-    kwargs: Dict
-) -> InputParameters:
-    model = kwargs.get('model')
-    messages = kwargs.get('messages')
-    tools = kwargs.get('tools')
+
+def extract_input_parameters_from_completion(kwargs: Dict) -> InputParameters:
+    model = kwargs.get("model")
+    messages = kwargs.get("messages")
+    tools = kwargs.get("tools")
     tool_descriptions_map = (
-        {tool["function"]["name"]: tool["function"]["description"] for tool in tools}
+        {
+            tool["function"]["name"]: tool["function"]["description"]
+            for tool in tools
+        }
         if tools is not None
         else None
     )
@@ -52,50 +53,54 @@ def extract_input_parameters_from_completion(
         if role == "user":
             user_messages.append(content)
     if len(user_messages) > 0:
-        input = user_messages[0] 
-          
-    return InputParameters(
-        model=model, 
-        input=input, 
-        messages=messages, 
-        tools=tools,
-        tool_descriptions=tool_descriptions_map
-    ) 
+        input = user_messages[0]
 
-def extract_input_parameters_from_response(
-    kwargs: Dict
-) -> InputParameters:
-    model = kwargs.get('model')
-    input = kwargs.get('input')
-    instructions = kwargs.get('instructions')
-    tools = kwargs.get('tools')
+    return InputParameters(
+        model=model,
+        input=input,
+        messages=messages,
+        tools=tools,
+        tool_descriptions=tool_descriptions_map,
+    )
+
+
+def extract_input_parameters_from_response(kwargs: Dict) -> InputParameters:
+    model = kwargs.get("model")
+    input = kwargs.get("input")
+    instructions = kwargs.get("instructions")
+    tools = kwargs.get("tools")
     tool_descriptions = (
         {tool["name"]: tool["description"] for tool in tools}
         if tools is not None
         else None
     )
     return InputParameters(
-        model=model, 
-        input=input, 
-        instructions=instructions, 
+        model=model,
+        input=input,
+        instructions=instructions,
         tools=tools,
-        tool_descriptions=tool_descriptions
-    ) 
+        tool_descriptions=tool_descriptions,
+    )
 
 
 def extract_output_parameters(
-    is_completion: bool, 
+    is_completion: bool,
     response: Union[ChatCompletion, ParsedChatCompletion, Response],
-    input_parameters: InputParameters
+    input_parameters: InputParameters,
 ) -> OutputParameters:
     if is_completion:
-        return extract_output_parameters_from_completion(response, input_parameters)
+        return extract_output_parameters_from_completion(
+            response, input_parameters
+        )
     else:
-        return extract_output_parameters_from_response(response, input_parameters)
+        return extract_output_parameters_from_response(
+            response, input_parameters
+        )
+
 
 def extract_output_parameters_from_completion(
     completion: Union[ChatCompletion, ParsedChatCompletion],
-    input_parameters: InputParameters
+    input_parameters: InputParameters,
 ) -> OutputParameters:
     output = str(completion.choices[0].message.content)
     prompt_tokens = completion.usage.prompt_tokens
@@ -111,26 +116,27 @@ def extract_output_parameters_from_completion(
                 ToolCall(
                     name=tool_call.function.name,
                     input_parameters=json.loads(tool_call.function.arguments),
-                    description=input_parameters.tool_descriptions.get(tool_call.function.name),
+                    description=input_parameters.tool_descriptions.get(
+                        tool_call.function.name
+                    ),
                 )
             )
-            
+
     return OutputParameters(
         output=output,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
-        tools_called=tools_called
+        tools_called=tools_called,
     )
 
 
 def extract_output_parameters_from_response(
-    response: Response, 
-    input_parameters: InputParameters
+    response: Response, input_parameters: InputParameters
 ) -> OutputParameters:
     output = response.output_text
-    prompt_tokens = response.usage.input_tokens 
-    completion_tokens = response.usage.output_tokens 
-    
+    prompt_tokens = response.usage.input_tokens
+    completion_tokens = response.usage.output_tokens
+
     # Extract Tool Calls
     tools_called = None
     openai_raw_output = response.output
@@ -143,7 +149,9 @@ def extract_output_parameters_from_response(
                 ToolCall(
                     name=tool_call.name,
                     input_parameters=json.loads(tool_call.arguments),
-                    description=input_parameters.tool_descriptions.get(tool_call.name),
+                    description=input_parameters.tool_descriptions.get(
+                        tool_call.name
+                    ),
                 )
             )
 
@@ -151,5 +159,5 @@ def extract_output_parameters_from_response(
         output=output,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
-        tools_called=tools_called
+        tools_called=tools_called,
     )

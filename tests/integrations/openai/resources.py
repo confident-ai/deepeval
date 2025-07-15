@@ -3,28 +3,9 @@ from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.tracing import observe
 
 
-RESPONSE_TOOLS = [{
-    "type": "function",
-    "name": "get_weather",
-    "description": "Get current temperature for a given location.",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "location": {
-                "type": "string",
-                "description": "City and country e.g. Bogotá, Colombia"
-            }
-        },
-        "required": [
-            "location"
-        ],
-        "additionalProperties": False
-    }
-}] 
-
-CHAT_TOOLS = [{
-    "type": "function",
-    "function": {
+RESPONSE_TOOLS = [
+    {
+        "type": "function",
         "name": "get_weather",
         "description": "Get current temperature for a given location.",
         "parameters": {
@@ -32,17 +13,37 @@ CHAT_TOOLS = [{
             "properties": {
                 "location": {
                     "type": "string",
-                    "description": "City and country e.g. Bogotá, Colombia"
+                    "description": "City and country e.g. Bogotá, Colombia",
                 }
             },
-            "required": [
-                "location"
-            ],
-            "additionalProperties": False
+            "required": ["location"],
+            "additionalProperties": False,
         },
-        "strict": True
     }
-}]
+]
+
+CHAT_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get current temperature for a given location.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "City and country e.g. Bogotá, Colombia",
+                    }
+                },
+                "required": ["location"],
+                "additionalProperties": False,
+            },
+            "strict": True,
+        },
+    }
+]
+
 
 @observe()
 def llm_app(
@@ -53,7 +54,10 @@ def llm_app(
         response = OpenAI().chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful chatbot. Always generate a string response."},
+                {
+                    "role": "system",
+                    "content": "You are a helpful chatbot. Always generate a string response.",
+                },
                 {"role": "user", "content": input},
             ],
             tools=CHAT_TOOLS,
@@ -80,7 +84,10 @@ async def async_llm_app(
         response = await AsyncOpenAI().chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a helpful chatbot. Always generate a string response."},
+                {
+                    "role": "system",
+                    "content": "You are a helpful chatbot. Always generate a string response.",
+                },
                 {"role": "user", "content": input},
             ],
             tools=CHAT_TOOLS,

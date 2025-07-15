@@ -42,6 +42,6 @@ class TestRunTasks:
 
     def clear_tasks(self):
         self.tasks.clear()
-    
-    
+
+
 global_test_run_tasks = TestRunTasks()
