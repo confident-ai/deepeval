@@ -348,13 +348,30 @@ goldens = [
     Golden(input="What are the main causes of climate change?"),
 ]
 
-# Run Async
-evaluate(
-    goldens=goldens,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True),
-    display_config=DisplayConfig(show_indicator=True),
-)
+
+from deepeval import test_run
+from deepeval.dataset import Golden
+
+goldens = [
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+]
+
+from deepeval import test_run
+from deepeval.dataset import Golden
+
+goldens = [
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+]
+
+# # Run Async
+# evaluate(
+#     goldens=goldens,
+#     observed_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=True),
+#     display_config=DisplayConfig(show_indicator=True),
+# )
 
 # evaluate(
 #     goldens=goldens,

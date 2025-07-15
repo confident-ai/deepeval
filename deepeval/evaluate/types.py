@@ -26,3 +26,22 @@ class TestResult:
 class EvaluationResult(BaseModel):
     test_results: List[TestResult]
     confident_link: Optional[str]
+
+
+class TestRunTasks:
+    tasks: list = []
+
+    def append(self, t):
+        self.tasks.append(t)
+
+    def get_tasks(self):
+        return self.tasks
+
+    def num_tasks(self):
+        return len(self.tasks)
+
+    def clear_tasks(self):
+        self.tasks.clear()
+
+
+global_test_run_tasks = TestRunTasks()

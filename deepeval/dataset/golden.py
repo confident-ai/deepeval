@@ -39,6 +39,9 @@ class Golden(BaseModel):
 
 class ConversationalGolden(BaseModel):
     scenario: str
+    expected_outcome: Optional[str] = Field(
+        None, serialization_alias="expectedOutcome"
+    )
     user_description: Optional[str] = Field(
         None, serialization_alias="userDescription"
     )

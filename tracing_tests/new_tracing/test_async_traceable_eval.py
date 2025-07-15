@@ -180,6 +180,12 @@ goldens = [
 ]
 
 # # Run Async
+#    goldens=goldens * 40,
+#    observed_callback=meta_agent,
+#    async_config=AsyncConfig(run_async=True, max_concurrent=40),
+#    cache_config=CacheConfig(write_cache=False),
+#    # display_config=DisplayConfig(show_indicator=False),
+
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,

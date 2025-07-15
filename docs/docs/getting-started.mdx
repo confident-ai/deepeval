@@ -8,6 +8,8 @@ sidebar_label: Quick Introduction
   <link rel="canonical" href="https://deepeval.com/docs/getting-started" />
 </head>
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import Envelope from "@site/src/components/Envelope";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
@@ -101,12 +103,23 @@ If you run more than one test run, you will be able to **catch regressions** by 
 You'll need to set your `OPENAI_API_KEY` as an environment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
 :::
 
-### Save Results On Cloud
+### Save Results
+
+It is recommended that you manage your evaluation suite on Confident AI, the `deepeval` platform.
+
+<Tabs>
+<TabItem value="confident-ai" label="Confident AI">
 
 It is **highly recommended** to save results on Confident AI, the `deepeval` cloud, to make your evaluation life easier. Run `deepeval login` (or [click here](https://app.confident-ai.com)) in the CLI to get your API key.
 
 ```bash
 deepeval login
+```
+
+Or, you can also run `deepeval view`
+
+```bash
+deepeval view
 ```
 
 After you've pasted in your API key, Confident AI will **generate testing reports and automate regression testing** whenever you run a test run to evaluate your LLM application inside any environment, at any scale, anywhere.
@@ -121,7 +134,9 @@ After you've pasted in your API key, Confident AI will **generate testing report
 
 You should save your test run as a dataset on Confident AI, which allows you to **reuse and edit** the set of `input`s and any `expected_output`, `context`, etc. for subsequent evaluations.
 
-### Save Results Locally
+</TabItem>
+
+<TabItem value="Locally" label="Locally in JSON">
 
 Simply set the `DEEPEVAL_RESULTS_FOLDER` environment variable to your relative path of choice.
 
@@ -132,6 +147,10 @@ export DEEPEVAL_RESULTS_FOLDER="./data"
 # or windows
 set DEEPEVAL_RESULTS_FOLDER=.\data
 ```
+
+</TabItem>
+
+</Tabs>
 
 ## Evaluate Nested Components
 

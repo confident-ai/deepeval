@@ -5,7 +5,10 @@ sidebar_label: Role Violation
 ---
 
 <head>
-  <link rel="canonical" href="https://deepeval.com/docs/metrics-role-violation" />
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-role-violation"
+  />
 </head>
 
 import Equation from "@site/src/components/Equation";
@@ -15,11 +18,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 The role violation metric uses LLM-as-a-judge to determine whether your LLM output violates the expected role or character that has been assigned. This can occur after fine-tuning a custom model or during general LLM usage.
 
-:::info
-Role violation in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
-:::
-
-:::tip
+:::note
 Unlike the `PromptAlignmentMetric` which focuses on following specific instructions, the `RoleViolationMetric` evaluates broader character consistency and persona adherence throughout the conversation.
 :::
 
@@ -118,7 +117,7 @@ The `RoleViolationMetric` score is calculated as a binary metric:
 
 The `RoleViolationMetric` first uses an LLM to detect and extract specific statements or behaviors from the `actual_output` that indicate role violations, before using the same LLM to classify whether each detected statement actually represents a role violation based on the expected role.
 
-### Definition of Role Violations
+### Definition of role violations
 
 In `deepeval`, whether a detected statement represents a role violation is defined according to the following rubric:
 
@@ -154,4 +153,4 @@ In `deepeval`, whether a detected statement represents a role violation is defin
 
 :::note
 Common role examples include: "helpful assistant", "customer service agent", "educational tutor", "technical support specialist", "creative writing assistant", or "professional consultant". The more specific your role definition, the more accurate the evaluation.
-::: 
+:::

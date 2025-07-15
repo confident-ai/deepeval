@@ -8,6 +8,9 @@ from deepeval.test_case import ToolCall
 
 class TurnParams(Enum):
     CONTENT = "content"
+    # SCENARIO = "scenario"
+    # USER_DESCRIPTION = "user_description"
+    # EXPECTED_OUTCOME = "expected_outcome"
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
 
@@ -28,6 +31,7 @@ class ConversationalTestCase:
     chatbot_role: Optional[str] = None
     scenario: Optional[str] = None
     user_description: Optional[str] = None
+    expected_outcome: Optional[str] = None
     name: Optional[str] = field(default=None)
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
