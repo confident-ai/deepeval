@@ -10,6 +10,7 @@ sidebar_label: Quick Introduction
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Admonition from "@theme/Admonition";
 import Envelope from "@site/src/components/Envelope";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
@@ -28,26 +29,17 @@ Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident
 
 <Envelope />
 
-## Setup A Python Environment
-
-Go to the root directory of your project and create a virtual environment (if you don't already have one). In the CLI, run:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
 ## Installation
 
-In your newly created virtual environment, run:
+To install DeepEval, run:
 
-```bash.log
+```console.log
 pip install -U deepeval
 ```
 
-`deepeval` runs evaluations locally on your environment. To keep your testing reports in a centralized place on the cloud, use [Confident AI](https://documentation.confident-ai.com/docs), the native evaluation platform for DeepEval:
+Login to [Confident AI (DeepEval's all-in-one evaluation platform)](https://app.confident-ai.com) to keep track of evaluation results:
 
-```bash
+```console
 deepeval login
 ```
 
@@ -57,11 +49,48 @@ Confident AI is free and allows you to keep all evaluation results on the cloud.
 
 ## Create Your First Test Run
 
-Run `touch test_example.py` to create a test file in your root directory to run your first **end-to-end evaluation**. An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in `deepeval` is represents a single unit of LLM app interaction (for a series of LLM interactions i.e. conversation, visit the conversational test cases [section](/docs/evaluation-multiturn-test-cases) instead).
+Create a test file to run your first **end-to-end evaluation**.
 
-![ok](https://deepeval-docs.s3.amazonaws.com/llm-test-case.svg)
+<details>
+  <summary>
+    <strong>Single‑turn vs Multi‑turn vs Agentic vs Arena Evaluations</strong>
+  </summary>
+  <p>
+    Depending on your use case, you may want to run single‑turn, multi‑turn,
+    agentic, or arena evaluations. Certain use cases may also demand running multiple
+    types of evaluation. For example, a travel booking assistant might be
+    conversational and agentic at the same time.
+  </p>
+  <ul>
+    <li>
+      <strong>Single‑turn:</strong> evaluates a single LLM interaction. Suitable
+      for non‑conversational use cases such as meeting summarizers, writing
+      assistants, Q&amp;A agents, and translators.
+    </li>
+    <li>
+      <strong>Multi‑turn:</strong> evaluates a sequence of LLM interactions.
+      Suitable for conversational agents like customer‑support chatbots or
+      travel‑booking assistants.
+    </li>
+    <li>
+      <strong>Agentic:</strong> evaluates a single traced LLM interaction. Ideal
+      for complex agents with multiple components such as browser automation
+      agents, code‑generation agents, and deep‑research agents.
+    </li>
+    <li>
+      <strong>Arena:</strong> evaluates multiple single-turn interactions with the same user input to find the best interaction. Ideal
+      for comparing different iterations of your LLM app, such as when picking the best models and prompts for your application.
+    </li>
+  </ul>
+ <p>
+  Single‑turn evaluations require an <a href="/docs/evaluation-test-cases#llm-test-case">LLM test case</a>, which represents a single interaction in <code>deepeval</code>. Multi-turn evaluations require <a href="/docs/evaluation-multiturn-test-cases">multi-turn test cases</a>, which represent a sequence of interactions. Arena evaluations require <a href="/docs/evaluation-arena-test-cases">arena test cases</a>, which represents a collection of single-turn LLM Test Cases with the same input. Finally, agentic evaluations require you to set up tracing.
+</p>
 
-Open `test_example.py` and paste in your first test case:
+</details>
+
+<Tabs>
+
+<TabItem value="single-turn" label="Single-Turn" default>
 
 ```python title="test_example.py"
 from deepeval import assert_test
@@ -90,18 +119,248 @@ Run `deepeval test run` from the root directory of your project to evaluate your
 deepeval test run test_example.py
 ```
 
-**Congratulations! Your test case should have passed ✅** Let's breakdown what happened.
+Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
 
 - The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
 - The variable `expected_output` represents the ideal answer for a given `input`, and [`GEval`](/docs/metrics-llm-evals) is a research-backed metric provided by `deepeval` for you to evaluate your LLM output's on any custom metric with human-like accuracy.
 - In this example, the metric `criteria` is correctness of the `actual_output` based on the provided `expected_output`, but not all metrics require an `expected_output`.
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
-If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-confident-ai-highly-recommended) for video demo).
+If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
 
-:::info
-You'll need to set your `OPENAI_API_KEY` as an environment variable before running `GEval`, since `GEval` is an LLM-evaluated metric. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
-:::
+<details> <summary><strong>Set up your LLM Provider</strong> </summary>
+
+You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
+variable to run <code>GEval</code>.
+
+Most deepeval metrics including <code>GEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+
+<pre>correctness_metric = GEval(..., model="o1")</pre>
+
+DeepEval also integrates with these model providers:
+
+- [Ollama](https://deepeval.com/integrations/models/ollama)
+- [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai)
+- [Anthropic](https://deepeval.com/integrations/models/anthropic)
+- [Gemini](https://deepeval.com/integrations/models/gemini)
+- [Vertex AI](https://deepeval.com/integrations/models/vertex-ai)
+- [vLLM](https://deepeval.com/integrations/models/vllm)
+- [LMStudio](https://deepeval.com/integrations/models/lmstudio)
+
+To use **ANY** custom LLM of your choice, [check out this part of the
+docs](/guides/guides-using-custom-llms).
+
+</details>
+
+  </TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn" default>
+
+```python title="test_example.py"
+from deepeval import assert_test
+from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+from deepeval.metrics import GEval
+
+def test_professionalism():
+    professionalism_metric = ConversationalGEval(
+        name="Professionalism",
+        criteria="Determine whether the assistant has acted professionally based on the content.",
+        evaluation_params=[TurnParams.CONTENT],
+        threshold=0.5
+    )
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="What is DeepEval?"),
+            Turn(role="assistant", content="DeepEval is an open-source LLM eval package.")
+        ]
+    )
+    assert_test(test_case, [professionalism_metric])
+```
+
+Run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
+
+```bash
+deepeval test run test_example.py
+```
+
+Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
+
+- The variable `role` distinguishes between the end user and your LLM application, and `content` contains either the user’s input or the LLM’s output.
+- In this example, the `criteria` metric evaluates the professionalism of the sequence of `content`.
+- All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
+
+If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
+
+<details> <summary><strong>Set up your LLM Provider</strong> </summary>
+
+You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
+variable to run <code>ConversationalGEval</code>.
+
+Most deepeval metrics including <code>ConversationalGEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+
+<pre>professionalism_metric = ConversationalGEval(..., model="o1")</pre>
+
+DeepEval also integrates with these model providers:
+
+- [Ollama](https://deepeval.com/integrations/models/ollama)
+- [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai)
+- [Anthropic](https://deepeval.com/integrations/models/anthropic)
+- [Gemini](https://deepeval.com/integrations/models/gemini)
+- [Vertex AI](https://deepeval.com/integrations/models/vertex-ai)
+- [vLLM](https://deepeval.com/integrations/models/vllm)
+- [LMStudio](https://deepeval.com/integrations/models/lmstudio)
+
+To use **ANY** custom LLM of your choice, [check out this part of the
+docs](/guides/guides-using-custom-llms).
+
+</details>
+
+  </TabItem>
+
+<TabItem value="agentic" label="Agentic" default>
+  <Admonition type="info">
+    To run Agentic Evaluations, see{" "}
+    <a href="/docs/getting-started#evaluate-nested-components">
+      component-level evaluations
+    </a>
+  </Admonition>
+</TabItem>
+
+<TabItem value="arena" label="Arena" default>
+
+```python title="test_example.py"
+from deepeval import evaluate
+from deepeval.test_case import ArenaTestCase, LLMTestCaseParams
+from deepeval.metrics import ArenaGEval
+
+a_test_case = ArenaTestCase(
+    contestants={
+        "GPT-4": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Paris",
+        ),
+        "Claude-4": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Paris is the capital of France.",
+        ),
+    },
+)
+arena_geval = ArenaGEval(
+    name="Friendly",
+    criteria="Choose the winner of the more friendly contestant based on the input and actual output",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
+
+metric.measure(a_test_case)
+print(metric.winner, metric.reason)
+```
+
+Run `test_example.py` from the root directory of your project to run arena evaluations your LLM app:
+
+```bash
+python test_example.py
+```
+
+Congratulations! You should've found your winning contestant ✅ Let's breakdown what happened.
+
+- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- Each of your contestants' `LLMTestCase` represents the `input` and `actual_output` of a different LLM model.
+- In this example, the arena metric `criteria` chooses the winner based on your application's friendliness.
+
+<details> <summary><strong>Set up your LLM Provider</strong> </summary>
+
+You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
+variable to run <code>ArenaGEval</code>.
+
+Most deepeval metrics including <code>ArenaGEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+
+<pre>arena_geval = ArenaGEval(..., model="o1")</pre>
+
+DeepEval also integrates with these model providers:
+
+- [Ollama](https://deepeval.com/integrations/models/ollama)
+- [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai)
+- [Anthropic](https://deepeval.com/integrations/models/anthropic)
+- [Gemini](https://deepeval.com/integrations/models/gemini)
+- [Vertex AI](https://deepeval.com/integrations/models/vertex-ai)
+- [vLLM](https://deepeval.com/integrations/models/vllm)
+- [LMStudio](https://deepeval.com/integrations/models/lmstudio)
+
+To use **ANY** custom LLM of your choice, [check out this part of the
+docs](/guides/guides-using-custom-llms).
+
+</details>
+</TabItem>
+<TabItem value="multimodal" label="Single Turn (Multimodal)" default>
+
+```python title="test_example.py"
+from deepeval import assert_test
+from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics import MultimodalGEval
+
+def test_text_image_coherence():
+    text_image_coherence = MultimodalGEval(
+        name="Text-Image Coherence",
+        criteria="Determine whether the images and text is coherence in the actual output.",
+        evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
+    )
+
+    test_case = MLLMTestCase(
+        input=["Show me how to fold an airplane"],
+        actual_output=[
+            "1. Take the sheet of paper and fold it lengthwise",
+            # Replace this with the actual output from your LLM application
+            MLLMImage(url="./paper_plane_1", local=True),
+            "2. Unfold the paper. Fold the top left and right corners towards the center.",
+            MLLMImage(url="./paper_plane_2", local=True)
+        ]
+    )
+    assert_test(test_case, [text_image_coherence])
+```
+
+Run `deepeval test run` from the root directory of your project to evaluate your LLM app **end-to-end**:
+
+```bash
+deepeval test run test_example.py
+```
+
+Congratulations! Your test case should have passed ✅ Let's breakdown what happened.
+
+- The variable `input` mimics a user input, and `actual_output` is a placeholder for what your application's supposed to output based on this input.
+- In this example, the metric `criteria` is coherence between the text and images in the `actual_output`.
+- All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
+
+If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
+
+<details> <summary><strong>Set up your LLM Provider</strong> </summary>
+
+You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
+variable to run <code>MultimodalGEval</code>.
+
+Most deepeval metrics including <code>MultimodalGEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+
+<pre>text_image_coherence = MultimodalGEval(..., model="o1")</pre>
+
+DeepEval also integrates with these model providers:
+
+- [Ollama](https://deepeval.com/integrations/models/ollama)
+- [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai)
+- [Anthropic](https://deepeval.com/integrations/models/anthropic)
+- [Gemini](https://deepeval.com/integrations/models/gemini)
+- [Vertex AI](https://deepeval.com/integrations/models/vertex-ai)
+- [vLLM](https://deepeval.com/integrations/models/vllm)
+- [LMStudio](https://deepeval.com/integrations/models/lmstudio)
+
+To use **ANY** custom LLM of your choice, [check out this part of the
+docs](/guides/guides-using-custom-llms).
+
+</details>
+</TabItem>
+
+</Tabs>
 
 ### Save Results
 
@@ -154,11 +413,23 @@ set DEEPEVAL_RESULTS_FOLDER=.\data
 
 ## Evaluate Nested Components
 
-:::note
-What we saw above is known as **end-to-end** evaluation, which treats your LLM app as a black-box. If you wish to evaluate multiple components in your LLM app, you can implement **component-level** evals instead.
-:::
+<details>
+  <summary>
+    <strong>What is Component-level Evaluations?</strong>
+  </summary>
 
-Simply trace "components" such as LLM calls, retrievers, tool calls, and agents within your LLM application using the `@observe` decorator to apply metrics on a component-level. Tracing with `deepeval` is non-instrusive (learn more [here](/docs/evaluation-llm-tracing)) and helps you avoid rewriting your codebase just for evals:
+What we saw above is known as **end-to-end** evaluation, which treats your LLM app as a black-box. If you wish to evaluate multiple components in your LLM app, you can implement **component-level** evals instead.
+
+Component‑level evaluations focus on individual components rather than the overall end‑to‑end result, making it easy to identify and fix specific modules in your LLM application. Moreover, agentic metrics—such as <a href="/docs/metrics#task-completion">Task Completion</a>—can only be applied through component-level evals.
+
+</details>
+
+To begin, trace the "components" such as LLM calls, retrievers, tool calls, and agents within your LLM application using the `@observe` decorator, and apply the metrics on a component-level. Tracing with `deepeval` is non-instrusive (learn more [here](/docs/evaluation-llm-tracing)) and helps you avoid rewriting your codebase just for evals:
+
+<Tabs>
+<TabItem value="general" label="LLM Applications">
+
+You can evaluate any LLM application by supplying any of DeepEval's non-conversational metrics to the `@observe` decorator.
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -170,18 +441,51 @@ from deepeval import evaluate
 correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
 
 @observe(metrics=[correctness])
-def inner_component():
-    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+def inner_component(): # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
     update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
     return
 
-@observe
+@observe()
 def llm_app(input: str):
     inner_component()
     return
 
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+
 ```
+
+</TabItem>
+<TabItem value="agents" label="Agents">
+
+When evaluating agents, we strongly recommend including `TaskCompletion` in your outter most component's metrics list. `TaskCompletion` is a powerful agentic metric that determines if the desired outcome was achieved based on the traced agentic flow.
+
+```python
+from deepeval.tracing import observe, update_current_span
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import Golden
+from deepeval.metrics import TaskCompletion
+from deepeval import evaluate
+
+task_completion = TaskCompletion()
+correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
+
+@observe(metrics=[correctness])
+def inner_component(): # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
+    return
+
+
+@observe(metrics=[task_completion])
+def llm_app(input: str):
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+
+```
+
+</TabItem>
+</Tabs>
 
 **Tracing also helps you debug evaluations** when using Confident AI (video below). You can learn everything about component-level evaluations [here.](/docs/evaluation-component-level-llm-evals)
 
@@ -219,6 +523,10 @@ You can use metrics the same way for both end-to-end and component-level evaluat
 
 To create a metric, simply import from the `deepeval.metrics` module:
 
+<Tabs>
+
+<TabItem value="RAG" label="RAG">
+
 ```python
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
@@ -230,6 +538,82 @@ relevancy.measure(test_case)
 print(relevancy.score, relevancy.reason)
 ```
 
+</TabItem>
+<TabItem value="Agents" label="Agents">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+task_completion = TaskCompletionMetric(threshold=0.5)
+
+@observe(metrics=[task_completion])
+def trip_planner_agent(input):
+
+    @observe()
+    def itinerary_generator(destination, days):
+        return ["Eiffel Tower", "Louvre Museum", "Montmartre"][:days]
+
+    destination = "Paris"
+    days = 2
+    return itinerary_generator(destination, days)
+
+evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")])
+```
+
+</TabItem>
+
+<TabItem value="Chatbots" label="Chatbots">
+
+```python
+from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+from deepeval.metrics import ConversationalGEval
+
+convo_test_case = ConversationalTestCase(
+    turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
+)
+role_adherence = RoleAdherenceMetric(threshold=0.5)
+
+role_adherence.measure(convo_test_case)
+print(role_adherence.score, role_adherence.reason)
+```
+
+</TabItem>
+
+<TabItem value="Multimodal" label="Multimodal">
+
+```python
+from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.metrics import ImageCoherenceMetric
+
+m_test_case = MLLMTestCase(input=[...], actual_output=[...])
+image_coherence = ImageCoherenceMetric(threshold=0.5)
+
+image_coherence.measure(m_test_case)
+print(image_coherence.score, image_coherence.reason)
+```
+
+</TabItem>
+
+<TabItem value="Safety" label="Safety">
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BiasMetric
+
+test_case = LLMTestCase(input="...", actual_output="...")
+bias = BiasMetric(threshold=0.5)
+
+bias.measure(test_case)
+print(bias.score, bias.reason)
+```
+
+</TabItem>
+
+</Tabs>
+
 Note that you can run a metric as a standalone or as part of a test run as shown in previous sections.
 
 :::info
@@ -239,6 +623,10 @@ All default metrics are evaluated using LLMs, and you can use **ANY** LLM of you
 ### Custom Metrics
 
 `deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to create a custom LLM-evaluated metric using natural language. Here's an example:
+
+<Tabs>
+
+<TabItem value="geval" label="G-Eval">
 
 ```python
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
@@ -255,6 +643,50 @@ correctness = GEval(
 correctness.measure(test_case)
 print(correctness.score, correctness.reason)
 ```
+
+</TabItem>
+<TabItem value="conversational-geval" label="Conversational G-Eval">
+
+```python
+from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+from deepeval.metrics import ConversationalGEval
+
+convo_test_case = ConversationalTestCase(
+    turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
+)
+professionalism_metric = ConversationalGEval(
+    name="Professionalism",
+    criteria="Determine whether the assistant has acted professionally based on the content."
+    evaluation_params=[TurnParams.CONTENT],
+    strict_mode=True
+)
+
+professionalism_metric.measure(convo_test_case)
+print(professionalism_metric.score, professionalism_metric.reason)
+```
+
+</TabItem>
+
+<TabItem value="multimodal" label="Multimodal G-Eval">
+
+```python
+from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics import MultimodalGEval
+
+m_test_case = MLLMTestCase(input=[...], actual_output=[...])
+text_image_coherence = MultimodalGEval(
+    name="Text-Image Coherence",
+    criteria="Determine whether the images and text is coherence in the actual output.",
+    evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
+    strict_mode=True
+)
+
+text_image_coherence.measure(convo_test_case)
+print(text_image_coherence.score, text_image_coherence.reason)
+```
+
+</TabItem>
+</Tabs>
 
 Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
 
