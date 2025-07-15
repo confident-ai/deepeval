@@ -88,20 +88,21 @@ class CallbackHandler(BaseCallbackHandler):
         self.active_trace_id = None
 
     
-    def evaluate_task_completion(self, span: BaseSpan):
+    def evaluate_task_completion(self, span: BaseSpan, metric: TaskCompletionMetric):
         if span.name == "LangGraph":
             span.llm_test_case = LLMTestCase(
                 input="None", actual_output="None"
             )
             span.llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-            print("----span.llm_test_case----")
-            print(span.llm_test_case._trace_dict)
+            score = metric.measure(span.llm_test_case)
+            print("----score----")
+            print(score)
 
     def evaluate_metrics(self, span: BaseSpan):
         def dfs(span: BaseSpan):
             for metric in self.metrics:
                 if isinstance(metric, TaskCompletionMetric):
-                    self.evaluate_task_completion(span)
+                    self.evaluate_task_completion(span, metric)
             
             for child in span.children:
                 dfs(child)
