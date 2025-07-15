@@ -88,7 +88,6 @@ class EvaluationDataset:
             f"_alias={self._alias}, _id={self._id}, _multi_turn={self._multi_turn})"
         )
 
-
     @property
     def goldens(self) -> Union[List[Golden], List[ConversationalGolden]]:
         if self._multi_turn:
@@ -592,13 +591,15 @@ class EvaluationDataset:
             raise ValueError(
                 "Unable to push empty dataset to Confident AI, there must be at least one golden in dataset."
             )
-        
+
         if is_confident():
             api_dataset = APIDataset(
                 alias=alias,
                 overwrite=overwrite,
                 goldens=self.goldens if not self._multi_turn else None,
-                conversationalGoldens=self.goldens if self._multi_turn else None,
+                conversationalGoldens=(
+                    self.goldens if self._multi_turn else None
+                ),
             )
             try:
                 body = api_dataset.model_dump(by_alias=True, exclude_none=True)
