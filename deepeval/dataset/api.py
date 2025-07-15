@@ -6,7 +6,7 @@ from deepeval.dataset.golden import Golden, ConversationalGolden
 
 class APIDataset(BaseModel):
     alias: str
-    overwrite: Optional[bool] = None
+    overwrite: bool
     goldens: Optional[List[Golden]] = Field(None)
     conversational_goldens: Optional[List[ConversationalGolden]] = Field(
         None, alias="conversationalGoldens"
