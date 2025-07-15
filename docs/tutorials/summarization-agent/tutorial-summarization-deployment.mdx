@@ -143,7 +143,7 @@ class MeetingSummarizer:
 
 You can now simply use `pytest` with `assert_test` during your CI/CD to trace and evaluate your summarization agent, here's how you can write the test file to do that:
 
-```python title="test_meeting_summarizer_quality.py"
+```python title="test_meeting_summarizer_quality.py" {13}
 import pytest
 from deepeval.dataset import EvaluationDataset
 from meeting_summarizer import MeetingSummarizer # import your summarizer here
