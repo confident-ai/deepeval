@@ -60,6 +60,7 @@ from deepeval.tracing.utils import (
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.utils import create_metric_data
 
 
 class TraceManager:
@@ -698,6 +699,7 @@ class TraceManager:
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
             ),
+            metricsData=[create_metric_data(metric) for metric in span.metrics] if span.metrics else None,
         )
 
         # Add type-specific attributes
