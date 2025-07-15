@@ -5,30 +5,57 @@ sidebar_label: Datasets
 ---
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 <head>
   <link rel="canonical" href="https://deepeval.com/docs/evaluation-datasets" />
 </head>
 
+In `deepeval`, an evaluation dataset, or just dataset, is a collection of goldens. At evaluation time, you would first convert all goldens in your dataset to test cases, before running evals on these test cases.
+
+<details>
+
+<summary>What Are Goldens?</summary>
+
+Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, goldens:
+
+- Only require `input`/`scenario` to initialize
+- Store expected results like `expected_output`/`expected_outcome`
+- Serve as templates before becoming fully-formed test cases
+
+Goldens excel in development workflows where you need to:
+
+- Evaluate changes across different iterations of your LLM application
+- Compare performance between model versions
+- Test with `input`s that haven't yet been processed by your LLM
+
+Think of goldens as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements (`actual_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
+
+You can scroll to the bottom to see the [data model of a golden.](/docs/evaluation-datasets#golden-data-structure)
+
+</details>
+
 ## Quick Summary
 
-In `deepeval`, an evaluation dataset, or just dataset, is a collection of `LLMTestCase`s and/or `Golden`s. There are three approaches to evaluating datasets in `deepeval`:
+There are two approaches to running evals using datasets in `deepeval`:
 
 1. Using `deepeval test run`
 2. Using `evaluate`
-3. Using `confident_evaluate` (evaluates on Confident AI instead of locally)
 
-:::note
+Depending on the type of goldens you supply, datasets are either **single-turn** or **mult-turn**. Evaluating a dataset means exactly the same as evaluating your LLM system, because by definition a dataset contains all the information produced by your LLM needed for evaluation.
 
-Evaluating a dataset means exactly the same as evaluating your LLM system, because by definition a dataset contains all the information produced by your LLM needed for evaluation.
+<details>
 
-:::
-
-You should also aim to group test cases of a certain category together in an `EvaluationDataset`. This will allow you to follow best practices:
+<summary>
+  What are the best practices for curating an evaluation dataset?
+</summary>
 
 - **Ensure telling test coverage:** Include diverse real-world inputs, varying complexity levels, and edge cases to properly challenge the LLM.
 - **Focused, quantitative test cases:** Design with clear scope that enables meaningful performance metrics without being too broad or narrow.
 - **Define clear objectives:** Align datasets with specific evaluation goals while avoiding unnecessary fragmentation.
+
+</details>
 
 :::info
 
@@ -45,110 +72,226 @@ here.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
 
 :::
 
-## What Are Goldens?
-
-A dataset is a list of goldens, and it's important to know how it is different from test cases.
-
-Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, `Golden`S:
-
-- Don't require an `actual_output` when created
-- Allow for LLM output generation during evaluation time
-- Store expected results like `expected_output` and `expected_tools`
-- Serve as templates before becoming fully-formed test cases
-
-`Golden`s excel in development workflows where you need to:
-
-- Evaluate changes across different iterations of your LLM application
-- Compare performance between model versions
-- Test with `input`s that haven't yet been processed by your LLM
-
-Think of `Golden`s as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements (`actual_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
-
 ## Create A Dataset
 
-An `EvaluationDataset` in `deepeval` is simply a collection of `Golden`s and/or `LLMTestCase`s.
-
-### With Goldens
-
-You should opt to initialize `EvaluationDataset`s with goldens if you're looking to generate LLM outputs at evaluation time. This usually means your original dataset does not contain precomputed outputs, but only the inputs you want to evaluate your LLM (application) on.
-
-```python
-from deepeval.dataset import EvaluationDataset, Golden
-
-first_golden = Golden(input="...")
-second_golden = Golden(input="...")
-
-dataset = EvaluationDataset(goldens=[first_golden, second_golden])
-print(dataset.goldens)
-```
-
-### With Test Cases
-
-```python
-from deepeval.test_case import LLMTestCase
-from deepeval.dataset import EvaluationDataset
-
-first_test_case = LLMTestCase(input="...", actual_output="...")
-second_test_case = LLMTestCase(input="...", actual_output="...")
-
-dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
-```
-
-You can also add a test case to an `EvaluationDataset` using the `add_test_case` method:
-
-```python
-...
-
-dataset.add_test_case(test_case)
-```
-
-:::tip
-A `Golden` and `LLMTestCase` contains almost an identical class signature, so technically you can also supply other parameters such as the `actual_output` when creating a `Golden`.
-:::
-
-## Generate A Dataset
-
-:::caution
-We highly recommend you to checkout the [`Synthesizer`](/docs/synthesizer-introduction) page to see the customizations available and how data synthesization work in `deepeval`. All methods in an `EvaluationDataset` that can be used to generate goldens uses the `Synthesizer` under the hood and has exactly the same function signature as corresponding methods in the `Synthesizer`.
-:::
-
-`deepeval` offers anyone the ability to easily generate synthetic datasets from documents locally on your machine. This is especially helpful if you don't have an evaluation dataset prepared beforehand.
+An `EvaluationDataset` in `deepeval` is simply a collection of goldens. You can initialize an empty dataset to start with:
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
-dataset.generate_goldens_from_docs(document_paths=['example.txt', 'example.docx', 'example.pdf'])
 ```
 
-In this example, we've used the `generate_goldens_from_docs` method, which one one of the four generation methods offered by `deepeval`'s `Synthesizer`. The four methods include:
+A dataset can either be a single-turn one, **or** a multi-turn one (but not both). Initializing supplying your dataset with a list of `Golden`s will make it a single-turn one, whereas supplying it with `ConversationalGolden`s will make it multi-turn:
 
-- [`generate_goldens_from_docs()`](/docs/synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
-- [`generate_goldens_from_contexts()`](/docs/synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
-- [`generate_goldens_from_scratch()`](/docs/synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
-- [`generate_goldens_from_goldens()`](/docs/synthesizer-generate-from-goldens): useful for generating goldens by augmenting a known set of goldens.
+<Tabs>
 
-Under the hood, these 4 methods calls the corresponding methods in `deepeval`'s `Synthesizer` with the exact same parameters, with an addition of a `synthesizer` parameter for you to customize your generation pipeline.
+<TabItem value="single-turn" label="Single-Turn">
 
 ```python
-from deepeval.dataset import EvaluationDataset
-from deepeval.synthesizer import Synthesizer
+from deepeval.dataset import EvaluationDataset, Golden
 
-synthesizer = Synthesizer(model="gpt-3.5-turbo")
-dataset.generate_goldens_from_docs(
-    synthesizer=synthesizer,
-    document_paths=['example.pdf'],
-    max_goldens_per_document=2
-)
+dataset = EvaluationDataset(goldens=[Golden(input="What is your name?")])
+print(dataset._multi_turn) # prints False
 ```
 
-:::info
-`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data. For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](/docs/synthesizer-introduction#how-does-it-work)
+</TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+from deepeval.dataset import EvaluationDataset, ConversationalGolden
+
+dataset = EvaluationDataset(
+    goldens=[
+        ConversationalGolden(
+            scenario="Frustrated user asking for a refund.",
+            expected_outcome="Redirected to a human agent."
+        )
+    ]
+)
+print(dataset._multi_turn) # prints True
+```
+
+</TabItem>
+
+</Tabs>
+
+To ensure best practices, datasets in `deepeval` are stateful and opinionated. This means you cannot change the value of `_multi_turn` once its value has been set. However, you can always add new goldens after initialization using the `add_golden` method:
+
+```python
+...
+
+dataset.add_golden(Golden(input="Nice."))
+```
+
+## Run Evals On Dataset
+
+You run evals on test cases in datasets, which you'll create at evaluation time using the goldens in the same dataset.
+
+![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
+
+First step is to load in the goldens to your dataset. This example will load datasets from Confident AI, but you can also explore [other options below.](#load-dataset)
+
+```python title="main.py"
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Dataset") # replace with your alias
+print(dataset.goldens) # print to sanity check yourself
+```
+
+:::tip
+Your dataset is either single or multi-turn the moment you pull your dataset.
 :::
 
-## Save Your Dataset
+Once you have your dataset and can see a non-empty list of goldens, you can start generating outputs and **add it back to your dataset** as test cases via the `add_test_case()` method:
 
-### On Confident AI
+<Tabs>
+
+<TabItem value="single-turn" label="Single-Turn">
+
+```python title="main.py" {9}
+from deepeval.test_case import LLMTestCase
+...
+
+for golden in dataset.goldens:
+    test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=your_llm_app(golden.input) # replace with your LLM app
+    )
+    dataset.add_test_case(test_case)
+
+print(dataset.test_cases) # print to santiy check yourself
+```
+
+Lastly, you can run evaluations on the list of test cases in your dataset:
+
+<Tabs>
+
+<TabItem value="ci-cd" label="Unit-Testing In CI/CD">
+
+```python title="test_llm_app.py" {5}
+import pytest
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+@pytest.mark.parametrize("test_case", dataset.test_cases)
+def test_llm_app(test_case: LLMTestCase):
+    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+```
+
+And execute the test file:
+
+```bash
+deepeval test run test_llm_app.py
+```
+
+You can learn more about `assert_test` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines)
+
+</TabItem>
+
+<TabItem value="python" label="In Python Scripts">
+
+```python title="main.py" {5}
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval import evaluate
+...
+
+evaluate(test_cases=dataset.test_cases, metrics=[AnswerRelevancyMetric()])
+```
+
+And run `main.py`:
+
+```bash
+python main.py
+```
+
+You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts)
+
+</TabItem>
+
+</Tabs>
+
+</TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python title="main.py" {9}
+from deepeval.test_case import ConversationalTestCase
+...
+
+for golden in dataset.goldens:
+    test_case = ConversationalTestCase(
+        scenario=golden.scenario,
+        turns=generate_turns(golden.scenario) # replace with your method to simulate conversations
+    )
+    dataset.add_test_case(test_case)
+
+print(dataset.test_cases) # print to santiy check yourself
+```
+
+Lastly, you can run evaluations on the list of test cases in your dataset:
+
+<Tabs>
+
+<TabItem value="ci-cd" label="Unit-Testing In CI/CD">
+
+```python title="test_llm_app.py" {5}
+import pytest
+from deepeval.metrics import ConversationalRelevancyMetric
+...
+
+@pytest.mark.parametrize("test_case", dataset.test_cases)
+def test_llm_app(test_case: ConversationalTestCase):
+    assert_test(test_case=test_case, metrics=[ConversationalRelevancyMetric()])
+```
+
+And execute the test file:
+
+```bash
+deepeval test run test_llm_app.py
+```
+
+You can learn more about `assert_test` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines)
+
+</TabItem>
+
+<TabItem value="python" label="In Python Scripts">
+
+```python title="main.py" {5}
+from deepeval.metrics import ConversationalRelevancyMetric
+from deepeval import evaluate
+...
+
+evaluate(test_cases=dataset.test_cases, metrics=[ConversationalRelevancyMetric()])
+```
+
+And run `main.py`:
+
+```bash
+python main.py
+```
+
+You can learn more about `evaluate` in [this section.](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts)
+
+</TabItem>
+
+</Tabs>
+
+</TabItem>
+
+</Tabs>
+
+## Manage Your Dataset
+
+Dataset management is an essential part of your evaluation lifecycle. We recommend Confident AI as the choice for your dataset management workflow as it comes with dozens of collaboration features out of the box, but you can also do it locally as well.
+
+### Save Dataset
+
+<Tabs>
+
+<TabItem value="confident-ai" label="Confident AI">
 
 You can save your dataset on the cloud by using the `push` method:
 
@@ -159,9 +302,15 @@ dataset = EvaluationDataset(goldens=[Golden(input="First golden")])
 dataset.push(alias="My dataset")
 ```
 
-You'll need to have already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work.
+:::tip
+You can also push multi-turn datasets.
+:::
 
-### Locally
+If you haven't already, you can create a [free account on Confident AI here](https://documentation.confident-ai.com/docs/getting-started/setup#create-an-account).
+
+</TabItem>
+
+<TabItem value="locally" label="Locally as CSV or JSON">
 
 You can save your dataset locally to either a CSV or JSON file by using the `save_as()` method:
 
@@ -182,11 +331,17 @@ There are **TWO** mandatory and **TWO** optional parameter when calling the `sav
 By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
 :::
 
-## Load an Existing Dataset
+</TabItem>
+
+</Tabs>
+
+### Load Dataset
 
 `deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
 
-### From Confident AI
+<Tabs>
+
+<TabItem value="confident-ai" label="Confident AI">
 
 You can load entire datasets on Confident AI's cloud in one line of code.
 
@@ -197,13 +352,13 @@ dataset = EvaluationDataset()
 dataset.pull(alias="My Evals Dataset")
 ```
 
-:::tip Did Your Know?
-You can **create, annotate, and comment** on datasets on Confident AI? You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
+Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 
 For more information, visit the [Confident AI datasets section.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
-:::
 
-### From JSON
+</TabItem>
+
+<TabItem value="from-json" label="From JSON">
 
 You can loading an existing `EvaluationDataset` you might have generated elsewhere by supplying a `file_path` to your `.json` file as **either test cases or goldens**. Your `.json` file should contain an array of objects (or list of dictionaries).
 
@@ -235,7 +390,9 @@ dataset.add_goldens_from_json_file(
 Loading datasets as goldens are especially helpful if you're looking to generate LLM `actual_output`s at evaluation time. You might find yourself in this situation if you are generating data for testing or using historical data from production.
 :::
 
-### From CSV
+</TabItem>
+
+<TabItem value="from-csv" label="From CSV">
 
 You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `LLMTestCase`s through their column names.
 
@@ -271,98 +428,123 @@ dataset.add_goldens_from_csv_file(
 Since `expected_output`, `context`, `retrieval_context`, `tools_called`, and `expected_tools` are optional parameters for an `LLMTestCase`, these fields are similarly **optional** parameters when adding test cases from an existing dataset.
 :::
 
-## Evaluate Your Dataset
+</TabItem>
 
-:::tip
-Before we begin, we highly recommend [logging into Confident AI](https://app.confident-ai.com) to keep track of all evaluation results created by `deepeval` on the cloud:
+</Tabs>
 
-```bash
-deepeval login
-```
+## Generate A Dataset
 
-:::
+Sometimes, you might not have datasets ready to use, and that's ok. `deepeval` provides two options for both single-turn and multi-turn use cases:
 
-### With Pytest
+- `Synthesizer` for generating single-turn goldens
+- `ConversationSimulator` for generating `turn`s in a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case)
 
-`deepeval` utilizes the `@pytest.mark.parametrize` decorator to loop through entire datasets.
+### Synthesizer
 
-```python title="test_bulk.py"
-import deepeval
-from deepeval import assert_test
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset
+`deepeval` offers anyone the ability to easily generate synthetic datasets from documents locally on your machine. This is especially helpful if you don't have an evaluation dataset prepared beforehand.
 
+```python
+from deepeval.synthesizer import Synthesizer
 
-dataset = EvaluationDataset(test_cases=[...])
-
-@pytest.mark.parametrize(
-    "test_case",
-    dataset,
+goldens = Synthesizer().generate_goldens_from_docs(
+    document_paths=['example.txt', 'example.docx', 'example.pdf']
 )
-def test_customer_chatbot(test_case: LLMTestCase):
-    hallucination_metric = HallucinationMetric(threshold=0.3)
-    answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
 
+dataset = EvaluationDataset(goldens=goldens)
+```
 
-@deepeval.on_test_run_end
-def function_to_be_called_after_test_run():
-    print("Test finished!")
+In this example, we've used the `generate_goldens_from_docs` method, which one one of the four generation methods offered by `deepeval`'s `Synthesizer`. The four methods include:
+
+- [`generate_goldens_from_docs()`](/docs/synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
+- [`generate_goldens_from_contexts()`](/docs/synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
+- [`generate_goldens_from_scratch()`](/docs/synthesizer-generate-from-scratch): useful for generating goldens to evaluate your LLM application without relying on contexts from a knowledge base.
+- [`generate_goldens_from_goldens()`](/docs/synthesizer-generate-from-goldens): useful for generating goldens by augmenting a known set of goldens.
+
+`deepeval`'s `Synthesizer` uses a series of evolution techniques to complicate and make generated goldens more realistic to human prepared data.
+
+:::info
+For more information on how `deepeval`'s `Synthesizer` works, visit the [synthesizer section.](/docs/synthesizer-introduction#how-does-it-work)
+:::
+
+### Conversation Simulator
+
+While a `Synthesizer` generates goldens, the `ConversationSimulator` works slightly different as it generates `turns` in a `ConversationalTestCase` instead:
+
+```python
+from deepeval.conversation_simulator import ConversationSimulator
+
+# Define simulator
+simulator = ConversationSimulator(
+    user_intentions={"Opening a bank account": 1},
+    user_profile_items=[
+        "full name",
+        "current address",
+        "bank account number",
+        "date of birth",
+        "mother's maiden name",
+        "phone number",
+        "country code",
+    ],
+)
+
+# Define model callback
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    return f"I don't know how to answer this: {input}"
+
+# Start simluation
+convo_test_cases = simulator.simulate(
+  model_callback=model_callback,
+  stopping_criteria="Stop when the user's banking request has been fully resolved.",
+)
+print(convo_test_cases)
+```
+
+You can learn more in the [conversation simulator page.](/docs/conversation-simulator)
+
+## Goldens Data Model
+
+The golden data model is nearly identical to their single/multi-turn test case counterparts (aka. `LLMTestCase` and `ConversationalTestCase`).
+
+For single-turn `Golden`s:
+
+```python
+from pydantic import BaseModel
+
+class Golden(BaseModel):
+    input: str
+    expected_output: Optional[str] = None
+    context: Optional[List[str]] = None
+    expected_tools: Optional[List[ToolCall]] = None
+
+    # Useful metadata for generating test cases
+    additional_metadata: Optional[Dict] = None
+    comments: Optional[str] = None
+    custom_column_key_values: Optional[Dict[str, str]] = None
+
+    # Fields that you should ideally not populate
+    actual_output: Optional[str] = None
+    retrieval_context: Optional[List[str]] = None
+    tools_called: Optional[List[ToolCall]] = None
 ```
 
 :::info
-Iterating through an `dataset` object implicitly loops through the test cases in an `dataset`. To iterate through goldens, you can do it by accessing `dataset.goldens` instead.
+The `actual_output`, `retrieval_context`, and `tools_called` are meant to be populated dynamically instead of passed directly from a golden to test case at evaluation time.
 :::
 
-To run several tests cases at once in parallel, use the optional `-n` flag followed by a number (that determines the number of processes that will be used) when executing `deepeval test run`:
-
-```
-deepeval test run test_bulk.py -n 3
-```
-
-### Without Pytest
-
-You can use `deepeval`'s `evaluate` function to evaluate datasets. This approach avoids the CLI, but does not allow for parallel test execution.
+For multi-turn `ConversationalGolden`s:
 
 ```python
-from deepeval import evaluate
-from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset
+from pydantic import BaseModel
 
-dataset = EvaluationDataset(test_cases=[...])
-hallucination_metric = HallucinationMetric(threshold=0.3)
-answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
+class ConversationalGolden(BaseModel):
+    scenario: str
+    expected_outcome: Optional[str] = None
+    user_description: Optional[str] = None
 
-dataset.evaluate([hallucination_metric, answer_relevancy_metric])
-
-# You can also call the evaluate() function directly
-evaluate(dataset, [hallucination_metric, answer_relevancy_metric])
+    # Useful metadata for generating test cases
+    additional_metadata: Optional[Dict] = None
+    comments: Optional[str] = None
+    custom_column_key_values: Optional[Dict[str, str]] = None
 ```
 
-:::info
-Visit the [end-to-end LLM evals section](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts) to learn what argument the `evaluate()` function accepts.
-:::
-
-### On Confident AI
-
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/setup):
-
-```bash
-deepeval login
-```
-
-Then, define metrics by [creating a metric collection](https://documentation.confident-ai.com/docs) on Confident AI. You can start running evaluations immediately by simply sending over your evaluation dataset and providing the name of the experiment you previously created via `deepeval`:
-
-```python
-from deepeval import confident_evaluate
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset(test_cases=[...])
-
-confident_evaluate(metric_collection="Agentic Metrics", dataset)
-```
-
-:::tip
-You can find the full tutorial on running evaluations on Confident AI [here.](https://documentation.confident-ai.com/docs)
-:::
+You can easily add and edit custom columns on [Confident AI.](https://documentation.confident-ai.com/docs/dataset-editor/dataset-features/custom-columns)
