@@ -56,7 +56,6 @@ class CallbackHandler(BaseCallbackHandler):
     
     active_trace_id: Optional[str] = None
     metrics: List[BaseMetric] = []
-    _has_task_completion_metric: bool = False
 
     def __init__(self, metrics: List[BaseMetric] = []):
         capture_tracing_integration(
@@ -64,9 +63,6 @@ class CallbackHandler(BaseCallbackHandler):
         )
         is_langchain_installed()
         self.metrics = metrics
-        self._has_task_completion_metric = any(
-            isinstance(metric, TaskCompletionMetric) for metric in metrics
-        )
         super().__init__()
 
 
@@ -91,15 +87,22 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
+    
+    def evaluate_task_completion(self, span: BaseSpan):
+        if span.name == "LangGraph":
+            span.llm_test_case = LLMTestCase(
+                input="None", actual_output="None"
+            )
+            span.llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+            print("----span.llm_test_case----")
+            print(span.llm_test_case._trace_dict)
+
     def evaluate_metrics(self, span: BaseSpan):
         def dfs(span: BaseSpan):
-            if self._has_task_completion_metric:
-                if span.llm_test_case is None:
-                    span.llm_test_case = LLMTestCase(
-                        input="None", actual_output="None"
-                    )
-                    span.llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-                    # test
+            for metric in self.metrics:
+                if isinstance(metric, TaskCompletionMetric):
+                    self.evaluate_task_completion(span)
+            
             for child in span.children:
                 dfs(child)
         dfs(span)
