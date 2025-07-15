@@ -1,4 +1,5 @@
 from openai.types.chat.chat_completion import ChatCompletion
+from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
@@ -154,17 +155,54 @@ class GPTModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         _openai_api_key: Optional[str] = None,
         base_url: Optional[str] = None,
+        cost_per_input_token: Optional[float] = None,
+        cost_per_output_token: Optional[float] = None,
         temperature: float = 0,
         *args,
         **kwargs,
     ):
         model_name = None
+        model = model or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.OPENAI_MODEL_NAME
+        )
+        cost_per_input_token = (
+            cost_per_input_token
+            if cost_per_input_token is not None
+            else KEY_FILE_HANDLER.fetch_data(
+                KeyValues.OPENAI_COST_PER_INPUT_TOKEN
+            )
+        )
+        cost_per_output_token = (
+            cost_per_output_token
+            if cost_per_output_token is not None
+            else KEY_FILE_HANDLER.fetch_data(
+                KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
+            )
+        )
+
         if isinstance(model, str):
             model_name = parse_model_name(model)
             if model_name not in valid_gpt_models:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
+        elif model is None:
+            model_name = default_gpt_model
+
+        if model_name not in model_pricing:
+            if cost_per_input_token is None or cost_per_output_token is None:
+                raise ValueError(
+                    f"No pricing available for `{model_name}`. "
+                    "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
+                    "or set them via the CLI:\n"
+                    "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
+                )
+            else:
+                model_pricing[model_name] = {
+                    "input": float(cost_per_input_token),
+                    "output": float(cost_per_output_token),
+                }
+
         elif model is None:
             model_name = default_gpt_model
 

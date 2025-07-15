@@ -14,7 +14,7 @@ class LlmAttributes(BaseModel):
     # input
     input: Union[str, List[Dict[str, Any]]]
     # output
-    output: str
+    output: Union[str, List[Dict[str, Any]]]
     prompt: Optional[Prompt] = None
 
     # Optional variables

@@ -1,0 +1,37 @@
+---
+id: benchmarks-ifeval
+title: IFEval
+sidebar_label: IFEval
+---
+
+import Equation from "@site/src/components/Equation";
+
+**IFEval (Instruction-Following Evaluation for Large Language Models
+)** is a benchmark for evaluating instruction-following capabilities of language models.
+It tests various aspects of instruction following including format compliance, constraint
+adherence, output structure requirements, and specific instruction types.
+
+:::tip
+`deepeval`'s `IFEval` implementation is based on the [original research paper](https://arxiv.org/abs/2311.07911) by Google.
+:::
+
+## Arguments
+
+There is **ONE** optional argument when using the `IFEval` benchmark:
+
+- [Optional] `n_problems`: limits the number of test cases the benchmark will evaluate. Defaulted to `None`.
+
+## Usage
+
+The code below evaluates a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) and assesses its performance on High School Computer Science and Astronomy using 3-shot learning.
+
+```python
+from deepeval.benchmarks import IFEval
+
+# Define benchmark with 'n_problems'
+benchmark = IFEval(n_problems=5)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```

@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from rich.console import Console
@@ -10,7 +11,10 @@ import datetime
 import time
 import ast
 
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import (
+    BaseConversationalMetric,
+    BaseMetric,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -29,7 +33,6 @@ from deepeval.telemetry import capture_pull_dataset
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
-    MLLMTestCase,
     ToolCall,
 )
 from deepeval.utils import convert_keys_to_snake_case, is_confident
@@ -37,98 +40,105 @@ from deepeval.utils import convert_keys_to_snake_case, is_confident
 valid_file_types = ["csv", "json", "jsonl"]
 
 
-def validate_test_case_type(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
-    subject: str,
-):
-    if (
-        not isinstance(test_case, LLMTestCase)
-        and not isinstance(test_case, ConversationalTestCase)
-        and not isinstance(test_case, MLLMTestCase)
-    ):
-        raise TypeError(
-            f"Provided `{subject}` must be a list of LLMTestCase, ConversationalTestCase, or MLLMTestCase"
-        )
-
-
 @dataclass
 class EvaluationDataset:
-    goldens: List[Golden]
+    _multi_turn: bool = field(default=False)
     _alias: Union[str, None] = field(default=None)
     _id: Union[str, None] = field(default=None)
+    _confident_api_key: Optional[str] = None
+
+    _goldens: List[Golden] = field(default_factory=[], repr=None)
+    _conversational_goldens: List[ConversationalGolden] = field(
+        default_factory=[], repr=None
+    )
+
     _llm_test_cases: List[LLMTestCase] = field(default_factory=[], repr=None)
     _conversational_test_cases: List[ConversationalTestCase] = field(
         default_factory=[], repr=None
     )
-    _confident_api_key: Optional[str] = None
 
     def __init__(
         self,
-        test_cases: List[
-            Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
-        ] = [],
-        goldens: List[Golden] = [],
+        goldens: Union[List[Golden], List[ConversationalGolden]] = [],
     ):
-        for test_case in test_cases:
-            validate_test_case_type(test_case, subject="test cases")
-        self.goldens = goldens
         self._alias = None
         self._id = None
 
-        llm_test_cases = []
-        conversational_test_cases = []
-        mllm_test_cases = []
-        for test_case in test_cases:
-            if isinstance(test_case, LLMTestCase):
-                test_case._dataset_rank = len(llm_test_cases)
-                llm_test_cases.append(test_case)
-            elif isinstance(test_case, ConversationalTestCase):
-                test_case._dataset_rank = len(conversational_test_cases)
-                conversational_test_cases.append(test_case)
-            elif isinstance(test_case, MLLMTestCase):
-                test_case._dataset_rank = len(mllm_test_cases)
-                mllm_test_cases.append(test_case)
+        goldens_list = []
+        conversational_goldens_list = []
+        for golden in goldens:
+            if isinstance(golden, Golden):
+                self._multi_turn = False
+                golden._dataset_rank = len(goldens)
+                goldens_list.append(golden)
+            elif isinstance(golden, ConversationalGolden):
+                self._multi_turn = True
+                golden._dataset_rank = len(goldens)
+                conversational_goldens_list.append(golden)
 
-        self._llm_test_cases = llm_test_cases
-        self._conversational_test_cases = conversational_test_cases
-        self._mllm_test_cases = mllm_test_cases
+        self._goldens = goldens_list
+        self._conversational_goldens = conversational_goldens_list
+        self._llm_test_cases = []
+        self._conversational_test_cases = []
 
     def __repr__(self):
         return (
             f"{self.__class__.__name__}(test_cases={self.test_cases}, "
             f"goldens={self.goldens}, "
-            # f"conversational_goldens={self.conversational_goldens}, "
-            f"_alias={self._alias}, _id={self._id})"
+            f"_alias={self._alias}, _id={self._id}, _multi_turn={self._multi_turn})"
         )
+
+    @property
+    def goldens(self) -> Union[List[Golden], List[ConversationalGolden]]:
+        if self._multi_turn:
+            return self._conversational_goldens
+
+        return self._goldens
+
+    @goldens.setter
+    def goldens(
+        self,
+        goldens: Union[List[Golden], List[ConversationalGolden]],
+    ):
+        goldens_list = []
+        conversational_goldens_list = []
+        for golden in goldens:
+            if not isinstance(golden, Golden) and not isinstance(
+                golden, ConversationalGolden
+            ):
+                continue
+
+            golden._dataset_alias = self._alias
+            golden._dataset_id = self._id
+            if isinstance(golden, Golden):
+                golden._dataset_rank = len(goldens_list)
+                goldens_list.append(golden)
+            elif isinstance(golden, ConversationalGolden):
+                golden._dataset_rank = len(conversational_goldens_list)
+                conversational_goldens_list.append(golden)
+
+        self._goldens = goldens_list
+        self._conversational_goldens = conversational_goldens_list
 
     @property
     def test_cases(
         self,
-    ) -> List[Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]]:
-        return (
-            self._llm_test_cases
-            + self._conversational_test_cases
-            + self._mllm_test_cases
-        )
+    ) -> Union[List[LLMTestCase], List[ConversationalTestCase]]:
+        if self._multi_turn:
+            return self._conversational_test_cases
+
+        return self._llm_test_cases
 
     @test_cases.setter
     def test_cases(
         self,
-        test_cases: List[
-            Union[LLMTestCase, ConversationalTestCase, MLLMTestCase]
-        ],
+        test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     ):
-        if not isinstance(test_cases, list):
-            raise TypeError("'test_cases' must be a list")
-
         llm_test_cases = []
         conversational_test_cases = []
-        mllm_test_cases = []
         for test_case in test_cases:
-            if (
-                not isinstance(test_case, LLMTestCase)
-                and not isinstance(test_case, ConversationalTestCase)
-                and not isinstance(test_case, MLLMTestCase)
+            if not isinstance(test_case, LLMTestCase) and not isinstance(
+                test_case, ConversationalTestCase
             ):
                 continue
 
@@ -140,20 +150,14 @@ class EvaluationDataset:
             elif isinstance(test_case, ConversationalTestCase):
                 test_case._dataset_rank = len(conversational_test_cases)
                 conversational_test_cases.append(test_case)
-            elif isinstance(test_case, MLLMTestCase):
-                test_case._dataset_rank = len(mllm_test_cases)
-                mllm_test_cases.append(test_case)
 
         self._llm_test_cases = llm_test_cases
         self._conversational_test_cases = conversational_test_cases
-        self._mllm_test_cases = mllm_test_cases
 
     def add_test_case(
         self,
-        test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
-        validate_test_case_type(test_case, subject="test cases")
-
         test_case._dataset_alias = self._alias
         test_case._dataset_id = self._id
         if isinstance(test_case, LLMTestCase):
@@ -162,9 +166,6 @@ class EvaluationDataset:
         elif isinstance(test_case, ConversationalTestCase):
             test_case._dataset_rank = len(self._conversational_test_cases)
             self._conversational_test_cases.append(test_case)
-        elif isinstance(test_case, MLLMTestCase):
-            test_case._dataset_rank = len(self._mllm_test_cases)
-            self._mllm_test_cases.append(test_case)
 
     def __len__(self):
         return len(self.test_cases)
@@ -172,7 +173,10 @@ class EvaluationDataset:
     def __iter__(self):
         return iter(self.test_cases)
 
-    def evaluate(self, metrics: List[BaseMetric]):
+    def evaluate(
+        self,
+        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
+    ) -> "EvaluationResult":
         from deepeval import evaluate
 
         if len(self.test_cases) == 0:
@@ -660,52 +664,48 @@ class EvaluationDataset:
                         },
                     )
 
-                    conversational_goldens = []
-                    for cg in convert_keys_to_snake_case(
-                        result["conversationalGoldens"]
-                    ):
-                        if "goldens" in cg:
-                            cg["turns"] = cg.pop("goldens")
-                        conversational_goldens.append(
-                            ConversationalGolden(**cg)
-                        )
-
                     response = DatasetHttpResponse(
-                        goldens=convert_keys_to_snake_case(result["goldens"]),
-                        conversationalGoldens=conversational_goldens,
+                        goldens=convert_keys_to_snake_case(
+                            result.get("goldens", None)
+                        ),
+                        conversationalGoldens=convert_keys_to_snake_case(
+                            result.get("conversationalGoldens", None)
+                        ),
                         datasetId=result["datasetId"],
                     )
 
                     self._alias = alias
                     self._id = response.datasetId
+                    self._multi_turn = response.goldens is None
                     self.goldens = []
-                    # self.conversational_goldens = []
                     self.test_cases = []
 
                     if auto_convert_goldens_to_test_cases:
-                        llm_test_cases = convert_goldens_to_test_cases(
-                            response.goldens, alias, response.datasetId
-                        )
-                        self._llm_test_cases.extend(llm_test_cases)
-                        # conversational_test_cases = (
-                        #     convert_convo_goldens_to_convo_test_cases(
-                        #         response.conversational_goldens,
-                        #         alias,
-                        #         response.datasetId,
-                        #     )
-                        # )
-                        # self._conversational_test_cases.extend(
-                        #     conversational_test_cases
-                        # )
+                        if not self._multi_turn:
+                            llm_test_cases = convert_goldens_to_test_cases(
+                                response.goldens, alias, response.datasetId
+                            )
+                            self._llm_test_cases.extend(llm_test_cases)
+                        else:
+                            conversational_test_cases = (
+                                convert_convo_goldens_to_convo_test_cases(
+                                    response.conversational_goldens,
+                                    alias,
+                                    response.datasetId,
+                                )
+                            )
+                            self._conversational_test_cases.extend(
+                                conversational_test_cases
+                            )
                     else:
-                        self.goldens = response.goldens
+                        if not self._multi_turn:
+                            self.goldens = response.goldens
+                        else:
+                            self.goldens = response.conversational_goldens
+
                         for golden in self.goldens:
                             golden._dataset_alias = alias
                             golden._dataset_id = response.datasetId
-
-                        # self.conversational_goldens = (
-                        #     response.conversational_goldens
-                        # )
 
                     end_time = time.perf_counter()
                     time_taken = format(end_time - start_time, ".2f")
@@ -720,18 +720,24 @@ class EvaluationDataset:
                 )
 
     def queue(
-        self, alias: str, goldens: List[Golden], print_response: bool = True
+        self,
+        alias: str,
+        goldens: Union[List[Golden], List[ConversationalGolden]],
+        print_response: bool = True,
     ):
         if len(goldens) == 0:
             raise ValueError(
                 f"Can't queue empty list of goldens to dataset with alias: {alias} on Confident AI."
             )
 
+        multi_turn = isinstance(goldens[0], ConversationalGolden)
+
         if is_confident():
             api = Api()
             api_dataset = APIQueueDataset(
                 alias=alias,
-                goldens=goldens,
+                goldens=goldens if not multi_turn else None,
+                conversationalGoldens=goldens if multi_turn else None,
             )
             try:
                 body = api_dataset.model_dump(by_alias=True, exclude_none=True)
@@ -739,11 +745,14 @@ class EvaluationDataset:
                 # Pydantic version below 2.0
                 body = api_dataset.dict(by_alias=True, exclude_none=True)
 
+            print(body, "@@")
+
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,
                 endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
                 body=body,
+                url_params={"alias": alias},
             )
             if result and print_response:
                 response = CreateDatasetHttpResponse(

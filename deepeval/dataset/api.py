@@ -7,15 +7,18 @@ from deepeval.dataset.golden import Golden, ConversationalGolden
 class APIDataset(BaseModel):
     alias: str
     overwrite: Optional[bool] = None
-    goldens: Optional[List[Golden]] = Field(default=[])
+    goldens: Optional[List[Golden]] = Field(None)
     conversational_goldens: Optional[List[ConversationalGolden]] = Field(
-        default=[], alias="conversationalGoldens"
+        None, alias="conversationalGoldens"
     )
 
 
 class APIQueueDataset(BaseModel):
     alias: str
-    goldens: List[Golden]
+    goldens: Optional[List[Golden]] = Field(None)
+    conversational_goldens: Optional[List[ConversationalGolden]] = Field(
+        None, alias="conversationalGoldens"
+    )
 
 
 class CreateDatasetHttpResponse(BaseModel):
@@ -23,8 +26,8 @@ class CreateDatasetHttpResponse(BaseModel):
 
 
 class DatasetHttpResponse(BaseModel):
-    goldens: List[Golden] = Field(alias="goldens")
-    conversational_goldens: List[ConversationalGolden] = Field(
-        alias="conversationalGoldens"
+    goldens: Optional[List[Golden]] = Field(None, alias="goldens")
+    conversational_goldens: Optional[List[ConversationalGolden]] = Field(
+        None, alias="conversationalGoldens"
     )
     datasetId: str

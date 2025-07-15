@@ -45,6 +45,7 @@ from deepeval.test_case import (
     MLLMImage,
     Turn,
     ArenaTestCase,
+    ToolCall,
 )
 
 
@@ -98,6 +99,22 @@ def convert_turn_to_dict(turn: Turn) -> Dict:
 def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
+
+
+def print_tools_called(tools_called_list: List[ToolCall]):
+    string = "[\n"
+    for index, tools_called in enumerate(tools_called_list):
+        json_string = json.dumps(tools_called.model_dump(), indent=4)
+        indented_json_string = "\n".join(
+            "  " + line for line in json_string.splitlines()
+        )
+        string += indented_json_string
+        if index < len(tools_called_list) - 1:
+            string += ",\n"
+        else:
+            string += "\n"
+    string += "]"
+    return string
 
 
 def print_verbose_logs(metric: str, logs: str):
@@ -349,6 +366,11 @@ def should_use_gemini_model():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_openai_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_OPENAI_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 def should_use_litellm():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LITELLM)
     return value.lower() == "yes" if value is not None else False
@@ -371,6 +393,8 @@ def initialize_model(
     # If model is a DeepEvalBaseLLM but not a native model, we can not assume it is a native model
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
+    if should_use_openai_model():
+        return GPTModel(), True
     if should_use_gemini_model():
         return GeminiModel(), True
     if should_use_litellm():

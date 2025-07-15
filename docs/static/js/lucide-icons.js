@@ -7,6 +7,9 @@ function addLucideIcons() {
     'sidebar-item-icon-synthetic-data': 'database',
     'sidebar-item-icon-red-teaming': 'shield-alert',
     'sidebar-item-icon-benchmarks': 'bar-chart-2',
+    'sidebar-item-icon-agent': 'bot',
+    'sidebar-item-icon-chatbot': 'bot-message-square',
+    'sidebar-item-icon-rag': 'file-search',
     'sidebar-item-icon-others': 'more-horizontal'
   };
   
@@ -85,7 +88,7 @@ function addLucideIcons() {
       currentPath = newPath;
       
       // Only act on doc paths
-      if (currentPath.startsWith('/docs') || currentPath === '/') {
+      if (currentPath.startsWith('/docs') || currentPath === '/' || currentPath.startsWith('/tutorials')) {
         // Wait for React to render the sidebar
         setTimeout(addLucideIcons, 200);
       }
@@ -104,7 +107,7 @@ function addLucideIcons() {
   window.addEventListener('popstate', handlePathChange);
   
   // Run once on initial load
-  if (currentPath.startsWith('/docs') || currentPath === '/') {
+  if (currentPath.startsWith('/docs') || currentPath === '/' || currentPath.startsWith('/tutorials')) {
     addLucideIcons();
   }
 })();

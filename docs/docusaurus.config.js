@@ -6,14 +6,6 @@ const rehypeKatexModule = import("rehype-katex");
 
 module.exports = {
   plugins: [
-    [
-      "posthog-docusaurus",
-      {
-        apiKey: "phc_xuPeotBDIsi9uNBRS1ZqFD24IaOTx6lmt4ZCLfOnaee",
-        appUrl: "https://us.i.posthog.com",
-        enableInDevelopment: false,
-      },
-    ],
     "docusaurus-plugin-sass",
     [
       "@docusaurus/plugin-content-docs",
@@ -81,7 +73,7 @@ module.exports = {
         blog: {
           blogTitle: "DeepEval Blog",
           blogDescription: "The official LLM evaluation blog",
-          blogSidebarCount: 0,
+          blogSidebarCount: 'ALL',
         },
         docs: {
           path: "docs",

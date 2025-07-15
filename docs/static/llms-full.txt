@@ -9709,7 +9709,7 @@ Even if you’re not using Confident AI, you can [join our discord community](ht
 This documentation is designed to teach you how to use Confident AI to evaluate your LLM apps with as little fluff as possible. The:
 
 - **Concepts** [section](https://documentation.confident-ai.com/docs/concepts/test-cases) covers essential terminology for understanding LLM evaluation - recommended starting point for beginners
-- **Quickstart** [section](https://documentation.confident-ai.com/docs/getting-started/create-account) provides the fundamentals needed to begin using the platform effectively
+- **Quickstart** [section](https://documentation.confident-ai.com/docs/getting-started/setup) provides the fundamentals needed to begin using the platform effectively
 - **Data Handling** [page](https://documentation.confident-ai.com/docs/data-handling) explains data organization, privacy controls, and residency options
 - **Platform Features** section details the complete suite of Confident AI capabilities:
   - [LLM Evaluations](https://documentation.confident-ai.com/docs/llm-evaluation/introduction)
@@ -16153,7 +16153,7 @@ Visit the [end-to-end LLM evals section](https://deepeval.com/docs/evaluation-en
 
 ### On Confident AI [​](https://deepeval.com/docs/evaluation-datasets\#on-confident-ai-1 "Direct link to On Confident AI")
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/create-account):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/setup):
 
 ```codeBlockLines_e6Vv
 deepeval login

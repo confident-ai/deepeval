@@ -1,0 +1,144 @@
+---
+id: tutorial-summarization-production
+title: Production
+sidebar_label: Production
+---
+
+In this section, we'll set up CI/CD workflows for your summarization agent and learn how to manage dynamic datasets to ensure reliable evaluation as your data evolves.
+
+In the previous section, we created a `deepeval` dataset. You can now reuse that dataset to evaluate your summarization agent continuously in a production setting.
+
+## Why Continuous Evaluation Matters
+
+Most summarization agents are created to summarize documents or transcripts that can help increase productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
+And `deepeval`'s datasets are editable and manageable through code or our cloud platform [Confident AI](https://www.confident-ai.com).
+
+You can populate datasets with full test cases, or use goldens, which contain just the inputs. During evaluation, the test cases will be generated on the fly by calling your summarizer to produce outputs.
+
+### Pulling datasets
+
+Here's how you can pull datasets from the cloud anytime and anywhere:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="MeetingSummarizer Dataset", auto_convert_goldens_to_test_cases=False)
+```
+
+If you've populated your dataset with goldens, here's how to convert them to test cases:
+
+```python
+from deepeval.test_case import LLMTestCase
+
+for golden in dataset.goldens:
+    actual_output = summarizer.summarize(golden.input)  # Replace with your summarizer
+
+    dataset.add_test_case(
+        LLMTestCase(
+            input=golden.input,
+            actual_output=actual_output,
+        )
+    )
+```
+
+If you've populated your datasets with test cases, you can simply evaluate your dataset with the `evaluate()` function by providing dataset instead of test cases.
+
+## CI/CD Integration
+
+In our CI/CD workflow, we'll pull a dataset from the cloud (assuming it's populated with goldens — inputs without outputs). We'll then run your summarizer to generate summaries and convert them into test cases.
+Here's how to continuously test your summarization agent's reliability in a production environment:
+
+```python title="test_summarizer_quality.py"
+import pytest
+from deepeval.test_case import LLMTestCase
+from deepeval.dataset import EvaluationDataset
+from deepeval.metrics import SummarizationMetric, GEval
+from deepeval import assert_test
+from meeting_summarizer import MeetingSummarizer # Import your summarizer
+
+metrics = [
+    SummarizationMetric(),
+    GEval(
+        name="Concision",
+        criteria="Assess whether the summary is concise and focused only on the essential points of the meeting? It should avoid repetition, irrelevant details, and unnecessary elaboration.",
+        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+    ),
+    GEval(
+        name="Action Item Accuracy",
+        criteria="Are the action items accurate, complete, and clearly reflect the key tasks or follow-ups mentioned in the meeting?",
+        evaluation_params=[LLMTestCaseParams.INPUT, LLMTestCaseParams.ACTUAL_OUTPUT]
+    )
+]
+
+summarizer = MeetingSummarizer() # Initialize with your best config
+dataset = EvaluationDataset()
+dataset.pull(alias="MeetingSummarizer Dataset", auto_convert_goldens_to_test_cases=False) # Assuming you've populated the dataset with goldens
+
+# NOTE: If your dataset already includes test cases, you can skip this step
+
+test_cases = []
+for golden in dataset.goldens:
+    actual_output = summarizer.summarize(golden.input)  # Replace with your summarizer
+    test_cases.append(
+        LLMTestCase(
+            input=golden.input,
+            actual_output=actual_output,
+        )
+    )
+@pytest.mark.parametrize("test_case", test_cases)
+def test_meeting_summarizer(test_case: LLMTestCase):
+    assert_test(test_case, metrics)
+```
+
+This test file plugs straight into any CI setup (GitHub Actions, GitLab CI, etc.), so your summarization agent maintains quality with every push. Just run:
+
+```bash 
+poetry run pytest -v test_summarizer_quality.py
+```
+
+Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
+
+```yaml {32-33}
+name: Meeting Summarizer DeepEval Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: poetry install --no-root
+
+      - name: Run DeepEval Unit Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # Add your OPENAI_API_KEY
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }} # Add your CONFIDENT_API_KEY
+        run: poetry run pytest -v test_meeting_summarizer_quality.py
+```
+
+And that's it! You now have a **robust, production-ready summarization agent** with automated evaluation integrated into your development workflow.
+
+:::tip Next Steps
+Use [Confident AI](https://www.confident-ai.com)'s dashboard to track your summarization agent's performance across builds, regressions, and evolving datasets. **It's free to get started.** _(No credit card required)_
+
+Learn more [here](https://www.confident-ai.com).
+:::

@@ -94,13 +94,11 @@ second_test_case = LLMTestCase(input="...", actual_output="...")
 dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
 ```
 
-You can also append a test case to an `EvaluationDataset` through the `test_cases` instance variable:
+You can also add a test case to an `EvaluationDataset` using the `add_test_case` method:
 
 ```python
 ...
 
-dataset.test_cases.append(test_case)
-# or
 dataset.add_test_case(test_case)
 ```
 
@@ -348,7 +346,7 @@ Visit the [end-to-end LLM evals section](/docs/evaluation-end-to-end-llm-evals#u
 
 ### On Confident AI
 
-Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/create-account):
+Instead of running evaluations locally using your own evaluation LLMs via `deepeval`, you can choose to run evaluations on Confident AI's infrastructure instead. First, [login to Confident AI](https://documentation.confident-ai.com/docs/getting-started/setup):
 
 ```bash
 deepeval login

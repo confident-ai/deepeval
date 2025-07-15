@@ -273,10 +273,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
                 azure_deployment=self.deployment_name,
+                **self.kwargs,
             )
         return AsyncAzureOpenAI(
             api_key=self.azure_openai_api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.deployment_name,
+            **self.kwargs,
         )

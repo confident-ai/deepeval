@@ -14,3 +14,4 @@ from .bbq.bbq import BBQ
 from .lambada.lambada import LAMBADA
 from .winogrande.winogrande import Winogrande
 from .equity_med_qa.equity_med_qa import EquityMedQA
+from .ifeval.ifeval import IFEval
