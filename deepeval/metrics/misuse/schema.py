@@ -15,5 +15,5 @@ class Verdicts(BaseModel):
     verdicts: List[MisuseVerdict]
 
 
-class Reason(BaseModel):
+class MisuseScoreReason(BaseModel):
     reason: str

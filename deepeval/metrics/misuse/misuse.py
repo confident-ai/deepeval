@@ -4,7 +4,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.models import DeepEvalBaseLLM
@@ -141,12 +140,16 @@ class MisuseMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Reason)
+            res, cost = await self.model.a_generate(
+                prompt, schema=MisuseScoreReason
+            )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = await self.model.a_generate(prompt, schema=Reason)
+                res: MisuseScoreReason = await self.model.a_generate(
+                    prompt, schema=MisuseScoreReason
+                )
                 return res.reason
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -168,12 +171,14 @@ class MisuseMetric(BaseMetric):
         )
 
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Reason)
+            res, cost = self.model.generate(prompt, schema=MisuseScoreReason)
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: Reason = self.model.generate(prompt, schema=Reason)
+                res: MisuseScoreReason = self.model.generate(
+                    prompt, schema=MisuseScoreReason
+                )
                 return res.reason
             except TypeError:
                 res = self.model.generate(prompt)
