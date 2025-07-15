@@ -95,6 +95,7 @@ class CallbackHandler(BaseCallbackHandler):
             )
             span.llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
             score = metric.measure(span.llm_test_case)
+            span.metrics = [metric]
             print("Task Completion Metric Score: ", score)
 
     def evaluate_metrics(self, span: BaseSpan):
