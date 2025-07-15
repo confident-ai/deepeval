@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, List
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import (
@@ -7,6 +7,8 @@ from deepeval.tracing.attributes import (
     LlmOutput,
     LlmToolCall,
 )
+from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
+from deepeval.metrics import BaseMetric
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -50,15 +52,18 @@ from deepeval.telemetry import capture_tracing_integration
 
 
 class CallbackHandler(BaseCallbackHandler):
+    
+    active_trace_id: Optional[str] = None
+    metrics: List[BaseMetric] = []
 
-    def __init__(self):
+    def __init__(self, metrics: List[BaseMetric] = []):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
         )
         is_langchain_installed()
+        self.metrics = metrics
         super().__init__()
 
-    active_trace_id: Optional[str] = None
 
     def check_active_trace_id(self):
         if self.active_trace_id is None:
@@ -80,6 +85,11 @@ class CallbackHandler(BaseCallbackHandler):
             current_trace.output = span.output
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
+
+    def evaluate_metrics(self, span: BaseSpan):
+        print("----evaluate_metrics----")
+        print(span)
+        pass
 
     def on_chain_start(
         self,
@@ -107,7 +117,6 @@ class CallbackHandler(BaseCallbackHandler):
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
         )
-
         self.add_span_to_trace(base_span)
 
     def on_chain_end(
@@ -127,6 +136,9 @@ class CallbackHandler(BaseCallbackHandler):
         self.end_span(base_span)
 
         if parent_run_id is None:
+            if self.metrics:
+                self.evaluate_metrics(base_span)
+                   
             self.end_trace(base_span)
 
     def on_llm_start(
