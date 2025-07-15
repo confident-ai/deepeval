@@ -84,7 +84,7 @@ dataset = EvaluationDataset()
 
 A dataset can either be a single-turn one, **or** a multi-turn one (but not both). Initializing supplying your dataset with a list of `Golden`s will make it a single-turn one, whereas supplying it with `ConversationalGolden`s will make it multi-turn:
 
-<Tabs>
+<Tabs groupId="single-multi-turns">
 
 <TabItem value="single-turn" label="Single-Turn">
 
@@ -147,7 +147,7 @@ Your dataset is either single or multi-turn the moment you pull your dataset.
 
 Once you have your dataset and can see a non-empty list of goldens, you can start generating outputs and **add it back to your dataset** as test cases via the `add_test_case()` method:
 
-<Tabs>
+<Tabs groupId="single-multi-turns">
 
 <TabItem value="single-turn" label="Single-Turn">
 
