@@ -109,6 +109,13 @@ details [class*="collapsibleContent"] {
   border-radius: 10px;
 }
 
+/* Remove styling from nested tabs containers */
+.tabs-container .tabs-container > div {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+}
+
 ul.tabs {
   border-bottom: 1px solid #cbd4de !important;
   column-gap: 0.5rem !important;
