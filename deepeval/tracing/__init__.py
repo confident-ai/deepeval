@@ -7,4 +7,4 @@ from .attributes import (
 )
 from .types import BaseSpan, Trace, Feedback
 from .tracing import observe, trace_manager
-from .api import evaluate_thread
+from .offline_evals import evaluate_thread, evaluate_trace, evaluate_span

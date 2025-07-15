@@ -2,11 +2,8 @@ from enum import Enum
 from typing import Dict, List, Optional, Union, Literal, Any
 from pydantic import BaseModel, Field
 
-from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.tracing.context import current_trace_context
-from deepeval.utils import is_confident
 from deepeval.feedback.api import APIFeedback
+from deepeval.test_case import ToolCall
 
 
 class SpanApiType(Enum):
@@ -57,7 +54,6 @@ class BaseApiSpan(BaseModel):
     name: str = None
     status: TraceSpanApiStatus
     type: SpanApiType
-    trace_uuid: str = Field(alias="traceUuid")
     parent_uuid: Optional[str] = Field(None, alias="parentUuid")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
@@ -90,8 +86,8 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    span_test_case: Optional[TraceSpanTestCase] = Field(
-        None, alias="spanTestCase"
+    llm_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="llmTestCase"
     )
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
@@ -106,13 +102,16 @@ class BaseApiSpan(BaseModel):
 
 class TraceApi(BaseModel):
     uuid: str
-    base_spans: List[BaseApiSpan] = Field(alias="baseSpans")
-    agent_spans: List[BaseApiSpan] = Field(alias="agentSpans")
-    llm_spans: List[BaseApiSpan] = Field(alias="llmSpans")
-    retriever_spans: List[BaseApiSpan] = Field(alias="retrieverSpans")
-    tool_spans: List[BaseApiSpan] = Field(alias="toolSpans")
+    base_spans: Optional[List[BaseApiSpan]] = Field(None, alias="baseSpans")
+    agent_spans: Optional[List[BaseApiSpan]] = Field(None, alias="agentSpans")
+    llm_spans: Optional[List[BaseApiSpan]] = Field(None, alias="llmSpans")
+    retriever_spans: Optional[List[BaseApiSpan]] = Field(
+        None, alias="retrieverSpans"
+    )
+    tool_spans: Optional[List[BaseApiSpan]] = Field(None, alias="toolSpans")
     start_time: str = Field(alias="startTime")
     end_time: str = Field(alias="endTime")
+    name: Optional[str] = Field(None)
     metadata: Optional[Dict[str, Any]] = Field(None)
     tags: Optional[List[str]] = Field(None)
     environment: Optional[str] = Field(None)
@@ -123,71 +122,8 @@ class TraceApi(BaseModel):
     feedback: Optional[APIFeedback] = Field(None)
 
     # evals
-    trace_test_case: Optional[TraceSpanTestCase] = Field(
-        None, alias="traceTestCase"
+    llm_test_case: Optional[TraceSpanTestCase] = Field(
+        None, alias="llmTestCase"
     )
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
-
-
-class RunThreadMetricApi(BaseModel):
-    thread_supplied_id: str = Field(alias="threadSuppliedId")
-    metric_collection: str = Field(alias="metricCollection")
-
-
-def evaluate_thread(thread_id: str, metric_collection: str):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    if not api_key and not is_confident():
-        return
-
-    run_thread_metric_api = RunThreadMetricApi(
-        threadSuppliedId=thread_id,
-        metricCollection=metric_collection,
-    )
-    try:
-        body = run_thread_metric_api.model_dump(
-            by_alias=True,
-            exclude_none=True,
-        )
-    except AttributeError:
-        # Pydantic version below 2.0
-        body = run_thread_metric_api.dict(by_alias=True, exclude_none=True)
-
-    api = Api(api_key=api_key)
-    api.send_request(
-        method=HttpMethods.POST,
-        endpoint=Endpoints.THREAD_METRICS_ENDPOINT,
-        body=body,
-    )
-
-
-async def a_evaluate_thread(thread_id: str, metric_collection: str):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    if not api_key and not is_confident():
-        return
-
-    run_thread_metric_api = RunThreadMetricApi(
-        threadSuppliedId=thread_id,
-        metricCollection=metric_collection,
-    )
-    try:
-        body = run_thread_metric_api.model_dump(
-            by_alias=True,
-            exclude_none=True,
-        )
-    except AttributeError:
-        # Pydantic version below 2.0
-        body = run_thread_metric_api.dict(by_alias=True, exclude_none=True)
-
-    api = Api(api_key=api_key)
-    await api.a_send_request(
-        method=HttpMethods.POST,
-        endpoint=Endpoints.THREAD_METRICS_ENDPOINT,
-        body=body,
-    )

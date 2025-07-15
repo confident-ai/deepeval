@@ -32,5 +32,5 @@ class Answers(BaseModel):
     answers: List[str]
 
 
-class Reason(BaseModel):
+class SummarizationScoreReason(BaseModel):
     reason: str

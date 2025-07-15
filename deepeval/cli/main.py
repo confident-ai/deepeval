@@ -157,6 +157,50 @@ def enable_grpc_logging():
     os.environ["DEEPEVAL_GRPC_LOGGING"] = "YES"
 
 
+#############################################
+# OpenAI Integration ########################
+#############################################
+
+
+@app.command(name="set-openai")
+def set_openai_env(
+    model: str = typer.Option(..., "--model", help="OpenAI model name"),
+    cost_per_input_token: Optional[float] = typer.Option(
+        ..., "--cost_per_input_token", help="OpenAI cost per input token"
+    ),
+    cost_per_output_token: Optional[float] = typer.Option(
+        ..., "--cost_per_output_token", help="OpenAI cost per output token"
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_OPENAI_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(KeyValues.OPENAI_MODEL_NAME, model)
+    KEY_FILE_HANDLER.write_key(
+        KeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_output_token)
+    )
+    KEY_FILE_HANDLER.write_key(
+        KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_input_token)
+    )
+    print(
+        f":raising_hands: Congratulations! You're now using OpenAI's `{model}` for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-openai")
+def unset_openai_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_OPENAI_MODEL)
+    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_COST_PER_INPUT_TOKEN)
+    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN)
+    print(
+        ":raising_hands: Congratulations! You're now using default OpenAI settings on DeepEval for all evals that require an LLM."
+    )
+
+
+#############################################
+# Azure Integration ########################
+#############################################
+
+
 @app.command(name="set-azure-openai")
 def set_azure_openai_env(
     azure_openai_api_key: str = typer.Option(

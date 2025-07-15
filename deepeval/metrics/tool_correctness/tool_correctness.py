@@ -8,7 +8,6 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ConversationalTestCase,
     ToolCallParams,
     ToolCall,
 )

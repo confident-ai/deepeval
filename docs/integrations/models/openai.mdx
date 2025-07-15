@@ -20,6 +20,26 @@ Alternatively, if you're working in a notebook environment (Jupyter or Colab), s
 %env OPENAI_API_KEY=<your-openai-api-key>
 ```
 
+### Command Line
+
+Run the following command in your CLI to specify an OpenAI model to power all metrics.
+
+```bash
+deepeval set-openai \
+    --model=gpt-4.1
+    --cost_per_input_token=0.000002
+    --cost_per_output_token=0.000008
+```
+
+:::info
+The CLI command above sets `gpt-4.1` as the default model for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset the current settings:
+
+```bash
+deepeval unset-open-ai
+```
+
+:::
+
 ### Python
 
 You may use OpenAI models other than `gpt-4.1`, which can be configured directly in python code through DeepEval's `GPTModel`.
@@ -33,8 +53,10 @@ from deepeval.models import GPTModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = GPTModel(
-    model="o1",
-    temperature=0
+    model="gpt-4.1",
+    temperature=0,
+    cost_per_input_token=0.000002,
+    cost_per_output_token=0.000008
 )
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
@@ -43,6 +65,8 @@ There are **ONE** mandatory and **ONE** optional parameters when creating a `GPT
 
 - `model`: A string specifying the name of the GPT model to use. Defaulted to `gpt-4o`.
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model.
+- [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model.
 
 ### Available OpenAI Models
 

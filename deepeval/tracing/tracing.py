@@ -160,7 +160,6 @@ class TraceManager:
         self.traces.append(new_trace)
         if self.evaluation_loop:
             self.traces_to_evaluate_order.append(trace_uuid)
-            
         return new_trace
 
     def end_trace(self, trace_uuid: str):
@@ -384,7 +383,7 @@ class TraceManager:
                     api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
                         method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACING_ENDPOINT,
+                        endpoint=Endpoints.TRACES_ENDPOINT,
                         body=body,
                     )
                     queue_size = self._trace_queue.qsize()
@@ -472,7 +471,7 @@ class TraceManager:
                     api = Api(api_key=self.confident_api_key)
                     resp = api.send_request(
                         method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACING_ENDPOINT,
+                        endpoint=Endpoints.TRACES_ENDPOINT,
                         body=body,
                     )
                     qs = self._trace_queue.qsize()
@@ -489,6 +488,35 @@ class TraceManager:
                         message="Error flushing remaining trace(s)",
                         description=str(e),
                     )
+
+    def create_nested_spans_dict(self, span: BaseSpan) -> Dict[str, Any]:
+        api_span = self._convert_span_to_api_span(span)
+        trace_dict = api_span.__dict__.copy()
+
+        # Remove specific keys
+        for key in (
+            "uuid",
+            "trace_uuid",
+            "parent_uuid",
+            "end_time",
+            "start_time",
+            "status",
+            "llm_test_case",
+            "metrics_data",
+            "metric_collection",
+            "metadata",
+        ):
+            trace_dict.pop(key, None)
+
+        # Remove all keys with None values
+        trace_dict = {k: v for k, v in trace_dict.items() if v is not None}
+
+        trace_dict["children"] = []
+        for child in span.children or []:
+            child_api_span = self.create_nested_spans_dict(child)
+            trace_dict["children"].append(child_api_span)
+
+        return trace_dict
 
     def create_trace_api(self, trace: Trace) -> TraceApi:
         # Initialize empty lists for each span type
@@ -559,6 +587,7 @@ class TraceManager:
             startTime=start_time,
             endTime=end_time,
             metadata=trace.metadata,
+            name=trace.name,
             tags=trace.tags,
             environment=self.environment,
             threadId=trace.thread_id,
@@ -568,7 +597,7 @@ class TraceManager:
             feedback=convert_feedback_to_api_feedback(
                 trace.feedback, trace_uuid=trace.uuid
             ),
-            traceTestCase=trace_test_case,
+            llmTestCase=trace_test_case,
             metricCollection=(
                 trace.metric_collection if trace.llm_test_case else None
             ),
@@ -639,7 +668,6 @@ class TraceManager:
             name=span.name,
             status=span.status.value,
             type=span_type,
-            traceUuid=span.trace_uuid,
             parentUuid=span.parent_uuid,
             startTime=start_time,
             endTime=end_time,
@@ -647,7 +675,7 @@ class TraceManager:
             output=output_data,
             metadata=span.metadata,
             error=span.error,
-            spanTestCase=span_test_case,
+            llmTestCase=span_test_case,
             metricCollection=span.metric_collection,
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid

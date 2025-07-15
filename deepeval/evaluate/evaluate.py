@@ -1,4 +1,13 @@
-from typing import Callable, List, Optional, Union, Dict, Any, Awaitable, Iterator
+from typing import (
+    Callable,
+    List,
+    Optional,
+    Union,
+    Dict,
+    Any,
+    Awaitable,
+    Iterator,
+)
 from rich.console import Console
 import asyncio
 import time
@@ -334,6 +343,7 @@ def evaluate(
 def dataset(
     alias: Optional[str] = None,
     goldens: Optional[List[Golden]] = None,
+    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     identifier: Optional[str] = None,
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     cache_config: Optional[CacheConfig] = CacheConfig(),
@@ -344,7 +354,7 @@ def dataset(
         raise ValueError(
             "You must provide either 'goldens' or 'alias' to dataset()."
         )
-    
+
     if alias:
         dataset = EvaluationDataset()
         dataset.pull(alias)

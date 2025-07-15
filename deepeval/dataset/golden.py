@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, PrivateAttr
 from typing import Optional, Dict, List
-from deepeval.test_case import ToolCall, Turn
+from deepeval.test_case import ToolCall
 
 
 class Golden(BaseModel):
@@ -38,11 +38,21 @@ class Golden(BaseModel):
 
 
 class ConversationalGolden(BaseModel):
+    scenario: str
+    expected_outcome: Optional[str] = Field(
+        None, serialization_alias="expectedOutcome"
+    )
+    user_description: Optional[str] = Field(
+        None, serialization_alias="userDescription"
+    )
     additional_metadata: Optional[Dict] = Field(
         default=None, serialization_alias="additionalMetadata"
     )
     comments: Optional[str] = Field(default=None)
-    turns: List[Turn] = Field(
-        default_factory=lambda: [],
-        serialization_alias="goldens",
+    name: Optional[str] = Field(default=None)
+    custom_column_key_values: Optional[Dict[str, str]] = Field(
+        default=None, serialization_alias="customColumnKeyValues"
     )
+    _dataset_rank: Optional[int] = PrivateAttr(default=None)
+    _dataset_alias: Optional[str] = PrivateAttr(default=None)
+    _dataset_id: Optional[str] = PrivateAttr(default=None)

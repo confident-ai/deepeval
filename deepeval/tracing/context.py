@@ -34,6 +34,7 @@ def update_current_span(
 
 
 def update_current_trace(
+    name: Optional[str] = None,
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     thread_id: Optional[str] = None,
@@ -46,6 +47,8 @@ def update_current_trace(
     current_trace = current_trace_context.get()
     if not current_trace:
         return
+    if name:
+        current_trace.name = name
     if tags:
         current_trace.tags = tags
     if metadata:

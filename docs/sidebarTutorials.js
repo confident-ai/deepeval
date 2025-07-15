@@ -1,23 +1,43 @@
 module.exports = {
   tutorials: [
-    "tutorial-introduction",
-    // "use-cases",
-    "tutorial-setup",
     {
       type: "category",
-      label: "Legal Doc Summarization",
+      label: "Getting Started",
+      className: "sidebar-item-getting-started",
       items: [
-        "doc-summarization-introduction",
-        "doc-summarization-defining-a-criteria",
-        "doc-summarization-selecting-metrics",
-        "doc-summarization-running-an-evaluation",
-        "doc-summarization-iterating-on-hyperparameters",
-        "doc-summarization-catching-llm-regressions",
-        "doc-summarization-annotating-datasets",
-        "doc-summarization-using-datasets",
+        "tutorial-introduction",
+        "tutorial-setup"
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
+      label: "Meeting Summarizer",
+      className: "sidebar-item-icon-agent",
+      items: [
+        "summarization-agent/tutorial-summarization-introduction", 
+        "summarization-agent/tutorial-summarization-development",
+        "summarization-agent/tutorial-summarization-evaluation",
+        "summarization-agent/tutorial-summarization-improvement",
+        "summarization-agent/tutorial-summarization-production",
       ],
       collapsed: true,
     },
+    // {
+    //   type: "category",
+    //   label: "Legal Doc Summarization",
+    //   items: [
+    //     "doc-summarization-introduction",
+    //     "doc-summarization-defining-a-criteria",
+    //     "doc-summarization-selecting-metrics",
+    //     "doc-summarization-running-an-evaluation",
+    //     "doc-summarization-iterating-on-hyperparameters",
+    //     "doc-summarization-catching-llm-regressions",
+    //     "doc-summarization-annotating-datasets",
+    //     "doc-summarization-using-datasets",
+    //   ],
+    //   collapsed: true,
+    // },
     {
       type: "category",
       label: "RAG QA Agent",

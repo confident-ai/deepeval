@@ -48,6 +48,7 @@ from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
+    TaskCompletionMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -79,6 +80,7 @@ from deepeval.evaluate.utils import (
     create_test_result,
     create_api_test_case,
     count_metrics_in_trace,
+    extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import TestCaseMetricPair, openai_test_case_pairs
@@ -959,7 +961,7 @@ def execute_agentic_test_cases(
                 ):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
-                    test_case: LLMTestCase = span.llm_test_case
+                    test_case: Optional[LLMTestCase] = span.llm_test_case
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
@@ -977,8 +979,26 @@ def execute_agentic_test_cases(
                     for child in span.children:
                         dfs(child, progress, pbar_eval_id)
 
-                    if span.metrics == None or span.llm_test_case == None:
+                    if span.metrics is None:
                         return
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in span.metrics
+                    )
+                    if span.llm_test_case is None and not has_task_completion:
+                        raise ValueError(
+                            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
+                        )
+
+                    # add trace if task completion
+                    if has_task_completion:
+                        if test_case is None:
+                            test_case = LLMTestCase(
+                                input="None", actual_output="None"
+                            )
+                        test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(span)
+                        )
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
@@ -1050,6 +1070,7 @@ def execute_agentic_test_cases(
                 api_test_case.update_run_duration(run_duration)
                 test_run_manager.update_test_run(api_test_case, test_case)
                 test_results.append(create_test_result(api_test_case))
+                test_results.extend(extract_trace_test_results(trace_api))
 
                 update_pbar(progress, pbar_id)
 
@@ -1289,6 +1310,7 @@ async def a_execute_agentic_test_case(
     api_test_case.update_run_duration(run_duration)
     test_run_manager.update_test_run(api_test_case, test_case)
     test_results.append(create_test_result(api_test_case))
+    test_results.extend(extract_trace_test_results(trace_api))
 
     update_pbar(progress, pbar_id)
 
@@ -1319,14 +1341,24 @@ async def a_execute_span_test_case(
 
     if span.metrics is None:
         return
-    if span.llm_test_case is None:
+
+    has_task_completion = any(
+        isinstance(metric, TaskCompletionMetric) for metric in span.metrics
+    )
+    if span.llm_test_case is None and not has_task_completion:
         raise ValueError(
             "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
         )
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     metrics: List[BaseMetric] = span.metrics
-    test_case: LLMTestCase = span.llm_test_case
+    test_case: Optional[LLMTestCase] = span.llm_test_case
+
+    # add trace if task completion
+    if has_task_completion:
+        if test_case is None:
+            test_case = LLMTestCase(input="None", actual_output="None")
+        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
 
     for metric in metrics:
         metric.skipped = False
@@ -1396,6 +1428,7 @@ def execute_agentic_test_cases_from_loop(
 
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
+
     
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
@@ -1408,7 +1441,9 @@ def execute_agentic_test_cases_from_loop(
             with capture_evaluation_run("golden"):
                 # yield golden
                 count += 1
-                pbar_tags_id = add_pbar(progress, f"\t⚡ Invoking observed callback (#{count})")
+                pbar_tags_id = add_pbar(
+                    progress, f"\t⚡ Invoking observed callback (#{count})"
+                )
                 with Observer(
                     "custom",
                     func_name="Test Wrapper",
@@ -1417,7 +1452,7 @@ def execute_agentic_test_cases_from_loop(
                 ):
                     yield golden
                     current_trace: Trace = current_trace_context.get()
-                    
+
                 update_pbar(progress, pbar_tags_id)
                 update_pbar(progress, pbar_id)
 
@@ -1619,7 +1654,12 @@ def a_execute_agentic_test_cases_from_loop(
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
             return await coroutine
-    
+
+    async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
@@ -1715,6 +1755,7 @@ def a_execute_agentic_test_cases_from_loop(
     local_trace_manager.traces_to_evaluate = []
     global_test_run_tasks.clear_tasks()
     asyncio.create_task = orig_create_task
+
 
 
 async def evaluate_traces(

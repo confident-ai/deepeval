@@ -1,0 +1,462 @@
+---
+id: tutorial-summarization-development
+title: Development
+sidebar_label: Development
+---
+
+In this section, we’re going to create our **Meeting Summarization Agent** using the OpenAI API.
+
+We will now start by creating a minimal setup as a starting point for our summarization agent. We are going to use the following system prompt template:
+```text
+You are an AI assistant tasked with summarizing meeting transcripts clearly 
+and accurately. Given the following conversation, generate a concise summary 
+that captures the key points discussed, along with a set of action items 
+reflecting the concrete next steps mentioned. Keep the tone neutral and 
+factual, avoid unnecessary detail, and do not add interpretation beyond 
+the content of the conversation.
+```
+
+By using the above system prompt template we are now going to create a `MeetingSummarizer` agent that takes the transcript of a meeting and returns the summary along with action items.
+
+## Creating Meeting Summarizer
+
+```python
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
+class MeetingSummarizer:
+    def __init__(
+        self, 
+        model: str = "gpt-4", 
+        system_prompt: str = "",
+    ):
+        self.model = model
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.system_prompt = system_prompt or (
+            "You are an AI assistant tasked with summarizing meeting transcripts clearly"
+            "and accurately. Given the following conversation, generate a concise summary"
+            "that captures the key points discussed, along with a set of action items"
+            "reflecting the concrete next steps mentioned. Keep the tone neutral and"
+            "factual, avoid unnecessary detail, and do not add interpretation beyond"
+            "the content of the conversation."
+        )
+
+    def summarize(self, transcript: str) -> str:
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": transcript}
+            ]
+        )
+
+        content = response.choices[0].message.content.strip()
+        return content
+```
+
+:::note
+You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
+:::
+
+### Generating summaries
+
+Now that we've defined our summarization agent, we can use the following code to generate the summary
+
+```python
+summarizer = MeetingSummarizer()
+with open("meeting_transcript.txt", "r") as file:
+    transcript = file.read().strip()
+summary = summarizer.summarize(transcript)
+print(summary)
+```
+
+:::note
+I have saved a file named `meeting_transcript.txt` that contains a mock transcript which is provided to the summarizer as shown above. You can provide your own transcript here or use the mock transcript that I've used:
+<details>
+<summary><strong>The conversation transcript used here</strong></summary>
+
+```text
+[2:01:03 PM]  
+Ethan:  
+Hey Maya, thanks for hopping on. So, I've been looking at some of the recent 
+logs from the customer support assistant. There's definitely some mixed feedback 
+coming through — especially around response speed and how useful the answers 
+actually are. Did you get a chance to dig into those logs in detail yet?
+
+[2:01:20 PM]  
+Maya:  
+Yeah, I took a look earlier today. Honestly, it's not completely broken or 
+anything, but I get why folks are concerned. I noticed the assistant sometimes 
+gives answers that are kind of vague or, worse, confidently wrong. Like, it acts 
+super sure about something that's just not right, which can be really frustrating 
+for users.
+
+[2:01:40 PM]  
+Ethan:  
+Exactly! I heard one of the PMs mention that the assistant suggested escalating a 
+basic password reset issue to Tier 2 support. That's something that should be 
+handled automatically or at least on Tier 1, right? It feels like a pretty obvious 
+miss.
+
+[2:01:55 PM]  
+Maya:  
+Yeah, that kind of mistake usually happens when the assistant tries to compress 
+or summarize a long conversation thread before answering. If the summary it creates 
+is off — even just a little bit — everything else kind of falls apart after that. 
+The answer built on a shaky summary is going to be shaky too.
+
+[2:02:14 PM]  
+Ethan:  
+Makes sense. So, when you look at it, do you think these issues are more about the 
+way we're engineering the prompts or is it more a problem of the model itself? Like, 
+should we be trying a different LLM, or just tweaking how we ask questions?
+
+[2:02:31 PM]  
+Maya:  
+Honestly, it's a bit of both. We've been using GPT-4o for the most part, which is 
+pretty solid and fast. But last week I ran a test using Claude 3 on the exact same 
+dataset, and Claude seemed more grounded in its responses, less prone to making 
+stuff up. The trade-off is that Claude was noticeably slower.
+
+[2:02:54 PM]  
+Ethan:  
+How much slower are we talking?
+
+[2:02:56 PM]  
+Maya:  
+On average, about one and a half times slower. So if GPT-4o takes around 5 seconds to 
+respond, Claude's coming in at about 7 to 8 seconds. That delay might not sound huge in 
+isolation, but in the context of a real-time chat with customers, it's pretty noticeable.
+
+[2:03:14 PM]  
+Ethan:  
+Yeah, that latency definitely matters. From the UX perspective, once you hit that 
+6-second mark, users start to lose patience. I've seen analytics where retries and 
+page refreshes spike sharply after that threshold.
+
+[2:03:28 PM]  
+Maya:  
+Exactly. And those retries add load on the system, which kind of compounds the 
+problem. So it's not just user frustration but also a backend scaling concern.
+
+[2:03:37 PM]  
+Ethan:  
+So, what's your gut? Do we stick with GPT-4o and accept some of these errors because 
+it's faster? Or do we switch to Claude to get better quality at the expense of speed?
+
+[2:03:49 PM]  
+Maya:  
+I'm leaning towards keeping GPT-4o as the main model for now, mainly because speed is 
+critical. But we can implement Claude as a fallback option — like a second pass when 
+the assistant's confidence is low or if it detects uncertainty.
+
+[2:04:06 PM]  
+Ethan:  
+Kind of like a two-step verification for answers?
+
+[2:04:09 PM]  
+Maya:  
+Yeah, exactly. The idea is that the first pass gives you a quick answer, and only when 
+something smells off do you invoke the slower but more reliable model. Of course, we'll 
+need a solid way to detect when the assistant isn't confident.
+
+[2:04:24 PM]  
+Ethan:  
+Right now, what kind of signals do we have to measure confidence?
+
+[2:04:28 PM]  
+Maya:  
+Not much, unfortunately. We mostly log latency and token usage for cost monitoring, but 
+we don't have anything baked in that measures the quality or confidence of responses.
+
+[2:04:40 PM]  
+Ethan:  
+Could we use something like embedding similarity? Like, compare the semantic similarity 
+between the original support ticket and the assistant's summary or answer to see if they align?
+
+[2:04:51 PM]  
+Maya:  
+That's a great idea. If the embeddings show a big drift between the question and the 
+summary, that could definitely flag a problematic response. The trick is embeddings 
+themselves aren't free, cost-wise.
+
+[2:05:05 PM]  
+Ethan:  
+Finance is already watching our token and API spend like hawks, so we need to be careful.
+
+[2:05:11 PM]  
+Maya:  
+Yeah, but there are tricks like quantizing embeddings down to 8-bit precision, which can 
+reduce storage and compute cost by a lot. It's not perfect, but it might be enough to keep 
+costs manageable while adding that confidence signal.
+
+[2:05:27 PM]  
+Ethan:  
+Okay, that sounds promising. Let's explore that.
+
+[2:05:30 PM]  
+Ethan:  
+Another thing from UX feedback — some users say the assistant sounds really robotic, even 
+when it gives a correct answer. It lacks that human touch or empathy you'd expect from a 
+real support agent.
+
+[2:05:44 PM]  
+Maya:  
+Yeah, that doesn't surprise me. Our system prompt is pretty barebones — polite but definitely 
+generic. No personality, no empathy cues, nothing to make it sound warm or relatable.
+
+[2:05:57 PM]  
+Ethan:  
+What about fine-tuning the model on actual support transcripts? Would that help?
+
+[2:06:02 PM]  
+Maya:  
+I'm cautious about full fine-tuning right now. It's costly, time-consuming, and the results 
+can be unpredictable. Instead, I'd recommend focusing on prompt tuning — like few-shot learning 
+where we include a few anonymized example replies in the prompt. That can help steer tone 
+without the overhead of full model retraining.
+
+[2:06:22 PM]  
+Ethan:  
+So basically, you put a couple of well-written, human-sounding responses in the prompt to 
+guide the model's style?
+
+[2:06:26 PM]  
+Maya:  
+Exactly. It's a lot lighter weight and faster to iterate on. And if it works, we could 
+eventually create domain-specific prompts too — like one set for billing questions, 
+another for technical support — but start simple.
+
+[2:06:41 PM]  
+Ethan:  
+Makes sense. One last thing I was thinking about — how should the UI handle cases when 
+the assistant's confidence is low? Like, do we just let it answer anyway or should we add 
+some fallback messaging?
+
+[2:06:54 PM]  
+Maya:  
+I'd strongly advocate for a fallback banner or prompt, something like “Not sure about 
+this? Contact a human agent.” Better to admit uncertainty than provide bad info that 
+could confuse or frustrate customers.
+
+[2:07:06 PM]  
+Ethan:  
+Yeah, I totally agree. But I guess the challenge will be tuning how often that shows 
+up so it's helpful but not annoying.
+
+[2:07:11 PM]  
+Maya:  
+Definitely. We want it to trigger only on real low-confidence cases, not on every 
+little uncertainty.
+
+[2:07:16 PM]  
+Ethan:  
+Alright, sounds like we have a good plan. I'll sync with design on the fallback UX messaging, 
+and you can start working on the similarity scoring and the two-pass system with GPT-4o and 
+Claude?
+
+[2:07:28 PM]  
+Maya:  
+Yeah, I'll prioritize building that similarity metric and set up a test run for the hybrid 
+model approach over the next few days.
+
+[2:07:34 PM]  
+Ethan:  
+Perfect. Let's regroup next week and see how things look.
+
+[2:07:37 PM]  
+Maya:  
+Sounds good. One step at a time, right?
+```
+
+</details>
+:::
+
+After running the summarizer, this is the output I got:
+
+:::tip Output
+**Meeting Summary:**
+
+Ethan and Maya discussed performance concerns with the current customer support assistant, particularly issues with inaccurate or vague responses and slow performance trade-offs when using different language models. Maya noted that while GPT-4o offers faster responses, Claude 3 provides more grounded and reliable answers but with higher latency. They agreed to continue using GPT-4o as the primary model and implement Claude as a fallback for low-confidence cases.
+
+To address quality issues, they explored confidence detection via embedding similarity between the input and the assistant's summary. Maya suggested using 8-bit quantized embeddings to manage cost. They also discussed improving the assistant's tone and empathy using prompt tuning instead of full model fine-tuning.
+
+On the UX side, they agreed to implement fallback messaging for low-confidence responses, ensuring it's helpful without being intrusive.
+
+---
+
+**Action Items:**
+
+1. **Maya** to develop a similarity scoring method using embeddings to detect low-confidence responses.
+2. **Maya** to test and prototype a hybrid response system using GPT-4o as the default and Claude 3 as a fallback.
+3. **Maya** to explore prompt tuning with few-shot examples to improve the assistant's tone and empathy.
+4. **Ethan** to coordinate with the design team on fallback UI messaging for low-confidence responses.
+5. **Team** to regroup next week to review progress on the hybrid model and confidence detection efforts.
+:::
+
+## Updating Meeting Summarizer
+
+While this setup does generate summaries and action items, it is not what a final summarization agent must look like for our use case. We are now going to update our `MeetingSummarizer` class using the previous one as our starting point
+
+We will be adding 2 helper functions each for different tasks. These helper functions are necessary because they allow for easy debugging and evaluation in the future.
+
+- A function to generate summary
+- A function to generate action items
+
+The action items must be generated in a `json` format, which will allow us to easily parse and render them in different representations.
+
+:::info
+These are the system prompts we'll be using for summary and action item generation:
+
+```text title="summary_system_prompt"
+You are an AI assistant summarizing meeting transcripts. Provide a clear and 
+concise summary of the following conversation, avoiding interpretation and 
+unnecessary details. Focus on the main discussion points only. Do not include 
+any action items.
+```
+
+```text title="action_item_system_prompt"
+Extract all action items from the following meeting transcript. Identify individual 
+and team-wide action items in the following format:
+
+{
+  "individual_actions": {
+    "Alice": ["Task 1", "Task 2"],
+    "Bob": ["Task 1"]
+  },
+  "team_actions": ["Task 1", "Task 2"],
+  "entities": ["Alice", "Bob"]
+}
+
+Only include what is explicitly mentioned. Do not infer. You must absolutely only 
+repond in JSON. No explanations needed.
+```
+:::
+
+<details>
+<summary><strong>Click here to see the new <code>MeetingSummarizer</code> class</strong></summary>
+
+```python
+import os
+import json
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
+class MeetingSummarizer:
+    def __init__(
+        self, 
+        model: str = "gpt-4", 
+        summary_system_prompt: str = "",
+        action_item_system_prompt: str = "",
+    ):
+        self.model = model
+        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.summary_system_prompt = summary_system_prompt or (
+            "..." # Use the summary_system_prompt mentioned above
+        )
+        self.action_item_system_prompt = action_item_system_prompt or (
+            "..." # Use the action_item_system_prompt mentioned above
+        )
+
+    def summarize(self, transcript: str) -> tuple[str, dict]:
+        summary = self.get_summary(transcript)
+        action_items = self.get_action_items(transcript)
+
+        return summary, action_items
+    
+    def get_summary(self, transcript: str) -> str:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.summary_system_prompt},
+                    {"role": "user", "content": transcript}
+                ]
+            )
+
+            summary = response.choices[0].message.content.strip()
+            return summary
+        except Exception as e:
+            print(f"Error generating summary: {e}")
+            return f"Error: Could not generate summary due to API issue: {e}"
+
+    def get_action_items(self, transcript: str) -> dict:
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.action_item_system_prompt},
+                    {"role": "user", "content": transcript}
+                ]
+            )
+
+            action_items = response.choices[0].message.content.strip()
+            try:
+                return json.loads(action_items)
+            except json.JSONDecodeError:
+                return {"error": "Invalid JSON returned from model", "raw_output": action_items}
+        except Exception as e:
+            print(f"Error generating action items: {e}")
+            return {"error": f"API call failed: {e}", "raw_output": ""}
+```
+
+</details>
+
+You can run the new `MeetingSummarizer` as follows:
+
+```python
+summarizer = MeetingSummarizer()
+
+with open("meeting_transcript.txt", "r") as file:
+    transcript = file.read().strip()
+
+summary, action_items = summarizer.summarize(transcript)
+print(summary)
+print("JSON:")
+print(json.dumps(action_items, indent=2))
+```
+
+Here's the updated output with structured action items:
+
+:::tip Output
+
+**Meeting Summary:**
+
+Ethan and Maya discussed recent issues with the customer support assistant, focusing on response speed, accuracy, and tone. They noted problems with vague or incorrect answers and identified that poor summarization of conversations contributes to these errors. Maya compared GPT-4o and Claude 3, highlighting GPT-4o's speed advantage but Claude's more accurate responses. They considered using GPT-4o as the primary model and Claude as a fallback in low-confidence situations.
+
+The conversation also covered confidence detection, with ideas like embedding similarity to flag potential issues. Cost concerns around compute and token usage were acknowledged. Maya suggested using quantized embeddings to manage expenses.
+
+Additional points included feedback on the assistant's robotic tone. Maya recommended prompt tuning with example responses to improve conversational style instead of full fine-tuning. Finally, they discussed adding a fallback UI message when the assistant's confidence is low to avoid misleading users.
+
+**JSON:**
+```json
+{
+  "individual_actions": {
+    "Ethan": [
+      "Sync with design on the fallback UX messaging"
+    ],
+    "Maya": [
+      "Build similarity metric to measure alignment between support tickets and assistant responses",
+      "Set up a test run for the hybrid model approach using GPT-4o and Claude"
+    ]
+  },
+  "team_actions": [],
+  "entities": ["Ethan", "Maya"]
+}
+```
+
+:::
+
+Now that we have our output in a desired format, what do you think of the quality of the output generated? _Good? Bad? Average?_ 
+
+**Many developers tend to eyeball results like this — and that's a major issue in LLM application development.**
+You might think that this output is okay and move forward with it. But LLMs aren't so easy to work with, they require robust evaluation and testing before they 
+can be used for reliable tasks.
+
+And that's where `deepeval` comes in. It offers various metrics tailored for different use cases. In the next section we are going to see [how to evaluate your summarization agent](tutorial-summarization-evaluation).

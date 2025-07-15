@@ -127,13 +127,15 @@ class TurnApi(BaseModel):
 class ConversationalApiTestCase(BaseModel):
     name: str
     success: bool
-    # instance_id: Optional[int] = Field(None)
-    # metrics_data can never be None
     metrics_data: List[MetricData] = Field(alias="metricsData")
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     turns: List[TurnApi] = Field(default_factory=lambda: [])
     order: Union[int, None] = Field(None)
+    scenario: Optional[str] = Field(None)
+    expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
+    user_description: Optional[str] = Field(None, alias="userDescription")
+    comments: Optional[str] = Field(None)
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )

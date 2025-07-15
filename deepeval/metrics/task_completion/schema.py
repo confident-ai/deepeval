@@ -1,10 +1,10 @@
-from typing import List, Optional
+from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class GoalAndOutcome(BaseModel):
-    user_goal: str
-    task_outcome: str
+class TaskAndOutcome(BaseModel):
+    task: str
+    outcome: str
 
 
 class TaskCompletionVerdict(BaseModel):

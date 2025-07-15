@@ -12,5 +12,5 @@ class OutOfCharacterResponseVerdicts(BaseModel):
     verdicts: List[OutOfCharacterResponseVerdict]
 
 
-class Reason(BaseModel):
+class RoleAdherenceScoreReason(BaseModel):
     reason: str

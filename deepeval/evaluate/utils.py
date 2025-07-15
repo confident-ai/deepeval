@@ -23,7 +23,7 @@ from deepeval.test_run import (
     MetricData,
 )
 from deepeval.evaluate.types import TestResult
-from deepeval.tracing.api import TraceApi
+from deepeval.tracing.api import TraceApi, BaseApiSpan
 from deepeval.tracing.tracing import BaseSpan, Trace
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 
@@ -138,10 +138,12 @@ def create_api_test_case(
             runDuration=0,
             evaluationCost=None,
             order=order,
-            testCases=[],
+            scenario=test_case.scenario,
+            expectedOutcome=test_case.expected_outcome,
+            userDescription=test_case.user_description,
+            comments=test_case.comments,
             additionalMetadata=test_case.additional_metadata,
         )
-        # api_test_case.instance_id = id(api_test_case)
         api_test_case.turns = [
             create_api_turn(
                 turn=turn,
@@ -509,3 +511,58 @@ def count_metrics_in_trace(trace: Trace) -> int:
         return count
 
     return sum(count_metrics_recursive(span) for span in trace.root_spans)
+
+
+def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
+    test_results: List[TestResult] = []
+    # extract trace result
+    if trace_api.metrics_data and trace_api.llm_test_case:
+        test_results.append(
+            TestResult(
+                name=trace_api.name,
+                success=True,
+                metrics_data=trace_api.metrics_data,
+                conversational=False,
+                input=trace_api.llm_test_case.input,
+                actual_output=trace_api.llm_test_case.actual_output,
+                expected_output=trace_api.llm_test_case.expected_output,
+                context=trace_api.llm_test_case.context,
+                retrieval_context=trace_api.llm_test_case.retrieval_context,
+            )
+        )
+    # extract base span results
+    for span in trace_api.base_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract agent span results
+    for span in trace_api.agent_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract llm span results
+    for span in trace_api.llm_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract retriever span results
+    for span in trace_api.retriever_spans:
+        test_results.extend(extract_span_test_results(span))
+    # extract tool span results
+    for span in trace_api.tool_spans:
+        test_results.extend(extract_span_test_results(span))
+
+    return test_results
+
+
+def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
+    test_results: List[TestResult] = []
+    if span_api.metrics_data and span_api.llm_test_case:
+        test_results.append(
+            TestResult(
+                name=span_api.name,
+                success=span_api.status == "SUCCESS",
+                metrics_data=span_api.metrics_data,
+                input=span_api.llm_test_case.input,
+                actual_output=span_api.llm_test_case.actual_output,
+                expected_output=span_api.llm_test_case.expected_output,
+                context=span_api.llm_test_case.context,
+                retrieval_context=span_api.llm_test_case.retrieval_context,
+                conversational=False,
+            )
+        )
+    return test_results
