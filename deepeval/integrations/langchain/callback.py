@@ -8,7 +8,8 @@ from deepeval.tracing.attributes import (
     LlmToolCall,
 )
 from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseMetric, TaskCompletionMetric
+from deepeval.test_case import LLMTestCase
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -55,6 +56,7 @@ class CallbackHandler(BaseCallbackHandler):
     
     active_trace_id: Optional[str] = None
     metrics: List[BaseMetric] = []
+    _has_task_completion_metric: bool = False
 
     def __init__(self, metrics: List[BaseMetric] = []):
         capture_tracing_integration(
@@ -62,6 +64,9 @@ class CallbackHandler(BaseCallbackHandler):
         )
         is_langchain_installed()
         self.metrics = metrics
+        self._has_task_completion_metric = any(
+            isinstance(metric, TaskCompletionMetric) for metric in metrics
+        )
         super().__init__()
 
 
@@ -87,9 +92,17 @@ class CallbackHandler(BaseCallbackHandler):
         self.active_trace_id = None
 
     def evaluate_metrics(self, span: BaseSpan):
-        print("----evaluate_metrics----")
-        print(span)
-        pass
+        def dfs(span: BaseSpan):
+            if self._has_task_completion_metric:
+                if span.llm_test_case is None:
+                    span.llm_test_case = LLMTestCase(
+                        input="None", actual_output="None"
+                    )
+                    span.llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+                    # test
+            for child in span.children:
+                dfs(child)
+        dfs(span)
 
     def on_chain_start(
         self,
@@ -138,7 +151,7 @@ class CallbackHandler(BaseCallbackHandler):
         if parent_run_id is None:
             if self.metrics:
                 self.evaluate_metrics(base_span)
-                   
+
             self.end_trace(base_span)
 
     def on_llm_start(
