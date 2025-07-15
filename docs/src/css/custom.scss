@@ -83,18 +83,37 @@ html[data-theme="dark"] {
 
 details {
   color: #1d232e;
-  background-color: #f8fafc !important;
-  border: 1px solid #cbd4de !important;
-  border-radius: 0.5rem !important;
-  padding: 1rem !important;
+  background-color: white !important;
+  border: 1px solid #cad1d8 !important;
+  border-radius: 4px !important;
+  padding: 0.75rem 1rem !important;
   margin-bottom: 1rem !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 1px 6px 0 rgba(192, 194, 205, 0.409) !important;
+}
+
+details summary {
+  font-weight: 600 !important;
+}
+
+details summary::before {
+  border-color: transparent transparent transparent rgb(49, 53, 62) !important;
+}
+
+details [class*="collapsibleContent"] {
+  border-top: 1px solid #e2e8f0 !important;
 }
 
 .tabs-container > div {
   padding: 1rem;
   border: 1px solid #cbd4de;
   border-radius: 10px;
+}
+
+/* Remove styling from nested tabs containers */
+.tabs-container .tabs-container > div {
+  padding: 0;
+  border: none;
+  border-radius: 0;
 }
 
 ul.tabs {
@@ -110,14 +129,6 @@ li.tabs__item {
 
 li.tabs__item--active {
   border-bottom: 1px solid #6d28d9 !important;
-}
-
-details summary::before {
-  border-color: transparent transparent transparent black !important;
-}
-
-details [class*="collapsibleContent"] {
-  border-top: 1px solid #e2e8f0 !important;
 }
 
 .navbar {
