@@ -19,7 +19,7 @@ module.exports = {
         "summarization-agent/tutorial-summarization-development",
         "summarization-agent/tutorial-summarization-evaluation",
         "summarization-agent/tutorial-summarization-improvement",
-        "summarization-agent/tutorial-summarization-production",
+        "summarization-agent/tutorial-summarization-deployment",
       ],
       collapsed: true,
     },

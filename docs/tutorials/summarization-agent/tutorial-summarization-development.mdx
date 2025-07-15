@@ -62,7 +62,7 @@ class MeetingSummarizer:
 You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
 :::
 
-### Generating summaries
+## Generating summaries
 
 Now that we've defined our summarization agent, we can use the following code to generate the summary
 
@@ -428,21 +428,23 @@ Here's the updated output with structured action items:
 
 **Meeting Summary:**
 
-Ethan and Maya discussed recent issues with the customer support assistant, focusing on response speed, accuracy, and tone. They noted problems with vague or incorrect answers and identified that poor summarization of conversations contributes to these errors. Maya compared GPT-4o and Claude 3, highlighting GPT-4o's speed advantage but Claude's more accurate responses. They considered using GPT-4o as the primary model and Claude as a fallback in low-confidence situations.
+Ethan and Maya discussed recent feedback on the customer support assistant, focusing on concerns around response speed and answer quality. Key issues included vague or incorrect answers and misclassification of simple issues, which may stem from inaccurate internal summarization.
 
-The conversation also covered confidence detection, with ideas like embedding similarity to flag potential issues. Cost concerns around compute and token usage were acknowledged. Maya suggested using quantized embeddings to manage expenses.
+They debated whether the problems are due to prompt engineering or the model itself. Maya shared results comparing GPT-4o and Claude 3, noting that Claude gave more reliable responses but was slower. Ethan emphasized the importance of latency for user experience.
 
-Additional points included feedback on the assistant's robotic tone. Maya recommended prompt tuning with example responses to improve conversational style instead of full fine-tuning. Finally, they discussed adding a fallback UI message when the assistant's confidence is low to avoid misleading users.
+They considered a hybrid approach using GPT-4o for speed and Claude as a fallback when confidence is low. However, current systems lack effective confidence metrics. They explored using embedding similarity as a potential signal, while being mindful of associated costs.
+
+The conversation also touched on user feedback about the assistant’s robotic tone. Maya recommended prompt tuning with example replies instead of full model fine-tuning to improve tone and empathy.
+
+Finally, they discussed UI strategies for low-confidence responses, agreeing that a fallback prompt suggesting human assistance would improve user trust, provided it's used judiciously.
 
 **JSON:**
 ```json
 {
   "individual_actions": {
-    "Ethan": [
-      "Sync with design on the fallback UX messaging"
-    ],
+    "Ethan": ["Sync with design on the fallback UX messaging"],
     "Maya": [
-      "Build similarity metric to measure alignment between support tickets and assistant responses",
+      "Build the similarity metric",
       "Set up a test run for the hybrid model approach using GPT-4o and Claude"
     ]
   },
