@@ -1,4 +1,13 @@
-from typing import Callable, List, Optional, Union, Dict, Any, Awaitable, Iterator
+from typing import (
+    Callable,
+    List,
+    Optional,
+    Union,
+    Dict,
+    Any,
+    Awaitable,
+    Iterator,
+)
 from rich.console import Console
 import asyncio
 import time
@@ -345,7 +354,7 @@ def dataset(
         raise ValueError(
             "You must provide either 'goldens' or 'alias' to dataset()."
         )
-    
+
     if alias:
         dataset = EvaluationDataset()
         dataset.pull(alias)

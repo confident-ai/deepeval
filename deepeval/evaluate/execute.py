@@ -848,6 +848,7 @@ async def a_execute_conversational_test_cases(
 ### Component-Level Evals
 ###########################################
 
+
 def execute_agentic_test_cases(
     goldens: List[Golden],
     observed_callback: Union[
@@ -1200,9 +1201,7 @@ async def a_execute_agentic_test_case(
     _use_bar_indicator: bool,
     _is_assert_test: bool,
     observed_callback: Optional[
-        Union[
-            Callable[[str], Any], Callable[[str], Awaitable[Any]]
-        ]
+        Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
     trace: Optional[Trace] = None,
     progress: Optional[Progress] = None,
@@ -1408,6 +1407,7 @@ def count_observe_decorators_in_module(func: Callable) -> int:
 ### Looped Evals
 ###########################################
 
+
 def execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
     verbose_mode: Optional[bool],
@@ -1427,7 +1427,7 @@ def execute_agentic_test_cases_from_loop(
 
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
-    
+
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
@@ -1439,7 +1439,9 @@ def execute_agentic_test_cases_from_loop(
             with capture_evaluation_run("golden"):
                 # yield golden
                 count += 1
-                pbar_tags_id = add_pbar(progress, f"\t⚡ Invoking observed callback (#{count})")
+                pbar_tags_id = add_pbar(
+                    progress, f"\t⚡ Invoking observed callback (#{count})"
+                )
                 with Observer(
                     "custom",
                     func_name="Test Wrapper",
@@ -1448,7 +1450,7 @@ def execute_agentic_test_cases_from_loop(
                 ):
                     yield golden
                     current_trace: Trace = current_trace_context.get()
-                    
+
                 update_pbar(progress, pbar_tags_id)
                 update_pbar(progress, pbar_id)
 
@@ -1650,7 +1652,7 @@ def a_execute_agentic_test_cases_from_loop(
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
             return await coroutine
-    
+
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
             return await func(*args, **kwargs)
@@ -1659,15 +1661,17 @@ def a_execute_agentic_test_cases_from_loop(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         pbar_callback_id: Optional[int] = None,
-    ):        
+    ):
         # Invoke LLM app
         def create_callback_task(coro):
             def on_task_done(t: asyncio.Task):
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
+
             task = loop.create_task(execute_callback_with_semaphore(coro))
             task.add_done_callback(on_task_done)
             return task
+
         asyncio.create_task = create_callback_task
 
         for golden in goldens:
@@ -1676,10 +1680,13 @@ def a_execute_agentic_test_cases_from_loop(
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
         if global_test_run_tasks.num_tasks() > 0:
-            loop.run_until_complete(asyncio.gather(*global_test_run_tasks.get_tasks()))
+            loop.run_until_complete(
+                asyncio.gather(*global_test_run_tasks.get_tasks())
+            )
 
         # Evaluate traces
         asyncio.create_task = loop.create_task
+
         async def evaluate_traces(traces_to_evaluate: List[Trace]):
             eval_tasks = []
             for count, trace in enumerate(traces_to_evaluate):
@@ -1704,7 +1711,10 @@ def a_execute_agentic_test_cases_from_loop(
                     eval_tasks.append(asyncio.create_task(task))
                     await asyncio.sleep(throttle_value)
             await asyncio.gather(*eval_tasks)
-        loop.run_until_complete(evaluate_traces(trace_manager.traces_to_evaluate))
+
+        loop.run_until_complete(
+            evaluate_traces(trace_manager.traces_to_evaluate)
+        )
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(

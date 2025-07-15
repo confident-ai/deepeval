@@ -160,7 +160,7 @@ class TraceManager:
         self.traces.append(new_trace)
         if self.evaluation_loop:
             self.traces_to_evaluate_order.append(trace_uuid)
-            
+
         return new_trace
 
     def end_trace(self, trace_uuid: str):
@@ -184,7 +184,9 @@ class TraceManager:
                     if trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
                         self.traces_to_evaluate.sort(
-                            key=lambda t: self.traces_to_evaluate_order.index(t.uuid) 
+                            key=lambda t: self.traces_to_evaluate_order.index(
+                                t.uuid
+                            )
                         )
                 else:
                     # print(f"Ending trace: {trace.root_spans}")
