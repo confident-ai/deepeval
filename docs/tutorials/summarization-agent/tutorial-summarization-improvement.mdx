@@ -4,55 +4,87 @@ title: Improvement
 sidebar_label: Improvement
 ---
 
-In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. Like most LLM applications, our summarizer includes tunable hyperparameters that can significantly influence performance.
-In our case, the key hyperparameters for the `MeetingSummarizer` are:
+In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. From the previous evaluation results, we've concluded the following:
+
+- The summary needs to be shorter and tighter.
+- The action items must include all key tasks.
+
+Like most LLM applications, our summarizer includes tunable hyperparameters that can significantly influence the performance of our application. In our case, the key hyperparameters for the `MeetingSummarizer` that can solve the issues mentioned above are:
 
 - Prompt template
 - Generation model
-- Temperature of the model
+
+The above mentioned hyperparameters are common for almost any LLM application. However, you can extend a few more hyperparameters that are specific to your use case.
 
 ## Iterating On Hyperparameters
+
 To identify the best configuration, we can experiment with different hyperparameter values and evaluate the results using `deepeval`. Here's how you can do that:
 
 ```python
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
-from deepeval.metrics import SummarizationMetric, GEval
+from deepeval.metrics import GEval
 from deepeval import evaluate
+from meeting_summarizer import MeetingSummarizer # import your summarizer here
 
-prompt_templates = [
-    "You are an AI assistant tasked with summarizing meeting transcripts. Summarize what was discussed and include any action items mentioned. Keep it short, accurate, and factual. Transcript:\n{transcript}",
-    "You are an AI assistant summarizing meetings to help teams quickly understand what was discussed. Your output must include a concise summary of key discussion points, followed by a list of action items. Be factual, avoid unnecessary detail, and only include relevant information. Transcript:\n{transcript}",
-    "You are an AI assistant that processes meeting transcripts and provides structured, actionable output. Your job is to produce a concise summary of the main points discussed and a complete list of action items, each reflecting a clear next step or responsibility mentioned in the meeting. Avoid interpretation or unnecessary details. Respond strictly using the format below:\n\nSummary of Meeting:\n<Your summary here>\n\nAction Items:\n- <Item 1>\n- <Item 2>\n- ...\n\nTranscript:\n{transcript}"
+summary_system_prompts = [
+    "You are an AI assistant tasked with summarizing meeting transcripts. Generate a concise, readable summary of the key discussion points without copying verbatim text. Avoid speculation or interpretation. Your goal is to help someone quickly understand what was discussed in the meeting.",
+    "You are an AI assistant summarizing a professional meeting transcript. Generate a concise, structured summary that covers all critical decisions, technical discussions, trade-offs, and proposed next steps. Avoid filler, redundant phrasing, or interpretation. Do not include action items or speculative conclusions. Write in a clear, skimmable format that communicates the essence of the conversation to someone who didn’t attend.",
+    "You are an expert meeting summarization assistant. Generate a tightly written, executive-style summary of the meeting transcript, focusing only on high-value information: key technical insights, decisions made, problems discussed, model/tool comparisons, and rationale behind proposals. Exclude all action items and any content that is not core to the purpose of the discussion. Prioritize clarity, brevity, and factual precision. The final summary should read like a high-quality meeting brief that allows a stakeholder to fully grasp the discussion in under 60 seconds."
 ]
-temperatures = [0, 0.3, 0.5, 0.7, 0.9]
+
+action_item_system_prompts = [
+    "Extract all action items from the following meeting transcript. Identify both individual and team-wide tasks. Use the following JSON format exactly:\n\n{\n  \"individual_actions\": {\n    \"Alice\": [\"Task 1\", \"Task 2\"],\n    \"Bob\": [\"Task 1\"]\n  },\n  \"team_actions\": [\"Task 1\", \"Task 2\"],\n  \"entities\": [\"Alice\", \"Bob\"]\n}\n\nOnly include what is explicitly stated in the conversation. Do not infer, speculate, or generate tasks that were not clearly mentioned. Respond only with valid JSON. No explanations or extra text.",
+    "Your task is to extract all action items explicitly mentioned in the following meeting transcript. Separate individual responsibilities by name, list team-wide tasks, and include a list of all named entities. Return your output strictly in the following JSON format:\n\n{\n  \"individual_actions\": {\n    \"Alice\": [\"Task 1\", \"Task 2\"],\n    \"Bob\": [\"Task 1\"]\n  },\n  \"team_actions\": [\"Task 1\", \"Task 2\"],\n  \"entities\": [\"Alice\", \"Bob\"]\n}\n\nDo not include any inferred or implied actions. Use only what is explicitly stated in the transcript. Output must be valid JSON only — no additional commentary, formatting, or plain text.",
+    "Parse the following meeting transcript and extract only the action items that are explicitly stated. Organize the output into individual responsibilities, team-wide tasks, and named entities. You must respond with a valid JSON object that follows this exact format:\n\n{\n  \"individual_actions\": {\n    \"Alice\": [\"Task 1\", \"Task 2\"],\n    \"Bob\": [\"Task 1\"]\n  },\n  \"team_actions\": [\"Task 1\", \"Task 2\"],\n  \"entities\": [\"Alice\", \"Bob\"]\n}\n\nDo not invent or infer any tasks. Only include tasks that are clearly and explicitly assigned or discussed. Do not output anything except valid JSON in the structure above. No natural language, notes, or extra formatting allowed."
+]
 models = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo"]
 
 with open("meeting_transcript.txt", "r") as file:
     transcript = file.read().strip()
 
-metrics = [...] # Use the same metrics defined in earlier stages
+metrics = [...] #use the same metrics used before
 
 for model in models:
-    for temperature in temperatures:
-        for prompt_template in prompt_templates:
+    for summary_system_prompt in summary_system_prompts:
+        for action_item_system_prompt in action_item_system_prompts:
             summarizer = MeetingSummarizer(
                 model=model,
-                temperature=temperature,
-                prompt_template=prompt_template
+                summary_system_prompt=summary_system_prompt,
+                action_item_system_prompt=action_item_system_prompt
             )
-            summary = summarizer.summarize(transcript=transcript)
-            testcase = LLMTestCase(
-                input=transcript,
-                actual_output=summary
+
+            summary, action_items = summarizer.summarize(transcript)
+
+            summary_test_case = LLMTestCase(
+                input=transcript, # your full meeting transcript as a string
+                actual_output=summary # provide the summary generated by your summarizer here
+            )
+
+            action_item_test_case = LLMTestCase(
+                input=transcript, # your full meeting transcript as a string
+                actual_output=str(action_items) # provide the action items generated by your summarizer here
+            )
+
+            summary_concision = GEval(...)
+            action_item_check = GEval(...)
+
+            evaluate(
+              test_cases=[summary_test_case], 
+              metrics=[summary_concision],
+              hyperparameters={
+                "model": model,
+                "summary_system_prompt": summary_system_prompt,
+                "action_item_system_prompt": action_item_system_prompt
+              }
             )
             evaluate(
-                test_cases=[testcase],
-                metrics=metrics,
-                hyperparameters={
-                    "prompt_template": prompt_template,
-                    "model": model,
-                    "temperature": temperature
-                }
+              test_cases=[action_item_test_case], 
+              metrics=[action_item_check],
+              hyperparameters={
+                "model": model,
+                "summary_system_prompt": summary_system_prompt,
+                "action_item_system_prompt": action_item_system_prompt
+              }
             ) # Evaluate summarizer with the current configuration
 ```
 
@@ -82,18 +114,56 @@ deepeval login
 ```
 :::
 
+After running the above code I got the following results:
+
+**Summary Concision:**
+
+|                     | System Prompt 1 | System Prompt 2 | System Prompt 3 |
+|---------------------|-----------------|-----------------|-----------------|
+| gpt-3.5-turbo       | 0.7             | 0.5             | 0.7             |
+| gpt-4o              | 0.9             | 0.8             | 0.9             |
+| gpt-4-turbo         | 0.8             | 0.7             | 0.7             |
+
+**Action Item Accuracy:**
+
+|                     | System Prompt 1 | System Prompt 2 | System Prompt 3 |
+|---------------------|-----------------|-----------------|-----------------|
+| gpt-3.5-turbo       | 0.5             | 0.7             | 0.6             |
+| gpt-4o              | 0.8             | 0.9             | 0.8             |
+| gpt-4-turbo         | 0.7             | 0.8             | 0.7             |
+
+From the results we can see that `gpt-4o` consistently performed better for both the tests. And among the system prompts for different tasks, System Prompt 1 of summary task performed best for all models and System Prompt 2 for action item task performed better among the others.
+
+The best configuration for our summarization agent is:
+- Model: `gpt-4o` 
+- Summary system prompt: `summary_system_prompts[0]`
+- Action item system prompt: `action_item_system_prompts[1]`
+
 ## DeepEval's Datasets
 
-Iterating on hyperparameters and finding the best configuration for your summarization agent is great. However, this approach has a key limitation: it evaluates performance on only a single meeting transcript.
-To build a robust and reliable summarization agent, you need to test it across a variety of meeting transcripts — something that's difficult to manage manually. deepeval solves this with [datasets](https://deepeval.com/docs/evaluation-datasets), which allow for scalable and repeatable evaluation.
-Here's how you can create and maintain datasets that can be used to evaluate your summarization agent with the help of `deepeval`:
+Now that you've found the best configuration for your summarization agent, the next step is to ensure it consistently performs well. And that means continuous evaluation of your summarizer on various transcripts. This is not a feasible task.
 
-### Creating Datasets
+**DeepEval** solves this problem with its [datasets](https://deepeval.com/docs/evaluation-datasets), these are simply a collection of `LLMTestCase`s and `Golden`s that can be stored in cloud and be pulled anytime and reused for evaluation.
 
-If you're building a summarization agent, you may already have a folder of documents or transcripts waiting to be summarized. If that's the case, you'll first want to parse these documents into strings that can be passed into your LLM summarizer. Here's how you can do that:
+## Goldens in DeepEval
 
-```python
+A dataset is a list of goldens, and it's important to know how they are different from test cases.
+
+`Golden`s represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset.** Unlike test cases, `Golden`s:
+
+- Don't require an `actual_output` when created
+- Store expected results like `expected_output` and `expected_tools`
+- Serve as templates before becoming fully-formed test cases
+
+This means you can store these goldens in the cloud and create your own test cases during run time by pulling this dataset and generating your `actual_output`s by calling your LLM application.
+
+## Creating Goldens
+
+For our summarization agent, we only have 2 essential parameters required to create LLM test cases that allow us to evaluate our summarizer. These are `input` and `actual_output`, We can create a dataset that contains numerous goldens each corresponding to different meeting transcripts represented as `input`s which can later be used to create `LLMTestCase`s during runtime. Here's how you can create those goldens:
+
+```python {2,16-18}
 import os
+from deepeval.dataset import Golden
 
 documents_path = "path/to/documents/folder"
 transcripts = []
@@ -104,31 +174,70 @@ for document in os.listdir(documents_path):
         with open(file_path, "r") as file:
             transcript = file.read().strip()
         transcripts.append(transcript)
+
+goldens = []
+for transcript in transcripts:
+    golden = Golden(
+        input=transcript
+    )
+    goldens.append(golden)
 ```
 
-Next, we'll generate test cases using our `MeetingSummarizer`. We'll only need to do this once, and we can reuse the dataset for all future evaluations. Here's how we can create a dataset with the test cases we'll create:
+You can view your goldens as shown below:
 
 ```python
-from deepeval.test_case import LLMTestCase
+for i, golden in enumerate(goldens):
+    print(f"Golden {i}: ", golden.input[:20])
+```
+
+
+## Creating Datasets
+
+We can use the above created goldens to create a dataset and store it in cloud. Here's how you can do that:
+
+```python
 from deepeval.dataset import EvaluationDataset
 
-summarizer = MeetingSummarizer() # Initialize with your best configuration
-
-test_cases = [LLMTestCase(input=transcript, actual_output=summarizer.summarize(transcript)) for transcript in transcripts]
-
-dataset = EvaluationDataset(test_cases=test_cases)
-```
-
-### Maintaining Datasets
-
-Now that you've created your datasets, you can save them to the cloud and reuse them anytime. Here's how you can save the dataset on Confident AI:
-
-```python
-print(dataset.test_cases[0])  # Optional: preview a test case before pushing the dataset
+dataset = EvaluationDataset(goldens=goldens)
 dataset.push(alias="MeetingSummarizer Dataset")
 ```
 
-It's as simple as that! Make sure you've already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work. [Click here](https://deepeval.com/docs/evaluation-datasets) to learn more about datasets.
+These stored datasets can later be pulled and used wherever needed, here's how you can pull the datasets:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="MeetingSummarizer Dataset")
+```
+
+The dataset pulled contains goldens, which can be used to create test cases during run time and evaluate them. Here's how to create test cases using datasets:
+
+```python
+from deepeval.test_case import LLMTestCase
+from meeting_summarizer import MeetingSummarizer # import your summarizer here
+
+summarizer = MeetingSummarizer() # Initialize with your best config
+summary_test_cases = []
+action_item_test_cases = []
+for golden in dataset.goldens:
+    summary, action_items = summarizer.summarize(golden.input)
+    summary_test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=summary
+    )
+    action_item_test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=str(action_items)
+    )
+    summary_test_cases.append(summary_test_case)
+    action_item_test_cases.append(action_item_test_case)
+
+print(len(summary_test_cases))
+print(len(action_item_test_cases))
+```
+
+You can use these test cases to evaluate your summarizer anywhere and anytime. It's as simple as that! Make sure you've already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work. [Click here](https://deepeval.com/docs/evaluation-datasets) to learn more about datasets.
 
 :::note
 You must be logged in to your [Confident AI](https://confident-ai.com) account to manage datasets. Set up Confident AI as shown [here](https://deepeval.com/tutorials/tutorial-setup#setting-up-confident-ai) or just run the following code in your terminal to get started:
@@ -137,4 +246,4 @@ deepeval login
 ```
 :::
 
-In the next section, we'll see how to integrate these datasets with CI/CD workflows to [prepare your summarization agent for production](tutorial-summarization-production).
+In the next section, we'll see how to integrate these datasets with CI/CD workflows to [prepare your summarization agent for deployment](tutorial-summarization-deployment).
