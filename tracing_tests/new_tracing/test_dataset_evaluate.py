@@ -1,9 +1,5 @@
-from tracing_tests.new_tracing.test_async_traceable_eval import (
-    meta_agent as async_meta_agent,
-)
-from tracing_tests.new_tracing.test_sync_traceable_eval import (
-    meta_agent as sync_meta_agent,
-)
+from tracing_tests.new_tracing.test_async_traceable_eval import meta_agent as async_meta_agent
+from tracing_tests.new_tracing.test_sync_traceable_eval import meta_agent as sync_meta_agent
 from deepeval.evaluate import dataset, test_run, AsyncConfig
 from deepeval.dataset import Golden
 import asyncio

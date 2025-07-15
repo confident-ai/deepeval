@@ -66,7 +66,7 @@ from deepeval.evaluate.execute import (
     execute_agentic_test_cases,
     execute_test_cases,
 )
-
+from deepeval.openai.utils import openai_test_case_pairs
 
 def assert_test(
     test_case: Optional[
@@ -405,8 +405,15 @@ def dataset(
                     display_config.display_option,
                     display_config.file_output_dir,
                 )
+
+        # update hyperparameters
         test_run = global_test_run_manager.get_test_run()
-        test_run.hyperparameters = process_hyperparameters(hyperparameters)
+        if len(openai_test_case_pairs) > 0:
+            raw_hyperparameters = openai_test_case_pairs[-1].hyperparameters
+            test_run.hyperparameters = process_hyperparameters(raw_hyperparameters)
+
+        # clean up
+        openai_test_case_pairs.clear()
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
         confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False

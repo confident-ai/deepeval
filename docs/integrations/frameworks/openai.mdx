@@ -1,0 +1,306 @@
+---
+id: openai
+title: OpenAI
+sidebar_label: OpenAI
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
+
+## Quick Summary
+
+DeepEval streamlines the process of evaluating and tracing your OpenAI applications through an **OpenAI client wrapper**, and supports both end-to-end and component-level evaluations, and online evaluations in production.
+
+## End-to-End Evaluation
+
+To begin evaluating your OpenAI application, simply replace your OpenAI client with DeepEval's OpenAI client, and pass in the `metrics` you wish to use.
+
+<Tabs>
+<TabItem value="chat-completions" label="Chat Completions">
+
+```python showLineNumbers {2,18}
+from deepeval.tracing import observe
+from deepeval.openai import OpenAI
+from deepeval.evaluate import dataset
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+
+client = OpenAI()
+
+for golden in dataset(alias="Your Dataset Name"):
+    # run OpenAI client
+    client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": golden.input}
+        ],
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
+```
+
+</TabItem>
+<TabItem value="response" label="Responses">
+
+```python showLineNumbers {2,16}
+from deepeval.tracing import observe
+from deepeval.openai import OpenAI
+from deepeval.evaluate import dataset
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+
+client = OpenAI()
+
+for golden in dataset(alias="Your Dataset Name"):
+    # run OpenAI client
+    client.responses.create(
+        model="gpt-4o",
+        instructions="You are a helpful assistant.",
+        input=golden.input,
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
+```
+
+</TabItem>
+<TabItem value="async-chat-completions" label="Async Chat Completions">
+
+```python showLineNumbers {2,19}
+from deepeval.tracing import observe
+from deepeval.openai import AsyncOpenAI
+from deepeval.evaluate import dataset, test_run
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+
+client = AsyncOpenAI()
+
+for golden in dataset(alias="Your Dataset Name"):
+    # add OpenAI client task
+    task = asyncio.create_task(
+        client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": golden.input}
+            ],
+            metrics=[AnswerRelevancyMetric(), BiasMetric()]
+        )
+    )
+    test_run.append(task)
+```
+
+</TabItem>
+<TabItem value="async-response" label="Async Responses">
+
+```python showLineNumbers {2,17}
+from deepeval.tracing import observe
+from deepeval.openai import AsyncOpenAI
+from deepeval.evaluate import dataset, test_run
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+
+client = AsyncOpenAI()
+
+for golden in dataset(alias="Your Dataset Name"):
+    # add OpenAI client task
+    task = asyncio.create_task(
+        client.responses.create(
+            model="gpt-4o",
+            instructions="You are a helpful assistant.",
+            input=golden.input,
+            metrics=[AnswerRelevancyMetric(), BiasMetric()]
+        )
+    )
+    test_run.append(task)
+```
+
+</TabItem>
+</Tabs>
+
+There are **FIVE** optional parameters when using DeepEval's OpenAI client's chat completion and response methods:
+
+- [Optional] `metrics`: a list of metrics of type `BaseMetric`
+- [Optional] `expected_output`: a string specifying the expected output of your OpenAI generation.
+- [Optional] `retrieval_context`: a list of strings, representing the retrieved contexts to be passed into your OpenAI generation.
+- [Optional] `context`: a list of strings, representing the ideal retrieved contexts to be passed into your OpenAI generation.
+- [Optional] `expected_tools`: a list of strings, representing the expected tools to be called during OpenAI generation.
+
+:::info
+DeepEval’s OpenAI client automatically extracts the `input` and `actual_output` from each API response, enabling you to use metrics like **Answer Relevancy** out of the box. For metrics such as **Faithfulness**—which rely on additional parameters such as retrieval context—you’ll need to explicitly set these parameters when invoking the client.
+:::
+
+## Using OpenAI in Component-Level Evaluation
+
+You can also use DeepEval's OpenAI client **within component-level evaluations**. To set up component-level evaluations, add the `@observe` decorator to your llm_application's components, and simply replace existing OpenAI clients with DeepEval's OpenAI client, passing in the metrics you wish to use.
+
+<Tabs>
+<TabItem value="chat-completions" label="Chat Completions">
+
+```python showLineNumbers {2,25}
+from deepeval.tracing import observe
+from deepeval.openai import OpenAI
+from deepeval.evaluate import dataset
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+@observe()
+def retrieve_docs(query):
+    return [
+        "Paris is the capital and most populous city of France.",
+        "It has been a major European center of finance, diplomacy, commerce, and science."
+    ]
+
+@observe()
+def llm_app(input):
+    client = OpenAI()
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": retrieve_docs(input) + "\n\nQuestion: " + input}
+        ],
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
+    return response.choices[0].message.content
+
+for golden in dataset(alias="Your Dataset Name"):
+    # run your LLM application
+    llm_app(input=golden.input)
+```
+
+</TabItem>
+<TabItem value="responses" label="Responses">
+
+```python showLineNumbers {2,23}
+from deepeval.tracing import observe
+from deepeval.openai import OpenAI
+from deepeval.evaluate import dataset
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+@observe()
+def retrieve_docs(query):
+    return [
+        "Paris is the capital and most populous city of France.",
+        "It has been a major European center of finance, diplomacy, commerce, and science."
+    ]
+
+@observe()
+def llm_app(input):
+    client = OpenAI()
+    response = client.responses.create(
+        model="gpt-4o",
+        instructions="You are a helpful assistant.",
+        input=input,
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
+    return response.output_text
+
+for golden in dataset(alias="Your Dataset Name"):
+    # run your LLM application
+    llm_app(input=golden.input)
+```
+
+</TabItem>
+<TabItem value="async-chat-completions" label="Async Chat Completions">
+
+```python showLineNumbers {2,25}
+from deepeval.tracing import observe
+from deepeval.openai import AsyncOpenAI
+from deepeval.evaluate import dataset
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+@observe()
+async def retrieve_docs(query):
+    return [
+        "Paris is the capital and most populous city of France.",
+        "It has been a major European center of finance, diplomacy, commerce, and science."
+    ]
+
+@observe()
+async def llm_app(input):
+    client = AsyncOpenAI()
+    response = await client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": retrieve_docs(input) + "\n\nQuestion: " + input}
+        ],
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
+    return response.choices[0].message.content
+
+for golden in dataset(alias="Your Dataset Name"):
+    # add LLM App task to test_run
+    task = asyncio.create_task(llm_app(input=golden.input))
+    test_run.append(task)
+```
+
+</TabItem>
+<TabItem value="async-responses" label="Async Responses">
+
+```python showLineNumbers {2,23}
+from deepeval.tracing import observe
+from deepeval.openai import AsyncOpenAI
+from deepeval.evaluate import dataset
+
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+@observe()
+async def retrieve_docs(query):
+    return [
+        "Paris is the capital and most populous city of France.",
+        "It has been a major European center of finance, diplomacy, commerce, and science."
+    ]
+
+@observe()
+async def llm_app(input):
+    client = AsyncOpenAI()
+    response = await client.responses.create(
+        model="gpt-4o",
+        instructions="You are a helpful assistant.",
+        input=input,
+        metrics=[AnswerRelevancyMetric(), BiasMetric()]
+    )
+    return response.output_text
+
+for golden in dataset(alias="Your Dataset Name"):
+    # add LLM App task to test_run
+    task = asyncio.create_task(llm_app(input=golden.input))
+    test_run.append(task)
+```
+
+</TabItem>
+</Tabs>
+
+When used inside `@observe` components, DeepEval’s OpenAI client automatically:
+
+- Generates an LLM span for every OpenAI API call, including nested Tool spans for any tool invocations.
+- Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
+- Records span-level attributes `LLMAttributes` such as the input prompt, generated output and token usage.
+- Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
+
+<div style={{ margin: "2rem 0" }}>
+  <VideoDisplayer
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/integrations:frameworks:openai.mp4"
+    label="OpenAI Integration"
+    confidentUrl="/llm-tracing/integrations/openai"
+  />
+</div>
+
+## Online Evaluation in Production
+
+...To be documented

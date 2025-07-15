@@ -2,7 +2,17 @@ module.exports = {
   integrations: [
     {
       type: "category",
-      label: "Model Providers",
+      label: "LLM Frameworks",
+      items: [
+        "frameworks/openai",
+        // "frameworks/llamaindex",
+        // "frameworks/huggingface",
+      ],
+      collapsed: false,
+    },
+    {
+      type: "category",
+      label: "Evaluation Model",
       items: [
         "models/openai",
         "models/azure-openai",
@@ -15,13 +25,7 @@ module.exports = {
         "models/lmstudio",
         "models/litellm",
       ],
-      collapsed: false,
-    },
-    {
-      type: "category",
-      label: "Frameworks",
-      items: ["frameworks/llamaindex", "frameworks/huggingface"],
-      collapsed: false,
+      collapsed: true,
     },
     {
       type: "category",
@@ -34,7 +38,7 @@ module.exports = {
         "vector-databases/qdrant",
         "vector-databases/pgvector",
       ],
-      collapsed: false,
+      collapsed: true,
     },
   ],
 };
