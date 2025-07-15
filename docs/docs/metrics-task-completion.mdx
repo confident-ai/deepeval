@@ -29,6 +29,8 @@ To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `
 ```python
 from deepeval.metrics import TaskCompletionMetric
 from deepeval.tracing import observe
+from deepeval.dataset import Golden
+from deepeval import evaluate
 
 task_completion = TaskCompletionMetric(
     threshold=0.7,
@@ -58,7 +60,7 @@ def trip_planner_agent(input):
 
     return ". ".join(output) + "."
 
-evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Hi!")])
+evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")])
 ```
 
 There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
@@ -79,6 +81,7 @@ You can also run the `TaskCompletionMetric` for [end-to-end](/docs/evaluation-en
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import TaskCompletionMetric
+from deepeval.test_case import ToolCall
 
 metric = TaskCompletionMetric(
     threshold=0.7,
