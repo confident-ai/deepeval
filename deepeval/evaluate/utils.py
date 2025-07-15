@@ -139,6 +139,7 @@ def create_api_test_case(
             evaluationCost=None,
             order=order,
             scenario=test_case.scenario,
+            expectedOutcome=test_case.expected_outcome,
             userDescription=test_case.user_description,
             comments=test_case.comments,
             additionalMetadata=test_case.additional_metadata,

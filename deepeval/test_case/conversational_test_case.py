@@ -28,6 +28,7 @@ class ConversationalTestCase:
     chatbot_role: Optional[str] = None
     scenario: Optional[str] = None
     user_description: Optional[str] = None
+    expected_outcome: Optional[str] = None
     name: Optional[str] = field(default=None)
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None

@@ -133,6 +133,7 @@ class ConversationalApiTestCase(BaseModel):
     turns: List[TurnApi] = Field(default_factory=lambda: [])
     order: Union[int, None] = Field(None)
     scenario: Optional[str] = Field(None)
+    expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
     user_description: Optional[str] = Field(None, alias="userDescription")
     comments: Optional[str] = Field(None)
     additional_metadata: Optional[Dict] = Field(
