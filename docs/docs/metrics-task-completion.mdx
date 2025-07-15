@@ -40,8 +40,8 @@ task_completion = TaskCompletionMetric(
 
 @observe(metrics=[task_completion])
 def trip_planner_agent(input):
-    destination, days = input.split(",")
-    days = int(days)
+    destination = "Paris"
+    days = 2
 
     @observe()
     def restaurant_finder(city):
