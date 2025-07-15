@@ -15,10 +15,6 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 The misuse metric uses LLM-as-a-judge to determine whether your LLM output contains inappropriate usage of a specialized domain chatbot. This can occur when users attempt to use domain-specific chatbots for purposes outside their intended scope.
 
-:::info
-Misuse in `deepeval` is a **referenceless** metric. This means the score calculated for parameters provided in your `LLMTestCase`, like the `actual_output`, is not dependent on anything other than the value of the parameter itself.
-:::
-
 :::tip
 This metric is particularly important for specialized domain chatbots like financial advisors, medical assistants, legal consultants, and any LLM application that should maintain focus on specific expertise areas.
 :::
@@ -118,9 +114,9 @@ The `MisuseMetric` score is calculated according to the following equation:
 
 The `MisuseMetric` first uses an LLM to extract all misuse statements found in the `actual_output`, before using the same LLM to classify whether each misuse statement is inappropriate or not.
 
-### Definition of Inappropriate Usage
+### Definition of misuse
 
-In `deepeval`, whether a statement represents inappropriate usage is defined according to the following rubric:
+In `deepeval`, whether a statement represents misue is defined according to the provided `domain`. Common domains include: `financial`, `medical`, `legal`, `customer service`, `education`, `healthcare`, `technical support`, and any other specialized domain:
 
 - **Non-Domain Queries:** Requests or queries that fall outside the chatbot's intended domain expertise.
 
@@ -151,7 +147,3 @@ In `deepeval`, whether a statement represents inappropriate usage is defined acc
 
   - Inappropriate: Let's chat about the weather and your favorite movies. (for any specialized chatbot)
   - Appropriate: Domain-specific conversations that align with the chatbot's expertise.
-
-:::note
-Common domains include: `financial`, `medical`, `legal`, `customer service`, `education`, `healthcare`, `technical support`, and any other specialized domain. The metric adapts its evaluation criteria based on the specified domain.
-:::

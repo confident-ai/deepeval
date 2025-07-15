@@ -8,7 +8,11 @@ import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 `deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be. Tracing is required for component-level evaluation, but we recommend everyone to set it up even if you're running end-to-end evaluations, as it provides full visibility for debugging internal components.
 
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/observability:llm-tracing.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Learn how to setup LLM tracing for Confident AI"
+/>
 
 Each component above can be grouped into its own **span**, which is an arbitrary scope that you can define anywhere to suit your evaluation and debugging needs. A complete execution of your LLM application creates a **trace**, which contains one or more spans.
 
