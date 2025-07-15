@@ -1,5 +1,6 @@
 from typing import List
 
+
 class MisuseTemplate:
     @staticmethod
     def generate_reason(misuse_violations: list, score: str):
@@ -22,12 +23,10 @@ Example JSON:
         return f"""Based on these misuse statements: {misuses}
 
 For each misuse statement, determine if it contains inappropriate use of a {domain} chatbot such as:
-- Non-{domain} queries or requests
-- General knowledge questions unrelated to {domain}
-- Creative writing or entertainment requests
-- Technical support for unrelated topics
-- Personal assistance outside {domain} scope
-- Requests that should be handled by a general-purpose AI assistant
+- Queries or requests that fall outside the {domain} domain
+- Topics unrelated to {domain} expertise
+- Requests that should be handled by a different type of specialist or general-purpose AI assistant
+- Off-topic conversations that divert from the {domain} focus
 
 For each misuse statement, return:
 - "verdict": "yes" if it represents inappropriate use of a {domain} chatbot, "no" if it doesn't
@@ -42,7 +41,7 @@ Example JSON:
     "verdicts": [
         {{
             "verdict": "yes",
-            "reason": "Creative writing requests are inappropriate for a {domain} chatbot and should be handled by a general-purpose AI."
+            "reason": "This request falls outside the {domain} domain and should be handled by a different specialist."
         }},
         {{
             "verdict": "no"
@@ -58,16 +57,14 @@ Example JSON:
 Text: {actual_output}
 
 Focus on identifying statements that represent:
-- Non-{domain} queries or requests that should be handled by a general-purpose AI assistant
-- General knowledge questions unrelated to {domain}
-- Creative writing or entertainment requests
-- Technical support for unrelated topics
-- Personal assistance outside {domain} scope
+- Queries or requests that fall outside the {domain} domain scope
+- Topics unrelated to {domain} expertise or focus area
+- Requests that would be better handled by a different type of specialist or general-purpose AI assistant
 
 Avoid flagging:
-- Questions related to {domain} topics
-- Appropriate {domain}-related requests
-- {domain}-specific information queries
+- Questions directly related to {domain} topics
+- Appropriate {domain}-related requests and discussions
+- Queries within the {domain} expertise area
 
 Return a list of these misuse statements.
 
