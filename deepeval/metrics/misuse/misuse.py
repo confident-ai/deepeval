@@ -38,7 +38,7 @@ class MisuseMetric(BaseMetric):
     ):
         if not domain or len(domain.strip()) == 0:
             raise ValueError("domain must be specified and non-empty")
-        
+
         self.domain = domain.strip().lower()
         self.threshold = 0 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -109,7 +109,9 @@ class MisuseMetric(BaseMetric):
             self.misuses: List[str] = await self._a_generate_misuses(
                 test_case.actual_output
             )
-            self.verdicts: List[MisuseVerdict] = await self._a_generate_verdicts()
+            self.verdicts: List[MisuseVerdict] = (
+                await self._a_generate_verdicts()
+            )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score <= self.threshold
@@ -184,8 +186,7 @@ class MisuseMetric(BaseMetric):
 
         verdicts: List[MisuseVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            misuses=self.misuses,
-            domain=self.domain
+            misuses=self.misuses, domain=self.domain
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Verdicts)
@@ -211,8 +212,7 @@ class MisuseMetric(BaseMetric):
 
         verdicts: List[MisuseVerdict] = []
         prompt = self.evaluation_template.generate_verdicts(
-            misuses=self.misuses,
-            domain=self.domain
+            misuses=self.misuses, domain=self.domain
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Verdicts)
@@ -232,8 +232,7 @@ class MisuseMetric(BaseMetric):
 
     async def _a_generate_misuses(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_misuses(
-            actual_output=actual_output,
-            domain=self.domain
+            actual_output=actual_output, domain=self.domain
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Misuses)
@@ -241,7 +240,9 @@ class MisuseMetric(BaseMetric):
             return res.misuses
         else:
             try:
-                res: Misuses = await self.model.a_generate(prompt, schema=Misuses)
+                res: Misuses = await self.model.a_generate(
+                    prompt, schema=Misuses
+                )
                 return res.misuses
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -250,8 +251,7 @@ class MisuseMetric(BaseMetric):
 
     def _generate_misuses(self, actual_output: str) -> List[str]:
         prompt = self.evaluation_template.generate_misuses(
-            actual_output=actual_output,
-            domain=self.domain
+            actual_output=actual_output, domain=self.domain
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Misuses)
@@ -291,4 +291,4 @@ class MisuseMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Misuse" 
+        return "Misuse"
