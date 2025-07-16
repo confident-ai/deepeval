@@ -189,7 +189,7 @@ class CallbackHandler(BaseCallbackHandler):
                             "model_name", "unknown"
                         )
                     if isinstance(gen.message, AIMessage):
-                        ai_message = cast(AIMessage, gen.message)
+                        ai_message = gen.message
                         tool_calls = []
                         for tool_call in ai_message.tool_calls:
                             tool_calls.append(LlmToolCall(
@@ -198,7 +198,7 @@ class CallbackHandler(BaseCallbackHandler):
                                 id=tool_call.id,
                             ))
                         output = LlmOutput(
-                            role="AI",
+                            role="Assistant",
                             content=ai_message.content,
                             tool_calls=tool_calls,
                         )
