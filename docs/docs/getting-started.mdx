@@ -33,56 +33,22 @@ Additionally, DeepEval has a cloud platform [Confident AI](https://app.confident
 <LinkCards
   tutorials={[
     {
-      title: "Run your first Evaluation",
+      title: "End-to-End Evaluations",
       description:
-        "Not sure where to begin? Click here to get started and run your first evaluation with DeepEval",
+        "Run end-to-end evaluations to test your application's overall performance.",
       to: "/docs/getting-started#create-your-first-test-run",
     },
     {
-      title: "Evaluate Chatbots",
+      title: "Component-Level Evaluations",
       description:
-        "Learn how to evaluate a multi-turn conversations using conversational metrics.",
-      to: "/docs/getting-started#create-your-first-test-run",
-    },
-    {
-      title: "Evaluate Agents",
-      description:
-        "Evaluate your AI Agent with component-level evaluations with agentic metrics like task completion.",
+        "Run component-level evaluations to test your application's internal components.",
       to: "/docs/getting-started#evaluate-nested-components",
     },
     {
-      title: "Compare LLM Responses",
+      title: "Arena Evaluations",
       description:
-        "Run arena-style evaluations to the best models and prompts for your LLM application.",
+        "Run arena-style evaluations to find the best models and prompts for your LLM application.",
       to: "/docs/getting-started#compare-llm-responses",
-    },
-    {
-      title: "Evaluate Safety",
-      description:
-        "Redteam your LLM application to uncover safety and security vulnerabilities.",
-      to: "/docs/getting-started#red-team-your-llm-application",
-    },
-    {
-      title: "Metrics",
-      description:
-        "Explore 30+ out-of-the-box metrics on DeepEval, or create your own custom metric.",
-      to: "/docs/getting-started#create-your-first-metric",
-    },
-    {
-      title: "Creating a Dataset",
-      description: "Create an evaluation dataset to store your test cases.",
-      to: "/docs/getting-started#create-your-first-dataset",
-    },
-    {
-      title: "Synthesize a Dataset",
-      description: "Synthesize an evaluation dataset from scratch.",
-      to: "/docs/getting-started#generate-synthetic-datasets",
-    },
-    {
-      title: "Confident AI",
-      description:
-        "Perform in-depth evaluation experiments and uncover insights on DeepEval's cloud platform.",
-      to: "/docs/getting-started#using-confident-ai",
     },
   ]}
 />
@@ -107,7 +73,7 @@ Confident AI is free and allows you to keep all evaluation results on the cloud.
 
 ## Create Your First Test Run
 
-Create a test file to run your first **end-to-end evaluation**.
+Create a test file to run your first **end-to-end evaluation**. An [LLM test case](/docs/evaluation-test-cases#llm-test-case) in deepeval is represents a single unit of LLM app interaction (for a series of LLM interactions i.e. conversation, visit the [conversational test cases](/docs/evaluation-multiturn-test-cases) section instead).
 
 <details>
   <summary>
@@ -133,9 +99,9 @@ conversational and agentic at the same time.
 
 Single‑turn evaluations require an [LLM test case](/docs/evaluation-test-cases#llm-test-case), which represents a single interaction in `deepeval`. Multi-turn evaluations require [multi-turn test cases](/docs/evaluation-multiturn-test-cases), which represent a sequence of interactions. Arena evaluations require [arena test cases](/docs/evaluation-arena-test-cases), which represents a collection of single-turn LLM Test Cases with the same input. Finally, agentic evaluations require you to set up tracing.
 
-![ok](https://deepeval-docs.s3.amazonaws.com/llm-test-case.svg)
-
 </details>
+
+![ok](https://deepeval-docs.s3.amazonaws.com/llm-test-case.svg)
 
 <Tabs>
 
@@ -177,32 +143,6 @@ Congratulations! Your test case should have passed ✅ Let's breakdown what happ
 
 If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
 
-<details> <summary><strong>Set up your LLM Provider</strong> </summary>
-
-You'll need to configure your `OPENAI_API_KEY` in your environment
-variable to run `GEval`.
-
-Most deepeval metrics including `GEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
-
-```python
-correctness_metric = GEval(..., model="o1")
-```
-
-DeepEval also integrates with these model providers:
-
-- [Ollama](https://deepeval.com/integrations/models/ollama)
-- [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai)
-- [Anthropic](https://deepeval.com/integrations/models/anthropic)
-- [Gemini](https://deepeval.com/integrations/models/gemini)
-- [Vertex AI](https://deepeval.com/integrations/models/vertex-ai)
-- [vLLM](https://deepeval.com/integrations/models/vllm)
-- [LMStudio](https://deepeval.com/integrations/models/lmstudio)
-
-To use **ANY** custom LLM of your choice, [check out this part of the
-docs](/guides/guides-using-custom-llms).
-
-</details>
-
   </TabItem>
 
 <TabItem value="multi-turn" label="Multi-Turn" default>
@@ -241,32 +181,6 @@ Congratulations! Your test case should have passed ✅ Let's breakdown what happ
 - All metric scores range from 0 - 1, which the `threshold=0.5` threshold ultimately determines if your test have passed or not.
 
 If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
-
-<details> <summary><strong>Set up your LLM Provider</strong> </summary>
-
-You'll need to configure your `OPENAI_API_KEY` in your environment
-variable to run `ConversationalGEval`.
-
-Most deepeval metrics including `ConversationalGEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
-
-```python
-professionalism_metric = ConversationalGEval(..., model="o1")
-```
-
-DeepEval also integrates with these model providers:
-
-- [Ollama](https://deepeval.com/integrations/models/ollama)
-- [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai)
-- [Anthropic](https://deepeval.com/integrations/models/anthropic)
-- [Gemini](https://deepeval.com/integrations/models/gemini)
-- [Vertex AI](https://deepeval.com/integrations/models/vertex-ai)
-- [vLLM](https://deepeval.com/integrations/models/vllm)
-- [LMStudio](https://deepeval.com/integrations/models/lmstudio)
-
-To use **ANY** custom LLM of your choice, [check out this part of the
-docs](/guides/guides-using-custom-llms).
-
-</details>
 
   </TabItem>
 
@@ -311,15 +225,19 @@ Congratulations! Your test case should have passed ✅ Let's breakdown what happ
 
 If you run more than one test run, you will be able to **catch regressions** by comparing test cases side-by-side. This is also made easier if you're using `deepeval` alongside Confident AI ([see below](/docs/getting-started#save-results-on-cloud) for video demo).
 
+</TabItem>
+
+</Tabs>
+
 <details> <summary><strong>Set up your LLM Provider</strong> </summary>
 
 You'll need to configure your `OPENAI_API_KEY` in your environment
-variable to run `MultimodalGEval`.
+variable to run `GEval`.
 
-Most deepeval metrics including `MultimodalGEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
+Most deepeval metrics including `GEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
 
 ```python
-text_image_coherence = MultimodalGEval(..., model="o1")
+correctness_metric = GEval(..., model="o1")
 ```
 
 DeepEval also integrates with these model providers:
@@ -336,9 +254,6 @@ To use **ANY** custom LLM of your choice, [check out this part of the
 docs](/guides/guides-using-custom-llms).
 
 </details>
-</TabItem>
-
-</Tabs>
 
 ### Save Results
 
@@ -404,11 +319,6 @@ Component‑level evaluations focus on individual components rather than the ove
 
 To begin, trace the "components" such as LLM calls, retrievers, tool calls, and agents within your LLM application using the `@observe` decorator, and apply the metrics on a component-level. Tracing with `deepeval` is non-instrusive (learn more [here](/docs/evaluation-llm-tracing)) and helps you avoid rewriting your codebase just for evals:
 
-<Tabs>
-<TabItem value="general" label="LLM Applications">
-
-You can evaluate any LLM application by supplying any of DeepEval's non-conversational metrics to the `@observe` decorator.
-
 ```python
 from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
@@ -432,10 +342,11 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 ```
 
-</TabItem>
-<TabItem value="agents" label="Agents">
+When evaluating agents, we strongly recommend including `TaskCompletion` in your outter most component's metrics list.
 
-When evaluating agents, we strongly recommend including `TaskCompletion` in your outter most component's metrics list. `TaskCompletion` is a powerful agentic metric that determines if the desired outcome was achieved based on the traced agentic flow.
+:::tip
+`TaskCompletion` is a powerful agentic metric that determines if the desired outcome was achieved based on the traced agentic flow, and is easy to set up because you don't need to populate any test case parameters.
+:::
 
 ```python
 from deepeval.tracing import observe, update_current_span
@@ -445,11 +356,9 @@ from deepeval.metrics import TaskCompletion
 from deepeval import evaluate
 
 task_completion = TaskCompletion()
-correctness = GEval(name="Correctness", criteria="Determine if the 'actual output' is correct based on the 'expected output'.", evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT])
 
-@observe(metrics=[correctness])
+@observe()
 def inner_component(): # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
-    update_current_span(test_case=LLMTestCase(input="...", actual_output="..."))
     return
 
 
@@ -459,11 +368,7 @@ def llm_app(input: str):
     return
 
 evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
-
 ```
-
-</TabItem>
-</Tabs>
 
 **Tracing also helps you debug evaluations** when using Confident AI (video below). You can learn everything about component-level evaluations [here.](/docs/evaluation-component-level-llm-evals)
 
@@ -519,21 +424,20 @@ You can use metrics the same way for both end-to-end and component-level evaluat
 
 ### Default Metrics
 
-`deepeval` offers 30+ research backed default metrics covering a wide range of use-cases. Here are a few popular metrics:
+`deepeval` offers 30+ research backed default metrics covering a wide range of use-cases. Here are some popular metrics organized by category:
 
-- RAG:
-  - Answer Relevancy
-  - Faithfulness
-  - Contextual Relevancy
-  - Contextual Recall
-  - Contextual Precision
-- Agents:
-  - Tool Correctness
-  - Task Completion
-- Chatbots:
-  - Conversation Completeness
-  - Conversation Relevancy
-  - Role Adherence
+| Metric Name               | Category | Description                                                                        |
+| ------------------------- | -------- | ---------------------------------------------------------------------------------- |
+| Answer Relevancy          | RAG      | Evaluates if the generated answer is relevant to the user query                    |
+| Faithfulness              | RAG      | Measures if the generated answer is factually consistent with the provided context |
+| Contextual Relevancy      | RAG      | Assesses if the retrieved context is relevant to the user query                    |
+| Contextual Recall         | RAG      | Evaluates if the retrieved context contains all relevant information               |
+| Contextual Precision      | RAG      | Measures if the retrieved context is precise and focused                           |
+| Tool Correctness          | Agents   | Evaluates if tools were called and used correctly                                  |
+| Task Completion           | Agents   | Assesses if the agent successfully completed the given task                        |
+| Conversation Completeness | Chatbots | Measures if the conversation fully addresses the user's needs                      |
+| Conversation Relevancy    | Chatbots | Evaluates if responses remain relevant throughout the conversation                 |
+| Role Adherence            | Chatbots | Assesses if the chatbot maintains its intended role or persona                     |
 
 To create a metric, simply import from the `deepeval.metrics` module:
 
