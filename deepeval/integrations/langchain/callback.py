@@ -198,7 +198,7 @@ class CallbackHandler(BaseCallbackHandler):
                                 id=tool_call.id,
                             ))
                         output = LlmOutput(
-                            role="Assistant",
+                            role="AI",
                             content=ai_message.content,
                             tool_calls=tool_calls,
                         )
