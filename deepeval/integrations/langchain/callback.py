@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, cast
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
@@ -7,6 +7,7 @@ try:
     from langchain_core.callbacks.base import BaseCallbackHandler
     from langchain_core.outputs import LLMResult
     from langchain_core.outputs import ChatGeneration
+    from langchain_core.messages import AIMessage
 
     # contains langchain imports
     from deepeval.integrations.langchain.utils import (
@@ -169,7 +170,7 @@ class CallbackHandler(BaseCallbackHandler):
         if llm_span is None:
             return
 
-        output_str = ""
+        output = []
         total_input_tokens = 0
         total_output_tokens = 0
 
@@ -187,13 +188,20 @@ class CallbackHandler(BaseCallbackHandler):
                         llm_span.model = gen.message.response_metadata.get(
                             "model_name", "unknown"
                         )
-
-                    output_str += convert_chat_generation_to_string(gen) + "\n"
+                    if isinstance(gen.message, AIMessage):
+                        ai_message = cast(AIMessage, gen.message)
+                        output.append({
+                            "role": "AI",
+                            "content": ai_message.content,
+                            # TODO: decide the tool call format in llm attributes
+                            "tool_calls": ai_message.tool_calls,
+                        })
+                    # output_str += convert_chat_generation_to_string(gen) + "\n"
 
         llm_span.set_attributes(
             LlmAttributes(
                 input=llm_span.attributes.input,
-                output=output_str,
+                output=output,
                 input_token_count=total_input_tokens,
                 output_token_count=total_output_tokens,
             )
