@@ -179,12 +179,14 @@ If you run more than one test run, you will be able to **catch regressions** by 
 
 <details> <summary><strong>Set up your LLM Provider</strong> </summary>
 
-You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
-variable to run <code>GEval</code>.
+You'll need to configure your `OPENAI_API_KEY` in your environment
+variable to run `GEval`.
 
-Most deepeval metrics including <code>GEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+Most deepeval metrics including `GEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
 
-<pre>correctness_metric = GEval(..., model="o1")</pre>
+```python
+correctness_metric = GEval(..., model="o1")
+```
 
 DeepEval also integrates with these model providers:
 
@@ -242,12 +244,14 @@ If you run more than one test run, you will be able to **catch regressions** by 
 
 <details> <summary><strong>Set up your LLM Provider</strong> </summary>
 
-You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
-variable to run <code>ConversationalGEval</code>.
+You'll need to configure your `OPENAI_API_KEY` in your environment
+variable to run `ConversationalGEval`.
 
-Most deepeval metrics including <code>ConversationalGEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+Most deepeval metrics including `ConversationalGEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
 
-<pre>professionalism_metric = ConversationalGEval(..., model="o1")</pre>
+```python
+professionalism_metric = ConversationalGEval(..., model="o1")
+```
 
 DeepEval also integrates with these model providers:
 
@@ -309,12 +313,14 @@ If you run more than one test run, you will be able to **catch regressions** by 
 
 <details> <summary><strong>Set up your LLM Provider</strong> </summary>
 
-You'll need to configure your <code>OPENAI_API_KEY</code> in your environment
-variable to run <code>MultimodalGEval</code>.
+You'll need to configure your `OPENAI_API_KEY` in your environment
+variable to run `MultimodalGEval`.
 
-Most deepeval metrics including <code>MultimodalGEval</code> are LLM-judge metrics, and default to using OpenAI's <code>gpt-4.1</code>, but you can specify any OpenAI model you wish to use:
+Most deepeval metrics including `MultimodalGEval` are LLM-judge metrics, and default to using OpenAI's `gpt-4.1`, but you can specify any OpenAI model you wish to use:
 
-<pre>text_image_coherence = MultimodalGEval(..., model="o1")</pre>
+```python
+text_image_coherence = MultimodalGEval(..., model="o1")
+```
 
 DeepEval also integrates with these model providers:
 
@@ -392,7 +398,7 @@ set DEEPEVAL_RESULTS_FOLDER=.\data
 
 What we saw above is known as **end-to-end** evaluation, which treats your LLM app as a black-box. If you wish to evaluate multiple components in your LLM app, you can implement **component-level** evals instead.
 
-Component‑level evaluations focus on individual components rather than the overall end‑to‑end result, making it easy to identify and fix specific modules in your LLM application. Moreover, agentic metrics—such as <a href="/docs/metrics#task-completion">Task Completion</a>—can only be applied through component-level evals.
+Component‑level evaluations focus on individual components rather than the overall end‑to‑end result, making it easy to identify and fix specific modules in your LLM application. Moreover, agentic metrics—such as [Task Completion](/docs/metrics#task-completion)—can only be applied through component-level evals.
 
 </details>
 

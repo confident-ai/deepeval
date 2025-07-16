@@ -10,11 +10,9 @@ import TabItem from "@theme/TabItem";
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
 
 <details>
-  <summary><strong>When should you run Component-Level evaluations?</strong></summary>
+<summary><strong>When should you run Component-Level evaluations?</strong></summary>
 
-<p>
-
-In <a href="/docs/evaluation-end-to-end-llm-evals">end-to-end evaluation</a>, your LLM application is treated as a black-box and evaluation is encapsulated by the overall system inputs and outputs in the form of an <code>LLMTestCase</code>.
+In [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals), your LLM application is treated as a black-box and evaluation is encapsulated by the overall system inputs and outputs in the form of an `LLMTestCase`.
 
 If your application has nested components or a structure that a simple `LLMTestCase` can't easily handle, component-level evaluation allows you to **apply different metrics to different components in your LLM application.**
 
@@ -28,7 +26,6 @@ Common use cases that are suitable for component-level evaluation include (not i
 
 The trend you'll notice is use cases that are more complex in architecture are more suited for component-level evaluation.
 
-</p>
 </details>
 
 ![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
@@ -59,9 +56,9 @@ In component-level evaluation, there are more metrics to select as there are mor
 Unlike end-to-end evaluation, where setting up your LLM application requires rewriting some parts of your code to return certain variables for testing, component-level testing is as simple as adding an `@observe` decorator to apply different metrics at different component scopes, a process known as tracing.
 
 <details>
-  <summary><strong>What is Tracing?</strong></summary>
+<summary><strong>What is Tracing?</strong></summary>
 
-The process of adding the `@observe` decorating in your app is known as <strong>tracing</strong>, which we will learn how to setup fully in the [next section](/docs/evaluation-llm-tracing). If you're worried about how tracing via `@observe` can affect your application, [click here.](/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)
+The process of adding the `@observe` decorating in your app is known as **tracing**, which we will learn how to setup fully in the [next section](/docs/evaluation-llm-tracing). If you're worried about how tracing via `@observe` can affect your application, [click here.](/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)
 
 An `@observe` decorator creates a **span**, and the overall collection of spans is called a **trace**.
 
