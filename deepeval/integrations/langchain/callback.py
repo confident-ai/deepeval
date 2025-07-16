@@ -60,12 +60,13 @@ class CallbackHandler(BaseCallbackHandler):
     active_trace_id: Optional[str] = None
     metrics: List[BaseMetric] = []
 
-    def __init__(self, metrics: List[BaseMetric] = []):
+    def __init__(self, metrics: List[BaseMetric] = [], metrics_collection: Optional[str] = None):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
         )
         is_langchain_installed()
         self.metrics = metrics
+        self.metrics_collection = metrics_collection
         super().__init__()
 
 
@@ -156,6 +157,9 @@ class CallbackHandler(BaseCallbackHandler):
         self.end_span(base_span)
 
         if parent_run_id is None:
+            if self.metrics_collection:
+                base_span.metric_collection = self.metrics_collection
+            
             if self.metrics:
                 current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
 
