@@ -4,7 +4,7 @@ title: Introduction
 sidebar_label: Introduction
 ---
 
-In this tutorial, we'll go through the entire process of building a robust **LLM-powered summarization agent using DeepEval**, from development to production.
+This tutorial walks you through the entire process of building a robust **LLM-powered summarization agent using DeepEval**, from development to production.
 
 :::tip
 If you're working with LLMs for summarization, this tutorial is for you. While we'll specifically focus on evaluating a meeting summarizer, the concepts and practices here can be applied to **any LLM application that generates summaries**.
@@ -49,42 +49,33 @@ In this tutorial, you'll learn:
 
 - How to build a summarization agent.
 - How to define summarization criteria and choose the right evaluation metrics.
-- How to run evals on your summarization agent using `deepeval`
+- How to run evals on your summarization agent using `deepeval`.
 - How to improve your summarization agent using evaluation results.
 - How to prepare your summarization agent for production.
 
 ## Meeting Summarizer
 
-Imagine you're building an industry standard meeting summarization agent. Your meeting summarizer takes the entire conversation transcription as `input` and outputs the following:
+Throughout this tutorial, we'll focus on building a meeting summarization agent. The agent will take a full meeting transcript as `input` and produce two structured outputs:
 
-- A brief summary of the discussion.
-- A list of action items.
+- A concise summary of the discussion.
+- A list of clear action items to follow.
 
-Your goal is to build a summarizer that can be used by multiple teams to improve their productivity. Hence, you need to ensure the summarizer captures key decisions and follow-ups accurately—without missing context, misinterpreting information, or including unnecessary details.
+Your objective is to build a high-quality summarizer that teams across an organization can rely on to improve productivity. To achieve this, the agent must accurately capture key decisions, action points, and important context—without omitting critical information or introducing irrelevant details.
 
 ## What You'll Build
 
-Most meeting summarization SaaS platforms aim to give valuable information from different meetings they handle in a way that is more accessible to users. For example some platforms summarize meetings and create a list of action items in the form of tick boxes which can be used to track team progress and ultimately improve productivity.
+Most important meetings these days happen through online video chats and meeting platforms like **Google Meet** and **Zoom**. With meetings like this happening every day, it's hard to keep track of the important details mentioned in the meeting. 
 
+This challenge has led to the rise of meeting summarization platforms like **Otter.ai** and **Circleback** to emerge. These tools typically record the entire meeting in the form of transcripts. Which they then use to create concise summaries and deliver a list of action items mentioned throughout the meeting helping increase a team's productivity.
 
-An end product of a summarization agent might look as shown below:
+In this tutorial, you'll build a similar meeting summarization agent—capable of generating concise summaries and extracting actionable items from full meeting transcripts.
 
-**On the platform**
-![Webpage Image](./images/webpage.png)
+Below is an example of what a deliverable from a meeting summarization platform looks like:
 
-The above image shows what you might see on the webpage of your meeting summarization agent platform. **An overview of the meeting, transcript, the summary and the action items concerning everyone involved.**
+![Webpage Image](./images/summarizer-overview.png)
 
-Most meeting summarization platforms also send emails to the relevant team members with their assigned action items to be performed. These emails might look as shown below:
+The above image shows what you might see on the webpage of your meeting summarization platform. **An overview of the meeting, transcript, the summary and the action items concerning everyone involved.**
 
-**Maya's email**
-![Maya's email](./images/maya-mail.png)
-
-**Ethan's email**
-![Ethan's email](./images/ethan-mail.png)
-
-This is an example of how you'll be using your meeting summarizer's responses to create an appealing meeting summarization platform that helps increase productivity of teams.
-
-
-In the rest of this tutorial series, you'll build a summarization agent that outputs summaries and action items — ready to be used in any kind of interactive platform or SaaS product.
+In the rest of this tutorial series, you'll build a summarization agent that platforms like **Otter.ai** and **Circleback** use to generate their summaries and action items from the transcripts they collect during the meeting.
 
 Ready to get started? Let's move on to [developing the summarization agent](tutorial-summarization-development).
