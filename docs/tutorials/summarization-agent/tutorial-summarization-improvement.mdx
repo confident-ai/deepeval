@@ -299,7 +299,7 @@ From the results we can see that:
 
 This raises an issue of which model to choose among the both as they each excel at their own tasks. 
 
-In this situation, you can either use more test cases to run evaluations or use the `deepeval`'s lates `ArenaGEval` to test which model is better among the for test cases with summaries and action items combined in them. You can learn more about it [here](http://localhost:3000/docs/metrics-arena-g-eval).
+In this situation, you can either use more test cases to run evaluations or use the `deepeval`'s lates `ArenaGEval` to test which model is better among them for test cases with both summaries and action items. You can learn more about it [here](http://localhost:3000/docs/metrics-arena-g-eval).
 
 **OR** alternatively, you can update your `MeetingSummarizer` to use 2 different models for different tasks. Here's how you can do that:
 
@@ -317,11 +317,7 @@ class MeetingSummarizer:
 
         return summary, action_items
     
-    def get_summary(
-      self, 
-      transcript: str,
-      model: str = None
-    ) -> str:
+    def get_summary(self, transcript: str, model: str = None) -> str:
       ...
       response = self.client.chat.completions.create(
           model=model or self.model,
@@ -332,11 +328,7 @@ class MeetingSummarizer:
       )
       ...
 
-    def get_action_items(
-      self, 
-      transcript: str,
-      model: str = None
-    ) -> dict:
+    def get_action_items(self, transcript: str, model: str = None) -> dict:
       ...
       response = self.client.chat.completions.create(
           model=model or self.model,

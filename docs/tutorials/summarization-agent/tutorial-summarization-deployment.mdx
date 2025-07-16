@@ -8,7 +8,7 @@ In this section, we'll set up CI/CD workflows for your summarization agent, and 
 
 In the previous section, we created a `deepeval` dataset. You can now reuse that dataset to evaluate your summarization agent continuously in a production setting.
 
-## Why Continuous Evaluation Matters
+## Why Continuous Evaluation
 
 Most summarization agents are created to summarize documents or transcripts that can help increase productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
 
@@ -60,7 +60,7 @@ this provides full visibility for debugging internal components of your LLM appl
 
 To setup tracing this is how you would change your `MeetingSummarizer` class:
 
-```python {27,34,46-48,54,68-70}
+```python {6,27,39,51-53,59,73-75}
 import os
 import json
 from openai import OpenAI
@@ -88,17 +88,22 @@ class MeetingSummarizer:
         )
 
     @observe(type="agent")
-    def summarize(self, transcript: str) -> tuple[str, dict]:
-        summary = self.get_summary(transcript)
-        action_items = self.get_action_items(transcript)
+    def summarize(
+        self, 
+        transcript: str, 
+        summary_model: str = "gpt-4o", 
+        action_item_model: str = "gpt-4-turbo"
+    ) -> tuple[str, dict]:
+        summary = self.get_summary(transcript, summary_model)
+        action_items = self.get_action_items(transcript, action_item_model)
 
         return summary, action_items
     
     @observe(metrics=[GEval(...)], name="Summary") # Use the summary_concision metric here
-    def get_summary(self, transcript: str) -> str:
+    def get_summary(self, transcript: str, model: str = None) -> str:
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=model or self.model,
                 messages=[
                     {"role": "system", "content": self.summary_system_prompt},
                     {"role": "user", "content": transcript}
@@ -115,10 +120,10 @@ class MeetingSummarizer:
             return f"Error: Could not generate summary due to API issue: {e}"
 
     @observe(metrics=[GEval(...)], name="Action Items") # Use the action_item_check metric here
-    def get_action_items(self, transcript: str) -> dict:
+    def get_action_items(self, transcript: str, model: str = None) -> dict:
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=model or self.model,
                 messages=[
                     {"role": "system", "content": self.action_item_system_prompt},
                     {"role": "user", "content": transcript}
