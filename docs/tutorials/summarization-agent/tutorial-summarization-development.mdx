@@ -4,21 +4,30 @@ title: Development
 sidebar_label: Development
 ---
 
-In this section, we’re going to create our **Meeting Summarization Agent** using the OpenAI API.
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
-We will now start by creating a minimal setup as a starting point for our summarization agent. We are going to use the following system prompt template:
-```text
-You are an AI assistant tasked with summarizing meeting transcripts clearly 
-and accurately. Given the following conversation, generate a concise summary 
-that captures the key points discussed, along with a set of action items 
-reflecting the concrete next steps mentioned. Keep the tone neutral and 
-factual, avoid unnecessary detail, and do not add interpretation beyond 
-the content of the conversation.
-```
+In this section, we're going to create our **Meeting Summarization Agent** using the OpenAI API. To create a summarization agent, we'll need to define a `MeetingSummarizer` class which can be used to create multiple instances that allow us to generate summaries and action items anytime and anywhere.
 
-By using the above system prompt template we are now going to create a `MeetingSummarizer` agent that takes the transcript of a meeting and returns the summary along with action items.
+:::tip
+Creating your agents in a reusable format like classes and methods is generally considered best practice because you can create multiple instances of this agent in various places for evaluations and iterations.
+:::
 
 ## Creating Meeting Summarizer
+
+_An LLM application's response is as good as the prompt used to generate that response._ It is important to define a good system prompt that we can use to generate our summaries and action items. We are going to use the following system prompt in the initial phase of our meeting summarizer:
+
+```text
+You are an AI assistant tasked with summarizing meeting transcripts clearly and accurately. 
+Given the following conversation, generate a concise summary that captures the key points 
+discussed, along with a set of action items reflecting the concrete next steps mentioned. 
+Keep the tone neutral and factual, avoid unnecessary detail, and do not add interpretation 
+beyond the content of the conversation.
+```
+
+### Using OpenAI API
+
+We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat completions API to generate summaries and action items using the system prompt mentioned above for any given transcript.
 
 ```python
 import os
@@ -62,14 +71,15 @@ class MeetingSummarizer:
 You need to set your environment variable `OPENAI_API_KEY` in your `.env` file.
 :::
 
-## Generating summaries
+### Generating summaries
 
 Now that we've defined our summarization agent, we can use the following code to generate the summary
 
 ```python
-summarizer = MeetingSummarizer()
 with open("meeting_transcript.txt", "r") as file:
     transcript = file.read().strip()
+
+summarizer = MeetingSummarizer()
 summary = summarizer.summarize(transcript)
 print(summary)
 ```
@@ -77,9 +87,9 @@ print(summary)
 :::note
 I have saved a file named `meeting_transcript.txt` that contains a mock transcript which is provided to the summarizer as shown above. You can provide your own transcript here or use the mock transcript that I've used:
 <details>
-<summary><strong>The conversation transcript used here</strong></summary>
+<summary><strong>Click here to see the contents of <code>meeting_transcript.txt</code></strong></summary>
 
-```text
+```text title="meeting_transcript.txt"
 [2:01:03 PM]  
 Ethan:  
 Hey Maya, thanks for hopping on. So, I've been looking at some of the recent 
@@ -276,9 +286,20 @@ Sounds good. One step at a time, right?
 </details>
 :::
 
-After running the summarizer, this is the output I got:
+After running the summarizer, the summary generated was a _string of markdown_ (that's how most LLMs respond by default). And this is not desirable for us as we need to parse the response from the LLM and create a UI/UX interface that is appealing for users.
+The best we can do with the output given by the LLM for now is shown below along with the raw output generated:
 
-:::tip Output
+<Tabs groups="ui-raw">
+
+<TabItem id="ui" value="UI">
+
+![UI Image](./images/first-summary.png)
+
+</TabItem>
+
+<TabItem id="raw" value="Raw">
+
+```md
 **Meeting Summary:**
 
 Ethan and Maya discussed performance concerns with the current customer support assistant, particularly issues with inaccurate or vague responses and slow performance trade-offs when using different language models. Maya noted that while GPT-4o offers faster responses, Claude 3 provides more grounded and reliable answers but with higher latency. They agreed to continue using GPT-4o as the primary model and implement Claude as a fallback for low-confidence cases.
@@ -296,30 +317,72 @@ On the UX side, they agreed to implement fallback messaging for low-confidence r
 3. **Maya** to explore prompt tuning with few-shot examples to improve the assistant's tone and empathy.
 4. **Ethan** to coordinate with the design team on fallback UI messaging for low-confidence responses.
 5. **Team** to regroup next week to review progress on the hybrid model and confidence detection efforts.
-:::
+```
+
+</TabItem>
+
+</Tabs>
 
 ## Updating Meeting Summarizer
 
-While this setup does generate summaries and action items, it is not what a final summarization agent must look like for our use case. We are now going to update our `MeetingSummarizer` class using the previous one as our starting point
+Since the responses generated by our summarizer cannot be parsed rendering them useless. We will now update our `MeetingSummarizer` to generate responses in our desired format, which makes them more versatile.
 
-We will be adding 2 helper functions each for different tasks. These helper functions are necessary because they allow for easy debugging and evaluation in the future.
+We can do that by sperating our summarizer's tasks into 2 independent helper functions. This means, we can create:
 
 - A function to generate summary
 - A function to generate action items
 
-The action items must be generated in a `json` format, which will allow us to easily parse and render them in different representations.
+This allows us to create 2 specific system prompts each for different task, giving us more control over what the agent generates and how it generates them.
+This also gives us more flexibility when evaluating our summarizer in the later stages.
 
-:::info
-These are the system prompts we'll be using for summary and action item generation:
+### Generating summaries
 
-```text title="summary_system_prompt"
+We will be creating a helper function which we can use to generate _only the summary_ of the transcript provided. We are creating this function because it gives us more flexibility on how the summary is generated.
+Also by making it a seperate function, we can do component level evaluations for our summarizer in the future.
+
+#### System prompt for generating summaries:
+
+```text
 You are an AI assistant summarizing meeting transcripts. Provide a clear and 
 concise summary of the following conversation, avoiding interpretation and 
 unnecessary details. Focus on the main discussion points only. Do not include 
-any action items.
+any action items. Give only summary as a text and nothing else. No explanations
+or headings needed.
 ```
 
-```text title="action_item_system_prompt"
+:::tip
+It is also important to note that some models perform well for specific tasks, when you are dealing with different use cases, it is better to test different models to see which one performs best for this specific task. By creating individual functions we can find the best hyperparameters that work for our use case.
+:::
+
+Here's how we'll define our helper function to generate summaries:
+
+```python
+class MeetingSummarizer:
+    ...
+    def get_summary(self, transcript: str, model: str = None) -> str:
+        try:
+            response = self.client.chat.completions.create(
+                model=model or self.model,
+                messages=[
+                    {"role": "system", "content": self.summary_system_prompt},
+                    {"role": "user", "content": transcript}
+                ]
+            )
+
+            summary = response.choices[0].message.content.strip()
+            return summary
+        except Exception as e:
+            print(f"Error generating summary: {e}")
+            return f"Error: Could not generate summary due to API issue: {e}"
+```
+
+### Generating action items
+
+We will now be creating a helper function to generate _only the action items_ of the transcript provided. The action items must be generated in a `json` format, which will allow us to easily parse and render them in different representations.
+
+#### System prompt for generating action items:
+
+```text
 Extract all action items from the following meeting transcript. Identify individual 
 and team-wide action items in the following format:
 
@@ -335,61 +398,16 @@ and team-wide action items in the following format:
 Only include what is explicitly mentioned. Do not infer. You must absolutely only 
 repond in JSON. No explanations needed.
 ```
-:::
 
-<details>
-<summary><strong>Click here to see the new <code>MeetingSummarizer</code> class</strong></summary>
+Here's how we'll define our helper function to generate action items:
 
 ```python
-import os
-import json
-from dotenv import load_dotenv
-from openai import OpenAI
-
-load_dotenv()
-
 class MeetingSummarizer:
-    def __init__(
-        self, 
-        model: str = "gpt-4", 
-        summary_system_prompt: str = "",
-        action_item_system_prompt: str = "",
-    ):
-        self.model = model
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.summary_system_prompt = summary_system_prompt or (
-            "..." # Use the summary_system_prompt mentioned above
-        )
-        self.action_item_system_prompt = action_item_system_prompt or (
-            "..." # Use the action_item_system_prompt mentioned above
-        )
-
-    def summarize(self, transcript: str) -> tuple[str, dict]:
-        summary = self.get_summary(transcript)
-        action_items = self.get_action_items(transcript)
-
-        return summary, action_items
-    
-    def get_summary(self, transcript: str) -> str:
+    ...
+    def get_action_items(self, transcript: str, model: str = None) -> dict:
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": self.summary_system_prompt},
-                    {"role": "user", "content": transcript}
-                ]
-            )
-
-            summary = response.choices[0].message.content.strip()
-            return summary
-        except Exception as e:
-            print(f"Error generating summary: {e}")
-            return f"Error: Could not generate summary due to API issue: {e}"
-
-    def get_action_items(self, transcript: str) -> dict:
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model,
+                model=model or self.model,
                 messages=[
                     {"role": "system", "content": self.action_item_system_prompt},
                     {"role": "user", "content": transcript}
@@ -406,7 +424,17 @@ class MeetingSummarizer:
             return {"error": f"API call failed: {e}", "raw_output": ""}
 ```
 
-</details>
+We can now call these helper functions in our `summarize()` function and return their respective responses. Here's how we can do that:
+
+```python
+class MeetingSummarizer:
+    ...
+    def summarize(self, transcript: str) -> tuple[str, dict]:
+        summary = self.get_summary(transcript)
+        action_items = self.get_action_items(transcript)
+
+        return summary, action_items
+```
 
 You can run the new `MeetingSummarizer` as follows:
 
@@ -422,23 +450,36 @@ print("JSON:")
 print(json.dumps(action_items, indent=2))
 ```
 
-Here's the updated output with structured action items:
+With this new updated `MeetingSummarizer`, the output we get for summary is a string of text and the output for action items is a `JSON` object which we can parse and manipulate it in any way we want.
 
-:::tip Output
+By running the new summarizer, I got the desirable output which can be used to create a webpage, here's both the UI and raw format of the outputs generated:
 
-**Meeting Summary:**
+<Tabs groups="summary-action_items-ui-raw">
 
+<TabItem id="summary-action_items-ui" value="UI">
+
+![UI Image](./images/second-summary.png)
+
+</TabItem>
+
+<TabItem id="summary-raw" value="Summary Raw">
+
+```text
 Ethan and Maya discussed recent feedback on the customer support assistant, focusing on concerns around response speed and answer quality. Key issues included vague or incorrect answers and misclassification of simple issues, which may stem from inaccurate internal summarization.
 
 They debated whether the problems are due to prompt engineering or the model itself. Maya shared results comparing GPT-4o and Claude 3, noting that Claude gave more reliable responses but was slower. Ethan emphasized the importance of latency for user experience.
 
 They considered a hybrid approach using GPT-4o for speed and Claude as a fallback when confidence is low. However, current systems lack effective confidence metrics. They explored using embedding similarity as a potential signal, while being mindful of associated costs.
 
-The conversation also touched on user feedback about the assistant’s robotic tone. Maya recommended prompt tuning with example replies instead of full model fine-tuning to improve tone and empathy.
+The conversation also touched on user feedback about the assistant's robotic tone. Maya recommended prompt tuning with example replies instead of full model fine-tuning to improve tone and empathy.
 
 Finally, they discussed UI strategies for low-confidence responses, agreeing that a fallback prompt suggesting human assistance would improve user trust, provided it's used judiciously.
+```
 
-**JSON:**
+</TabItem>
+
+<TabItem id="action_items-raw" value="Actions items Raw">
+
 ```json
 {
   "individual_actions": {
@@ -453,12 +494,12 @@ Finally, they discussed UI strategies for low-confidence responses, agreeing tha
 }
 ```
 
-:::
+</TabItem>
 
-Now that we have our output in a desired format, what do you think of the quality of the output generated? _Good? Bad? Average?_ 
+</Tabs>
 
-**Many developers tend to eyeball results like this — and that's a major issue in LLM application development.**
+We now have a summarization agent that generates responses in our desired format. Now it's time to evaluate how good this agent works. **Many developers tend to eyeball these results — and that's a major issue in LLM application development.**
 You might think that this output is okay and move forward with it. But LLMs aren't so easy to work with, they require robust evaluation and testing before they 
 can be used for reliable tasks.
 
-And that's where `deepeval` comes in. It offers various metrics tailored for different use cases. In the next section we are going to see [how to evaluate your summarization agent](tutorial-summarization-evaluation).
+In the next section we are going to see [how to evaluate your summarization agent](tutorial-summarization-evaluation) using `deepeval`.
