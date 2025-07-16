@@ -241,15 +241,13 @@ def test_llm_app(golden: Golden):
     assert_test(golden=golden, observed_callback=your_llm_app)
 ```
 
-<details>
-<summary><code>assert_test()</code> for component-level evaluations</summary>
-
+:::info
 Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
 
 - Declaration of `metrics` because those are defined at the span level in the `metrics` parameter.
 - Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
 
-</details>
+:::
 
 Finally, don't forget to run the test file in the CLI:
 
