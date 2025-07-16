@@ -157,19 +157,21 @@ class CallbackHandler(BaseCallbackHandler):
 
         if parent_run_id is None:
             if self.metrics:
-                global_test_run_manager.reset()
+                current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+
+                if current_trace is None:
+                    return
+                
+                current_trace.end_time = perf_counter()
+                current_trace.status = TraceSpanStatus.SUCCESS
                 
                 start_time = perf_counter()
                 self.evaluate_metrics(base_span)
                 end_time = perf_counter()
+
+                current_trace.input = base_span.input
+                current_trace.output = base_span.output                
                 
-                current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
-                if current_trace is not None:
-                    current_trace.input = base_span.input
-                    current_trace.output = base_span.output                
-                
-                current_trace.end_time = perf_counter()
-                current_trace.status = TraceSpanStatus.SUCCESS
                 trace_api = trace_manager.create_trace_api(current_trace)
 
                 test_case = LLMTestCase(
@@ -179,6 +181,8 @@ class CallbackHandler(BaseCallbackHandler):
                     test_case=test_case,
                     trace=trace_api,
                 )
+
+                global_test_run_manager.reset()
                 global_test_run_manager.update_test_run(api_test_case, test_case)
                 global_test_run_manager.wrap_up_test_run(end_time - start_time, display_table=False)
                 
