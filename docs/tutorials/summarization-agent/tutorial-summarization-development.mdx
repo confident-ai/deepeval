@@ -359,10 +359,10 @@ Here's how we'll define our helper function to generate summaries:
 ```python
 class MeetingSummarizer:
     ...
-    def get_summary(self, transcript: str, model: str = None) -> str:
+    def get_summary(self, transcript: str) -> str:
         try:
             response = self.client.chat.completions.create(
-                model=model or self.model,
+                model=self.model,
                 messages=[
                     {"role": "system", "content": self.summary_system_prompt},
                     {"role": "user", "content": transcript}
@@ -404,10 +404,10 @@ Here's how we'll define our helper function to generate action items:
 ```python
 class MeetingSummarizer:
     ...
-    def get_action_items(self, transcript: str, model: str = None) -> dict:
+    def get_action_items(self, transcript: str) -> dict:
         try:
             response = self.client.chat.completions.create(
-                model=model or self.model,
+                model=self.model,
                 messages=[
                     {"role": "system", "content": self.action_item_system_prompt},
                     {"role": "user", "content": transcript}
@@ -462,7 +462,7 @@ By running the new summarizer, I got the desirable output which can be used to c
 
 </TabItem>
 
-<TabItem id="summary-raw" value="Summary Raw">
+<TabItem id="summary-raw" value="Raw Summary">
 
 ```text
 Ethan and Maya discussed recent feedback on the customer support assistant, focusing on concerns around response speed and answer quality. Key issues included vague or incorrect answers and misclassification of simple issues, which may stem from inaccurate internal summarization.
@@ -478,7 +478,7 @@ Finally, they discussed UI strategies for low-confidence responses, agreeing tha
 
 </TabItem>
 
-<TabItem id="action_items-raw" value="Actions items Raw">
+<TabItem id="action_items-raw" value="Raw Actions items">
 
 ```json
 {
