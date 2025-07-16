@@ -160,39 +160,38 @@ class CallbackHandler(BaseCallbackHandler):
             if self.metrics_collection:
                 base_span.metric_collection = self.metrics_collection
             
-            if self.metrics:
-                current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+            # if self.metrics:
+            #     current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
 
-                if current_trace is None:
-                    return
+            #     if current_trace is None:
+            #         return
                 
-                current_trace.end_time = perf_counter()
-                current_trace.status = TraceSpanStatus.SUCCESS
+            #     current_trace.end_time = perf_counter()
+            #     current_trace.status = TraceSpanStatus.SUCCESS
                 
-                start_time = perf_counter()
-                self.evaluate_metrics(base_span)
-                end_time = perf_counter()
+            #     start_time = perf_counter()
+            #     self.evaluate_metrics(base_span)
+            #     end_time = perf_counter()
 
-                current_trace.input = base_span.input
-                current_trace.output = base_span.output                
+            #     current_trace.input = base_span.input
+            #     current_trace.output = base_span.output                
                 
-                trace_api = trace_manager.create_trace_api(current_trace)
+            #     trace_api = trace_manager.create_trace_api(current_trace)
 
-                test_case = LLMTestCase(
-                    input="None", actual_output="None"
-                )
-                api_test_case: LLMApiTestCase = create_api_test_case(
-                    test_case=test_case,
-                    trace=trace_api,
-                )
+            #     test_case = LLMTestCase(
+            #         input="None", actual_output="None"
+            #     )
+            #     api_test_case: LLMApiTestCase = create_api_test_case(
+            #         test_case=test_case,
+            #         trace=trace_api,
+            #     )
 
-                global_test_run_manager.reset()
-                global_test_run_manager.update_test_run(api_test_case, test_case)
-                global_test_run_manager.wrap_up_test_run(end_time - start_time, display_table=False)
+            #     global_test_run_manager.reset()
+            #     global_test_run_manager.update_test_run(api_test_case, test_case)
+            #     global_test_run_manager.wrap_up_test_run(end_time - start_time, display_table=False)
                 
-                self.active_trace_id = None
-            else:
-                self.end_trace(base_span)
+            #     self.active_trace_id = None
+            self.end_trace(base_span)
 
     def on_llm_start(
         self,
