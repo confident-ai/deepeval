@@ -12,8 +12,7 @@ class AgentAttributes(BaseModel):
 class LlmToolCall(BaseModel):
     name: str
     args: Dict[str, Any]
-    metadata: Optional[Dict[str, Any]] = None
-
+    id: Optional[str] = None
 class LlmOutput(BaseModel):
     role: str
     content: str
