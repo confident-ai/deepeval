@@ -4,14 +4,14 @@ title: Improvement
 sidebar_label: Improvement
 ---
 
-In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. We are going to create a full evaluation suite that helps us iterate on our summarization agent to find the best hyperparameters that help improve it.
+In this section, we'll explore multiple strategies to improve your summarization agent using `deepeval`. We'll create a full evaluation suite that allows us to iterate on our summarization agent to find the best hyperparameters that help improve it.
 
 Like most LLM applications, our summarizer includes tunable hyperparameters that can significantly influence the performance of our application. In our case, the key hyperparameters for the `MeetingSummarizer` that can improve our agent are:
 
 - Prompt template
 - Generation model
 
-The above mentioned hyperparameters are common for almost any LLM application. However, you can extend a few more hyperparameters that are specific to your use case.
+The above-mentioned hyperparameters are common for almost any LLM application. However, you can extend a few more hyperparameters that are specific to your use case.
 
 ## DeepEval's Datasets
 
@@ -19,7 +19,7 @@ In order to evaluate and figure out the best hyperparameter configuration for yo
 
 If you are trying to evaluate a summarizer, you might already have a few files or transcripts that you need to generate summaries of, we can use those files to create test cases that can be used to evaluate the summarizer.
 
-**DeepEval**'s' [datasets](https://deepeval.com/docs/evaluation-datasets), which are simply a collection of `LLMTestCase`s and `Golden`s, can be stored in cloud and pulled anytime with just a few lines of code. This allows you to create a dataset that can be used to evalaute your summarization agent anytime and anywhere.
+**DeepEval**'s' [datasets](https://deepeval.com/docs/evaluation-datasets), which are simply a collection of `LLMTestCase`s and `Golden`s, can be stored in cloud and pulled anytime with just a few lines of code. This allows you to create a dataset that can be used to evaluate your summarization agent anytime and anywhere.
 
 ### Goldens in DeepEval
 
@@ -83,7 +83,7 @@ deepeval login
 :::
 
 
-This allows us to create a datasets which we can manage on the Confident AI platform. You can view, edit, delete and do a lot more with your datasets on the platform, here's how it'll look on Confident AI:
+This allows us to create a dataset that we can manage on the Confident AI platform. You can view, edit, delete and do a lot more with your datasets on the platform, here's how it'll look on Confident AI:
 
 ![Datasets on Confident AI](./images/dataset-demo.png)
 
@@ -129,7 +129,7 @@ You can use these test cases to evaluate your summarizer anywhere and anytime. M
 
 Now that we have our dataset, we can use this dataset to generate test cases using our summarization agent with different configurations and evaluate it to find the best hyperparameters that work for our use case. Here's how we can run iterative evals on our summarization agent:
 
-In the previous stages, we have evaluated our summarization agent seperately for summary conciseness and action item correctness. We will use the same approach and run our evaluations seperately for summary and action items.
+In the previous stages, we have evaluated our summarization agent separately for summary conciseness and action item correctness. We will use the same approach and run our evaluations separately for summary and action items.
 
 ### Summary Evaluation
 
@@ -187,7 +187,7 @@ for model in models:
     ) # Evaluate summarizer with the current configuration
 ```
 
-After running the iterations, these were the results:
+The results of the evaluation iterations for summary generations are shown below:
 
 |                     | System Prompt 1 | System Prompt 2 | System Prompt 3 |
 |---------------------|-----------------|-----------------|-----------------|
@@ -195,7 +195,7 @@ After running the iterations, these were the results:
 | gpt-4o              | 0.8             | 0.8             | 0.9             |
 | gpt-4-turbo         | 0.8             | 0.7             | 0.7             |
 
-We can observe that `gpt-4o` has consistently performed better for all the prompts and _system prompt 3_ is the best among all the results of `gpt-4o` which also happens to be the highest score in all the evaluations.
+It's clear that `gpt-4o` has consistently performed better for all the prompts and _system prompt 3_ is the best among all the results of `gpt-4o` which also happens to be the highest score in all the evaluations.
 
 ### Action Item Evaluation
 
@@ -253,7 +253,7 @@ for model in models:
     ) # Evaluate summarizer with the current configuration
 ```
 
-These were the results for action item evaluation iterations:
+These were the results for generated action items evaluation iterations:
 
 |                     | System Prompt 1 | System Prompt 2 | System Prompt 3 |
 |---------------------|-----------------|-----------------|-----------------|
@@ -299,9 +299,9 @@ From the results we can see that:
 
 This raises an issue of which model to choose among the both as they each excel at their own tasks. 
 
-In this situation, you can either use more test cases to run evaluations or use the `deepeval`'s lates `ArenaGEval` to test which model is better among them for test cases with both summaries and action items. You can learn more about it [here](http://localhost:3000/docs/metrics-arena-g-eval).
+In this situation, you can either use more test cases to run evaluations or use `deepeval`'s latest `ArenaGEval` to test which model is better among them by evaluating test cases that include both summaries and action items. You can learn more about it [here](http://localhost:3000/docs/metrics-arena-g-eval).
 
-**OR** alternatively, you can update your `MeetingSummarizer` to use 2 different models for different tasks. Here's how you can do that:
+**OR** alternatively, you can update your `MeetingSummarizer` to to use two different models for different tasks. Here's how you can do that:
 
 ```python {6-7,9-10,14,17,25,28,36,39}
 class MeetingSummarizer:

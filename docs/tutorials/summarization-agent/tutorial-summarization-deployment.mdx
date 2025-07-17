@@ -6,13 +6,13 @@ sidebar_label: Deployment
 
 In this section, we'll set up CI/CD workflows for your summarization agent, and learn how to manage dynamic datasets to ensure reliable evaluation as your data evolves.
 
-In the previous section, we created a `deepeval` dataset. You can now reuse that dataset to evaluate your summarization agent continuously in a production setting.
+In the previous section, we created a `deepeval` dataset. You can now reuse this dataset to continuously evaluate your summarization agent.
 
 ## Why Continuous Evaluation
 
-Most summarization agents are created to summarize documents or transcripts that can help increase productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
+Most summarization agents are built to summarize documents and transcripts, often to improve productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
 
-DeepEval's datasets are very useful for continuous evaluations, you can populate datasets with goldens, which contain just the inputs. During evaluation, the test cases will be generated on the fly by calling your LLM application to produce outputs.
+**DeepEval**'s datasets are very useful for continuous evaluations. You can populate datasets with goldens, which contain just the inputs. During evaluation, test cases are generated on-the-fly by calling your LLM application to produce outputs.
 
 ![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
 
@@ -58,7 +58,7 @@ print(len(action_item_test_cases))
 `deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
 this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
-To setup tracing this is how you would change your `MeetingSummarizer` class:
+To set up tracing, modify your `MeetingSummarizer` class like this:
 
 ```python {6,27,39,51-53,59,73-75}
 import os
@@ -146,7 +146,7 @@ class MeetingSummarizer:
 
 ## Integrating CI/CD
 
-You can now simply use `pytest` with `assert_test` during your CI/CD to trace and evaluate your summarization agent, here's how you can write the test file to do that:
+You can use `pytest` with `assert_test` during your CI/CD to trace and evaluate your summarization agent, here's how you can write the test file to do that:
 
 ```python title="test_meeting_summarizer_quality.py" {13}
 import pytest
