@@ -1641,7 +1641,7 @@ def a_execute_agentic_test_cases_from_loop(
 ) -> Iterator[TestResult]:
 
     semaphore = asyncio.Semaphore(max_concurrent)
-    orig_create_task = asyncio.create_task
+    original_create_task = asyncio.create_task
 
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = save_to_disk
@@ -1655,36 +1655,38 @@ def a_execute_agentic_test_cases_from_loop(
         async with semaphore:
             return await coroutine
 
-    async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
-        async with semaphore:
-            return await func(*args, **kwargs)
 
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         pbar_callback_id: Optional[int] = None,
     ):
-        # Invoke LLM app
         def create_callback_task(coro, **kwargs):
+            task = loop.create_task(execute_callback_with_semaphore(coro))
             def on_task_done(t: asyncio.Task):
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
-
-            task = loop.create_task(execute_callback_with_semaphore(coro))
             task.add_done_callback(on_task_done)
             return task
 
         asyncio.create_task = create_callback_task
-        for golden in goldens:
-            yield golden
-            if global_test_run_tasks.num_tasks() == 0:
-                update_pbar(progress, pbar_callback_id)
-                update_pbar(progress, pbar_id)
+        
+        try:
+            for golden in goldens:
+                yield golden
+                if global_test_run_tasks.num_tasks() == 0:
+                    update_pbar(progress, pbar_callback_id)
+                    update_pbar(progress, pbar_id)
+        finally:
+            asyncio.create_task = original_create_task
+            
         if global_test_run_tasks.num_tasks() > 0:
             loop.run_until_complete(
-                asyncio.gather(*global_test_run_tasks.get_tasks())
+                asyncio.gather(
+                    *global_test_run_tasks.get_tasks(),
+                )
             )
-
+        
         # Evaluate traces
         asyncio.create_task = loop.create_task
         if trace_manager.traces_to_evaluate:
@@ -1758,7 +1760,7 @@ def a_execute_agentic_test_cases_from_loop(
     local_trace_manager.traces_to_evaluate_order = []
     local_trace_manager.traces_to_evaluate = []
     global_test_run_tasks.clear_tasks()
-    asyncio.create_task = orig_create_task
+    asyncio.create_task = original_create_task
 
 
 async def evaluate_traces(
