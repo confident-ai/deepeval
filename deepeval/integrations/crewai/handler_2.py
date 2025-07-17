@@ -17,6 +17,7 @@ try:
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.crew import Crew
+    from crewai.agent import Agent
     crewai_installed = True
 except:
     crewai_installed = False
@@ -41,13 +42,14 @@ class CrewAIEventsListener(BaseEventListener):
         if current_trace is not None:
             current_trace.input = base_span.input
             current_trace.output = base_span.output
-        trace_manager.end_trace(self.active_trace_id)
-        self.active_trace_id = None
+        if self.active_trace_id is not None:
+            trace_manager.end_trace(self.active_trace_id)
+            self.active_trace_id = None
 
     def end_span(self, base_span: BaseSpan):
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
-        trace_manager.remove_span(str(base_span.uuid))
+        trace_manager.remove_span(base_span.uuid)
 
     def setup_listeners(self, crewai_event_bus):
         @crewai_event_bus.on(CrewKickoffStartedEvent)
@@ -65,7 +67,7 @@ class CrewAIEventsListener(BaseEventListener):
                 name="Crew",
                 input=event.inputs,
                 metadata={
-                    "Crew.id": source.id,
+                    "Crew.id": str(source.id),
                 }
             )
             trace_manager.add_span(base_span)
@@ -78,23 +80,58 @@ class CrewAIEventsListener(BaseEventListener):
             
             base_span = None
             for span_uuid, span in trace_manager.active_spans.items():
-                if span.metadata.get("Crew.id") == source.id:
+                if span.name == "Crew" and span.metadata.get("Crew.id") == str(source.id):
                     base_span = span
                     break
             
             if base_span is None:
                 return
+            
             base_span.output = event.output
             self.end_span(base_span)
             self.end_trace(base_span)
 
         @crewai_event_bus.on(AgentExecutionStartedEvent)
-        def on_agent_started(source, event):
-            print(">>agent started")
+        def on_agent_started(source: Agent, event: AgentExecutionStartedEvent):
+            
+            parent_uuid = None
+            for span_uuid, span in trace_manager.active_spans.items():
+                if span.name == "Crew" and span.metadata.get("Crew.id") == str(source.crew.id):
+                    parent_uuid = span.uuid
+                    print(">>agent parent_uuid (crew)", parent_uuid)
+                    break
+            
+            base_span = BaseSpan(
+                uuid=str(uuid.uuid4()),
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=self.active_trace_id,
+                parent_uuid=parent_uuid,
+                start_time=perf_counter(),
+                name="Agent",
+                # input=event.task, # find a way insert input
+                metadata={
+                    "Agent.id": str(source.id),
+                }
+            )
+            trace_manager.add_span(base_span)
+            trace_manager.add_span_to_trace(base_span)
 
         @crewai_event_bus.on(AgentExecutionCompletedEvent)
-        def on_agent_completed(source, event):
-            print(">>agent completed")
+        def on_agent_completed(source: Agent, event: AgentExecutionCompletedEvent):
+
+            base_span = None
+            for span_uuid, span in trace_manager.active_spans.items():
+                if span.name == "Agent" and span.metadata.get("Agent.id") == str(source.id):
+                    base_span = span
+                    print(">>agent span", base_span)
+                    break
+            
+            if base_span is None:
+                return
+            
+            # base_span.output = event.output # find a way insert output
+            self.end_span(base_span)
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
