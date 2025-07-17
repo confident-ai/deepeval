@@ -296,10 +296,14 @@ With `deepeval`, you can easily unit test RAG applications in CI environments. W
 
 ```python title="test_rag.py"
 from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
+...
 
-dataset = EvaluationDataset(test_cases=[...])
+dataset = EvaluationDataset(goldens=[...])
+for goldens in dataset.goldens:
+  dataset.add_test_case(...) # convert golden to test case
 
 @pytest.mark.parametrize(
     "test_case",

@@ -93,22 +93,26 @@ print(answer_relevancy_metric.score)
 
 ## Datasets
 
-Datasets in `deepeval` is a collection of test cases. It provides a centralized interface for you to evaluate a collection of test cases using one or multiple metrics.
+Datasets in `deepeval` is a collection of goldens. It provides a centralized interface for you to evaluate a collection of test cases using one or multiple metrics.
 
 ```python
 from deepeval.test_case import LLMTestCase
-from deepeval.dataset import EvaluationDataset
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval import evaluate
 
 answer_relevancy_metric = AnswerRelevancyMetric()
-test_case = LLMTestCase(
-  input="Who is the current president of the United States of America?",
-  actual_output="Joe Biden",
-  retrieval_context=["Joe Biden serves as the current president of America."]
-)
+dataset = EvaluationDataset(goldens=[Golden(input="Who is the current president of the United States of America?")])
 
-dataset = EvaluationDataset(test_cases=[test_case])
-dataset.evaluate([answer_relevancy_metric])
+for golden in dataset.goldens:
+  dataset.add_test_case(
+    LLMTestCase(
+      input=golden.input,
+      actual_output=you_llm_app(golden.input)
+    )
+  )
+
+evaluate(test_cases=dataset.test_cases, metrics=[answer_relevancy_metric])
 ```
 
 :::note
@@ -145,18 +149,21 @@ Although `deepeval` integrates with Pytest, we highly recommend you to **AVOID**
 
 ```python title="test_example.py"
 from deepeval import assert_test
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 
-dataset = EvaluationDataset(test_cases=[...])
+dataset = EvaluationDataset(goldens=[...])
+
+for golden in dataset.goldens:
+  dataset.add_test_case(...) # convert golden to test case
 
 @pytest.mark.parametrize(
     "test_case",
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    answer_relevancy_metric = AnswerRelevancyMetric()
-    assert_test(test_case, [answer_relevancy_metric])
+    assert_test(test_case, [AnswerRelevancyMetric()])
 ```
 
 And run the test file in the CLI using `deepeval test run`:
@@ -188,10 +195,11 @@ from deepeval import evaluate
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset
 
-dataset = EvaluationDataset(test_cases=[...])
-answer_relevancy_metric = AnswerRelevancyMetric()
+dataset = EvaluationDataset(goldens=[...])
+for golden in dataset.goldens:
+  dataset.add_test_case(...) # convert golden to test case
 
-evaluate(dataset, [answer_relevancy_metric])
+evaluate(dataset, [AnswerRelevancyMetric()])
 ```
 
 There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function:

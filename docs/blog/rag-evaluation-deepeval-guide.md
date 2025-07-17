@@ -500,8 +500,9 @@ goldens = synthesizer.generate_goldens_from_docs(
     document_paths=["document.txt"], chunk_size=1024, chunk_overlap=50
 )
 
+dataset = EvaluationDataset(goldens=goldens)
+
 # Create DeepEval test cases from your golden pairs
-test_cases = []
 for golden in goldens:
     query = golden.input
     expected_answer = golden.expected_output
@@ -513,7 +514,7 @@ for golden in goldens:
     # Generate answer
     generated_answer = generator_instance.generate(query)
 
-    test_cases.append(
+    dataset.add_test_case(
         LLMTestCase(
             input=query,
             actual_output=generated_answer,
@@ -521,9 +522,6 @@ for golden in goldens:
             retrieval_context=context_list,
         )
     )
-
-# 3. Create an EvaluationDataset from your LLMTestCase objects
-dataset = EvaluationDataset(test_cases=test_cases)
 
 # Define metrics with thresholds
 metrics = [
@@ -540,7 +538,7 @@ metrics = [
 ]
 
 # 5. Use pytest.mark.parametrize to iterate over the dataset and run tests
-@pytest.mark.parametrize("test_case", dataset)
+@pytest.mark.parametrize("test_case", dataset.test_case)
 def test_rag_application_performance(test_case: LLMTestCase):
     # Use assert_test to run all specified metrics on the test_case
     # If any metric fails its threshold, assert_test will raise an AssertionError
