@@ -1,7 +1,12 @@
 from typing import Any, Optional
 from uuid import UUID
 from time import perf_counter
-from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes, LlmOutput, LlmToolCall
+from deepeval.tracing.attributes import (
+    LlmAttributes,
+    RetrieverAttributes,
+    LlmOutput,
+    LlmToolCall,
+)
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -191,11 +196,13 @@ class CallbackHandler(BaseCallbackHandler):
                         ai_message = gen.message
                         tool_calls = []
                         for tool_call in ai_message.tool_calls:
-                            tool_calls.append(LlmToolCall(
-                                name=tool_call["name"],
-                                args=tool_call["args"],
-                                id=tool_call["id"],
-                            ))
+                            tool_calls.append(
+                                LlmToolCall(
+                                    name=tool_call["name"],
+                                    args=tool_call["args"],
+                                    id=tool_call["id"],
+                                )
+                            )
                         output = LlmOutput(
                             role="AI",
                             content=ai_message.content,
