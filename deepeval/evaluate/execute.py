@@ -1664,13 +1664,11 @@ def a_execute_agentic_test_cases_from_loop(
         def create_callback_task(coro, **kwargs):
             task = loop.create_task(execute_callback_with_semaphore(coro))
             def on_task_done(t: asyncio.Task):
-                try:
-                    update_pbar(progress, pbar_callback_id)
-                    update_pbar(progress, pbar_id)
-                except KeyError:
-                    pass
+                update_pbar(progress, pbar_callback_id)
+                update_pbar(progress, pbar_id)
             task.add_done_callback(on_task_done)
             return task
+
         asyncio.create_task = create_callback_task
         
         try:
