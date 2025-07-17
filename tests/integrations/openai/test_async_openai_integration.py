@@ -84,5 +84,5 @@ async def test_tracing():
 
 if __name__ == "__main__":
     test_end_to_end_evaluation()
-    # test_component_level_loop()
-    # asyncio.run(test_tracing())
+    test_component_level_loop()
+    asyncio.run(test_tracing())
