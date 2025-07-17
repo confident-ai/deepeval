@@ -1,6 +1,7 @@
 from typing import Any, Optional, List
 from uuid import UUID
 from time import perf_counter
+from deepeval.integrations.langchain.utils import add_test_case
 from deepeval.tracing.attributes import (
     LlmAttributes,
     RetrieverAttributes,
@@ -56,17 +57,18 @@ from deepeval.telemetry import capture_tracing_integration
 
 
 class CallbackHandler(BaseCallbackHandler):
-    
+
     active_trace_id: Optional[str] = None
     metrics: List[BaseMetric] = []
+    metric_collection: Optional[str] = None
 
-    def __init__(self, metrics: List[BaseMetric] = [], metrics_collection: Optional[str] = None):
+    def __init__(self, metrics: List[BaseMetric] = [], metric_collection: Optional[str] = None):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
         )
         is_langchain_installed()
         self.metrics = metrics
-        self.metrics_collection = metrics_collection
+        self.metric_collection = metric_collection
         super().__init__()
 
 
@@ -83,6 +85,10 @@ class CallbackHandler(BaseCallbackHandler):
         span.status = TraceSpanStatus.SUCCESS
         trace_manager.remove_span(str(span.uuid))
 
+        # only evaluate these spans
+        if span.name == "LangGraph":
+            self.evaluate_metrics(span)
+
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
         if current_trace is not None:
@@ -91,26 +97,20 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
-    
-    def evaluate_task_completion(self, span: BaseSpan, metric: TaskCompletionMetric):
-        if span.name == "LangGraph":
-            span.llm_test_case = LLMTestCase(
-                input="None", actual_output="None"
-            )
-            span.llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-            score = metric.measure(span.llm_test_case)
-            span.metrics = [metric]
-            print("Task Completion Metric Score: ", score)
+    def prepare_task_completion_test_case_pair(self, span: BaseSpan, metric: TaskCompletionMetric):
+        test_case = LLMTestCase(
+            input="None", actual_output="None"
+        )
+        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+        add_test_case(test_case, [metric])
 
     def evaluate_metrics(self, span: BaseSpan):
-        def dfs(span: BaseSpan):
-            for metric in self.metrics:
-                if isinstance(metric, TaskCompletionMetric):
-                    self.evaluate_task_completion(span, metric)
-            
-            for child in span.children:
-                dfs(child)
-        dfs(span)
+        # span.metrics = self.metrics (check if backend is updated)
+        span.metric_collection = self.metric_collection
+        for metric in self.metrics:
+            if isinstance(metric, TaskCompletionMetric):
+                self.prepare_task_completion_test_case_pair(span, metric)
+
 
     def on_chain_start(
         self,
@@ -155,42 +155,8 @@ class CallbackHandler(BaseCallbackHandler):
 
         base_span.output = outputs
         self.end_span(base_span)
-
+        
         if parent_run_id is None:
-            if self.metrics_collection:
-                base_span.metric_collection = self.metrics_collection
-            
-            # if self.metrics:
-            #     current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
-
-            #     if current_trace is None:
-            #         return
-                
-            #     current_trace.end_time = perf_counter()
-            #     current_trace.status = TraceSpanStatus.SUCCESS
-                
-            #     start_time = perf_counter()
-            #     self.evaluate_metrics(base_span)
-            #     end_time = perf_counter()
-
-            #     current_trace.input = base_span.input
-            #     current_trace.output = base_span.output                
-                
-            #     trace_api = trace_manager.create_trace_api(current_trace)
-
-            #     test_case = LLMTestCase(
-            #         input="None", actual_output="None"
-            #     )
-            #     api_test_case: LLMApiTestCase = create_api_test_case(
-            #         test_case=test_case,
-            #         trace=trace_api,
-            #     )
-
-            #     global_test_run_manager.reset()
-            #     global_test_run_manager.update_test_run(api_test_case, test_case)
-            #     global_test_run_manager.wrap_up_test_run(end_time - start_time, display_table=False)
-                
-            #     self.active_trace_id = None
             self.end_trace(base_span)
 
     def on_llm_start(
