@@ -23,6 +23,8 @@ try:
 except:
     crewai_installed = False
 
+from .agent import agent_registry
+
 def is_crewai_installed():
     if not crewai_installed:
         raise ImportError(
@@ -94,12 +96,10 @@ class CrewAIEventsListener(BaseEventListener):
 
         @crewai_event_bus.on(AgentExecutionStartedEvent)
         def on_agent_started(source: Agent, event: AgentExecutionStartedEvent):
-            
             parent_uuid = None
             for span_uuid, span in trace_manager.active_spans.items():
                 if span.name == "Crew" and span.metadata.get("Crew.id") == str(source.crew.id):
                     parent_uuid = span.uuid
-                    print(">>agent parent_uuid (crew)", parent_uuid)
                     break
             
             agent_span = AgentSpan(
@@ -113,7 +113,8 @@ class CrewAIEventsListener(BaseEventListener):
                 # input=event.task, # find a way insert input (seriliazer for task)
                 metadata={
                     "Agent.id": str(source.id),
-                }
+                }, 
+                metric_collection=agent_registry.get_metric_collection(source)
             )
             trace_manager.add_span(agent_span)
             trace_manager.add_span_to_trace(agent_span)

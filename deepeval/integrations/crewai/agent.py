@@ -42,10 +42,10 @@ class AgentRegistry:
 agent_registry = AgentRegistry()
 
 class Agent(CrewAIAgent):
-    def __init__(self, *args, metrics_collection: Optional[str] = None, **kwargs):
+    def __init__(self, *args, metric_collection: Optional[str] = None, **kwargs):
         super().__init__(*args, **kwargs)
         # Register this agent instance with its metric collection
-        agent_registry.register_agent(self, metrics_collection)
+        agent_registry.register_agent(self, metric_collection)
     
     @property
     def metric_collection(self) -> Optional[str]:
