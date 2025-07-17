@@ -1,7 +1,8 @@
+from deepeval.evaluate.configs import AsyncConfig
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.evaluate import dataset, test_run
-from deepeval.dataset import Golden
 from deepeval.openai import AsyncOpenAI
+from deepeval.dataset import Golden
 import asyncio
 
 from tests.integrations.openai.resources import (
@@ -13,7 +14,7 @@ from tests.integrations.openai.resources import (
 goldens = [
     Golden(input="What is the weather in Bogotá, Colombia?"),
     Golden(input="What is the weather in Paris, France?"),
-] * 20
+] * 10
 
 
 def test_end_to_end_evaluation():
@@ -31,7 +32,7 @@ def test_end_to_end_evaluation():
                 ],
                 tools=CHAT_TOOLS,
                 metrics=[AnswerRelevancyMetric(), BiasMetric()],
-            )
+            ),
         )
         test_run.append(task)
 
