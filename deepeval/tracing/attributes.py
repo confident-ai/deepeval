@@ -13,6 +13,7 @@ class LlmToolCall(BaseModel):
     name: str
     args: Dict[str, Any]
     id: Optional[str] = None
+
 class LlmOutput(BaseModel):
     role: str
     content: str
