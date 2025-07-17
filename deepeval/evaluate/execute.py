@@ -84,6 +84,7 @@ from deepeval.evaluate.utils import (
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import TestCaseMetricPair, openai_test_case_pairs
+from deepeval.integrations.langchain.utils import langchain_test_case_pairs
 from deepeval.test_run.hyperparameters import process_hyperparameters
 
 
@@ -1713,6 +1714,25 @@ def a_execute_agentic_test_cases_from_loop(
             loop.run_until_complete(
                 evaluate_test_case_pairs(
                     test_case_pairs=openai_test_case_pairs,
+                    test_run=test_run,
+                    test_run_manager=test_run_manager,
+                    test_results=test_results,
+                    ignore_errors=ignore_errors,
+                    skip_on_missing_params=skip_on_missing_params,
+                    show_indicator=show_indicator,
+                    verbose_mode=verbose_mode,
+                    _use_bar_indicator=_use_bar_indicator,
+                    _is_assert_test=_is_assert_test,
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    throttle_value=throttle_value,
+                    max_concurrent=max_concurrent,
+                )
+            )
+        elif langchain_test_case_pairs:
+            loop.run_until_complete(
+                evaluate_test_case_pairs(
+                    test_case_pairs=langchain_test_case_pairs,
                     test_run=test_run,
                     test_run_manager=test_run_manager,
                     test_results=test_results,

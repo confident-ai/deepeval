@@ -98,6 +98,7 @@ class CallbackHandler(BaseCallbackHandler):
         self.active_trace_id = None
 
     def prepare_task_completion_test_case_pair(self, span: BaseSpan, metric: TaskCompletionMetric):
+        trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
         test_case = LLMTestCase(
             input="None", actual_output="None"
         )
