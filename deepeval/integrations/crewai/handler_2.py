@@ -5,6 +5,7 @@ from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
     BaseSpan,
     TraceSpanStatus,
+    AgentSpan
 )
 from time import perf_counter
 
@@ -101,7 +102,7 @@ class CrewAIEventsListener(BaseEventListener):
                     print(">>agent parent_uuid (crew)", parent_uuid)
                     break
             
-            base_span = BaseSpan(
+            agent_span = AgentSpan(
                 uuid=str(uuid.uuid4()),
                 status=TraceSpanStatus.IN_PROGRESS,
                 children=[],
@@ -109,29 +110,28 @@ class CrewAIEventsListener(BaseEventListener):
                 parent_uuid=parent_uuid,
                 start_time=perf_counter(),
                 name="Agent",
-                # input=event.task, # find a way insert input
+                # input=event.task, # find a way insert input (seriliazer for task)
                 metadata={
                     "Agent.id": str(source.id),
                 }
             )
-            trace_manager.add_span(base_span)
-            trace_manager.add_span_to_trace(base_span)
+            trace_manager.add_span(agent_span)
+            trace_manager.add_span_to_trace(agent_span)
 
         @crewai_event_bus.on(AgentExecutionCompletedEvent)
         def on_agent_completed(source: Agent, event: AgentExecutionCompletedEvent):
 
-            base_span = None
+            agent_span = None
             for span_uuid, span in trace_manager.active_spans.items():
                 if span.name == "Agent" and span.metadata.get("Agent.id") == str(source.id):
-                    base_span = span
-                    print(">>agent span", base_span)
+                    agent_span = span
                     break
             
-            if base_span is None:
+            if agent_span is None:
                 return
             
-            # base_span.output = event.output # find a way insert output
-            self.end_span(base_span)
+            # base_span.output = event.output # find a way insert output (seriliazer for output)
+            self.end_span(agent_span)
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
