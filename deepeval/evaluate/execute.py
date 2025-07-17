@@ -1655,7 +1655,6 @@ def a_execute_agentic_test_cases_from_loop(
         async with semaphore:
             return await coroutine
 
-
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
@@ -1663,14 +1662,16 @@ def a_execute_agentic_test_cases_from_loop(
     ):
         def create_callback_task(coro, **kwargs):
             task = loop.create_task(execute_callback_with_semaphore(coro))
+
             def on_task_done(t: asyncio.Task):
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
+
             task.add_done_callback(on_task_done)
             return task
 
         asyncio.create_task = create_callback_task
-        
+
         try:
             for golden in goldens:
                 yield golden
@@ -1679,14 +1680,14 @@ def a_execute_agentic_test_cases_from_loop(
                     update_pbar(progress, pbar_id)
         finally:
             asyncio.create_task = original_create_task
-            
+
         if global_test_run_tasks.num_tasks() > 0:
             loop.run_until_complete(
                 asyncio.gather(
                     *global_test_run_tasks.get_tasks(),
                 )
             )
-        
+
         # Evaluate traces
         asyncio.create_task = loop.create_task
         if trace_manager.traces_to_evaluate:
