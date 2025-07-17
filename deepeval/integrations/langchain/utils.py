@@ -3,17 +3,13 @@ from langchain_core.outputs import ChatGeneration
 from dataclasses import dataclass
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-
-@dataclass
-class TestCaseMetricPair:
-    test_case: LLMTestCase
-    metrics: List[BaseMetric]
+from deepeval.openai.utils import TestCaseMetricPair
 
 langchain_test_case_pairs: List[TestCaseMetricPair] = []
 
 def add_test_case(
     test_case: LLMTestCase,
-    metrics: List[BaseMetric],
+    metrics: List[BaseMetric]
 ):
     langchain_test_case_pairs.append(TestCaseMetricPair(test_case, metrics))
 

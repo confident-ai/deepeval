@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 import uuid
 
@@ -13,7 +13,7 @@ from deepeval.metrics import BaseMetric
 class TestCaseMetricPair:
     test_case: LLMTestCase
     metrics: List[BaseMetric]
-    hyperparameters: Dict[str, Any]
+    hyperparameters: Optional[Dict[str, Any]] = None
 
 
 openai_test_case_pairs: List[TestCaseMetricPair] = []
