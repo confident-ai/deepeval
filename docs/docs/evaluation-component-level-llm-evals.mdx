@@ -9,17 +9,12 @@ import TabItem from "@theme/TabItem";
 
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
 
-:::note
+<details>
+<summary><strong>When should you run Component-Level evaluations?</strong></summary>
+
 In [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals), your LLM application is treated as a black-box and evaluation is encapsulated by the overall system inputs and outputs in the form of an `LLMTestCase`.
-:::
 
 If your application has nested components or a structure that a simple `LLMTestCase` can't easily handle, component-level evaluation allows you to **apply different metrics to different components in your LLM application.**
-
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
-
-:::info
-You would still be creating `LLMTestCase`s, but this time for individual components at runtime instead of the overall system.
-:::
 
 Common use cases that are suitable for component-level evaluation include (not inclusive):
 
@@ -31,29 +26,47 @@ Common use cases that are suitable for component-level evaluation include (not i
 
 The trend you'll notice is use cases that are more complex in architecture are more suited for component-level evaluation.
 
+</details>
+
+![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
+
+Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, run:
+
+```
+deepeval login
+```
+
 ## Prerequisites
 
 ### Select metrics
 
-Unlike end-to-end evaluation, you will need to select a set of appropriate metrics **for each component you want to evaluate**, and ensure the `LLMTestCase`s that you create in that component contains all the necessary parameters.
-
 You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for which components, but alternatively you can also [join our discord to ask us directly.](https://discord.com/invite/a3K9c8GRGt)
 
-:::info
+<details>
+  <summary><strong>Component-level vs End-to-End Metrics</strong></summary>
+
+Similar to end-to-end evaluation, you would still be creating `LLMTestCase`s, but this time for individual components at runtime instead of the overall system, which means you will need to select a set of appropriate metrics **for each component you want to evaluate**, and ensure the `LLMTestCase`s that you create in that component contains all the necessary parameters.
+
 In component-level evaluation, there are more metrics to select as there are more individual components to evaluate.
-:::
+
+</details>
 
 ### Setup LLM application
 
-Unlike end-to-end evaluation, where setting up your LLM application requires rewriting some parts of your code to return certain variables for testing, component-level testing is as simple as adding an `@observe` decorator to apply different metrics at different component scopes.
+Unlike end-to-end evaluation, where setting up your LLM application requires rewriting some parts of your code to return certain variables for testing, component-level testing is as simple as adding an `@observe` decorator to apply different metrics at different component scopes, a process known as tracing.
 
-:::danger YOU MUST KNOW
-The process of adding the `@observe` decorating in your app is known as **tracing**, which we will learn how to setup fully in the [next section](/docs/evaluation-llm-tracing).
+<details>
+<summary><strong>What is Tracing?</strong></summary>
 
-If you're worried about how tracing via `@observe` can affect your application, [click here.](/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)
-:::
+The process of adding the `@observe` decorating in your app is known as **tracing**, which we will learn how to setup fully in the [next section](/docs/evaluation-llm-tracing). If you're worried about how tracing via `@observe` can affect your application, [click here.](/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)
 
-An `@observe` decorator creates a **span**, and the overall collection of spans is called a **trace**. We'll trace this example LLM application to demonstrate how to run component-level evaluations using `deepeval` in two lines of code:
+An `@observe` decorator creates a **span**, and the overall collection of spans is called a **trace**.
+
+As you'll see in the example below, tracing with `deepeval`'s `@observe` means we don't have to return variables such as the `retrieval_context` in awkward places just to create end-to-end `LLMTestCase`s, [as previously seen in end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals#setup-llm-application)
+
+</details>
+
+We'll trace this example LLM application to demonstrate how to run component-level evaluations in two lines of code:
 
 ```python title="somewhere.py" showLineNumbers {14,25}
 from typing import List
@@ -90,11 +103,7 @@ def your_llm_app(input: str):
 print(your_llm_app("How are you?"))
 ```
 
-If you compare this implementation to the [previous one in end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals#setup-llm-application), you'll notice that tracing with `deepeval`'s `@observe` means we don't have to return variables such as the `retrieval_context` in awkward places just to create end-to-end `LLMTestCase`s.
-
-:::caution
 At this point, you can either pause and [learn how to setup LLM tracing in the next section](/docs/evaluation-llm-tracing) before continuing, or finish this section before moving onto tracing.
-:::
 
 ## Run Component-Level Evals
 
@@ -115,7 +124,7 @@ flowchart LR
 
 </div>
 
-You can run component=level LLM evaluations in either:
+You can run component-level LLM evaluations in either:
 
 - **CI/CD pipelines** using `deepeval test run`, or
 - **Python scripts** using the `evaluate()` function or
@@ -123,13 +132,13 @@ You can run component=level LLM evaluations in either:
 
 All 3 methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
-### Use `dataset` iterator in Python scripts
-
-To use the `dataset` iterator for component-level testing, supply your dataset alias or a list of `Golden`s to the iterator, then invoke your `@observe` decorated LLM application within the loop.
+### Use Python scripts
 
 <Tabs>
 
-<TabItem value="async" label="Asynchronous">
+<TabItem value="async" label="dataset (Async)">
+
+To use the `dataset` iterator for component-level testing, supply your dataset alias or a list of `Golden`s to the iterator, then invoke your `@observe` decorated LLM application within the loop.
 
 ```python title="main.py"
 from somewhere import your_async_llm_app # Replace with your async LLM app
@@ -141,9 +150,21 @@ for golden in dataset(alias="Your Dataset Name"):
     test_run.append(task)
 ```
 
+There are **SEVEN** optional parameters when calling the `dataset` iterator for **COMPONENT-LEVEL** evaluation:
+
+- [Optional] `alias`: the alias of the dataset you wish to use as inputs to your LLM application.
+- [Optional] `goldens`: a list of `Golden`s that you wish to use as inputs to your LLM application. Must be supplied if `alias` is not provided.
+- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
+- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
+- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
+- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
+- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
+
 </TabItem>
 
-<TabItem value="sync" label="Synchronous">
+<TabItem value="sync" label="dataset (Sync)">
+
+To use the `dataset` iterator for component-level testing, supply your dataset alias or a list of `Golden`s to the iterator, then invoke your `@observe` decorated LLM application within the loop.
 
 ```python title="main.py"
 from somewhere import your_llm_app # Replace with your LLM app
@@ -153,10 +174,6 @@ for golden in dataset(alias="Your Dataset Name"):
     # Invoke your LLM app
     your_llm_app(golden.input)
 ```
-
-</TabItem>
-
-</Tabs>
 
 There are **SEVEN** optional parameters when calling the `dataset` iterator for **COMPONENT-LEVEL** evaluation:
 
@@ -168,7 +185,9 @@ There are **SEVEN** optional parameters when calling the `dataset` iterator for 
 - [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
 - [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
-### Use `evaluate()` in Python scripts
+</TabItem>
+
+<TabItem value="evaluate" label="evaluate">
 
 To use `evaluate()` for component-level testing, supply a list of `Golden`s instead of `LLMTestCase`s, and an `observed_callback` which is the `@observe` decorated LLM application you wish to run evals on.
 
@@ -198,6 +217,10 @@ There are **TWO** mandatory and **FIVE** optional parameters when calling the `e
 :::tip
 You'll notice that unlike end-to-end evaluation, there is no declaration of `metrics` because those are defined in `@observe` in the `metrics` parameter, and there are no creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
 :::
+
+</TabItem>
+
+</Tabs>
 
 ### Use `deepeval test run` in CI/CD pipelines
 

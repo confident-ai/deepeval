@@ -6,12 +6,17 @@ sidebar_label: End-to-End
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Admonition from "@theme/Admonition";
 
-End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box. For simple LLM applications like basic RAG pipelines with "flat" architectures that can be represented by a single `LLMTestCase`, end-to-end evaluation is ideal:
+End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box.
 
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/end-to-end-evals:simple-system.png)
+<details>
+<summary><strong>When should you run End-to-End evaluations?</strong></summary>
 
-Common use cases that are suitable for end-to-end evaluation include (not inclusive):
+For simple LLM applications like basic RAG pipelines with "flat" architectures
+that can be represented by a single <code>LLMTestCase</code>, end-to-end
+evaluation is ideal. Common use cases that are suitable for end-to-end
+evaluation include (not inclusive):
 
 - RAG QA
 - PDF extraction
@@ -21,25 +26,42 @@ Common use cases that are suitable for end-to-end evaluation include (not inclus
 
 You'll notice that use cases with simplier architectures are more suited for end-to-end evaluation. However, if your system is an extremely complex agentic workflow, you might also find end-to-end evaluation more suitable as you'll might conclude that that component-level evaluation gives you too much noise in its evaluation results.
 
-:::info
-Most of what you saw in `deepeval`'s [quickstart](/docs/getting-started) is end-to-end evaluation.
-:::
+Most of what you saw in DeepEval's <a href="/docs/getting-started">quickstart</a> is end-to-end evaluation!
+
+</details>
+
+![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/end-to-end-evals:simple-system.png)
+
+If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports) on the cloud. Run this in the CLI:
+
+```bash
+deepeval login
+```
 
 ## Prerequisites
 
 ### Select metrics
 
-You'll need to select the appropriate metrics and ensure your LLM app returns the required fields to create end-to-end `LLMTestCase`. For example, `AnswerRelevancyMetric()` expects `input` and `actual_output`, while `FaithfulnessMetric()` also requires `retrieval_context`.
-
-You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for your use case, but the general rule of thumb is to include no more than 5 metrics, with 2-3 system specific, generic metrics and 1-2 use case specific, custom metrics.
-
-If you're unsure, feel free to ask the team and get some recommendations [in discord.](https://discord.com/invite/a3K9c8GRGt)
+You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for your use case, but the general rule of thumb is to include no more than 5 metrics, with 2-3 system specific, generic metrics and 1-2 use case specific, custom metrics. If you're unsure, feel free to ask the team and get some recommendations [in discord.](https://discord.com/invite/a3K9c8GRGt)
 
 ### Setup LLM application
 
-:::note
-You'll need to setup your LLM application to return the test case parameters required by the metrics you've chosen above.
-:::
+You'll need to setup your LLM application to return the test case parameters required by the metrics you've chosen. Alternatively, [setup LLM tracing](/docs/evaluation-llm-tracing) to avoid making changes to your LLM app.
+
+<details>
+  <summary>Guidelines to set up your LLM application</summary>
+
+You'll need to make sure your application returns all fields required by your selected metrics, in order to create a valid end-to-end `LLMTestCase`. For example, if you’re using `AnswerRelevancyMetric` and `FaithfulnessMetric`, your application must return:
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+because both metrics require `input` and `actual_output`, and `FaithfulnessMetric` also requires `retrieval_context`.
+
+If you cannot make changes to your LLM app, you should <a href="/docs/evaluation-llm-tracing">set up tracing</a>, which also allows you to run and debug end-to-end evaluations on Confident AI.
+
+</details>
 
 We'll be using this LLM application in this example which has a simple, "flat" RAG architecture to demonstrate how to run end-to-end evaluations on it using `deepeval`:
 
@@ -70,8 +92,6 @@ def your_llm_app(input: str):
 print(your_llm_app("How are you?"))
 ```
 
-If you find it inconvenient to return variables just for creating `LLMTestCase`s, [setup LLM tracing instead](/docs/evaluation-llm-tracing), which also allows you to debug end-to-end evals on Confident AI.
-
 ## Run End-to-End Evals
 
 Running an end-to-end LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. You would typically:
@@ -79,8 +99,6 @@ Running an end-to-end LLM evaluation creates a **test run** — a collection of 
 - Loop through a list of `Golden`s
 - Invoke your LLM app with each golden’s `input`
 - Generate a set of test cases ready for evaluation
-
-Once the evaluation metrics have been applied to your test cases, you get a completed test run.
 
 <div style={{ textAlign: "center", margin: "2rem 0" }}>
 
@@ -95,8 +113,8 @@ flowchart LR
 
 You can run end-to-end LLM evaluations in either:
 
-- **CI/CD pipelines** using `deepeval test run`, or
-- **Python scripts** using the `evaluate()` function
+- **Python scripts** using the `evaluate()` function, or
+- **CI/CD pipelines** using `deepeval test run`
 
 Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
@@ -176,11 +194,12 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 
 ### Use `deepeval test run` in CI/CD pipelines
 
-:::caution
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/unit-testing-in-cicd)).
-:::
+<details>
+<summary><strong>Do not use the <code>pytest</code> command</strong></summary>
 
-`deepeval` allows you to unit-test in CI/CD pipelines using the `deepeval test run` command as if you're using Pytest via `deepeval`'s Pytest integration.
+The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/unit-testing-in-cicd)).
+
+</details>
 
 ```python title="test_llm_app.py" showLineNumbers {14}
 from somewhere import your_llm_app # Replace with your LLM app
@@ -193,12 +212,16 @@ from deepeval import assert_test
 goldens = [Golden(input="...")]
 
 # Loop through goldens using pytest
+
 @pytest.mark.parametrize("golden", goldens)
 def test_llm_app(golden: Golden):
-    res, text_chunks = your_llm_app(golden.input)
-    test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
-    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+res, text_chunks = your_llm_app(golden.input)
+test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
+assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+
 ```
+
+Then, run the following command in your CLI:
 
 ```bash
 deepeval test run test_llm_app.py
@@ -211,13 +234,3 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
-
-:::tip
-
-If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports) on the cloud. Run this in the CLI:
-
-```bash
-deepeval login
-```
-
-:::
