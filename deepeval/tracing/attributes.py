@@ -9,12 +9,20 @@ class AgentAttributes(BaseModel):
     # output
     output: Union[str, Dict, list]
 
+class LlmToolCall(BaseModel):
+    name: str
+    args: Dict[str, Any]
+    id: Optional[str] = None
+class LlmOutput(BaseModel):
+    role: str
+    content: str
+    tool_calls: Optional[List[LlmToolCall]] = None
 
 class LlmAttributes(BaseModel):
     # input
     input: Union[str, List[Dict[str, Any]]]
     # output
-    output: Union[str, List[Dict[str, Any]]]
+    output: Union[str, LlmOutput, List[Dict[str, Any]]]
     prompt: Optional[Prompt] = None
 
     # Optional variables
