@@ -60,6 +60,7 @@ from deepeval.tracing.utils import (
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.utils import create_metric_data
 
 
 class TraceManager:
@@ -98,6 +99,7 @@ class TraceManager:
         self.evaluation_loop = False
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
+        self.langgraph_traces_to_evaluate: List[Trace] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -193,11 +195,11 @@ class TraceManager:
                             )
                         )
                 else:
-                    # print(f"Ending trace: {trace.root_spans}")
-                    self.environment = Environment.TESTING
-                    trace.root_spans = [trace.root_spans[0].children[0]]
-                    for root_span in trace.root_spans:
-                        root_span.parent_uuid = None
+                    if not self.langgraph_traces_to_evaluate:
+                        self.environment = Environment.TESTING
+                        trace.root_spans = [trace.root_spans[0].children[0]]
+                        for root_span in trace.root_spans:
+                            root_span.parent_uuid = None
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
@@ -698,6 +700,7 @@ class TraceManager:
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
             ),
+            metricsData=[create_metric_data(metric) for metric in span.metrics] if span.metrics else None,
         )
 
         # Add type-specific attributes

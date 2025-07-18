@@ -2,6 +2,8 @@ import os
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
+from deepeval.metrics import BaseMetric
+from deepeval.tracing.api import MetricData
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
@@ -74,3 +76,32 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     timestamp = time_diff + perf_counter_value
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
+# copied from deepeval.evaluate.utils due to circular import
+def create_metric_data(metric: BaseMetric) -> MetricData:
+    if metric.error is not None:
+        return MetricData(
+            name=metric.__name__,
+            threshold=metric.threshold,
+            score=None,
+            reason=None,
+            success=False,
+            strictMode=metric.strict_mode,
+            evaluationModel=metric.evaluation_model,
+            error=metric.error,
+            evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
+        )
+    else:
+        return MetricData(
+            name=metric.__name__,
+            score=metric.score,
+            threshold=metric.threshold,
+            reason=metric.reason,
+            success=metric.is_successful(),
+            strictMode=metric.strict_mode,
+            evaluationModel=metric.evaluation_model,
+            error=None,
+            evaluationCost=metric.evaluation_cost,
+            verboseLogs=metric.verbose_logs,
+        )

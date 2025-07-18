@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from rich.progress import (
     Progress,
     TextColumn,
@@ -645,6 +646,7 @@ async def a_execute_llm_test_cases(
     _is_assert_test: bool,
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
+    trace: Optional[Trace] = None,
 ):
     pbar_test_case_id = add_pbar(
         progress,
@@ -708,7 +710,10 @@ async def a_execute_llm_test_cases(
     if run_duration < 1:
         run_duration = 0
     api_test_case.update_run_duration(run_duration)
-
+    
+    if trace is not None:
+        api_test_case.trace = trace_manager.create_trace_api(trace)
+    
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
 
@@ -1728,6 +1733,25 @@ def a_execute_agentic_test_cases_from_loop(
                     max_concurrent=max_concurrent,
                 )
             )
+        elif trace_manager.langgraph_traces_to_evaluate:
+            loop.run_until_complete(
+                    evaluate_traces(
+                        traces_to_evaluate=trace_manager.langgraph_traces_to_evaluate,
+                        goldens=goldens,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        verbose_mode=verbose_mode,
+                        ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
+                        show_indicator=show_indicator,
+                        _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
+                        progress=progress,
+                        pbar_id=pbar_id,
+                        throttle_value=throttle_value,
+                        max_concurrent=max_concurrent,
+                    )
+            )
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(
@@ -1865,3 +1889,8 @@ async def evaluate_test_case_pairs(
             tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
+
+@dataclass
+class TraceTestCaseWithSpan:
+    llm_test_case: LLMTestCase
+    metrics: List[BaseMetric]
