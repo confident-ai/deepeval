@@ -14,12 +14,14 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.role_adherence.schema import *
 
 
 class RoleAdherenceMetric(BaseConversationalMetric):
+    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -44,7 +46,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ):
         check_conversational_test_case_params(
-            test_case, self, require_chatbot_role=True
+            test_case,
+            self._required_test_case_params,
+            self,
+            require_chatbot_role=True,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -86,7 +91,10 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ) -> float:
         check_conversational_test_case_params(
-            test_case, self, require_chatbot_role=True
+            test_case,
+            self._required_test_case_params,
+            self,
+            require_chatbot_role=True,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

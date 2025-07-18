@@ -3,6 +3,7 @@ from deepeval.tracing import (
     observe,
     update_current_span,
     update_current_trace,
+    TurnContext,
 )
 import asyncio
 
@@ -38,7 +39,16 @@ async def meta_agent(query: str):
     )
     update_current_trace(
         metadata={"input": "input"},
-        thread_id="131324ljihfsadiuyip",
+        thread_id="context_thread_id2",
+        input="input",
+        output="output",
+        turn_context=TurnContext(
+            retrieval_context=[
+                "context_retrieval_ dsh oasdfhi uafduasiufhai hd iufa haisu hiucontext",
+                "asidufhdsiaufhsiaufhdisaf husai fdisuh isa hfdiuh aiu",
+            ],
+            tools_called=[ToolCall(name="test")],
+        ),
         user_id="111",
         test_case=LLMTestCase(
             input="What is this again?",

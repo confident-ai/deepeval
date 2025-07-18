@@ -5,6 +5,6 @@ from .attributes import (
     ToolAttributes,
     AgentAttributes,
 )
-from .types import BaseSpan, Trace, Feedback
+from .types import BaseSpan, Trace, Feedback, TurnContext
 from .tracing import observe, trace_manager
 from .offline_evals import evaluate_thread, evaluate_trace, evaluate_span
