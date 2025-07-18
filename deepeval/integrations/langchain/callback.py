@@ -103,6 +103,7 @@ class CallbackHandler(BaseCallbackHandler):
         ######## Conditions send the trace for evaluation ########
         if self.metrics:
             add_trace_for_evaluation(span)
+            trace_manager.evaluation_loop = False # not post if send trace for evaluation
 
     # def prepare_task_completion_test_case_pair(self, span: BaseSpan, metric: TaskCompletionMetric):
     #     trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
