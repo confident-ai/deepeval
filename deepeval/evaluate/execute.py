@@ -713,6 +713,7 @@ async def a_execute_llm_test_cases(
     
     if trace is not None:
         api_test_case.trace = trace_manager.create_trace_api(trace)
+    
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
 
@@ -1893,7 +1894,6 @@ async def evaluate_test_case_pairs(
 class TraceTestCaseWithSpan:
     llm_test_case: LLMTestCase
     metrics: List[BaseMetric]
-    base_span: BaseSpan
 
 async def evaluate_traces_in_test_run(
     traces_to_evaluate: List[Trace],
@@ -1918,6 +1918,7 @@ async def evaluate_traces_in_test_run(
             return await func(*args, **kwargs)
 
     tasks = []
+    global_count = 0  # Add global counter
     for trace in traces_to_evaluate:
         trace_test_cases: List[TraceTestCaseWithSpan] = []
 
@@ -1928,7 +1929,6 @@ async def evaluate_traces_in_test_run(
             trace_test_cases.append(TraceTestCaseWithSpan(
                 llm_test_case=span.llm_test_case,
                 metrics=span.metrics,
-                base_span=span
             ))
 
             for child_span in span.children:
@@ -1936,7 +1936,7 @@ async def evaluate_traces_in_test_run(
         
         dfs(trace.root_spans[0])
 
-        for count, trace_test_case in enumerate(trace_test_cases):
+        for trace_test_case in trace_test_cases:  # Remove enumerate here
             with capture_evaluation_run("test case"):
                 if len(trace_test_case.metrics) == 0:
                     update_pbar(progress, pbar_id)
@@ -1954,7 +1954,7 @@ async def evaluate_traces_in_test_run(
                     test_case=trace_test_case.llm_test_case,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
-                    count=count,
+                    count=global_count,  # Use global counter
                     test_run=test_run,
                     ignore_errors=ignore_errors,
                     skip_on_missing_params=skip_on_missing_params,
@@ -1967,6 +1967,7 @@ async def evaluate_traces_in_test_run(
                     trace=trace,
                 )
                 tasks.append(asyncio.create_task(task))
+                global_count += 1  # Increment global counter
                 await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
 
