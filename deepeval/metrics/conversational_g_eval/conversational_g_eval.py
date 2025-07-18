@@ -7,7 +7,7 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
     Rubric,
     construct_conversational_g_eval_turn_params_string,
-    construct_conversational_test_case_string,
+    construct_non_turns_test_case_string,
     format_rubrics,
 )
 from deepeval.test_case import (
@@ -35,7 +35,7 @@ class ConversationalGEval(BaseConversationalMetric):
     def __init__(
         self,
         name: str,
-        evaluation_params: Optional[List[TurnParams]] = [TurnParams.CONTENT],
+        evaluation_params: Optional[List[TurnParams]] = None,
         criteria: Optional[str] = None,
         evaluation_steps: Optional[List[str]] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
@@ -50,6 +50,14 @@ class ConversationalGEval(BaseConversationalMetric):
             raise ValueError("evaluation_params cannot be an empty list.")
 
         self.name = name
+        if evaluation_params is None:
+            evaluation_params = [TurnParams.CONTENT, TurnParams.ROLE]
+
+        if TurnParams.CONTENT not in evaluation_params:
+            evaluation_params.append(TurnParams.CONTENT)
+        if TurnParams.ROLE not in evaluation_params:
+            evaluation_params.append(TurnParams.ROLE)
+
         self.evaluation_params = evaluation_params
 
         # Check if both criteria and evaluation_steps are not None at the same time
@@ -85,7 +93,9 @@ class ConversationalGEval(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(test_case, self)
+        check_conversational_test_case_params(
+            test_case, self.evaluation_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -104,7 +114,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                g_score, reason = self.evaluate(test_case.turns)
+                g_score, reason = self.evaluate(test_case)
                 self.reason = reason
                 self.score = float(g_score) / 10
                 self.score = (
@@ -131,7 +141,9 @@ class ConversationalGEval(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(test_case, self)
+        check_conversational_test_case_params(
+            test_case, self.evaluation_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -143,7 +155,7 @@ class ConversationalGEval(BaseConversationalMetric):
             self.evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
-            g_score, reason = await self._a_evaluate(test_case.turns)
+            g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
             self.score = float(g_score) / 10
             self.score = (
@@ -213,7 +225,7 @@ class ConversationalGEval(BaseConversationalMetric):
     async def _a_evaluate(
         self, test_case: ConversationalTestCase
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = construct_conversational_test_case_string(
+        test_case_content = construct_non_turns_test_case_string(
             self.evaluation_params, test_case
         )
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
@@ -231,6 +243,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
             )
+            print(prompt)
         else:
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
@@ -283,7 +296,7 @@ class ConversationalGEval(BaseConversationalMetric):
     def evaluate(
         self, test_case: ConversationalTestCase
     ) -> Tuple[Union[int, float], str]:
-        test_case_content = construct_conversational_test_case_string(
+        test_case_content = construct_non_turns_test_case_string(
             self.evaluation_params, test_case
         )
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(

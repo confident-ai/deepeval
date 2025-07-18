@@ -45,8 +45,11 @@ G_EVAL_PARAMS = {
 
 CONVERSATIONAL_G_EVAL_PARAMS = {
     TurnParams.CONTENT: "Content",
+    TurnParams.ROLE: "Role",
     TurnParams.TOOLS_CALLED: "Tools Called",
     TurnParams.RETRIEVAL_CONTEXT: "Retrieval Context",
+    TurnParams.EXPECTED_OUTCOME: "Expected Outcome",
+    TurnParams.SCENARIO: "Scenario",
 }
 
 
@@ -162,11 +165,19 @@ def construct_conversational_g_eval_turn_params_string(
     return g_eval_params_str
 
 
-def construct_conversational_test_case_string(
+def construct_non_turns_test_case_string(
     turn_params: List[TurnParams], test_case: ConversationalTestCase
 ) -> str:
     text = """"""
     for param in turn_params:
+        if (
+            param == TurnParams.RETRIEVAL_CONTEXT
+            or param == TurnParams.TOOLS_CALLED
+            or param == TurnParams.CONTENT
+            or param == TurnParams.ROLE
+        ):
+            continue
+
         value = getattr(test_case, param.value)
         text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value} \n\n"
     return text

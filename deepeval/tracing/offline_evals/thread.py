@@ -26,7 +26,6 @@ def evaluate_thread(thread_id: str, metric_collection: str):
             by_alias=True, exclude_none=True
         )
 
-
     api = Api(api_key=api_key)
     api.send_request(
         method=HttpMethods.POST,

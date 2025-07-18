@@ -89,12 +89,20 @@ def format_turns(
     return res
 
 
-def convert_turn_to_dict(turn: Turn, turn_params: List[TurnParams]) -> Dict:
-    return {
+def convert_turn_to_dict(
+    turn: Turn,
+    turn_params: List[TurnParams] = [TurnParams.CONTENT, TurnParams.ROLE],
+) -> Dict:
+    result = {
         param.value: getattr(turn, param.value)
         for param in turn_params
-        if getattr(turn, param.value) is not None
+        if (
+            param != TurnParams.SCENARIO
+            and param != TurnParams.EXPECTED_OUTCOME
+            and getattr(turn, param.value) is not None
+        )
     }
+    return result
 
 
 def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
@@ -146,6 +154,7 @@ def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
 
 def check_conversational_test_case_params(
     test_case: ConversationalTestCase,
+    test_case_params: List[TurnParams],
     metric: BaseConversationalMetric,
     require_chatbot_role: bool = False,
 ):
@@ -153,6 +162,19 @@ def check_conversational_test_case_params(
         error_str = f"Unable to evaluate test cases that are not of type 'ConversationalTestCase' using the conversational '{metric.__name__}' metric."
         metric.error = error_str
         raise ValueError(error_str)
+
+    if (
+        TurnParams.EXPECTED_OUTCOME in test_case_params
+        and test_case.expected_outcome is None
+    ):
+        error_str = f"'expected_outcome' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if TurnParams.SCENARIO in test_case_params and test_case.scenario is None:
+        error_str = f"'scenario' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
 
     if require_chatbot_role and test_case.chatbot_role is None:
         error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
