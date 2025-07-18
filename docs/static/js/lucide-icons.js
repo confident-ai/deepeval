@@ -9,7 +9,7 @@ function addLucideIcons() {
     'sidebar-item-icon-benchmarks': 'bar-chart-2',
     'sidebar-item-icon-agent': 'bot',
     'sidebar-item-icon-chatbot': 'bot-message-square',
-    'sidebar-item-icon-rag': 'file-search',
+    'sidebar-item-icon-rag': 'folder-search',
     'sidebar-item-icon-others': 'more-horizontal'
   };
   

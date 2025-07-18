@@ -23,6 +23,19 @@ module.exports = {
       ],
       collapsed: true,
     },
+    {
+      type: "category",
+      label: "RAG QA Agent",
+      className: "sidebar-item-icon-rag",
+      items: [
+        "rag-qa-agent/tutorial-rag-qa-introduction", 
+        "rag-qa-agent/tutorial-rag-qa-development",
+        "rag-qa-agent/tutorial-rag-qa-evaluation",
+        "rag-qa-agent/tutorial-rag-qa-improvement",
+        "rag-qa-agent/tutorial-rag-qa-deployment",
+      ],
+      collapsed: true,
+    },
     // {
     //   type: "category",
     //   label: "Legal Doc Summarization",
