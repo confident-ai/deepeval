@@ -7,6 +7,7 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
     Rubric,
     construct_conversational_g_eval_turn_params_string,
+    construct_conversational_test_case_string,
     format_rubrics,
 )
 from deepeval.test_case import (
@@ -210,8 +211,11 @@ class ConversationalGEval(BaseConversationalMetric):
                 return data["steps"]
 
     async def _a_evaluate(
-        self, turns: List[Turn]
+        self, test_case: ConversationalTestCase
     ) -> Tuple[Union[int, float], str]:
+        test_case_content = construct_conversational_test_case_string(
+            self.evaluation_params, test_case
+        )
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
@@ -219,14 +223,22 @@ class ConversationalGEval(BaseConversationalMetric):
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                turns=[convert_turn_to_dict(turn) for turn in turns],
+                test_case_content=test_case_content,
+                turns=[
+                    convert_turn_to_dict(turn, self.evaluation_params)
+                    for turn in test_case.turns
+                ],
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
             )
         else:
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                turns=[convert_turn_to_dict(turn) for turn in turns],
+                test_case_content=test_case_content,
+                turns=[
+                    convert_turn_to_dict(turn, self.evaluation_params)
+                    for turn in test_case.turns
+                ],
                 parameters=g_eval_params_str,
             )
         try:
@@ -268,7 +280,12 @@ class ConversationalGEval(BaseConversationalMetric):
                     data = trimAndLoadJson(res, self)
                     return data["score"], data["reason"]
 
-    def evaluate(self, turns: List[Turn]) -> Tuple[Union[int, float], str]:
+    def evaluate(
+        self, test_case: ConversationalTestCase
+    ) -> Tuple[Union[int, float], str]:
+        test_case_content = construct_conversational_test_case_string(
+            self.evaluation_params, test_case
+        )
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
@@ -276,14 +293,21 @@ class ConversationalGEval(BaseConversationalMetric):
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                turns=[convert_turn_to_dict(turn) for turn in turns],
+                test_case_content=test_case_content,
+                turns=[
+                    convert_turn_to_dict(turn, self.evaluation_params)
+                    for turn in test_case.turns
+                ],
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
             )
         else:
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
-                turns=[convert_turn_to_dict(turn) for turn in turns],
+                turns=[
+                    convert_turn_to_dict(turn, self.evaluation_params)
+                    for turn in test_case.turns
+                ],
                 parameters=g_eval_params_str,
             )
         try:

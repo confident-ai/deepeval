@@ -13,7 +13,6 @@ def evaluate_thread(thread_id: str, metric_collection: str):
         return
 
     evaluate_thread_request_body = EvaluateThreadRequestBody(
-        threadSuppliedId=thread_id,
         metricCollection=metric_collection,
     )
     try:
@@ -26,6 +25,7 @@ def evaluate_thread(thread_id: str, metric_collection: str):
         body = evaluate_thread_request_body.dict(
             by_alias=True, exclude_none=True
         )
+
 
     api = Api(api_key=api_key)
     api.send_request(
@@ -45,7 +45,6 @@ async def a_evaluate_thread(thread_id: str, metric_collection: str):
         return
 
     evaluate_thread_request_body = EvaluateThreadRequestBody(
-        threadSuppliedId=thread_id,
         metricCollection=metric_collection,
     )
     try:

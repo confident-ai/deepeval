@@ -46,6 +46,7 @@ from deepeval.test_case import (
     Turn,
     ArenaTestCase,
     ToolCall,
+    TurnParams,
 )
 
 
@@ -88,11 +89,11 @@ def format_turns(
     return res
 
 
-def convert_turn_to_dict(turn: Turn) -> Dict:
+def convert_turn_to_dict(turn: Turn, turn_params: List[TurnParams]) -> Dict:
     return {
-        key: value
-        for key, value in turn.__dict__.items()
-        if value is not None and key != "additional_metadata"
+        param.value: getattr(turn, param.value)
+        for param in turn_params
+        if getattr(turn, param.value) is not None
     }
 
 

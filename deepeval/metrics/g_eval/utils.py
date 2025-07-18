@@ -8,10 +8,11 @@ from deepeval.test_case import (
     TurnParams,
     LLMTestCase,
     ToolCall,
-    ArenaTestCase,
 )
 from deepeval.models.llms.openai_model import unsupported_log_probs_gpt_models
 from pydantic import BaseModel, field_validator
+
+from deepeval.test_case.conversational_test_case import ConversationalTestCase
 
 
 class Rubric(BaseModel):
@@ -159,6 +160,16 @@ def construct_conversational_g_eval_turn_params_string(
         )
 
     return g_eval_params_str
+
+
+def construct_conversational_test_case_string(
+    turn_params: List[TurnParams], test_case: ConversationalTestCase
+) -> str:
+    text = """"""
+    for param in turn_params:
+        value = getattr(test_case, param.value)
+        text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value} \n\n"
+    return text
 
 
 def construct_test_case_string(
