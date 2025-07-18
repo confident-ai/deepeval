@@ -1,7 +1,6 @@
 from typing import Any, Optional, List
 from uuid import UUID
 from time import perf_counter
-from deepeval.integrations.langchain.utils import add_trace_for_evaluation
 from deepeval.tracing.attributes import (
     LlmAttributes,
     RetrieverAttributes,
@@ -96,16 +95,16 @@ class CallbackHandler(BaseCallbackHandler):
             # prepare test_case for task_completion metric
             for metric in self.metrics:
                 if isinstance(metric, TaskCompletionMetric):
-                    self.prepare_task_completion_test_case(span, metric)
+                    self.prepare_task_completion_test_case(span)
 
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
         
         ######## Conditions send the trace for evaluation ########
         if self.metrics:
-            add_trace_for_evaluation(current_trace)
             trace_manager.evaluating = True # to avoid posting the trace to the server
             trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
+            trace_manager.langgraph_traces_to_evaluate.append(current_trace)
 
         if current_trace is not None:
             current_trace.input = span.input
@@ -114,8 +113,7 @@ class CallbackHandler(BaseCallbackHandler):
         self.active_trace_id = None
 
 
-    def prepare_task_completion_test_case(self, span: BaseSpan, metric: TaskCompletionMetric):
-        trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
+    def prepare_task_completion_test_case(self, span: BaseSpan):
         test_case = LLMTestCase(
             input="None", actual_output="None"
         )
