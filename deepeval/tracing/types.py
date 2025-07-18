@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 
 from deepeval.feedback import Feedback
+from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.attributes import (
     AgentAttributes,
     LlmAttributes,
@@ -100,6 +101,15 @@ class ToolSpan(BaseSpan):
         self.attributes = attributes
 
 
+class TurnContext(BaseModel):
+    retrieval_context: Optional[List[str]] = Field(
+        None, serialization_alias="retrievalContext"
+    )
+    tools_called: Optional[List[ToolCall]] = Field(
+        None, serialization_alias="toolsCalled"
+    )
+
+
 class Trace(BaseModel):
     uuid: str = Field(serialization_alias="uuid")
     status: TraceSpanStatus
@@ -114,9 +124,11 @@ class Trace(BaseModel):
     input: Optional[Any] = None
     output: Optional[Any] = None
     feedback: Optional[Feedback] = None
+
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
+    turn_context: Optional[TurnContext] = None
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)

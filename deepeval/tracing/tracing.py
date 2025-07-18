@@ -53,6 +53,7 @@ from deepeval.tracing.utils import (
     make_json_serializable,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
+    tracing_enabled,
     validate_environment,
     validate_sampling_rate,
 )
@@ -90,6 +91,7 @@ class TraceManager:
         self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
         validate_sampling_rate(self.sampling_rate)
         self.openai_client = None
+        self.tracing_enabled = True
 
         # Evals
         self.evaluating = False
@@ -124,6 +126,7 @@ class TraceManager:
         sampling_rate: Optional[float] = None,
         confident_api_key: Optional[str] = None,
         openai_client: Optional[OpenAI] = None,
+        tracing_enabled: Optional[bool] = None,
     ) -> None:
         if mask is not None:
             self.custom_mask_fn = mask
@@ -138,6 +141,8 @@ class TraceManager:
         if openai_client is not None:
             self.openai_client = openai_client
             patch_openai_client(openai_client)
+        if tracing_enabled is not None:
+            self.tracing_enabled = tracing_enabled
 
     def start_new_trace(
         self,
@@ -269,7 +274,7 @@ class TraceManager:
         environment: Optional[str] = None,
     ):
         if (
-            os.getenv(CONFIDENT_TRACE_VERBOSE) != "NO"
+            os.getenv(CONFIDENT_TRACE_VERBOSE, "YES").upper() != "NO"
             and self.evaluating is False
         ):
             console = Console()
@@ -315,6 +320,9 @@ class TraceManager:
             self._worker_thread.start()
 
     def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
+        if not tracing_enabled() or not self.tracing_enabled:
+            return None
+
         if not is_confident() and self.confident_api_key is None:
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
@@ -328,9 +336,12 @@ class TraceManager:
         self._ensure_worker_thread_running()
         self._trace_queue.put(trace_api)
 
-        return "ok"
+        return
 
     def post_trace(self, trace: Trace) -> Optional[str]:
+        if not tracing_enabled() or not self.tracing_enabled:
+            return None
+
         if not is_confident() and self.confident_api_key is None:
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
@@ -347,7 +358,7 @@ class TraceManager:
         # Start the worker thread if it's not already running
         self._ensure_worker_thread_running()
 
-        return "ok"
+        return
 
     def _process_trace_queue(self):
         """Worker thread function that processes the trace queue"""
@@ -381,6 +392,9 @@ class TraceManager:
                     body = trace_api.dict(by_alias=True, exclude_none=True)
                 # If the main thread is still alive, send now
                 body = make_json_serializable(body)
+
+                print(body)
+
                 if main_thr.is_alive():
                     api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
@@ -463,6 +477,9 @@ class TraceManager:
     def flush_traces(
         self, remaining_trace_request_bodies: List[Dict[str, Any]]
     ):
+        if not tracing_enabled() or not self.tracing_enabled:
+            return
+
         self._print_trace_status(
             TraceWorkerStatus.WARNING,
             message=f"Flushing {len(remaining_trace_request_bodies)} remaining trace(s)",
@@ -603,6 +620,7 @@ class TraceManager:
             metricCollection=(
                 trace.metric_collection if trace.llm_test_case else None
             ),
+            turnContext=trace.turn_context,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
