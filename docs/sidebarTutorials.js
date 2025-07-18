@@ -51,19 +51,19 @@ module.exports = {
     //   ],
     //   collapsed: true,
     // },
-    {
-      type: "category",
-      label: "RAG QA Agent",
-      items: [
-        "qa-agent-introduction",
-        "qa-agent-generating-a-synthetic-dataset",
-        "qa-agent-defining-an-evaluation-criteria",
-        "qa-agent-choosing-metrics",
-        "qa-agent-running-evaluations",
-        "qa-agent-improving-hyperparameters",
-      ],
-      collapsed: true,
-    },
+    // {
+    //   type: "category",
+    //   label: "RAG QA Agent",
+    //   items: [
+    //     "qa-agent-introduction",
+    //     "qa-agent-generating-a-synthetic-dataset",
+    //     "qa-agent-defining-an-evaluation-criteria",
+    //     "qa-agent-choosing-metrics",
+    //     "qa-agent-running-evaluations",
+    //     "qa-agent-improving-hyperparameters",
+    //   ],
+    //   collapsed: true,
+    // },
     {
       type: "category",
       label: "Medical Chatbot",
