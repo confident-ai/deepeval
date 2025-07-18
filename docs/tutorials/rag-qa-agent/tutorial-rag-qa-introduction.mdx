@@ -1,0 +1,91 @@
+---
+id: tutorial-rag-qa-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+import LinkCards from "@site/src/components/LinkCards"
+
+This tutorial walks you through the entire process of building a reliable **RAG (_Retrieval-Augmented Generation_) QA Agent**, 
+from initial development to iterative improvement through `deepeval`'s evaluations.
+
+:::note
+If you're working with RAG applications, this tutorial will be helpful to you. While this tutorial focuses on a QA agent for a company 
+called **Theranos**, the concepts and practices used throughout this tutorial are applicable to any **RAG-based application**.
+:::
+
+Here are the links to jump to different stages of this tutorial:
+
+<LinkCards
+    tutorials={[
+        {
+            number: 1,
+            title: 'Development',
+            description: 'Go to the Development stage',
+            to: '/tutorials/rag-qa-agent/tutorial-rag-qa-development',
+        },
+        {
+            number: 2,
+            title: 'Evaluation',
+            description: 'Go to the Evaluation stage',
+            to: '/tutorials/rag-qa-agent/tutorial-rag-qa-evaluation',
+        },
+        {
+            number: 3,
+            title: 'Improvement',
+            description: 'Go to the Improvement stage',
+            to: '/tutorials/rag-qa-agent/tutorial-rag-qa-improvement',
+        },
+        {
+            number: 4,
+            title: 'Deployment',
+            description: 'Go to the Deployment stage',
+            to: '/tutorials/rag-qa-agent/tutorial-rag-qa-deployment',
+        },
+    ]}
+/>
+
+## What You'll Learn:
+
+In this tutorial you'll learn:
+
+- How to build a RAG agent.
+- How to define evaluation criteria for your RAG agent.
+- How to generate synthetic evaluation datasets to test your RAG agent.
+- How to evaluate and improve your RAG agent using `deepeval`.
+- How to prepare your RAG agent for deployment.
+
+## RAG QA Agent
+
+Throughout this tutorial, we'll build a RAG QA agent designed to answer questions about **Theranos**, a company specializing in blood 
+diagnostics. The QA agent we'll build retrieves relevant data from the company's knowledge base based on a user's query. 
+It takes the query as `input` and generates a response that answers the query from the most relevant documents in the knowledge base.
+
+Your objective is to build a reliable RAG QA agent that not only answers the user's queries but also makes sure that the answers 
+are **relevant and correct** based on the information in the knowledge base. If the relevant documents are not found, the agent must 
+respond that _there are no documents relevant to the user's query_ instead of hallucinating or speculating a possible answer, 
+which would make it unreliable.
+
+## What You'll build
+
+With AI agents on the rise, RAG agents have particularly become the most commonly used AI agents now. This is because RAGs provide the 
+flexibility to make an AI answer questions related to a specific topic that might be private by using retrieval methods to access this 
+private information from a knowledge base. This allows companies to escape the hassle of fine-tuning an entire AI application on their 
+database; instead, they can simply use a RAG agent.
+
+Companies now use RAG agents to provide customers and employees with information about their company in a much more accessible and 
+flexible way. **Theranos** has also decided to use a RAG agent to answer the queries a user might have about their company and how they 
+diagnose blood. 
+
+Here's what **Theranos**'s RAG QA agent looks like:
+
+![MadeUpCompany's RAG QA Agent](./images/qa-agent-overview.png)
+
+The image above shows a QA agent in action — it takes a question as `input` and generates a relevant answer based on the retrieved context.
+The answer must absolutely be related to a context from the knowledge base, or it shouldn't answer the question and just explain 
+that there are no documents relevant to the user's query.
+
+In the following sections of this tutorial, you'll learn how to build a reliable RAG QA Agent that retrieves correct data and generates an 
+accurate answer based on the retrieved context. 
+
+Ready to get started? Click here to move on to [developing the RAG QA Agent](tutorials/rag-qa-agent/tutorial-rag-qa-development).
