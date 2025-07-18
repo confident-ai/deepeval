@@ -100,16 +100,19 @@ class CallbackHandler(BaseCallbackHandler):
 
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+        
+        ######## Conditions send the trace for evaluation ########
+        if self.metrics:
+            add_trace_for_evaluation(current_trace)
+            trace_manager.evaluating = True # to avoid posting the trace to the server
+            trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
+
         if current_trace is not None:
             current_trace.input = span.input
             current_trace.output = span.output
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
-        ######## Conditions send the trace for evaluation ########
-        if self.metrics:
-            add_trace_for_evaluation(span)
-            trace_manager.evaluation_loop = False # not post if send trace for evaluation
 
     def prepare_task_completion_test_case(self, span: BaseSpan, metric: TaskCompletionMetric):
         trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
