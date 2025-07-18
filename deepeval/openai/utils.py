@@ -13,7 +13,7 @@ from deepeval.metrics import BaseMetric
 class TestCaseMetricPair:
     test_case: LLMTestCase
     metrics: List[BaseMetric]
-    hyperparameters: Optional[Dict[str, Any]] = None
+    hyperparameters: Dict[str, Any]
 
 
 openai_test_case_pairs: List[TestCaseMetricPair] = []
