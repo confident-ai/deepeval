@@ -165,7 +165,7 @@ def test_meeting_summarizer_components(golden):
 ```
 
 ```bash 
-poetry run pytest -v test_meeting_summarizer_quality.py
+poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
 
 Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
@@ -203,7 +203,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # Add your OPENAI_API_KEY
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }} # Add your CONFIDENT_API_KEY
-        run: poetry run pytest -v test_meeting_summarizer_quality.py
+        run: poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
 
 And that's it! You now have a **robust, production-ready summarization agent** with automated evaluation integrated into your development workflow.

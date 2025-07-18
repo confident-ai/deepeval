@@ -508,7 +508,7 @@ def test_chatbot_performance(test_case: ConversationalTestCase):
 This test file plugs straight into any CI setup (GitHub Actions, GitLab CI, etc.), so your chatbot keeps meeting quality and safety standards with every push. Just run:
 
 ```bash title="bash"
-poetry run pytest -v test_chatbot_quality.py
+poetry run deepeval test run test_chatbot_quality.py
 ```
 
 Now let’s write our GitHub actions file to complete our CI integration.
@@ -545,7 +545,7 @@ jobs:
       - name: Run DeepEval Unit Tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: poetry run pytest -v test_chatbot_quality.py
+        run: poetry run deepeval test run test_chatbot_quality.py
 ```
 
 ## Conclusion
