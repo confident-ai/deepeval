@@ -85,12 +85,18 @@ class CallbackHandler(BaseCallbackHandler):
         span.status = TraceSpanStatus.SUCCESS
         trace_manager.remove_span(str(span.uuid))
 
-        ######## Conditions to add metrics and metric_collection to span ########
+        ######## Conditions to add metric_collection to span ########
         if self.metric_collection and span.name == "LangGraph":
             span.metric_collection = self.metric_collection
         
+        ######## Conditions to add metrics to span ########
         if self.metrics and span.name == "LangGraph":
             span.metrics = self.metrics
+            
+            # prepare test_case for task_completion metric
+            for metric in self.metrics:
+                if isinstance(metric, TaskCompletionMetric):
+                    self.prepare_task_completion_test_case(span, metric)
 
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
@@ -105,20 +111,13 @@ class CallbackHandler(BaseCallbackHandler):
             add_trace_for_evaluation(span)
             trace_manager.evaluation_loop = False # not post if send trace for evaluation
 
-    # def prepare_task_completion_test_case_pair(self, span: BaseSpan, metric: TaskCompletionMetric):
-    #     trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
-    #     test_case = LLMTestCase(
-    #         input="None", actual_output="None"
-    #     )
-    #     test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-    #     add_test_case(test_case, [metric])
-
-    # def evaluate_metrics(self, span: BaseSpan):
-    #     # span.metrics = self.metrics (check if backend is updated)
-    #     span.metric_collection = self.metric_collection
-    #     for metric in self.metrics:
-    #         if isinstance(metric, TaskCompletionMetric):
-    #             self.prepare_task_completion_test_case_pair(span, metric)
+    def prepare_task_completion_test_case(self, span: BaseSpan, metric: TaskCompletionMetric):
+        trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
+        test_case = LLMTestCase(
+            input="None", actual_output="None"
+        )
+        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+        span.llm_test_case = test_case
 
 
     def on_chain_start(
