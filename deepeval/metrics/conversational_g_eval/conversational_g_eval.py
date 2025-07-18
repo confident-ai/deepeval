@@ -243,7 +243,6 @@ class ConversationalGEval(BaseConversationalMetric):
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
             )
-            print(prompt)
         else:
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
