@@ -3,15 +3,14 @@ from langchain_core.outputs import ChatGeneration
 from dataclasses import dataclass
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.openai.utils import TestCaseMetricPair
+from deepeval.tracing.types import Trace, BaseSpan
 
-langchain_test_case_pairs: List[TestCaseMetricPair] = []
+langchain_traces_to_evaluate: List[Trace] = []
 
-def add_test_case(
-    test_case: LLMTestCase,
-    metrics: List[BaseMetric]
+def add_trace_for_evaluation(
+    trace: Trace
 ):
-    langchain_test_case_pairs.append(TestCaseMetricPair(test_case, metrics))
+    langchain_traces_to_evaluate.append(trace)
 
 def parse_prompts_to_messages(
     prompts: list[str], **kwargs

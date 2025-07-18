@@ -1,7 +1,7 @@
 from typing import Any, Optional, List
 from uuid import UUID
 from time import perf_counter
-from deepeval.integrations.langchain.utils import add_test_case
+from deepeval.integrations.langchain.utils import add_trace_for_evaluation
 from deepeval.tracing.attributes import (
     LlmAttributes,
     RetrieverAttributes,
@@ -85,9 +85,12 @@ class CallbackHandler(BaseCallbackHandler):
         span.status = TraceSpanStatus.SUCCESS
         trace_manager.remove_span(str(span.uuid))
 
-        # only evaluate these spans
-        if span.name == "LangGraph":
-            self.evaluate_metrics(span)
+        ######## Conditions to add metrics and metric_collection to span ########
+        if self.metric_collection and span.name == "LangGraph":
+            span.metric_collection = self.metric_collection
+        
+        if self.metrics and span.name == "LangGraph":
+            span.metrics = self.metrics
 
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
@@ -97,20 +100,24 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
-    def prepare_task_completion_test_case_pair(self, span: BaseSpan, metric: TaskCompletionMetric):
-        trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
-        test_case = LLMTestCase(
-            input="None", actual_output="None"
-        )
-        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-        add_test_case(test_case, [metric])
+        ######## Conditions send the trace for evaluation ########
+        if self.metrics:
+            add_trace_for_evaluation(span)
 
-    def evaluate_metrics(self, span: BaseSpan):
-        # span.metrics = self.metrics (check if backend is updated)
-        span.metric_collection = self.metric_collection
-        for metric in self.metrics:
-            if isinstance(metric, TaskCompletionMetric):
-                self.prepare_task_completion_test_case_pair(span, metric)
+    # def prepare_task_completion_test_case_pair(self, span: BaseSpan, metric: TaskCompletionMetric):
+    #     trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
+    #     test_case = LLMTestCase(
+    #         input="None", actual_output="None"
+    #     )
+    #     test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+    #     add_test_case(test_case, [metric])
+
+    # def evaluate_metrics(self, span: BaseSpan):
+    #     # span.metrics = self.metrics (check if backend is updated)
+    #     span.metric_collection = self.metric_collection
+    #     for metric in self.metrics:
+    #         if isinstance(metric, TaskCompletionMetric):
+    #             self.prepare_task_completion_test_case_pair(span, metric)
 
 
     def on_chain_start(
