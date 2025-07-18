@@ -4,13 +4,8 @@ from dataclasses import dataclass
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
 from deepeval.tracing.types import Trace, BaseSpan
+from copy import deepcopy
 
-langchain_traces_to_evaluate: List[Trace] = []
-
-def add_trace_for_evaluation(
-    trace: Trace
-):
-    langchain_traces_to_evaluate.append(trace)
 
 def parse_prompts_to_messages(
     prompts: list[str], **kwargs

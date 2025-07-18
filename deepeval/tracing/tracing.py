@@ -99,6 +99,7 @@ class TraceManager:
         self.evaluation_loop = False
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
+        self.langgraph_traces_to_evaluate: List[Trace] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -194,11 +195,11 @@ class TraceManager:
                             )
                         )
                 else:
-                    # print(f"Ending trace: {trace.root_spans}")
-                    self.environment = Environment.TESTING
-                    trace.root_spans = [trace.root_spans[0].children[0]]
-                    for root_span in trace.root_spans:
-                        root_span.parent_uuid = None
+                    if not self.langgraph_traces_to_evaluate:
+                        self.environment = Environment.TESTING
+                        trace.root_spans = [trace.root_spans[0].children[0]]
+                        for root_span in trace.root_spans:
+                            root_span.parent_uuid = None
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
