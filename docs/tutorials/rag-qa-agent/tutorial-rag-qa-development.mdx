@@ -10,15 +10,15 @@ import TabItem from "@theme/TabItem";
 In this section, we're going to create our **RAG QA Agent** using **_Langchain_** and **_OpenAI_**. A RAG application typically consists of two
 components — A **retriever** and a **generator**.
 
-The retriever is used for fetching or retrieving all the relevant the documents from the knowledge base for a given query. 
-The generator is responsible for responding to the user by generating an answer to their query by using the retrieved context. 
+The retriever is used for retrieving all the relevant documents from the knowledge base for a given query. 
+The generator is responsible for generating an answer to the user's query by using the retrieved context. 
 Both of them combined make up a RAG (_Retrieval-Augmented Generation_) application.
 
 ## Creating The RAG Agent
 
 We are going to create a class called `RAGAgent` that combines both the retriever and generator's responses to answer the user's query. 
-To do this we will define the retrieval part and generation part separately as helper functions. This allows us to evaluate our retriever's 
-and generator's quality independently, which helps us improve our Agent. Before we can retrieve any data, we first need to store our 
+We'll separate retrieval and generation into two different helper functions. This allows us to evaluate our retriever 
+and generator's quality independently, which helps us improve our agent in later stages. Before we can retrieve any data, we first need to store our 
 data in a database that the retriever can easily access and look through. We can do this using vector stores offered by `langchain`.
 
 :::note
@@ -68,14 +68,13 @@ class RAGAgent:
         return self.vector_store_class.from_documents(documents, self.embedding_model)
 ```
 
-You can modify the above code to use an embedding model or vector store of your choice. Now that we have our vector store, we can move 
-on to creating a retriever that will retrieve the relevant data for a query from this vector store.
+You can modify the above code to use an embedding model or vector store of your choice. Next, we'll define a `retrieve()` method to fetch relevant documents from the vector store.
 
 ### Creating Retriever
 
 In the context of **Retrieval-Augmented Generation (RAG)**, the retriever is a crucial component responsible for efficiently identifying and 
-extracting the most relevant information from a large, external knowledge base. We will now create a `retrieve()` function to our `RAGAgent` class 
-that allows you to retrieve the relevant data for a particular query. Here's how we can do that:
+extracting the most relevant information from a large, external knowledge base — our vector store in this case. We will now create a `retrieve()` function in our `RAGAgent` class 
+that allows us to retrieve the relevant data for a particular query. Here's how we can do that:
 
 ```python
 from langchain.vectorstores import FAISS
@@ -104,6 +103,8 @@ retrieved_docs = retriever.retrieve("How many blood tests can you perform and ho
 print(retrieved_docs)
 ```
 
+:::note
+I have created a file called `theranos_legacy.txt` that has all the information about **Theranos** company. Feel free to use your own documents or the sample content provided below:
 <details>
 <summary><strong>Click here to see the contents of <code>theranos_legacy.txt</code></strong></summary>
 
@@ -199,6 +200,7 @@ investorrelations@theranos.com
 Company Motto: “One Drop Changes Everything™”
 ```
 </details>
+:::
 
 This is the output of the above code:
 
@@ -212,8 +214,8 @@ Now that we have a working retriever, we can move on to creating our generator.
 ### Creating generator
 
 In a **Retrieval-Augmented Generation (RAG)** system, the **generator** is the component that produces natural language responses based on 
-both the input query and the retrieved documents. We will now add the generate function in our `RAGAgent` class that takes the retrieved 
-context and generates a natural sounding coherent answer using an LLM.
+both the input query and the retrieved documents. We will now add the `generate()` function in our `RAGAgent` class that takes the retrieved 
+context and generates an answer using the `OpenAI` LLM provided by `langchain`.
 
 ```python
 from langchain.vectorstores import FAISS
@@ -268,7 +270,7 @@ The NanoDrop 3000 can perform over 325 blood tests using just 1-2 microliters of
 This enables comprehensive diagnostics with minimal sample volume.
 ```
 
-We can use these helper functions in a single method that will be used to answer any query. Here's how we can do that:
+We can use these helper functions in a final `answer()` function that will be used to answer any query. Here's how we can do that:
 
 ```python
 from langchain.vectorstores import FAISS
@@ -310,8 +312,8 @@ retriever = RAGAgent(document_paths)
 answer, _ = retriever.answer(query)
 ```
 
-The LLM outputs a response in markdown format by default, which makes it harder to extract structured data such as citations. However, this is not ideal because we cannot parse the 
-output to show citations in the UI. This is the best we can do in UI with what our retriever generates for now:
+The LLM outputs a response in markdown format by default, which makes it harder to extract structured data such as citations. This is not ideal because we cannot parse the 
+output to show citations in the UI. The following is the best we can do with what our retriever generates for now:
 
 <Tabs groups="ui-raw">
 
@@ -345,8 +347,8 @@ output to show citations in the UI. This is the best we can do in UI with what o
 
 ## Updating The RAG Agent
 
-We can update our retriever's response by using a better prompt for generating our answer in a `json` format which helps us parse the 
-given output and use it to render the data in any style we want. Here's how we can update our retriever and the system prompt to use:
+We can update the way our agent responds by using a better prompt. This allows our agent to answer in a `json` format which helps us parse the 
+given output and use it to render the data in any style we want. Here's how we'll update our `RAGAgent` class and the new prompt we'll use to generate `json` formatted answers:
 
 We can use the following prompt template to generate our response in `json`:
 
@@ -404,7 +406,7 @@ class RAGAgent:
 ```
 
 Now our `RAGAgent` outputs a valid `json`, we can use this output to render UI and create webpages or handle our responses in 
-any way we want. Here's what the new responses allow us to do:
+any way we want. Here's the new responses generated by our agent:
 
 <Tabs groups="ui-raw">
 
@@ -431,7 +433,7 @@ any way we want. Here's what the new responses allow us to do:
 
 </Tabs>
 
-We now have a RAG agent that generates the output in our desired format, but how reliable is this agent? It is very important to make sure 
-that the answers generated by the agent are reliable, especially for a company like **Theranos**. Hence there is a need for rigourous testing of our agent.
+We now have a RAG agent that generates the output in our desired format, but how reliable are the generated answers? It is very important to make sure 
+that the answers generated by the agent are reliable, especially for an infamous company like **Theranos**.
 
 In the next section, we'll see [how to evaluate our RAG QA Agent](/tutorials/rag-qa-agent/tutorial-rag-qa-evaluation) using `deepeval`.
