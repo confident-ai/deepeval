@@ -238,7 +238,7 @@ Swapping to `HuggingFaceEmbeddings` and increasing chunk size to `1024` improved
 
 This is the flow you want to follow if you are trying to create a reliable retriever with DeepEval.
 
-![DeepEval Retriever Evaluation Flow Diagram](./images/rag-blog/deepeval-retriever-flow.png)
+![DeepEval Retriever Evaluation Flow Diagram](https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:rag-blog:deepeval-retriever.png)
 
 ## Evaluating Your Generator with DeepEval
 
@@ -440,7 +440,7 @@ After testing all prompt–model combinations, I found:
 consistently scored **highest on all four metrics** as follows **Faithfulness: 0.91 | Relevancy: 0.88**.
 
 This is the flow you want to follow if you are trying to create a reliable generator.
-![DeepEval Generator Evaluation Flow Diagram](./images/rag-blog/deepeval-generator-flow.png)
+![DeepEval Generator Evaluation Flow Diagram](https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:rag-blog:deepeval-rag.png)
 
 :::tip
 Don’t eval in isolation. Retrieval \+ generation must be co-optimized — or you’ll chase ghosts.
@@ -448,7 +448,7 @@ Don’t eval in isolation. Retrieval \+ generation must be co-optimized — or y
 
 To help visualize this robust RAG architecture, here's a diagram illustrating the flow:
 
-![DeepEval Retriever and Generator Evaluation Flow Diagram](./images/rag-blog/deepeval-rag-flow.png)
+![DeepEval Retriever and Generator Evaluation Flow Diagram](https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:rag-blog:deepeval-rag-full-flow.png)
 
 ## CI/CD Integration for Continuous Evaluation
 

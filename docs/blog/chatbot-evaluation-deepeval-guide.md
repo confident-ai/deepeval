@@ -31,7 +31,7 @@ This guide walks you through building, testing, and optimizing a multi-turn medi
 
 Multi-turn chatbots are conversational AI systems designed to remember and understand the context of an ongoing dialogue across multiple back-and-forth exchanges with a user. Unlike single-turn bots that treat each input in isolation (like a basic FAQ or search engine), multi-turn chatbots **maintain memory**, **handle follow-up questions**, and **adhere to a defined persona or role**. The goal is to create a smooth, realistic conversation that feels natural and coherent.
 
-![Multi-Turn Chatbot](./images/chatbot-blog/multi-turn-chatbot.png)
+![Multi-Turn Chatbot](https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:multi-turn-chatbot.png)
 
 To build a reliable chatbot, we need to understand why — and how — multi-turn chatbots break. These systems face a unique set of challenges that go far beyond generating _good-sounding_ responses. They must:
 
@@ -421,7 +421,7 @@ Both `KnowledgeRetentionMetric` and `RoleAdherenceMetric` reached scores of **0.
 These results weren’t accidental. With focused prompt design and memory strategy, and by evaluating the right metrics, meaningful progress becomes measurable — and repeatable.
 :::
 
-![Multi-turn chatbot test flow using DeepEval’s ConversationSimulator](./images/chatbot-blog/deepeval-simulator-chatbot.png)
+![Multi-turn chatbot test flow using DeepEval’s ConversationSimulator](https://deepeval-docs.s3.us-east-1.amazonaws.com/blog:deepeval-simulator-chatbot.png)
 
 This is how we can use **DeepEval** to create reliable multi-turn chatbots.
 
