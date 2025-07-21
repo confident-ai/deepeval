@@ -10,13 +10,14 @@ from deepeval.tracing.types import (
 )
 from time import perf_counter
 from deepeval.test_case import LLMTestCase
-
+from deepeval.test_case.llm_test_case import ToolCall
 try:
     from crewai.utilities.events import (
         CrewKickoffStartedEvent,
         CrewKickoffCompletedEvent,
         AgentExecutionStartedEvent,
         AgentExecutionCompletedEvent,
+        ToolUsageStartedEvent
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.crew import Crew
@@ -120,12 +121,14 @@ class CrewAIEventsListener(BaseEventListener):
                 input=input,
                 metadata={
                     "Agent.id": str(source.id),
+                    "Agent.key": str(source.key),
                 }, 
                 metric_collection=agent_registry.get_metric_collection(source), 
             )
             agent_span.llm_test_case = LLMTestCase(
                 input=str(input), # even if input is none, it will be considered as a string
-                actual_output=""
+                actual_output="",
+                tools_called=[]
             )
             trace_manager.add_span(agent_span)
             trace_manager.add_span_to_trace(agent_span)
@@ -145,6 +148,17 @@ class CrewAIEventsListener(BaseEventListener):
             agent_span.output = event.output
             agent_span.llm_test_case.actual_output = str(event.output) # even if output is none, it will be considered as a string
             self.end_span(agent_span)
+        
+        @crewai_event_bus.on(ToolUsageStartedEvent)
+        def on_tool_usage_started(source, event: ToolUsageStartedEvent):
+            for span_uuid, span in trace_manager.active_spans.items():
+                if span.name == "Agent" and span.metadata.get("Agent.key") == str(event.agent_key):
+                    tool_call = ToolCall(
+                        name=event.tool_name,
+                        input_parameters=event.tool_args if isinstance(event.tool_args, dict) else None
+                    )
+                    span.llm_test_case.tools_called.append(tool_call)
+            
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
