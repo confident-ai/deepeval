@@ -45,7 +45,7 @@ module.exports = {
             "metrics-arena-g-eval",
             {
               type: "category",
-              label: "RAG Metrics",
+              label: "RAG",
               items: [
                 "metrics-answer-relevancy",
                 "metrics-faithfulness",
@@ -57,13 +57,13 @@ module.exports = {
             },
             {
               type: "category",
-              label: "Agentic Metrics",
+              label: "Agentic",
               items: ["metrics-task-completion", "metrics-tool-correctness"],
               collapsed: false,
             },
             {
               type: "category",
-              label: "Conversational Metrics",
+              label: "Conversational",
               items: [
                 "metrics-conversational-g-eval",
                 "metrics-role-adherence",
@@ -101,7 +101,7 @@ module.exports = {
             },
             {
               type: "category",
-              label: "Multimodal Metrics",
+              label: "Multimodal",
               items: [
                 "multimodal-metrics-g-eval",
                 "multimodal-metrics-image-coherence",
