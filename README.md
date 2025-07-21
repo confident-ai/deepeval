@@ -288,23 +288,26 @@ In DeepEval, a dataset is simply a collection of test cases. Here is how you can
 ```python
 import pytest
 from deepeval import assert_test
-from deepeval.metrics import HallucinationMetric, AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.dataset import EvaluationDataset
 
-first_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
-second_test_case = LLMTestCase(input="...", actual_output="...", context=["..."])
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like today?")])
 
-dataset = EvaluationDataset(test_cases=[first_test_case, second_test_case])
+for golden in dataset.goldens:
+    test_case = LLMTestCase(
+        input=golden.input,
+        actual_output=your_llm_app(golden.input)
+    )
+    dataset.add_test_case(test_case)
 
 @pytest.mark.parametrize(
     "test_case",
     dataset,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
-    hallucination_metric = HallucinationMetric(threshold=0.3)
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)
-    assert_test(test_case, [hallucination_metric, answer_relevancy_metric])
+    assert_test(test_case, [answer_relevancy_metric])
 ```
 
 ```bash
