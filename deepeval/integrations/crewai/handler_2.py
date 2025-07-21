@@ -2,6 +2,7 @@ from typing import Optional
 import uuid
 import deepeval
 from deepeval.tracing import trace_manager
+from deepeval.tracing.attributes import AgentAttributes
 from deepeval.tracing.types import (
     BaseSpan,
     TraceSpanStatus,
@@ -19,6 +20,7 @@ try:
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.crew import Crew
     from crewai.agent import Agent
+    from crewai.task import Task
     crewai_installed = True
 except:
     crewai_installed = False
@@ -102,6 +104,10 @@ class CrewAIEventsListener(BaseEventListener):
                     parent_uuid = span.uuid
                     break
             
+            input = None
+            if isinstance(event.task, Task):
+                input = event.task.prompt()
+
             agent_span = AgentSpan(
                 uuid=str(uuid.uuid4()),
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -110,7 +116,7 @@ class CrewAIEventsListener(BaseEventListener):
                 parent_uuid=parent_uuid,
                 start_time=perf_counter(),
                 name="Agent",
-                # input=event.task, # find a way insert input (seriliazer for task)
+                input=input,
                 metadata={
                     "Agent.id": str(source.id),
                 }, 
@@ -131,7 +137,7 @@ class CrewAIEventsListener(BaseEventListener):
             if agent_span is None:
                 return
             
-            # base_span.output = event.output # find a way insert output (seriliazer for output)
+            agent_span.output = event.output
             self.end_span(agent_span)
 
 def instrumentator(api_key: Optional[str] = None):
