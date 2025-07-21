@@ -1886,7 +1886,6 @@ async def evaluate_test_case_pairs(
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
 
-@dataclass
 class TraceTestCaseWithSpan:
     llm_test_case: LLMTestCase
     metrics: List[BaseMetric]
