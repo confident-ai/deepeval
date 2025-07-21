@@ -1,0 +1,184 @@
+---
+id: tutorial-rag-qa-deployment
+title: Deployment
+sidebar_label: Deployment
+---
+
+In this section we'll learn how to set up tracing for our RAG agent to do component level evals to ensure your agent performs well and get full visibilty for debugging internal components.
+
+## Setup Tracing 
+
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
+this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
+
+To set up tracing, modify your `RAGAgent` class like this:
+
+```python {11,51,54-61,64,79-85,88}
+from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from deepeval.metrics import (
+    ContextualRelevancyMetric,
+    ContextualRecallMetric,
+    ContextualPrecisionMetric,
+    GEval,
+)
+from deepeval.dataset import EvaluationDataset
+from deepeval.tracing import observe, update_current_span
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+import tempfile
+
+class RAGAgent:
+    def __init__(
+        self,
+        document_paths: list,
+        embedding_model=None,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 50,
+        vector_store_class=FAISS,
+        k: int = 2
+    ): # Added Chroma 
+        self.document_paths = document_paths
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.embedding_model = embedding_model or OpenAIEmbeddings()
+        self.vector_store_class = vector_store_class
+        self.k = k
+        self.vector_store = self._load_vector_store()
+        self.persist_directory = tempfile.mkdtemp()
+    
+    def _load_vector_store(self):
+        documents = []
+        for document_path in self.document_paths:
+            with open(document_path, "r", encoding="utf-8") as file:
+                raw_text = file.read()
+            
+            splitter = RecursiveCharacterTextSplitter(
+                chunk_size=self.chunk_size,
+                chunk_overlap=self.chunk_overlap
+            )
+            documents.extend(splitter.create_documents([raw_text]))
+
+        return self.vector_store_class.from_documents(
+            documents, self.embedding_model,
+            persist_directory=self.persist_directory
+        )
+        
+    @observe(metrics=[ContextualRelevancyMetric(), ContextualRecallMetric(), ContextualPrecisionMetric()], name="Retriever")
+    def retrieve(self, query: str):
+        retrieved_docs = self.vector_store.similarity_search(query, k=self.k)
+        update_current_span(
+            test_case=LLMTestCase(
+                input=query,
+                actual_output="...",
+                expected_output="...",
+                retrieval_context=[doc.page_content for doc in retrieved_docs]
+            )
+        )
+        return retrieved_docs
+
+    @observe(metrics=[GEval(...), GEval(...)], name="Generator") # Use same metrics as before
+    def generate(
+        self,
+        query: str, 
+        retrieved_docs: list, 
+        llm_model=None, 
+        prompt_template: str = None
+    ): # Changed prompt template, model used
+        context = "\n".join([doc.page_content for doc in retrieved_docs])
+        model = llm_model or OpenAI(model_name="gpt-4")
+        prompt = prompt_template or (
+            "You are an AI assistant designed for factual retrieval. Using the context below, extract only the information needed to answer the user's query. Respond in strictly valid JSON using the schema below.\n\nResponse schema:\n{\n  \"answer\": \"string — a precise, factual answer found in the context\",\n  \"citations\": [\n    \"string — exact quotes or summaries from the context that support the answer\"\n  ]\n}\n\nRules:\n- Do not fabricate any information or cite anything not present in the context.\n- Do not include explanations or formatting — only return valid JSON.\n- Use complete sentences in the answer.\n- Limit the answer to the scope of the context.\n- If no answer is found in the context, return:\n{\n  \"answer\": \"No relevant information available.\",\n  \"citations\": []\n}\n\nContext:\n{context}\n\nQuery:\n{query}"
+        )
+        answer = model(prompt)
+        prompt = prompt.format(context=context, query=query)
+        update_current_span(
+            test_case=LLMTestCase(
+                input=query,
+                actual_output=answer,
+                retrieval_context=[doc.page_content for doc in retrieved_docs]
+            )
+        )
+        return answer
+    
+    @observe(type="agent")
+    def answer(
+        self, 
+        query: str,
+        llm_model=None, 
+        prompt_template: str = None
+    ):
+        retrieved_docs = self.retrieve(query)
+        generated_answer = self.generate(query, retrieved_docs, llm_model, prompt_template)
+        return generated_answer, retrieved_docs
+```
+
+## Integrating CI/CD
+
+You can use `pytest` with `assert_test` during your CI/CD to trace and evaluate your RAG agent, here's how you can write the test file to do that:
+
+```python title="test_rag_qa_agent.py"
+import pytest
+from deepeval.dataset import EvaluationDataset
+from qa_agent import RAGAgent # import your RAG agent here
+from deepeval import assert_test
+
+dataset = EvaluationDataset()
+dataset.pull(alias="QA Agent Dataset")
+
+agent = RAGAgent() # Initialize with your best config
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_meeting_summarizer_components(golden):
+    assert_test(golden=golden, observed_callback=agent.answer)
+```
+
+```bash
+poetry run deepeval test run test_rag_qa_agent.py
+```
+
+Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
+
+```yaml
+name: RAG QA Agent DeepEval Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: poetry install --no-root
+
+      - name: Run DeepEval Unit Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # Add your OPENAI_API_KEY
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }} # Add your CONFIDENT_API_KEY
+        run: poetry run deepeval test run test_rag_qa_agent.py
+```
+
+And that's it! You now have a reliable, production-ready RAG QA agent with automated evaluation integrated into your development workflow.
+
+:::tip Next Steps
+Setup [Confident AI](https://deepeval.com/tutorials/tutorial-setup) to track your summarization agent's performance across builds, regressions, and evolving datasets. **It's free to get started.** _(No credit card required)_
+
+Learn more [here](https://www.confident-ai.com).
+:::

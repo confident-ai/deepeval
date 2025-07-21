@@ -282,7 +282,10 @@ class GEval(BaseMetric):
             res, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
-            self.evaluation_cost += cost
+
+            if self.evaluation_cost is not None:
+                self.evaluation_cost += cost
+
             data = trimAndLoadJson(res.choices[0].message.content, self)
 
             reason = data["reason"]
