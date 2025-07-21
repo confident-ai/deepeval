@@ -646,7 +646,6 @@ async def a_execute_llm_test_cases(
     _is_assert_test: bool,
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
-    trace: Optional[Trace] = None,
 ):
     pbar_test_case_id = add_pbar(
         progress,
@@ -710,9 +709,6 @@ async def a_execute_llm_test_cases(
     if run_duration < 1:
         run_duration = 0
     api_test_case.update_run_duration(run_duration)
-    
-    if trace is not None:
-        api_test_case.trace = trace_manager.create_trace_api(trace)
     
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
