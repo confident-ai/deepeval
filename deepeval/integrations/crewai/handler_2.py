@@ -143,6 +143,7 @@ class CrewAIEventsListener(BaseEventListener):
                 return
             
             agent_span.output = event.output
+            agent_span.llm_test_case.actual_output = str(event.output) # even if output is none, it will be considered as a string
             self.end_span(agent_span)
 
 def instrumentator(api_key: Optional[str] = None):
