@@ -11,7 +11,7 @@ In this section we'll learn how to set up tracing for our RAG agent to do compon
 `deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
 this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
-To set up tracing, modify your `RADAgent` class like this:
+To set up tracing, modify your `RAGAgent` class like this:
 
 ```python {11,51,54-61,64,79-85,88}
 from langchain.vectorstores import FAISS

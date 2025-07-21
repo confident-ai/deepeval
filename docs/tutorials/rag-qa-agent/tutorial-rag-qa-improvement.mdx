@@ -21,11 +21,11 @@ In this section, we are going to iterate on multiple hyperparameters for our RAG
 
 ## Iterating on Hyperparameters
 
-We will now iterate over different hyperparameters to see which configuration performs best. Here's how we will do that:
+We will now iterate over different hyperparameters to see which configuration performs best.
 
 ### Retriever Iteration
 
-We will iterate on different retriever hyperparameters like chunk size, embedding model, vector store. Here's how we can do that:
+We will iterate on different retriever hyperparameters like chunk size, embedding model, and vector store. Here's how we can do that:
 
 ```python
 from deepeval.dataset import EvaluatinDataset
@@ -104,7 +104,7 @@ They got the following average results:
 
 ### Generator Iteration
 
-We will iterate on different generator hyperparameters like prompt template and generator model. Here's how we can do that:
+We will iterate on different generator hyperparameters like prompt template and generator model:
 
 ```python
 from deepeval.dataset import EvaluatinDataset
@@ -156,7 +156,7 @@ After running the iterations, this was the configuration that scored the highest
 - **Generation Model**: _`gpt-4`_
 - **Prompt Template**: _3_
 
-These were the average results:
+These were the average results for this configuration:
 
 | Metric               | Score |
 |----------------------|-------|
@@ -165,7 +165,7 @@ These were the average results:
 
 ## RAG Agent Improvement
 
-These were the changes made to `RAGAgent` class to support the new configurations which improved the performance of the agent:
+Here's how we changed the `RAGAgent` class to support the new configurations which improved the performance of the agent:
 
 ```python
 from langchain.vectorstores import FAISS
@@ -237,7 +237,7 @@ The new `RAGAgent` now answers reliably in the desired `json` format. This is th
 
 <TabItem id="ui" value="UI">
 
-![UI Image](./images/qa-agent-overview.png)
+![UI Image](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:qa-agent-overview.png)
 
 </TabItem>
 

@@ -64,9 +64,9 @@ dataset.push(alias="QA Agent Dataset")
 
 Here's what the dataset looks like on the Confident AI platform:
 
-![Dataset on Confident AI Platform](./images/qa-agent-dataset-platform.png)
+![Dataset on Confident AI Platform](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:dataset-platform.png)
 
-You can edit this dataset, finalize and do much more. Here's how you can pull this dataset for evaluations:
+You can edit, finalize and do much more to this dataset on the [Confident AI](https://www.confident-ai.com) platform. Here's how you can pull this dataset for evaluations:
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -79,7 +79,7 @@ Now that we have an evaluation dataset, we can move on to evaluating our RAG age
 
 ## Defining Evaluation Criteria
 
-**Retrieval-Augmented Generation (RAG)** applications are made up of two components — a retriever and a generator. Each component performs it's own tasks and is prune to errors in their own ways, this is why it is necessary to evaluate them by isolating them. 
+**Retrieval-Augmented Generation (RAG)** applications are made up of two components — a retriever and a generator. Each component performs it's own tasks and is prune to errors in their own ways, which is why it is necessary to evaluate them in isolation and as a single unit too. 
 
 **DeepEval** offers specialised RAG metrics that can be used to evaluate retrievers and generators seperately and combined as well. Here are the list of RAG metrics offered by `deepeval`:
 
@@ -127,7 +127,7 @@ for golden in dataset.goldens:
 evaluate(dataset, metrics)
 ```
 
-After running this evaluation, I got the following scores:
+After running this evaluation, I got the following average scores:
 
 | Metric               | Score |
 |----------------------|-------|
@@ -139,7 +139,7 @@ These results can be improved by tuning the hyperparameters of your retriever, w
 
 ### Generator Evaluation
 
-We can use the exact same dataset to evaluate our generator. Before that we need to define the criteria for our generator evals. Since our generator responds in pure `json` we can use `G-Eval` to write custom criterias that helps us evaluate our generator. Here's the criteria we'll be using to evaluate our generator:
+We can use the exact same dataset to evaluate our generator. Before that we need to define the criteria for our generator evals. Since our generator responds in pure `json` we can use `G-Eval` to write custom criterias that helps us evaluate our generator. Here are the metrics we'll be using to evaluate our generator:
 
 1. [Answer Correctness](https://deepeval.com/docs/metrics-llm-evals) — To evaluate only the answer from our `json`.
 2. [Citation Accuracy](https://deepeval.com/docs/metrics-llm-evals) — To evaluate the citations mentioned in the `json`.
