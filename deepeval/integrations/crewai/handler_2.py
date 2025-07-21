@@ -107,8 +107,10 @@ class CrewAIEventsListener(BaseEventListener):
                     break
             
             input = None
+            expected_ouput = None
             if isinstance(event.task, Task):
                 input = event.task.prompt()
+                expected_ouput = event.task.expected_output
 
             agent_span = AgentSpan(
                 uuid=str(uuid.uuid4()),
@@ -128,7 +130,8 @@ class CrewAIEventsListener(BaseEventListener):
             agent_span.llm_test_case = LLMTestCase(
                 input=str(input), # even if input is none, it will be considered as a string
                 actual_output="",
-                tools_called=[]
+                tools_called=[], 
+                expected_output=expected_ouput
             )
             trace_manager.add_span(agent_span)
             trace_manager.add_span_to_trace(agent_span)
