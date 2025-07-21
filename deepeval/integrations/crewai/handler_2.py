@@ -125,7 +125,8 @@ class CrewAIEventsListener(BaseEventListener):
                     "Agent.id": str(source.id),
                     "Agent.key": str(source.key),
                 }, 
-                metric_collection=agent_registry.get_metric_collection(source), 
+                metric_collection=agent_registry.get_metric_collection(source),
+                available_tools=[tool.name for tool in source.tools]
             )
             agent_span.llm_test_case = LLMTestCase(
                 input=str(input), # even if input is none, it will be considered as a string
