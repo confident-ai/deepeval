@@ -123,6 +123,10 @@ class CrewAIEventsListener(BaseEventListener):
                 }, 
                 metric_collection=agent_registry.get_metric_collection(source), 
             )
+            agent_span.llm_test_case = LLMTestCase(
+                input=str(input), # even if input is none, it will be considered as a string
+                actual_output=""
+            )
             trace_manager.add_span(agent_span)
             trace_manager.add_span_to_trace(agent_span)
 
@@ -139,10 +143,6 @@ class CrewAIEventsListener(BaseEventListener):
                 return
             
             agent_span.output = event.output
-            agent_span.llm_test_case = LLMTestCase(
-                input=agent_span.input,
-                actual_output=agent_span.output
-            )
             self.end_span(agent_span)
 
 def instrumentator(api_key: Optional[str] = None):
