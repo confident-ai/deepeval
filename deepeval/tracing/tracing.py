@@ -60,8 +60,6 @@ from deepeval.tracing.utils import (
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
-from deepeval.tracing.utils import create_metric_data
-
 
 class TraceManager:
     def __init__(self):
@@ -681,6 +679,7 @@ class TraceManager:
             else None
         )
 
+        from deepeval.evaluate.utils import create_metric_data
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
