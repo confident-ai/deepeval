@@ -4,10 +4,7 @@ module.exports = {
       type: "category",
       label: "Getting Started",
       className: "sidebar-item-getting-started",
-      items: [
-        "tutorial-introduction",
-        "tutorial-setup"
-      ],
+      items: ["tutorial-introduction", "tutorial-setup"],
       collapsed: false,
     },
     {
@@ -15,7 +12,7 @@ module.exports = {
       label: "Meeting Summarizer",
       className: "sidebar-item-icon-agent",
       items: [
-        "summarization-agent/tutorial-summarization-introduction", 
+        "summarization-agent/tutorial-summarization-introduction",
         "summarization-agent/tutorial-summarization-development",
         "summarization-agent/tutorial-summarization-evaluation",
         "summarization-agent/tutorial-summarization-improvement",

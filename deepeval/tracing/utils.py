@@ -1,8 +1,10 @@
+import os
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 from deepeval.metrics import BaseMetric
 from deepeval.tracing.api import MetricData
+from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
 
 class Environment(Enum):
@@ -10,6 +12,10 @@ class Environment(Enum):
     DEVELOPMENT = "development"
     STAGING = "staging"
     TESTING = "testing"
+
+
+def tracing_enabled():
+    return os.getenv(CONFIDENT_TRACING_ENABLED, "YES").upper() == "YES"
 
 
 def validate_environment(environment: str):

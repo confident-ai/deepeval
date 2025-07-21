@@ -55,7 +55,7 @@ print(len(action_item_test_cases))
 
 ## Setup Tracing
 
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction),
 this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
 To set up tracing, modify your `MeetingSummarizer` class like this:
@@ -73,8 +73,8 @@ load_dotenv()
 
 class MeetingSummarizer:
     def __init__(
-        self, 
-        model: str = "gpt-4", 
+        self,
+        model: str = "gpt-4",
         summary_system_prompt: str = "",
         action_item_system_prompt: str = "",
     ):
@@ -89,16 +89,16 @@ class MeetingSummarizer:
 
     @observe(type="agent")
     def summarize(
-        self, 
-        transcript: str, 
-        summary_model: str = "gpt-4o", 
+        self,
+        transcript: str,
+        summary_model: str = "gpt-4o",
         action_item_model: str = "gpt-4-turbo"
     ) -> tuple[str, dict]:
         summary = self.get_summary(transcript, summary_model)
         action_items = self.get_action_items(transcript, action_item_model)
 
         return summary, action_items
-    
+
     @observe(metrics=[GEval(...)], name="Summary") # Use the summary_concision metric here
     def get_summary(self, transcript: str, model: str = None) -> str:
         try:
@@ -164,7 +164,7 @@ def test_meeting_summarizer_components(golden):
     assert_test(golden=golden, observed_callback=summarizer.summarize)
 ```
 
-```bash 
+```bash
 poetry run pytest -v test_meeting_summarizer_quality.py
 ```
 
