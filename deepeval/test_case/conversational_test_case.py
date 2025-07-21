@@ -7,10 +7,10 @@ from deepeval.test_case import ToolCall
 
 
 class TurnParams(Enum):
+    ROLE = "role"
     CONTENT = "content"
-    # SCENARIO = "scenario"
-    # USER_DESCRIPTION = "user_description"
-    # EXPECTED_OUTCOME = "expected_outcome"
+    SCENARIO = "scenario"
+    EXPECTED_OUTCOME = "expected_outcome"
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
 

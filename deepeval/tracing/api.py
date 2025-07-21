@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from deepeval.feedback.api import APIFeedback
 from deepeval.test_case import ToolCall
+from deepeval.tracing.types import TurnContext
 
 
 class SpanApiType(Enum):
@@ -127,3 +128,4 @@ class TraceApi(BaseModel):
     )
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
+    turn_context: Optional[TurnContext] = Field(None, alias="turnContext")
