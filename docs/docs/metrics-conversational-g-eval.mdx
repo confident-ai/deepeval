@@ -40,7 +40,7 @@ from deepeval.metrics import ConversationalGEval
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
 )
-professionalism_metric = ConversationalGEval(
+metric = ConversationalGEval(
     name="Professionalism",
     criteria="Determine whether the assistant has acted professionally based on the content."
 )
