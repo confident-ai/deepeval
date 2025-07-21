@@ -23,6 +23,7 @@ JSON:
     @staticmethod
     def generate_evaluation_results(
         evaluation_steps: str,
+        test_case_content: str,
         turns: List[Dict],
         parameters: str,
         rubric: Optional[str] = None,
@@ -57,6 +58,8 @@ JSON:
 
     {rubric_text}Conversation:
     {turns}
+
+    {test_case_content}
 
     Parameters to consider during evaluation:
     {parameters}

@@ -1,6 +1,6 @@
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List
 
-from deepeval.test_case import ConversationalTestCase, LLMTestCaseParams, Turn
+from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
@@ -23,6 +23,8 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
 class KnowledgeRetentionMetric(BaseConversationalMetric):
+    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -46,7 +48,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(test_case, self)
+        check_conversational_test_case_params(
+            test_case, self._required_test_case_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -88,7 +92,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(test_case, self)
+        check_conversational_test_case_params(
+            test_case, self._required_test_case_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(

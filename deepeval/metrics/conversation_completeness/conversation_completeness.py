@@ -15,13 +15,15 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase
-
+from deepeval.test_case import TurnParams
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.conversation_completeness.schema import *
 
 
 class ConversationCompletenessMetric(BaseConversationalMetric):
+    _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -47,7 +49,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(test_case, self)
+        check_conversational_test_case_params(
+            test_case, self._required_test_case_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -93,7 +97,9 @@ class ConversationCompletenessMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(test_case, self)
+        check_conversational_test_case_params(
+            test_case, self._required_test_case_params, self
+        )
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
