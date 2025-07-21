@@ -82,7 +82,7 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 ```
 
-A dataset can either be a single-turn one, **or** a multi-turn one (but not both). Initializing supplying your dataset with a list of `Golden`s will make it a single-turn one, whereas supplying it with `ConversationalGolden`s will make it multi-turn:
+A dataset can either be a single-turn one, **or** a multi-turn one (but not both). During initialization supplying your dataset with a list of `Golden`s will make it a single-turn one, whereas supplying it with `ConversationalGolden`s will make it multi-turn:
 
 <Tabs groupId="single-multi-turns">
 
@@ -317,7 +317,7 @@ Lastly, you're unsure whether a golden is ready for evaluation, you should `queu
 dataset.queue(alias="My dataset")
 ```
 
-The `queue` method will similarly push goldens but mark it as "finalized" on Confident AI. This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://documentation.confident-ai.com/docs/dataset-editor/dataset-features/push-queue-goldens)
+The `queue` method will similarly push goldens but will not mark it as "finalized" on Confident AI. This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://documentation.confident-ai.com/docs/dataset-editor/dataset-features/push-queue-goldens)
 
 :::tip
 You can also push multi-turn datasets.
@@ -468,7 +468,7 @@ goldens = Synthesizer().generate_goldens_from_docs(
 dataset = EvaluationDataset(goldens=goldens)
 ```
 
-In this example, we've used the `generate_goldens_from_docs` method, which one one of the four generation methods offered by `deepeval`'s `Synthesizer`. The four methods include:
+In this example, we've used the `generate_goldens_from_docs` method, which is one of the four generation methods offered by `deepeval`'s `Synthesizer`. The four methods include:
 
 - [`generate_goldens_from_docs()`](/docs/synthesizer-generate-from-docs): useful for generating goldens to evaluate your LLM application based on contexts extracted from your knowledge base in the form of documents.
 - [`generate_goldens_from_contexts()`](/docs/synthesizer-generate-from-contexts): useful for generating goldens to evaluate your LLM application based on a list of prepared context.
