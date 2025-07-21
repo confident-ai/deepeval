@@ -646,7 +646,6 @@ async def a_execute_llm_test_cases(
     _is_assert_test: bool,
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
-    trace: Optional[Trace] = None,
 ):
     pbar_test_case_id = add_pbar(
         progress,
@@ -710,9 +709,7 @@ async def a_execute_llm_test_cases(
     if run_duration < 1:
         run_duration = 0
     api_test_case.update_run_duration(run_duration)
-
-    if trace is not None:
-        api_test_case.trace = trace_manager.create_trace_api(trace)
+    
     ### Update Test Run ###
     test_run_manager.update_test_run(api_test_case, test_case)
 
@@ -1734,22 +1731,22 @@ def a_execute_agentic_test_cases_from_loop(
             )
         elif trace_manager.langgraph_traces_to_evaluate:
             loop.run_until_complete(
-                evaluate_traces_in_test_run(
-                    traces_to_evaluate=trace_manager.langgraph_traces_to_evaluate,
-                    test_run=test_run,
-                    test_run_manager=test_run_manager,
-                    test_results=test_results,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    show_indicator=show_indicator,
-                    verbose_mode=verbose_mode,
-                    _use_bar_indicator=_use_bar_indicator,
-                    _is_assert_test=_is_assert_test,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                    throttle_value=throttle_value,
-                    max_concurrent=max_concurrent,
-                )
+                    evaluate_traces(
+                        traces_to_evaluate=trace_manager.langgraph_traces_to_evaluate,
+                        goldens=goldens,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        verbose_mode=verbose_mode,
+                        ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
+                        show_indicator=show_indicator,
+                        _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
+                        progress=progress,
+                        pbar_id=pbar_id,
+                        throttle_value=throttle_value,
+                        max_concurrent=max_concurrent,
+                    )
             )
 
     if show_indicator and _use_bar_indicator:
@@ -1889,87 +1886,7 @@ async def evaluate_test_case_pairs(
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
 
-
 @dataclass
 class TraceTestCaseWithSpan:
     llm_test_case: LLMTestCase
     metrics: List[BaseMetric]
-    base_span: BaseSpan
-
-
-async def evaluate_traces_in_test_run(
-    traces_to_evaluate: List[Trace],
-    test_run: TestRun,
-    test_run_manager: TestRunManager,
-    test_results: List[TestResult],
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    show_indicator: bool,
-    verbose_mode: Optional[bool],
-    _use_bar_indicator: bool,
-    _is_assert_test: bool,
-    progress: Optional[Progress],
-    pbar_id: Optional[int],
-    throttle_value: int,
-    max_concurrent: int,
-):
-    semaphore = asyncio.Semaphore(max_concurrent)
-
-    async def execute_with_semaphore(func: Callable, *args, **kwargs):
-        async with semaphore:
-            return await func(*args, **kwargs)
-
-    tasks = []
-    for trace in traces_to_evaluate:
-        trace_test_cases: List[TraceTestCaseWithSpan] = []
-
-        def dfs(span: BaseSpan):
-            if span.llm_test_case is None:
-                return
-
-            trace_test_cases.append(
-                TraceTestCaseWithSpan(
-                    llm_test_case=span.llm_test_case,
-                    metrics=span.metrics,
-                    base_span=span,
-                )
-            )
-
-            for child_span in span.children:
-                dfs(child_span)
-
-        dfs(trace.root_spans[0])
-
-        for count, trace_test_case in enumerate(trace_test_cases):
-            with capture_evaluation_run("test case"):
-                if len(trace_test_case.metrics) == 0:
-                    update_pbar(progress, pbar_id)
-                    continue
-                if verbose_mode is not None:
-                    for metric in trace_test_case.metrics:
-                        metric.verbose_mode = verbose_mode
-                # copied_llm_metrics: List[BaseMetric] = copy_metrics(
-                #     trace_test_case.metrics
-                # ) # NOT making a copy to modify the metrics in the span
-
-                task = execute_with_semaphore(
-                    func=a_execute_llm_test_cases,
-                    metrics=trace_test_case.metrics,
-                    test_case=trace_test_case.llm_test_case,
-                    test_run_manager=test_run_manager,
-                    test_results=test_results,
-                    count=count,
-                    test_run=test_run,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    use_cache=False,
-                    show_indicator=show_indicator,
-                    _use_bar_indicator=_use_bar_indicator,
-                    _is_assert_test=_is_assert_test,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                    trace=trace,
-                )
-                tasks.append(asyncio.create_task(task))
-                await asyncio.sleep(throttle_value)
-    await asyncio.gather(*tasks)
