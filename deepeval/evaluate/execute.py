@@ -1729,10 +1729,10 @@ def a_execute_agentic_test_cases_from_loop(
                     max_concurrent=max_concurrent,
                 )
             )
-        elif trace_manager.langgraph_traces_to_evaluate:
+        elif trace_manager.integration_traces_to_evaluate:
             loop.run_until_complete(
                     evaluate_traces(
-                        traces_to_evaluate=trace_manager.langgraph_traces_to_evaluate,
+                        traces_to_evaluate=trace_manager.integration_traces_to_evaluate,
                         goldens=goldens,
                         test_run_manager=test_run_manager,
                         test_results=test_results,

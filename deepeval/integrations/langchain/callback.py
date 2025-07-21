@@ -111,7 +111,7 @@ class CallbackHandler(BaseCallbackHandler):
             trace_manager.evaluation_loop = (
                 False  # to avoid traces being evaluated twice
             )
-            trace_manager.langgraph_traces_to_evaluate.append(current_trace)
+            trace_manager.integration_traces_to_evaluate.append(current_trace)
 
         if current_trace is not None:
             current_trace.input = span.input
