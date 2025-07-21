@@ -70,6 +70,7 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
+
 # copied from deepeval.evaluate.utils due to circular import
 def create_metric_data(metric: BaseMetric) -> MetricData:
     if metric.error is not None:

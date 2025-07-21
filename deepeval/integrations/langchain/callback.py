@@ -61,7 +61,11 @@ class CallbackHandler(BaseCallbackHandler):
     metrics: List[BaseMetric] = []
     metric_collection: Optional[str] = None
 
-    def __init__(self, metrics: List[BaseMetric] = [], metric_collection: Optional[str] = None):
+    def __init__(
+        self,
+        metrics: List[BaseMetric] = [],
+        metric_collection: Optional[str] = None,
+    ):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
         )
@@ -69,7 +73,6 @@ class CallbackHandler(BaseCallbackHandler):
         self.metrics = metrics
         self.metric_collection = metric_collection
         super().__init__()
-
 
     def check_active_trace_id(self):
         if self.active_trace_id is None:
@@ -87,11 +90,11 @@ class CallbackHandler(BaseCallbackHandler):
         ######## Conditions to add metric_collection to span ########
         if self.metric_collection and span.name == "LangGraph":
             span.metric_collection = self.metric_collection
-        
+
         ######## Conditions to add metrics to span ########
         if self.metrics and span.name == "LangGraph":
             span.metrics = self.metrics
-            
+
             # prepare test_case for task_completion metric
             for metric in self.metrics:
                 if isinstance(metric, TaskCompletionMetric):
@@ -99,11 +102,15 @@ class CallbackHandler(BaseCallbackHandler):
 
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
-        
+
         ######## Conditions send the trace for evaluation ########
         if self.metrics:
-            trace_manager.evaluating = True # to avoid posting the trace to the server
-            trace_manager.evaluation_loop = False # to avoid traces being evaluated twice
+            trace_manager.evaluating = (
+                True  # to avoid posting the trace to the server
+            )
+            trace_manager.evaluation_loop = (
+                False  # to avoid traces being evaluated twice
+            )
             trace_manager.langgraph_traces_to_evaluate.append(current_trace)
 
         if current_trace is not None:
@@ -112,14 +119,10 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
-
     def prepare_task_completion_test_case(self, span: BaseSpan):
-        test_case = LLMTestCase(
-            input="None", actual_output="None"
-        )
+        test_case = LLMTestCase(input="None", actual_output="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
         span.llm_test_case = test_case
-
 
     def on_chain_start(
         self,
@@ -164,7 +167,7 @@ class CallbackHandler(BaseCallbackHandler):
 
         base_span.output = outputs
         self.end_span(base_span)
-        
+
         if parent_run_id is None:
             self.end_trace(base_span)
 

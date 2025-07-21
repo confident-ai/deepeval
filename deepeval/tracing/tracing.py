@@ -684,7 +684,11 @@ class TraceManager:
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
             ),
-            metricsData=[create_metric_data(metric) for metric in span.metrics] if span.metrics else None,
+            metricsData=(
+                [create_metric_data(metric) for metric in span.metrics]
+                if span.metrics
+                else None
+            ),
         )
 
         # Add type-specific attributes

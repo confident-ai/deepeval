@@ -710,7 +710,7 @@ async def a_execute_llm_test_cases(
     if run_duration < 1:
         run_duration = 0
     api_test_case.update_run_duration(run_duration)
-    
+
     if trace is not None:
         api_test_case.trace = trace_manager.create_trace_api(trace)
     ### Update Test Run ###
@@ -1889,11 +1889,13 @@ async def evaluate_test_case_pairs(
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
 
+
 @dataclass
 class TraceTestCaseWithSpan:
     llm_test_case: LLMTestCase
     metrics: List[BaseMetric]
     base_span: BaseSpan
+
 
 async def evaluate_traces_in_test_run(
     traces_to_evaluate: List[Trace],
@@ -1924,16 +1926,18 @@ async def evaluate_traces_in_test_run(
         def dfs(span: BaseSpan):
             if span.llm_test_case is None:
                 return
-            
-            trace_test_cases.append(TraceTestCaseWithSpan(
-                llm_test_case=span.llm_test_case,
-                metrics=span.metrics,
-                base_span=span
-            ))
+
+            trace_test_cases.append(
+                TraceTestCaseWithSpan(
+                    llm_test_case=span.llm_test_case,
+                    metrics=span.metrics,
+                    base_span=span,
+                )
+            )
 
             for child_span in span.children:
                 dfs(child_span)
-        
+
         dfs(trace.root_spans[0])
 
         for count, trace_test_case in enumerate(trace_test_cases):
@@ -1969,4 +1973,3 @@ async def evaluate_traces_in_test_run(
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
-
