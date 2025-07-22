@@ -478,13 +478,17 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=SummarizationAlignmentVerdict)
+            res, cost = self.model.generate(
+                prompt, schema=SummarizationAlignmentVerdict
+            )
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
-                res: SummarizationAlignmentVerdict = self.model.generate(prompt, schema=SummarizationAlignmentVerdict)
+                res: SummarizationAlignmentVerdict = self.model.generate(
+                    prompt, schema=SummarizationAlignmentVerdict
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
