@@ -62,7 +62,9 @@ class DeepSeekModel(DeepEvalBaseLLM):
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
             )
-            json_output = trim_and_load_json(completion.choices[0].message.content)
+            json_output = trim_and_load_json(
+                completion.choices[0].message.content
+            )
             cost = self.calculate_cost(
                 completion.usage.prompt_tokens,
                 completion.usage.completion_tokens,
@@ -80,7 +82,6 @@ class DeepSeekModel(DeepEvalBaseLLM):
             )
             return output, cost
 
-
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -92,7 +93,9 @@ class DeepSeekModel(DeepEvalBaseLLM):
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
             )
-            json_output = trim_and_load_json(completion.choices[0].message.content)
+            json_output = trim_and_load_json(
+                completion.choices[0].message.content
+            )
             cost = self.calculate_cost(
                 completion.usage.prompt_tokens,
                 completion.usage.completion_tokens,
@@ -110,7 +113,6 @@ class DeepSeekModel(DeepEvalBaseLLM):
             )
             return output, cost
 
-
     ###############################################
     # Utilities
     ###############################################
@@ -124,7 +126,6 @@ class DeepSeekModel(DeepEvalBaseLLM):
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-
 
     ###############################################
     # Model

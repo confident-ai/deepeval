@@ -20,14 +20,18 @@ class LocalModel(DeepEvalBaseLLM):
         *args,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
+        model_name = model or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_NAME
+        )
         self.local_model_api_key = api_key or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_API_KEY
         )
         self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_BASE_URL
         )
-        self.format = format or KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_FORMAT)
+        self.format = format or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_FORMAT
+        )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature

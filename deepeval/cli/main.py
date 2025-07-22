@@ -410,9 +410,11 @@ def unset_local_model_env():
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
 
+
 #############################################
 # Grok Model Integration ####################
 #############################################
+
 
 @app.command(name="set-grok")
 def set_grok_model_env(
@@ -434,6 +436,7 @@ def set_grok_model_env(
         ":raising_hands: Congratulations! You're now using a Grok model for all evals that require an LLM."
     )
 
+
 @app.command(name="unset-grok")
 def unset_grok_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.GROK_MODEL_NAME)
@@ -444,9 +447,11 @@ def unset_grok_model_env():
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
 
+
 #############################################
 # Moonshot Model Integration ################
 #############################################
+
 
 @app.command(name="set-moonshot")
 def set_moonshot_model_env(
@@ -468,6 +473,7 @@ def set_moonshot_model_env(
         ":raising_hands: Congratulations! You're now using a Moonshot model for all evals that require an LLM."
     )
 
+
 @app.command(name="unset-moonshot")
 def unset_moonshot_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.MOONSHOT_MODEL_NAME)
@@ -478,9 +484,11 @@ def unset_moonshot_model_env():
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
 
+
 #############################################
 # DeepSeek Model Integration ################
 #############################################
+
 
 @app.command(name="set-deepseek")
 def set_deepseek_model_env(
@@ -502,6 +510,7 @@ def set_deepseek_model_env(
         ":raising_hands: Congratulations! You're now using a DeepSeek model for all evals that require an LLM."
     )
 
+
 @app.command(name="unset-deepseek")
 def unset_deepseek_model_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.DEEPSEEK_MODEL_NAME)
@@ -511,6 +520,7 @@ def unset_deepseek_model_env():
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
+
 
 #############################################
 # Local Embedding Model Integration #########
