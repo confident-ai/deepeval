@@ -24,7 +24,9 @@ try:
     )
     from llama_index.core.tools.function_tool import AsyncBaseTool
     from llama_index_instrumentation.dispatcher import Dispatcher
-
+    import llama_index.core.agent.workflow.base_agent as base_agent_mod
+    from llama_index.core.agent.workflow.base_agent import BaseWorkflowAgent
+    
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -109,6 +111,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     ) -> Optional[LlamaIndexBaseSpan]:
         if parent_span_id is None:
             self.active_trace_uuid = trace_manager.start_new_trace().uuid
+            
 
         base_span = BaseSpan(
             uuid=id_,
@@ -117,7 +120,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             trace_uuid=self.active_trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
-            name=instance.__class__.__name__ if instance else None,
+            name=instance.__class__.__name__ if instance else None, # decide the name of the span
             input=bound_args.arguments,
         )
 

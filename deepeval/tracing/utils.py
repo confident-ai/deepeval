@@ -5,7 +5,7 @@ from time import perf_counter
 from typing import Optional, List
 from deepeval.metrics import BaseMetric
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
-
+from pydantic import Field
 
 class Environment(Enum):
     PRODUCTION = "production"
@@ -76,12 +76,12 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
-def with_metrics(metrics: Optional[List[BaseMetric]], metric_collection: Optional[str] = None):
-    def decorator(cls):
-        class SubClassWithMetricCollection(cls):
-            def __init__(self, *args, **kwargs):
-                super().__init__(*args, **kwargs)
-                self.metric_collection = metric_collection
-                self.metrics = metrics
-        return SubClassWithMetricCollection
-    return decorator
+def with_metrics(cls):
+
+    class SubClassWithMetric(cls):
+        metric_collection: Optional[str] = Field(default=None)
+        metrics: Optional[List[BaseMetric]] = Field(default_factory=list)
+    
+    SubClassWithMetric.__name__ = cls.__name__
+
+    return SubClassWithMetric
