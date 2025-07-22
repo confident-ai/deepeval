@@ -4,8 +4,8 @@ from time import perf_counter
 import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
-from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan, TraceSpanStatus
+from deepeval.tracing.attributes import LlmAttributes
+from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -22,11 +22,8 @@ try:
         LLMChatStartEvent,
         LLMChatEndEvent,
     )
-    from llama_index.core.tools.function_tool import AsyncBaseTool
     from llama_index_instrumentation.dispatcher import Dispatcher
-    import llama_index.core.agent.workflow.base_agent as base_agent_mod
-    from llama_index.core.agent.workflow.base_agent import BaseWorkflowAgent
-    
+    from deepeval.integrations.llama_index.agent import FunctionAgent as PatchedFunctionAgent
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -111,44 +108,38 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     ) -> Optional[LlamaIndexBaseSpan]:
         if parent_span_id is None:
             self.active_trace_uuid = trace_manager.start_new_trace().uuid
-            
-
-        base_span = BaseSpan(
+        
+        # default span
+        span = BaseSpan(
             uuid=id_,
             status=TraceSpanStatus.IN_PROGRESS,
             children=[],
             trace_uuid=self.active_trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
-            name=instance.__class__.__name__ if instance else None, # decide the name of the span
+            name=instance.__class__.__name__ if instance else "No Name", # decide the name of the span
             input=bound_args.arguments,
         )
 
-        trace_manager.add_span(base_span)
-        trace_manager.add_span_to_trace(base_span)
-
-        if isinstance(instance, AsyncBaseTool):
-            tool_span = ToolSpan(
-                uuid=str(uuid.uuid4()),
-                name=instance.metadata.name,
+        # conditions to qualify as patched function agent instance
+        if isinstance(instance, PatchedFunctionAgent):
+            span = AgentSpan(
+                uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
-                description=instance.metadata.description,
                 children=[],
                 trace_uuid=self.active_trace_uuid,
-                parent_uuid=base_span.uuid,
+                parent_uuid=parent_span_id,
                 start_time=perf_counter(),
+                name="FunctionAgent",
                 input=bound_args.arguments,
+                metric_collection=instance.metric_collection,
+                # metrics=instance.metrics, TODO: facing issue with this
             )
 
-            trace_manager.add_span(tool_span)
-            trace_manager.add_span_to_trace(tool_span)
+        trace_manager.add_span(span)
+        trace_manager.add_span_to_trace(span)
 
-            # adding this tool span id to the metadata of the parent span
-            trace_manager.get_span_by_uuid(base_span.uuid).metadata = {
-                "tool_span_id": tool_span.uuid
-            }
-
-        return base_span
+        return span
 
     def prepare_to_exit_span(
         self,
@@ -162,16 +153,6 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         if base_span is None:
             return None
-
-        if isinstance(instance, AsyncBaseTool):
-            tool_span_id = base_span.metadata.get("tool_span_id")
-            if tool_span_id:
-                tool_span = trace_manager.get_span_by_uuid(tool_span_id)
-                if tool_span:
-                    tool_span.end_time = perf_counter()
-                    tool_span.status = TraceSpanStatus.SUCCESS
-                    tool_span.output = result
-                    trace_manager.remove_span(tool_span.uuid)
 
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
