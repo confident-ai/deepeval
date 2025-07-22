@@ -2,7 +2,8 @@ import os
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-
+from typing import Optional, List
+from deepeval.metrics import BaseMetric
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
 
@@ -74,3 +75,13 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     timestamp = time_diff + perf_counter_value
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
+def with_metrics(metrics: Optional[List[BaseMetric]], metric_collection: Optional[str] = None):
+    def decorator(cls):
+        class SubClassWithMetricCollection(cls):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self.metric_collection = metric_collection
+                self.metrics = metrics
+        return SubClassWithMetricCollection
+    return decorator
