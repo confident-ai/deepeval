@@ -17,7 +17,13 @@ try:
         CrewKickoffCompletedEvent,
         AgentExecutionStartedEvent,
         AgentExecutionCompletedEvent,
-        ToolUsageStartedEvent
+        ToolUsageStartedEvent,
+        # MemoryQueryCompletedEvent,
+        MemoryRetrievalCompletedEvent
+    )
+    from crewai.utilities.events.knowledge_events import (
+        KnowledgeRetrievalCompletedEvent,
+        # KnowledgeQueryCompletedEvent
     )
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.crew import Crew
@@ -132,7 +138,8 @@ class CrewAIEventsListener(BaseEventListener):
                 input=str(input), # even if input is none, it will be considered as a string
                 actual_output="",
                 tools_called=[], 
-                expected_output=expected_ouput
+                expected_output=expected_ouput,
+                retrieval_context=[]
             )
             trace_manager.add_span(agent_span)
             trace_manager.add_span_to_trace(agent_span)
@@ -163,6 +170,26 @@ class CrewAIEventsListener(BaseEventListener):
                     )
                     span.llm_test_case.tools_called.append(tool_call)
             
+        @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
+        def on_knowledge_retrieval_completed(source, event: KnowledgeRetrievalCompletedEvent):
+            retrieved_knowledge = event.retrieved_knowledge
+            if isinstance(retrieved_knowledge, str):
+                retrieved_context = retrieved_knowledge
+            else:
+                try:
+                    retrieved_context = str(retrieved_knowledge)
+                except Exception:
+                    retrieved_context = None
+
+            agent_span = None
+            for span_uuid, span in trace_manager.active_spans.items():
+                if span.name == "Agent" and span.metadata.get("Agent.key") == str(source.id):
+                    agent_span = span
+                    break
+            if agent_span is None:
+                return
+
+            agent_span.llm_test_case.retrieval_context.append(retrieved_context)
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
