@@ -188,8 +188,8 @@ class CrewAIEventsListener(BaseEventListener):
                     break
             if agent_span is None:
                 return
-
-            agent_span.llm_test_case.retrieval_context.append(retrieved_context)
+            if retrieved_context is not None:
+                agent_span.llm_test_case.retrieval_context.append(retrieved_context)
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
