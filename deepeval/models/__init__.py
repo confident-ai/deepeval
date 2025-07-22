@@ -13,6 +13,9 @@ from deepeval.models.llms import (
     GeminiModel,
     AmazonBedrockModel,
     LiteLLMModel,
+    KimiModel,
+    GrokModel,
+    DeepSeekModel,
 )
 from deepeval.models.mlllms import (
     MultimodalOpenAIModel,
