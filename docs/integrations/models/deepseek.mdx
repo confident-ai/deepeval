@@ -1,0 +1,53 @@
+---
+# id: deepseek
+title: DeepSeek
+sidebar_label: DeepSeek
+---
+
+DeepEval allows you to use `deepseek-chat` and `deepseek-reasoner` directly from DeepSeek to run all of DeepEval's metrics, which can be set through the CLI or in python.
+
+### Command Line
+
+To configure your DeepSeek model through the CLI, run the following command:
+
+```bash
+deepeval set-deepseek --model deepseek-chat \
+    --api-key="your-api-key" \
+    --temperature=0
+```
+
+The CLI command above sets `deepseek-chat` as the default model for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset DeepSeek:
+
+```bash
+deepeval unset-deepseek
+```
+
+### Python
+
+You can also specify your model directly in code using `DeepSeekModel`.
+
+```python
+from deepeval.models import DeepSeekModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = DeepSeekModel(
+    model_name="deepseek-chat",
+    api_key="your-api-key",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+There are **TWO** mandatory and **ONE** optional parameters when creating a `DeepSeekModel`:
+
+- `model`: A string specifying the name of the DeepSeek model to use. Either be `deepseek-chat` or `deepseek-reasoner`.
+- `api_key`: A string specifying your DeepSeek API key for authentication.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+
+### Available DeepSeek Models
+
+Below is the comprehensive list of available DeepSeek models in DeepEval:
+
+- `deepseek-chat`
+- `deepseek-reasoner`

@@ -1,0 +1,66 @@
+---
+# id: grok
+title: Grok
+sidebar_label: Grok
+---
+
+DeepEval allows you to use any Grok model from xAI to run evals, either through the CLI or directly in python.
+
+:::info
+To use Grok, you must first install the xAI SDK:
+
+```bash
+pip install xai-sdk
+```
+
+:::
+
+### Command Line
+
+To configure Grok through the CLI, run the following command:
+
+```bash
+deepeval set-grok --model grok-4-0709 \
+    --api-key="your-api-key" \
+    --temperature=0
+```
+
+The CLI command above sets the specified Grok model as the default llm-judge for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Grok:
+
+```bash
+deepeval unset-grok
+```
+
+### Python
+
+Alternatively, you can specify your model directly in code using `GrokModel` from DeepEval's model collection.
+
+```python
+from deepeval.models import GrokModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = GrokModel(
+    model_name="grok-4-0709",
+    api_key="your-api-key",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+There are **TWO** mandatory and **ONE** optional parameters when creating an `GrokModel`:
+
+- `model`: A string specifying the name of the Grok model to use.
+- [Optional] `api_key`: A string specifying your Grok API key for authentication.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+
+### Available Grok Models
+
+Below is the comprehensive list of available Grok models in DeepEval:
+
+- `grok-4-0709`
+- `grok-3`
+- `grok-3-mini`
+- `grok-3-fast`
+- `grok-3-mini-fast`
+- `grok-2-vision-1212`
