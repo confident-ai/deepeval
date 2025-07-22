@@ -45,19 +45,19 @@ model_pricing = {
         "output": 3.00 / 1e6,
     },
     "moonshot-v1-128k": {
-          "input": 0.20 / 1e6,
+        "input": 0.20 / 1e6,
         "output": 5.00 / 1e6,
     },
     "moonshot-v1-8k-vision-preview": {
-           "input": 1.00 / 1e6,
+        "input": 1.00 / 1e6,
         "output": 2.00 / 1e6,
     },
     "moonshot-v1-32k-vision-preview": {
-            "input": 2.00 / 1e6,
+        "input": 2.00 / 1e6,
         "output": 3.00 / 1e6,
     },
     "moonshot-v1-128k-vision-preview": {
-          "input": 0.20 / 1e6,
+        "input": 0.20 / 1e6,
         "output": 5.00 / 1e6,
     },
 }
@@ -107,7 +107,9 @@ class KimiModel(DeepEvalBaseLLM):
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
             )
-            json_output = trim_and_load_json(completion.choices[0].message.content)
+            json_output = trim_and_load_json(
+                completion.choices[0].message.content
+            )
             cost = self.calculate_cost(
                 completion.usage.prompt_tokens,
                 completion.usage.completion_tokens,
@@ -129,7 +131,6 @@ class KimiModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -141,7 +142,9 @@ class KimiModel(DeepEvalBaseLLM):
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
             )
-            json_output = trim_and_load_json(completion.choices[0].message.content)
+            json_output = trim_and_load_json(
+                completion.choices[0].message.content
+            )
             cost = self.calculate_cost(
                 completion.usage.prompt_tokens,
                 completion.usage.completion_tokens,
@@ -163,7 +166,6 @@ class KimiModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-
     ###############################################
     # Utilities
     ###############################################
@@ -177,7 +179,6 @@ class KimiModel(DeepEvalBaseLLM):
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-
 
     ###############################################
     # Model

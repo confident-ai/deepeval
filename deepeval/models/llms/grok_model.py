@@ -41,7 +41,7 @@ model_pricing = {
     "grok-2-vision-1212": {
         "input": 1.00 / 1e6,
         "output": 2.00 / 1e6,
-    }
+    },
 }
 
 
@@ -68,9 +68,11 @@ class GrokModel(DeepEvalBaseLLM):
             self.temperature = float(temperature_from_key)
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
-        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GROK_API_KEY
-        ) or os.getenv("GROK_API_KEY")
+        self.api_key = (
+            api_key
+            or KEY_FILE_HANDLER.fetch_data(KeyValues.GROK_API_KEY)
+            or os.getenv("GROK_API_KEY")
+        )
         super().__init__(model_name)
 
     ###############################################
@@ -82,7 +84,7 @@ class GrokModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
-            model=self.model_name, 
+            model=self.model_name,
             temperature=self.temperature,
         )
         chat.append(user(prompt))
@@ -107,13 +109,12 @@ class GrokModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
-            model=self.model_name, 
+            model=self.model_name,
             temperature=self.temperature,
         )
         chat.append(user(prompt))
@@ -138,7 +139,6 @@ class GrokModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-
     ###############################################
     # Utilities
     ###############################################
@@ -152,7 +152,6 @@ class GrokModel(DeepEvalBaseLLM):
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]
         return input_cost + output_cost
-
 
     ###############################################
     # Model

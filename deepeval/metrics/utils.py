@@ -27,7 +27,7 @@ from deepeval.models import (
     MultimodalOllamaModel,
     AmazonBedrockModel,
     LiteLLMModel,
-KimiModel,
+    KimiModel,
     GrokModel,
     DeepSeekModel,
 )
@@ -401,13 +401,16 @@ def should_use_litellm():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LITELLM)
     return value.lower() == "yes" if value is not None else False
 
+
 def should_use_deepseek_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_DEEPSEEK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
+
 def should_use_moonshot_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_MOONSHOT_MODEL)
     return value.lower() == "yes" if value is not None else False
+
 
 def should_use_grok_model():
     value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GROK_MODEL)
