@@ -24,6 +24,7 @@ try:
     )
     from llama_index_instrumentation.dispatcher import Dispatcher
     from deepeval.integrations.llama_index.agent import FunctionAgent as PatchedFunctionAgent
+    from deepeval.integrations.llama_index.utils import parse_id
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -121,8 +122,10 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             input=bound_args.arguments,
         )
 
-        # conditions to qualify as patched function agent instance
-        if isinstance(instance, PatchedFunctionAgent):
+        class_name, method_name = parse_id(id_)
+
+        # conditions to qualify as agent start run span
+        if class_name == "Workflow" and method_name == "run":
             span = AgentSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -130,12 +133,16 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 trace_uuid=self.active_trace_uuid,
                 parent_uuid=parent_span_id,
                 start_time=perf_counter(),
-                name="FunctionAgent",
+                name="Agent", #TODO: decide the name of the span
                 input=bound_args.arguments,
-                metric_collection=instance.metric_collection,
-                # metrics=instance.metrics, TODO: facing issue with this
             )
 
+            # check if the instance is a PatchedFunctionAgent
+            if isinstance(instance, PatchedFunctionAgent):
+                span.metric_collection = instance.metric_collection
+                # span.metrics = instance.metrics # TODO: facing issue with this
+
+        # prepare input test case params for the span
         trace_manager.add_span(span)
         trace_manager.add_span_to_trace(span)
 
