@@ -38,6 +38,19 @@ module.exports = {
     },
     // {
     //   type: "category",
+    //   label: "Medical Chatbot",
+    //   className: "sidebar-item-icon-chatbot",
+    //   items: [
+    //     "medical-chatbot/tutorial-medical-chatbot-introduction", 
+    //     "medical-chatbot/tutorial-medical-chatbot-development",
+    //     "medical-chatbot/tutorial-medical-chatbot-evaluation",
+    //     "medical-chatbot/tutorial-medical-chatbot-improvement",
+    //     "medical-chatbot/tutorial-medical-chatbot-deployment",
+    //   ],
+    //   collapsed: true,
+    // },
+    // {
+    //   type: "category",
     //   label: "Legal Doc Summarization",
     //   items: [
     //     "doc-summarization-introduction",
