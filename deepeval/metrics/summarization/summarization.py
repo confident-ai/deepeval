@@ -18,8 +18,16 @@ from deepeval.metrics.utils import (
 from deepeval.metrics.summarization.template import SummarizationTemplate
 from deepeval.metrics.faithfulness.template import FaithfulnessTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.summarization.schema import *
-from deepeval.metrics.faithfulness.schema import *
+from deepeval.metrics.summarization.schema import (
+    ScoreType,
+    SummarizationAlignmentVerdict,
+    SummarizationCoverageVerdict,
+    Verdicts,
+    Questions,
+    Answers,
+    SummarizationScoreReason,
+)
+from deepeval.metrics.faithfulness.schema import Truths, Claims
 
 
 class SummarizationMetric(BaseMetric):
@@ -204,14 +212,14 @@ class SummarizationMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=FaithfulnessScoreReason
+                prompt, schema=SummarizationScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: FaithfulnessScoreReason = await self.model.a_generate(
-                    prompt, schema=FaithfulnessScoreReason
+                res: SummarizationScoreReason = await self.model.a_generate(
+                    prompt, schema=SummarizationScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -257,14 +265,14 @@ class SummarizationMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=FaithfulnessScoreReason
+                prompt, schema=SummarizationScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: FaithfulnessScoreReason = self.model.generate(
-                    prompt, schema=FaithfulnessScoreReason
+                res: SummarizationScoreReason = self.model.generate(
+                    prompt, schema=SummarizationScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -470,7 +478,9 @@ class SummarizationMetric(BaseMetric):
             summary_claims=self.claims, original_text="\n\n".join(self.truths)
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
+            res, cost = self.model.generate(
+                prompt, schema=SummarizationAlignmentVerdict
+            )
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
