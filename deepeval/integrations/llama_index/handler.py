@@ -24,7 +24,7 @@ try:
     )
     from llama_index_instrumentation.dispatcher import Dispatcher
     from deepeval.integrations.llama_index.agent import FunctionAgent as PatchedFunctionAgent
-    from deepeval.integrations.llama_index.utils import parse_id
+    from deepeval.integrations.llama_index.utils import parse_id, prepare_input_llm_test_case_params    
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -137,12 +137,17 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input=bound_args.arguments,
             )
 
+            print(">>>>>>>>>>>>> bound_args")
+            print(bound_args.arguments.get('start_event').to_dict())
+            print("--------------------------------")
+
             # check if the instance is a PatchedFunctionAgent
             if isinstance(instance, PatchedFunctionAgent):
                 span.metric_collection = instance.metric_collection
                 # span.metrics = instance.metrics # TODO: facing issue with this
 
         # prepare input test case params for the span
+        prepare_input_llm_test_case_params(class_name, method_name, span, bound_args.arguments)
         trace_manager.add_span(span)
         trace_manager.add_span_to_trace(span)
 
