@@ -172,12 +172,12 @@ class CrewAIEventsListener(BaseEventListener):
             
         @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
         def on_knowledge_retrieval_completed(source, event: KnowledgeRetrievalCompletedEvent):
-            retrieved_knowledge = event.retrieved_knowledge
-            if isinstance(retrieved_knowledge, str):
-                retrieved_context = retrieved_knowledge
+            
+            if isinstance(event.retrieved_knowledge, str):
+                retrieved_context = event.retrieved_knowledge
             else:
                 try:
-                    retrieved_context = str(retrieved_knowledge)
+                    retrieved_context = str(event.retrieved_knowledge)
                 except Exception:
                     retrieved_context = None
 
@@ -186,8 +186,10 @@ class CrewAIEventsListener(BaseEventListener):
                 if span.name == "Agent" and span.metadata.get("Agent.key") == str(source.id):
                     agent_span = span
                     break
+            
             if agent_span is None:
                 return
+            
             if retrieved_context is not None:
                 agent_span.llm_test_case.retrieval_context.append(retrieved_context)
 
