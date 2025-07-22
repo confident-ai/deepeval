@@ -486,8 +486,8 @@ class SummarizationMetric(BaseMetric):
             return verdicts
         else:
             try:
-                res: SummarizationAlignmentVerdict = self.model.generate(
-                    prompt, schema=SummarizationAlignmentVerdict
+                res: Verdicts = self.model.generate(
+                    prompt, schema=Verdicts
                 )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
