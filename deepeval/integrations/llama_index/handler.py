@@ -137,10 +137,6 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input=bound_args.arguments,
             )
 
-            print(">>>>>>>>>>>>> bound_args")
-            print(bound_args.arguments.get('start_event').to_dict())
-            print("--------------------------------")
-
             # check if the instance is a PatchedFunctionAgent
             if isinstance(instance, PatchedFunctionAgent):
                 span.metric_collection = instance.metric_collection
