@@ -1,5 +1,6 @@
-from deepeval.test_case.llm_test_case import LLMTestCase
+from deepeval.test_case.llm_test_case import LLMTestCase, ToolCall
 from deepeval.tracing.types import BaseSpan
+from typing import Any
 
 def parse_id(id_: str) -> tuple[str, str]:
     """
@@ -27,3 +28,20 @@ def prepare_input_llm_test_case_params(class_name: str, method_name: str, span: 
                 input=input,
                 actual_output="",
             )
+
+def prepare_output_llm_test_case_params(class_name: str, method_name: str, result: Any, span: BaseSpan):
+    
+    if class_name == "Workflow" and method_name == "run":
+        from llama_index.core.agent.workflow.workflow_events import AgentOutput
+
+        if isinstance(result, AgentOutput):
+            span.llm_test_case.actual_output = result.response.content
+
+            tool_calls = []
+            for tool_call in result.tool_calls:
+                tool_calls.append(ToolCall(
+                    name=tool_call.tool_name,
+                    input_parameters=tool_call.tool_kwargs,
+                ))
+            
+            span.llm_test_case.tools_called = tool_calls

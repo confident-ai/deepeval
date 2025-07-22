@@ -24,7 +24,7 @@ try:
     )
     from llama_index_instrumentation.dispatcher import Dispatcher
     from deepeval.integrations.llama_index.agent import FunctionAgent as PatchedFunctionAgent
-    from deepeval.integrations.llama_index.utils import parse_id, prepare_input_llm_test_case_params    
+    from deepeval.integrations.llama_index.utils import parse_id, prepare_input_llm_test_case_params, prepare_output_llm_test_case_params    
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -161,10 +161,15 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         if base_span is None:
             return None
-
+        
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = result
+
+        if base_span.llm_test_case:
+            class_name, method_name = parse_id(id_)
+            prepare_output_llm_test_case_params(class_name, method_name, result, base_span)
+
         trace_manager.remove_span(base_span.uuid)
 
         if base_span.parent_uuid is None:
