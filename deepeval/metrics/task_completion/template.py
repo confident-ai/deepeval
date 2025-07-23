@@ -1,22 +1,9 @@
 from deepeval.metrics.utils import print_tools_called
 import textwrap
 import json
-
+from deepeval.tracing.utils import make_json_serializable
 # from deepeval.utils import serialize
 
-
-def _json_fallback(obj):
-    """Fallback function for JSON serialization of non-serializable objects."""
-    try:
-        # Try to get a string representation
-        if hasattr(obj, "__str__"):
-            return str(obj)
-        elif hasattr(obj, "__repr__"):
-            return repr(obj)
-        else:
-            return f"<{type(obj).__name__} object>"
-    except Exception:
-        return f"<{type(obj).__name__} object>"
 
 
 class TaskCompletionTemplate:
@@ -209,7 +196,7 @@ class TaskCompletionTemplate:
             **
 
             trace:
-            {json.dumps(trace, default=_json_fallback, indent=2)}
+            {json.dumps(trace, default=make_json_serializable, indent=2)}
 
             JSON:
             """
