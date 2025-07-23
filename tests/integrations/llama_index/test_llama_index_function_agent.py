@@ -9,10 +9,10 @@ import time
 import deepeval
  
 # Don't forget to setup tracing
-deepeval.login_with_confident_api_key("<confident_api_key>")
+deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
 instrument_llama_index(instrument.get_dispatcher())
  
-os.environ["OPENAI_API_KEY"] = "<openai_api_key>"
+os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
  
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""

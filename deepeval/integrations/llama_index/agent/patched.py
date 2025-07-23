@@ -16,12 +16,21 @@ def is_llama_index_agent_installed():
 
 @with_metrics
 class FunctionAgent(FunctionAgent):
-    pass
+    def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metric_collection = metric_collection
+        self.metrics = metrics or []
 
 @with_metrics
 class ReActAgent(ReActAgent):
-    pass
+    def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metric_collection = metric_collection
+        self.metrics = metrics or []
 
 @with_metrics
 class CodeActAgent(CodeActAgent):
-    pass
+    def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.metric_collection = metric_collection
+        self.metrics = metrics or []
