@@ -615,9 +615,7 @@ class TraceManager:
                 trace.feedback, trace_uuid=trace.uuid
             ),
             llmTestCase=trace_test_case,
-            metricCollection=(
-                trace.metric_collection if trace.llm_test_case else None
-            ),
+            metricCollection=trace.metric_collection,
             turnContext=trace.turn_context,
         )
 
@@ -1073,6 +1071,7 @@ def observe(
                 with Observer(
                     type,
                     metrics=metrics,
+                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:

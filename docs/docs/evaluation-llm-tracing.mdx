@@ -4,39 +4,49 @@ title: Setup Tracing
 sidebar_label: Setup Tracing
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be. Tracing is required for component-level evaluation, but we recommend everyone to set it up even if you're running end-to-end evaluations, as it provides full visibility for debugging internal components.
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be.
+
+:::tip
+Tracing is required for component-level evaluation, but we recommend everyone to set it up even if you're running end-to-end evaluations, as it provides full visibility for debugging internal components.
+:::
+
+<Tabs>
+
+<TabItem value="traces" label="Evals on Traces">
+
+Evals on traces are [end-to-end evaluations](/docs/evaluation-end-to-end-llm-evals), where a single LLM interaction is being evaluated.
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/observability:llm-tracing.mp4"
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
   confidentUrl="/docs/llm-tracing/introduction"
   label="Learn how to setup LLM tracing for Confident AI"
 />
 
+</TabItem>
+
+<TabItem value="spans" label="Evals on Spans">
+
+Spans make up a trace and evals on spans represents [component-level evaluations](/docs/evaluation-component-level-llm-evals), where individual components in your LLM app are being evaluated.
+
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Learn how to setup LLM tracing for Confident AI"
+/>
+
+</TabItem>
+
+</Tabs>
+
 Each component above can be grouped into its own **span**, which is an arbitrary scope that you can define anywhere to suit your evaluation and debugging needs. A complete execution of your LLM application creates a **trace**, which contains one or more spans.
 
-:::note
-If you're concerned about how tracing could affect your codebase, [click here](/docs/evaluation-llm-tracing#dont-be-worried-about-tracing) to learn how we've designed `deepeval`'s tracing to not affect it at all.
-:::
+<details>
 
-Tracing in `deepeval` has these benefits:
-
-- **Component-level metrics**: Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs to run targeted metrics like answer relevancy or context precision without refactoring.
-
-- **Create test cases at runtime**: Different components may depend on the outputs of other components, instead of a static dataset `LLMTestCase`s to be set dynamically at runtime as data flows through the system.
-
-- **Component-level debugging**: Trace evaluation across spans to inspect failures at tool calls, intermediate LLM outputs, or retrieved contexts.nt components are interacting with one another for each evaluated test case.
-
-## Why Tracing?
-
-Apart from tracing being mandatory for component-level evaluation, tracing solves these problems that you might have already experienced for end-to-end evaluation:
-
-- **Awkward code changes:** You often need to expose or return internal variables across many layers just to capture `LLMTestCase` parameters for evaluation.
-
-- **Limited visibility:** It's hard to debug individual components (e.g., retrieval, re-ranking, reasoning), and you might end up indexing evaluation results by the name of the component you wish to unit-test.
-
-## Don't Be Worried About Tracing
+<summary>Click here to learn how DeepEval's tracing is non-instrusive</summary>
 
 `deepeval`'s tracing is **non-intrusive**, requires **minimal code change** and **doesn't add latency** to your LLM application. It also:
 
@@ -66,6 +76,24 @@ def complete(query: str):
     update_current_span(test_case=LLMTestCase(input=query, output=response))
     return response
 ```
+
+</details>
+
+Tracing in `deepeval` has these benefits:
+
+- **Component-level metrics**: Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs to run targeted metrics like answer relevancy or context precision without refactoring.
+
+- **Create test cases at runtime**: Different components may depend on the outputs of other components, instead of a static dataset `LLMTestCase`s to be set dynamically at runtime as data flows through the system.
+
+- **Component-level debugging**: Trace evaluation across spans to inspect failures at tool calls, intermediate LLM outputs, or retrieved contexts.nt components are interacting with one another for each evaluated test case.
+
+## Why Tracing?
+
+Apart from tracing being mandatory for component-level evaluation, tracing solves these problems that you might have already experienced for end-to-end evaluation:
+
+- **Awkward code changes:** You often need to expose or return internal variables across many layers just to capture `LLMTestCase` parameters for evaluation.
+
+- **Limited visibility:** It's hard to debug individual components (e.g., retrieval, re-ranking, reasoning), and you might end up indexing evaluation results by the name of the component you wish to unit-test.
 
 :::tip
 Each metric in `metrics` is evaluated using exactly the same algorithm, require the same `LLMTestCase` parameters, and with the same configurations, as you would expect when running evaluations without tracing.
