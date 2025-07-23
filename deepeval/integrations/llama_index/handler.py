@@ -23,7 +23,7 @@ try:
         LLMChatEndEvent,
     )
     from llama_index_instrumentation.dispatcher import Dispatcher
-    from deepeval.integrations.llama_index.agent import FunctionAgent as PatchedFunctionAgent
+    from deepeval.integrations.llama_index.agent.patched import FunctionAgent as PatchedFunctionAgent, ReActAgent as PatchedReActAgent, CodeActAgent as PatchedCodeActAgent
     from deepeval.integrations.llama_index.utils import parse_id, prepare_input_llm_test_case_params, prepare_output_llm_test_case_params    
     llama_index_installed = True
 except:
@@ -139,6 +139,17 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
             # check if the instance is a PatchedFunctionAgent
             if isinstance(instance, PatchedFunctionAgent):
+                span.name = "FunctionAgent"
+                span.metric_collection = instance.metric_collection
+                # span.metrics = instance.metrics # TODO: facing issue with this
+            
+            if isinstance(instance, PatchedReActAgent):
+                span.name = "ReActAgent"
+                span.metric_collection = instance.metric_collection
+                # span.metrics = instance.metrics # TODO: facing issue with this
+            
+            if isinstance(instance, PatchedCodeActAgent):
+                span.name = "CodeActAgent"
                 span.metric_collection = instance.metric_collection
                 # span.metrics = instance.metrics # TODO: facing issue with this
 

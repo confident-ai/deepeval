@@ -2,7 +2,7 @@ from deepeval.tracing.utils import with_metrics
 
 
 try:
-    from llama_index.core.agent.workflow.function_agent import FunctionAgent
+    from llama_index.core.agent.workflow import FunctionAgent, ReActAgent, CodeActAgent
     is_llama_index_installed = True
 except:
     is_llama_index_installed = False
@@ -16,4 +16,12 @@ def is_llama_index_agent_installed():
 
 @with_metrics
 class FunctionAgent(FunctionAgent):
+    pass
+
+@with_metrics
+class ReActAgent(ReActAgent):
+    pass
+
+@with_metrics
+class CodeActAgent(CodeActAgent):
     pass
