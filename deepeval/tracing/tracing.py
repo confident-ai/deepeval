@@ -594,7 +594,7 @@ class TraceManager:
             else None
         )
 
-        a = TraceApi(
+        return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
             agentSpans=agent_spans,
@@ -618,8 +618,6 @@ class TraceManager:
             metricCollection=trace.metric_collection,
             turnContext=trace.turn_context,
         )
-        print(trace.metric_collection)
-        return a
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
         # Determine span type
