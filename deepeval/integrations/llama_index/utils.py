@@ -2,6 +2,18 @@ from deepeval.test_case.llm_test_case import LLMTestCase, ToolCall
 from deepeval.tracing.types import BaseSpan
 from typing import Any
 
+try:
+    from llama_index.core.agent.workflow.workflow_events import AgentOutput, AgentWorkflowStartEvent
+    llama_index_agent_installed = True
+except:
+    llama_index_agent_installed = False
+
+def is_llama_index_agent_installed():
+    if not llama_index_agent_installed:
+        raise ImportError(
+            "llama-index is neccesary for this functionality. Please install it with `pip install llama-index` or with package manager of choice."
+        )
+
 def parse_id(id_: str) -> tuple[str, str]:
     """
     Parse the id_ into a tuple of class name and method name, ignoring any suffix after '-'.
@@ -18,7 +30,7 @@ def prepare_input_llm_test_case_params(class_name: str, method_name: str, span: 
     if class_name == "Workflow" and method_name == "run":
         start_event = args.get("start_event")
         
-        from llama_index.core.agent.workflow.workflow_events import AgentWorkflowStartEvent
+        is_llama_index_agent_installed()
         if isinstance(start_event, AgentWorkflowStartEvent):
             input = ""
             for key, value in start_event.items():
@@ -32,8 +44,8 @@ def prepare_input_llm_test_case_params(class_name: str, method_name: str, span: 
 def prepare_output_llm_test_case_params(class_name: str, method_name: str, result: Any, span: BaseSpan):
     
     if class_name == "Workflow" and method_name == "run":
-        from llama_index.core.agent.workflow.workflow_events import AgentOutput
-
+        
+        is_llama_index_agent_installed()
         if isinstance(result, AgentOutput):
             span.llm_test_case.actual_output = result.response.content
 
