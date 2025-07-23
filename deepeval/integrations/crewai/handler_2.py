@@ -3,11 +3,12 @@ import uuid
 import deepeval
 import functools
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import AgentAttributes
+from deepeval.tracing.attributes import AgentAttributes, LlmAttributes
 from deepeval.tracing.types import (
     BaseSpan,
     TraceSpanStatus,
-    AgentSpan
+    AgentSpan,
+    LlmSpan
 )
 from time import perf_counter
 from deepeval.test_case import LLMTestCase
@@ -69,8 +70,38 @@ class CrewAIEventsListener(BaseEventListener):
         def wrapper(func):
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
+                parent_uuid = None
+                for span_uuid, span in trace_manager.active_spans.items():
+                    if span.name == "Agent" and span.metadata.get("Agent.id") == agent_id:
+                        parent_uuid = span.uuid
+                        break
+                
                 # logic to create llm span under agent span
-                return func(*args, **kwargs)
+                llm_span = LlmSpan(
+                    uuid=str(uuid.uuid4()),
+                    status=TraceSpanStatus.IN_PROGRESS,
+                    children=[],
+                    trace_uuid=self.active_trace_id,
+                    parent_uuid=parent_uuid,
+                    start_time=perf_counter(),
+                    name="LLM",
+                    model = "unknown",# TODO find a way to get the model name
+                    attributes=LlmAttributes(input=args[0], output=""),
+                )
+                trace_manager.add_span(llm_span)
+                trace_manager.add_span_to_trace(llm_span)
+                
+                result = func(*args, **kwargs)
+                
+                llm_span.end_time = perf_counter()
+                llm_span.status = TraceSpanStatus.SUCCESS
+                llm_span.set_attributes(
+                    LlmAttributes(
+                        input=llm_span.attributes.input, output=str(result) # TODO: what if result is not string representable?
+                    )
+                )
+                self.end_span(llm_span)
+                return result
             return wrapper
         return wrapper
 
@@ -122,7 +153,7 @@ class CrewAIEventsListener(BaseEventListener):
                     parent_uuid = span.uuid
                     break
             
-            source.llm.call = self.llm_call_wrapper(source.id)(source.llm.call)
+            source.llm.call = self.llm_call_wrapper(str(source.id))(source.llm.call)
             
             input = None
             expected_ouput = None
