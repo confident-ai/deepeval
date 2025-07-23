@@ -12,18 +12,26 @@ from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 class LocalModel(DeepEvalBaseLLM):
     def __init__(
         self,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        api_key: Optional[str] = None,
         temperature: float = 0,
+        format: Optional[str] = None,
         *args,
         **kwargs,
     ):
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
-        self.local_model_api_key = KEY_FILE_HANDLER.fetch_data(
+        model_name = model or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_NAME
+        )
+        self.local_model_api_key = api_key or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_API_KEY
         )
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
+        self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
             KeyValues.LOCAL_MODEL_BASE_URL
         )
-        self.format = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_FORMAT)
+        self.format = format or KEY_FILE_HANDLER.fetch_data(
+            KeyValues.LOCAL_MODEL_FORMAT
+        )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature

@@ -570,7 +570,7 @@ class EvolutionTemplate:
             Example input: 
             What are the principles behind solar power generation?
             Example rewritten input:
-            Examine the significance of rainforest biodiversity in sustaining ecosystem resilience and providing essential services such as disease control and crop pollination, alongside its critical role in medical research and the development of new medicines. Consider the broader implications of biodiversity loss on global ecological balance and human health.
+            Explain how photovoltaic cells convert sunlight into electricity and discuss the environmental benefits of solar power as a sustainable energy source.
             **
 
             Context:

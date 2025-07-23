@@ -6,13 +6,13 @@ sidebar_label: Multi-Turn
 
 ## Quick Summary
 
-A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **TWO** parameters:
+A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **FIVE** parameters:
 
 - `turns`
-- `scenario`
-- `expected_outcome`
-- `user_description`
-- `chatbot_role`
+- [Optional] `scenario`
+- [Optional] `expected_outcome`
+- [Optional] `user_description`
+- [Optional] `chatbot_role`
 
 :::note
 `deepeval` makes the assumption that a multi-turn use case are mainly conversational chatbots. Agents on the other hand, should be evaluated via [component-level evaluation](/docs/evaluation-component-level-llm-evals) instead, where each component in your agentic workflow is assessed individually.
@@ -28,7 +28,7 @@ test_case = ConversationalTestCase(
     expected_outcome="AI should respond in friendly manner.",
     turns=[
         Turn(role="user", content="How are you doing?"),
-        Turn(role="assistant", content="Why do you care?)
+        Turn(role="assistant", content="Why do you care?")
     ]
 )
 ```
@@ -43,14 +43,8 @@ A `ConversationalTestCase` can only be evaluated using **conversational metrics.
 from deepeval.test_case import Turn, ConversationalTestCase
 
 turns = [
-    Turn(
-        role="assistant",
-        content="Why did the chicken cross the road?",
-    ),
-    Turn(
-        role="user",
-        content="Are you trying to be funny?",
-    ),
+    Turn(role="user", content="Why did the chicken cross the road?"),
+    Turn(role="assistant", content="Are you trying to be funny?"),
 ]
 
 test_case = ConversationalTestCase(turns=turns)

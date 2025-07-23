@@ -412,6 +412,117 @@ def unset_local_model_env():
 
 
 #############################################
+# Grok Model Integration ####################
+#############################################
+
+
+@app.command(name="set-grok")
+def set_grok_model_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the Grok model"
+    ),
+    api_key: str = typer.Option(
+        ..., "--api-key", help="API key for the Grok model"
+    ),
+    temperature: float = typer.Option(
+        0, "--temperature", help="Temperature for the Grok model"
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.GROK_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.GROK_API_KEY, api_key)
+    KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_GROK_MODEL, "YES")
+    print(
+        ":raising_hands: Congratulations! You're now using a Grok model for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-grok")
+def unset_grok_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.GROK_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.GROK_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.TEMPERATURE)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_GROK_MODEL)
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+#############################################
+# Moonshot Model Integration ################
+#############################################
+
+
+@app.command(name="set-moonshot")
+def set_moonshot_model_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the Moonshot model"
+    ),
+    api_key: str = typer.Option(
+        ..., "--api-key", help="API key for the Moonshot model"
+    ),
+    temperature: float = typer.Option(
+        0, "--temperature", help="Temperature for the Moonshot model"
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.MOONSHOT_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.MOONSHOT_API_KEY, api_key)
+    KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_MOONSHOT_MODEL, "YES")
+    print(
+        ":raising_hands: Congratulations! You're now using a Moonshot model for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-moonshot")
+def unset_moonshot_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.MOONSHOT_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.MOONSHOT_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.TEMPERATURE)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_MOONSHOT_MODEL)
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+#############################################
+# DeepSeek Model Integration ################
+#############################################
+
+
+@app.command(name="set-deepseek")
+def set_deepseek_model_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the DeepSeek model"
+    ),
+    api_key: str = typer.Option(
+        ..., "--api-key", help="API key for the DeepSeek model"
+    ),
+    temperature: float = typer.Option(
+        0, "--temperature", help="Temperature for the DeepSeek model"
+    ),
+):
+    KEY_FILE_HANDLER.write_key(KeyValues.DEEPSEEK_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(KeyValues.DEEPSEEK_API_KEY, api_key)
+    KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
+    KEY_FILE_HANDLER.write_key(KeyValues.USE_DEEPSEEK_MODEL, "YES")
+    print(
+        ":raising_hands: Congratulations! You're now using a DeepSeek model for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-deepseek")
+def unset_deepseek_model_env():
+    KEY_FILE_HANDLER.remove_key(KeyValues.DEEPSEEK_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(KeyValues.DEEPSEEK_API_KEY)
+    KEY_FILE_HANDLER.remove_key(KeyValues.TEMPERATURE)
+    KEY_FILE_HANDLER.remove_key(KeyValues.USE_DEEPSEEK_MODEL)
+    print(
+        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
+    )
+
+
+#############################################
 # Local Embedding Model Integration #########
 #############################################
 

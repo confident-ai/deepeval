@@ -1,0 +1,66 @@
+---
+# id: moonshot
+title: Moonshot
+sidebar_label: Moonshot
+---
+
+DeepEval's integration with Moonshot AI allows you to use any Moonshot models to power all of DeepEval's metrics.
+
+### Command Line
+
+To configure your Moonshot model through the CLI, run the following command:
+
+```bash
+deepeval set-moonshot \
+    --model "kimi-k2-0711-preview" \
+    --api-key "your-api-key" \
+    --temperature=0
+```
+
+:::info
+The CLI command above sets Moonshot as the default provider for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset Moonshot:
+
+```bash
+deepeval unset-moonshot
+```
+
+:::
+
+### Python
+
+Alternatively, you can define `KimiModel` directly in python code:
+
+```python
+from deepeval.models import KimiModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = KimiModel(
+    model_name="kimi-k2-0711-preview",
+    api_key="your-api-key",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+There are **TWO** mandatory and **ONE** optional parameters when creating an `KimiModel`:
+
+- `model`: A string specifying the name of the Kimi model to use.
+- `api_key`: A string specifying your Kimi API key for authentication.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+
+### Available Moonshot Models
+
+Below is a comprehensive list of available Moonshot models:
+
+- `kimi-k2-0711-preview`
+- `kimi-thinking-preview`
+- `moonshot-v1-8k`
+- `moonshot-v1-32k`
+- `moonshot-v1-128k`
+- `moonshot-v1-8k-vision-preview`
+- `moonshot-v1-32k-vision-preview`
+- `moonshot-v1-128k-vision-preview`
+- `kimi-latest-8k`
+- `kimi-latest-32k`
+- `kimi-latest-128k`

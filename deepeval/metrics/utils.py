@@ -27,6 +27,9 @@ from deepeval.models import (
     MultimodalOllamaModel,
     AmazonBedrockModel,
     LiteLLMModel,
+    KimiModel,
+    GrokModel,
+    DeepSeekModel,
 )
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.metrics import (
@@ -399,6 +402,21 @@ def should_use_litellm():
     return value.lower() == "yes" if value is not None else False
 
 
+def should_use_deepseek_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_DEEPSEEK_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_moonshot_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_MOONSHOT_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
+def should_use_grok_model():
+    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GROK_MODEL)
+    return value.lower() == "yes" if value is not None else False
+
+
 ###############################################
 # LLM
 ###############################################
@@ -428,6 +446,12 @@ def initialize_model(
         return LocalModel(), True
     elif should_use_azure_openai():
         return AzureOpenAIModel(model=model), True
+    elif should_use_moonshot_model():
+        return KimiModel(model=model), True
+    elif should_use_grok_model():
+        return GrokModel(model=model), True
+    elif should_use_deepseek_model():
+        return DeepSeekModel(model=model), True
     elif isinstance(model, str) or model is None:
         return GPTModel(model=model), True
 
@@ -449,6 +473,9 @@ def is_native_model(
         or isinstance(model, GeminiModel)
         or isinstance(model, AmazonBedrockModel)
         or isinstance(model, LiteLLMModel)
+        or isinstance(model, KimiModel)
+        or isinstance(model, GrokModel)
+        or isinstance(model, DeepSeekModel)
     ):
         return True
     else:
