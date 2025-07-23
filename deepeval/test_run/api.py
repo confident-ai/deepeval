@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Union, Dict
 
-from deepeval.test_case import MLLMImage
+from deepeval.test_case import MLLMImage, ToolCall
 from deepeval.tracing.api import TraceApi, MetricData
 
 
@@ -117,7 +117,7 @@ class TurnApi(BaseModel):
     content: str
     order: int
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
-    tools_called: Optional[list] = Field(None, alias="toolsCalled")
+    tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
