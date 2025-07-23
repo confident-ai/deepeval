@@ -15,6 +15,7 @@ from deepeval.metrics import (
     BaseConversationalMetric,
     BaseMetric,
 )
+from deepeval.evaluate.types import EvaluationResult
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -63,18 +64,30 @@ class EvaluationDataset:
     ):
         self._alias = None
         self._id = None
+        if len(goldens) > 0:
+            self._multi_turn = (
+                True if isinstance(goldens[0], ConversationalGolden) else False
+            )
 
         goldens_list = []
         conversational_goldens_list = []
         for golden in goldens:
-            if isinstance(golden, Golden):
-                self._multi_turn = False
-                golden._dataset_rank = len(goldens)
-                goldens_list.append(golden)
-            elif isinstance(golden, ConversationalGolden):
-                self._multi_turn = True
-                golden._dataset_rank = len(goldens)
-                conversational_goldens_list.append(golden)
+            if self._multi_turn:
+                if isinstance(golden, ConversationalGolden):
+                    golden._dataset_rank = len(goldens)
+                    conversational_goldens_list.append(golden)
+                else:
+                    raise TypeError(
+                        "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGoldens."
+                    )
+            else:
+                if isinstance(golden, Golden):
+                    golden._dataset_rank = len(goldens)
+                    goldens_list.append(golden)
+                else:
+                    raise TypeError(
+                        "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
+                    )
 
         self._goldens = goldens_list
         self._conversational_goldens = conversational_goldens_list
@@ -106,16 +119,28 @@ class EvaluationDataset:
             if not isinstance(golden, Golden) and not isinstance(
                 golden, ConversationalGolden
             ):
-                continue
+                raise TypeError(
+                    "Your goldens must be instances of either ConversationalGolden or Golden"
+                )
 
             golden._dataset_alias = self._alias
             golden._dataset_id = self._id
-            if isinstance(golden, Golden):
-                golden._dataset_rank = len(goldens_list)
-                goldens_list.append(golden)
-            elif isinstance(golden, ConversationalGolden):
-                golden._dataset_rank = len(conversational_goldens_list)
-                conversational_goldens_list.append(golden)
+            if self._multi_turn:
+                if isinstance(golden, ConversationalGolden):
+                    golden._dataset_rank = len(goldens)
+                    conversational_goldens_list.append(golden)
+                else:
+                    raise TypeError(
+                        "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGoldens."
+                    )
+            else:
+                if isinstance(golden, Golden):
+                    golden._dataset_rank = len(goldens)
+                    goldens_list.append(golden)
+                else:
+                    raise TypeError(
+                        "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
+                    )
 
         self._goldens = goldens_list
         self._conversational_goldens = conversational_goldens_list
@@ -167,6 +192,22 @@ class EvaluationDataset:
             test_case._dataset_rank = len(self._conversational_test_cases)
             self._conversational_test_cases.append(test_case)
 
+    def add_golden(self, golden: Union[Golden, ConversationalGolden]):
+        if self._multi_turn:
+            if isinstance(golden, ConversationalGolden):
+                self._conversational_goldens.append(golden)
+            else:
+                raise TypeError(
+                    "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGolden."
+                )
+        else:
+            if isinstance(golden, Golden):
+                self._goldens.append(golden)
+            else:
+                raise TypeError(
+                    "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
+                )
+
     def __len__(self):
         return len(self.test_cases)
 
@@ -176,7 +217,7 @@ class EvaluationDataset:
     def evaluate(
         self,
         metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
-    ) -> "EvaluationResult":
+    ) -> EvaluationResult:
         from deepeval import evaluate
 
         if len(self.test_cases) == 0:
