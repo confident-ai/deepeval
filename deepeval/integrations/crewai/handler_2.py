@@ -6,6 +6,7 @@ from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import AgentAttributes, LlmAttributes
 from deepeval.tracing.types import (
     BaseSpan,
+    ToolSpan,
     TraceSpanStatus,
     AgentSpan,
     LlmSpan
@@ -20,6 +21,7 @@ try:
         AgentExecutionStartedEvent,
         AgentExecutionCompletedEvent,
         ToolUsageStartedEvent,
+        ToolUsageFinishedEvent,
         # MemoryQueryCompletedEvent,
         MemoryRetrievalCompletedEvent
     )
@@ -213,28 +215,54 @@ class CrewAIEventsListener(BaseEventListener):
                     )
                     span.llm_test_case.tools_called.append(tool_call)
             
-        @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
-        def on_knowledge_retrieval_completed(source, event: KnowledgeRetrievalCompletedEvent):
+        # @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
+        # def on_knowledge_retrieval_completed(source, event: KnowledgeRetrievalCompletedEvent):
             
-            if isinstance(event.retrieved_knowledge, str):
-                retrieved_context = event.retrieved_knowledge
-            else:
-                try:
-                    retrieved_context = str(event.retrieved_knowledge)
-                except Exception:
-                    retrieved_context = None
+        #     if isinstance(event.retrieved_knowledge, str):
+        #         retrieved_context = event.retrieved_knowledge
+        #     else:
+        #         try:
+        #             retrieved_context = str(event.retrieved_knowledge)
+        #         except Exception:
+        #             retrieved_context = None
 
-            agent_span = None
+        #     agent_span = None
+        #     for span_uuid, span in trace_manager.active_spans.items():
+        #         if span.name == "Agent" and span.metadata.get("Agent.key") == str(source.id):
+        #             agent_span = span
+        #             break
+            
+        #     if agent_span is None:
+        #         return
+            
+        #     if retrieved_context is not None:
+        #         agent_span.llm_test_case.retrieval_context.append(retrieved_context)
+
+        @crewai_event_bus.on(ToolUsageFinishedEvent)
+        def on_tool_usage_finished(source, event: ToolUsageFinishedEvent):
+            parent_uuid = None
             for span_uuid, span in trace_manager.active_spans.items():
-                if span.name == "Agent" and span.metadata.get("Agent.key") == str(source.id):
-                    agent_span = span
+                if span.name == "Agent" and span.metadata.get("Agent.key") == str(event.agent_key):
+                    parent_uuid = span.uuid
                     break
             
-            if agent_span is None:
-                return
-            
-            if retrieved_context is not None:
-                agent_span.llm_test_case.retrieval_context.append(retrieved_context)
+            tool_span = ToolSpan(
+                uuid=str(uuid.uuid4()),
+                status=TraceSpanStatus.SUCCESS,
+                children=[],
+                trace_uuid=self.active_trace_id,
+                parent_uuid=parent_uuid,
+                start_time=event.started_at.timestamp(),  # start time of the tool usage (conver datetime to epoch)
+                end_time=event.finished_at.timestamp(),  # end time of the tool usage (conver datetime to epoch)
+                name=event.tool_name,  # name of the tool
+                input=event.tool_args,  # from the event
+                output=event.output,  # from the event
+            )
+            trace_manager.add_span(tool_span)
+            trace_manager.add_span_to_trace(tool_span)
+
+            # remove the tool span from the trace, since it is a completed span
+            trace_manager.remove_span(tool_span.uuid)
 
 def instrumentator(api_key: Optional[str] = None):
     if api_key:
