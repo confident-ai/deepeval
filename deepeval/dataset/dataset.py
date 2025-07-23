@@ -69,28 +69,15 @@ class EvaluationDataset:
                 True if isinstance(goldens[0], ConversationalGolden) else False
             )
 
-        goldens_list = []
-        conversational_goldens_list = []
+        self._goldens = []
+        self._conversational_goldens = []
         for golden in goldens:
+            golden._dataset_rank = len(goldens)
             if self._multi_turn:
-                if isinstance(golden, ConversationalGolden):
-                    golden._dataset_rank = len(goldens)
-                    conversational_goldens_list.append(golden)
-                else:
-                    raise TypeError(
-                        "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGoldens."
-                    )
+                self._add_conversational_golden(golden)
             else:
-                if isinstance(golden, Golden):
-                    golden._dataset_rank = len(goldens)
-                    goldens_list.append(golden)
-                else:
-                    raise TypeError(
-                        "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
-                    )
+                self._add_golden(golden)
 
-        self._goldens = goldens_list
-        self._conversational_goldens = conversational_goldens_list
         self._llm_test_cases = []
         self._conversational_test_cases = []
 
@@ -113,37 +100,30 @@ class EvaluationDataset:
         self,
         goldens: Union[List[Golden], List[ConversationalGolden]],
     ):
-        goldens_list = []
-        conversational_goldens_list = []
-        for golden in goldens:
-            if not isinstance(golden, Golden) and not isinstance(
-                golden, ConversationalGolden
-            ):
-                raise TypeError(
-                    "Your goldens must be instances of either ConversationalGolden or Golden"
-                )
-
-            golden._dataset_alias = self._alias
-            golden._dataset_id = self._id
-            if self._multi_turn:
-                if isinstance(golden, ConversationalGolden):
-                    golden._dataset_rank = len(goldens)
-                    conversational_goldens_list.append(golden)
-                else:
+        goldens_list = self._goldens
+        conversational_goldens_list = self._conversational_goldens
+        self._goldens = []
+        self._conversational_goldens = []
+        try:
+            for golden in goldens:
+                if not isinstance(golden, Golden) and not isinstance(
+                    golden, ConversationalGolden
+                ):
                     raise TypeError(
-                        "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGoldens."
-                    )
-            else:
-                if isinstance(golden, Golden):
-                    golden._dataset_rank = len(goldens)
-                    goldens_list.append(golden)
-                else:
-                    raise TypeError(
-                        "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
+                        "Your goldens must be instances of either ConversationalGolden or Golden"
                     )
 
-        self._goldens = goldens_list
-        self._conversational_goldens = conversational_goldens_list
+                golden._dataset_alias = self._alias
+                golden._dataset_id = self._id
+                golden._dataset_rank = len(goldens)
+                if self._multi_turn:
+                    self._add_conversational_golden(golden)
+                else:
+                    self.add_golden(golden)
+        except Exception as e:
+            self._goldens = goldens_list
+            self._conversational_goldens = conversational_goldens_list
+            raise e
 
     @property
     def test_cases(
@@ -194,19 +174,25 @@ class EvaluationDataset:
 
     def add_golden(self, golden: Union[Golden, ConversationalGolden]):
         if self._multi_turn:
-            if isinstance(golden, ConversationalGolden):
-                self._conversational_goldens.append(golden)
-            else:
-                raise TypeError(
-                    "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGolden."
-                )
+            self._add_conversational_golden(golden)
         else:
-            if isinstance(golden, Golden):
-                self._goldens.append(golden)
-            else:
-                raise TypeError(
-                    "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
-                )
+            self._add_golden(golden)
+            
+    def _add_golden(self, golden: Union[Golden, ConversationalGolden]):
+        if isinstance(golden, Golden):
+            self._goldens.append(golden)
+        else:
+            raise TypeError(
+                "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
+            )
+    
+    def _add_conversational_golden(self, golden: Union[Golden, ConversationalGolden]):
+        if isinstance(golden, ConversationalGolden):
+            self._conversational_goldens.append(golden)
+        else:
+            raise TypeError(
+                "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGolden."
+            )
 
     def __len__(self):
         return len(self.test_cases)
