@@ -1,6 +1,7 @@
 from typing import Optional
 import uuid
 import deepeval
+import functools
 from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import AgentAttributes
 from deepeval.tracing.types import (
@@ -63,6 +64,15 @@ class CrewAIEventsListener(BaseEventListener):
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         trace_manager.remove_span(base_span.uuid)
+    
+    def llm_call_wrapper(self, agent_id: str):
+        def wrapper(func):
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                # logic to create llm span under agent span
+                return func(*args, **kwargs)
+            return wrapper
+        return wrapper
 
     def setup_listeners(self, crewai_event_bus):
         @crewai_event_bus.on(CrewKickoffStartedEvent)
@@ -111,6 +121,8 @@ class CrewAIEventsListener(BaseEventListener):
                 if span.name == "Crew" and span.metadata.get("Crew.id") == str(source.crew.id):
                     parent_uuid = span.uuid
                     break
+            
+            source.llm.call = self.llm_call_wrapper(source.id)(source.llm.call)
             
             input = None
             expected_ouput = None
