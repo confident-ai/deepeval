@@ -177,7 +177,7 @@ class EvaluationDataset:
             self._add_conversational_golden(golden)
         else:
             self._add_golden(golden)
-            
+
     def _add_golden(self, golden: Union[Golden, ConversationalGolden]):
         if isinstance(golden, Golden):
             self._goldens.append(golden)
@@ -185,8 +185,10 @@ class EvaluationDataset:
             raise TypeError(
                 "You cannot add a multi-turn ConversationalGolden to a single-turn dataset. You can only add a Golden."
             )
-    
-    def _add_conversational_golden(self, golden: Union[Golden, ConversationalGolden]):
+
+    def _add_conversational_golden(
+        self, golden: Union[Golden, ConversationalGolden]
+    ):
         if isinstance(golden, ConversationalGolden):
             self._conversational_goldens.append(golden)
         else:
