@@ -1,1 +1,1 @@
-from .handler_2 import instrumentator
+from .handler import instrumentator
