@@ -109,7 +109,7 @@ class CallbackHandler(BaseCallbackHandler):
                 True  # to avoid posting the trace to the server
             )
             trace_manager.evaluation_loop = (
-                False  # to avoid traces being evaluated twice
+                True  # to avoid traces being evaluated twice
             )
             trace_manager.integration_traces_to_evaluate.append(current_trace)
 

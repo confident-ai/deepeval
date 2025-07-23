@@ -185,7 +185,9 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 if self.evaluation_loop:
-                    if trace_uuid in self.traces_to_evaluate_order:
+                    if self.integration_traces_to_evaluate:
+                        pass
+                    elif trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
                         self.traces_to_evaluate.sort(
                             key=lambda t: self.traces_to_evaluate_order.index(
@@ -193,11 +195,10 @@ class TraceManager:
                             )
                         )
                 else:
-                    if not self.integration_traces_to_evaluate:
-                        self.environment = Environment.TESTING
-                        trace.root_spans = [trace.root_spans[0].children[0]]
-                        for root_span in trace.root_spans:
-                            root_span.parent_uuid = None
+                    self.environment = Environment.TESTING
+                    trace.root_spans = [trace.root_spans[0].children[0]]
+                    for root_span in trace.root_spans:
+                        root_span.parent_uuid = None
 
             # Remove from active traces
             del self.active_traces[trace_uuid]
