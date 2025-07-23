@@ -594,7 +594,7 @@ class TraceManager:
             else None
         )
 
-        return TraceApi(
+        a = TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
             agentSpans=agent_spans,
@@ -615,11 +615,11 @@ class TraceManager:
                 trace.feedback, trace_uuid=trace.uuid
             ),
             llmTestCase=trace_test_case,
-            metricCollection=(
-                trace.metric_collection if trace.llm_test_case else None
-            ),
+            metricCollection=trace.metric_collection,
             turnContext=trace.turn_context,
         )
+        print(trace.metric_collection)
+        return a
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
         # Determine span type
@@ -1073,6 +1073,7 @@ def observe(
                 with Observer(
                     type,
                     metrics=metrics,
+                    metric_collection=metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:

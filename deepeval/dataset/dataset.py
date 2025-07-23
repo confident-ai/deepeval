@@ -780,8 +780,6 @@ class EvaluationDataset:
                 # Pydantic version below 2.0
                 body = api_dataset.dict(by_alias=True, exclude_none=True)
 
-            print(body, "@@")
-
             api = Api()
             result = api.send_request(
                 method=HttpMethods.POST,
