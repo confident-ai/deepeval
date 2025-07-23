@@ -1,7 +1,7 @@
 import os
 from deepeval.integrations.llama_index import instrument_llama_index
 import llama_index.core.instrumentation as instrument
-from deepeval.integrations.llama_index.agent import FunctionAgent
+from deepeval.integrations.llama_index import FunctionAgent
 from llama_index.llms.openai import OpenAI
 import asyncio
 import time
