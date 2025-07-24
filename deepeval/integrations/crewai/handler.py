@@ -57,15 +57,15 @@ class CrewAIEventsListener(BaseEventListener):
     
     def end_trace(self, base_span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+        if self.is_offline_eval:
+            trace_manager.integration_traces_to_evaluate.append(current_trace)
+            self.is_offline_eval = False
         if current_trace is not None:
             current_trace.input = base_span.input
             current_trace.output = base_span.output
         if self.active_trace_id is not None:
             trace_manager.end_trace(self.active_trace_id)
             self.active_trace_id = None
-        if self.is_offline_eval:
-            trace_manager.integration_traces_to_evaluate.append(current_trace)
-            self.is_offline_eval = False
 
     def end_span(self, base_span: BaseSpan):
         base_span.end_time = perf_counter()
