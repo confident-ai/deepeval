@@ -2,7 +2,8 @@ import os
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-
+from deepeval.metrics import BaseMetric
+from deepeval.tracing.api import MetricData
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
 

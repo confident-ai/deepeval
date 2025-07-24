@@ -92,6 +92,7 @@ class SimpleChatbot:
         self.history.append({"role": "assistant", "content": reply})
         return reply
 ```
+
 </details>
 
 :::note
@@ -232,7 +233,7 @@ evaluate(test_cases=convo_test_cases, metrics=metrics)
 With the evaluation complete, it's clear our chatbot has room for improvement. These were the results when I evaluated the chatbot:
 
 | Metric                    | Score |
-|---------------------------|-------|
+| ------------------------- | ----- |
 | Knowledge Retention       | 0.7   |
 | Role Adherence            | 0.6   |
 | Medical Assistant Quality | 0.5   |
@@ -330,6 +331,7 @@ class SimpleChatbot:
     async def a_chat(self, user_input: str) -> str:
         # Use `acreate` method and implement the asynchronous chat method here
 ```
+
 </details>
 
 Now that our chatbot supports these hyperparameters, we can begin experimenting with different combinations to see which configuration performs best across evaluation metrics.
@@ -386,7 +388,7 @@ for model_name in models:
                 test_case.chatbot_role = "a professional, empathetic medical assistant"
 
             # Evaluate and print metrics
-            evaluate(test_cases=convo_test_cases, metrics=metrics)    
+            evaluate(test_cases=convo_test_cases, metrics=metrics)
 ```
 
 After running all combinations, one configuration clearly stood out:
@@ -398,7 +400,7 @@ After running all combinations, one configuration clearly stood out:
 This setup consistently delivered high scores across all evaluation metrics:
 
 | Metric                    | Score |
-|---------------------------|-------|
+| ------------------------- | ----- |
 | Knowledge Retention       | 0.9   |
 | Role Adherence            | 0.9   |
 | Medical Assistant Quality | 0.8   |
@@ -406,7 +408,7 @@ This setup consistently delivered high scores across all evaluation metrics:
 Here’s a quick before-and-after comparison:
 
 | Metric                    | Initial Version | Optimized Version |
-|---------------------------|-----------------|-------------------|
+| ------------------------- | --------------- | ----------------- |
 | Knowledge Retention       | 0.7             | 0.9               |
 | Role Adherence            | 0.6             | 0.9               |
 | Medical Assistant Quality | 0.5             | 0.8               |
@@ -508,7 +510,7 @@ def test_chatbot_performance(test_case: ConversationalTestCase):
 This test file plugs straight into any CI setup (GitHub Actions, GitLab CI, etc.), so your chatbot keeps meeting quality and safety standards with every push. Just run:
 
 ```bash title="bash"
-poetry run deepeval test run test_chatbot_quality.py
+poetry run pytest -v test_chatbot_quality.py
 ```
 
 Now let’s write our GitHub actions file to complete our CI integration.
@@ -545,7 +547,7 @@ jobs:
       - name: Run DeepEval Unit Tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: poetry run deepeval test run test_chatbot_quality.py
+        run: poetry run pytest -v test_chatbot_quality.py
 ```
 
 ## Conclusion
@@ -554,6 +556,6 @@ We’ve seen how even a simple chatbot can miss the mark — and how **DeepEval*
 
 By simulating real conversations, defining the right metrics, and plugging evaluation into CI, you catch issues early — before they ever reach a real user. No guesswork. No assumptions. Just measurable, repeatable quality.
 
-Whether you're fixing hallucinations or fine-tuning prompts, the mindset is the same: treat your chatbot like any other critical system — test it, iterate on it, and never ship blind. 
+Whether you're fixing hallucinations or fine-tuning prompts, the mindset is the same: treat your chatbot like any other critical system — test it, iterate on it, and never ship blind.
 
 Already have a bot in production? Start evaluating it. You might be surprised by what you find.

@@ -33,14 +33,6 @@ test_case = ConversationalTestCase(
 )
 ```
 
-## Multi-Turn LLM Interaction
-
-Different from a [single-turn LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), a multi-turn LLM interaction encapsulates exchanges between a user and a conversational agent/chatbot, which is represented by a `ConversationalTestCase` in `deepeval`.
-
-![Conversational Test Case](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
-
-The `turns` parameter in a conversational test case is vital to specifying the roles and content of a conversation (in OpenAI API format), and allows you to supply any optional `tools_called` and `retrieval_context`. Additional optional parameters such as `scenario` and `expected outcome` is best suited for users converting [`ConversationalGolden`s](/docs/evaluation-datasets#goldens-data-model) to test cases at evaluation time.
-
 ## Conversational Test Case
 
 While a [single-turn test case](/docs/evaluation-test-cases) represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
@@ -73,6 +65,7 @@ class Turn:
     user_id: Optional[str] = None
     retrieval_context: Optional[List[str]] = None
     tools_called: Optional[List[ToolCall]] = None
+    additional_metadata: Optional[Dict] = None
 ```
 
 :::info

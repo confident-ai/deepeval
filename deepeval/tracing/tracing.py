@@ -52,15 +52,14 @@ from deepeval.tracing.utils import (
     Environment,
     make_json_serializable,
     perf_counter_to_datetime,
-    to_zod_compatible_iso,
     tracing_enabled,
+    to_zod_compatible_iso,
     validate_environment,
     validate_sampling_rate,
 )
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
-
 
 class TraceManager:
     def __init__(self):
@@ -98,6 +97,7 @@ class TraceManager:
         self.evaluation_loop = False
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
+        self.integration_traces_to_evaluate: List[Trace] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -185,7 +185,9 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 if self.evaluation_loop:
-                    if trace_uuid in self.traces_to_evaluate_order:
+                    if self.integration_traces_to_evaluate:
+                        pass
+                    elif trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
                         self.traces_to_evaluate.sort(
                             key=lambda t: self.traces_to_evaluate_order.index(
@@ -193,7 +195,6 @@ class TraceManager:
                             )
                         )
                 else:
-                    # print(f"Ending trace: {trace.root_spans}")
                     self.environment = Environment.TESTING
                     trace.root_spans = [trace.root_spans[0].children[0]]
                     for root_span in trace.root_spans:
@@ -392,7 +393,6 @@ class TraceManager:
                     body = trace_api.dict(by_alias=True, exclude_none=True)
                 # If the main thread is still alive, send now
                 body = make_json_serializable(body)
-
                 if main_thr.is_alive():
                     api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
@@ -678,6 +678,7 @@ class TraceManager:
             else None
         )
 
+        from deepeval.evaluate.utils import create_metric_data
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -695,6 +696,11 @@ class TraceManager:
             metricCollection=span.metric_collection,
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
+            ),
+            metricsData=(
+                [create_metric_data(metric) for metric in span.metrics]
+                if span.metrics
+                else None
             ),
         )
 
