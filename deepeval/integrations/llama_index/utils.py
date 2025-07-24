@@ -17,12 +17,22 @@ def is_llama_index_agent_installed():
 def parse_id(id_: str) -> tuple[str, str]:
     """
     Parse the id_ into a tuple of class name and method name, ignoring any suffix after '-'.
+    Returns empty strings as defaults if parsing fails.
     """
-    # Ignore everything after the first '-'
-    main_part = id_.split("-", 1)[0]
-    # Split by '.' to get class and method
-    class_name, method_name = main_part.rsplit(".", 1)
-    return class_name, method_name
+    try:
+        # Ignore everything after the first '-'
+        main_part = id_.split("-", 1)[0]
+        # Split by '.' to get class and method
+        parts = main_part.rsplit(".", 1)
+        if len(parts) == 2:
+            class_name, method_name = parts
+        else:
+            # If no '.' found, treat the whole string as class_name
+            class_name, method_name = main_part, ""
+        return class_name, method_name
+    except:
+        # Return empty strings if any parsing fails
+        return "", ""
 
 def prepare_input_llm_test_case_params(class_name: str, method_name: str, span: BaseSpan, args: dict):
     
