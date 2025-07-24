@@ -177,6 +177,7 @@ class CrewAIEventsListener(BaseEventListener):
                     "Agent.key": str(source.key),
                 }, 
                 metric_collection=agent_registry.get_metric_collection(source),
+                metrics=agent_registry.get_metrics(source),
                 available_tools=[tool.name for tool in source.tools]
             )
             agent_span.llm_test_case = LLMTestCase(
