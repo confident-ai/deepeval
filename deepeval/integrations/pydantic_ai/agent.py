@@ -1,4 +1,3 @@
-import contextvars
 from typing import override
 from pydantic_ai.agent import Agent
 
