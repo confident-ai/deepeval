@@ -9,11 +9,18 @@ from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
 from deepeval.tracing.otel.utils import to_hex_string
 from deepeval.tracing.tracing import to_zod_compatible_iso
+from enum import Enum
+
+class FrameworkEnum(str, Enum):
+    DEFAULT = "default"
+    PYDANTIC_AI = "pydantic_ai"
 
 class ConfidentSpanExporterV1(SpanExporter):
-    active_trace_id: Optional[str] = None
+    active_trace_id: Optional[str] = None #TODO: introduce support for distributed systems
+    framework: FrameworkEnum
 
-    def __init__(self):
+    def __init__(self, framework: Optional[FrameworkEnum] = FrameworkEnum.DEFAULT):
+        self.framework = framework
         capture_tracing_integration("deepeval.tracing.otel.exporter_v1")
         super().__init__()
 
@@ -29,22 +36,26 @@ class ConfidentSpanExporterV1(SpanExporter):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
     
-
+    def handle_default_framework(self, span: ReadableSpan):
+        return BaseSpan(
+            uuid=to_hex_string(span.context.span_id, 16),
+            status=TraceSpanStatus.SUCCESS, # TODO: handle status
+            children=[],
+            trace_uuid=self.active_trace_id,
+            start_time=span.start_time/1e9,
+            end_time=span.end_time/1e9,
+            parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
+            name=span.name,
+            metadata=json.loads(span.to_json())
+        )
+    
     def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         self.check_active_trace_id()
         spans_list: List[BaseSpan] = []
         for span in spans:
-            base_span = BaseSpan(
-                uuid=to_hex_string(span.context.span_id, 16),
-                status=TraceSpanStatus.SUCCESS,
-                children=[],
-                trace_uuid=self.active_trace_id,
-                start_time=span.start_time/1e9,
-                end_time=span.end_time/1e9,
-                parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
-                name=span.name,
-                metadata=json.loads(span.to_json())
-            )
+            if self.framework == FrameworkEnum.DEFAULT:
+                base_span = self.handle_default_framework(span)
+
             spans_list.append(base_span)
         
         for base_span in reversed(spans_list):
