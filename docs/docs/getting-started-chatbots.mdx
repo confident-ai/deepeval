@@ -41,8 +41,6 @@ deepeval login
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
-      scroll
     >
       {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
         "\n" +
@@ -66,8 +64,7 @@ deepeval login
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
-      scroll
+      metastring="{5}"
     >
       {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
         "\n" +
@@ -89,8 +86,6 @@ deepeval login
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
-      scroll
     >
       {"from deepeval.metrics import RoleAdherenceMetric, KnowledgeRetentionMetric\n" +
         "\n" +
@@ -106,8 +101,6 @@ deepeval login
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
-      scroll
     >
       {"from deepeval import evaluate\n" +
         "...\n\n" +
@@ -123,7 +116,7 @@ deepeval login
 In this section, you'll learn how to <a href="/docs/conversation-simulator">simulate conversations</a> with your chatbot using DeepEval.
 
 :::tip
-If you don't have conversation histories, simulation is an efficient way to generate conversations for evaluation. You can skip this section if you already have a conversational dataset.
+If you don't have conversation histories, simulation is an **efficient way to generate conversations** for evaluation. You can skip this section if you already have a conversational dataset.
 :::
 
 <Timeline>
@@ -134,8 +127,6 @@ If you don't have conversation histories, simulation is an efficient way to gene
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
-      scroll
     >
       {"from deepeval.conversation_simulator import ConversationSimulator\n" +
         "\n" +
@@ -165,7 +156,6 @@ If you don't have conversation histories, simulation is an efficient way to gene
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
     >
       {"async def model_callback(input, conversation_history):\n" +
         "    # Replace this with your chatbot's response\n" +
@@ -180,7 +170,6 @@ If you don't have conversation histories, simulation is an efficient way to gene
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-      metastring="1,6"
     >
       {"...\n\n" +
         "convo_test_cases = simulator.simulate(\n" +
