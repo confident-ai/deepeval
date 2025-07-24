@@ -18,7 +18,7 @@ class FrameworkEnum(str, Enum):
     PYDANTIC_AI = "pydantic_ai"
 
 class ConfidentSpanExporterV1(SpanExporter):
-    active_trace_id: Optional[str] = None #TODO: introduce support for distributed systems
+    active_trace_id: Optional[str] = None #TODO: introduce support for distributed systems by handling trace_id in the span
     framework: FrameworkEnum
 
     def __init__(self, framework: Optional[FrameworkEnum] = FrameworkEnum.DEFAULT):
