@@ -1,16 +1,12 @@
 ---
 id: metrics-custom
-title: Custom Metrics
-sidebar_label: Custom Metrics
+title: "'Do it yourself' Metrics"
+sidebar_label: Do it yourself
 ---
 
 <head>
   <link rel="canonical" href="https://deepeval.com/docs/metrics-custom" />
 </head>
-
-:::note
-This page is identical to the guide on building custom metrics which can be found [here.](/guides/guides-building-custom-metrics)
-:::
 
 In `deepeval`, anyone can easily build their own custom LLM evaluation metric that is automatically integrated within `deepeval`'s ecosystem, which includes:
 
@@ -29,6 +25,10 @@ There are many ways one can implement an LLM evaluation metric. Here is a [great
 :::
 
 ## Rules To Follow When Creating A Custom Metric
+
+<Timeline>
+  <TimelineItem title="Inherit the `BaseMetric` class"></TimelineItem>
+</Timeline>
 
 ### 1. Inherit the `BaseMetric` class
 
@@ -201,7 +201,9 @@ class CustomMetric(BaseMetric):
 
 **Congratulations 🎉!** You've just learnt how to build a custom metric that is 100% integrated with `deepeval`'s ecosystem. In the following section, we'll go through a few real-life examples.
 
-## Building a Custom Non-LLM Eval
+## More Examples
+
+### Non-LLM Evals
 
 An LLM-Eval is an LLM evaluation metric that is scored using an LLM, and so a non-LLM eval is simply a metric that is not scored using an LLM. In this example, we'll demonstrate how to use the [rouge score](https://www.confident-ai.com/blog/llm-evaluation-metrics-everything-you-need-for-llm-evaluation) instead:
 
@@ -258,7 +260,7 @@ metric.measure(test_case)
 print(metric.is_successful())
 ```
 
-## Building a Custom Composite Metric
+### Composite Metrics
 
 In this example, we'll be combining two default `deepeval` metrics as our custom metric, hence why we're calling it a "composite" metric.
 

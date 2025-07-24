@@ -20,6 +20,7 @@
   --ifm-menu-color: #747480 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
+
   .alert--info {
     --ifm-alert-background-color: #f5fcff !important;
     --ifm-alert-border-color: #2264ab !important;
@@ -437,6 +438,7 @@ html[data-theme="dark"] .prism-code {
 /* Remove all the sidebar item ::before content */
 .sidebar-item-getting-started > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-llm-eval > .menu__list-item-collapsible > a::before,
+.sidebar-item-icon-metrics > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-synthetic-data > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-red-teaming > .menu__list-item-collapsible > a::before,
 .sidebar-item-icon-benchmarks > .menu__list-item-collapsible > a::before,
@@ -444,20 +446,12 @@ html[data-theme="dark"] .prism-code {
   content: none;
 }
 
-/* Adjust borders for subcategories */
-// .sidebar-item-getting-started ul,
-// .sidebar-item-icon-llm-eval ul,
-// .sidebar-item-icon-synthetic-data ul,
-// .sidebar-item-icon-red-teaming ul,
-// .sidebar-item-icon-benchmarks ul,
-// .sidebar-item-icon-others ul {
-//   margin-left: 16px !important;
-//   border-left: 1px solid #e0e0e0;
-// }
+
 
 .sidebar-item-getting-started ul:not(:first-child),
 .sidebar-item-icon-llm-eval ul:not(:first-child),
 .sidebar-item-icon-synthetic-data ul:not(:first-child),
+.sidebar-item-icon-metrics ul:not(:first-child),
 .sidebar-item-icon-red-teaming ul:not(:first-child),
 .sidebar-item-icon-benchmarks ul:not(:first-child),
 .sidebar-item-icon-others ul:not(:first-child) {
@@ -468,6 +462,7 @@ html[data-theme="dark"] .prism-code {
 html[data-theme="dark"] .sidebar-item-getting-started > ul,
 html[data-theme="dark"] .sidebar-item-icon-llm-eval > ul,
 html[data-theme="dark"] .sidebar-item-icon-synthetic-data > ul,
+html[data-theme="dark"] .sidebar-item-icon-metrics > ul,
 html[data-theme="dark"] .sidebar-item-icon-red-teaming > ul,
 html[data-theme="dark"] .sidebar-item-icon-benchmarks > ul,
 html[data-theme="dark"] .sidebar-item-icon-others > ul {
