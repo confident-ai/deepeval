@@ -6,16 +6,6 @@
     <h1 align="center">The LLM Evaluation Framework</h1>
 </p>
 
-<p align="center">
-    <a href="https://discord.gg/3SEyvpgu2f">
-        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/3SEyvpgu2f?style=flat">
-    </a>
-</p>
-
-<p align="center">
-<a href="https://trendshift.io/repositories/5917" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5917" alt="confident-ai%2Fdeepeval | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</p>
-
 <h4 align="center">
     <p>
         <a href="https://deepeval.com/docs/getting-started?utm_source=GitHub">Documentation</a> |
@@ -25,6 +15,16 @@
         <a href="https://confident-ai.com?utm_source=GitHub">DeepEval Platform</a>
     <p>
 </h4>
+
+<p align="center">
+<a href="https://trendshift.io/repositories/5917" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5917" alt="confident-ai%2Fdeepeval | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+</p>
+
+<p align="center">
+    <a href="https://discord.gg/3SEyvpgu2f">
+        <img alt="discord-invite" src="https://dcbadge.vercel.app/api/server/3SEyvpgu2f?style=flat">
+    </a>
+</p>
 
 <p align="center">
     <a href="https://github.com/confident-ai/deepeval/releases">
