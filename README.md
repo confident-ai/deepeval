@@ -12,6 +12,10 @@
     </a>
 </p>
 
+<p align="center">
+<a href="https://trendshift.io/repositories/5917" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5917" alt="confident-ai%2Fdeepeval | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+</p>
+
 <h4 align="center">
     <p>
         <a href="https://deepeval.com/docs/getting-started?utm_source=GitHub">Documentation</a> |
