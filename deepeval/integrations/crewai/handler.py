@@ -48,6 +48,7 @@ def is_crewai_installed():
 
 class CrewAIEventsListener(BaseEventListener):
     active_trace_id: Optional[str] = None
+    is_offline_eval: bool = False
 
     def __init__(self):
         deepeval.capture_tracing_integration("crewai")
@@ -62,11 +63,16 @@ class CrewAIEventsListener(BaseEventListener):
         if self.active_trace_id is not None:
             trace_manager.end_trace(self.active_trace_id)
             self.active_trace_id = None
+        if self.is_offline_eval:
+            trace_manager.integration_traces_to_evaluate.append(current_trace)
+            self.is_offline_eval = False
 
     def end_span(self, base_span: BaseSpan):
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         trace_manager.remove_span(base_span.uuid)
+        if base_span.metrics:
+            self.is_offline_eval = True
     
     def llm_call_wrapper(self, agent_id: str):
         def wrapper(func):

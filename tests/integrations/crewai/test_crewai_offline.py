@@ -4,6 +4,8 @@ from deepeval.integrations.crewai.agent import Agent
 import os
 from deepeval.integrations.crewai import instrumentator
 import time
+from deepeval.dataset import Golden
+from deepeval.evaluate import dataset
  
 os.environ["OPENAI_API_KEY"] = "<your-api-key>"
 instrumentator(api_key="<your-api-key>")
@@ -31,8 +33,15 @@ crew = Crew(
     agents=[coder],
     tasks=[task1],
 )
+
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+    Golden(input="What is the weather in Tokyo, Japan?"),
+]
+
+for golden in dataset(goldens=goldens):
+    # Kickoff your crew
+    result = crew.kickoff()
  
-# Kickoff your crew
-result = crew.kickoff()
- 
-time.sleep(7) # Wait for traces to be posted to observatory
+# time.sleep(7) # Wait for traces to be posted to observatory
