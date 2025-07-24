@@ -74,7 +74,7 @@ class CrewAIEventsListener(BaseEventListener):
             def wrapper(*args, **kwargs):
                 parent_uuid = None
                 for span_uuid, span in trace_manager.active_spans.items():
-                    if span.name == "Agent" and span.metadata.get("Agent.id") == agent_id:
+                    if isinstance(span, AgentSpan) and span.metadata.get("Agent.id") == agent_id:
                         parent_uuid = span.uuid
                         break
                 
@@ -170,7 +170,7 @@ class CrewAIEventsListener(BaseEventListener):
                 trace_uuid=self.active_trace_id,
                 parent_uuid=parent_uuid,
                 start_time=perf_counter(),
-                name="Agent",
+                name=f"Agent: {str(source.role)}",
                 input=input,
                 metadata={
                     "Agent.id": str(source.id),
@@ -194,7 +194,7 @@ class CrewAIEventsListener(BaseEventListener):
 
             agent_span = None
             for span_uuid, span in trace_manager.active_spans.items():
-                if span.name == "Agent" and span.metadata.get("Agent.id") == str(source.id):
+                if isinstance(span, AgentSpan) and span.metadata.get("Agent.id") == str(source.id):
                     agent_span = span
                     break
             
@@ -208,7 +208,7 @@ class CrewAIEventsListener(BaseEventListener):
         @crewai_event_bus.on(ToolUsageStartedEvent)
         def on_tool_usage_started(source, event: ToolUsageStartedEvent):
             for span_uuid, span in trace_manager.active_spans.items():
-                if span.name == "Agent" and span.metadata.get("Agent.key") == str(event.agent_key):
+                if isinstance(span, AgentSpan) and span.metadata.get("Agent.key") == str(event.agent_key):
                     tool_call = ToolCall(
                         name=event.tool_name,
                         input_parameters=event.tool_args if isinstance(event.tool_args, dict) else None
@@ -242,7 +242,7 @@ class CrewAIEventsListener(BaseEventListener):
         def on_tool_usage_finished(source, event: ToolUsageFinishedEvent):
             parent_uuid = None
             for span_uuid, span in trace_manager.active_spans.items():
-                if span.name == "Agent" and span.metadata.get("Agent.key") == str(event.agent_key):
+                if isinstance(span, AgentSpan) and span.metadata.get("Agent.key") == str(event.agent_key):
                     parent_uuid = span.uuid
                     break
             
