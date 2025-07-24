@@ -4,10 +4,11 @@ module.exports = {
       type: "category",
       label: "Getting Started",
       className: "sidebar-item-getting-started",
-      items: 
-      [
+      items: [
         "getting-started",
-        "getting-started-agents"
+        "getting-started-agents",
+        "getting-started-chatbots",
+        "getting-started-rag",
       ],
       collapsed: false,
     },
