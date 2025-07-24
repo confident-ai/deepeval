@@ -110,6 +110,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         if parent_span_id is None:
             self.active_trace_uuid = trace_manager.start_new_trace().uuid
         
+        class_name, method_name = parse_id(id_)
+        
         # default span
         span = BaseSpan(
             uuid=id_,
@@ -118,11 +120,10 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             trace_uuid=self.active_trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
-            name=instance.__class__.__name__ if instance else "No Name", # decide the name of the span
+            name= method_name if method_name else instance.__class__.__name__,
             input=bound_args.arguments,
         )
 
-        class_name, method_name = parse_id(id_)
 
         # conditions to qualify as agent start run span
         if class_name == "Workflow" and method_name == "run":
