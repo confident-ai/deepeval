@@ -11,6 +11,8 @@ from deepeval.tracing.otel.utils import to_hex_string
 from deepeval.tracing.tracing import to_zod_compatible_iso
 from enum import Enum
 
+from deepeval.integrations.pydantic_ai.handler import otel_span_handler as pydantic_ai_otel_span_handler
+
 class FrameworkEnum(str, Enum):
     DEFAULT = "default"
     PYDANTIC_AI = "pydantic_ai"
@@ -55,6 +57,10 @@ class ConfidentSpanExporterV1(SpanExporter):
         for span in spans:
             if self.framework == FrameworkEnum.DEFAULT:
                 confident_span = self.handle_default_framework_span(span)
+            elif self.framework == FrameworkEnum.PYDANTIC_AI:
+                confident_span = pydantic_ai_otel_span_handler(span, self.active_trace_id)
+            else:
+                ValueError(f"Framework {self.framework} not supported")
     
             spans_list.append(confident_span)
         
