@@ -75,7 +75,6 @@ def otel_span_handler(span: ReadableSpan, active_trace_id: str) -> BaseSpan:
         except Exception as e:
             pass
         
-        model = span.attributes.get("gen_ai.request.model")
         confident_span = LlmSpan(
             uuid=to_hex_string(span.context.span_id, 16),
             status=TraceSpanStatus.SUCCESS, # TODO: handle status
@@ -90,7 +89,7 @@ def otel_span_handler(span: ReadableSpan, active_trace_id: str) -> BaseSpan:
                 input=input,
                 output=output,
             ),
-            model=model if model is not None else "unknown",
+            model=request_model
         )
 
     return confident_span
