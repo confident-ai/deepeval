@@ -23,7 +23,7 @@ In this guide, you'll learn how to set up your chatbot for evaluations in **unde
 3. Simulate conversations.
 
 :::info
-**Log in to Confident AI** to view your chatbot test report:
+**Log in to Confident AI** in order to view your chatbot evaluation report:
 
 ```bash
 deepeval login
@@ -31,4 +31,163 @@ deepeval login
 
 :::
 
-## Prepare Conversational Test Cases
+## Prepare Test Cases
+
+<Timeline>
+  <TimelineItem title="Populate conversation">
+    <p>Create a <code>ConversationalTestCase</code> for your chatbot by populating it with turns from a conversation history.</p>
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+      scroll
+    >
+      {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
+        "\n" +
+        "test_case = ConversationalTestCase(\n" +
+        "    turns=[\n" +
+        '        Turn(role="user", content="What does YC look for?"),\n' +
+        '        Turn(role="assistant", content="Founding teams with domain expertise."),\n' +
+        '        Turn(role="user", content="How can I stand out?"),\n' +
+        '        Turn(role="assistant", content="Focus on demonstrating traction."),\n' +
+        '        Turn(role="user", content="What mistakes should I avoid?"),\n' +
+        '        Turn(role="assistant", content="Avoid vague descriptions."),\n' +
+        "    ]\n" +
+        ")"}
+    </CodeBlock>
+
+  </TimelineItem>
+  <TimelineItem title="Define chatbot role">
+    <p>Define the role or purpose of your chatbot in the conversation.</p>
+   <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+      scroll
+    >
+      {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
+        "\n" +
+        "test_case = ConversationalTestCase(\n" +
+        "    turns=[...],\n" +
+        "    chatbot_role='QA agent that answers questions about YC.'\n" +
+        ")"}
+    </CodeBlock>
+  </TimelineItem>
+</Timeline>
+
+## Evaluate Conversations
+
+<Timeline>
+  <TimelineItem title="Select metrics">
+    <p>Select <a href="/docs/metrics-conversational-g-eval">multi-turn metrics</a> to evaluate your conversation, or define your own using <a href="/docs/metrics-conversational-g-eval">Conversational G-Eval</a>.</p>
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+      scroll
+    >
+      {"from deepeval.metrics import RoleAdherenceMetric, KnowledgeRetentionMetric\n" +
+        "\n" +
+        "role_adherence = RoleAdherenceMetric(threshold=0.8)\n" +
+        "knowledge_retention = KnowledgeRetentionMetric(threshold=0.8)"}
+    </CodeBlock>
+
+  </TimelineItem>
+  <TimelineItem title="Running an evaluation">
+    <p>Run an evaluation on the conversational test case you previously created using the metrics defined above.</p>
+   <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+      scroll
+    >
+      {"from deepeval import evaluate\n" +
+        "...\n\n" +
+        "evaluate([test_case], metrics=[role_adherence, knowledge_retention])"}
+    </CodeBlock>
+    <p>Once the evaluation completes, you'll be directed to Confident AI to view the evaluation report</p>
+    <VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+  </TimelineItem>
+</Timeline>
+
+## Simulate Conversations
+
+In this section, you'll learn how to <a href="/docs/conversation-simulator">simulate conversations</a> with your chatbot using DeepEval.
+
+:::tip
+If you don't have conversation histories, simulation is an efficient way to generate conversations for evaluation. You can skip this section if you already have a conversational dataset.
+:::
+
+<Timeline>
+  <TimelineItem title="Create the simulator">
+    <p>Initialize the simulator by providing mock user details, including user intentions and profile items.</p>
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+      scroll
+    >
+      {"from deepeval.conversation_simulator import ConversationSimulator\n" +
+        "\n" +
+        "user_intentions = {\n" +
+        "   'opening a bank account': 1,\n" +
+        "   'disputing a payment': 2,\n" +
+        "   'ensquiring a recent transaction': 2\n" +
+        "}\n" +
+        "user_profile_items = [\n" +
+        "    'first name',\n" +
+        "    'last name',\n" +
+        "    'address',\n" +
+        "    'social security number'\n" +
+        "]\n" +
+        "\n" +
+        "simulator = ConversationSimulator(\n" +
+        "    user_intentions=user_intentions,\n" +
+        "    user_profile_items=user_profile_items\n" +
+        ")"}
+    </CodeBlock>
+
+  </TimelineItem>
+  <TimelineItem title="Setup model callback">
+    <p>Setup a model callback returns a string response from your chatbot, given the user input and conversation history.</p>
+   <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+    >
+      {"async def model_callback(input, conversation_history):\n" +
+        "    # Replace this with your chatbot's response\n" +
+        "    return f\"I don't know how to answer this: {input}, {conversation_history}\""}
+    </CodeBlock>
+
+  </TimelineItem>
+  <TimelineItem title="Simulate conversations">
+    <p>Simulate conversations using the model callback and simulator you previously created, and define a stopping criteria.</p>
+   <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="1,6"
+    >
+      {"...\n\n" +
+        "convo_test_cases = simulator.simulate(\n" +
+        "  model_callback=model_callback,\n" +
+        "  stopping_criteria='Stop when the user is satisfied with the response.',\n" +
+        ")"}
+    </CodeBlock>
+
+  </TimelineItem>
+</Timeline>
