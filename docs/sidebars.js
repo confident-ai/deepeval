@@ -63,7 +63,7 @@ module.exports = {
             },
             {
               type: "category",
-              label: "Conversational",
+              label: "Multi-Turn",
               items: [
                 "metrics-conversational-g-eval",
                 "metrics-role-adherence",

@@ -104,11 +104,11 @@ class MedicalChatbot:
     def query_engine(self, query: str) -> str:
         """"A tool to retrive data on various diagnosis methods from gale encyclopedia"""
         # Give an appropriate description of the tool
-        hits = self.client.search(
-            collection_name="gale_encyclopedia",
-            query_vector=self.encoder.encode(query).tolist(),
+        hits = self.client.query_points(
+            collection_name="my_books",
+            query=encoder.encode("alien invasion").tolist(),
             limit=3,
-        )
+        ).points
 
         contexts = [hit.payload['content'] for hit in hits]
         return "\n".join(contexts)

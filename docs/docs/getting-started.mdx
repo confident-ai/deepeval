@@ -304,22 +304,24 @@ set DEEPEVAL_RESULTS_FOLDER=.\data
 
 </Tabs>
 
-## Evaluate Nested Components
+
+## Evaluate LLM Components
+
+While end-to-end evals treat your LLM app as a black-box, you also evaluate individual components within your LLM app (think retrievers, agents, tool calls, LLMs, etc.) through **component-level evaluation**. This is the recommended way to evaluate **AI agents.**
 
 <details>
   <summary>
     <strong>What is Component-level Evaluations?</strong>
   </summary>
 
-What we saw above is known as **end-to-end** evaluation, which treats your LLM app as a black-box. If you wish to evaluate multiple components in your LLM app, you can implement **component-level** evals instead.
+Component‑level evals is the recommended way to **evaluate AI agents**, as it tackles each and every component in your LLM app. You can apply either metrics with specific criteria (like the `GEval` we saw above for end-to-end evals), or a generic [task completion metric](/docs/metrics-task-completion) that is great for evaluating agents.
 
 Component‑level evaluations focus on individual components rather than the overall end‑to‑end result, making it easy to identify and fix specific modules in your LLM application. Moreover, agentic metrics—such as [Task Completion](/docs/metrics#task-completion)—can only be applied through component-level evals.
 
 </details>
 
-To begin, trace the "components" such as LLM calls, retrievers, tool calls, and agents within your LLM application using the `@observe` decorator, and apply the metrics on a component-level. Tracing with `deepeval` is non-instrusive (learn more [here](/docs/evaluation-llm-tracing)) and helps you avoid rewriting your codebase just for evals:
 
-```python
+```python title="main.py" {7,12}
 from deepeval.tracing import observe, update_current_span
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import Golden
@@ -342,7 +344,9 @@ evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 
 ```
 
-When evaluating agents, we strongly recommend including `TaskCompletion` in your outter most component's metrics list.
+All you need is setup LLM tracing by adding a `@observe` decorator to components you wish to evaluate. This will also allow you to see [LLM traces on Confident AI](https://documentation.confident-ai.com/docs/llm-tracing/introduction), for both testing and production environments.
+
+Notice how we had to set an `LLMTestCase` at the "`inner_component`" level. If you wish to just evaluate the entire trace starting from that particular component, simply use the **task completion metric**:
 
 :::tip
 `TaskCompletion` is a powerful agentic metric that determines if the desired outcome was achieved based on the traced agentic flow, and is easy to set up because you don't need to populate any test case parameters.
@@ -360,20 +364,18 @@ task_completion = TaskCompletion()
 @observe()
 def inner_component(): # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
     return
-
-
-@observe(metrics=[task_completion])
-def llm_app(input: str):
-    inner_component()
-    return
-
-evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
 ```
+
+:::tip
+The task completion metric means you no longer need to learn about test cases, and `deepeval` will determine whether the desired outcome was achieved based on the traced agentic flow.
+:::
+
+Component-level evals is also on Confident AI:
 
 **Tracing also helps you debug evaluations** when using Confident AI (video below). You can learn everything about component-level evaluations [here.](/docs/evaluation-component-level-llm-evals)
 
 <VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/observability:llm-tracing.mp4"
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
   confidentUrl="/docs/llm-tracing/introduction"
   label="LLM Tracing on Confident AI"
 />
@@ -485,8 +487,17 @@ evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")
 
 <TabItem value="Chatbots" label="Chatbots">
 
-```python
-from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+Chatbots require "conversational" (or multi-turn) metrics and they include:
+
+- **Conversation Completeness:** Evaluates if conversation satisify user needs.
+- **Conversation Relevancy:** Measures if the generated outputs are relevant to user inputs.
+- **Role Adherence:** Assesses if the chatbot stays in character throughout a conversation.
+- **Knowledge Retention:** Evaluates if the chatbot is able to retain knowledge learnt throughout a conversation.
+
+You'll need to also use [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case)s instead of regular `LLMTestCase` for conversational metrics:
+
+```python title="main.py"
+from deepeval.test_case import Turn, ConversationalTestCase
 from deepeval.metrics import ConversationalGEval
 
 convo_test_case = ConversationalTestCase(
@@ -610,7 +621,7 @@ Under the hood, `deepeval` first generates a series of evaluation steps, before 
 
 ### (Super) Custom Metrics
 
-Although `GEval` is great in many ways as a custom, task-specific metric, it is **NOT** deterministic. If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
+If you're looking for more fine-grained, deterministic control over your metric scores, you should be using the [`DAGMetric` (deep acyclic graph)](/docs/metrics-dag) instead, which is **a metric that is deterministic, LLM-powered, and based on a decision tree you define.**
 
 Take this decision tree for example, which evaluates a Summarization use case based on the `actual_output` of your `LLMTestCase`. Here, we want to check whether the `actual_output` contains the correct "summary headings", and whether they are in the correct order.
 

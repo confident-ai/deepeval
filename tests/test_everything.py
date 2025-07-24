@@ -383,9 +383,10 @@ def test_everything_2():
 # prompt = Prompt(alias="First Prompt")
 # prompt.pull()
 
-# @deepeval.log_hyperparameters
-# def hyperparameters():
-#     return {"temperature": 1, "model": "gpt-4", "Prompt": prompt}
+
+@deepeval.log_hyperparameters
+def hyperparameters():
+    return {"temperature": 1, "model": "gpt-4"}
 
 
 # metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)

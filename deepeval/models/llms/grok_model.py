@@ -1,7 +1,5 @@
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
-from xai_sdk import Client, AsyncClient
-from xai_sdk.chat import user
 import os
 
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
@@ -82,6 +80,12 @@ class GrokModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        try:
+            from xai_sdk.chat import user
+        except ImportError:
+            raise ImportError(
+                "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
+            )
         client = self.load_model(async_mode=False)
         chat = client.chat.create(
             model=self.model_name,
@@ -112,6 +116,12 @@ class GrokModel(DeepEvalBaseLLM):
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
+        try:
+            from xai_sdk.chat import user
+        except ImportError:
+            raise ImportError(
+                "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
+            )
         client = self.load_model(async_mode=True)
         chat = client.chat.create(
             model=self.model_name,
@@ -158,10 +168,17 @@ class GrokModel(DeepEvalBaseLLM):
     ###############################################
 
     def load_model(self, async_mode: bool = False):
-        if not async_mode:
-            return Client(api_key=self.api_key)
-        else:
-            return AsyncClient(api_key=self.api_key)
+        try:
+            from xai_sdk import Client, AsyncClient
+
+            if not async_mode:
+                return Client(api_key=self.api_key)
+            else:
+                return AsyncClient(api_key=self.api_key)
+        except ImportError:
+            raise ImportError(
+                "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
+            )
 
     def get_model_name(self):
         return f"{self.model_name}"

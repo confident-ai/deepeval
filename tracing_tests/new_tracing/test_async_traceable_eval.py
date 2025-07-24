@@ -118,16 +118,15 @@ async def custom_research_agent(query: str):
 
 
 @observe(
-    type="agent",
     available_tools=["get_weather", "get_location"],
     metrics=[TaskCompletionMetric()],
 )
 async def weather_agent(query: str):
-    # update_current_span(
-    #     test_case=LLMTestCase(
-    #         input=query, actual_output="Weather information unavailable"
-    #     )
-    # )
+    update_current_span(
+        test_case=LLMTestCase(
+            input=query, actual_output="Weather information unavailable"
+        )
+    )
     await sleep(random.uniform(1, 3))
     return "Weather information unavailable"
 

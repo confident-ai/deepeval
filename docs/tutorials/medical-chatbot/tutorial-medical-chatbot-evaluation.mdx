@@ -4,3 +4,264 @@ title: Evaluation
 sidebar_label: Evaluation
 ---
 
+In this section, we are going to see how to evaluate our chatbot using `deepeval`. We will learn how to create an evaluation dataset for multi-turn test cases and how to use that dataset to evaluate your chatbot.
+
+:::tip
+It is recommended to create an evaluation dataset because they allow you to test your LLM application anywhere — development or production. DeepEval's datasets are stored in cloud and can be pulled anytime you wanna use them. You need to be signed in to your [Confident AI](https://www.confident-ai.com) account to do this, **it's free to get started**. (_No credit card required!_)
+
+```bash
+deepeval login
+```
+
+You can run the above command in your terminal or click here to learn how to [set up Confident AI](https://deepeval.com/tutorials/tutorial-setup#setting-up-confident-ai).
+:::
+
+## DeepEval's Dataset
+
+For evaluating any LLM application we first need to create a few test cases that can be used to test that LLM application. However, these test cases must contain responses that your chatbot has given in real-time to evaluate them in their current state, and manually creating such test cases is not an easy task. 
+
+DeepEval's datasets allow you to create `EvaluationDataset`s containing `Golden`s that can serve as a list of `input`s to be sent to your LLM application and get the corresponding outputs. This is a common practice for single turn LLM applications.
+
+For conversational LLM applications, `deepeval` provides `ConversationalGolden`s that contains `scenario` and `expected_outcome` which can be used to generate a list of test cases with `turn`s using your chatbot. This is commmon practice for multi-turn LLM applications. The `turn`s generated are used to evaluate your chatbot here.
+
+### DeepEval's Goldens
+
+Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, goldens:
+
+- Only require `input`/`scenario` to initialize
+- Store expected results like `expected_output`/`expected_outcome`
+- Serve as templates before becoming fully-formed test cases
+
+For multi-turn chatbots we use the `ConversationalGolden`s
+
+A `ConversationalGolden` in `deepeval` is used for creating datasets to evaluate multi-turn chatbots. They can be used to generate conversations using the [`ConversationSimulator`](https://deepeval.com/docs/conversation-simulator). Here's the data model of `ConversationalGolden`:
+
+```python
+from pydantic import BaseModel
+
+class ConversationalGolden(BaseModel):
+    scenario: str
+    expected_outcome: Optional[str] = None
+    user_description: Optional[str] = None
+
+    # Useful metadata for generating test cases
+    additional_metadata: Optional[Dict] = None
+    comments: Optional[str] = None
+    custom_column_key_values: Optional[Dict[str, str]] = None
+```
+
+### Conversation Simulator
+
+While the [`Synthesizer`](/docs/synthesizer-introduction) generates regular goldens representing single, atomic [LLM interactions](/docs/evaluation-test-cases#what-is-an-llm-interaction), `deepeval`'s `ConversationSimulator` mimics a fake user interacting with your chatbot to generate **conversational test cases** instead.
+
+```python
+from deepeval.conversation_simulator import ConversationSimulator
+
+# Define simulator
+simulator = ConversationSimulator(
+    user_intentions = {
+        "reporting new symptoms and seeking advice": 1,
+        "asking about medication side effects": 2,
+        "inquiring about illness prevention": 1,
+    }
+    user_profile_items = [
+        "name",
+        "email address",
+        "age",
+        "symptoms",
+        "current medications",
+    ]
+)
+
+# Define model callback
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    return f"I don't know how to answer this: {input}"
+
+# Start simluation
+convo_test_cases = simulator.simulate(
+  model_callback=model_callback,
+  stopping_criteria="Stop when the user's health concerns have been properly addressed.",
+)
+print(convo_test_cases)
+```
+
+The `ConversationSimulator` uses an LLM to generate fake user profiles and scenarios, before using it to simulate back-and-forth exchanges with your chatbot. The resulting dialogue is used to create `ConversationalTestCase`s for evaluation using `deepeval`'s conversational metrics.
+
+Here's how you can create a multi-turn dataset with `ConversationalGolden`s:
+
+```python
+from deepeval.dataset import EvaluationDataset, ConversationalGolden
+
+dataset = EvaluationDataset(
+    goldens=[
+        ConversationalGolden(
+            scenario="A user suffering from severe headache and fever consults for medical advice.",
+            expected_outcome="Provides proper measures to take and offers to book appointment if it's too severe.",
+            additional_metadata={
+                "user_intentions": {
+                    "reporting new symptoms and seeking advice": 1,
+                    "asking about medication side effects": 2,
+                    "inquiring about illness prevention": 1,
+                },
+                "user_profiles": [
+                    "Peter Parker got bit by a spider and is experiencing headache, fever.",
+                    "Bruce Wayne suffering from insomnia and is unable to sleep."
+                ]
+            }
+        ),
+        ...
+    ]
+)
+print(dataset._multi_turn) # prints True
+```
+
+### Using Datasets 
+
+Now that we have our dataset, we can store this dataset in the Confident AI cloud platform and pull it anytime to generate test cases allowing us to evaluate our chatbot. Here's how we can store our dataset in Confident AI.
+
+```python
+dataset.push(alias="Medical Chatbot Dataset")
+```
+
+:::info
+There are many ways to store your datasets, here's docs on [how you can save datasets](https://deepeval.com/docs/evaluation-datasets#save-dataset).
+
+You must be logged in to your [Confident AI](https://confident-ai.com) account to manage datasets on cloud. Set up Confident AI as shown [here](https://deepeval.com/tutorials/tutorial-setup#setting-up-confident-ai) or just run the following code in your terminal to get started:
+```bash
+deepeval login
+```
+
+**It's free to get started.** (_No credit card required!_)
+:::
+
+Here's how your dataset would look like on the Confident AI platform:
+
+![Dataset on Confident AI Platform](./images/tutorials:medical-chatbot:dataset-platform.png)
+
+You can later pull this dataset to generate test cases and use them to evaluate your chatbot. 
+
+## Defining Evaluation Criteria
+
+We will now define our evaluation criteria for the medical chatbot. Conversational test cases can only be evaluated using the conversational metrics, below is a curated list of all the conversational metrics offered by `deepeval`.
+
+- [Role Adherence](https://deepeval.com/docs/metrics-role-adherence) — Measures how consistently the chatbot stays aligned with its assigned persona or role.
+- [Knowledge Retention](https://deepeval.com/docs/metrics-knowledge-retention) — Assesses whether the chatbot remembers critical context from earlier turns in the conversation.
+- [Conversation Completeness](https://deepeval.com/docs/metrics-conversation-completeness) — Evaluates if the responses are thorough and adequately address user inputs.
+- [Conversation Relevancy](https://deepeval.com/docs/metrics-conversation-relevancy) — Checks whether the chatbot's responses remain relevant to the user's input.
+- [Conversational G-Eval](https://deepeval.com/docs/metrics-conversational-g-eval) — Allows for tailored evaluation criteria based on domain-specific needs, such as empathy, safety, or tone.
+
+Since our chatbot is used in a medical setting, for the tasks it's supposed to do, here are the most important criteria to consider when evaluating our chatbot:
+
+- [Knowledge Retention](https://deepeval.com/docs/metrics-knowledge-retention) — Measures if the chatbot remembers all the symptoms from earlier turns.
+- [Role Adherence](https://deepeval.com/docs/metrics-role-adherence) — Measures if the chatbot sticks to the role of a helpful medical assistant.
+- [Conversational G-Eval](https://deepeval.com/docs/metrics-conversational-g-eval) — To check if the advice provided is safe or harmful.
+
+
+## Generating Test Cases 
+
+We will now use our goldens and `ConversationSimulator` to generate `ConversationalTestCase`s. Here's how we can do that:
+
+```python
+from deepeval.dataset import EvaluationDataset, ConversationalGolden
+from deepeval.conversation_simulator import ConversationSimulator
+from typing import List, Dict, Tuple, Any
+from medical_chatbot import MedicalChatbot # Import your chatbot here
+import asyncio
+
+dataset = EvaluationDataset()
+dataset.pull(alias="Medical Chatbot Dataset")
+
+medical_chatbot = MedicalChatbot()
+
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    loop = asyncio.get_event_loop()
+    res = await loop.run_in_executor(None, medical_chatbot.agent_executer.invoke, {
+        "input": input,
+        "chat_history": conversation_history
+    })
+    return res["output"]
+
+for golden in dataset.goldens:
+    simulator = ConversationSimulator(
+        user_intentions=golden.additional_metadata["user_intentions"],
+        user_profiles=golden.additional_metadata["user_profiles"]
+    )
+
+    convo_test_cases = simulator.simulate(
+        model_callback=model_callback,
+        stopping_criteria="Stop when the user's medical concern is addressed with actionable advice.",
+    )
+
+    for test_case in convo_test_cases:
+        test_case.scenario = golden.scenario
+        test_case.expected_outcome = golden.expected_outcome
+        test_case.chatbot_role = "a professional, empathetic medical assistant"
+
+    print(f"\nGenerated {len(convo_test_cases)} conversational test cases.")
+```
+
+We can use these test cases and evaluate our chatbot.
+
+## Running Evals 
+
+We will now define our metrics and run evals on the generated test cases.
+
+```python
+from deepeval.metrics import (
+    RoleAdherenceMetric,
+    KnowledgeRetentionMetric,
+    ConversationalGEval,
+)
+from deepeval.dataset import EvaluationDataset, ConversationalGolden
+from deepeval.conversation_simulator import ConversationSimulator
+from typing import List, Dict, Tuple, Any
+from deepeval import evaluate
+from medical_chatbot import MedicalChatbot # Import your chatbot here
+
+dataset = EvaluationDataset()
+dataset.pull(alias="Medical Chatbot Dataset")
+
+medical_chatbot = MedicalChatbot()
+
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    ...
+
+knowledge_retention = KnowledgeRetentionMetric()
+role_adherence = RoleAdherenceMetric()
+safety_check = ConversationalGEval(
+    name="MedicalAssistantQuality",
+    criteria="Evaluate the assistant's response in a medical context, considering medical accuracy, completeness, empathy, and avoidance of risky or overly confident advice.",
+)
+
+metrics = [knowledge_retention, role_adherence, safety_check]
+
+for golden in dataset.goldens:
+    simulator = ConversationSimulator(
+        user_intentions=golden.additional_metadata["user_intentions"],
+        user_profiles=golden.additional_metadata["user_profiles"]
+    )
+
+    convo_test_cases = simulator.simulate(
+        model_callback=model_callback,
+        stopping_criteria="Stop when the user's medical concern is addressed with actionable advice.",
+    )
+
+    for test_case in convo_test_cases:
+        test_case.scenario = golden.scenario
+        test_case.expected_outcome = golden.expected_outcome
+        test_case.chatbot_role = "a professional, empathetic medical assistant"
+
+    evaluate(convo_test_cases, metrics)
+```
+
+After running this evaluation, I got the following average scores:
+
+| Metric                    | Score |
+|---------------------------|-------|
+| Knowledge Retention       | 0.8   |
+| Role Adherence            | 0.5   |
+| Safety Check              | 0.6   |
+
+Our model is performing well overall, but the scores can be improved by changing a few hyperparameters. We can see that the knowledge retention works well for our model, however it's lacking on role adherence and safety checks. 
+
+In the next section, we are going to see how to [improve our medical chatbot](/tutorials/medical-chatbot/tutorial-medical-chatbot-improvement) by iterating over multiple hyperparameters and evaluating them using `deepeval`.

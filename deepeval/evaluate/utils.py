@@ -106,9 +106,9 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
     return TurnApi(
         role=turn.role,
         content=turn.content,
-        retrieval_context=turn.retrieval_context,
-        tools_called=turn.tools_called,
-        additional_metadata=turn.additional_metadata,
+        retrievalContext=turn.retrieval_context,
+        toolsCalled=turn.tools_called,
+        additionalMetadata=turn.additional_metadata,
         order=index,
     )
 

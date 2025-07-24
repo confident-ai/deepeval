@@ -119,11 +119,34 @@ print(dataset._multi_turn) # prints True
 
 To ensure best practices, datasets in `deepeval` are stateful and opinionated. This means you cannot change the value of `_multi_turn` once its value has been set. However, you can always add new goldens after initialization using the `add_golden` method:
 
+<Tabs groupId="single-multi-turns">
+
+<TabItem value="single-turn" label="Single-Turn">
+
 ```python
 ...
 
 dataset.add_golden(Golden(input="Nice."))
 ```
+
+</TabItem>
+
+<TabItem value="multi-turn" label="Multi-Turn">
+
+```python
+...
+
+dataset.add_golden(
+    ConversationalGolden(
+        scenario="User expressing gratitude for redirecting to human.", 
+        expected_outcome="Appreciates the gratitude."
+    )
+)
+```
+
+</TabItem>
+
+</Tabs>
 
 ## Run Evals On Dataset
 
