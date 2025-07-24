@@ -4,6 +4,7 @@ import deepeval
 # from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 from deepeval.tracing.otel.exporter_v1 import ConfidentSpanExporterV1, FrameworkEnum
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.integrations.pydantic_ai.agent import PydanticAIAgent as Agent
 
 try:
     from opentelemetry import trace
