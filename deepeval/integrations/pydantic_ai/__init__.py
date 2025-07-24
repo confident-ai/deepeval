@@ -1,7 +1,8 @@
 from typing import Optional
 
 import deepeval
-from deepeval.tracing.otel.exporter import ConfidentSpanExporter
+# from deepeval.tracing.otel.exporter import ConfidentSpanExporter
+from deepeval.tracing.otel.exporter_v1 import ConfidentSpanExporterV1
 from deepeval.telemetry import capture_tracing_integration
 
 try:
@@ -32,7 +33,7 @@ def setup_instrumentation(api_key: Optional[str] = None):
     else:
         tracer_provider = trace.get_tracer_provider()
 
-    exporter = ConfidentSpanExporter()
+    exporter = ConfidentSpanExporterV1()
     span_processor = BatchSpanProcessor(exporter)
     tracer_provider.add_span_processor(span_processor)
     set_tracer_provider(tracer_provider)
