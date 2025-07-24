@@ -11,17 +11,6 @@ import asyncio
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    # metrics=[
-    #     "Answer Relevancy",
-    #     "Faithfulness",
-    #     # "Helpfulness",
-    #     # "Verbosity",
-    #     # "Contextual Precision",
-    #     # "Contextual Recall",
-    #     # "Tool Correctness",
-    #     # "Contextual Relevancy",
-    #     # "Hallucination"
-    # ],
     metric_collection="Test",
 )
 async def meta_agent(query: str):
