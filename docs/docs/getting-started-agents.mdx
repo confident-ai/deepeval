@@ -1,0 +1,612 @@
+---
+id: getting-started-agents
+title: Evaluating AI Agents
+sidebar_label: AI Agents
+---
+
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
+import VideoDisplay from "@site/src/components/VideoDisplayer";
+
+
+<details>
+  <summary>Click to learn more about AI Agent Evaluation</summary>, which
+  includes evaluating the end-to-end task completion ability of your agent, as
+  well as evaluating specific components of your agent.
+</details>
+
+In this guide, you'll learn how to set up your agent for evaluations in **under 5 minutes**:
+
+1. Set up tracing for your agent.
+2. Evaluate your agent end-to-end.
+3. Evaluate components in your agent.
+
+:::info
+You'll need to **log in to Confident AI** to view your evaluation traces:
+
+```bash
+deepeval login
+```
+
+:::
+
+## Setup Tracing
+
+<Timeline>
+  <TimelineItem title="Setup tracing">
+    <Tabs>
+      <TabItem value="python" label="Python">
+        <p>
+          Attach the <code>@observe</code> decorator to all the functions that
+          are part of your agent.
+        </p>
+      <CodeBlock
+        className="language-python"
+        title="main.py"
+        showLineNumbers={true}
+        wrapLines={true}
+        metastring="{1,4,8}"
+      >
+          {"from deepeval.tracing import observe\n" +
+            "...\n\n" +
+            "@observe()\n" +
+            "def your_ai_agent_tool():\n" +
+            "    return 'tool call result'\n\n" +
+            "@observe()\n" +
+            "def your_ai_agent(input):\n" +
+            "    tool_call_result = your_ai_agent_tool()\n" +
+            "    return 'Tool Call Result: ' + tool_call_result"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
+        <p>
+          Pass in DeepEval's <code>CallbackHandler</code> for LangGraph to your agent's invoke method.
+        </p>
+        <CodeBlock
+          className="language-python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{1,17}"
+        >
+          {"from deepeval.integrations.langchain import CallbackHandler\n" +
+            "from langgraph.prebuilt import create_react_agent\n" +
+            "import time\n" +
+            "import os\n" +
+            "\n" +
+            "def get_weather(city: str) -> str:\n" +
+            '    return f"It\'s always sunny in {city}!"\n' +
+            "\n" +
+            "agent = create_react_agent(\n" +
+            '    model="openai:gpt-4.1",\n' +
+            "    tools=[get_weather],\n" +
+            '    prompt="You are a helpful assistant"\n' +
+            ")\n" +
+            "\n" +
+            "result = agent.invoke(\n" +
+            '    input={"messages":[{"role":"user","content":"what is the weather in sf"}]},\n' +
+            '    config={"callbacks":[CallbackHandler()]}\n' +
+            ")"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="langchain" label="LangChain">
+        <p>
+          Pass in DeepEval's <code>CallbackHandler</code> for LangChain to your agent's invoke method.
+        </p>
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{1,14}"
+        >
+           {"from deepeval.integrations.langchain import CallbackHandler\n" +
+            "from langchain.chat_models import init_chat_model\n" +
+            "import time\n" +
+            "import os\n" +
+            "\n" +
+            "def multiply(a: int, b: int) -> int:\n" +
+            "    return a * b\n" +
+            "\n" +
+            "llm = init_chat_model(\"gpt-4.1\", model_provider=\"openai\")\n" +
+            "llm_with_tools = llm.bind_tools([multiply])\n" +
+            "\n" +
+            "llm_with_tools.invoke(\n" +
+            "    \"What is 3 * 12?\",\n" +
+            "    config = {\"callbacks\": [CallbackHandler()]}\n" +
+            ")"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="llama-index" label="LlamaIndex">
+      <p>
+        Instrument DeepEval as an span handler for LlamaIndex and import your <code>FunctionAgent</code>, <code>ReActAgent</code>, and <code>CodeActAgent</code> from DeepEval instead.
+      </p>
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{1,2,7}"
+        >
+          {"from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent\n" +
+            "import llama_index.core.instrumentation as instrument\n" +
+            "from llama_index.llms.openai import OpenAI\n" +
+            "import asyncio\n" +
+            "import os\n" +
+            "\n" +
+            "instrument_llama_index(instrument.get_dispatcher())\n" +
+            "\n" +
+            "def multiply(a: float, b: float) -> float:\n" +
+            "    return a * b\n" +
+            "\n" +
+            "agent = FunctionAgent(\n" +
+            "    tools=[multiply],\n" +
+            "    llm=OpenAI(model=\"gpt-4o-mini\"),\n" +
+            "    system_prompt=\"You are a helpful assistant that can perform calculations.\",\n" +
+            ")\n" +
+            "\n" +
+            "asyncio.run(agent.run(\"What is 3 * 12?\"))"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="crewai" label="CrewAI">
+        <p>
+          Instrument DeepEval as an span handler for CrewAI and import your <code>Agent</code> from DeepEval instead.
+        </p>
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{1,6}"
+        >
+          {"from deepeval.integrations.crewai import instrumentator, Agent\n" +
+            "from crewai import Task, Crew\n" +
+            "import time\n" +
+            "import os\n" +
+            "\n" +
+            "instrumentator(api_key=\"<your-confident-api-key>\")\n" +
+            "\n" +
+            "coder = Agent(\n" +
+            "    role='Consultant',\n" +
+            "    goal='Write clear, concise explanation.',\n" +
+            "    backstory='An expert consultant with a keen eye for software trends.',\n" +
+            ")\n" +
+            "\n" +
+            "task = Task(\n" +
+            "    description=\"Explain the latest trends in AI.\",\n" +
+            "    agent=coder\n" +
+            ")\n" +
+            "\n" +
+            "crew = Crew(\n" +
+            "    agents=[coder],\n" +
+            "    tasks=[task],\n" +
+            ")\n" +
+            "result = crew.kickoff()"}
+        </CodeBlock>
+      </TabItem>
+       <TabItem value="pydantic" label="Pydantic">
+        <p>
+          <i>To be documented...</i>
+        </p>
+      </TabItem>
+       <TabItem value="OpenAI Agents" label="OpenAI Agents">
+        <p>
+          <i>To be documented...</i>
+        </p>
+      </TabItem>
+    </Tabs>
+
+  </TimelineItem>
+  <TimelineItem title="Configure environment variables">
+    <p>
+      If you are running evaluations in a local environment, you will need to
+      set the following environment variable. Skip this step if you are running{" "}
+      <a href="/docs/getting-started-agents#online-evaluations">
+        online evaluations in production
+      </a>
+    </p>
+    <CodeBlock language="bash">export CONFIDENT_TRACE_FLUSH=YES</CodeBlock>
+  </TimelineItem>
+  <TimelineItem title="Run a test query">
+    <p>Run your agent evaluations as you would normally do:</p>
+     <CodeBlock language="bash">python main.py</CodeBlock>
+    <p>If successful, you should see a trace log like the one below in your CLI:</p>
+  <pre>
+    <code >
+        <span style={{color: "#7f7f7f", fontWeight: "bold", whiteSpace: "nowrap"}}> [Confident AI Trace Log]{"  "}</span>
+        <span style={{color: "#00ff00", whiteSpace: "nowrap"}}>Successfully posted trace (...):{" "}</span>
+        <span style={{color: "#5f5fff", textDecoration: "underline", whiteSpace: "nowrap"}}>https://app.confident.ai/[...]</span> 
+    </code>
+</pre>
+  </TimelineItem>
+</Timeline>
+
+# End-to-End Evaluations
+
+<Timeline>
+  <TimelineItem title="Configure metrics">
+    <p><strong>Task Completion</strong> is the most powerful metric on DeepEval for evaluating AI agents end-to-end.</p>
+    <details>
+      <summary>What other metrics are available?</summary>
+    </details>
+    <Tabs>
+      <TabItem value="python" label="Python">
+        <p>
+          Supply the <code>TaskCompletionMetric</code> to the metrics argument inside the observe decorator.
+        </p>
+        <CodeBlock
+          className="language-python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{2,9}"
+        >
+          {"from deepeval.tracing import observe\n" +
+            "from deepeval.metrics import TaskCompletionMetric\n" +
+            "...\n\n" +
+            "@observe()\n" +
+            "def your_ai_agent_tool():\n" +
+            "    return 'tool call result'\n\n" +
+            "@observe(metrics=[TaskCompletionMetric()])\n" +
+            "def your_ai_agent(input):\n" +
+            "    tool_call_result = your_ai_agent_tool()\n" +
+            "    return 'Tool Call Result: ' + tool_call_result"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
+        <p>
+          Supply the <code>TaskCompletionMetric</code> to the metrics argument inside the <code>CallbackHandler</code>.
+        </p>
+        <CodeBlock
+          className="language-python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{2,18}"
+        >
+          {"from deepeval.integrations.langchain import CallbackHandler\n" +
+            "from deepeval.metrics import TaskCompletionMetric\n" +
+            "from langgraph.prebuilt import create_react_agent\n" +
+            "import time\n" +
+            "import os\n" +
+            "\n" +
+            "def get_weather(city: str) -> str:\n" +
+            '    return f"It\'s always sunny in {city}!"\n' +
+            "\n" +
+            "agent = create_react_agent(\n" +
+            '    model="openai:gpt-4.1",\n' +
+            "    tools=[get_weather],\n" +
+            '    prompt="You are a helpful assistant"\n' +
+            ")\n" +
+            "\n" +
+            "result = agent.invoke(\n" +
+            '    input={"messages":[{"role":"user","content":"what is the weather in sf"}]},\n' +
+            '    config={"callbacks":[CallbackHandler(metrics=[TaskCompletionMetric()])]}\n' +
+            ")"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="langchain" label="LangChain">
+        <p>
+          Supply the <code>TaskCompletionMetric</code> to the metrics argument inside the <code>CallbackHandler</code>.
+        </p>
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{2,15}"
+        >
+          {"from deepeval.integrations.langchain import CallbackHandler\n" +
+            "from deepeval.metrics import TaskCompletionMetric\n" +
+            "from langchain.chat_models import init_chat_model\n" +
+            "import time\n" +
+            "import os\n" +
+            "\n" +
+            "def multiply(a: int, b: int) -> int:\n" +
+            "    return a * b\n" +
+            "\n" +
+            'llm = init_chat_model("gpt-4.1", model_provider="openai")\n' +
+            "llm_with_tools = llm.bind_tools([multiply])\n" +
+            "\n" +
+            "llm_with_tools.invoke(\n" +
+            '    "What is 3 * 12?",\n' +
+            '    config = {"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}\n' +
+            ")"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="llama-index" label="LlamaIndex">
+        <p>
+          Supply the <code>TaskCompletionMetric</code> to the metrics argument inside the <code>FunctionAgent</code>, <code>ReActAgent</code>, and <code>CodeActAgent</code> from DeepEval.
+        </p>
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{3,17}"
+        >
+          {"from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent\n" +
+            "import llama_index.core.instrumentation as instrument\n" +
+            "from deepeval.metrics import TaskCompletionMetric\n" +
+            "from llama_index.llms.openai import OpenAI\n" +
+            "import asyncio\n" +
+            "import os\n" +
+            "\n" +
+            "instrument_llama_index(instrument.get_dispatcher())\n" +
+            "\n" +
+            "def multiply(a: float, b: float) -> float:\n" +
+            "    return a * b\n" +
+            "\n" +
+            "agent = FunctionAgent(\n" +
+            "    tools=[multiply],\n" +
+            '    llm=OpenAI(model="gpt-4o-mini"),\n' +
+            '    system_prompt="You are a helpful assistant that can perform calculations.",\n' +
+            "    metrics=[TaskCompletionMetric()]\n" +
+            ")\n" +
+            "\n" +
+            'asyncio.run(agent.run("What is 3 * 12?"))'}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="crewai" label="CrewAI">
+        <p>
+          Supply the <code>TaskCompletionMetric</code> to the metrics argument inside the <code>Agent</code> from DeepEval.
+        </p>
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+          metastring="{2,13}"
+        >
+          {"from deepeval.integrations.crewai import instrumentator, Agent\n" +
+            "from deepeval.metrics import TaskCompletionMetric\n" +
+            "from crewai import Task, Crew\n" +
+            "import time\n" +
+            "import os\n" +
+            "\n" +
+            'instrumentator(api_key="<your-confident-api-key>")\n' +
+            "\n" +
+            "coder = Agent(\n" +
+            "    role='Consultant',\n" +
+            "    goal='Write clear, concise explanation.',\n" +
+            "    backstory='An expert consultant with a keen eye for software trends.',\n" +
+            "    metrics=[TaskCompletionMetric()]\n" +
+            ")\n" +
+            "\n" +
+            "task = Task(\n" +
+            '    description="Explain the latest trends in AI.",\n' +
+            "    agent=coder\n" +
+            ")\n" +
+            "\n" +
+            "crew = Crew(\n" +
+            "    agents=[coder],\n" +
+            "    tasks=[task],\n" +
+            ")\n" +
+            "result = crew.kickoff()"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="pydantic" label="Pydantic">
+        <p>
+          <i>To be documented...</i>
+        </p>
+      </TabItem>
+      <TabItem value="OpenAI Agents" label="OpenAI Agents">
+        <p>
+          <i>To be documented...</i>
+        </p>
+      </TabItem>
+    </Tabs>
+
+  </TimelineItem>
+  <TimelineItem title="Run an evaluation">
+    <p>
+      To run an evaluation, run a query for each golden using the <code>dataset</code> iterator.
+    </p>
+
+<Tabs>
+  <TabItem value="python" label="Python">
+    <CodeBlock
+      className="language-python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    tool_call_result = your_ai_agent(golden.input)\n"}
+    </CodeBlock>
+    <p> DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results. </p>
+    <VideoDisplay src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4" />
+  </TabItem>
+  <TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
+    <CodeBlock
+      className="language-python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    result = agent.invoke(\n" +
+        '        input={"messages":[{"role":"user","content":golden.input}]},\n' +
+        '        config={"callbacks":[CallbackHandler(metrics=[TaskCompletionMetric()])]}\n' +
+        "    )"}
+    </CodeBlock>
+  </TabItem>
+  <TabItem value="langchain" label="LangChain">
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    llm_with_tools.invoke(\n" +
+        '        "What is 3 * 12?",\n' +
+        '        config = {"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}\n' +
+        "    )"}
+    </CodeBlock>
+
+  </TabItem>
+  <TabItem value="llama-index" label="LlamaIndex">
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    asyncio.run(agent.run(golden.input))"}
+    </CodeBlock>
+  </TabItem>
+  <TabItem value="crewai" label="CrewAI">
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    task = Task(\n" +
+        "        description=golden.input,\n" +
+        "        agent=coder\n" +
+        "    )\n" +
+        "    crew = Crew(agents=[coder], tasks=[task])\n" +
+        "    crew.kickoff()"}
+    </CodeBlock>
+  </TabItem>
+  <TabItem value="pydantic" label="Pydantic">
+    <p>
+      <i>To be documented...</i>
+    </p>
+  </TabItem>
+  <TabItem value="OpenAI Agents" label="OpenAI Agents">
+    <p>
+      <i>To be documented...</i>
+    </p>
+  </TabItem>
+</Tabs>
+
+  </TimelineItem>
+</Timeline>
+
+# Component-Level Evaluations
+
+Component-level evaluations allow for fine-grained evaluation of specific components in your agent.
+
+:::note
+Component-level evaluations are **not available** for integrations at this time.
+:::
+
+<Timeline>
+  <TimelineItem title="Set up test cases">
+    <p>
+      Set up test cases for each function in your agent. You can learn more
+      about available <a>test case parameters here.</a></p>
+    <CodeBlock
+      className="language-python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,2,7,19}"
+    >
+      {"from deepeval.tracing import observe, update_span\n" +
+        "from deepeval.test_case import LLMTestCase, ToolCall\n" +
+        "...\n\n" +
+        "@observe()\n" +
+        "def your_ai_agent_tool():\n" +
+        "    update_span(\n" +
+        "        test_case=LLMTestCase(\n" +
+        "            tools_called=[TooCall(name='Tool A')],\n" +
+        "            expected_tools=[TooCall(name='Tool A')]\n" +
+        "        )\n" +
+        "    )\n" +
+        "    return 'tool call result'\n\n" +
+        "@observe()\n" +
+        "def your_ai_agent(input):\n" +
+        "    tool_call_result = your_ai_agent_tool()\n" +
+        "    output = 'Tool Call Result: ' + tool_call_result\n" +
+        "    update_span(\n" +
+        "        test_case=LLMTestCase(\n" +
+        "            input=input,\n" +
+        "            actual_output=output\n" +
+        "        )\n" +
+        "    )\n" +
+        "    return output"}
+    </CodeBlock>
+
+  </TimelineItem>
+  <TimelineItem title="Configure metrics">
+    <p>
+      Supply the metrics to the <code>@observe</code> decorator of each function. Each metric will require different test case parameters.
+    </p>
+    <CodeBlock
+      className="language-python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,2,3,6,8,16,20}"
+    >
+      {"from deepeval.tracing import observe, update_span\n" +
+        "from deepeval.test_case import LLMTestCase, ToolCall\n" +
+        "from deepeval.metrics import TaskCompletionMetric, ToolCorrectness\n" +
+        "...\n\n" +
+        "@observe(metrics=[ToolCorrectness()])\n" +
+        "def your_ai_agent_tool():\n" +
+        "    update_span(\n" +
+        "        test_case=LLMTestCase(\n" +
+        "            tools_called=[TooCall(name='Tool A')],\n" +
+        "            expected_tools=[TooCall(name='Tool A')]\n" +
+        "        )\n" +
+        "    )\n" +
+        "    return 'tool call result'\n\n" +
+        "@observe(metrics=[TaskCompletionMetric()])\n" +
+        "def your_ai_agent(input):\n" +
+        "    tool_call_result = your_ai_agent_tool()\n" +
+        "    output = 'Tool Call Result: ' + tool_call_result\n" +
+        "    update_span(\n" +
+        "        test_case=LLMTestCase(\n" +
+        "            input=input,\n" +
+        "            actual_output=output\n" +
+        "        )\n" +
+        "    )\n" +
+        "    return output"}
+    </CodeBlock>
+  </TimelineItem>
+  <TimelineItem title="Run Evaluations">
+    <p>Finally, run a query for each golden using the dataset iterator.</p>
+    <CodeBlock language="bash">python main.py</CodeBlock>
+    <p>
+      If successful, you should see a trace log like the one below in your CLI:
+    </p>
+    <CodeBlock
+      className="language-python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    tool_call_result = your_ai_agent(golden.input)\n"}
+    </CodeBlock>
+    <p> DeepEval will automatically generate a component-level test report on Confident AI. </p>
+    <VideoDisplay src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4" />
+  </TimelineItem>
+</Timeline>
