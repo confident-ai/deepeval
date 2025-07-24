@@ -36,7 +36,7 @@ class ConfidentSpanExporterV1(SpanExporter):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
     
-    def handle_default_framework(self, span: ReadableSpan):
+    def handle_default_framework_span(self, span: ReadableSpan):
         return BaseSpan(
             uuid=to_hex_string(span.context.span_id, 16),
             status=TraceSpanStatus.SUCCESS, # TODO: handle status
@@ -54,9 +54,9 @@ class ConfidentSpanExporterV1(SpanExporter):
         spans_list: List[BaseSpan] = []
         for span in spans:
             if self.framework == FrameworkEnum.DEFAULT:
-                base_span = self.handle_default_framework(span)
-
-            spans_list.append(base_span)
+                confident_span = self.handle_default_framework_span(span)
+    
+            spans_list.append(confident_span)
         
         for base_span in reversed(spans_list):
             self.add_span_to_trace(base_span)
