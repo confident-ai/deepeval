@@ -3,11 +3,12 @@ from opentelemetry.sdk.trace import ReadableSpan
 from deepeval.tracing.attributes import LlmAttributes
 from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan
 from deepeval.tracing.otel.utils import to_hex_string
+from deepeval.test_case import LLMTestCase
 from deepeval.tracing.types import TraceSpanStatus
 
 def otel_span_handler(span: ReadableSpan, active_trace_id: str) -> BaseSpan:
     
-    # default span
+    ##### default span #####
     confident_span = BaseSpan(
         uuid=to_hex_string(span.context.span_id, 16),
         status=TraceSpanStatus.SUCCESS, # TODO: handle status
@@ -17,10 +18,11 @@ def otel_span_handler(span: ReadableSpan, active_trace_id: str) -> BaseSpan:
         end_time=span.end_time/1e9,
         parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
         name=span.name,
-        metadata=json.loads(span.to_json())
+        metadata=json.loads(span.to_json()),
+        metric_collection=span.attributes.get("metric_collection")
     )
 
-    # conditions to qualify as agent span
+    ##### conditions to qualify as agent span #####
     if span.attributes.get("agent_name") is not None:
         input = ""
         if span.attributes.get("all_messages_events") is not None:
@@ -42,9 +44,21 @@ def otel_span_handler(span: ReadableSpan, active_trace_id: str) -> BaseSpan:
             metadata=json.loads(span.to_json()),
             input = input,
             output = output,
+            metric_collection=span.attributes.get("metric_collection")
         )
 
-    # conditions to qualify as llm span
+        try:
+            llm_test_case = LLMTestCase(
+                input=str(input),
+                actual_output=str(output),
+            )
+        except:
+            llm_test_case = None
+        
+        confident_span.llm_test_case = llm_test_case
+        return confident_span
+
+    ##### conditions to qualify as llm span #####
     operation_name = span.attributes.get("gen_ai.operation.name")
     request_model = span.attributes.get("gen_ai.request.model")
 
@@ -89,8 +103,11 @@ def otel_span_handler(span: ReadableSpan, active_trace_id: str) -> BaseSpan:
                 input=input,
                 output=output,
             ),
-            model=request_model
+            model=request_model,
+            metric_collection=span.attributes.get("metric_collection")
         )
+
+        return confident_span
 
     return confident_span
     
