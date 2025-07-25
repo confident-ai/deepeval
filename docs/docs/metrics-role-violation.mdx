@@ -14,7 +14,7 @@ sidebar_label: Role Violation
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
-<MetricTagsDisplayer referenceless={true} safety={true} />
+<MetricTagsDisplayer singleTurn={true} referenceless={true} safety={true} />
 
 The role violation metric uses LLM-as-a-judge to determine whether your LLM output violates the expected role or character that has been assigned. This can occur after fine-tuning a custom model or during general LLM usage.
 

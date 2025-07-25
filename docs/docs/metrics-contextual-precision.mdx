@@ -14,7 +14,7 @@ sidebar_label: Contextual Precision
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
-<MetricTagsDisplayer rag={true} referenceBased={true} />
+<MetricTagsDisplayer singleTurn={true} rag={true} referenceBased={true} />
 
 The contextual precision metric uses LLM-as-a-judge to measure your RAG pipeline's retriever by evaluating whether nodes in your `retrieval_context` that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s contextual precision metric is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 

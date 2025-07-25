@@ -4,7 +4,7 @@ import styles from "./VideoDisplayer.module.css";
 const VideoDisplayer = ({ src, confidentUrl, label }) => {
   return (
     <div className={styles.videoContainer}>
-      <video width="100%" muted controls playsInline controlsList="nodownload">
+      <video width="100%" muted autoPlay controls playsInline controlsList="nodownload">
         <source
           src={src}
           type="video/mp4"

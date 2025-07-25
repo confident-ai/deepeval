@@ -8,6 +8,10 @@ sidebar_label: Do it yourself
   <link rel="canonical" href="https://deepeval.com/docs/metrics-custom" />
 </head>
 
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer custom={true} usesLLMs={false} />
+
 In `deepeval`, anyone can easily build their own custom LLM evaluation metric that is automatically integrated within `deepeval`'s ecosystem, which includes:
 
 - Running your custom metric in **CI/CD pipelines**.

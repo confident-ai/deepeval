@@ -20,6 +20,10 @@
   --ifm-menu-color: #747480 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
+  .alert {
+    padding: 0.75rem;
+    font-size: 15px;
+  }
 
   .alert--info {
     --ifm-alert-background-color: #f5fcff !important;
