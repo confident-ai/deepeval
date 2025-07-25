@@ -4,8 +4,8 @@ from time import perf_counter
 import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import LlmAttributes, ToolAttributes
-from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan, TraceSpanStatus
+from deepeval.tracing.attributes import LlmAttributes
+from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -22,9 +22,9 @@ try:
         LLMChatStartEvent,
         LLMChatEndEvent,
     )
-    from llama_index.core.tools.function_tool import AsyncBaseTool
     from llama_index_instrumentation.dispatcher import Dispatcher
-
+    from deepeval.integrations.llama_index.agent.patched import FunctionAgent as PatchedFunctionAgent, ReActAgent as PatchedReActAgent, CodeActAgent as PatchedCodeActAgent
+    from deepeval.integrations.llama_index.utils import parse_id, prepare_input_llm_test_case_params, prepare_output_llm_test_case_params    
     llama_index_installed = True
 except:
     llama_index_installed = False
@@ -109,43 +109,57 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     ) -> Optional[LlamaIndexBaseSpan]:
         if parent_span_id is None:
             self.active_trace_uuid = trace_manager.start_new_trace().uuid
-
-        base_span = BaseSpan(
+        
+        class_name, method_name = parse_id(id_)
+        
+        # default span
+        span = BaseSpan(
             uuid=id_,
             status=TraceSpanStatus.IN_PROGRESS,
             children=[],
             trace_uuid=self.active_trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
-            name=instance.__class__.__name__ if instance else None,
+            name= method_name if method_name else instance.__class__.__name__,
             input=bound_args.arguments,
         )
 
-        trace_manager.add_span(base_span)
-        trace_manager.add_span_to_trace(base_span)
 
-        if isinstance(instance, AsyncBaseTool):
-            tool_span = ToolSpan(
-                uuid=str(uuid.uuid4()),
-                name=instance.metadata.name,
+        # conditions to qualify as agent start run span
+        if class_name == "Workflow" and method_name == "run":
+            span = AgentSpan(
+                uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
-                description=instance.metadata.description,
                 children=[],
                 trace_uuid=self.active_trace_uuid,
-                parent_uuid=base_span.uuid,
+                parent_uuid=parent_span_id,
                 start_time=perf_counter(),
+                name="Agent", #TODO: decide the name of the span
                 input=bound_args.arguments,
             )
 
-            trace_manager.add_span(tool_span)
-            trace_manager.add_span_to_trace(tool_span)
+            # check if the instance is a PatchedFunctionAgent
+            if isinstance(instance, PatchedFunctionAgent):
+                span.name = "FunctionAgent"
+                span.metric_collection = instance.metric_collection
+                # span.metrics = instance.metrics # TODO: facing issue with this
+            
+            if isinstance(instance, PatchedReActAgent):
+                span.name = "ReActAgent"
+                span.metric_collection = instance.metric_collection
+                # span.metrics = instance.metrics # TODO: facing issue with this
+            
+            if isinstance(instance, PatchedCodeActAgent):
+                span.name = "CodeActAgent"
+                span.metric_collection = instance.metric_collection
+                # span.metrics = instance.metrics # TODO: facing issue with this
 
-            # adding this tool span id to the metadata of the parent span
-            trace_manager.get_span_by_uuid(base_span.uuid).metadata = {
-                "tool_span_id": tool_span.uuid
-            }
+        # prepare input test case params for the span
+        prepare_input_llm_test_case_params(class_name, method_name, span, bound_args.arguments)
+        trace_manager.add_span(span)
+        trace_manager.add_span_to_trace(span)
 
-        return base_span
+        return span
 
     def prepare_to_exit_span(
         self,
@@ -159,20 +173,15 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         if base_span is None:
             return None
-
-        if isinstance(instance, AsyncBaseTool):
-            tool_span_id = base_span.metadata.get("tool_span_id")
-            if tool_span_id:
-                tool_span = trace_manager.get_span_by_uuid(tool_span_id)
-                if tool_span:
-                    tool_span.end_time = perf_counter()
-                    tool_span.status = TraceSpanStatus.SUCCESS
-                    tool_span.output = result
-                    trace_manager.remove_span(tool_span.uuid)
-
+        
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = result
+
+        if base_span.llm_test_case:
+            class_name, method_name = parse_id(id_)
+            prepare_output_llm_test_case_params(class_name, method_name, result, base_span)
+
         trace_manager.remove_span(base_span.uuid)
 
         if base_span.parent_uuid is None:

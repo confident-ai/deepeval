@@ -2,9 +2,10 @@ import os
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-
+from typing import Optional, List, TypeVar, cast
+from deepeval.metrics import BaseMetric
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
-
+from pydantic import Field
 
 class Environment(Enum):
     PRODUCTION = "production"
@@ -74,3 +75,13 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     timestamp = time_diff + perf_counter_value
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
+T = TypeVar("T", bound=type)
+
+def with_metrics(cls: T) -> T:
+    class SubClassWithMetric(cls):  # type: ignore
+        metric_collection: Optional[str] = Field(default=None)
+        metrics: Optional[List[BaseMetric]] = Field(default_factory=list)
+    SubClassWithMetric.__name__ = cls.__name__
+    SubClassWithMetric.__qualname__ = cls.__qualname__
+    return cast(T, SubClassWithMetric)
