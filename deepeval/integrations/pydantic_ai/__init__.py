@@ -22,8 +22,8 @@ def is_opentelemetry_available():
 
 
 def setup_instrumentation(api_key: Optional[str] = None):
-
     capture_tracing_integration("pydantic_ai")
+    is_opentelemetry_available()
 
     if api_key:
         deepeval.login_with_confident_api_key(api_key)

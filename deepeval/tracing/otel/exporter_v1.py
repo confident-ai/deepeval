@@ -11,7 +11,7 @@ from deepeval.tracing.otel.utils import to_hex_string
 from deepeval.tracing.tracing import to_zod_compatible_iso
 from enum import Enum
 
-from deepeval.integrations.pydantic_ai.handler import otel_span_handler as pydantic_ai_otel_span_handler
+from deepeval.tracing.otel.span_handlers import pydantic_ai_otel_span_handler
 
 class FrameworkEnum(str, Enum):
     DEFAULT = "default"
