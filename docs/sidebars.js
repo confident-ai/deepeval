@@ -4,7 +4,12 @@ module.exports = {
       type: "category",
       label: "Getting Started",
       className: "sidebar-item-getting-started",
-      items: ["getting-started"],
+      items: [
+        "getting-started",
+        "getting-started-agents",
+        "getting-started-chatbots",
+        "getting-started-rag",
+      ],
       collapsed: false,
     },
     {
