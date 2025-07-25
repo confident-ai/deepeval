@@ -7,11 +7,38 @@ sidebar_label: Introduction
 import LinkCards from "@site/src/components/LinkCards"
 import TechStackCards from "@site/src/components/TechStackCards"
 
-This tutorial walks you through the entire process of developing a reliable **LLM-powered medical chatbot**, from initial stages to post production observability with the help of **DeepEval**.
+Learn how to build and evaluate a reliable **LLM-powered medical chatbot** using **OpenAI**, **LangChain**, **Qdrant**, and **DeepEval**—from development to deployment.
 
 :::note
 If you are working with **multi-turn chatbots**, this tutorial will be helpful to you. We will go through the entire process of building a reliable _multi-turn chatbot_ and how to evaluate it using `deepeval`
 :::
+
+## Overview
+
+DeepEval is an open-source LLM evaluation framework that supports a wide-range of metrics to help evaluate and iterate on your LLM applications.
+
+In this tutorial, we'll be building a reliable medical chatbot using **OpenAI**, **Qdrant**, **LangChain** and **DeepEval**.
+
+<TechStackCards
+    techStack={[
+        {
+            name: "OpenAI",
+            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
+        },
+        {
+            name: "Qdrant",
+            logo: "https://cdn-avatars.huggingface.co/v1/production/uploads/612689acc64ee1aa6818808a/y7jCVdW48MnIZVmsCefSC.png",
+        },
+        {
+            name: "LangChain",
+            logo: "https://logo.svgcdn.com/s/langchain-dark-8x.png",
+        },
+        {
+            name: "DeepEval",
+            logo: "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g.png",
+        }
+    ]}
+/>
 
 Here are the links to jump to different phases of this tutorial: 
 
@@ -54,49 +81,20 @@ In this tutorial, you'll be learning:
 - How to evaluate and improve your chatbot
 - How to do component level evals on your chatbot
 
-## Tech Stack
-
-<TechStackCards
-    techStack={[
-        {
-            name: "OpenAI",
-            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
-            website: "https://www.openai.com"
-        },
-        {
-            name: "Qdrant",
-            logo: "https://cdn-avatars.huggingface.co/v1/production/uploads/612689acc64ee1aa6818808a/y7jCVdW48MnIZVmsCefSC.png",
-            website: "https://qdrant.tech"
-        },
-        {
-            name: "LangChain",
-            logo: "https://logo.svgcdn.com/s/langchain-dark-8x.png",
-            website: "https://www.langchain.com"
-        },
-        {
-            name: "DeepEval",
-            logo: "https://media.licdn.com/dms/image/v2/D560BAQFogqXz2yr1VQ/company-logo_200_200/company-logo_200_200/0/1698938769821/confident_ai_logo?e=2147483647&v=beta&t=4Ot5C3a5yYpjerH4nltzMBWELrq0NQKRptBWo9mRaWI",
-            website: "https://www.deepeval.com"
-        }
-    ]}
-/>
-
 ## Medical Chatbot
 
-By the end of this tutorial, you'll have built a reliable **medical chatbot** that answers user's queries, diagnoses their symptoms as well as book appointments for them. It will be a _conversational chatbot_
-which can converse in multiple turns with a user and remember their symptoms to book appointments with its findings from the entire conversation.
+Multi-turn chatbots are increasingly common across industries like healthcare and finance. Their ability to maintain context and provide personalized support makes them powerful tools.
 
-We will ensure that this chatbot is reliable by testing it using `deepeval`'s [`ConversationSimulator`](https://deepeval.com/docs/conversation-simulator) which will interact with your chatbot like a real user and create multi-turn [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases), which you can use to test your chatbot.
+In this tutorial, you'll build a reliable **medical chatbot** that can answer user queries, diagnose symptoms, and book appointments. It's a **multi-turn conversational agent**—meaning it can remember previous messages, handle follow-up questions, and take action based on the full conversation.
 
-## What You'll Build
+To ensure quality, you'll test the chatbot using `deepeval`'s [`ConversationSimulator`](https://deepeval.com/docs/conversation-simulator), which mimics real user interactions and generates [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases)s to validate the bot's performance.
 
-Multi-turn chatbots have become very common now, they are used in various fields like medical, finance, and more. Their ability to remember the previous conversation and handle follow-up questions make them viable assistants in various sectors that require back-and-forth exchanges for services. And in this tutorial, we are going to build a medical chatbot, that can converse with you and remember your symptoms to diagnose you and schedule an appointment with your information. 
-Here's what the medical assistant will look like:
+Here's what the chatbot interface looks like:
 
-![Medical Chatbot Overview](./images/tutorials:medical-chatbot:chatbot-overview.png)
+![Medical Chatbot Overview](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:medical-chatbot:chatbot-overview.png)
 
-The above image shows the overview of what a medical chatbot would look like in a user-friendly interface. It just takes the user input and generates the appropriate response. 
+The chatbot takes user input, tracks context across turns, and responds accordingly—all within an intuitive, user-friendly interface.
 
-In the rest of this tutorial series, you'll build a medical chatbot that can handle multi-turn conversations and you'll learn how to evaluate a conversational chatbot using `deepeval`
+In the next sections, you'll build and evaluate a chatbot that can carry out full medical conversations and schedule appointments based on user symptoms.
 
-Ready to get started? Let's move on to [developing the medical chatbot](/tutorials/medical-chatbot/tutorial-medical-chatbot-development).
+Ready to begin? Head over to [developing the medical chatbot](/tutorials/medical-chatbot/tutorial-medical-chatbot-development).

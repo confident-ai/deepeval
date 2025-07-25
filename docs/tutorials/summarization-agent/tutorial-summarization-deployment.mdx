@@ -4,7 +4,7 @@ title: Deployment
 sidebar_label: Deployment
 ---
 
-In this section, we'll set up CI/CD workflows for your summarization agent, and learn how to manage dynamic datasets to ensure reliable evaluation as your data evolves.
+In this section, we'll set up CI/CD workflows for your summarization agent, and learn how to add metrics and create spans with test cases in your application for better tracing experience.
 
 In the previous section, we created a `deepeval` dataset. You can now reuse this dataset to continuously evaluate your summarization agent.
 
@@ -13,8 +13,6 @@ In the previous section, we created a `deepeval` dataset. You can now reuse this
 Most summarization agents are built to summarize documents and transcripts, often to improve productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
 
 **DeepEval**'s datasets are very useful for continuous evaluations. You can populate datasets with goldens, which contain just the inputs. During evaluation, test cases are generated on-the-fly by calling your LLM application to produce outputs.
-
-![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
 
 ## Using Datasets
 
@@ -56,9 +54,9 @@ print(len(action_item_test_cases))
 ## Setup Tracing
 
 `deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
-this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
+this provides full visibility for debugging internal components of your LLM application. We have added these decorators during development of our agent, we will now add metrics and spans for running online evals. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
-To set up tracing, modify your `MeetingSummarizer` class like this:
+Here's how we can add metrics and create spans for our `@observe` decorators in the `MeetingSummarizer` class:
 
 ```python {6,27,39,51-53,59,73-75}
 import os
@@ -73,8 +71,8 @@ load_dotenv()
 
 class MeetingSummarizer:
     def __init__(
-        self, 
-        model: str = "gpt-4", 
+        self,
+        model: str = "gpt-4",
         summary_system_prompt: str = "",
         action_item_system_prompt: str = "",
     ):
@@ -89,16 +87,16 @@ class MeetingSummarizer:
 
     @observe(type="agent")
     def summarize(
-        self, 
-        transcript: str, 
-        summary_model: str = "gpt-4o", 
+        self,
+        transcript: str,
+        summary_model: str = "gpt-4o",
         action_item_model: str = "gpt-4-turbo"
     ) -> tuple[str, dict]:
         summary = self.get_summary(transcript, summary_model)
         action_items = self.get_action_items(transcript, action_item_model)
 
         return summary, action_items
-    
+
     @observe(metrics=[GEval(...)], name="Summary") # Use the summary_concision metric here
     def get_summary(self, transcript: str, model: str = None) -> str:
         try:
@@ -164,8 +162,8 @@ def test_meeting_summarizer_components(golden):
     assert_test(golden=golden, observed_callback=summarizer.summarize)
 ```
 
-```bash 
-poetry run deepeval test run test_meeting_summarizer_quality.py
+```bash
+poetry run pytest -v test_meeting_summarizer_quality.py
 ```
 
 Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
@@ -203,7 +201,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # Add your OPENAI_API_KEY
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }} # Add your CONFIDENT_API_KEY
-        run: poetry run deepeval test run test_meeting_summarizer_quality.py
+        run: poetry run pytest -v test_meeting_summarizer_quality.py
 ```
 
 And that's it! You now have a **robust, production-ready summarization agent** with automated evaluation integrated into your development workflow.
