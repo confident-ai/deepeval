@@ -48,155 +48,149 @@ deepeval login
 ## Prepare Test Cases
 
 <Timeline>
-  <TimelineItem title="Setup RAG pipeline">
+<TimelineItem title="Setup RAG pipeline" number="1">
+
+Set up your RAG pipeline to return the retrieved contexts alongside the
+LLM response.
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+def rag_pipeline(input):
+   ...
+   return 'RAG output', ['retrieved context 1', 'retrieved context 2', ...]
+```
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from langchain_core.messages import HumanMessage
+from langchain.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+
+embeddings = OpenAIEmbeddings()
+vectorstore = FAISS.load_local("./faiss_index", embeddings)
+retriever = vectorstore.as_retriever()
+llm = ChatOpenAI(model="gpt-4")
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_docs = retriever.get_relevant_documents(input)
+    context_texts = [doc.page_content for doc in retrieved_docs]
+
+    # Generate response
+    state = {"messages": [HumanMessage(content=input + "\\n\\n".join(context_texts))]}
+    result = your_graph.invoke(state)
+    return result["messages"][-1].content, context_texts
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from langchain_openai import ChatOpenAI
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
+
+llm = ChatOpenAI(model="gpt-4")
+vectorstore = Chroma(persist_directory="./chroma_db")
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_docs = retriever.get_relevant_documents(input)
+    context_texts = [doc.page_content for doc in retrieved_docs]
+
+    # Generate response
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=retriever,
+        return_source_documents=True
+    )
+    result = qa_chain.invoke({"query": input})
+    return result["result"], context_texts
+```
+
+</TabItem>
+<TabItem value="llama_index" label="LlamaIndex">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+documents = SimpleDirectoryReader("./data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+def rag_pipeline(input):
+    # Generate response
+    response = query_engine.query(input)
+
+    # Extract retrieval context
+    context_texts = []
+    if hasattr(response, 'source_nodes'):
+        context_texts = [node.text for node in response.source_nodes]
+    return str(response), context_texts
+```
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic AI">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from pydantic_ai import Agent
+from your_embedding_service import EmbeddingService
+
+agent = Agent(
+    model='openai:gpt-4o',
+    system_prompt='Use the provided context to answer questions accurately.'
+)
+embedding_service = EmbeddingService()
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_contexts = embedding_service.search_sync(input, top_k=3)
+    context_texts = [ctx.text for ctx in retrieved_contexts]
+
+    # Generate response
+    result = agent.run_sync(input + '\n\n'.join(context_texts))
+    return result.data, context_texts
+```
+
+</TabItem>
+<TabItem value="openai-agents" label="OpenAI Agents">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from agents import Agent, Runner
+from your_vector_store import VectorStore
+
+agent = Agent(
+    name="RAG Assistant",
+    instructions="You are a helpful assistant that uses provided context"
+)
+vector_store = VectorStore()
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_docs = vector_store.similarity_search(input, k=3)
+    context_texts = [doc.page_content for doc in retrieved_docs]
+
+    # Generate response
+    result = Runner.run_sync(agent, input + "\\n\\n".join(context_texts))
+    return result.final_output, context_texts
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
     <p>
-      Set up your RAG pipeline to return the retrieved contexts alongside the
-      LLM response.
+      <i>To be documented...</i>
     </p>
-    <Tabs>
-      <TabItem value="python" label="Python">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"def rag_pipeline(input):\n" +
-            "   ...\n" +
-            "   return 'RAG output', ['retrieved context 1', 'retrieved context 2', ...]"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="langgraph" label="LangGraph">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from langchain_core.messages import HumanMessage\n" +
-            "from langchain.vectorstores import FAISS\n" +
-            "from langchain_openai import OpenAIEmbeddings, ChatOpenAI\n\n" +
-            "embeddings = OpenAIEmbeddings()\n" +
-            'vectorstore = FAISS.load_local("./faiss_index", embeddings)\n' +
-            "retriever = vectorstore.as_retriever()\n" +
-            'llm = ChatOpenAI(model="gpt-4")\n\n' +
-            "def rag_pipeline(input):\n" +
-            "    # Extract retrieval context\n" +
-            "    retrieved_docs = retriever.get_relevant_documents(input)\n" +
-            "    context_texts = [doc.page_content for doc in retrieved_docs]\n" +
-            "    \n" +
-            "    # Generate response\n" +
-            '    state = {"messages": [HumanMessage(content=input + "\\n\\n".join(context_texts))]}\n' +
-            "    result = your_graph.invoke(state)\n" +
-            '    return result["messages"][-1].content, context_texts'}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="langchain" label="LangChain">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from langchain_openai import ChatOpenAI\n" +
-            "from langchain.vectorstores import Chroma\n" +
-            "from langchain.chains import RetrievalQA\n\n" +
-            'llm = ChatOpenAI(model="gpt-4")\n' +
-            'vectorstore = Chroma(persist_directory="./chroma_db")\n' +
-            'retriever = vectorstore.as_retriever(search_kwargs={"k": 3})\n\n' +
-            "def rag_pipeline(input):\n" +
-            "    # Extract retrieval context\n" +
-            "    retrieved_docs = retriever.get_relevant_documents(input)\n" +
-            "    context_texts = [doc.page_content for doc in retrieved_docs]\n" +
-            "    \n" +
-            "    # Generate response\n" +
-            "    qa_chain = RetrievalQA.from_chain_type(\n" +
-            "        llm=llm,\n" +
-            '        chain_type="stuff",\n' +
-            "        retriever=retriever,\n" +
-            "        return_source_documents=True\n" +
-            "    )\n" +
-            '    result = qa_chain.invoke({"query": input})\n' +
-            '    return result["result"], context_texts'}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="llama_index" label="LlamaIndex">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from llama_index.core import VectorStoreIndex, SimpleDirectoryReader\n\n" +
-            'documents = SimpleDirectoryReader("./data").load_data()\n' +
-            "index = VectorStoreIndex.from_documents(documents)\n" +
-            "query_engine = index.as_query_engine()\n\n" +
-            "def rag_pipeline(input):\n" +
-            "    # Generate response\n" +
-            "    response = query_engine.query(input)\n" +
-            "    \n" +
-            "    # Extract retrieval context\n" +
-            "    context_texts = []\n" +
-            "    if hasattr(response, 'source_nodes'):\n" +
-            "        context_texts = [node.text for node in response.source_nodes]\n" +
-            "    return str(response), context_texts"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="pydantic" label="Pydantic AI">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from pydantic_ai import Agent\n" +
-            "from your_embedding_service import EmbeddingService\n\n" +
-            "agent = Agent(\n" +
-            "    model='openai:gpt-4o',\n" +
-            "    system_prompt='Use the provided context to answer questions accurately.'\n" +
-            ")\n" +
-            "embedding_service = EmbeddingService()\n\n" +
-            "def rag_pipeline(input):\n" +
-            "    # Extract retrieval context\n" +
-            "    retrieved_contexts = embedding_service.search_sync(input, top_k=3)\n" +
-            "    context_texts = [ctx.text for ctx in retrieved_contexts]\n\n" +
-            "    # Generate response\n" +
-            "    result = agent.run_sync(input + '\\n\\n'.join(context_texts))\n" +
-            "    return result.data, context_texts"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="openai-agents" label="OpenAI Agents">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from agents import Agent, Runner\n" +
-            "from your_vector_store import VectorStore\n\n" +
-            "agent = Agent(\n" +
-            '    name="RAG Assistant",\n' +
-            '    instructions="You are a helpful assistant that uses provided context"\n' +
-            ")\n" +
-            "vector_store = VectorStore()\n\n" +
-            "def rag_pipeline(input):\n" +
-            "    # Extract retrieval context\n" +
-            "    retrieved_docs = vector_store.similarity_search(input, k=3)\n" +
-            "    context_texts = [doc.page_content for doc in retrieved_docs]\n" +
-            "    \n" +
-            "    # Generate response\n" +
-            '    result = Runner.run_sync(agent, input + "\\n\\n".join(context_texts))\n' +
-            "    return result.final_output, context_texts"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="crewai" label="CrewAI">
-        <p>
-          <i>To be documented...</i>
-        </p>
-      </TabItem>
-    </Tabs>
-  </TimelineItem>
-  <TimelineItem title="Create a test case">
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Create a test case" number="2">
     <p>
       Create a test case using the outputs of your newly set up RAG pipeline.
     </p>
@@ -218,8 +212,8 @@ deepeval login
         "    retrieval_context=retrieved_contexts\n" +
         ")"}
     </CodeBlock>
-  </TimelineItem>
-  <TimelineItem title="Fill test cases">
+</TimelineItem>
+<TimelineItem title="Fill test cases" number="3">
     <p>
       Optionally provide an expected output if you plan to run contextual
       precision and recall metrics.
@@ -238,40 +232,38 @@ deepeval login
         "    expected_output='expected output',\n" +
         ")"}
     </CodeBlock>
-  </TimelineItem>
+</TimelineItem>
 </Timeline>
 
 ## Running Evaluations
 
 <Timeline>
-  <TimelineItem title="Select metrics">
-    <p>Select <a href="/docs/metrics-answer-relevancy">RAG metrics</a> to evaluate your RAG pipeline, or define your own using <a href="/docs/metrics-llm-evals">G-Eval</a>.</p>
-    <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-    >
-      {"from deepeval.metrics import AnswerRelevancyMetric, ContextualPrecisionMetric\n" +
-        "\n" +
-        "answer_relevancy = AnswerRelevancyMetric(threshold=0.8)\n" +
-        "contextual_precision = ContextualPrecisionMetric(threshold=0.8)"}
-    </CodeBlock>
+<TimelineItem title="Select metrics" number="1">
 
-  </TimelineItem>
-  <TimelineItem title="Running an evaluation">
-    <p>Run an evaluation on the LLM test case you previously created using the metrics defined above.</p>
-   <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-    >
-      {"from deepeval import evaluate\n" +
-        "...\n\n" +
-        "evaluate([test_case], metrics=[answer_relevancy, contextual_precision])"}
-    </CodeBlock>
-    <p>Once the evaluation completes, you'll be directed to Confident AI to view the evaluation report</p>
-    <VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag.mp4" />
-  </TimelineItem>
+Select [RAG metrics](/docs/metrics-answer-relevancy) to evaluate your RAG pipeline, or define your own using [G-Eval](/docs/metrics-llm-evals).
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import AnswerRelevancyMetric, ContextualPrecisionMetric
+
+answer_relevancy = AnswerRelevancyMetric(threshold=0.8)
+contextual_precision = ContextualPrecisionMetric(threshold=0.8)
+```
+
+</TimelineItem>
+<TimelineItem title="Running an evaluation" number="2">
+
+Run an evaluation on the LLM test case you previously created using the metrics defined above.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval import evaluate
+...
+
+evaluate([test_case], metrics=[answer_relevancy, contextual_precision])
+```
+
+Once the evaluation completes, you'll be directed to Confident AI to view the evaluation report.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag.mp4" />
+
+</TimelineItem>
 </Timeline>

@@ -2,12 +2,14 @@
   position: relative;
   padding-left: 3rem;
   margin-top: 2rem;
+  counter-reset: step;
 
   .timelineItem {
     position: relative;
     margin-bottom: 0;
     padding-bottom: 2rem;
     display: flex;
+    counter-increment: step;
 
     .timelineStep {
       position: absolute;
@@ -30,6 +32,10 @@
       font-weight: bold;
       z-index: 2;
       background: white;
+    }
+
+    .timelineNumber::before {
+      content: counter(step);
     }
 
     .timelineLine {

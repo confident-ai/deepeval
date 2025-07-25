@@ -49,242 +49,217 @@ deepeval login
 ## Prepare Test Cases
 
 <Timeline>
-  <TimelineItem title="Populate conversation">
-    <p>
-      Create a <code>ConversationalTestCase</code> for your chatbot by
-      populating it with turns from a conversation history.
-    </p>
-    <Tabs>
-      <TabItem value="python" label="Python">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "\n" +
-            "test_case = ConversationalTestCase(\n" +
-            "    turns=[\n" +
-            '        Turn(role="user", content="What does YC look for?"),\n' +
-            '        Turn(role="assistant", content="Founding teams with domain expertise."),\n' +
-            '        Turn(role="user", content="How can I stand out?"),\n' +
-            '        Turn(role="assistant", content="Focus on demonstrating traction."),\n' +
-            "    ]\n" +
-            ")"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="openai" label="OpenAI">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "\n" +
-            "messages = [\n" +
-            "    {role:'user', content:'What does YC look for?'},\n" +
-            "    {role:'assistant', content:'Founding teams with domain expertise.'},\n" +
-            "    {role:'user', content:'How can I stand out?'},\n" +
-            "    {role:'assistant', content:'Focus on demonstrating traction.'},\n" +
-            "]\n" +
-            "\n" +
-            "test_case = ConversationalTestCase(\n" +
-            "    turns=[\n" +
-            "        Turn(role=message['role'], content=message['content']) \n" +
-            "        for message in messages\n" +
-            "    ]\n" +
-            ")"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="langchain" label="LangChain">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "from langchain.schema import HumanMessage, AIMessage\n" +
-            "\n" +
-            "messages = [\n" +
-            "    HumanMessage(content='What does YC look for?'),\n" +
-            "    AIMessage(content='Founding teams with domain expertise.'),\n" +
-            "    HumanMessage(content='How can I stand out?'),\n" +
-            "    AIMessage(content='Focus on demonstrating traction.')\n" +
-            "]\n" +
-            "\n" +
-            "test_case = ConversationalTestCase(\n" +
-            "    turns=[\n" +
-            "        Turn(\n" +
-            "            role='user' if isinstance(message, HumanMessage) else 'assistant',\n" +
-            "            content=message.content\n" +
-            "        ) for message in messages\n" +
-            "    ]\n" +
-            ")"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="langgraph" label="LangGraph">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "from langgraph.checkpoint.base import BaseCheckpointSaver\n" +
-            "\n" +
-            'config = {"configurable": {"thread_id": "<YOUR_THREAD_ID>"}}\n' +
-            "state = checkpointer.get(config)\n" +
-            'messages = state["messages"] if state else []\n' +
-            "\n" +
-            "test_case = ConversationalTestCase(\n" +
-            "    turns=[\n" +
-            "        Turn(\n" +
-            "            role='user' if message.type == 'human' else 'assistant',\n" +
-            "            content=message.content\n" +
-            "        ) for message in messages\n" +
-            "]\n" +
-            ")"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="llama_index" label="LlamaIndex">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "from llama_index.core.storage.chat_store import SimpleChatStore\n" +
-            "from llama_index.core.llms import MessageRole\n" +
-            "\n" +
-            "chat_store = SimpleChatStore()\n" +
-            'messages = chat_store.get_messages("<YOUR_CHAT_STORE_KEY>")\n' +
-            "\n" +
-            "test_case = ConversationalTestCase(\n" +
-            "    turns=[\n" +
-            "        Turn(\n" +
-            "            role='user' if message.role == MessageRole.USER else 'assistant',\n" +
-            "            content=message.content\n" +
-            "        ) for message in messages\n" +
-            "    ]\n" +
-            ")"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="openai-agents" label="OpenAI Agents">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "from agents import SQLiteSession\n" +
-            "import asyncio\n" +
-            "\n" +
-            "async def create_test_case():\n" +
-            '    session = SQLiteSession("user_123", "conversations.db")\n' +
-            "    items = await session.get_items()\n\n" +
-            "    test_case = ConversationalTestCase(\n" +
-            "        turns=[\n" +
-            '            Turn(role=item["role"], content=item["content"])\n' +
-            "            for item in items\n" +
-            "        ]\n" +
-            "    )\n" +
-            "    return test_case\n" +
-            "\n" +
-            "test_case = asyncio.run(create_test_case())"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="pydantic" label="Pydantic">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-            "from pydantic_ai import Agent\n" +
-            "from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart\n" +
-            "\n" +
-            "agent = Agent(...)\n" +
-            "result = agent.run_sync(...)\n" +
-            "\n" +
-            "turns = []\n" +
-            "for msg in result.all_messages():\n" +
-            "    if isinstance(msg, ModelRequest):\n" +
-            "        for part in msg.parts:\n" +
-            "            if isinstance(part, UserPromptPart):\n" +
-            "                turns.append(Turn(role='user', content=part.content))\n" +
-            "    elif isinstance(msg, ModelResponse):\n" +
-            "        for part in msg.parts:\n" +
-            "            if isinstance(part, TextPart):\n" +
-            "                turns.append(Turn(role='assistant', content=part.content))\n" +
-            "\n" +
-            "test_case = ConversationalTestCase(turns=turns)"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="crewai" label="CrewAI">
-        <p>
-          <i>To be documented...</i>
-        </p>
-      </TabItem>
-    </Tabs>
-  </TimelineItem>
-  <TimelineItem title="Define chatbot role">
-    <p>Define the role or purpose of your chatbot in the conversation.</p>
-    <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-      metastring="{5}"
-    >
-      {"from deepeval.test_case import ConversationalTestCase, Turn\n" +
-        "\n" +
-        "test_case = ConversationalTestCase(\n" +
-        "    turns=[...],\n" +
-        "    chatbot_role='QA agent that answers questions about YC.'\n" +
-        ")"}
-    </CodeBlock>
-  </TimelineItem>
+<TimelineItem title="Populate conversation">
+
+Create a `ConversationalTestCase` for your chatbot by populating it with turns from a conversation history.
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="What does YC look for?"),
+        Turn(role="assistant", content="Founding teams with domain expertise."),
+        Turn(role="user", content="How can I stand out?"),
+        Turn(role="assistant", content="Focus on demonstrating traction."),
+    ]
+)
+```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+
+messages = [
+    {role:'user', content:'What does YC look for?'},
+    {role:'assistant', content:'Founding teams with domain expertise.'},
+    {role:'user', content:'How can I stand out?'},
+    {role:'assistant', content:'Focus on demonstrating traction.'},
+]
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role=message['role'], content=message['content'])
+        for message in messages
+    ]
+)
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+from langchain.schema import HumanMessage, AIMessage
+
+messages = [
+    HumanMessage(content='What does YC look for?'),
+    AIMessage(content='Founding teams with domain expertise.'),
+    HumanMessage(content='How can I stand out?'),
+    AIMessage(content='Focus on demonstrating traction.')
+]
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(
+            role='user' if isinstance(message, HumanMessage) else 'assistant',
+            content=message.content
+        ) for message in messages
+    ]
+)
+```
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+from langgraph.checkpoint.base import BaseCheckpointSaver
+
+config = {"configurable": {"thread_id": "<YOUR_THREAD_ID>"}}
+state = checkpointer.get(config)
+messages = state["messages"] if state else []
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(
+            role='user' if message.type == 'human' else 'assistant',
+            content=message.content
+        ) for message in messages
+    ]
+)
+```
+
+</TabItem>
+<TabItem value="llama_index" label="LlamaIndex">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+from llama_index.core.storage.chat_store import SimpleChatStore
+from llama_index.core.llms import MessageRole
+
+chat_store = SimpleChatStore()
+messages = chat_store.get_messages("<YOUR_CHAT_STORE_KEY>")
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(
+            role='user' if message.role == MessageRole.USER else 'assistant',
+            content=message.content
+        ) for message in messages
+    ]
+)
+```
+
+</TabItem>
+<TabItem value="openai-agents" label="OpenAI Agents">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+from agents import SQLiteSession
+import asyncio
+
+async def create_test_case():
+    session = SQLiteSession("user_123", "conversations.db")
+    items = await session.get_items()
+
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(role=item["role"], content=item["content"])
+            for item in items
+        ]
+    )
+    return test_case
+
+    test_case = asyncio.run(create_test_case())
+```
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+
+agent = Agent(...)
+result = agent.run_sync(...)
+
+turns = []
+for msg in result.all_messages():
+    if isinstance(msg, ModelRequest):
+        for part in msg.parts:
+            if isinstance(part, UserPromptPart):
+                turns.append(Turn(role='user', content=part.content))
+    elif isinstance(msg, ModelResponse):
+        for part in msg.parts:
+            if isinstance(part, TextPart):
+                turns.append(Turn(role='assistant', content=part.content))
+
+test_case = ConversationalTestCase(turns=turns)
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+
+_To be documented..._
+
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Define chatbot role">
+
+Define the role or purpose of your chatbot in the conversation.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.test_case import ConversationalTestCase, Turn
+
+test_case = ConversationalTestCase(
+    turns=[...],
+    chatbot_role='QA agent that answers questions about YC.'
+)
+```
+
+</TimelineItem>
 </Timeline>
 
 ## Evaluate Conversations
 
 <Timeline>
-  <TimelineItem title="Select metrics">
-    <p>Select <a href="/docs/metrics-conversational-g-eval">multi-turn metrics</a> to evaluate your conversation, or define your own using <a href="/docs/metrics-conversational-g-eval">Conversational G-Eval</a>.</p>
-    <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-    >
-      {"from deepeval.metrics import RoleAdherenceMetric, KnowledgeRetentionMetric\n" +
-        "\n" +
-        "role_adherence = RoleAdherenceMetric(threshold=0.8)\n" +
-        "knowledge_retention = KnowledgeRetentionMetric(threshold=0.8)"}
-    </CodeBlock>
+<TimelineItem title="Select metrics">
 
-  </TimelineItem>
-  <TimelineItem title="Running an evaluation">
-    <p>Run an evaluation on the conversational test case you previously created using the metrics defined above.</p>
-   <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-    >
-      {"from deepeval import evaluate\n" +
-        "...\n\n" +
-        "evaluate([test_case], metrics=[role_adherence, knowledge_retention])"}
-    </CodeBlock>
-    <p>Once the evaluation completes, you'll be directed to Confident AI to view the evaluation report</p>
-    <VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
-  </TimelineItem>
+Select [multi-turn metrics](/docs/metrics-conversational-g-eval) to evaluate your conversation, or define your own using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import RoleAdherenceMetric, KnowledgeRetentionMetric
+
+role_adherence = RoleAdherenceMetric(threshold=0.8)
+knowledge_retention = KnowledgeRetentionMetric(threshold=0.8)
+```
+
+</TimelineItem>
+<TimelineItem title="Running an evaluation">
+
+Run an evaluation on the conversational test case you previously created using the metrics defined above.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval import evaluate
+...
+
+evaluate([test_case], metrics=[role_adherence, knowledge_retention])
+```
+
+Once the evaluation completes, you'll be directed to Confident AI to view the evaluation report.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+
+</TimelineItem>
 </Timeline>
 
 ## Simulate Conversations
@@ -292,231 +267,212 @@ deepeval login
 You'll need to <a href="/docs/conversation-simulator">simulate conversations</a> with your chatbot if you don't have conversations to evaluate.
 
 <Timeline>
-  <TimelineItem title="Setup chatbot">
-    <p>Setup your chatbot to return a response, given the user input and conversation history.</p>
-   <Tabs>
-      <TabItem value="python" label="Python">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"async def chatbot(input, conversation_history):\n" +
-            "    # Replace this with your chatbot's response\n" +
-            "    return f\"Chatbot response to: {input} and {conversation_history}\""}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="openai" label="OpenAI">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"import openai\n" +
-            "import json\n\n" +
-            "client = openai.OpenAI()\n" +
-            "\n" +
-            "async def chatbot(input, conversation_history):\n" +
-            "    # Parse conversation history from JSON string\n" +
-            "    history = json.loads(conversation_history)\n" +
-            "    messages = []\n" +
-            "    for turn in history:\n" +
-            "        messages.append({\"role\": turn[\"role\"], \"content\": turn[\"content\"]})\n" +
-            "    \n" +
-            "    # Add current user input\n" +
-            "    messages.append({\"role\": \"user\", \"content\": input})\n" +
-            "    \n" +
-            "    # Replace with your chatbot's response\n" +
-            "    response = client.chat.completions.create(\n" +
-            "        model=\"gpt-4\",\n" +
-            "        messages=messages\n" +
-            "    )\n" +
-            "    return response.choices[0].message.content"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="langchain" label="LangChain">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from langchain.schema import HumanMessage, AIMessage\n" +
-            "from langchain_openai import ChatOpenAI\n" +
-            "import json\n" +
-            "\n" +
-            "llm = ChatOpenAI(model=\"gpt-4\")\n\n" +
-            "async def chatbot(input, conversation_history):\n" +
-            "    # Parse conversation history from JSON string\n" +
-            "    history = json.loads(conversation_history)\n" +
-            "    messages = []\n" +
-            "    for turn in history:\n" +
-            "        if turn[\"role\"] == \"user\":\n" +
-            "            messages.append(HumanMessage(content=turn[\"content\"]))\n" +
-            "        else:\n" +
-            "            messages.append(AIMessage(content=turn[\"content\"]))\n" +
-            "    \n" +
-            "    # Add current user input\n" +
-            "    messages.append(HumanMessage(content=input))\n" +
-            "    \n" +
-            "    # Replace with your chatbot's response\n" +
-            "    response = await llm.ainvoke(messages)\n" +
-            "    return response.content"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="langgraph" label="LangGraph">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from langgraph.graph import MessagesState\n" +
-            "from langchain_core.messages import HumanMessage, AIMessage\n" +
-            "import json\n" +
-            "...\n" +
-            "\n" +
-            "async def chatbot(input, conversation_history):\n" +
-            "    # Parse conversation history from JSON string\n" +
-            "    history = json.loads(conversation_history)\n" +
-            "    messages = []\n" +
-            "    for turn in history:\n" +
-            "        if turn[\"role\"] == \"user\":\n" +
-            "            messages.append(HumanMessage(content=turn[\"content\"]))\n" +
-            "        else:\n" +
-            "            messages.append(AIMessage(content=turn[\"content\"]))\n" +
-            "    \n" +
-            "    # Add current user input\n" +
-            "    messages.append(HumanMessage(content=input))\n" +
-            "    \n" +
-            "    # Replace with your chatbot's response\n" +
-            "    state = {\"messages\": messages}\n" +
-            "    result = await your_graph.ainvoke(state)\n" +
-            "    return result[\"messages\"][-1].content"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="llama_index" label="LlamaIndex">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from llama_index.core.llms import ChatMessage, MessageRole\n" +
-            "from llama_index.core.chat_engine import SimpleChatEngine\n" +
-            "import json\n" +
-            "...\n" +
-            "\n" +
-            "async def chatbot(input, conversation_history):\n" +
-            "    # Parse conversation history from JSON string\n" +
-            "    history = json.loads(conversation_history)\n" +            "    messages = []\n" +
-            "    for turn in history:\n" +
-            "        role = MessageRole.USER if turn[\"role\"] == \"user\" else MessageRole.ASSISTANT\n" +
-            "        messages.append(ChatMessage(role=role, content=turn[\"content\"]))\n" +
-            "    \n" +
-            "    # Add current user input\n" +
-            "    messages.append(ChatMessage(role=MessageRole.USER, content=input))\n" +
-            "    \n" +
-            "    # Replace with your chatbot's response\n" +
-            "    response = await chat_engine.achat(input, chat_history=messages[:-1])\n" +
-            "    return str(response)"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="openai-agents" label="OpenAI Agents">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from agents import Agent, Runner, SQLiteSession\n" +
-            "import json\n" +
-            "...\n" +
-            "\n" +
-            "agent = Agent(name=\"Assistant\", instructions=\"You are a helpful assistant\")\n" +
-            "session = SQLiteSession(\"conversation_session\")\n" +
-            "\n" +
-            "async def chatbot(input, conversation_history):\n" +
-            "    # Parse conversation history from JSON string\n" +
-            "    history = json.loads(conversation_history)\n" +
-            "    history_items = []\n" +
-            "    for turn in history:\n" +
-            "        history_items.append({\"role\": turn[\"role\"], \"content\": turn[\"content\"]})\n" +
-            "    await session.add_items(history_items)\n" +
-            "    \n" +
-            "    # Replace with your chatbot's response\n" +
-            "    result = await Runner.run(agent, input, session=session)\n" +
-            "    return result.final_output"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="pydantic" label="Pydantic AI">
-        <CodeBlock
-          language="python"
-          title="main.py"
-          showLineNumbers={true}
-          wrapLines={true}
-        >
-          {"from pydantic_ai import Agent\n" +
-            "from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart\n" +
-            "import json\n" +
-            "...\n\n" +
-            "agent = Agent('openai:gpt-4o', system_prompt='Be a helpful assistant.')\n" +
-            "\n" +
-            "async def chatbot(input, conversation_history):\n" +
-            "    # Parse conversation history from JSON string\n" +
-            "    history = json.loads(conversation_history)\n" +
-            "    message_history = []\n" +
-            "    for turn in history:\n" +
-            "        if turn[\"role\"] == \"user\":\n" +
-            "            message_history.append(\n" +
-            "                ModelRequest(parts=[UserPromptPart(content=turn[\"content\"])])\n" +
-            "            )\n" +
-            "        else:\n" +
-            "            message_history.append(\n" +
-            "                ModelResponse(parts=[TextPart(content=turn[\"content\"])])\n" +
-            "            )\n" +
-            "    \n" +
-            "    # Replace with your chatbot's response\n" +
-            "    result = await agent.run(input, message_history=message_history)\n" +
-            "    return result.data"}
-        </CodeBlock>
-      </TabItem>
-      <TabItem value="crewai" label="CrewAI">
-       <p><i>To be documented...</i></p>
-      </TabItem>
-    </Tabs>
+<TimelineItem title="Setup chatbot">
 
-  </TimelineItem>
-  <TimelineItem title="Define user profile">
-    <p>Define user profiles to interact with your chatbot.</p>
-    <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-    >
-      {"user_profiles = [\n" +
-        "  'Garry Tan, YC Partner. Probably has a keyboard with only the Enter key.',\n" +
-        "  'Jessica Livingston, YC Partner. Can spot a unicorn before it’s even born.'\n" +
-        "]\n"}
-    </CodeBlock>
+Setup your chatbot to return a response, given the user input and conversation history.
 
-  </TimelineItem>
-  <TimelineItem title="Simulate conversations">
-    <p>Run simulations with the user profiles and chatbot callback function you previously defined.</p>
-   <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
-    >
-      {"from deepeval.conversation_simulator import ConversationSimulator\n" +
-        "...\n\n" +
-        "simulator = ConversationSimulator(user_profiles=user_profiles)\n" +
-        "test_cases = simulator.simulate(chatbot)\n"}
-    </CodeBlock>
+<Tabs>
+<TabItem value="python" label="Python">
 
-  </TimelineItem>
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+async def chatbot(input, conversation_history):
+    # Replace this with your chatbot's response
+    return f"Chatbot response to: {input} and {conversation_history}"
+```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+import openai
+import json
+
+client = openai.OpenAI()
+
+async def chatbot(input, conversation_history):
+    # Parse conversation history from JSON string
+    history = json.loads(conversation_history)
+    messages = []
+    for turn in history:
+        messages.append({"role": turn["role"], "content": turn["content"]})
+
+    # Add current user input
+    messages.append({"role": "user", "content": input})
+
+    # Replace with your chatbot's response
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=messages
+    )
+    return response.choices[0].message.content
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from langchain.schema import HumanMessage, AIMessage
+from langchain_openai import ChatOpenAI
+import json
+
+llm = ChatOpenAI(model="gpt-4")
+
+async def chatbot(input, conversation_history):
+    # Parse conversation history from JSON string
+    history = json.loads(conversation_history)
+    messages = []
+    for turn in history:
+        if turn["role"] == "user":
+            messages.append(HumanMessage(content=turn["content"]))
+        else:
+            messages.append(AIMessage(content=turn["content"]))
+
+    # Add current user input
+    messages.append(HumanMessage(content=input))
+
+    # Replace with your chatbot's response
+    response = await llm.ainvoke(messages)
+    return response.content
+```
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from langgraph.graph import MessagesState
+from langchain_core.messages import HumanMessage, AIMessage
+import json
+
+async def chatbot(input, conversation_history):
+    # Parse conversation history from JSON string
+    history = json.loads(conversation_history)
+    messages = []
+    for turn in history:
+        if turn["role"] == "user":
+            messages.append(HumanMessage(content=turn["content"]))
+        else:
+            messages.append(AIMessage(content=turn["content"]))
+
+    # Add current user input
+    messages.append(HumanMessage(content=input))
+
+    # Replace with your chatbot's response
+    state = {"messages": messages}
+    result = await your_graph.ainvoke(state)
+    return result["messages"][-1].content
+```
+
+</TabItem>
+<TabItem value="llama_index" label="LlamaIndex">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from llama_index.core.llms import ChatMessage, MessageRole
+from llama_index.core.chat_engine import SimpleChatEngine
+import json
+...
+
+async def chatbot(input, conversation_history):
+    # Parse conversation history from JSON string
+    history = json.loads(conversation_history)
+    messages = []
+    for turn in history:
+        role = MessageRole.USER if turn["role"] == "user" else MessageRole.ASSISTANT
+        messages.append(ChatMessage(role=role, content=turn["content"]))
+
+    # Add current user input
+    messages.append(ChatMessage(role=MessageRole.USER, content=input))
+
+    # Replace with your chatbot's response
+    response = await chat_engine.achat(input, chat_history=messages[:-1])
+    return str(response)
+```
+
+</TabItem>
+<TabItem value="openai-agents" label="OpenAI Agents">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from agents import Agent, Runner, SQLiteSession
+import json
+...
+
+agent = Agent(name="Assistant", instructions="You are a helpful assistant")
+session = SQLiteSession("conversation_session")
+
+async def chatbot(input, conversation_history):
+    # Parse conversation history from JSON string
+    history = json.loads(conversation_history)
+    history_items = []
+    for turn in history:
+        history_items.append({"role": turn["role"], "content": turn["content"]})
+    await session.add_items(history_items)
+
+    # Replace with your chatbot's response
+    result = await Runner.run(agent, input, session=session)
+    return result.final_output
+```
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic AI">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from pydantic_ai import Agent
+from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+import json
+...
+
+agent = Agent('openai:gpt-4o', system_prompt='Be a helpful assistant.')
+
+async def chatbot(input, conversation_history):
+    # Parse conversation history from JSON string
+    history = json.loads(conversation_history)
+    message_history = []
+    for turn in history:
+        if turn["role"] == "user":
+            message_history.append(
+                ModelRequest(parts=[UserPromptPart(content=turn["content"])])
+            )
+        else:
+            message_history.append(
+                ModelResponse(parts=[TextPart(content=turn["content"])])
+            )
+
+    # Replace with your chatbot's response
+    result = await agent.run(input, message_history=message_history)
+    return result.data
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+
+_To be documented..._
+
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Define user profile">
+
+Define user profiles to interact with your chatbot.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+user_profiles = [
+  'Garry Tan, YC Partner. Probably has a keyboard with only the Enter key.',
+  'Jessica Livingston, YC Partner. Can spot a unicorn before it’s even born.'
+]
+```
+
+</TimelineItem>
+<TimelineItem title="Simulate conversations">
+
+Run simulations with the user profiles and chatbot callback function you previously defined.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.conversation_simulator import ConversationSimulator
+...
+
+simulator = ConversationSimulator(user_profiles=user_profiles)
+test_cases = simulator.simulate(chatbot)
+```
+
+</TimelineItem>
 </Timeline>
