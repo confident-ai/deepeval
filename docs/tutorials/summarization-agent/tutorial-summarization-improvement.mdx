@@ -56,7 +56,7 @@ You can use these test cases to evaluate your summarizer anywhere and anytime. M
 
 ## Iterating On Hyperparameters
 
-Now that we have our dataset, we can use this dataset to generate test cases using our summarization agent with different configurations and evaluate it to find the best hyperparameters that work for our use case. Here's how we can run iterative evals on our summarization agent:
+Now that we have our dataset, we can use this dataset to generate test cases using our summarization agent with different configurations and evaluate it to find the best hyperparameters that work for our use case. Here's how we can run iterative evals on our summarization agent.
 
 In the previous stages, we have evaluated our summarization agent separately for summary conciseness and action item correctness. We will use the same approach and run our evaluations separately for summary and action items.
 
@@ -215,7 +215,7 @@ The average results of the evaluation iterations are shown below:
 | gpt-4o         | 0.9               | 0.7                  |
 | gpt-4-turbo    | 0.8               | 0.9                  |
 
-## Iteration Eval Results
+## Improving From Eval Results
 
 From these results, we can see that `gpt-4o` and `gpt-4-turbo` perform well but for different tasks. 
 
