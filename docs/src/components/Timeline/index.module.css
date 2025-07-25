@@ -3,58 +3,58 @@
   padding-left: 3rem;
   margin-top: 2rem;
   counter-reset: step;
+}
 
-  .timelineItem {
-    position: relative;
-    margin-bottom: 0;
-    padding-bottom: 2rem;
-    display: flex;
-    counter-increment: step;
+.timelineItem {
+  position: relative;
+  margin-bottom: 0;
+  padding-bottom: 2rem;
+  display: flex;
+  counter-increment: step;
+}
 
-    .timelineStep {
-      position: absolute;
-      left: -3rem;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+.timelineStep {
+  position: absolute;
+  left: -3rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-    .timelineNumber {
-      width: 1.75rem;
-      height: 1.75rem;
-      border-radius: 4px;
-      border: 1px solid #cbd4de;
-      color: rgb(49, 53, 62);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      z-index: 2;
-      background: white;
-    }
+.timelineNumber {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 4px;
+  border: 1px solid #cbd4de;
+  color: rgb(49, 53, 62);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  z-index: 2;
+  background: white;
+}
 
-    .timelineNumber::before {
-      content: counter(step);
-    }
+.timelineNumber::before {
+  content: counter(step);
+}
 
-    .timelineLine {
-      position: absolute;
-      top: 1.75rem;
-      left: 0.875rem;
-      width: 1px;
-      height: 100%;
-      background: #cbd4de;
-      z-index: 1;
-    }
+.timelineLine {
+  position: absolute;
+  top: 1.75rem;
+  left: 0.875rem;
+  width: 1px;
+  height: calc(100% + 1rem);
+  background: #cbd4de;
+  z-index: 1;
+}
 
-    &:last-child .timelineLine {
-      height: calc(100% - 5rem);
-    }
+.timelineItem:last-child .timelineLine {
+  height: calc(100% - 5rem);
+}
 
-    .timelineContent {
-      padding-left: 1rem;
-      flex: 1;
-    }
-  }
+.timelineContent {
+  padding-left: 1rem;
+  flex: 1;
 }

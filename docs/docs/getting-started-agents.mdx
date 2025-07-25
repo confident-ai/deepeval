@@ -422,8 +422,8 @@ from deepeval.test_case import LLMTestCase, ToolCall
 def your_ai_agent_tool():
     update_span(
         test_case=LLMTestCase(
-            tools_called=[TooCall(name='Tool A')],
-            expected_tools=[TooCall(name='Tool A')]
+            tools_called=[ToolCall(name='Tool A')],
+            expected_tools=[ToolCall(name='Tool A')]
         )
     )
     return 'tool call result'
@@ -456,8 +456,8 @@ from deepeval.metrics import TaskCompletionMetric, ToolCorrectness
 def your_ai_agent_tool():
     update_span(
         test_case=LLMTestCase(
-            tools_called=[TooCall(name='Tool A')],
-            expected_tools=[TooCall(name='Tool A')]
+            tools_called=[ToolCall(name='Tool A')],
+            expected_tools=[ToolCall(name='Tool A')]
         )
     )
     return 'tool call result'
@@ -484,7 +484,7 @@ Finally, run a query for each golden using the `dataset` iterator.
 from deepeval.evaluate import dataset
 ...
 
-for golden in dataset(goldens=[Golden(input='This is a test query')])
+for golden in dataset(goldens=[Golden(input='This is a test query')]):
     tool_call_result = your_ai_agent(golden.input)
 ```
 
