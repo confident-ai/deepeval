@@ -14,6 +14,18 @@ DeepEval makes it easy to evaluate complex **AI Agents**, such as multi-agent sy
 
 <details>
   <summary>Click to learn more about AI Agent Evaluation</summary>
+
+AI Agent Evaluation is different from other types of evaluations because agentic workflows are complex and **consist of multiple interacting components**, such as tools, chained LLM calls, and RAG modules.
+
+Therefore, it’s important to evaluate your AI agents both end-to-end and at the component level to understand how each part performs. This involves [tracing each component in your agent](/docs/getting-started-agents#setup-tracing).
+
+[Task Completion](/docs/metrics-task-completion) is the most powerful and recommended metric for AI agent evaluations. It analyzes your Agent’s full trace and does not require setting up an LLM test case. Other metrics on DeepEval can also be used to evaluate agents, but they require you to set up an LLM test case. Some of these include:
+
+- [Tool Correctness](/docs/metrics-tool-correctness)
+- [G-Eval](/docs/metrics-llm-evals)
+- [Answer Relevancy](/docs/metrics-answer-relevancy)
+- [Faithfulness](/docs/metrics-faithfulness)
+
 </details>
 
 In this guide, you'll learn how to set up your agent for evaluations in **under 5 minutes**:
@@ -202,7 +214,7 @@ deepeval login
     <p>
       If you are running evaluations in a local environment, you will need to
       set the following environment variable. Skip this step if you are running{" "}
-      <a href="/docs/getting-started-agents#online-evaluations">
+      <a href="https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations">
         online evaluations in production
       </a>
     </p>
@@ -229,6 +241,14 @@ deepeval login
     <p><strong>Task Completion</strong> is the most powerful metric on DeepEval for evaluating AI agents end-to-end.</p>
     <details>
       <summary>What other metrics are available?</summary>
+      <p>Other metrics on DeepEval can also be used to evaluate agents but <strong>ONLY</strong> if you run <a href="/docs/getting-started-agents#component-level-evaluations">component-level evaluations</a>, since they require you to set up an LLM test case. These metrics include:</p>
+      <ul>
+        <li><a href="/docs/metrics-tool-correctness">Tool Correctness</a></li>
+        <li><a href="/docs/metrics-llm-evals">G-Eval</a></li>
+        <li><a href="/docs/metrics-answer-relevancy">Answer Relevancy</a></li>
+        <li><a href="/docs/metrics-faithfulness">Faithfulness</a></li>
+      </ul>
+      <p>For more information on available metrics, see the <a href="/docs/metrics-introduction">Metrics Introduction</a> section.</p>
     </details>
     <Tabs>
       <TabItem value="python" label="Python">
@@ -516,7 +536,7 @@ Component-level evaluations are **not available** for integrations at this time.
   <TimelineItem title="Set up test cases">
     <p>
       Set up test cases for each function in your agent. You can learn more
-      about available <a>test case parameters here.</a></p>
+      about available <a href="evaluation-test-cases">test case parameters here.</a></p>
     <CodeBlock
       className="language-python"
       title="main.py"

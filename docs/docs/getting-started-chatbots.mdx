@@ -14,6 +14,21 @@ You can use DeepEval to evaluate any type of **chatbot**, including QA agents, c
 
 <details>
   <summary>Click to learn more about chatbot evaluation</summary>
+
+Chatbot Evaluation is different from other types of evaluations because most metrics on DeepEval evaluates an single-turn interaction between a user and the LLM, which is captured by an `LLMTestCase`.
+
+Chatbots, on the other hand, requires evaluating multi-turn interactions between a user and the LLM, which requires a <code>ConversationalTestCase</code>.
+
+![Chatbot Evaluation](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
+
+Conversational test cases can only be evaluated using **multi-turn metrics**, which include:
+
+- [Conversational G-Eval](/docs/metrics-conversational-g-eval)
+- [Role Adherence](/docs/metrics-role-adherence)
+- [Knowledge Retention](/docs/metrics-knowledge-retention)
+- [Conversation Completeness](/docs/metrics-conversation-completeness)
+- [Conversation Relevancy](/docs/metrics-conversation-relevancy)
+
 </details>
 
 In this guide, you'll learn how to set up your chatbot for evaluations in **under 5 minutes**:
@@ -490,7 +505,7 @@ You'll need to <a href="/docs/conversation-simulator">simulate conversations</a>
 
   </TimelineItem>
   <TimelineItem title="Simulate conversations">
-    <p>Run simulations with the user profiles and chatbot callback function you previously defined to generate test cases.</p>
+    <p>Run simulations with the user profiles and chatbot callback function you previously defined.</p>
    <CodeBlock
       language="python"
       title="main.py"
