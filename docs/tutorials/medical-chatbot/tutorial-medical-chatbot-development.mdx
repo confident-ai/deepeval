@@ -109,14 +109,14 @@ class MedicalChatbot:
     def store_data(self, document_path):
         ...
 
-    @observe()
     @tool
+    @observe()
     def query_engine(self, query: str) -> str:
         """"A tool to retrive data on various diagnosis methods from gale encyclopedia"""
         # Give an appropriate description of the tool
         hits = self.client.query_points(
-            collection_name="my_books",
-            query=encoder.encode("alien invasion").tolist(),
+            collection_name="gale_encyclopedia",
+            query=self.encoder.encode(query).tolist(),
             limit=3,
         ).points
 
@@ -151,8 +151,8 @@ class MedicalChatbot:
     def store_data(self, document_path):
         ...
 
-    @observe()
     @tool
+    @observe()
     def query_engine(self, query: str) -> str:
         ...
 
@@ -233,8 +233,8 @@ class MedicalChatbot:
             self.medical_diagnosis_tool,
         ]
         system_prompt = system_prompt or (
-            "..." # Your system prompt here
-        )
+            "You are BayMax, a personal heathcare companion, answer the user's concerns in an empathetic way."
+        ) # Your system prompt here
 
         agent = create_tool_calling_agent(self.model, tools, system_prompt)
         self.agent_executer = AgentExecutor(agent=agent, tools=tools)
