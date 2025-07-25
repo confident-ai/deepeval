@@ -1,11 +1,10 @@
 .section {
-  margin-top: 3rem;
+  margin-top: 2rem;
   margin-bottom: 2rem;
 }
 
 .list {
   display: flex;
-  flex-direction: column;
   gap: 1rem;
 }
 
@@ -22,14 +21,6 @@
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.card:hover {
-  background-color: #f5f5f5;
-  border-color: #6d28d9;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
-  transform: translateY(-2px);
-  text-decoration: none;
-}
-
 .cardContent {
   display: flex;
   align-items: center;
@@ -39,7 +30,6 @@
 }
 
 .logo {
-  position: absolute;
   left: 0;
   width: 32px;
   height: 32px;
@@ -53,8 +43,4 @@
   color: #111827;
   text-align: center;
   transition: color 0.2s ease;
-}
-
-.card:hover .cardTitle {
-  color: #6d28d9;
 }

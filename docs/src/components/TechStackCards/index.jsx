@@ -16,12 +16,12 @@ const TechStackCards = ({ techStack }) => {
 
 const TechStackCard = ({ name, logo, website }) => {
   return (
-    <Link to={website} className={styles.card} target="_blank" rel="noopener noreferrer">
+    <div className={styles.card}>
       <div className={styles.cardContent}>
         <img src={logo} alt={`${name} logo`} className={styles.logo} />
         <h3 className={styles.cardTitle}>{name}</h3>
       </div>
-    </Link>
+    </div>
   );
 };
 
