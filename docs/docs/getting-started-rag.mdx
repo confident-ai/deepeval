@@ -49,53 +49,192 @@ deepeval login
 
 <Timeline>
   <TimelineItem title="Setup RAG pipeline">
-    <p>Set up your RAG pipeline to return the retrieved contexts alongside the LLM response.</p>
+    <p>
+      Set up your RAG pipeline to return the retrieved contexts alongside the
+      LLM response.
+    </p>
+    <Tabs>
+      <TabItem value="python" label="Python">
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+        >
+          {"def rag_pipeline(input):\n" +
+            "   ...\n" +
+            "   return 'RAG output', ['retrieved context 1', 'retrieved context 2', ...]"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="langgraph" label="LangGraph">
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+        >
+          {"from langchain_core.messages import HumanMessage\n" +
+            "from langchain.vectorstores import FAISS\n" +
+            "from langchain_openai import OpenAIEmbeddings, ChatOpenAI\n\n" +
+            "embeddings = OpenAIEmbeddings()\n" +
+            'vectorstore = FAISS.load_local("./faiss_index", embeddings)\n' +
+            "retriever = vectorstore.as_retriever()\n" +
+            'llm = ChatOpenAI(model="gpt-4")\n\n' +
+            "def rag_pipeline(input):\n" +
+            "    # Extract retrieval context\n" +
+            "    retrieved_docs = retriever.get_relevant_documents(input)\n" +
+            "    context_texts = [doc.page_content for doc in retrieved_docs]\n" +
+            "    \n" +
+            "    # Generate response\n" +
+            '    state = {"messages": [HumanMessage(content=input + "\\n\\n".join(context_texts))]}\n' +
+            "    result = your_graph.invoke(state)\n" +
+            '    return result["messages"][-1].content, context_texts'}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="langchain" label="LangChain">
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+        >
+          {"from langchain_openai import ChatOpenAI\n" +
+            "from langchain.vectorstores import Chroma\n" +
+            "from langchain.chains import RetrievalQA\n\n" +
+            'llm = ChatOpenAI(model="gpt-4")\n' +
+            'vectorstore = Chroma(persist_directory="./chroma_db")\n' +
+            'retriever = vectorstore.as_retriever(search_kwargs={"k": 3})\n\n' +
+            "def rag_pipeline(input):\n" +
+            "    # Extract retrieval context\n" +
+            "    retrieved_docs = retriever.get_relevant_documents(input)\n" +
+            "    context_texts = [doc.page_content for doc in retrieved_docs]\n" +
+            "    \n" +
+            "    # Generate response\n" +
+            "    qa_chain = RetrievalQA.from_chain_type(\n" +
+            "        llm=llm,\n" +
+            '        chain_type="stuff",\n' +
+            "        retriever=retriever,\n" +
+            "        return_source_documents=True\n" +
+            "    )\n" +
+            '    result = qa_chain.invoke({"query": input})\n' +
+            '    return result["result"], context_texts'}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="llama_index" label="LlamaIndex">
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+        >
+          {"from llama_index.core import VectorStoreIndex, SimpleDirectoryReader\n\n" +
+            'documents = SimpleDirectoryReader("./data").load_data()\n' +
+            "index = VectorStoreIndex.from_documents(documents)\n" +
+            "query_engine = index.as_query_engine()\n\n" +
+            "def rag_pipeline(input):\n" +
+            "    # Generate response\n" +
+            "    response = query_engine.query(input)\n" +
+            "    \n" +
+            "    # Extract retrieval context\n" +
+            "    context_texts = []\n" +
+            "    if hasattr(response, 'source_nodes'):\n" +
+            "        context_texts = [node.text for node in response.source_nodes]\n" +
+            "    return str(response), context_texts"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="pydantic" label="Pydantic AI">
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+        >
+          {"from pydantic_ai import Agent\n" +
+            "from your_embedding_service import EmbeddingService\n\n" +
+            "agent = Agent(\n" +
+            "    model='openai:gpt-4o',\n" +
+            "    system_prompt='Use the provided context to answer questions accurately.'\n" +
+            ")\n" +
+            "embedding_service = EmbeddingService()\n\n" +
+            "def rag_pipeline(input):\n" +
+            "    # Extract retrieval context\n" +
+            "    retrieved_contexts = embedding_service.search_sync(input, top_k=3)\n" +
+            "    context_texts = [ctx.text for ctx in retrieved_contexts]\n\n" +
+            "    # Generate response\n" +
+            "    result = agent.run_sync(input + '\\n\\n'.join(context_texts))\n" +
+            "    return result.data, context_texts"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="openai-agents" label="OpenAI Agents">
+        <CodeBlock
+          language="python"
+          title="main.py"
+          showLineNumbers={true}
+          wrapLines={true}
+        >
+          {"from agents import Agent, Runner\n" +
+            "from your_vector_store import VectorStore\n\n" +
+            "agent = Agent(\n" +
+            '    name="RAG Assistant",\n' +
+            '    instructions="You are a helpful assistant that uses provided context"\n' +
+            ")\n" +
+            "vector_store = VectorStore()\n\n" +
+            "def rag_pipeline(input):\n" +
+            "    # Extract retrieval context\n" +
+            "    retrieved_docs = vector_store.similarity_search(input, k=3)\n" +
+            "    context_texts = [doc.page_content for doc in retrieved_docs]\n" +
+            "    \n" +
+            "    # Generate response\n" +
+            '    result = Runner.run_sync(agent, input + "\\n\\n".join(context_texts))\n' +
+            "    return result.final_output, context_texts"}
+        </CodeBlock>
+      </TabItem>
+      <TabItem value="crewai" label="CrewAI">
+        <p>
+          <i>To be documented...</i>
+        </p>
+      </TabItem>
+    </Tabs>
+  </TimelineItem>
+  <TimelineItem title="Create a test case">
+    <p>
+      Create a test case using the outputs of your newly set up RAG pipeline.
+    </p>
     <CodeBlock
       language="python"
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
-    >
-      {"def rag_pipeline(input):\n" + 
-        "   ...\n\n" +
-        "   return 'RAG output', ['retrieved context 1', 'retrieved context 2', ...]"}
-    </CodeBlock>
-
-  </TimelineItem>
-  <TimelineItem title="Create a test case">
-    <p>Create a test case using the outputs of your newly set up RAG pipeline.</p>
-   <CodeBlock
-      language="python"
-      title="main.py"
-      showLineNumbers={true}
-      wrapLines={true}
       metastring="{1,4}"
-    > 
-      {"from deepeval.test_case import LLMTestCase\n" + 
+    >
+      {"from deepeval.test_case import LLMTestCase\n" +
         "\n" +
         "input = 'What does YC look for?'\n" +
         "actual_output, retrieved_contexts = rag_pipeline(input)\n" +
         "\n" +
         "test_case = LLMTestCase(\n" +
-        "    input=input,\n" + 
+        "    input=input,\n" +
         "    actual_output=actual_output,\n" +
         "    retrieved_contexts=retrieved_contexts\n" +
         ")"}
     </CodeBlock>
   </TimelineItem>
   <TimelineItem title="Fill test cases">
-    <p>Optionally provide an expected output if you plan to run contextual precision and recall metrics.</p>
-   <CodeBlock
+    <p>
+      Optionally provide an expected output if you plan to run contextual
+      precision and recall metrics.
+    </p>
+    <CodeBlock
       language="python"
       title="main.py"
       showLineNumbers={true}
       wrapLines={true}
       metastring="{6}"
-    > 
-      {"from deepeval.test_case import LLMTestCase\n" + 
+    >
+      {"from deepeval.test_case import LLMTestCase\n" +
         "...\n\n" +
         "test_case = LLMTestCase(\n" +
-        "    ...,\n" + 
+        "    ...,\n" +
         "    expected_output='expected output',\n" +
         ")"}
     </CodeBlock>
