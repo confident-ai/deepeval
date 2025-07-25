@@ -60,8 +60,15 @@ class CustomGPT(DeepEvalBaseLLM):
                 KeyValues.AZURE_MODEL_VERSION
             )
 
+            user_id = KEY_FILE_HANDLER.fetch_data(
+                KeyValues.AZURE_OPENAI_USER_ID
+            )
+
             if model_version is None:
                 model_version = ""
+
+            if user_id is None:
+                user_id = ""
 
             return AzureChatOpenAI(
                 openai_api_version=openai_api_version,
@@ -69,6 +76,7 @@ class CustomGPT(DeepEvalBaseLLM):
                 azure_endpoint=azure_endpoint,
                 openai_api_key=openai_api_key,
                 model_version=model_version,
+                user_id=user_id,
                 *self.args,
                 **self.kwargs,
             )

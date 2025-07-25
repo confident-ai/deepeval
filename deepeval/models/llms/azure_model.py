@@ -1,6 +1,6 @@
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 from openai.types.chat.chat_completion import ChatCompletion
-from openai import AzureOpenAI, AsyncAzureOpenAI
+from openai import AzureOpenAI, AsyncAzureOpenAI, NotGiven, NOT_GIVEN
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 import openai
@@ -33,6 +33,8 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
+        user: str | NotGiven = NOT_GIVEN,
+        *args,
         **kwargs,
     ):
         # fetch Azure deployment parameters
@@ -56,6 +58,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
+        self.user = user or KEY_FILE_HANDLER.fetch_data(
+            ModelKeyValues.AZURE_OPENAI_USER_ID
+        )
 
         # args and kwargs will be passed to the underlying model, in load_model function
         self.kwargs = kwargs
@@ -83,6 +88,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -100,6 +106,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -116,6 +123,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
+            user=self.user,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -146,6 +154,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -163,6 +172,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -179,6 +189,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
+            user=self.user,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -213,6 +224,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
+            user=self.user,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -239,6 +251,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
+            user=self.user,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
