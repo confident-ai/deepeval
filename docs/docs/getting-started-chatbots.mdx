@@ -490,7 +490,7 @@ You'll need to <a href="/docs/conversation-simulator">simulate conversations</a>
 
   </TimelineItem>
   <TimelineItem title="Simulate conversations">
-    <p>Run simulations with the user profiles and chatbot callback function you previously defined.</p>
+    <p>Run simulations with the user profiles and chatbot callback function you previously defined to generate test cases.</p>
    <CodeBlock
       language="python"
       title="main.py"
@@ -500,7 +500,7 @@ You'll need to <a href="/docs/conversation-simulator">simulate conversations</a>
       {"from deepeval.conversation_simulator import ConversationSimulator\n" +
         "...\n\n" +
         "simulator = ConversationSimulator(user_profiles=user_profiles)\n" +
-        "convo_test_cases = simulator.simulate(chatbot)\n"}
+        "test_cases = simulator.simulate(chatbot)\n"}
     </CodeBlock>
 
   </TimelineItem>
