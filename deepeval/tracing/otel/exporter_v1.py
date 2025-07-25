@@ -20,7 +20,32 @@ class FrameworkEnum(str, Enum):
 class ConfidentSpanExporterV1(SpanExporter):
     active_trace_id: Optional[str] = None #TODO: introduce support for distributed systems by handling trace_id in the span
     framework: FrameworkEnum
+    
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
+        self.check_active_trace_id()
+        spans_list: List[BaseSpan] = []
+        for span in spans:
+            if self.framework == FrameworkEnum.DEFAULT:
+                confident_span = self.handle_default_framework_span(span)
+            elif self.framework == FrameworkEnum.PYDANTIC_AI:
+                confident_span = pydantic_ai_otel_span_handler(span, self.active_trace_id)
+            else:
+                ValueError(f"Framework {self.framework} not supported")
+    
+            spans_list.append(confident_span)
+        
+        for base_span in reversed(spans_list):
+            self.add_span_to_trace(base_span)
+        self.end_trace()
 
+        return SpanExportResult.SUCCESS
+    
+    def shutdown(self):
+        pass
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+    
     def __init__(self, framework: Optional[FrameworkEnum] = FrameworkEnum.DEFAULT):
         self.framework = framework
         capture_tracing_integration("deepeval.tracing.otel.exporter_v1")
@@ -50,29 +75,4 @@ class ConfidentSpanExporterV1(SpanExporter):
             name=span.name,
             metadata=json.loads(span.to_json())
         )
-    
-    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
-        self.check_active_trace_id()
-        spans_list: List[BaseSpan] = []
-        for span in spans:
-            if self.framework == FrameworkEnum.DEFAULT:
-                confident_span = self.handle_default_framework_span(span)
-            elif self.framework == FrameworkEnum.PYDANTIC_AI:
-                confident_span = pydantic_ai_otel_span_handler(span, self.active_trace_id)
-            else:
-                ValueError(f"Framework {self.framework} not supported")
-    
-            spans_list.append(confident_span)
-        
-        for base_span in reversed(spans_list):
-            self.add_span_to_trace(base_span)
-        self.end_trace()
-
-        return SpanExportResult.SUCCESS
-    
-    def shutdown(self):
-        pass
-
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True
     
