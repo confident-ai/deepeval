@@ -221,6 +221,9 @@ def set_azure_openai_env(
     azure_model_version: Optional[str] = typer.Option(
         None, "--model-version", help="Azure model version (optional)"
     ),
+    azure_user_id: Optional[str] = typer.Option(
+        None, "--user-id", help="Azure OpenAI user unique identifier (optional)"
+    ),
 ):
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
@@ -237,6 +240,11 @@ def set_azure_openai_env(
     if azure_model_version is not None:
         KEY_FILE_HANDLER.write_key(
             KeyValues.AZURE_MODEL_VERSION, azure_model_version
+        )
+
+    if azure_user_id is not None:
+        KEY_FILE_HANDLER.write_key(
+            KeyValues.AZURE_OPENAI_USER_ID, azure_user_id
         )
 
     KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "YES")
@@ -270,6 +278,7 @@ def set_azure_openai_embedding_env(
 def unset_azure_openai_env():
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_API_KEY)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_ENDPOINT)
+    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_USER_ID)
     KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_API_VERSION)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_DEPLOYMENT_NAME)
     KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_NAME)

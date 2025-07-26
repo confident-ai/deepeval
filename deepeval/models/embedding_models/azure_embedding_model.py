@@ -1,5 +1,5 @@
 from typing import List
-from openai import AzureOpenAI, AsyncAzureOpenAI
+from openai import AzureOpenAI, AsyncAzureOpenAI, NOT_GIVEN
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
@@ -19,12 +19,17 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             KeyValues.AZURE_OPENAI_ENDPOINT
         )
         self.model_name = self.azure_embedding_deployment
+        user_id = KEY_FILE_HANDLER.fetch_data(
+            KeyValues.AZURE_OPENAI_USER_ID
+        )
+        self.user = user_id if user_id is not None else NOT_GIVEN
 
     def embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
             input=text,
             model=self.azure_embedding_deployment,
+            user=self.user,
         )
         return response.data[0].embedding
 
@@ -33,6 +38,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         response = client.embeddings.create(
             input=texts,
             model=self.azure_embedding_deployment,
+            user=self.user,
         )
         return [item.embedding for item in response.data]
 
@@ -41,6 +47,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         response = await client.embeddings.create(
             input=text,
             model=self.azure_embedding_deployment,
+            user=self.user,
         )
         return response.data[0].embedding
 
@@ -49,6 +56,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         response = await client.embeddings.create(
             input=texts,
             model=self.azure_embedding_deployment,
+            user=self.user,
         )
         return [item.embedding for item in response.data]
 
