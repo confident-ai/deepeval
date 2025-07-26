@@ -124,7 +124,7 @@ poetry run deepeval test run test_rag_qa_agent.py
 
 Finally, let's integrate this test into GitHub Actions to enable automated quality checks on every push.
 
-```yaml
+```yaml {32-33}
 name: RAG QA Agent DeepEval Tests
 
 on:
