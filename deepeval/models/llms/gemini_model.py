@@ -70,6 +70,8 @@ class GeminiModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
+        self.args = args
+        self.kwargs = kwargs
         super().__init__(model_name, *args, **kwargs)
 
     def should_use_vertexai(self):
@@ -108,7 +110,7 @@ class GeminiModel(DeepEvalBaseLLM):
 
             # Create client for Vertex AI
             self.client = genai.Client(
-                vertexai=True, project=self.project, location=self.location
+                vertexai=True, project=self.project, location=self.location, **self.kwargs
             )
         else:
             if not self.api_key:
@@ -117,7 +119,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     "or set it in your DeepEval configuration."
                 )
             # Create client for Gemini API
-            self.client = genai.Client(api_key=self.api_key)
+            self.client = genai.Client(api_key=self.api_key, **self.kwargs)
 
         # Configure default model generation settings
         self.model_safety_settings = [
