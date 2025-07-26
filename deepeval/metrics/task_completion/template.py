@@ -1,7 +1,7 @@
 from deepeval.metrics.utils import print_tools_called
 import textwrap
 import json
-
+from deepeval.tracing.utils import make_json_serializable
 
 class TaskCompletionTemplate:
 
@@ -193,7 +193,7 @@ class TaskCompletionTemplate:
             **
 
             trace:
-            {json.dumps(trace, indent=2)}
+            {json.dumps(trace, default=make_json_serializable, indent=2)}
 
             JSON:
             """
