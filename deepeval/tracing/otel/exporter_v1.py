@@ -35,9 +35,6 @@ class ConfidentSpanExporterV1(SpanExporter):
             trace_manager.add_span_to_trace(base_span)
             # no removing span because it can be parent of other spans
 
-        for trace in trace_manager.active_traces:
-            trace_manager.end_trace(trace)
-        
         # safely end all active traces
         active_traces_keys = list(trace_manager.active_traces.keys())
         
