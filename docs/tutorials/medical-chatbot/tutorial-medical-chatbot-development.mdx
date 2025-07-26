@@ -7,13 +7,21 @@ sidebar_label: Development
 In this section, we are going to create a **conversational medical chatbot** that can use various tools to diagnose and schedule appointments for users based on their symptoms.
 We will be using `langchain` and `qdrant` to build our chatbot.
 
-:::info
-For the purpose of this tutorial, we'll be using a text version of [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) as our knowledge base. You will need to convert this to a `.txt` file for the code to work.
+:::tip
+`deepeval` provides the `@observe` decorator that helps you monitor your LLM application's entire workflow, and it requires only a single line of code. It is highly recommended to add this tracing to your application right from the development stage to make your dev life easier.
+:::
+
+:::note
+If you already have an multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation).
 :::
 
 ## Developing The Chatbot
 
 We will use `langchain`'s OpenAI [chat model](https://python.langchain.com/docs/concepts/chat_models/) to create our main chatbot. You can use your own model here, but ensure your model supports `langchain`'s agentic api usage. Here's how you can create an OpenAI chat model using `langchain`:
+
+:::info
+For the purpose of this tutorial, we'll be using a text version of [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) as our knowledge base. You will need to convert this to a `.txt` file for the code to work.
+:::
 
 ```python
 from langchain_openai import ChatOpenAI
@@ -92,6 +100,7 @@ from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
+from deepeval.tracing import observe
 
 class MedicalChatbot:
     def __init__(self, document_path, model="gpt-4o-mini"):
@@ -101,12 +110,13 @@ class MedicalChatbot:
         ...
 
     @tool
+    @observe()
     def query_engine(self, query: str) -> str:
         """"A tool to retrive data on various diagnosis methods from gale encyclopedia"""
         # Give an appropriate description of the tool
         hits = self.client.query_points(
-            collection_name="my_books",
-            query=encoder.encode("alien invasion").tolist(),
+            collection_name="gale_encyclopedia",
+            query=self.encoder.encode(query).tolist(),
             limit=3,
         ).points
 
@@ -142,6 +152,7 @@ class MedicalChatbot:
         ...
 
     @tool
+    @observe()
     def query_engine(self, query: str) -> str:
         ...
 
@@ -222,8 +233,8 @@ class MedicalChatbot:
             self.medical_diagnosis_tool,
         ]
         system_prompt = system_prompt or (
-            "..." # Your system prompt here
-        )
+            "You are BayMax, a personal heathcare companion, answer the user's concerns in an empathetic way."
+        ) # Your system prompt here
 
         agent = create_tool_calling_agent(self.model, tools, system_prompt)
         self.agent_executer = AgentExecutor(agent=agent, tools=tools)
@@ -232,9 +243,11 @@ class MedicalChatbot:
 Finally, we'll create an interactive environment where users can engage with the chatbot. This involves configuring input/output, managing conversation flow, and processing user queries.
 
 ```python
+from deepeval.tracing import observe
 ...
 class MedicalChatbot:
     ...
+    @observe()
     def interactive_session(self):
         print("Hello! I am Baymax, your personal health care companian")
         print("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.")
@@ -273,6 +286,7 @@ We can now change the setup agent to use a new agent with chat history and updat
 from langchain.agents import create_tool_calling_agent
 from langchain.agents import AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from deepeval.tracing import observe
 
 ...
 class MedicalChatbot:
@@ -303,6 +317,7 @@ class MedicalChatbot:
             history_messages_key="chat_history",
         )
 
+    @observe()
     def interactive_session(self, session_id):
         print("Hello! I am Baymax, your personal health care companian")
         print("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.")

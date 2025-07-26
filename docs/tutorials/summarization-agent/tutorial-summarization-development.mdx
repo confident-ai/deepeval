@@ -10,7 +10,11 @@ import TabItem from "@theme/TabItem";
 In this section, we're going to create our **Meeting Summarization Agent** using the OpenAI API. To create a summarization agent, we'll need to define a `MeetingSummarizer` class which can be used to create multiple instances that allow us to generate summaries and action items anytime and anywhere.
 
 :::tip
-Defining your agents using reusable classes and methods is generally considered best practice because you can create multiple instances of this agent in various places for evaluations and iterations.
+`deepeval` provides the `@observe` decorator that helps you monitor your LLM application's entire workflow, and it requires only a single line of code. It is highly recommended to add this tracing to your application right from the development stage to make your dev life easier.
+:::
+
+:::note
+If you already have an LLM-based summarization agent that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](tutorial-summarization-evaluation).
 :::
 
 ## Creating Meeting Summarizer
@@ -25,6 +29,10 @@ Keep the tone neutral and factual, avoid unnecessary detail, and do not add inte
 beyond the content of the conversation.
 ```
 
+:::tip
+Defining your agents using reusable classes and methods is generally considered best practice because you can create multiple instances of this agent in various places for evaluations and iterations.
+:::
+
 ### Using OpenAI API
 
 We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat completions API to generate summaries and action items using the system prompt mentioned above for any given transcript.
@@ -33,6 +41,7 @@ We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat c
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
+from deepeval.tracing import observe
 
 load_dotenv()
 
@@ -53,6 +62,7 @@ class MeetingSummarizer:
             "the content of the conversation."
         )
 
+    @observe()
     def summarize(self, transcript: str) -> str:
 
         response = self.client.chat.completions.create(
@@ -360,8 +370,11 @@ It is also important to note that some models perform well for specific tasks, w
 Here's how we'll define our helper function to generate summaries:
 
 ```python
+from deepeval.tracing import observe
+...
 class MeetingSummarizer:
     ...
+    @observe()
     def get_summary(self, transcript: str) -> str:
         try:
             response = self.client.chat.completions.create(
@@ -405,8 +418,11 @@ valid JSON format — no extra text or commentary.
 Here's how we'll define our helper function to generate action items:
 
 ```python
+from deepeval.tracing import observe
+...
 class MeetingSummarizer:
     ...
+    @observe()
     def get_action_items(self, transcript: str) -> dict:
         try:
             response = self.client.chat.completions.create(
@@ -430,8 +446,11 @@ class MeetingSummarizer:
 We can now call these helper functions in our `summarize()` function and return their respective responses. Here's how we can do that:
 
 ```python
+from deepeval.tracing import observe
+...
 class MeetingSummarizer:
     ...
+    @observe()
     def summarize(self, transcript: str) -> tuple[str, dict]:
         summary = self.get_summary(transcript)
         action_items = self.get_action_items(transcript)

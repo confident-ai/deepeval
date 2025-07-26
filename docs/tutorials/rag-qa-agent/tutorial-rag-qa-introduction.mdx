@@ -14,6 +14,29 @@ from initial development to iterative improvement through `deepeval`'s evaluatio
 This tutorial focuses on building a RAG-based QA agent for an infamous company called **Theranos**. However, the concepts and practices used throughout this tutorial are applicable to any **RAG-based application**. If you are working with RAG applications, this tutorial will be helpful to you.
 :::
 
+## Overview
+
+DeepEval is an open-source LLM evaluation framework that supports a wide-range of metrics to help evaluate and iterate on your LLM applications.
+
+In this tutorial, we'll be building a reliable RAG QA Agent using **OpenAI**, **LangChain** and **DeepEval**.
+
+<TechStackCards
+    techStack={[
+        {
+            name: "OpenAI",
+            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
+        },
+        {
+            name: "LangChain",
+            logo: "https://logo.svgcdn.com/s/langchain-dark-8x.png",
+        },
+        {
+            name: "DeepEval",
+            logo: "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g.png",
+        }
+    ]}
+/>
+
 Here are the links to jump to different stages of this tutorial:
 
 <LinkCards
@@ -55,56 +78,21 @@ In this tutorial you'll learn:
 - How to evaluate and improve your RAG agent using `deepeval`.
 - How to prepare your RAG agent for deployment.
 
-## Tech Stack
-
-<TechStackCards
-    techStack={[
-        {
-            name: "OpenAI",
-            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
-            website: "https://www.openai.com"
-        },
-        {
-            name: "LangChain",
-            logo: "https://logo.svgcdn.com/s/langchain-dark-8x.png",
-            website: "https://www.langchain.com"
-        },
-        {
-            name: "DeepEval",
-            logo: "https://media.licdn.com/dms/image/v2/D560BAQFogqXz2yr1VQ/company-logo_200_200/company-logo_200_200/0/1698938769821/confident_ai_logo?e=2147483647&v=beta&t=4Ot5C3a5yYpjerH4nltzMBWELrq0NQKRptBWo9mRaWI",
-            website: "https://www.deepeval.com"
-        }
-    ]}
-/>
-
 ## RAG QA Agent
 
-Throughout this tutorial, we'll build a **RAG QA agent** designed to answer questions about **Theranos**, a company specializing in blood 
-diagnostics. It takes a user query as `input` and generates a response that answers the query from the the most relevant documents stored in a vector database.
+**RAG (Retrieval-Augmented Generation)** agents are a widely adopted pattern that let companies build domain-specific assistants without the need to fine-tune large models.
 
-Our objective is to build a reliable RAG QA agent that not only answers the user's queries but also makes sure that the answers generated
-are **relevant and correct** based on the information in the documents stored. We will also ensure that the agent only answers from the retrieved 
-documents and does not hallucinate — which might make the agent unreliable.
+In this tutorial, you'll build a **RAG QA agent** designed to answer questions about **Theranos**, a company focused on blood diagnostics. The agent takes a user query as input and returns an answer based on the most relevant documents stored in a vector database.
 
-## What You'll build
+The goal is to create a reliable system that provides accurate, relevant answers strictly grounded in retrieved content — avoiding hallucinations or unsupported claims.
 
-RAG-based agents have become one of the most widely used AI patterns today. This is because _RAG applications provide the flexibility 
-to enable AI agents to answer questions related to a specific topic by using retrieval methods to access private information from a knowledge 
-base_. This allows companies to avoid fine-tuning a model on their entire database.
-
-Companies now use RAG agents to provide customers and employees with information about their company in a much more accessible and 
-flexible way. **Theranos** has also decided to use a RAG agent to answer the queries a user might have about their company and how they 
-diagnose blood. 
-
-Here's what **Theranos**'s RAG QA agent looks like:
+**Theranos** is using a RAG QA agent to help users understand its services and technology. Here's what thier QA Agent looks like:
 
 ![MadeUpCompany's RAG QA Agent](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:qa-agent:qa-agent-overview.png)
 
-The QA agent takes a user query as `input` and generates a relevant answer based on the retrieved context.
-The answer must absolutely be related to a context from the knowledge base — which are cited for reliability. It shouldn't answer any questions if no relevant documents are found and instead, it must explain 
-that there are no documents relevant to the user's query.
+The agent retrieves relevant context, answers based strictly on that content, and cites its sources. If no relevant documents are found, it simply informs the user.
 
 In the following sections of this tutorial, you'll learn how to build a reliable RAG QA Agent that retrieves correct data and generates an 
 accurate answer based on the retrieved context. 
 
-Ready to get started? Click here to move on to [developing the RAG QA Agent](/tutorials/rag-qa-agent/tutorial-rag-qa-development).
+Ready to get started? Continue to [developing the RAG QA Agent](/tutorials/rag-qa-agent/tutorial-rag-qa-development).

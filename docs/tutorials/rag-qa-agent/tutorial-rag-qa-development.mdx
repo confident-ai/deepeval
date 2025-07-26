@@ -14,6 +14,14 @@ The retriever is used for retrieving all the relevant documents from the knowled
 The generator is responsible for generating an answer to the user's query by using the retrieved context. 
 Both of them combined make up a RAG (_Retrieval-Augmented Generation_) application.
 
+:::tip
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be. It is highly recommended to add this tracing to your application right from the development stage to make your dev life easier.
+:::
+
+:::note
+If you already have a RAG application that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](/tutorials/rag-qa-agent/tutorial-rag-qa-evaluation).
+:::
+
 ## Creating The RAG Agent
 
 We are going to create a class called `RAGAgent` that combines both the retriever and generator's responses to answer the user's query. 
@@ -80,6 +88,7 @@ that allows us to retrieve the relevant data for a particular query. Here's how 
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from deepeval.tracing import observe
 
 class RAGAgent:
     def __init(...):
@@ -88,8 +97,11 @@ class RAGAgent:
     def _load_vector_store(...):
         ...
 
+    @observe()
     def retrieve(self, query: str):
-        return self.vector_store.similarity_search(query, k=self.k)
+        docs = self.vector_store.similarity_search(query, k=self.k)
+        context = [doc.page_content for doc in docs]
+        return context
 ```
 
 This allows us to retrieve `k` documents that are most relevant to the `query` we supplied by using similarity search. We can test our retriever with the following code:
@@ -205,8 +217,8 @@ Company Motto: “One Drop Changes Everything™”
 This is the output of the above code:
 
 ```text
-[Document(page_content='The NanoDrop 3000 is a compact, portable diagnostic device capable of performing over 300 blood tests using just 1-2 microliters of capillary blood. The device integrates microfluidics, spectrometry, and Theranos’s patented NanoAnalysis Engine™ to provide lab-grade results in under 20 minutes.', metadata={}),
- Document(page_content='Key Features:\n- Sample volume: 1.2 microliters (average)\n- Test menu: 325+ assays including metabolic, hormonal, infectious, hematologic, and genomic panels', metadata={})]
+['The NanoDrop 3000 is a compact, portable diagnostic device capable of performing over 300 blood tests using just 1-2 microliters of capillary blood. The device integrates microfluidics, spectrometry, and Theranos’s patented NanoAnalysis Engine™ to provide lab-grade results in under 20 minutes.',
+ 'Key Features:\n- Sample volume: 1.2 microliters (average)\n- Test menu: 325+ assays including metabolic, hormonal, infectious, hematologic, and genomic panels']
 ```
 
 Now that we have a working retriever, we can move on to creating our generator.
@@ -222,6 +234,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.llms import OpenAI
+from deepeval.tracing import observe
 
 class RAGAgent:
     def __init(...):
@@ -230,9 +243,11 @@ class RAGAgent:
     def _load_vector_store(...):
         ...
 
+    @observe
     def retrieve(...):
         ...
 
+    @observe()
     def generate(
         self,
         query: str, 
@@ -240,7 +255,7 @@ class RAGAgent:
         llm_model=None, 
         prompt_template: str = None
     ):
-        context = "\n".join([doc.page_content for doc in retrieved_docs])
+        context = "\n".join(retrieved_docs)
         model = llm_model or OpenAI(temperature=0)
         prompt = prompt_template or (
             "Answer the query using the context below.\n\nContext:\n{context}\n\nQuery:\n{query}"
@@ -277,6 +292,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.llms import OpenAI
+from deepeval.tracing import observe
 
 class RAGAgent:
     def __init(...):
@@ -285,12 +301,15 @@ class RAGAgent:
     def _load_vector_store(...):
         ...
 
+    @observe()
     def retrieve(...):
         ...
 
+    @observe()
     def generate(...):
         ...
 
+    @observe()
     def answer(
         self, 
         query: str,
@@ -390,10 +409,12 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.llms import OpenAI
+from deepeval.tracing import observe
 
 class RAGAgent:
     ...
 
+    @observe()
     def answer(self, query: str):
         retrieved_docs = self.retrieve(query)
         generated_answer = self.generate(query, retrieved_docs)
