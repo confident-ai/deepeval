@@ -28,10 +28,22 @@ class ConfidentSpanExporterV1(SpanExporter):
         
         # list starts from root span
         for base_span in reversed(spans_list):
-            print(">>>> base_span", base_span)
-            print("--------------------------")
-        
+            if not trace_manager.get_trace_by_uuid(base_span.trace_uuid):
+                trace_manager.start_new_trace(trace_uuid=base_span.trace_uuid)
+            #TODO: Fix timing of the trace 
+            trace_manager.add_span(base_span)
+            trace_manager.add_span_to_trace(base_span)
+            # no removing span because it can be parent of other spans
 
+        for trace in trace_manager.active_traces:
+            trace_manager.end_trace(trace)
+        
+        # safely end all active traces
+        active_traces_keys = list(trace_manager.active_traces.keys())
+        
+        for trace_key in active_traces_keys:
+            trace_manager.end_trace(trace_key)
+        
         return SpanExportResult.SUCCESS
     
     def shutdown(self):
@@ -53,4 +65,3 @@ class ConfidentSpanExporterV1(SpanExporter):
             children=[],
             metadata=json.loads(span.to_json())
         )
-    

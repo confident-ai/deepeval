@@ -150,9 +150,11 @@ class TraceManager:
         self,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
+        trace_uuid: Optional[str] = None,
     ) -> Trace:
         """Start a new trace and set it as the current trace."""
-        trace_uuid = str(uuid.uuid4())
+        if trace_uuid is None:
+            trace_uuid = str(uuid.uuid4())
         new_trace = Trace(
             uuid=trace_uuid,
             root_spans=[],
