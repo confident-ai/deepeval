@@ -18,7 +18,7 @@ We follow fork and pull request workflow. To know more about it, check out this 
 3. Install the dependencies using:
 
 ```bash
-make install
+poetry install
 ```
 
 ## Our expectations (not a lot :)
