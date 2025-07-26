@@ -25,6 +25,7 @@ class OllamaModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -75,9 +76,9 @@ class OllamaModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return Client(host=self.base_url)
+            return Client(host=self.base_url, **self.kwargs)
         else:
-            return AsyncClient(host=self.base_url)
+            return AsyncClient(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"
