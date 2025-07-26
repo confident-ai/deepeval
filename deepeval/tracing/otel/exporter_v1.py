@@ -28,9 +28,9 @@ class ConfidentSpanExporterV1(SpanExporter):
         
         # list starts from root span
         for base_span in reversed(spans_list):
-            self.add_span_to_trace(base_span)
+            print(">>>> base_span", base_span)
+            print("--------------------------")
         
-        self.end_trace()
 
         return SpanExportResult.SUCCESS
     
@@ -40,25 +40,17 @@ class ConfidentSpanExporterV1(SpanExporter):
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
     
-    
-    def add_span_to_trace(self, span: BaseSpan):
-        trace_manager.add_span(span)
-        trace_manager.add_span_to_trace(span)
-    
-    def end_trace(self):
-        trace_manager.end_trace(self.active_trace_id)
-        self.active_trace_id = None
-    
     def _convert_readable_span_to_base_span(self, span: ReadableSpan):
+
         return BaseSpan(
+            name=span.name,
             uuid=to_hex_string(span.context.span_id, 16),
-            status=TraceSpanStatus.SUCCESS, # TODO: handle status
-            children=[],
-            trace_uuid=self.active_trace_id,
+            parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
+            trace_uuid=to_hex_string(span.context.trace_id, 32),
             start_time=span.start_time/1e9,
             end_time=span.end_time/1e9,
-            parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
-            name=span.name,
+            status=TraceSpanStatus.SUCCESS, # TODO: handle status
+            children=[],
             metadata=json.loads(span.to_json())
         )
     
