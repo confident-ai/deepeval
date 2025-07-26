@@ -6,11 +6,13 @@ from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
 from deepeval.tracing.otel.utils import to_hex_string
-
+import deepeval
 class ConfidentSpanExporterV1(SpanExporter):
     
-    def __init__(self):
+    def __init__(self, api_key: str):
         capture_tracing_integration("deepeval.tracing.otel.exporter_v1")
+
+        deepeval.login_with_confident_api_key(api_key)
         super().__init__()
 
     def export(
