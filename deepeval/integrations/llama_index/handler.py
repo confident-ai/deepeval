@@ -38,7 +38,7 @@ def is_llama_index_installed():
 
 
 class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
-    active_trace_uuid: Optional[str] = None
+    root_span_trace_id_map: Dict[str, str] = {}
     open_ai_astream_to_llm_span_map: Dict[str, str] = {}
 
     def __init__(self):
@@ -66,7 +66,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 uuid=str(uuid.uuid4()),
                 status=TraceSpanStatus.IN_PROGRESS,
                 children=[],
-                trace_uuid=self.active_trace_uuid,
+                trace_uuid=trace_manager.get_span_by_uuid(event.span_id).trace_uuid,
                 parent_uuid=event.span_id,
                 start_time=perf_counter(),
                 model=getattr(event, "model_dict", {}).get(
@@ -107,23 +107,32 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         tags: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Optional[LlamaIndexBaseSpan]:
-        if parent_span_id is None:
-            self.active_trace_uuid = trace_manager.start_new_trace().uuid
-        
         class_name, method_name = parse_id(id_)
-        
+
+        # check if it is a root span
+        if parent_span_id is None:
+            trace_uuid = trace_manager.start_new_trace().uuid
+        elif class_name == "Workflow" and method_name == "run":
+            trace_uuid = trace_manager.start_new_trace().uuid
+            parent_span_id = None # since workflow is the root span, we need to set the parent span id to None
+        elif trace_manager.get_span_by_uuid(parent_span_id):
+            trace_uuid = trace_manager.get_span_by_uuid(parent_span_id).trace_uuid
+        else:
+            trace_uuid = trace_manager.start_new_trace().uuid
+
+        self.root_span_trace_id_map[id_] = trace_uuid
+
         # default span
         span = BaseSpan(
             uuid=id_,
             status=TraceSpanStatus.IN_PROGRESS,
             children=[],
-            trace_uuid=self.active_trace_uuid,
+            trace_uuid=trace_uuid,
             parent_uuid=parent_span_id,
             start_time=perf_counter(),
             name= method_name if method_name else instance.__class__.__name__,
             input=bound_args.arguments,
         )
-
 
         # conditions to qualify as agent start run span
         if class_name == "Workflow" and method_name == "run":
@@ -131,7 +140,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
                 children=[],
-                trace_uuid=self.active_trace_uuid,
+                trace_uuid=trace_uuid,
                 parent_uuid=parent_span_id,
                 start_time=perf_counter(),
                 name="Agent", #TODO: decide the name of the span
@@ -186,7 +195,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         if base_span.parent_uuid is None:
             trace_manager.end_trace(base_span.trace_uuid)
-            self.active_trace_uuid = None
+            self.root_span_trace_id_map.pop(base_span.uuid)
 
         return base_span
 
