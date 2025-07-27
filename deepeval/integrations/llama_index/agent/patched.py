@@ -29,18 +29,18 @@ class FunctionAgent(FunctionAgent):
     def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
-        self.metrics = metrics or []
+        self.metrics = metrics
 
 @with_metrics
 class ReActAgent(ReActAgent):
     def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
-        self.metrics = metrics or []
+        self.metrics = metrics
 
 @with_metrics
 class CodeActAgent(CodeActAgent):
     def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
-        self.metrics = metrics or []
+        self.metrics = metrics
