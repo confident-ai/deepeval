@@ -22,6 +22,6 @@ class PatchedAgent(CrewAIAgent):
         **kwargs
     ):
         is_crewai_installed()
-        super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
         self.metrics = metrics
+        super().__init__(*args, **kwargs)
