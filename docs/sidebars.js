@@ -33,7 +33,7 @@ module.exports = {
             },
             "evaluation-datasets",
           ],
-          collapsed: false,
+          collapsed: true,
         },
       ],
       collapsed: false,
