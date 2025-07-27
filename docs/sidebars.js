@@ -13,10 +13,6 @@ module.exports = {
       className: "sidebar-item-icon-llm-eval",
       items: [
         "evaluation-introduction",
-        "evaluation-end-to-end-llm-evals",
-        "evaluation-component-level-llm-evals",
-        "evaluation-llm-tracing",
-        "evaluation-flags-and-configs",
         {
           type: "category",
           label: "Concepts",
@@ -35,6 +31,10 @@ module.exports = {
           ],
           collapsed: true,
         },
+        "evaluation-end-to-end-llm-evals",
+        "evaluation-component-level-llm-evals",
+        "evaluation-llm-tracing",
+        "evaluation-flags-and-configs",
       ],
       collapsed: false,
     },
