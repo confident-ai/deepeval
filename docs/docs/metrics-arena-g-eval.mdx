@@ -23,8 +23,7 @@ You'll also need to supply any additional arguments such as `expected_output` an
 To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
 
 ```python
-from deepeval import evaluate
-from deepeval.test_case import ArenaTestCase, LLMTestCaseParams
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import ArenaGEval
 
 a_test_case = ArenaTestCase(
@@ -39,7 +38,7 @@ a_test_case = ArenaTestCase(
         ),
     },
 )
-arena_geval = ArenaGEval(
+metric = ArenaGEval(
     name="Friendly",
     criteria="Choose the winner of the more friendly contestant based on the input and actual output",
     evaluation_params=[

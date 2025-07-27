@@ -15,15 +15,22 @@ module.exports = {
         "evaluation-introduction",
         {
           type: "category",
-          label: "Test Cases",
+          label: "Concepts",
           items: [
-            "evaluation-test-cases",
-            "evaluation-multiturn-test-cases",
-            "evaluation-arena-test-cases",
+            {
+              type: "category",
+              label: "Test Cases",
+              items: [
+                "evaluation-test-cases",
+                "evaluation-multiturn-test-cases",
+                "evaluation-arena-test-cases",
+              ],
+              collapsed: false,
+            },
+            "evaluation-datasets",
           ],
           collapsed: true,
         },
-        "evaluation-datasets",
         "evaluation-end-to-end-llm-evals",
         "evaluation-component-level-llm-evals",
         "evaluation-llm-tracing",
