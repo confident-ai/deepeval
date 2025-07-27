@@ -3,11 +3,11 @@ from deepeval.tracing.offline_evals import (
     evaluate_trace,
     evaluate_thread,
 )
-import pytest
+import os
 
-span_id = "Your Span ID"
-trace_id = "Your Trace ID"
-thread_id = "Your Thread ID"
+span_id = os.getenv("SPAN_ID")
+trace_id = os.getenv("TRACE_ID")
+thread_id = os.getenv("THREAD_ID")
 
 
 def test_evaluate_span_with_custom_metrics():

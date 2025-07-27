@@ -5,26 +5,13 @@ from deepeval.tracing import (
     update_current_trace,
     TurnContext,
 )
-import asyncio
-
 
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    # metrics=[
-    #     "Answer Relevancy",
-    #     "Faithfulness",
-    #     # "Helpfulness",
-    #     # "Verbosity",
-    #     # "Contextual Precision",
-    #     # "Contextual Recall",
-    #     # "Tool Correctness",
-    #     # "Contextual Relevancy",
-    #     # "Hallucination"
-    # ],
     metric_collection="Test",
 )
-async def meta_agent(query: str):
+def meta_agent(query: str):
     update_current_span(
         metadata={"user_id": "11111", "date": "1/1/11"},
         test_case=LLMTestCase(
@@ -60,26 +47,13 @@ async def meta_agent(query: str):
             expected_tools=[ToolCall(name="test")],
         ),
     )
-    print("query")
     return query
 
 
-async def run_parallel_examples():
-    tasks = [
-        meta_agent("How tall is Mount Everest?"),
-        meta_agent("What's the capital of Brazil?"),
-        # meta_agent("Who won the last World Cup?"),
-        # meta_agent("Explain quantum entanglement."),
-        # meta_agent("What's the latest iPhone model?"),
-        # meta_agent("How do I cook a perfect steak?"),
-        # meta_agent("Tell me a joke about robots."),
-        # meta_agent("What causes lightning?"),
-        # meta_agent("Who painted the Mona Lisa?"),
-        # meta_agent("What's the population of Japan?"),
-        # meta_agent("How do vaccines work?"),
-        # meta_agent("Recommend a good sci-fi movie."),
-    ]
-    await asyncio.gather(*tasks)
-
-
-asyncio.run(run_parallel_examples())
+def test_online_metrics():
+    for query in [
+        "How tall is Mount Everest?",
+        "What's the capital of Brazil?",
+    ]:
+        meta_agent(query)
+    assert True
