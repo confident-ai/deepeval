@@ -1,2 +1,2 @@
 from .handler import instrumentator
-from .agent import PatchedAgent as Agent
+from .agent import Agent

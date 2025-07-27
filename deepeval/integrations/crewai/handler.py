@@ -19,7 +19,7 @@ def is_crewai_installed():
         )
     
 from deepeval.test_case.llm_test_case import LLMTestCase
-from deepeval.tracing.tracing import observe, current_span_context
+from deepeval.tracing.tracing import observe, current_span_context, trace_manager, current_trace_context
 
 class CrewAIEventsListener(BaseEventListener):
     def __init__(self):
@@ -52,7 +52,10 @@ class CrewAIEventsListener(BaseEventListener):
                 if isinstance(source, PatchedAgent):
                     current_span.metrics = agent_registry.get_metrics(source)
                     current_span.metric_collection = agent_registry.get_metric_collection(source)
-
+                    
+                    # set offline evals
+                    if current_span.metric_collection:
+                        trace_manager.integration_traces_to_evaluate.append(current_trace_context.get())
 
 def instrumentator(api_key: Optional[str] = None):
     is_crewai_installed()
