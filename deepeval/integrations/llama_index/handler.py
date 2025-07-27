@@ -151,14 +151,17 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             if isinstance(instance, PatchedFunctionAgent):
                 span.name = "FunctionAgent"
                 span.metric_collection = instance.metric_collection
+                span.metrics = instance.metrics
             
             if isinstance(instance, PatchedReActAgent):
                 span.name = "ReActAgent"
                 span.metric_collection = instance.metric_collection
+                span.metrics  = instance.metrics
             
             if isinstance(instance, PatchedCodeActAgent):
                 span.name = "CodeActAgent"
                 span.metric_collection = instance.metric_collection
+                span.metrics = instance.metrics
 
         # prepare input test case params for the span
         prepare_input_llm_test_case_params(class_name, method_name, span, bound_args.arguments)
@@ -187,6 +190,9 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         if base_span.llm_test_case:
             class_name, method_name = parse_id(id_)
             prepare_output_llm_test_case_params(class_name, method_name, result, base_span)
+        
+        if base_span.metrics:
+            trace_manager.integration_traces_to_evaluate.append(trace_manager.get_trace_by_uuid(base_span.trace_uuid))
 
         trace_manager.remove_span(base_span.uuid)
 
