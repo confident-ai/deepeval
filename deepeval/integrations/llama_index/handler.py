@@ -151,17 +151,14 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
             if isinstance(instance, PatchedFunctionAgent):
                 span.name = "FunctionAgent"
                 span.metric_collection = instance.metric_collection
-                # span.metrics = instance.metrics # TODO: facing issue with this
             
             if isinstance(instance, PatchedReActAgent):
                 span.name = "ReActAgent"
                 span.metric_collection = instance.metric_collection
-                # span.metrics = instance.metrics # TODO: facing issue with this
             
             if isinstance(instance, PatchedCodeActAgent):
                 span.name = "CodeActAgent"
                 span.metric_collection = instance.metric_collection
-                # span.metrics = instance.metrics # TODO: facing issue with this
 
         # prepare input test case params for the span
         prepare_input_llm_test_case_params(class_name, method_name, span, bound_args.arguments)
@@ -218,7 +215,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         if base_span.parent_uuid is None:
             trace_manager.end_trace(base_span.trace_uuid)
-            self.active_trace_uuid = None
+            self.root_span_trace_id_map.pop(base_span.uuid)
 
         return base_span
 
