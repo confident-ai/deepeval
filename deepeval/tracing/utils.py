@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
+from collections import deque
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
@@ -33,19 +34,52 @@ def validate_sampling_rate(sampling_rate: float):
 
 
 def make_json_serializable(obj):
-    if isinstance(obj, (str, int, float, bool)) or obj is None:
-        return obj
-    if isinstance(obj, (list, tuple, set)):
-        return [make_json_serializable(i) for i in obj]
-    if isinstance(obj, dict):
-        return {str(k): make_json_serializable(v) for k, v in obj.items()}
-    if hasattr(obj, "__dict__"):
-        return {
-            key: make_json_serializable(value)
-            for key, value in vars(obj).items()
-            if not key.startswith("_")  # optional: exclude private attrs
-        }
-    return str(obj)
+    """
+    Recursively converts an object to a JSON‐serializable form,
+    replacing circular references with "<circular>".
+    """
+    seen = set()  # Store `id` of objects we've visited
+
+    def _serialize(o):
+        oid = id(o)
+        # Primitive types are already serializable
+        if isinstance(o, (str, int, float, bool)) or o is None:
+            return o
+
+        # Detect circular reference
+        if oid in seen:
+            return "<circular>"
+
+        # Mark current object as seen
+        seen.add(oid)
+
+        # Handle containers
+        if isinstance(o, (list, tuple, set, deque)): # TODO: check if more
+            serialized = []
+            for item in o:
+                serialized.append(_serialize(item))
+
+            return serialized
+
+        if isinstance(o, dict):
+            result = {}
+            for key, value in o.items():
+                # Convert key to string (JSON only allows string keys)
+                result[str(key)] = _serialize(value)
+            return result
+
+        # Handle objects with __dict__
+        if hasattr(o, "__dict__"):
+            result = {}
+            for key, value in vars(o).items():
+                if not key.startswith("_"):
+                    result[key] = _serialize(value)
+            return result
+
+        # Fallback: convert to string
+        return str(o)
+
+    return _serialize(obj)
 
 
 def to_zod_compatible_iso(dt: datetime) -> str:
@@ -74,3 +108,9 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     timestamp = time_diff + perf_counter_value
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
+def replace_self_with_class_name(obj):
+    try:
+        return f"<{obj.__class__.__name__}>"
+    except:
+        return f"<self>"

@@ -50,7 +50,8 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
-    make_json_serializable,
+    replace_self_with_class_name,
+    safe_json_serialize,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
     tracing_enabled,
@@ -394,7 +395,7 @@ class TraceManager:
                     # Pydantic version below 2.0
                     body = trace_api.dict(by_alias=True, exclude_none=True)
                 # If the main thread is still alive, send now
-                body = make_json_serializable(body)
+                body = safe_json_serialize(body)
 
                 if main_thr.is_alive():
                     api = Api(api_key=self.confident_api_key)
@@ -1072,9 +1073,13 @@ def observe(
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
                 complete_kwargs = dict(bound_args.arguments)
+                
+                if "self" in complete_kwargs:
+                    complete_kwargs["self"] = replace_self_with_class_name(complete_kwargs["self"])
+
                 observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
-                    "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
+                    "function_kwargs": safe_json_serialize(complete_kwargs), # serilaizing it before it goes to trace api
                 }
                 with Observer(
                     type,
@@ -1086,7 +1091,7 @@ def observe(
                     # Call the original function
                     result = func(*args, **func_kwargs)
                     # Capture the result
-                    observer.result = result
+                    observer.result = safe_json_serialize(result) # serilaizing it before it goes to trace api
                     return result
 
             # Set the marker attribute on the wrapper
