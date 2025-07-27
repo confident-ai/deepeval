@@ -6,6 +6,7 @@ from deepeval.tracing import (
     TurnContext,
 )
 
+
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],

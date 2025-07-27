@@ -16,7 +16,9 @@ def test_sync_run_async():
 def test_sync_run_sync():
     golden = Golden(input="What’s the weather like in SF?")
     try:
-        assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
+        assert_test(
+            golden=golden, observed_callback=meta_agent, run_async=False
+        )
     except Exception as e:
         print(f"Test failed but continuing: {e}")
     assert True

@@ -4,6 +4,7 @@ from tests.test_tracing.sync_app import meta_agent
 from deepeval.evaluate import AsyncConfig, dataset, test_run
 from deepeval.dataset import Golden
 import asyncio
+import pytest
 
 # Define golden inputs
 goldens = [
@@ -28,7 +29,8 @@ def test_sync_run_sync():
     assert True
 
 
-def test_async_run_async():
+@pytest.mark.asyncio
+async def test_async_run_async():
     for golden in dataset(
         goldens=goldens, async_config=AsyncConfig(run_async=True)
     ):
@@ -37,10 +39,11 @@ def test_async_run_async():
     assert True
 
 
-# def test_async_run_sync():
-#     for golden in dataset(
-#         goldens=goldens, async_config=AsyncConfig(run_async=False)
-#     ):
-#         task = asyncio.create_task(async_meta_agent(golden.input))
-#         test_run.append(task)
-#     assert True
+@pytest.mark.asyncio
+async def test_async_run_sync():
+    for golden in dataset(
+        goldens=goldens, async_config=AsyncConfig(run_async=False)
+    ):
+        task = asyncio.create_task(async_meta_agent(golden.input))
+        test_run.append(task)
+    assert True
