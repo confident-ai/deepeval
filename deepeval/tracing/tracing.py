@@ -176,7 +176,7 @@ class TraceManager:
 
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
-            trace.end_time = perf_counter()
+            trace.end_time = perf_counter() if trace.end_time is None else trace.end_time
 
             # Default to SUCCESS for completed traces
             # This assumes that if a trace completes, it was successful overall

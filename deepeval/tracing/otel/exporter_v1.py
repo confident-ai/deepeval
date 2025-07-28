@@ -5,7 +5,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, Reada
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
-from deepeval.tracing.otel.utils import to_hex_string
+from deepeval.tracing.otel.utils import to_hex_string, set_trace_time
 import deepeval
 class ConfidentSpanExporterV1(SpanExporter):
     
@@ -39,6 +39,7 @@ class ConfidentSpanExporterV1(SpanExporter):
         active_traces_keys = list(trace_manager.active_traces.keys())
         
         for trace_key in active_traces_keys:
+            set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
             trace_manager.end_trace(trace_key)
         
         trace_manager.clear_traces()
