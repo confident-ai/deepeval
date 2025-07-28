@@ -23,7 +23,6 @@ def set_trace_time(trace: Trace):
         trace: The trace object to update
     """
 
-    print(f"trace.root_spans: {trace.root_spans}")
     if not trace.root_spans:
         return
     
