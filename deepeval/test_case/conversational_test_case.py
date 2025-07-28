@@ -16,59 +16,59 @@ class TurnParams(Enum):
     TOOLS_CALLED = "tools_called"
 
 
-@dataclass
-class MCPTool:
-    name: str
-    input_schema: Dict
-    output_schema: Dict
-    title: Optional[str] = None
-    description: Optional[str] = None
+# @dataclass
+# class MCPTool:
+#     name: str
+#     input_schema: Dict
+#     output_schema: Dict
+#     title: Optional[str] = None
+#     description: Optional[str] = None
 
 
-@dataclass
-class MCPToolCall:
-    name: str
-    args: Dict
-    structured_content: Dict # can use the "result" property in this for ease of access instead of using content
-    is_error: bool
-    content: Optional[List] = None# Will have to implement content types later on if needed from the MCP types.py
+# @dataclass
+# class MCPToolCall:
+#     name: str
+#     args: Dict
+#     structured_content: Dict # can use the "result" property in this for ease of access instead of using content
+#     is_error: bool
+#     content: Optional[List] = None# Will have to implement content types later on if needed from the MCP types.py
 
 
-@dataclass
-class MCPPromptCall:
-    description: str
-    messages: List
+# @dataclass
+# class MCPPromptCall:
+#     description: str
+#     messages: List
 
 
-@dataclass
-class MCPResourceCall:
-    contents: List # Gotta use the .text / .blob    
+# @dataclass
+# class MCPResourceCall:
+#     contents: List # Gotta use the .text / .blob    
 
 
-@dataclass
-class MCPResource:
-    name: str
-    mimeType: str
-    uri: AnyUrl
-    title: Optional[str] = None
-    description: Optional[str] = None
+# @dataclass
+# class MCPResource:
+#     name: str
+#     mimeType: str
+#     uri: AnyUrl
+#     title: Optional[str] = None
+#     description: Optional[str] = None
 
 
-@dataclass
-class MCPPrompt:
-    name: str
-    arguments: List
-    title: Optional[str] = None
-    description: Optional[str] = None
+# @dataclass
+# class MCPPrompt:
+#     name: str
+#     arguments: List
+#     title: Optional[str] = None
+#     description: Optional[str] = None
 
 
 @dataclass
 class MCPMetaData:
     server_name: str
     transport: Optional[Literal["stdio", "sse", "streamable-http"]] = None
-    available_tools: Optional[List[MCPTool]] = None
-    available_resources: Optional[List[MCPResource]] = None
-    available_prompts: Optional[List[MCPPrompt]] = None
+    available_tools: Optional[List] = None
+    available_resources: Optional[List] = None
+    available_prompts: Optional[List] = None
 
 
 @dataclass
@@ -78,10 +78,10 @@ class Turn:
     user_id: Optional[str] = None
     retrieval_context: Optional[List[str]] = None
     tools_called: Optional[List[ToolCall]] = None
+    mcp_tools_called: Optional[List[Dict]] = None
+    mcp_resources_called: Optional[List[Dict]] = None
+    mcp_prompts_called: Optional[List[Dict]] = None
     additional_metadata: Optional[Dict] = None
-    mcp_tools_called: Optional[List[MCPToolCall]] = None
-    mcp_resources_called: Optional[List[MCPResourceCall]] = None
-    mcp_prompts_called: Optional[List[MCPPromptCall]] = None
 
 
 @dataclass
