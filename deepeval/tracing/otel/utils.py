@@ -1,4 +1,6 @@
 from deepeval.tracing.types import Trace
+import time
+from datetime import datetime, timezone
 
 def to_hex_string(id_value: int | bytes, length: int = 32) -> str:
     """
@@ -48,3 +50,10 @@ def set_trace_time(trace: Trace):
         trace.start_time = target_span.start_time
         trace.end_time = target_span.end_time
     
+def convert_to_perf_counter(timestamp: int) -> float:
+    timestamp_seconds = timestamp / 1e9
+    current_time = datetime.now(timezone.utc)
+    current_perf_counter = time.perf_counter()
+
+    offset = current_perf_counter - current_time.timestamp()
+    return timestamp_seconds + offset

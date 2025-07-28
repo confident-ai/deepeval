@@ -5,7 +5,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, Reada
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
-from deepeval.tracing.otel.utils import to_hex_string, set_trace_time
+from deepeval.tracing.otel.utils import to_hex_string, convert_to_perf_counter
 import deepeval
 class ConfidentSpanExporterV1(SpanExporter):
     
@@ -39,10 +39,10 @@ class ConfidentSpanExporterV1(SpanExporter):
         active_traces_keys = list(trace_manager.active_traces.keys())
         
         for trace_key in active_traces_keys:
-            set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
             trace_manager.end_trace(trace_key)
-        
+
         trace_manager.clear_traces()
+        
         return SpanExportResult.SUCCESS
     
     def shutdown(self):
@@ -58,8 +58,8 @@ class ConfidentSpanExporterV1(SpanExporter):
             uuid=to_hex_string(span.context.span_id, 16),
             parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
             trace_uuid=to_hex_string(span.context.trace_id, 32),
-            start_time=span.start_time/1e9,
-            end_time=span.end_time/1e9,
+            start_time=convert_to_perf_counter(span.start_time),
+            end_time=convert_to_perf_counter(span.end_time),
             status=TraceSpanStatus.SUCCESS, # TODO: handle status
             children=[],
             metadata=json.loads(span.to_json())
