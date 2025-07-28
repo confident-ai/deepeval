@@ -3,15 +3,12 @@ import llama_index.core.instrumentation as instrument
 import asyncio
 import time
 
-os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
-
 from deepeval.integrations.llama_index import ReActAgent
 from deepeval.integrations.llama_index import instrument_llama_index
 from llama_index.llms.openai import OpenAI
 
 import deepeval
 
-deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
 instrument_llama_index(instrument.get_dispatcher())
 
 agent = ReActAgent(

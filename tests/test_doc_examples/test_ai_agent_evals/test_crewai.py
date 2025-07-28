@@ -1,16 +1,22 @@
-from deepeval.integrations.langchain import CallbackHandler
-from langgraph.prebuilt import create_react_agent
+from deepeval.integrations.crewai import instrumentator, Agent
+from crewai import Task, Crew
 
-def get_weather(city: str) -> str:
-    return f"It's always sunny in {city}!"
+instrumentator(api_key="q8/AU3bxv2MX0mBnW9I8ynOVNx/iV3mMH3oqkl2Isu4=")
 
-agent = create_react_agent(
-    model="openai:gpt-4.1",
-    tools=[get_weather],
-    prompt="You are a helpful assistant"
+coder = Agent(
+    role='Consultant',
+    goal='Write clear, concise explanation.',
+    backstory='An expert consultant with a keen eye for software trends.',
 )
 
-result = agent.invoke(
-    input={"messages":[{"role":"user","content":"what is the weather in sf"}]},
-    config={"callbacks":[CallbackHandler()]}
+task = Task(
+    description="Explain the latest trends in AI.",
+    agent=coder,
+    expected_output="A clear and concise explanation.",
 )
+
+crew = Crew(
+    agents=[coder],
+    tasks=[task],
+)
+result = crew.kickoff()

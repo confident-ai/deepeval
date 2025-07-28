@@ -2,6 +2,7 @@ from deepeval.integrations.langchain import CallbackHandler
 from langgraph.prebuilt import create_react_agent
 
 def get_weather(city: str) -> str:
+    """Returns the weather in a city"""
     return f"It's always sunny in {city}!"
 
 agent = create_react_agent(

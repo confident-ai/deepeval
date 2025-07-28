@@ -14,4 +14,8 @@ agent = FunctionAgent(
     system_prompt="You are a helpful assistant that can perform calculations.",
 )
 
-asyncio.run(agent.run("What is 3 * 12?"))
+async def main():
+    response = await agent.run("What is 1234 * 4567?")
+    print(response)
+
+asyncio.run(main())
