@@ -114,35 +114,6 @@ llm_with_tools.invoke(
 ```
 
 </TabItem>
-<TabItem value="llama-index" label="LlamaIndex">
-
-Instrument DeepEval as an span handler for LlamaIndex and import your `FunctionAgent`, `ReActAgent`, and `CodeActAgent` from DeepEval instead.
-
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,2,6}"
-from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent
-import llama_index.core.instrumentation as instrument
-from llama_index.llms.openai import OpenAI
-import asyncio
-
-instrument_llama_index(instrument.get_dispatcher())
-
-def multiply(a: float, b: float) -> float:
-    return a * b
-
-agent = FunctionAgent(
-    tools=[multiply],
-    llm=OpenAI(model="gpt-4o-mini"),
-    system_prompt="You are a helpful assistant that can perform calculations.",
-)
-
-async def main():
-    response = await agent.run("What is 1234 * 4567?")
-    print(response)
-
-asyncio.run(main())
-```
-
-</TabItem>
 <TabItem value="crewai" label="CrewAI">
 
 Instrument DeepEval as an span handler for CrewAI and import your `Agent` from DeepEval instead.
@@ -171,6 +142,11 @@ crew = Crew(
 )
 result = crew.kickoff()
 ```
+
+</TabItem>
+<TabItem value="llama-index" label="LlamaIndex">
+
+_To be documented..._
 
 </TabItem>
 <TabItem value="pydantic" label="Pydantic">
@@ -299,7 +275,7 @@ for golden in dataset(goldens=[Golden(input="This is a test query")]):
 
 DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
 
-<VideoDisplay src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4" />
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Acomponent-level.mp4" />
 
 </TabItem>
 <TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
@@ -332,6 +308,9 @@ for golden in dataset(goldens=[Golden(input="This is a test query")]):
     )
 ```
 
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Alanggraph.mp4" />
 </TabItem>
 <TabItem value="langchain" label="LangChain">
 
@@ -359,43 +338,9 @@ for golden in dataset(goldens=[Golden(input="This is a test query")]):
     )
 ```
 
-</TabItem>
-<TabItem value="llama-index" label="LlamaIndex">
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
 
-Supply the task completion metric to the metrics argument inside the `FunctionAgent`, `ReActAgent`, and `CodeActAgent` from DeepEval. Then, to run an evaluation, run a query for each golden using the `dataset` iterator.
-
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,5,18,26,28}"
-from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent
-import llama_index.core.instrumentation as instrument
-from deepeval.evaluate import dataset, test_run
-from llama_index.llms.openai import OpenAI
-from deepeval.dataset import Golden
-import asyncio
-...
-
-instrument_llama_index(instrument.get_dispatcher())
-
-def multiply(a: float, b: float) -> float:
-    return a * b
-
-agent = FunctionAgent(
-    tools=[multiply],
-    llm=OpenAI(model="gpt-4o-mini"),
-    system_prompt="You are a helpful assistant that can perform calculations.",
-    metrics=[task_completion_metric],
-)
-
-async def llm_app(input_text):
-    response = await agent.run(input_text)
-    return response
-
-def main():
-    for golden in dataset(goldens=[Golden(input="What is 1234 * 4567?")]):
-        task = asyncio.create_task(llm_app(golden.input))
-        test_run.append(task)
-
-main()
-```
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Alangchain.mp4" />
 
 </TabItem>
 <TabItem value="crewai" label="CrewAI">
@@ -430,6 +375,15 @@ for golden in dataset(goldens=[Golden(input="Explain the latest trends in AI.")]
     )
     result = crew.kickoff()
 ```
+
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Acrew-ai.mp4" />
+
+</TabItem>
+<TabItem value="llama-index" label="LlamaIndex">
+
+_To be documented..._
 
 </TabItem>
 <TabItem value="pydantic" label="Pydantic">
@@ -537,7 +491,7 @@ for golden in dataset(goldens=[Golden(input='This is a test query')]):
 
 DeepEval will automatically generate a component-level test report on Confident AI.
 
-<VideoDisplay src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4" />
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Aend-to-end.mp4" />
 
 </TimelineItem>
 </Timeline>

@@ -22,11 +22,13 @@ agent = FunctionAgent(
     metrics=[metric],
 )
 
-async def llm_app(input_text):
-    response = await agent.run(input_text)
-    return response
+
 
 def main():
+    async def llm_app(input_text):
+        response = await agent.run(input_text)
+        return response
+    
     for golden in dataset(goldens=[Golden(input="What is 1234 * 4567?")]):
         task = asyncio.create_task(llm_app(golden.input))
         test_run.append(task)
