@@ -33,7 +33,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
-        user: str | NotGiven = NOT_GIVEN,
+        user: Optional[str] = None,
         *args,
         **kwargs,
     ):
