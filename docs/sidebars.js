@@ -29,7 +29,7 @@ module.exports = {
             },
             "evaluation-datasets",
           ],
-          collapsed: true,
+          collapsed: false,
         },
         "evaluation-end-to-end-llm-evals",
         "evaluation-component-level-llm-evals",
