@@ -41,6 +41,7 @@ class ConfidentSpanExporterV1(SpanExporter):
         for trace_key in active_traces_keys:
             trace_manager.end_trace(trace_key)
         
+        trace_manager.clear_traces()
         return SpanExportResult.SUCCESS
     
     def shutdown(self):
