@@ -4,6 +4,7 @@ function addLucideIcons() {
   const iconMapping = {
     'sidebar-item-getting-started': 'rocket',
     'sidebar-item-icon-llm-eval': 'flask-conical',
+    'sidebar-item-icon-metrics': 'bar-chart-2',
     'sidebar-item-icon-synthetic-data': 'database',
     'sidebar-item-icon-red-teaming': 'shield-alert',
     'sidebar-item-icon-benchmarks': 'bar-chart-2',

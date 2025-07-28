@@ -11,9 +11,89 @@ By looking at the evaluation results from various configurations we can improve 
 - **System prompt**: This is the prompt that defines the overall behavior of our chatbot across all interactions.
 - **Model**: This is the model we'll use to generate responses. 
 
+## Pulling Datasets 
+
+In the previous section, we've seen [how to create datasets](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation#creating-dataset) and store them in the cloud. We can now pull that dataset and use it as many times as we need to generate test cases and evaluate our medical chatbot.
+
+Here's how we can pull datasets from the cloud:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="Medical Chatbot Dataset")
+```
+
+The dataset pulled contains goldens, which can be used to create test cases during run time and run evals. This is how we can use our `ConversationalGolden`s and `ConversationSimulator` to generate `ConversationalTestCase`s:
+
+```python
+from deepeval.conversation_simulator import ConversationSimulator
+from typing import List, Dict
+from medical_chatbot import MedicalChatbot # Import your chatbot here
+import asyncio
+
+medical_chatbot = MedicalChatbot()
+
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    loop = asyncio.get_event_loop()
+    res = await loop.run_in_executor(None, medical_chatbot.agent_executer.invoke, {
+        "input": input,
+        "chat_history": conversation_history
+    })
+    return res["output"]
+
+for golden in dataset.goldens:
+    simulator = ConversationSimulator(
+        user_intentions=golden.additional_metadata["user_intentions"],
+        user_profiles=golden.additional_metadata["user_profiles"]
+    )
+
+    convo_test_cases = simulator.simulate(
+        model_callback=model_callback,
+        stopping_criteria="Stop when the user's medical concern is addressed with actionable advice.",
+    )
+
+    for test_case in convo_test_cases:
+        test_case.scenario = golden.scenario
+        test_case.expected_outcome = golden.expected_outcome
+        test_case.chatbot_role = "a professional, empathetic medical assistant"
+
+    print(f"\nGenerated {len(convo_test_cases)} conversational test cases.")
+```
+
+We can use these test cases and evaluate our chatbot.
+
 ## Iterating on Hyperparameters
 
-We will now iterate on different configurations of system prompts and generation model to see which configuration perform the best. Here' how we can do that:
+Now that we can pull our `ConversationalGolden`s, we will use these goldens and the `ConversationSimulator` to generate test cases for different configurations of our chatbot by iterating on hyperparameters.
+
+We will now iterate on different models and use a better system prompt to see which configuration performs the best.
+
+This is the new system prompt we'll be using: 
+
+```text
+You are BayMax, a friendly and professional healthcare chatbot. You assist users by retrieving accurate information from the Gale Encyclopedia of Medicine and helping them book medical appointments.
+
+Your key responsibilities:
+- Provide clear, fact-based health information from trusted sources only.
+- Retrieve and summarize relevant entries from the Gale Encyclopedia when asked.
+- Help users schedule or manage healthcare appointments as needed.
+- Maintain a warm, empathetic, and calm tone.
+- Always recommend consulting a licensed healthcare provider for diagnoses or treatment.
+
+Do not:
+- Offer medical diagnoses or personal treatment plans.
+- Speculate or give advice beyond verified sources.
+- Ask for sensitive personal information unless necessary for booking.
+
+Use phrases like:
+- "According to the Gale Encyclopedia of Medicine..."
+- "This is general information. Please consult a healthcare provider for advice."
+
+Your goal is to support users with reliable, respectful healthcare guidance.
+```
+
+We will now iterate over different models to see which one perfoms best for our chatbot.
 
 ```python
 from deepeval.metrics import (
@@ -23,7 +103,7 @@ from deepeval.metrics import (
 )
 from deepeval.dataset import EvaluationDataset, ConversationalGolden
 from deepeval.conversation_simulator import ConversationSimulator
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict
 from deepeval import evaluate
 from medical_chatbot import MedicalChatbot # Import your chatbot here
 
@@ -33,11 +113,7 @@ dataset.pull(alias="Medical Chatbot Dataset")
 metrics = [knowledge_retention, role_adherence, safety_check] # Use the same metrics
 
 models = ["gpt-4", "gpt-4o-mini", "gpt-3.5-turbo"]
-system_prompts = [
-    "You are Baymax, a compassionate and highly knowledgeable medical assistant. Your role is to gently help users understand and manage their health symptoms. Ask thoughtful, clarifying questions before providing any advice. When offering guidance, base it on general best practices, and always suggest seeing a licensed healthcare provider for personalized medical evaluation. Prioritize empathy, safety, and clarity in every interaction.",
-    "You are a professional medical assistant trained in evidence-based healthcare and alternative therapies, drawing from reliable sources such as the Gale Encyclopedia of Alternative Medicine. Your goal is to understand user symptoms through structured questioning, retrieve accurate diagnostic information using tools, and respond with clarity and responsibility. Never guess—only provide insights grounded in verified information. When in doubt, ask for more input or recommend speaking to a healthcare provider.",
-    "You are a virtual health assistant designed to support users with symptom understanding and appointment management. Start every conversation by actively listening to the user's concerns. Ask clear follow-up questions to gather information like symptom duration, intensity, and relevant health history. Use available tools to fetch diagnostic information or manage medical appointments. Never assume a diagnosis unless there's enough detail, and always recommend professional medical consultation when appropriate."
-]
+system_prompt = "..." # Use your new system prompt here
 
 def create_model_callback(chatbot_instance):
     async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
@@ -45,30 +121,29 @@ def create_model_callback(chatbot_instance):
     return model_callback
 
 for model in models:
-    for system_prompt in system_prompts:
-        for golden in dataset.goldens:
-            simulator = ConversationSimulator(
-                user_intentions=golden.additional_metadata["user_intentions"],
-                user_profiles=golden.additional_metadata["user_profiles"]
-            )
+    for golden in dataset.goldens:
+        simulator = ConversationSimulator(
+            user_intentions=golden.additional_metadata["user_intentions"],
+            user_profiles=golden.additional_metadata["user_profiles"]
+        )
 
-            chatbot = MedicalChatbot("gale_encyclopedia.txt", model)
-            chatbot.setup_agent(system_prompt)
+        chatbot = MedicalChatbot("gale_encyclopedia.txt", model)
+        chatbot.setup_agent(system_prompt)
 
-            convo_test_cases = simulator.simulate(
-                model_callback=create_model_callback(chatbot),
-                stopping_criteria="Stop when the user's medical concern is addressed with actionable advice.",
-            )
+        convo_test_cases = simulator.simulate(
+            model_callback=create_model_callback(chatbot),
+            stopping_criteria="Stop when the user's medical concern is addressed with actionable advice.",
+        )
 
-            for test_case in convo_test_cases:
-                test_case.scenario = golden.scenario
-                test_case.expected_outcome = golden.expected_outcome
-                test_case.chatbot_role = "a professional, empathetic medical assistant"
+        for test_case in convo_test_cases:
+            test_case.scenario = golden.scenario
+            test_case.expected_outcome = golden.expected_outcome
+            test_case.chatbot_role = "a professional, empathetic medical assistant"
 
-            evaluate(convo_test_cases, metrics)
+        evaluate(convo_test_cases, metrics)
 ```
 
-After running these iterations I've observed that `gpt-4` with _system prompt 3_ is performing the best for all 3 metrics, here are the average results it got:
+After running these iterations I've observed that `gpt-4` is performing the best for all 3 metrics, here are the average results it got:
 
 | Metric                    | Score |
 |---------------------------|-------|
@@ -76,7 +151,7 @@ After running these iterations I've observed that `gpt-4` with _system prompt 3_
 | Role Adherence            | 0.7   |
 | Safety Check              | 0.9   |
 
-So the best configuration for our chatbot is `gpt-4` with _system prompt 3_. We'll now see how to update our chatbot to support more hyperparameters. 
+We'll now see how to update our chatbot to support more hyperparameters. 
 
 ## Updating Chatbot
 
@@ -86,6 +161,7 @@ We have previously seen how to change our parameters, now we'll update cod eof o
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_openai import ChatOpenAI
+from deepeval.tracing import observe
 
 class MedicalChatbot:
     def __init__(
@@ -110,6 +186,7 @@ class MedicalChatbot:
         ...
     
     @tool
+    @observe()
     def query_engine(self, query: str) -> str:
         ...
     
@@ -132,18 +209,21 @@ class MedicalChatbot:
     def setup_tools(self):
         ...
 
+    @observe()
     def setup_agent(self, system_prompt: str):
+        ...
+
+    @observe()
+    def interactive_session(self, session_id):
         ...
 ```
 
-This is how we've changed the code of our chatbot, these are the changes made:
+These were the updates made to our medical chatbot. You can now change the following configurations for your chatbot in the initialization itself
 
 - generation model
 - embedding model
 - memory management
 - system prompt
-
-You can now change all these configurations of your chatbot in the initialization itself, here's how we can do that:
 
 ```python
 from medical_chatbot import MedicalChatbot
@@ -156,11 +236,8 @@ chatbot = MedicalChatbot(
 )
 ```
 
-We can now change the model's configuration easily.
-
-
 This new updated model now performs as we intended and can be used to create a UI interface, this is what a UI integrated chatbot looks like:
 
-![Chatbot UI Overview](./images/tutorials:medical-chatbot:chatbot-overview.png)
+![Chatbot UI Overview](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:medical-chatbot:chatbot-overview.png)
 
 In the next section, we'll go over how to setup tracing for our chatbot to observe it on a component level and [prepare the chatbot for deployment](/tutorials/medical-chatbot/tutorial-medical-chatbot-deployment).

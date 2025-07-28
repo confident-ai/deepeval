@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, List
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import (
@@ -7,6 +7,12 @@ from deepeval.tracing.attributes import (
     LlmOutput,
     LlmToolCall,
 )
+from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
+from deepeval.metrics import BaseMetric, TaskCompletionMetric
+from deepeval.test_case import LLMTestCase
+from deepeval.test_run import global_test_run_manager
+from deepeval.evaluate.utils import create_api_test_case
+from deepeval.test_run import LLMApiTestCase
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -51,14 +57,22 @@ from deepeval.telemetry import capture_tracing_integration
 
 class CallbackHandler(BaseCallbackHandler):
 
-    def __init__(self):
+    active_trace_id: Optional[str] = None
+    metrics: List[BaseMetric] = []
+    metric_collection: Optional[str] = None
+
+    def __init__(
+        self,
+        metrics: List[BaseMetric] = [],
+        metric_collection: Optional[str] = None,
+    ):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
         )
         is_langchain_installed()
+        self.metrics = metrics
+        self.metric_collection = metric_collection
         super().__init__()
-
-    active_trace_id: Optional[str] = None
 
     def check_active_trace_id(self):
         if self.active_trace_id is None:
@@ -73,13 +87,42 @@ class CallbackHandler(BaseCallbackHandler):
         span.status = TraceSpanStatus.SUCCESS
         trace_manager.remove_span(str(span.uuid))
 
+        ######## Conditions to add metric_collection to span ########
+        if self.metric_collection and span.parent_uuid is None: # if span is a root span
+            span.metric_collection = self.metric_collection
+
+        ######## Conditions to add metrics to span ########
+        if self.metrics and span.parent_uuid is None: # if span is a root span
+            span.metrics = self.metrics
+
+            # prepare test_case for task_completion metric
+            for metric in self.metrics:
+                if isinstance(metric, TaskCompletionMetric):
+                    self.prepare_task_completion_test_case(span)
+
     def end_trace(self, span: BaseSpan):
         current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
+
+        ######## Conditions send the trace for evaluation ########
+        if self.metrics:
+            trace_manager.evaluating = (
+                True  # to avoid posting the trace to the server
+            )
+            trace_manager.evaluation_loop = (
+                True  # to avoid traces being evaluated twice
+            )
+            trace_manager.integration_traces_to_evaluate.append(current_trace)
+
         if current_trace is not None:
             current_trace.input = span.input
             current_trace.output = span.output
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
+
+    def prepare_task_completion_test_case(self, span: BaseSpan):
+        test_case = LLMTestCase(input="None", actual_output="None")
+        test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
+        span.llm_test_case = test_case
 
     def on_chain_start(
         self,
@@ -107,7 +150,6 @@ class CallbackHandler(BaseCallbackHandler):
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
         )
-
         self.add_span_to_trace(base_span)
 
     def on_chain_end(

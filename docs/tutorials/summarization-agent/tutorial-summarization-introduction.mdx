@@ -7,14 +7,32 @@ sidebar_label: Introduction
 import LinkCards from "@site/src/components/LinkCards"
 import TechStackCards from "@site/src/components/TechStackCards"
 
-This tutorial walks you through the entire process of building a robust **LLM-powered summarization agent using DeepEval**, from development to production.
+Learn how to build, evaluate, and deploy a reliable **LLM-powered meeting summarization agent** using **OpenAI** and **DeepEval**.
 
 :::note
 If you're working with LLMs for summarization, this tutorial is for you. While we'll specifically focus on evaluating a meeting summarizer, the concepts and practices here can be applied to **any LLM application that generates summaries**.
 :::
 
-Here are the links to jump to different stages of this tutorial:
+## Overview
 
+DeepEval is an open-source LLM evaluation framework that supports a wide-range of metrics to help evaluate and iterate on your LLM applications.
+
+In this tutorial, we'll be building a robust LLM-powered summarization agent using **OpenAI** and **DeepEval**. 
+
+<TechStackCards
+    techStack={[
+        {
+            name: "OpenAI",
+            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
+        },
+        {
+            name: "DeepEval",
+            logo: "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g.png",
+        }
+    ]}
+/>
+
+Here are the links to jump to different stages of this tutorial:
 
 <LinkCards
     tutorials={[
@@ -55,46 +73,25 @@ In this tutorial, you'll learn:
 - How to improve your summarization agent using evaluation results.
 - How to prepare your summarization agent for production.
 
-## Tech Stack
-
-<TechStackCards
-    techStack={[
-        {
-            name: "OpenAI",
-            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
-            website: "https://www.openai.com"
-        },
-        {
-            name: "DeepEval",
-            logo: "https://media.licdn.com/dms/image/v2/D560BAQFogqXz2yr1VQ/company-logo_200_200/company-logo_200_200/0/1698938769821/confident_ai_logo?e=2147483647&v=beta&t=4Ot5C3a5yYpjerH4nltzMBWELrq0NQKRptBWo9mRaWI",
-            website: "https://www.deepeval.com"
-        }
-    ]}
-/>
-
 ## Meeting Summarizer
 
-Throughout this tutorial, we'll focus on building a meeting summarization agent. The agent will take a full meeting transcript as `input` and produce two structured outputs:
+Most meetings today happen over platforms like **Google Meet** and **Zoom**, making it easy for key points to be missed or forgotten.
 
-- A concise summary of the discussion.
-- A list of clear action items to follow.
+To solve this, tools like **Otter.ai** and **Circleback** convert transcripts into concise summaries and actionable takeaways—keeping teams aligned and productive.
 
-Your objective is to build a high-quality summarizer that teams across an organization can rely on to improve productivity. To achieve this, the agent must accurately capture key decisions, action points, and important context—without omitting critical information or introducing irrelevant details.
+In this tutorial, you'll build a meeting summarization agent that takes a full transcript as `input` and generates:
 
-## What You'll Build
+* A concise summary of the discussion
+* A clear list of action items
 
-Most important meetings these days happen through online video chats and meeting platforms like **Google Meet** and **Zoom**. With meetings like this happening every day, it's hard to keep track of the important details mentioned in the meeting. 
+Your goal is to create a reliable summarization agent that captures critical decisions and next steps—without missing important context.
 
-This challenge has led to the rise of meeting summarization platforms like **Otter.ai** and **Circleback** to emerge. These tools typically record the entire meeting in the form of transcripts, which they then use to create concise summaries and deliver a list of action items mentioned throughout the meeting helping increase a team's productivity.
-
-In this tutorial, you'll build a similar meeting summarization agent—capable of generating concise summaries and extracting actionable items from full meeting transcripts.
-
-Below is an example of what a deliverable from a meeting summarization platform looks like:
+Below is an example of what a deliverable from a meeting summarization platform might look like:
 
 ![Webpage Image](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-overview.png)
 
-The above image shows what you might see on the webpage of your meeting summarization platform. **It includes the meeting overview, full transcript, summary, and action items relevant to everyone involved.**
+This interface shows a typical output: **the meeting overview, full transcript, a concise summary, and a list of action items** — all designed to keep everyone aligned and informed.
 
-In the rest of this tutorial series, you'll build a summarization agent that platforms like **Otter.ai** and **Circleback** use to generate their summaries and action items from the transcripts they collect during the meeting.
+In the rest of this tutorial, you'll build the core summarization agent behind platforms like **Otter.ai** and **Circleback** — capable of turning raw meeting transcripts into clear, actionable insights.
 
 Ready to get started? Let's move on to [developing the summarization agent](tutorial-summarization-development).

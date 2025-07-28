@@ -7,6 +7,10 @@ class ReasonScore(BaseModel):
     score: float
 
 
+class RewrittenReason(BaseModel):
+    rewritten_reason: str
+
+
 class Winner(BaseModel):
     winner: str
     reason: str

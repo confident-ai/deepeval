@@ -50,6 +50,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
+    replace_self_with_class_name,
     make_json_serializable,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
@@ -98,6 +99,7 @@ class TraceManager:
         self.evaluation_loop = False
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
+        self.integration_traces_to_evaluate: List[Trace] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -185,7 +187,9 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 if self.evaluation_loop:
-                    if trace_uuid in self.traces_to_evaluate_order:
+                    if self.integration_traces_to_evaluate:
+                        pass
+                    elif trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
                         self.traces_to_evaluate.sort(
                             key=lambda t: self.traces_to_evaluate_order.index(
@@ -677,7 +681,7 @@ class TraceManager:
             if span.llm_test_case
             else None
         )
-
+        from deepeval.evaluate.utils import create_metric_data
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -695,6 +699,11 @@ class TraceManager:
             metricCollection=span.metric_collection,
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
+            ),
+            metricsData=(
+                [create_metric_data(metric) for metric in span.metrics]
+                if span.metrics
+                else None
             ),
         )
 
@@ -1064,9 +1073,13 @@ def observe(
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
                 complete_kwargs = dict(bound_args.arguments)
+                
+                if "self" in complete_kwargs:
+                    complete_kwargs["self"] = replace_self_with_class_name(complete_kwargs["self"])
+
                 observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
-                    "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
+                    "function_kwargs": make_json_serializable(complete_kwargs), # serilaizing it before it goes to trace api and raises circular reference error
                 }
                 with Observer(
                     type,
@@ -1078,7 +1091,7 @@ def observe(
                     # Call the original function
                     result = func(*args, **func_kwargs)
                     # Capture the result
-                    observer.result = result
+                    observer.result = make_json_serializable(result) # serilaizing it before it goes to trace api and raises circular reference error
                     return result
 
             # Set the marker attribute on the wrapper

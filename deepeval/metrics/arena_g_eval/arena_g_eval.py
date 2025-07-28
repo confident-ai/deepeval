@@ -1,6 +1,6 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Optional, List, Tuple, Union
+from typing import Dict, Optional, List, Tuple, Union
 from deepeval.metrics import BaseArenaMetric
 from deepeval.metrics.arena_g_eval.utils import format_arena_test_case
 from deepeval.test_case import (
@@ -69,10 +69,14 @@ class ArenaGEval(BaseArenaMetric):
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
-                winner, reason = self._compare(test_case)
-                self.winner = winner
+                masked_winner, masked_reason, dummy_to_real_names = (
+                    self._compare(test_case)
+                )
+                self.winner = dummy_to_real_names[masked_winner]
+                self.reason = self._generate_rewritten_reason(
+                    masked_reason, dummy_to_real_names
+                )
                 self.success = True
-                self.reason = reason
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -101,10 +105,14 @@ class ArenaGEval(BaseArenaMetric):
             self.evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
-            winner, reason = await self._a_compare(test_case)
-            self.winner = winner
+            masked_winner, masked_reason, dummy_to_real_names = (
+                await self._a_compare(test_case)
+            )
+            self.winner = dummy_to_real_names[masked_winner]
+            self.reason = await self._a_generate_rewritten_reason(
+                masked_reason, dummy_to_real_names
+            )
             self.success = True
-            self.reason = reason
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -167,8 +175,8 @@ class ArenaGEval(BaseArenaMetric):
     async def _a_compare(
         self,
         test_case: ArenaTestCase,
-    ) -> Tuple[str, str]:
-        formatted_test_case = format_arena_test_case(
+    ) -> Tuple[str, str, Dict[str, str]]:
+        formatted_test_case, dummy_to_real_names = format_arena_test_case(
             self.evaluation_params, test_case
         )
         g_eval_params_str = construct_g_eval_params_string(
@@ -182,21 +190,21 @@ class ArenaGEval(BaseArenaMetric):
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=Winner)
             self.evaluation_cost += cost
-            return res.winner, res.reason
+            return res.winner, res.reason, dummy_to_real_names
         else:
             try:
                 res: Winner = await self.model.a_generate(prompt, schema=Winner)
-                return res.winner, res.reason
+                return res.winner, res.reason, dummy_to_real_names
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["winner"], data["reason"]
+                return data["winner"], data["reason"], dummy_to_real_names
 
     def _compare(
         self,
         test_case: ArenaTestCase,
-    ) -> Tuple[str, str]:
-        formatted_test_case = format_arena_test_case(
+    ) -> Tuple[str, str, Dict[str, str]]:
+        formatted_test_case, dummy_to_real_names = format_arena_test_case(
             self.evaluation_params, test_case
         )
         g_eval_params_str = construct_g_eval_params_string(
@@ -210,15 +218,65 @@ class ArenaGEval(BaseArenaMetric):
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=Winner)
             self.evaluation_cost += cost
-            return res.winner, res.reason
+            return res.winner, res.reason, dummy_to_real_names
         else:
             try:
                 res: Winner = self.model.generate(prompt, schema=Winner)
-                return res.winner, res.reason
+                return res.winner, res.reason, dummy_to_real_names
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return data["winner"], data["reason"]
+                return data["winner"], data["reason"], dummy_to_real_names
+
+    async def _a_generate_rewritten_reason(
+        self,
+        reason: str,
+        dummy_to_real_names: Dict[str, str],
+    ) -> str:
+        prompt = ArenaGEvalTemplate.rewrite_reason(
+            reason=reason,
+            dummy_to_real_names=dummy_to_real_names,
+        )
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(
+                prompt, schema=RewrittenReason
+            )
+            self.evaluation_cost += cost
+            return res.rewritten_reason
+        else:
+            try:
+                res: RewrittenReason = await self.model.a_generate(
+                    prompt, schema=RewrittenReason
+                )
+                return res.rewritten_reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["rewritten_reason"]
+
+    def _generate_rewritten_reason(
+        self,
+        reason: str,
+        dummy_to_real_names: Dict[str, str],
+    ) -> str:
+        prompt = ArenaGEvalTemplate.rewrite_reason(
+            reason=reason,
+            dummy_to_real_names=dummy_to_real_names,
+        )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt, schema=RewrittenReason)
+            self.evaluation_cost += cost
+            return res.rewritten_reason
+        else:
+            try:
+                res: RewrittenReason = self.model.generate(
+                    prompt, schema=RewrittenReason
+                )
+                return res.rewritten_reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["rewritten_reason"]
 
     def is_successful(self) -> bool:
         if self.error is not None:

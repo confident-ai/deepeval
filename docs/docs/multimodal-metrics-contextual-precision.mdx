@@ -14,7 +14,7 @@ sidebar_label: Multimodal Contextual Precision
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
-<MetricTagsDisplayer custom={true} multimodal={true} />
+<MetricTagsDisplayer singleTurn={true} custom={true} multimodal={true} />
 
 The multimodal contextual precision metric measures your RAG pipeline's retriever by evaluating whether nodes in your `retrieval_context` that are relevant to the given `input` are ranked higher than irrelevant ones. `deepeval`'s multimodal contextual precision metric is a self-explaining MLLM-Eval, meaning it outputs a reason for its metric score.
 

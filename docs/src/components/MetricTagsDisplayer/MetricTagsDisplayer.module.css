@@ -43,15 +43,15 @@
 }
 
 .chatbot {
-    background-color: #e9fef8;
-    border: 1px solid #94fbde;
-    color: #056a4d;
+    background-color: #e9fefa;
+    border: 1px solid #70e2d3;
+    color: #17554d;
 }
 
 .custom {
   background-color: #f8f2ff;
-  border: 1px solid #d597fe;
-  color: #c234ff;
+  border: 1px solid #9774e3;
+  color: #440092;
 }
 
 .safety {
@@ -65,3 +65,16 @@
   border: 1px solid #fcc092;
   color: #924000;
 }
+
+.singleTurn {
+    background-color: white;
+    border: 1px solid rgb(218, 221, 227);
+    color: black;
+}
+
+.multiTurn {
+  background-color: white;
+  border: 1px solid rgb(218, 221, 227);
+  color: black;
+}
+

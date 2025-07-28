@@ -1,6 +1,6 @@
 ---
 id: evaluation-test-cases
-title: Single-Turn
+title: Single-Turn Test Case
 sidebar_label: Single-Turn
 ---
 
@@ -165,7 +165,7 @@ For users starting out, scoping the interaction as the overall LLM application w
 
 An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as RAG and LLM agents (for individual components, agents within agents, or the agent altogether). It contains the necessary information (`tools_called` for agents, `retrieval_context` for RAG, etc.) to evaluate your LLM application for a given `input`.
 
-![ok](https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png)
+![LLM Test Case](https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png)
 
 An `LLMTestCase` is used for both end-to-end and component-level evaluation:
 

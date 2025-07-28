@@ -4,61 +4,14 @@ title: Deployment
 sidebar_label: Deployment
 ---
 
-In this section, we'll set up CI/CD workflows for your summarization agent, and learn how to manage dynamic datasets to ensure reliable evaluation as your data evolves.
-
-In the previous section, we created a `deepeval` dataset. You can now reuse this dataset to continuously evaluate your summarization agent.
-
-## Why Continuous Evaluation
-
-Most summarization agents are built to summarize documents and transcripts, often to improve productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
-
-**DeepEval**'s datasets are very useful for continuous evaluations. You can populate datasets with goldens, which contain just the inputs. During evaluation, test cases are generated on-the-fly by calling your LLM application to produce outputs.
-
-![Evaluation Dataset](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
-
-## Using Datasets
-
-Here's how you can pull datasets and reuse them to generate test cases:
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="MeetingSummarizer Dataset")
-```
-
-If you've populated your dataset with goldens, here's how to convert them to test cases:
-
-```python
-from deepeval.test_case import LLMTestCase
-from meeting_summarizer import MeetingSummarizer # import your summarizer here
-
-summarizer = MeetingSummarizer() # Initialize with your best config
-summary_test_cases = []
-action_item_test_cases = []
-for golden in dataset.goldens:
-    summary, action_items = summarizer.summarize(golden.input)
-    summary_test_case = LLMTestCase(
-        input=golden.input,
-        actual_output=summary
-    )
-    action_item_test_case = LLMTestCase(
-        input=golden.input,
-        actual_output=str(action_items)
-    )
-    summary_test_cases.append(summary_test_case)
-    action_item_test_cases.append(action_item_test_case)
-
-print(len(summary_test_cases))
-print(len(action_item_test_cases))
-```
+In this section, we'll set up CI/CD workflows for your summarization agent, and learn how to add metrics and create spans with test cases in your application for better tracing experience.
 
 ## Setup Tracing
 
 `deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
-this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
+this provides full visibility for debugging internal components of your LLM application. We have added these decorators during development of our agent, we will now add metrics and spans for running online evals. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
-To set up tracing, modify your `MeetingSummarizer` class like this:
+Here's how we can add metrics and create spans for our `@observe` decorators in the `MeetingSummarizer` class:
 
 ```python {6,27,39,51-53,59,73-75}
 import os
@@ -73,8 +26,8 @@ load_dotenv()
 
 class MeetingSummarizer:
     def __init__(
-        self, 
-        model: str = "gpt-4", 
+        self,
+        model: str = "gpt-4",
         summary_system_prompt: str = "",
         action_item_system_prompt: str = "",
     ):
@@ -89,16 +42,16 @@ class MeetingSummarizer:
 
     @observe(type="agent")
     def summarize(
-        self, 
-        transcript: str, 
-        summary_model: str = "gpt-4o", 
+        self,
+        transcript: str,
+        summary_model: str = "gpt-4o",
         action_item_model: str = "gpt-4-turbo"
     ) -> tuple[str, dict]:
         summary = self.get_summary(transcript, summary_model)
         action_items = self.get_action_items(transcript, action_item_model)
 
         return summary, action_items
-    
+
     @observe(metrics=[GEval(...)], name="Summary") # Use the summary_concision metric here
     def get_summary(self, transcript: str, model: str = None) -> str:
         try:
@@ -144,6 +97,25 @@ class MeetingSummarizer:
             return {"error": f"API call failed: {e}", "raw_output": ""}
 ```
 
+## Why Continuous Evaluation
+
+Most summarization agents are built to summarize documents and transcripts, often to improve productivity. This means that the documents to be summarized are ever-growing, and your summarizer needs to be able to keep up with that. That's why continuous testing is essential — your summarizer must remain reliable, even as new types of documents are introduced.
+
+**DeepEval**'s datasets are very useful for continuous evaluations. You can populate datasets with goldens, which contain just the inputs. During evaluation, test cases are generated on-the-fly by calling your LLM application to produce outputs.
+
+In the previous section, we created a `deepeval` dataset. You can now reuse this dataset to continuously evaluate your summarization agent.
+
+## Using Datasets
+
+Here's how you can pull datasets and reuse them to generate test cases:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="MeetingSummarizer Dataset")
+```
+
 ## Integrating CI/CD
 
 You can use `pytest` with `assert_test` during your CI/CD to trace and evaluate your summarization agent, here's how you can write the test file to do that:
@@ -164,7 +136,7 @@ def test_meeting_summarizer_components(golden):
     assert_test(golden=golden, observed_callback=summarizer.summarize)
 ```
 
-```bash 
+```bash
 poetry run deepeval test run test_meeting_summarizer_quality.py
 ```
 

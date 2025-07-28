@@ -1728,6 +1728,25 @@ def a_execute_agentic_test_cases_from_loop(
                     max_concurrent=max_concurrent,
                 )
             )
+        elif trace_manager.integration_traces_to_evaluate:
+            loop.run_until_complete(
+                    evaluate_traces(
+                        traces_to_evaluate=trace_manager.integration_traces_to_evaluate,
+                        goldens=goldens,
+                        test_run_manager=test_run_manager,
+                        test_results=test_results,
+                        verbose_mode=verbose_mode,
+                        ignore_errors=ignore_errors,
+                        skip_on_missing_params=skip_on_missing_params,
+                        show_indicator=show_indicator,
+                        _use_bar_indicator=_use_bar_indicator,
+                        _is_assert_test=_is_assert_test,
+                        progress=progress,
+                        pbar_id=pbar_id,
+                        throttle_value=throttle_value,
+                        max_concurrent=max_concurrent,
+                    )
+            )
 
     if show_indicator and _use_bar_indicator:
         progress = Progress(
