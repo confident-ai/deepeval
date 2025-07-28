@@ -49,11 +49,3 @@ def set_trace_time(trace: Trace):
     if target_span is not None:
         trace.start_time = target_span.start_time
         trace.end_time = target_span.end_time
-    
-def convert_to_perf_counter(timestamp: int) -> float:
-    timestamp_seconds = timestamp / 1e9
-    current_time = datetime.now(timezone.utc)
-    current_perf_counter = time.perf_counter()
-
-    offset = current_perf_counter - current_time.timestamp()
-    return timestamp_seconds + offset
