@@ -1,6 +1,4 @@
 .section {
-  margin-top: 3rem;
-  margin-bottom: 2rem;
 }
 
 .title {
@@ -30,8 +28,14 @@
 
 .grid {
   display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .card {
@@ -62,12 +66,24 @@
   flex-direction: column;
 }
 
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.icon {
+  color: black;
+  flex-shrink: 0;
+}
+
 .cardTitle {
   font-size: 1.1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
   color: #111827;
   transition: color 0.2s ease;
+  margin-bottom: 0;
 }
 
 .cardDescription {
@@ -77,10 +93,18 @@
   transition: color 0.2s ease;
 }
 
-.card:hover .cardTitle {
+.card:hover .cardTitle, .card:hover .icon {
   color: #6d28d9;
 }
 
 .card:hover .cardDescription {
   color: #374151;
+}
+
+.objectives {
+  list-style-type: disc;
+  padding-left: 1rem;
+  color: #4b5563;
+  font-size: 14px;
+  margin-bottom: 0;
 }

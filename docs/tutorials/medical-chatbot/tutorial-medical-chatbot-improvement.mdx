@@ -1,7 +1,7 @@
 ---
 id: tutorial-medical-chatbot-improvement
-title: Improvement
-sidebar_label: Improvement
+title: Improving Prompts and Models
+sidebar_label: Improving Prompts and Models
 ---
 
 In this section we'll explore different configurations of our medical chatbot by iterating over different hyperparameters and evaluating these configurations using `deepeval`.
@@ -9,9 +9,9 @@ In this section we'll explore different configurations of our medical chatbot by
 By looking at the evaluation results from various configurations we can improve our chatbot's performance significantly. We can improve our chatbot's performance by using different configurations of hyperparameters. The following are the hyperparameters we'll be iterating over our chatbot:
 
 - **System prompt**: This is the prompt that defines the overall behavior of our chatbot across all interactions.
-- **Model**: This is the model we'll use to generate responses. 
+- **Model**: This is the model we'll use to generate responses.
 
-## Pulling Datasets 
+## Pulling Datasets
 
 In the previous section, we've seen [how to create datasets](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation#creating-dataset) and store them in the cloud. We can now pull that dataset and use it as many times as we need to generate test cases and evaluate our medical chatbot.
 
@@ -69,7 +69,7 @@ Now that we can pull our `ConversationalGolden`s, we will use these goldens and 
 
 We will now iterate on different models and use a better system prompt to see which configuration performs the best.
 
-This is the new system prompt we'll be using: 
+This is the new system prompt we'll be using:
 
 ```text
 You are BayMax, a friendly and professional healthcare chatbot. You assist users by retrieving accurate information from the Gale Encyclopedia of Medicine and helping them book medical appointments.
@@ -145,13 +145,13 @@ for model in models:
 
 After running these iterations I've observed that `gpt-4` is performing the best for all 3 metrics, here are the average results it got:
 
-| Metric                    | Score |
-|---------------------------|-------|
-| Knowledge Retention       | 0.8   |
-| Role Adherence            | 0.7   |
-| Safety Check              | 0.9   |
+| Metric              | Score |
+| ------------------- | ----- |
+| Knowledge Retention | 0.8   |
+| Role Adherence      | 0.7   |
+| Safety Check        | 0.9   |
 
-We'll now see how to update our chatbot to support more hyperparameters. 
+We'll now see how to update our chatbot to support more hyperparameters.
 
 ## Updating Chatbot
 
@@ -165,8 +165,8 @@ from deepeval.tracing import observe
 
 class MedicalChatbot:
     def __init__(
-        self, 
-        document_path, 
+        self,
+        document_path,
         model="gpt-4",
         encoder="all-MiniLM-L6-v2",
         memory=":memory:",
@@ -184,26 +184,14 @@ class MedicalChatbot:
 
     def store_data(self, document_path):
         ...
-    
+
     @tool
     @observe()
     def query_engine(self, query: str) -> str:
         ...
-    
-    @tool
-    def get_appointment_state(self, appointment_id: str) -> str:
-        ...
-
-    @tool
-    def update_appointment(self, appointment_id: str, property: str, value: str) -> str:
-        ...
 
     @tool
     def create_appointment(self, appointment_id: str) -> str:
-        ...
-
-    @tool
-    def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
         ...
 
     def setup_tools(self):
