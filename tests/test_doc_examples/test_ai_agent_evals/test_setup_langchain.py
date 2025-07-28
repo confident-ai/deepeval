@@ -1,7 +1,6 @@
 from deepeval.integrations.langchain import CallbackHandler
 from langchain.chat_models import init_chat_model
 
-
 def multiply(a: int, b: int) -> int:
     return a * b
 

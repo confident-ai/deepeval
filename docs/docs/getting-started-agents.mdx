@@ -276,15 +276,14 @@ def your_ai_agent(input):
 
 Supply the `TaskCompletionMetric` to the metrics argument inside the `CallbackHandler`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,18}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,17}"
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
 from langgraph.prebuilt import create_react_agent
-import time
-import os
 
 def get_weather(city: str) -> str:
-    return f"It\'s always sunny in {city}!"
+    """Returns the weather in a city"""
+    return f"It's always sunny in {city}!"
 
 agent = create_react_agent(
     model="openai:gpt-4.1",
@@ -327,13 +326,12 @@ llm_with_tools.invoke(
 
 Supply the `TaskCompletionMetric` to the metrics argument inside the `FunctionAgent`, `ReActAgent`, and `CodeActAgent` from DeepEval.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,17}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,16}"
 from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent
 import llama_index.core.instrumentation as instrument
 from deepeval.metrics import TaskCompletionMetric
 from llama_index.llms.openai import OpenAI
 import asyncio
-import os
 
 instrument_llama_index(instrument.get_dispatcher())
 
@@ -347,7 +345,11 @@ agent = FunctionAgent(
     metrics=[TaskCompletionMetric()]
 )
 
-asyncio.run(agent.run("What is 3 * 12?"))
+async def main():
+    response = await agent.run("What is 1234 * 4567?")
+    print(response)
+
+asyncio.run(main())
 ```
 
 </TabItem>
@@ -355,14 +357,12 @@ asyncio.run(agent.run("What is 3 * 12?"))
 
 Supply the `TaskCompletionMetric` to the metrics argument inside the `Agent` from DeepEval.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,13}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,11}"
 from deepeval.integrations.crewai import instrumentator, Agent
 from deepeval.metrics import TaskCompletionMetric
 from crewai import Task, Crew
-import time
-import os
 
-instrumentator(api_key="<your-confident-api-key>")
+instrumentator(api_key="q8/AU3bxv2MX0mBnW9I8ynOVNx/iV3mMH3oqkl2Isu4=")
 
 coder = Agent(
     role='Consultant',
@@ -373,7 +373,8 @@ coder = Agent(
 
 task = Task(
     description="Explain the latest trends in AI.",
-    agent=coder
+    agent=coder,
+    expected_output="A clear and concise explanation.",
 )
 
 crew = Crew(
@@ -393,6 +394,98 @@ _To be documented..._
 
 _To be documented..._
 
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Run an evaluation">
+<p>
+    To run an evaluation, run a query for each golden using the <code>dataset</code> iterator.
+</p>
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4}"
+from deepeval.evaluate import dataset
+...
+
+for golden in dataset(goldens=[Golden(input='This is a test query')]):
+    tool_call_result = your_ai_agent(golden.input)
+```
+
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4" />
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4}"
+from deepeval.evaluate import dataset
+...
+
+for golden in dataset(goldens=[Golden(input='This is a test query')]):
+    result = agent.invoke(
+        input={"messages":[{"role":"user","content":golden.input}]},
+        config={"callbacks":[CallbackHandler(metrics=[TaskCompletionMetric()])]}
+    )
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4}"
+from deepeval.evaluate import dataset
+...
+
+for golden in dataset(goldens=[Golden(input='This is a test query')]):
+    llm_with_tools.invoke(
+        "What is 3 * 12?",
+        config = {"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
+    )
+```
+
+</TabItem>
+<TabItem value="llama-index" label="LlamaIndex">
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4}"
+from deepeval.evaluate import dataset
+...
+
+for golden in dataset(goldens=[Golden(input='This is a test query')])
+    asyncio.run(agent.run(golden.input))
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.evaluate import dataset\n" +
+        "...\n\n" +
+        "for golden in dataset(goldens=[Golden(input='This is a test query')])\n" +
+        "    task = Task(\n" +
+        "        description=golden.input,\n" +
+        "        agent=coder\n" +
+        "    )\n" +
+        "    crew = Crew(agents=[coder], tasks=[task])\n" +
+        "    crew.kickoff()"}
+    </CodeBlock>
+</TabItem>
+<TabItem value="pydantic" label="Pydantic">
+ 
+ To be documented...
+ 
+</TabItem>
+<TabItem value="OpenAI Agents" label="OpenAI Agents">
+ 
+ To be documented...
+ 
 </TabItem>
 </Tabs>
 
