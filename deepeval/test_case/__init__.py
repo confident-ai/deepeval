@@ -4,6 +4,17 @@ from .llm_test_case import (
     ToolCall,
     ToolCallParams,
 )
-from .conversational_test_case import ConversationalTestCase, Turn, TurnParams
+from .conversational_test_case import (
+    ConversationalTestCase, 
+    Turn, 
+    TurnParams, 
+    MCPMetaData,
+    MCPPrompt,
+    MCPTool, 
+    MCPResource,
+    MCPToolCall,
+    MCPResourceCall,
+    MCPPromptCall
+)
 from .mllm_test_case import MLLMTestCase, MLLMTestCaseParams, MLLMImage
 from .arena_test_case import ArenaTestCase
