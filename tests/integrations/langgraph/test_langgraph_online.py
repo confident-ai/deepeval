@@ -6,8 +6,6 @@ from deepeval.integrations.langchain.callback import CallbackHandler
 import deepeval
 from deepeval.metrics import TaskCompletionMetric
 
-os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
-deepeval.login_with_confident_api_key("<YOUR_CONFIDENT_API_KEY>")
 
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
@@ -24,7 +22,11 @@ result = agent.invoke(
     input={
         "messages": [{"role": "user", "content": "what is the weather in sf"}]
     },
-    config={"callbacks": [CallbackHandler(metric_collection="task_completion")]},
+    config={
+        "callbacks": [
+            CallbackHandler(metric_collection="Task Completion Metric")
+        ]
+    },
 )
 
 time.sleep(5)  # Wait for the trace to be published
