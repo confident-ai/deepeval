@@ -24,7 +24,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         )
         self.model_name = self.azure_embedding_deployment
         self.user = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_OPENAI_USER_ID
+            ModelKeyValues.AZURE_OPENAI_USER_ID
         )
 
     def embed_text(self, text: str) -> List[float]:

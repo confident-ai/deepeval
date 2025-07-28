@@ -1,6 +1,6 @@
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 from openai.types.chat.chat_completion import ChatCompletion
-from openai import AzureOpenAI, AsyncAzureOpenAI, NotGiven, NOT_GIVEN
+from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 import openai
