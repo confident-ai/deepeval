@@ -50,6 +50,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
+    replace_self_with_class_name,
     make_json_serializable,
     perf_counter_to_datetime,
     to_zod_compatible_iso,
@@ -1072,9 +1073,13 @@ def observe(
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
                 complete_kwargs = dict(bound_args.arguments)
+                
+                if "self" in complete_kwargs:
+                    complete_kwargs["self"] = replace_self_with_class_name(complete_kwargs["self"])
+
                 observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
-                    "function_kwargs": complete_kwargs,  # Now contains all args mapped to their names
+                    "function_kwargs": make_json_serializable(complete_kwargs), # serilaizing it before it goes to trace api and raises circular reference error
                 }
                 with Observer(
                     type,
@@ -1086,7 +1091,7 @@ def observe(
                     # Call the original function
                     result = func(*args, **func_kwargs)
                     # Capture the result
-                    observer.result = result
+                    observer.result = make_json_serializable(result) # serilaizing it before it goes to trace api and raises circular reference error
                     return result
 
             # Set the marker attribute on the wrapper
