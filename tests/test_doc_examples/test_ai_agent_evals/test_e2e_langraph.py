@@ -14,11 +14,6 @@ agent = create_react_agent(
     prompt="You are a helpful assistant"
 )
 
-agent.invoke(
-    input={"messages":[{"role":"user","content":"what is the weather in sf"}]},
-    config={"callbacks":[CallbackHandler()]}
-)
-
 for golden in dataset(goldens=[Golden(input='This is a test query')]):
     agent.invoke(
         input={"messages":[{"role":"user","content":golden.input}]},

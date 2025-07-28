@@ -17,6 +17,7 @@ instrument_llama_index(instrument.get_dispatcher())
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
+    
 answer_relevancy_metric = AnswerRelevancyMetric()
 agent = FunctionAgent(
     tools=[multiply],
@@ -42,4 +43,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    time.sleep(7)
