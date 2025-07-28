@@ -98,6 +98,7 @@ class TraceManager:
         self.evaluation_loop = False
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
+        self.integration_traces_to_evaluate: List[Trace] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -185,7 +186,9 @@ class TraceManager:
                 self.post_trace(trace)
             else:
                 if self.evaluation_loop:
-                    if trace_uuid in self.traces_to_evaluate_order:
+                    if self.integration_traces_to_evaluate:
+                        pass
+                    elif trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
                         self.traces_to_evaluate.sort(
                             key=lambda t: self.traces_to_evaluate_order.index(
@@ -677,7 +680,7 @@ class TraceManager:
             if span.llm_test_case
             else None
         )
-
+        from deepeval.evaluate.utils import create_metric_data
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -695,6 +698,11 @@ class TraceManager:
             metricCollection=span.metric_collection,
             feedback=convert_feedback_to_api_feedback(
                 span.feedback, span_uuid=span.uuid
+            ),
+            metricsData=(
+                [create_metric_data(metric) for metric in span.metrics]
+                if span.metrics
+                else None
             ),
         )
 
