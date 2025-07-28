@@ -1,4 +1,4 @@
-from deepeval.metrics import TaskCompletionMetric
+from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     RetrieverAttributes,
@@ -72,7 +72,7 @@ async def custom_research_agent(query: str):
 
 @observe(
     available_tools=["get_weather", "get_location"],
-    metrics=[TaskCompletionMetric()],
+    metrics=[TaskCompletionMetric(), AnswerRelevancyMetric()],
 )
 async def weather_agent(query: str):
     update_current_span(

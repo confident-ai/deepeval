@@ -1,102 +1,114 @@
 import asyncio
 import random
+import pytest
+from typing import List
 
 from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.test_case import ConversationalTestCase
 from deepeval.models import GPTModel
 
-user_profile_requirements_1 = [
-    "name (first and last)",
-    "phone number",
-    "availabilities (between monday and friday)",
-]
-user_intentions_1 = {
-    "Ordering new products": 1,
-    "Repair for existing products": 1,
-    "Picking products up because somebody died or moved into intensive care": 1,
-    "Questions regarding open invoices": 1,
-    "Questions regarding the order status": 1,
-}
-user_profile_requirements_2 = "name (first and last), medical condition, availabilities (between monday and friday)"
-user_intentions_2 = {
-    # "Seeking medical advice for a chronic condition",
+user_intentions = {
     "Booking an appointment with a specialist": 1,
     "Following up on test results": 1,
-    # "Requesting prescription refills",
-    # "Exploring treatment options for a new diagnosis",
 }
+user_profile = "Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."
+user_intention = "Booking an appointment with a specialist"
 
 
-async def test_user_profile(conversation_simulator: ConversationSimulator):
-    tasks = [conversation_simulator._simulate_user_profile() for _ in range(5)]
-    results = await asyncio.gather(*tasks)
-    for i, result in enumerate(results, start=1):
-        print(f"Task {i}: {result}")
-    return results
+# Test fixtures
+@pytest.fixture
+def callback_fn():
+    def callback(prompt: str, conversation_history):
+        model = GPTModel()
+        res, _ = model.generate(prompt)
+        return res
+
+    return callback
 
 
-async def test_scenario(
-    conversation_simulator: ConversationSimulator,
-    user_profile: str,
-    user_intention: str,
-):
-    for _ in range(5):
-        scenario = await conversation_simulator._a_simulate_scenario(
-            user_profile, user_intention
-        )
-        print(scenario)
-        print(("================================"))
+@pytest.fixture
+async def async_callback_fn():
+    async def a_callback(prompt: str, conversation_history):
+        model = GPTModel()
+        res, _ = await model.a_generate(prompt)
+        return res
+
+    return a_callback
 
 
-async def test_generate_conversations(
-    conversation_simulator: ConversationSimulator,
-):
-    conversational_test_cases = await conversation_simulator._a_simulate()
-    for tc in conversational_test_cases:
-        conversation_str = conversation_simulator._format_conversational_turns(
-            tc.turns
-        )
-        print(("================================"))
-
-
-async def a_callback(prompt: str, conversation_history):
-    model = GPTModel()
-    res, _ = await model.a_generate(prompt)
-    return res
-
-
-def callback(prompt: str, conversation_history):
-    model = GPTModel()
-    res, _ = model.generate(prompt)
-    return res
-
-
-async def main():
-    user_intentions = user_intentions_2
-    conversational_synthesizer = ConversationSimulator(
-        # user_profile_items=user_profile_requirements_2,
-        user_profiles=[
-            "Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."
-        ],
+@pytest.fixture
+def simulator_sync():
+    return ConversationSimulator(
+        user_profiles=[user_profile],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
         async_mode=False,
     )
-    conversational_synthesizer.simulate(
-        min_turns=2,
-        max_turns=4,
-        model_callback=callback,
-        stopping_criteria="The user has succesfully booked an appointment",
+
+
+@pytest.fixture
+def simulator_async():
+    return ConversationSimulator(
+        user_profiles=[user_profile],
+        user_intentions=user_intentions,
+        opening_message="Hi, I'm your personal medical chatbot.",
+        async_mode=True,
     )
 
-    # user_profiles = await test_user_profile(conversational_synthesizer)
-    # await test_scenario(
-    #     conversational_synthesizer,
-    #     random.choice(user_profiles),
-    #     random.choice(user_intentions),
-    # )
-    # await test_generate_conversations(conversational_synthesizer)
+
+# Test functions
+@pytest.mark.asyncio
+async def test_user_profile_generation(simulator_async: ConversationSimulator):
+    tasks = [simulator_async._simulate_user_profile() for _ in range(3)]
+    results = await asyncio.gather(*tasks)
+    assert len(results) == 3, "Should generate 3 user profiles"
+    for profile in results:
+        assert isinstance(profile, str), "Each profile should be a string"
+        assert len(profile) > 0, "Profiles should not be empty"
 
 
-# Run the main async function
-if __name__ == "__main__":
-    asyncio.run(main())
+@pytest.mark.asyncio
+async def test_scenario_generation(
+    simulator_async: ConversationSimulator,
+):
+    scenario = await simulator_async._a_simulate_scenario(
+        user_profile, user_intention
+    )
+    assert isinstance(scenario, str), "Scenario should be a string"
+    assert len(scenario) > 0, "Scenario should not be empty"
+    assert (
+        user_intention.lower() in scenario.lower()
+        or "appointment" in scenario.lower()
+    ), "Scenario should contain intention or related keywords"
+
+
+def test_simulate_sync(simulator_sync: ConversationSimulator, callback_fn):
+    test_cases = simulator_sync.simulate(
+        min_turns=2,
+        max_turns=4,
+        model_callback=callback_fn,
+        stopping_criteria="The user has successfully booked an appointment",
+    )
+    assert test_cases is not None, "Should generate test cases"
+    assert len(test_cases) > 0, "Should have at least one test case"
+    for tc in test_cases:
+        assert hasattr(tc, "turns"), "Test case should have turns attribute"
+        assert len(tc.turns) >= 2, "Test case should have at least min_turns"
+        assert len(tc.turns) <= 4, "Test case should have at most max_turns"
+
+
+def test_simulate_async(
+    simulator_async: ConversationSimulator, async_callback_fn
+):
+    test_cases: List[ConversationalTestCase] = simulator_async.simulate(
+        min_turns=2,
+        max_turns=4,
+        model_callback=async_callback_fn,
+        stopping_criteria="The user has successfully booked an appointment",
+    )
+    assert test_cases is not None, "Should generate test cases"
+    assert len(test_cases) > 0, "Should have at least one test case"
+    for tc in test_cases:
+        assert hasattr(tc, "turns"), "Test case should have turns attribute"
+        assert len(tc.turns) >= 2, "Test case should have at least min_turns"
+        assert len(tc.turns) <= 4, "Test case should have at most max_turns"

@@ -10,6 +10,23 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
+def test_async_run_async():
+    evaluate(
+        goldens=goldens,
+        observed_callback=async_meta_agent,
+        async_config=AsyncConfig(run_async=True),
+    )
+    assert True
+
+
+def test_async_run_sync():
+    evaluate(
+        goldens=goldens,
+        observed_callback=async_meta_agent,
+        async_config=AsyncConfig(run_async=False),
+    )
+    assert True
+
 
 def test_sync_run_async():
     evaluate(
@@ -24,24 +41,6 @@ def test_sync_run_sync():
     evaluate(
         goldens=goldens,
         observed_callback=meta_agent,
-        async_config=AsyncConfig(run_async=False),
-    )
-    assert True
-
-
-def test_async_run_async():
-    evaluate(
-        goldens=goldens,
-        observed_callback=async_meta_agent,
-        async_config=AsyncConfig(run_async=True),
-    )
-    assert True
-
-
-def test_async_run_sync():
-    evaluate(
-        goldens=goldens,
-        observed_callback=async_meta_agent,
         async_config=AsyncConfig(run_async=False),
     )
     assert True
