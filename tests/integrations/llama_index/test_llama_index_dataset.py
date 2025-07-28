@@ -17,29 +17,29 @@ instrument_llama_index(instrument.get_dispatcher())
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
-    
+
 answer_relevancy_metric = AnswerRelevancyMetric()
 agent = FunctionAgent(
     tools=[multiply],
     llm=OpenAI(model="gpt-4o-mini"),
     system_prompt="You are a helpful assistant that can perform calculations.",
-    # metric_collection="test_collection_1",
     metrics=[answer_relevancy_metric]
 )
 
 goldens = [
-    Golden(input="What's 7 * 8?"),
-    Golden(input="What's 7 * 6?")
+    Golden(input="How do I perform 7 * 8?"),
 ]
-
-async def llm_app(golden: Golden):
-    await agent.run(golden.input)
 
 def main():
     for golden in dataset(goldens=goldens):
-        task = asyncio.create_task(llm_app(golden))
+        # Create an async function that properly awaits the agent.run()
+        async def run_agent(input_text):
+            return await agent.run(input_text)
+        
+        task = asyncio.create_task(run_agent(golden.input))
         test_run.append(task)
 
 
 if __name__ == "__main__":
     main()
+    time.sleep(7)

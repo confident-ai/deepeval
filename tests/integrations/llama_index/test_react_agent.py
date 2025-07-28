@@ -1,13 +1,11 @@
-import os
 import llama_index.core.instrumentation as instrument
 import asyncio
 import time
 
-from deepeval.integrations.llama_index import ReActAgent
 from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.integrations.llama_index import ReActAgent
 from llama_index.llms.openai import OpenAI
 
-import deepeval
 
 instrument_llama_index(instrument.get_dispatcher())
 

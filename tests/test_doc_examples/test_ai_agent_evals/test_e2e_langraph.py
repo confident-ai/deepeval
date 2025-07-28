@@ -11,11 +11,13 @@ def get_weather(city: str) -> str:
 agent = create_react_agent(
     model="openai:gpt-4.1",
     tools=[get_weather],
-    prompt="You are a helpful assistant"
+    prompt="You are a helpful assistant",
 )
 
-for golden in dataset(goldens=[Golden(input='This is a test query')]):
+for golden in dataset(goldens=[Golden(input="This is a test query")]):
     agent.invoke(
-        input={"messages":[{"role":"user","content":golden.input}]},
-        config={"callbacks":[CallbackHandler(metrics=[TaskCompletionMetric()])]}
+        input={"messages": [{"role": "user", "content": golden.input}]},
+        config={
+            "callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]
+        },
     )

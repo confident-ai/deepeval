@@ -4,9 +4,9 @@ from crewai import Task, Crew
 instrumentator(api_key="q8/AU3bxv2MX0mBnW9I8ynOVNx/iV3mMH3oqkl2Isu4=")
 
 coder = Agent(
-    role='Consultant',
-    goal='Write clear, concise explanation.',
-    backstory='An expert consultant with a keen eye for software trends.',
+    role="Consultant",
+    goal="Write clear, concise explanation.",
+    backstory="An expert consultant with a keen eye for software trends.",
 )
 
 task = Task(
