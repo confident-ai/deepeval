@@ -8,9 +8,6 @@ from deepeval.evaluate import dataset
 from deepeval.dataset import Golden
 from deepeval.evaluate.configs import AsyncConfig
 
-os.environ["OPENAI_API_KEY"] = "<your-api-key>"
-deepeval.login_with_confident_api_key("<your-api-key>")
-
 task_completion = TaskCompletionMetric(
     threshold=0.7, model="gpt-4o-mini", include_reason=True
 )

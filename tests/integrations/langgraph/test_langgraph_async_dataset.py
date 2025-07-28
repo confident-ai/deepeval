@@ -9,8 +9,6 @@ from deepeval.evaluate import dataset, test_run
 from deepeval.dataset import Golden
 from deepeval.evaluate.configs import AsyncConfig
 
-os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
-deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
 
 task_completion = TaskCompletionMetric(
     threshold=0.7, model="gpt-4o-mini", include_reason=True
@@ -36,17 +34,24 @@ goldens = [
 
 def main():
     for golden in dataset(goldens=goldens):
-        test_run.append(asyncio.create_task(agent.ainvoke(
-            input={"messages": [{"role": "user", "content": golden.input}]},
-            config={
-                "callbacks": [
-                    CallbackHandler(
-                        metrics=[task_completion],
-                        metric_collection="task_completion",
-                    )
-                ]
-            },
-        )))
+        test_run.append(
+            asyncio.create_task(
+                agent.ainvoke(
+                    input={
+                        "messages": [{"role": "user", "content": golden.input}]
+                    },
+                    config={
+                        "callbacks": [
+                            CallbackHandler(
+                                metrics=[task_completion],
+                                metric_collection="task_completion",
+                            )
+                        ]
+                    },
+                )
+            )
+        )
+
 
 if __name__ == "__main__":
     main()
