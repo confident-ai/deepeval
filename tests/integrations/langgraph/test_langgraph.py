@@ -5,8 +5,6 @@ import time
 import os
 import deepeval
 
-os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
-deepeval.login_with_confident_api_key("<YOUR_CONFIDENT_API_KEY>")
 
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
@@ -19,20 +17,27 @@ agent = create_react_agent(
     prompt="You are a helpful assistant",
 )
 
+
 async def run_concurrent_invokes():
     # Define 3 different inputs for concurrent execution
     inputs = [
         {
-            "messages": [{"role": "user", "content": "what is the weather in sf"}]
+            "messages": [
+                {"role": "user", "content": "what is the weather in sf"}
+            ]
         },
         {
-            "messages": [{"role": "user", "content": "what is the weather in nyc"}]
+            "messages": [
+                {"role": "user", "content": "what is the weather in nyc"}
+            ]
         },
         {
-            "messages": [{"role": "user", "content": "what is the weather in la"}]
-        }
+            "messages": [
+                {"role": "user", "content": "what is the weather in la"}
+            ]
+        },
     ]
-    
+
     # Create tasks for concurrent execution
     tasks = [
         agent.ainvoke(
@@ -41,14 +46,9 @@ async def run_concurrent_invokes():
         )
         for input_data in inputs
     ]
-    
+
     # Run all tasks concurrently
     results = await asyncio.gather(*tasks)
-    
-    # Print results
-    for i, result in enumerate(results):
-        print(f"Result {i+1}: {result}")
-    
     return results
 
 

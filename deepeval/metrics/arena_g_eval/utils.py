@@ -1,6 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 import json
+import random
 
 from deepeval.test_case import (
     LLMTestCaseParams,
@@ -8,6 +9,20 @@ from deepeval.test_case import (
     ArenaTestCase,
     LLMTestCase,
 )
+
+# List of fake names to use for masking contestant names
+FAKE_NAMES = [
+    "Alice",
+    "Bob",
+    "Charlie",
+    "Diana",
+    "Eve",
+    "Frank",
+    "Grace",
+    "Henry",
+    "Iris",
+    "Jack",
+]
 
 
 @dataclass
@@ -39,6 +54,7 @@ class FormattedLLMTestCase:
 @dataclass
 class FormattedArenaTestCase:
     contestants: Dict[str, FormattedLLMTestCase]
+    dummy_to_real_names: Dict[str, str]
     input: Optional[str] = None
     expected_output: Optional[str] = None
 
@@ -49,17 +65,50 @@ class FormattedArenaTestCase:
         if self.expected_output is not None:
             data["expected_output"] = self.expected_output
 
-        data["arena_test_cases"] = {
-            name: repr(contestant)
-            for name, contestant in self.contestants.items()
-        }
+        # Randomize the order of contestants
+        contestant_items = list(self.contestants.items())
+        random.shuffle(contestant_items)
+
+        # Use dummy names if mapping is available, otherwise use real names
+        if self.dummy_to_real_names:
+            # Create reverse mapping from real to dummy names
+            real_to_dummy = {
+                real: dummy for dummy, real in self.dummy_to_real_names.items()
+            }
+            data["arena_test_cases"] = {
+                real_to_dummy.get(name, name): repr(contestant)
+                for name, contestant in contestant_items
+            }
+        else:
+            data["arena_test_cases"] = {
+                name: repr(contestant) for name, contestant in contestant_items
+            }
         return json.dumps(data, indent=2)
 
 
 def format_arena_test_case(
     evaluation_params: List[LLMTestCaseParams], test_case: ArenaTestCase
-) -> FormattedArenaTestCase:
+) -> Tuple[FormattedArenaTestCase, Dict[str, str]]:
     case = next(iter(test_case.contestants.values()))
+
+    # Create dummy name mapping
+    real_names = list(test_case.contestants.keys())
+    available_fake_names = FAKE_NAMES.copy()
+    random.shuffle(available_fake_names)
+
+    # Ensure we have enough fake names
+    if len(real_names) > len(available_fake_names):
+        # If we need more names, create additional ones by adding numbers
+        additional_names = [
+            f"Contestant{i+1}"
+            for i in range(len(real_names) - len(available_fake_names))
+        ]
+        available_fake_names.extend(additional_names)
+
+    dummy_to_real_names = {}
+    for i, real_name in enumerate(real_names):
+        dummy_to_real_names[available_fake_names[i]] = real_name
+
     formatted_test_case = FormattedArenaTestCase(
         input=(
             case.input if LLMTestCaseParams.INPUT in evaluation_params else None
@@ -75,8 +124,9 @@ def format_arena_test_case(
             )
             for contestant, test_case in test_case.contestants.items()
         },
+        dummy_to_real_names=dummy_to_real_names,
     )
-    return formatted_test_case
+    return formatted_test_case, dummy_to_real_names
 
 
 def construct_formatted_llm_test_case(
