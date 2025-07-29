@@ -78,6 +78,7 @@ from openai import OpenAI
 
 client = OpenAI()
 
+messages = [{"role": "user", "content": "What does YC look for?"}]
 response = client.chat.completions.create(
     model="gpt-4",
     messages=messages
