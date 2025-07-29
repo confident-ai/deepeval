@@ -5,7 +5,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, Reada
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
-from deepeval.tracing.otel.utils import to_hex_string, set_trace_time
+from deepeval.tracing.otel.utils import to_hex_string, set_trace_time, validate_and_prepare_llm_test_cases
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
 
@@ -55,6 +55,9 @@ class ConfidentSpanExporterV1(SpanExporter):
     
     def _convert_readable_span_to_base_span(self, span: ReadableSpan):
 
+        metric_collection = span.attributes.get("confident_ai.metric_collection", None)
+        llm_test_cases = span.attributes.get("confident_ai.llm_test_cases", None)
+
         return BaseSpan(
             name=span.name,
             uuid=to_hex_string(span.context.span_id, 16),
@@ -64,5 +67,7 @@ class ConfidentSpanExporterV1(SpanExporter):
             end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
             status=TraceSpanStatus.SUCCESS, # TODO: handle status
             children=[],
-            metadata=json.loads(span.to_json())
+            metadata=json.loads(span.to_json()),
+            metric_collection=metric_collection,
+            llm_test_cases = validate_and_prepare_llm_test_cases(llm_test_cases) if llm_test_cases else None
         )
