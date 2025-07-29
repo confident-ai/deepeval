@@ -11,6 +11,7 @@ def is_pydantic_ai_installed():
 
 def safe_patch_agent_run_method():
     is_pydantic_ai_installed()
+    original_run = Agent.run
     
     # define patched run method
     async def patched_run(*args, **kwargs):
@@ -18,7 +19,7 @@ def safe_patch_agent_run_method():
         print(args)
         print("kwargs--------------")
         print(kwargs)
-        result = await Agent.run(*args, **kwargs)
+        result = await original_run(*args, **kwargs)
         print("result--------------")
         print(result)
         return result
