@@ -62,26 +62,31 @@ class ConfidentSpanExporterV1(SpanExporter):
         
         llm_test_case = None
         try:
-            llm_test_case = LLMTestCase(
-                input=span.attributes.get("confident_ai.llm_test_case.input", None),
-                actual_output=span.attributes.get("confident_ai.llm_test_case.actual_output", None),
-                expected_output=span.attributes.get("confident_ai.llm_test_case.expected_output", None),
-                context=span.attributes.get("confident_ai.llm_test_case.context", None),
-                retrieval_context=span.attributes.get("confident_ai.llm_test_case.retrieval_context", None),
-                additional_metadata=span.attributes.get("confident_ai.llm_test_case.additional_metadata", None),
-                # tools_called=span.attributes.get("confident_ai.llm_test_case.tools_called", None), # TODO: handle tools_called
-                comments=span.attributes.get("confident_ai.llm_test_case.comments", None),
-                # expected_tools=span.attributes.get("confident_ai.llm_test_case.expected_tools", None), # TODO: handle expected_tools
-                token_cost=span.attributes.get("confident_ai.llm_test_case.token_cost", None), 
-                completion_time=span.attributes.get("confident_ai.llm_test_case.completion_time", None),
-                name=span.attributes.get("confident_ai.llm_test_case.name", None),
-                tags=span.attributes.get("confident_ai.llm_test_case.tags", None),
-                _trace_dict=span.attributes.get("confident_ai.llm_test_case._trace_dict", None),
-                _dataset_rank=span.attributes.get("confident_ai.llm_test_case._dataset_rank", None),
-                _dataset_alias=span.attributes.get("confident_ai.llm_test_case._dataset_alias", None),
-                _dataset_id=span.attributes.get("confident_ai.llm_test_case._dataset_id", None),
-                _identifier=span.attributes.get("confident_ai.llm_test_case._identifier", None),
-            )
+            # Only create LLMTestCase if we have valid input and actual_output
+            input_value = span.attributes.get("confident_ai.llm_test_case.input", None)
+            actual_output_value = span.attributes.get("confident_ai.llm_test_case.actual_output", None)
+            
+            if input_value is not None and actual_output_value is not None:
+                llm_test_case = LLMTestCase(
+                    input=input_value,
+                    actual_output=actual_output_value,
+                    expected_output=span.attributes.get("confident_ai.llm_test_case.expected_output", None),
+                    context=span.attributes.get("confident_ai.llm_test_case.context", None),
+                    retrieval_context=span.attributes.get("confident_ai.llm_test_case.retrieval_context", None),
+                    additional_metadata=span.attributes.get("confident_ai.llm_test_case.additional_metadata", None),
+                    # tools_called=span.attributes.get("confident_ai.llm_test_case.tools_called", None), # TODO: handle tools_called
+                    comments=span.attributes.get("confident_ai.llm_test_case.comments", None),
+                    # expected_tools=span.attributes.get("confident_ai.llm_test_case.expected_tools", None), # TODO: handle expected_tools
+                    token_cost=span.attributes.get("confident_ai.llm_test_case.token_cost", None), 
+                    completion_time=span.attributes.get("confident_ai.llm_test_case.completion_time", None),
+                    name=span.attributes.get("confident_ai.llm_test_case.name", None),
+                    tags=span.attributes.get("confident_ai.llm_test_case.tags", None),
+                    _trace_dict=span.attributes.get("confident_ai.llm_test_case._trace_dict", None),
+                    _dataset_rank=span.attributes.get("confident_ai.llm_test_case._dataset_rank", None),
+                    _dataset_alias=span.attributes.get("confident_ai.llm_test_case._dataset_alias", None),
+                    _dataset_id=span.attributes.get("confident_ai.llm_test_case._dataset_id", None),
+                    _identifier=span.attributes.get("confident_ai.llm_test_case._identifier", None),
+                )
         except Exception as e:
             print(f"Error converting llm_test_case: {e}")
         

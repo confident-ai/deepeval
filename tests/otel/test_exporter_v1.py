@@ -46,7 +46,8 @@ class TestConfidentSpanExporterV1(unittest.TestCase):
         self.capture_patcher.stop()
 
     def create_mock_readable_span(self, name="test_span", span_id=12345, trace_id=67890, 
-                                 parent_span_id=None, start_time=1000000000, end_time=2000000000):
+                                 parent_span_id=None, start_time=1000000000, end_time=2000000000,
+                                 attributes=None):
         """Helper method to create a mock ReadableSpan."""
         mock_span = Mock(spec=ReadableSpan)
         mock_span.name = name
@@ -68,6 +69,14 @@ class TestConfidentSpanExporterV1(unittest.TestCase):
         # Mock timing
         mock_span.start_time = start_time
         mock_span.end_time = end_time
+        
+        # Mock attributes
+        mock_attributes = Mock()
+        if attributes:
+            mock_attributes.get.side_effect = lambda key, default=None: attributes.get(key, default)
+        else:
+            mock_attributes.get.return_value = None
+        mock_span.attributes = mock_attributes
         
         # Mock to_json method
         mock_span.to_json.return_value = json.dumps({
@@ -158,6 +167,187 @@ class TestConfidentSpanExporterV1(unittest.TestCase):
                 
                 # Verify to_hex_string was not called for parent
                 mock_to_hex.assert_called()
+
+    def test_convert_readable_span_to_base_span_with_metric_collection(self):
+        """Test _convert_readable_span_to_base_span with metric_collection attribute."""
+        # Arrange
+        attributes = {
+            "confident_ai.metric_collection": "test_metric_collection"
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                self.assertEqual(result.metric_collection, "test_metric_collection")
+                self.assertIsNone(result.llm_test_case)  # Should be None when not provided
+
+    def test_convert_readable_span_to_base_span_with_invalid_metric_collection(self):
+        """Test _convert_readable_span_to_base_span with invalid metric_collection (non-string)."""
+        # Arrange
+        attributes = {
+            "confident_ai.metric_collection": 123  # Non-string value
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                self.assertIsNone(result.metric_collection)  # Should be None for non-string values
+
+    def test_convert_readable_span_to_base_span_with_llm_test_case_attributes(self):
+        """Test _convert_readable_span_to_base_span with llm_test_case attributes."""
+        # Arrange
+        attributes = {
+            "confident_ai.llm_test_case.input": "test input",
+            "confident_ai.llm_test_case.actual_output": "test output",
+            "confident_ai.llm_test_case.expected_output": "expected output",
+            "confident_ai.llm_test_case.context": ["context1", "context2"],
+            "confident_ai.llm_test_case.retrieval_context": ["retrieval1", "retrieval2"],
+            "confident_ai.llm_test_case.comments": "test comments",
+            "confident_ai.llm_test_case.name": "test name",
+            "confident_ai.llm_test_case.tags": ["tag1", "tag2"]
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                self.assertIsNotNone(result.llm_test_case)
+                self.assertEqual(result.llm_test_case.input, "test input")
+                self.assertEqual(result.llm_test_case.actual_output, "test output")
+                self.assertEqual(result.llm_test_case.expected_output, "expected output")
+                self.assertEqual(result.llm_test_case.context, ["context1", "context2"])
+                self.assertEqual(result.llm_test_case.retrieval_context, ["retrieval1", "retrieval2"])
+                self.assertEqual(result.llm_test_case.comments, "test comments")
+                self.assertEqual(result.llm_test_case.name, "test name")
+                self.assertEqual(result.llm_test_case.tags, ["tag1", "tag2"])
+
+    def test_convert_readable_span_to_base_span_with_minimal_llm_test_case(self):
+        """Test _convert_readable_span_to_base_span with minimal required llm_test_case attributes."""
+        # Arrange
+        attributes = {
+            "confident_ai.llm_test_case.input": "test input",
+            "confident_ai.llm_test_case.actual_output": "test output"
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                self.assertIsNotNone(result.llm_test_case)
+                self.assertEqual(result.llm_test_case.input, "test input")
+                self.assertEqual(result.llm_test_case.actual_output, "test output")
+                # Optional fields should be None
+                self.assertIsNone(result.llm_test_case.expected_output)
+                self.assertIsNone(result.llm_test_case.context)
+                self.assertIsNone(result.llm_test_case.retrieval_context)
+
+    def test_convert_readable_span_to_base_span_with_both_attributes(self):
+        """Test _convert_readable_span_to_base_span with both metric_collection and llm_test_case."""
+        # Arrange
+        attributes = {
+            "confident_ai.metric_collection": "test_metric_collection",
+            "confident_ai.llm_test_case.input": "test input",
+            "confident_ai.llm_test_case.actual_output": "test output"
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                self.assertEqual(result.metric_collection, "test_metric_collection")
+                self.assertIsNotNone(result.llm_test_case)
+                self.assertEqual(result.llm_test_case.input, "test input")
+                self.assertEqual(result.llm_test_case.actual_output, "test output")
+
+    def test_convert_readable_span_to_base_span_with_invalid_llm_test_case(self):
+        """Test _convert_readable_span_to_base_span with invalid llm_test_case attributes."""
+        # Arrange
+        attributes = {
+            "confident_ai.llm_test_case.input": None,  # Invalid: input cannot be None
+            "confident_ai.llm_test_case.actual_output": "test output"
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                # Should handle the exception gracefully and set llm_test_case to None
+                self.assertIsNone(result.llm_test_case)
+
+    def test_convert_readable_span_to_base_span_with_numeric_attributes(self):
+        """Test _convert_readable_span_to_base_span with numeric llm_test_case attributes."""
+        # Arrange
+        attributes = {
+            "confident_ai.llm_test_case.input": "test input",
+            "confident_ai.llm_test_case.actual_output": "test output",
+            "confident_ai.llm_test_case.token_cost": 0.05,
+            "confident_ai.llm_test_case.completion_time": 1.5,
+            "confident_ai.llm_test_case._dataset_rank": 1,
+            "confident_ai.llm_test_case._dataset_id": "dataset123"
+        }
+        mock_span = self.create_mock_readable_span(attributes=attributes)
+        
+        with patch('deepeval.tracing.otel.exporter_v1.to_hex_string') as mock_to_hex:
+            mock_to_hex.side_effect = ["uuid", "trace_uuid"]
+            
+            with patch('deepeval.tracing.otel.exporter_v1.peb.epoch_nanos_to_perf_seconds') as mock_epoch_to_perf:
+                mock_epoch_to_perf.side_effect = [1.0, 2.0]
+                
+                # Act
+                result = self.exporter._convert_readable_span_to_base_span(mock_span)
+                
+                # Assert
+                self.assertIsNotNone(result.llm_test_case)
+                self.assertEqual(result.llm_test_case.input, "test input")
+                self.assertEqual(result.llm_test_case.actual_output, "test output")
+                self.assertEqual(result.llm_test_case.token_cost, 0.05)
+                self.assertEqual(result.llm_test_case.completion_time, 1.5)
+                self.assertEqual(result.llm_test_case._dataset_rank, 1)
+                self.assertEqual(result.llm_test_case._dataset_id, "dataset123")
 
     def test_export_method_list_reversal(self):
         """Test that the export method processes spans in reverse order."""
