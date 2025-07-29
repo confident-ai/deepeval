@@ -169,7 +169,7 @@ def test_generate_without_schema_returns_string(model_class, setup_func):
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
-        (KimiModel, set_moonshot_model_env),
+        (KimiModel, set_moonshot),
         (GrokModel, set_grok),
     ]
 )
@@ -196,7 +196,7 @@ def test_a_generate_without_schema_returns_string(model_class, setup_func):
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
-        (KimiModel, set_moonshot_model_env),
+        (KimiModel, set_moonshot),
         (GrokModel, set_grok),
     ]
 )
@@ -225,7 +225,7 @@ def test_generate_with_schema_returns_city_object(model_class, setup_func):
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
-        (KimiModel, set_moonshot_model_env),
+        (KimiModel, set_moonshot),
         (GrokModel, set_grok),
     ]
 )
@@ -254,7 +254,7 @@ def test_a_generate_with_schema_returns_city_object(model_class, setup_func):
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
-        (KimiModel, set_moonshot_model_env),
+        (KimiModel, set_moonshot),
         (GrokModel, set_grok),
     ]
 )
@@ -284,7 +284,7 @@ def test_answer_relevancy_measure_sync(model_class, setup_func):
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
-        (KimiModel, set_moonshot_model_env),
+        (KimiModel, set_moonshot),
         (GrokModel, set_grok),
     ]
 )
@@ -313,7 +313,7 @@ def test_answer_relevancy_measure_async(model_class, setup_func):
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
-        (KimiModel, set_moonshot_model_env),
+        (KimiModel, set_moonshot),
         (GrokModel, set_grok),
     ]
 )
