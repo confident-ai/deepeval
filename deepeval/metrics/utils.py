@@ -445,7 +445,7 @@ def initialize_model(
     elif should_use_local_model():
         return LocalModel(), True
     elif should_use_azure_openai():
-        return AzureOpenAIModel(model=model), True
+        return AzureOpenAIModel(model_name=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():

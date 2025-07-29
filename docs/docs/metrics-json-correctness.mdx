@@ -14,7 +14,7 @@ sidebar_label: Json Correctness
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
-<MetricTagsDisplayer usesLLMs={false} referenceless={true} />
+<MetricTagsDisplayer singleTurn={true} usesLLMs={false} referenceless={true} />
 
 The json correctness metric measures whether your LLM application is able to generate `actual_output`s with the correct **json schema**.
 

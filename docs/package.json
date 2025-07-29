@@ -23,6 +23,7 @@
     "docusaurus": "^1.14.7",
     "docusaurus-plugin-sass": "^0.2.5",
     "font-awesome": "^4.7.0",
+    "lucide-react": "^0.526.0",
     "posthog-docusaurus": "^2.0.2",
     "posthog-js": "^1.206.1",
     "prism-react-renderer": "^1.3.5",
