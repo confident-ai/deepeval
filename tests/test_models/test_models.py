@@ -1,3 +1,5 @@
+# TODO: add CLI for anthropic and add anthropic to this test file
+
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import asyncio
@@ -12,7 +14,6 @@ from deepeval import evaluate
 from deepeval.models.llms import (
     AzureOpenAIModel,
     GPTModel,
-    OllamaModel,
     GeminiModel,
     KimiModel,
     GrokModel,
@@ -21,7 +22,6 @@ from deepeval.models.llms import (
 from deepeval.cli.main import (
     set_openai_env,
     set_azure_openai_env,
-    set_ollama_model_env,
     set_gemini_model_env,
     set_deepseek_model_env,
     set_moonshot_model_env,
@@ -52,14 +52,6 @@ def set_azure_openai():
         openai_model_name=os.environ["AZURE_MODEL_NAME"],
         azure_deployment_name=os.environ["AZURE_DEPLOYMENT_NAME"],
         azure_model_version=os.environ["AZURE_MODEL_VERSION"],
-    )
-
-
-# Ollama
-def set_ollama():
-    set_ollama_model_env(
-        model_name=os.environ["OLLAMA_MODEL_NAME"],
-        base_url="http://localhost:11434",
     )
 
 
@@ -139,7 +131,6 @@ class City(BaseModel):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
@@ -165,13 +156,12 @@ def test_generate_without_schema_returns_string(model_class, setup_func):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
         (KimiModel, set_moonshot),
         (GrokModel, set_grok),
-    ]
+    ],
 )
 def test_a_generate_without_schema_returns_string(model_class, setup_func):
     try:
@@ -192,13 +182,12 @@ def test_a_generate_without_schema_returns_string(model_class, setup_func):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
         (KimiModel, set_moonshot),
         (GrokModel, set_grok),
-    ]
+    ],
 )
 def test_generate_with_schema_returns_city_object(model_class, setup_func):
     try:
@@ -221,13 +210,12 @@ def test_generate_with_schema_returns_city_object(model_class, setup_func):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
         (KimiModel, set_moonshot),
         (GrokModel, set_grok),
-    ]
+    ],
 )
 def test_a_generate_with_schema_returns_city_object(model_class, setup_func):
     try:
@@ -250,13 +238,12 @@ def test_a_generate_with_schema_returns_city_object(model_class, setup_func):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
         (KimiModel, set_moonshot),
         (GrokModel, set_grok),
-    ]
+    ],
 )
 def test_answer_relevancy_measure_sync(model_class, setup_func):
     try:
@@ -280,13 +267,12 @@ def test_answer_relevancy_measure_sync(model_class, setup_func):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
         (KimiModel, set_moonshot),
         (GrokModel, set_grok),
-    ]
+    ],
 )
 def test_answer_relevancy_measure_async(model_class, setup_func):
     try:
@@ -309,13 +295,12 @@ def test_answer_relevancy_measure_async(model_class, setup_func):
     [
         (GPTModel, set_openai),
         (AzureOpenAIModel, set_azure_openai),
-        (OllamaModel, set_ollama),
         (GeminiModel, set_gemini),
         # (GeminiModel, set_vertex_ai),
         (DeepSeekModel, set_deepseek),
         (KimiModel, set_moonshot),
         (GrokModel, set_grok),
-    ]
+    ],
 )
 def test_evaluate_function(model_class, setup_func):
     try:
@@ -326,11 +311,11 @@ def test_evaluate_function(model_class, setup_func):
         question1 = "What is the capital of Japan?"
         relevant_answer = "The capital of Japan is Tokyo. It is the largest metropolitan area in the world."
         question2 = "What is the capital of Italy?"
-        irrelevant_answer = (
-            "Pizza was invented in Naples, Italy. It's a popular dish worldwide."
-        )
+        irrelevant_answer = "Pizza was invented in Naples, Italy. It's a popular dish worldwide."
         test_case1 = LLMTestCase(input=question1, actual_output=relevant_answer)
-        test_case2 = LLMTestCase(input=question2, actual_output=irrelevant_answer)
+        test_case2 = LLMTestCase(
+            input=question2, actual_output=irrelevant_answer
+        )
         evaluate(
             test_cases=[test_case1],
             metrics=[AnswerRelevancyMetric(model=model)],
