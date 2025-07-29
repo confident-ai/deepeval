@@ -1,4 +1,5 @@
 from typing import Optional
+from .agent import PydanticAIAgent as Agent
 
 import deepeval
 # from deepeval.tracing.otel.exporter import ConfidentSpanExporter
