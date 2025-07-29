@@ -14,10 +14,14 @@ from pydantic import ValidationError
 
 class ConfidentSpanExporterV1(SpanExporter):
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str] = None):
+        
         capture_tracing_integration("deepeval.tracing.otel.exporter_v1")
-
-        deepeval.login_with_confident_api_key(api_key)
+        peb.init_clock_bridge()
+        
+        if api_key:
+            deepeval.login_with_confident_api_key(api_key) # TODO: send api keys dynamically to get it compatible with the collector framework
+        
         super().__init__()
 
     def export(

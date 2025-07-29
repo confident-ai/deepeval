@@ -61,12 +61,9 @@ from deepeval.tracing.utils import (
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
-from deepeval.tracing import perf_epoch_bridge as peb
-
 
 class TraceManager:
     def __init__(self):
-        peb.init_clock_bridge()
         self.traces: List[Trace] = []
         self.active_traces: Dict[str, Trace] = {}  # Map of trace_uuid to Trace
         self.active_spans: Dict[str, BaseSpan] = (
