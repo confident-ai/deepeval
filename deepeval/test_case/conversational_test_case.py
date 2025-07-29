@@ -3,7 +3,7 @@ from typing import List, Optional, Dict, Literal
 from pydantic import AnyUrl
 from copy import deepcopy
 from enum import Enum
-
+from mcp.types import Tool, Resource, Prompt, CallToolResult, ReadResourceResult, GetPromptResult
 from deepeval.test_case import ToolCall
 
 
@@ -107,6 +107,32 @@ class ConversationalTestCase:
         for turn in self.turns:
             if not isinstance(turn, Turn):
                 raise TypeError("'turns' must be a list of `Turn`s")
+            if turn.mcp_tools_called is not None:
+                for tool_called in turn.mcp_tools_called:
+                    if not isinstance(tool_called, CallToolResult):
+                        raise TypeError("The 'tools_called' must be of type 'CallToolResult' from mcp.types")
+            if turn.mcp_resources_called is not None:
+                for resource in turn.mcp_resources_called:
+                    if not isinstance(resource, ReadResourceResult):
+                        raise TypeError("The 'resources_called' must be of type 'ReadResourceResult' from mcp.types")
+            if turn.mcp_prompts_called is not None:
+                for prompt_called in turn.mcp_prompts_called:
+                    if not isinstance(prompt_called, GetPromptResult):
+                        raise TypeError("The 'prompts_called' must be of type 'GetPromptResult' from mcp.types")
             copied_turns.append(deepcopy(turn))
+
+        for mcp_data in self.mcp_data:
+            if mcp_data.available_tools is not None:
+                for tool in mcp_data.available_tools:
+                    if not isinstance(tool, Tool):
+                        raise TypeError("'available_tools' must be instances of 'Tool' from mcp.types")
+            if mcp_data.available_resources is not None:
+                for resource in mcp_data.available_resources:
+                    if not isinstance(resource, Resource):
+                        raise TypeError("'available_resources' must be instances of 'Resource' from mcp.types")
+            if mcp_data.available_prompts is not None:
+                for prompt in mcp_data.available_prompts:
+                    if not isinstance(prompt, Prompt):
+                        raise TypeError("'available_prompts' must be instances of 'Prompt' from mcp.types")
 
         self.turns = copied_turns
