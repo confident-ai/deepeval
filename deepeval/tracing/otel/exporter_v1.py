@@ -58,6 +58,10 @@ class ConfidentSpanExporterV1(SpanExporter):
         metric_collection = span.attributes.get("confident_ai.metric_collection", None)
         llm_test_cases = span.attributes.get("confident_ai.llm_test_cases", None)
 
+        # Convert llm_test_cases to a single llm_test_case (take the first one if multiple)
+        llm_test_case_list = validate_and_prepare_llm_test_cases(llm_test_cases) if llm_test_cases else []
+        llm_test_case = llm_test_case_list[0] if llm_test_case_list else None
+        
         return BaseSpan(
             name=span.name,
             uuid=to_hex_string(span.context.span_id, 16),
@@ -69,5 +73,5 @@ class ConfidentSpanExporterV1(SpanExporter):
             children=[],
             metadata=json.loads(span.to_json()),
             metric_collection=metric_collection,
-            llm_test_cases = validate_and_prepare_llm_test_cases(llm_test_cases) if llm_test_cases else None
+            llm_test_case=llm_test_case
         )
