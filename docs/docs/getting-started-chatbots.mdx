@@ -74,18 +74,25 @@ test_case = ConversationalTestCase(
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.test_case import ConversationalTestCase, Turn
+from openai import OpenAI
 
-messages = [
-    {role:'user', content:'What does YC look for?'},
-    {role:'assistant', content:'Founding teams with domain expertise.'},
-    {role:'user', content:'How can I stand out?'},
-    {role:'assistant', content:'Focus on demonstrating traction.'},
-]
+client = OpenAI()
+
+response = client.chat.completions.create(
+    model="gpt-4",
+    messages=messages
+)
+
+# Append assistant reply
+messages.append({
+    "role": "assistant",
+    "content": response.choices[0].message.content
+})
 
 test_case = ConversationalTestCase(
     turns=[
-        Turn(role=message['role'], content=message['content'])
-        for message in messages
+        Turn(role=msg["role"], content=msg["content"])
+        for msg in messages
     ]
 )
 ```
@@ -95,21 +102,27 @@ test_case = ConversationalTestCase(
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.test_case import ConversationalTestCase, Turn
-from langchain.schema import HumanMessage, AIMessage
+from langchain.memory import ConversationBufferMemory
+from langchain.chat_models import ChatOpenAI
+from langchain.chains import ConversationChain
+...
 
-messages = [
-    HumanMessage(content='What does YC look for?'),
-    AIMessage(content='Founding teams with domain expertise.'),
-    HumanMessage(content='How can I stand out?'),
-    AIMessage(content='Focus on demonstrating traction.')
-]
+llm = ChatOpenAI()
+memory = ConversationBufferMemory(return_messages=True)
+chain = ConversationChain(llm=llm, memory=memory)
+
+chain.run("What does YC look for?")
+chain.run("How can I stand out?")
+
+messages = memory.chat_memory.messages
 
 test_case = ConversationalTestCase(
     turns=[
         Turn(
-            role='user' if isinstance(message, HumanMessage) else 'assistant',
-            content=message.content
-        ) for message in messages
+            role="user" if msg.type == "human" else "assistant",
+            content=msg.content
+        )
+        for msg in messages
     ]
 )
 ```
@@ -120,6 +133,7 @@ test_case = ConversationalTestCase(
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.test_case import ConversationalTestCase, Turn
 from langgraph.checkpoint.base import BaseCheckpointSaver
+...
 
 config = {"configurable": {"thread_id": "<YOUR_THREAD_ID>"}}
 state = checkpointer.get(config)
@@ -142,6 +156,7 @@ test_case = ConversationalTestCase(
 from deepeval.test_case import ConversationalTestCase, Turn
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.llms import MessageRole
+...
 
 chat_store = SimpleChatStore()
 messages = chat_store.get_messages("<YOUR_CHAT_STORE_KEY>")
@@ -163,6 +178,7 @@ test_case = ConversationalTestCase(
 from deepeval.test_case import ConversationalTestCase, Turn
 from agents import SQLiteSession
 import asyncio
+...
 
 async def create_test_case():
     session = SQLiteSession("user_123", "conversations.db")
