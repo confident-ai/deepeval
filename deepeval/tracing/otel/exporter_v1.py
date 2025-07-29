@@ -32,7 +32,6 @@ class ConfidentSpanExporterV1(SpanExporter):
         for base_span in reversed(spans_list):
             if not trace_manager.get_trace_by_uuid(base_span.trace_uuid):
                 trace_manager.start_new_trace(trace_uuid=base_span.trace_uuid)
-            #TODO: Fix timing of the trace 
             trace_manager.add_span(base_span)
             trace_manager.add_span_to_trace(base_span)
             # no removing span because it can be parent of other spans
