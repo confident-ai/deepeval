@@ -1,0 +1,269 @@
+---
+id: getting-started-rag
+title: Evaluating RAG
+sidebar_label: RAG Evals
+---
+
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
+import VideoDisplay from "@site/src/components/VideoDisplayer";
+
+DeepEval makes it easy to evaluate any **RAG** pipelines and systems, including QA agents and customer support chatbots.
+
+<details>
+  <summary>Click to learn more about RAG evaluation</summary>
+
+[RAG Evaluation](/guides/guides-rag-evaluation) is one of the most popular use-cases for DeepEval. A good RAG evaluation pipeline can help you determine the best prompts, models, and retriever settings for your specific use-case.
+
+DeepEval's RAG metrics require you to set up an `LLMTestCase`, which represents a single interaction with your RAG pipeline.
+
+![ok](https://deepeval-docs.s3.amazonaws.com/docs:llm-test-case.png)
+
+DeepEval offers a total of 5 RAG metrics, which are:
+
+- [Answer Relevancy](/docs/metrics-answer-relevancy)
+- [Faithfulness](/docs/metrics-faithfulness)
+- [Contextual Relevancy](/docs/metrics-contextual-relevancy)
+- [Contextual Precision](/docs/metrics-contextual-precision)
+- [Contextual Recall](/docs/metrics-contextual-recall)
+
+</details>
+
+In this guide, you'll learn how to set up your RAG pipeline for evaluations in **under 5 minutes**:
+
+1. Prepare test cases.
+2. Evaluate your RAG pipeline.
+
+:::info
+**Log in to Confident AI** to view your RAG evaluation report:
+
+```bash
+deepeval login
+```
+
+:::
+
+## Prepare Test Cases
+
+<Timeline>
+<TimelineItem title="Setup RAG pipeline" number="1">
+
+Set up your RAG pipeline to return the retrieved contexts alongside the
+LLM response.
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+def rag_pipeline(input):
+   ...
+   return 'RAG output', ['retrieved context 1', 'retrieved context 2', ...]
+```
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from langchain_core.messages import HumanMessage
+from langchain.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+
+embeddings = OpenAIEmbeddings()
+vectorstore = FAISS.load_local("./faiss_index", embeddings)
+retriever = vectorstore.as_retriever()
+llm = ChatOpenAI(model="gpt-4")
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_docs = retriever.get_relevant_documents(input)
+    context_texts = [doc.page_content for doc in retrieved_docs]
+
+    # Generate response
+    state = {"messages": [HumanMessage(content=input + "\\n\\n".join(context_texts))]}
+    result = your_graph.invoke(state)
+    return result["messages"][-1].content, context_texts
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from langchain_openai import ChatOpenAI
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
+
+llm = ChatOpenAI(model="gpt-4")
+vectorstore = Chroma(persist_directory="./chroma_db")
+retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_docs = retriever.get_relevant_documents(input)
+    context_texts = [doc.page_content for doc in retrieved_docs]
+
+    # Generate response
+    qa_chain = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=retriever,
+        return_source_documents=True
+    )
+    result = qa_chain.invoke({"query": input})
+    return result["result"], context_texts
+```
+
+</TabItem>
+<TabItem value="llama_index" label="LlamaIndex">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader
+
+documents = SimpleDirectoryReader("./data").load_data()
+index = VectorStoreIndex.from_documents(documents)
+query_engine = index.as_query_engine()
+
+def rag_pipeline(input):
+    # Generate response
+    response = query_engine.query(input)
+
+    # Extract retrieval context
+    context_texts = []
+    if hasattr(response, 'source_nodes'):
+        context_texts = [node.text for node in response.source_nodes]
+    return str(response), context_texts
+```
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic AI">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from pydantic_ai import Agent
+from your_embedding_service import EmbeddingService
+
+agent = Agent(
+    model='openai:gpt-4o',
+    system_prompt='Use the provided context to answer questions accurately.'
+)
+embedding_service = EmbeddingService()
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_contexts = embedding_service.search_sync(input, top_k=3)
+    context_texts = [ctx.text for ctx in retrieved_contexts]
+
+    # Generate response
+    result = agent.run_sync(input + '\n\n'.join(context_texts))
+    return result.data, context_texts
+```
+
+</TabItem>
+<TabItem value="openai-agents" label="OpenAI Agents">
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from agents import Agent, Runner
+from your_vector_store import VectorStore
+
+agent = Agent(
+    name="RAG Assistant",
+    instructions="You are a helpful assistant that uses provided context"
+)
+vector_store = VectorStore()
+
+def rag_pipeline(input):
+    # Extract retrieval context
+    retrieved_docs = vector_store.similarity_search(input, k=3)
+    context_texts = [doc.page_content for doc in retrieved_docs]
+
+    # Generate response
+    result = Runner.run_sync(agent, input + "\\n\\n".join(context_texts))
+    return result.final_output, context_texts
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+    <p>
+      <i>To be documented...</i>
+    </p>
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Create a test case" number="2">
+    <p>
+      Create a test case using the outputs of your newly set up RAG pipeline.
+    </p>
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{1,4}"
+    >
+      {"from deepeval.test_case import LLMTestCase\n" +
+        "\n" +
+        "input = 'What does YC look for?'\n" +
+        "actual_output, retrieved_contexts = rag_pipeline(input)\n" +
+        "\n" +
+        "test_case = LLMTestCase(\n" +
+        "    input=input,\n" +
+        "    actual_output=actual_output,\n" +
+        "    retrieval_context=retrieved_contexts\n" +
+        ")"}
+    </CodeBlock>
+</TimelineItem>
+<TimelineItem title="Fill test cases" number="3">
+    <p>
+      Optionally provide an expected output if you plan to run contextual
+      precision and recall metrics.
+    </p>
+    <CodeBlock
+      language="python"
+      title="main.py"
+      showLineNumbers={true}
+      wrapLines={true}
+      metastring="{6}"
+    >
+      {"from deepeval.test_case import LLMTestCase\n" +
+        "...\n\n" +
+        "test_case = LLMTestCase(\n" +
+        "    ...,\n" +
+        "    expected_output='expected output',\n" +
+        ")"}
+    </CodeBlock>
+</TimelineItem>
+</Timeline>
+
+## Running Evaluations
+
+<Timeline>
+<TimelineItem title="Select metrics" number="1">
+
+Select [RAG metrics](/docs/metrics-answer-relevancy) to evaluate your RAG pipeline, or define your own using [G-Eval](/docs/metrics-llm-evals).
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import AnswerRelevancyMetric, ContextualPrecisionMetric
+
+answer_relevancy = AnswerRelevancyMetric(threshold=0.8)
+contextual_precision = ContextualPrecisionMetric(threshold=0.8)
+```
+
+</TimelineItem>
+<TimelineItem title="Running an evaluation" number="2">
+
+Run an evaluation on the LLM test case you previously created using the metrics defined above.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval import evaluate
+...
+
+evaluate([test_case], metrics=[answer_relevancy, contextual_precision])
+```
+
+Once the evaluation completes, you'll be directed to Confident AI to view the evaluation report.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag.mp4" />
+
+</TimelineItem>
+</Timeline>

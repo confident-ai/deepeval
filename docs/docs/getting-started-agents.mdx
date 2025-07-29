@@ -1,0 +1,497 @@
+---
+id: getting-started-agents
+title: Evaluating AI Agents
+sidebar_label: AI Agent Evals
+---
+
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import CodeBlock from "@theme/CodeBlock";
+import VideoDisplay from "@site/src/components/VideoDisplayer";
+
+DeepEval makes it easy to evaluate complex **AI Agents**, such as multi-agent systems and tool-using agents.
+
+<details>
+  <summary>Click to learn more about AI Agent Evaluation</summary>
+
+AI Agent Evaluation is different from other types of evaluations because agentic workflows are complex and **consist of multiple interacting components**, such as tools, chained LLM calls, and RAG modules.
+
+Therefore, it’s important to evaluate your AI agents both end-to-end and at the component level to understand how each part performs. This involves [tracing each component in your agent](/docs/getting-started-agents#setup-tracing).
+
+[Task Completion](/docs/metrics-task-completion) is the most powerful and recommended metric for AI agent evaluations. It analyzes your Agent’s full trace and does not require setting up an LLM test case. Other metrics on DeepEval can also be used to evaluate agents, but they require you to set up an LLM test case. Some of these include:
+
+- [Tool Correctness](/docs/metrics-tool-correctness)
+- [G-Eval](/docs/metrics-llm-evals)
+- [Answer Relevancy](/docs/metrics-answer-relevancy)
+- [Faithfulness](/docs/metrics-faithfulness)
+
+</details>
+
+In this guide, you'll learn how to set up your agent for evaluations in **under 5 minutes**:
+
+1. Set up tracing for your agent.
+2. Evaluate your agent end-to-end.
+3. Evaluate components in your agent.
+
+:::info
+You'll need to **log in to Confident AI** to view your evaluation traces:
+
+```bash
+deepeval login
+```
+
+:::
+
+## Setup Tracing
+
+<Timeline>
+<TimelineItem title="Setup tracing">
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+Attach the <code>@observe</code> decorator to all the functions that are part of your agent.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4,8}"
+from deepeval.tracing import observe
+...
+
+@observe()
+def your_ai_agent_tool():
+    return 'tool call result'
+
+@observe()
+def your_ai_agent(input):
+    tool_call_result = your_ai_agent_tool()
+    return 'Tool Call Result: ' + tool_call_result
+```
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
+
+Pass in DeepEval's `CallbackHandler` for LangGraph to your agent's invoke method.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,16}"
+from deepeval.integrations.langchain import CallbackHandler
+from langgraph.prebuilt import create_react_agent
+
+def get_weather(city: str) -> str:
+    """Returns the weather in a city"""
+    return f"It's always sunny in {city}!"
+
+agent = create_react_agent(
+    model="openai:gpt-4.1",
+    tools=[get_weather],
+    prompt="You are a helpful assistant"
+)
+
+result = agent.invoke(
+    input={"messages":[{"role":"user","content":"what is the weather in sf"}]},
+    config={"callbacks":[CallbackHandler()]}
+)
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+Pass in DeepEval's `CallbackHandler` for LangChain to your agent's invoke method.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,12}"
+from deepeval.integrations.langchain import CallbackHandler
+from langchain.chat_models import init_chat_model
+
+def multiply(a: int, b: int) -> int:
+    return a * b
+
+llm = init_chat_model("gpt-4.1", model_provider="openai")
+llm_with_tools = llm.bind_tools([multiply])
+
+llm_with_tools.invoke(
+    "What is 3 * 12?",
+    config = {"callbacks": [CallbackHandler()]}
+)
+```
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+
+Instrument DeepEval as an span handler for CrewAI and import your `Agent` from DeepEval instead.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,6}"
+from deepeval.integrations.crewai import instrumentator, Agent
+from crewai import Task, Crew
+
+instrumentator(api_key="<your-confident-api-key>")
+
+coder = Agent(
+    role='Consultant',
+    goal='Write clear, concise explanation.',
+    backstory='An expert consultant with a keen eye for software trends.',
+)
+
+task = Task(
+    description="Explain the latest trends in AI.",
+    agent=coder,
+    expected_output="A clear and concise explanation.",
+)
+
+crew = Crew(
+    agents=[coder],
+    tasks=[task],
+)
+result = crew.kickoff()
+```
+
+</TabItem>
+<TabItem value="llama-index" label="LlamaIndex">
+
+_To be documented..._
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic">
+
+_To be documented..._
+
+</TabItem>
+<TabItem value="OpenAI Agents" label="OpenAI Agents">
+
+_To be documented..._
+
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Configure environment variables">
+
+If you are running evaluations in a local environment, you will need to set the following environment variable. Skip this step if you are running [online evaluations in production](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations)
+
+```bash
+export CONFIDENT_TRACE_FLUSH=YES
+```
+
+</TimelineItem>
+<TimelineItem title="Run a test query">
+
+Run your agent evaluations as you would normally do:
+
+```bash
+python main.py
+```
+
+If successful, you should see a trace log like the one below in your CLI:
+
+<pre>
+  <code>
+    <span
+      style={{ color: "#7f7f7f", fontWeight: "bold", whiteSpace: "nowrap" }}
+    >
+      [Confident AI Trace Log]{"  "}
+    </span>
+    <span style={{ color: "#00ff00", whiteSpace: "nowrap" }}>
+      Successfully posted trace (...):{" "}
+    </span>
+    <span
+      style={{
+        color: "#5f5fff",
+        textDecoration: "underline",
+        whiteSpace: "nowrap",
+      }}
+    >
+      https://app.confident.ai/[...]
+    </span>
+  </code>
+</pre>
+
+</TimelineItem>
+</Timeline>
+
+## End-to-End Evaluations
+
+<Timeline>
+<TimelineItem title="Configure evaluation model">
+
+To configure OpenAI as the your evaluation model for all metrics, run the following command:
+
+```bash
+export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+```
+
+:::info
+You can also use these models for evaluation: [Ollama](https://deepeval.com/integrations/models/ollama), [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai), [Anthropic](https://deepeval.com/integrations/models/anthropic), [Gemini](https://deepeval.com/integrations/models/gemini), etc. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
+:::
+
+</TimelineItem>
+<TimelineItem title="Define metrics">
+
+_Task Completion_ is the most powerful metric on DeepEval for evaluating AI agents end-to-end.
+
+<details>
+  <summary>What other metrics are available?</summary>
+
+Other metrics on DeepEval can also be used to evaluate agents but _ONLY_ if you run [component-level evaluations](/docs/getting-started-agents#component-level-evaluations), since they require you to set up an LLM test case. These metrics include:
+
+- [Tool Correctness](/docs/metrics-tool-correctness)
+- [G-Eval](/docs/metrics-llm-evals)
+- [Answer Relevancy](/docs/metrics-answer-relevancy)
+- [Faithfulness](/docs/metrics-faithfulness)
+
+For more information on available metrics, see the [Metrics Introduction](/docs/metrics-introduction) section.
+
+</details>
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+
+task_completion_metric = TaskCompletionMetric(threshold=0.5)
+```
+
+</TimelineItem>
+<TimelineItem title="Run an evaluation">
+
+<Tabs>
+<TabItem value="python" label="Python">
+
+Supply the task completion metric to the metrics argument inside the observe decorator. Then, run a query for each golden using the `dataset` iterator.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,3,10,15}"
+from deepeval.tracing import observe
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+...
+
+@observe()
+def your_ai_agent_tool():
+    return 'tool call result'
+
+@observe(metrics=[task_completion_metric])
+def your_ai_agent(input):
+    tool_call_result = your_ai_agent_tool()
+    return 'Tool Call Result: ' + tool_call_result
+
+for golden in dataset(goldens=[Golden(input="This is a test query")]):
+    your_ai_agent(golden.input)
+```
+
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Acomponent-level.mp4" />
+
+</TabItem>
+<TabItem value="langgraph" label="LangGraph" showLineNumbers={true}>
+
+Supply the task completion metric to the metrics argument inside the `CallbackHandler`. Then, to run an evaluation, run a query for each golden using the `dataset` iterator.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,4,17,21}"
+from deepeval.integrations.langchain import CallbackHandler
+from langgraph.prebuilt import create_react_agent
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+...
+
+def get_weather(city: str) -> str:
+    """Returns the weather in a city"""
+    return f"It's always sunny in {city}!"
+
+agent = create_react_agent(
+    model="openai:gpt-4.1",
+    tools=[get_weather],
+    prompt="You are a helpful assistant",
+)
+
+for golden in dataset(goldens=[Golden(input="This is a test query")]):
+    agent.invoke(
+        input={"messages": [{"role": "user", "content": golden.input}]},
+        config={
+            "callbacks": [CallbackHandler(metrics=[task_completion_metric])]
+        },
+    )
+```
+
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Alanggraph.mp4" />
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+Supply the task completion metric to the metrics argument inside the `CallbackHandler`. Then, to run an evaluation, run a query for each golden using the `dataset` iterator.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,4,13,17}"
+from deepeval.integrations.langchain import CallbackHandler
+from langchain.chat_models import init_chat_model
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+...
+
+def multiply(a: int, b: int) -> int:
+    return a * b
+
+llm = init_chat_model("gpt-4.1", model_provider="openai")
+llm_with_tools = llm.bind_tools([multiply])
+
+for golden in dataset(goldens=[Golden(input="This is a test query")]):
+    llm_with_tools.invoke(
+        "What is 3 * 12?",
+        config={
+            "callbacks": [CallbackHandler(metrics=[task_completion_metric])]
+        },
+    )
+```
+
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Alangchain.mp4" />
+
+</TabItem>
+<TabItem value="crewai" label="CrewAI">
+
+Supply the task completion metric to the metrics argument inside the `Agent` from DeepEval. Then, to run an evaluation, run a query for each golden using the `dataset` iterator.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,3,13,16}"
+from deepeval.integrations.crewai import instrumentator, Agent
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+from crewai import Task, Crew
+...
+
+instrumentator(api_key="q8/AU3bxv2MX0mBnW9I8ynOVNx/iV3mMH3oqkl2Isu4=")
+
+coder = Agent(
+    role='Consultant',
+    goal='Write clear, concise explanation.',
+    backstory='An expert consultant with a keen eye for software trends.',
+    metrics=[task_completion_metric]
+)
+
+for golden in dataset(goldens=[Golden(input="Explain the latest trends in AI.")]):
+    task = Task(
+        description="Explain the latest trends in AI.",
+        agent=coder,
+        expected_output="A clear and concise explanation.",
+    )
+    crew = Crew(
+        agents=[coder],
+        tasks=[task],
+    )
+    result = crew.kickoff()
+```
+
+DeepEval will automatically generate a test report on Confident AI, where you can debug and view evaluation results.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Acrew-ai.mp4" />
+
+</TabItem>
+<TabItem value="llama-index" label="LlamaIndex">
+
+_To be documented..._
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic">
+
+_To be documented..._
+
+</TabItem>
+<TabItem value="OpenAI Agents" label="OpenAI Agents">
+
+_To be documented..._
+
+</TabItem>
+</Tabs>
+</TimelineItem>
+</Timeline>
+
+## Component-Level Evaluations
+
+Component-level evaluations allow for fine-grained evaluation of specific components in your agent.
+
+:::note
+Component-level evaluations are **not available** for integrations at this time.
+:::
+
+<Timeline>
+<TimelineItem title="Set up test cases">
+
+Set up test cases for each function in your agent. You can learn more about available [test case parameters here.](/docs/evaluation-test-cases)
+
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,7,19}"
+from deepeval.tracing import observe, update_span
+from deepeval.test_case import LLMTestCase, ToolCall
+...
+
+@observe()
+def your_ai_agent_tool():
+    update_span(
+        test_case=LLMTestCase(
+            tools_called=[ToolCall(name='Tool A')],
+            expected_tools=[ToolCall(name='Tool A')]
+        )
+    )
+    return 'tool call result'
+
+@observe()
+def your_ai_agent(input):
+    tool_call_result = your_ai_agent_tool()
+    output = 'Tool Call Result: ' + tool_call_result
+    update_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=output
+        )
+    )
+    return output
+```
+
+</TimelineItem>
+<TimelineItem title="Configure metrics">
+
+Supply the metrics to the `@observe` decorator of each function. Each metric will require different test case parameters.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{3,6,10,11,16,22,23}"
+from deepeval.tracing import observe, update_span
+from deepeval.test_case import LLMTestCase, ToolCall
+from deepeval.metrics import TaskCompletionMetric, ToolCorrectness
+...
+
+@observe(metrics=[ToolCorrectness()])
+def your_ai_agent_tool():
+    update_span(
+        test_case=LLMTestCase(
+            tools_called=[ToolCall(name='Tool A')],
+            expected_tools=[ToolCall(name='Tool A')]
+        )
+    )
+    return 'tool call result'
+
+@observe(metrics=[TaskCompletionMetric()])
+def your_ai_agent(input):
+    tool_call_result = your_ai_agent_tool()
+    output = 'Tool Call Result: ' + tool_call_result
+    update_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=output
+        )
+    )
+    return output
+```
+
+</TimelineItem>
+<TimelineItem title="Run Evaluations">
+
+Finally, run a query for each golden using the `dataset` iterator.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,2,5}"
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+...
+
+for golden in dataset(goldens=[Golden(input='This is a test query')]):
+    tool_call_result = your_ai_agent(golden.input)
+```
+
+DeepEval will automatically generate a component-level test report on Confident AI.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Aend-to-end.mp4" />
+
+</TimelineItem>
+</Timeline>
