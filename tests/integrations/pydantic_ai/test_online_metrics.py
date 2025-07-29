@@ -3,9 +3,12 @@ import time
 from deepeval.integrations.pydantic_ai import setup_instrumentation
 from deepeval.integrations.pydantic_ai import Agent
 
-setup_instrumentation(api_key="<your-api-key>")
+from dotenv import load_dotenv
+load_dotenv()
 
-os.environ['OPENAI_API_KEY'] = '<your-api-key>'
+setup_instrumentation(api_key=os.getenv("CONFIDENT_API_KEY"))
+
+os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
 
 Agent.instrument_all()
 
