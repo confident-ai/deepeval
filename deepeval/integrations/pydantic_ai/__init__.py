@@ -1,0 +1,39 @@
+from typing import Optional
+
+import deepeval
+# from deepeval.tracing.otel.exporter import ConfidentSpanExporter
+from deepeval.tracing.otel.exporter_v1 import ConfidentSpanExporterV1
+from deepeval.telemetry import capture_tracing_integration
+
+try:
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.trace import set_tracer_provider
+    opentelemetry_installed = True
+except:
+    opentelemetry_installed = False
+
+def is_opentelemetry_available():
+    if not opentelemetry_installed:
+        raise ImportError("OpenTelemetry SDK is not available. Please install it with `pip install opentelemetry-sdk`.")
+    return True
+
+
+def setup_instrumentation(api_key: Optional[str] = None):
+    capture_tracing_integration("pydantic_ai")
+    is_opentelemetry_available()
+
+    if api_key:
+        deepeval.login_with_confident_api_key(api_key)
+    
+    if not isinstance(trace.get_tracer_provider(), TracerProvider):
+        tracer_provider = TracerProvider()
+        trace.set_tracer_provider(tracer_provider)
+    else:
+        tracer_provider = trace.get_tracer_provider()
+
+    exporter = ConfidentSpanExporterV1()
+    span_processor = BatchSpanProcessor(exporter)
+    tracer_provider.add_span_processor(span_processor)
+    set_tracer_provider(tracer_provider)

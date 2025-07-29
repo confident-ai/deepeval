@@ -18,7 +18,7 @@ class ConfidentSpanExporterV1(SpanExporter):
         capture_tracing_integration("deepeval.tracing.otel.exporter_v1")
 
         if api_key:
-            deepeval.login_with_confident_api_key(api_key)
+            deepeval.login_with_confident_api_key(api_key) # TODO: send api keys dynamically to get it compatible with the collector framework
         
         super().__init__()
 
