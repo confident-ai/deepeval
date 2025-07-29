@@ -1,12 +1,12 @@
 import json
 import typing
-from typing import List
+from typing import List, Optional
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, ReadableSpan
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
-from deepeval.tracing.otel.utils import to_hex_string, set_trace_time
+from deepeval.tracing.otel.utils import to_hex_string, set_trace_time, validate_llm_test_case_data
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.test_case import LLMTestCase, ToolCall
@@ -94,18 +94,21 @@ class ConfidentSpanExporterV1(SpanExporter):
                         print(f"Error converting expected tool call: {err}")
         
         llm_test_case = None
-        try:
-            llm_test_case = LLMTestCase(
-                input=input,
-                actual_output=actual_output,
-                expected_output=expected_output,
-                context=context,
-                retrieval_context=retrieval_context,
-                tools_called=tools_called,
-                expected_tools=expected_tools
-            )
-        except Exception as e:
-            print(f"Error converting llm test case: {e}")
+        if input and actual_output:
+            try:
+                validate_llm_test_case_data(input, actual_output, expected_output, context, retrieval_context, tools_called, expected_tools)
+                
+                llm_test_case = LLMTestCase(
+                    input=input,
+                    actual_output=actual_output,
+                    expected_output=expected_output,
+                    context=context,
+                    retrieval_context=retrieval_context,
+                    tools_called=tools_called,
+                    expected_tools=expected_tools
+                )
+            except Exception as e:
+                print(f"Invalid LLMTestCase data: {e}")
         
         return BaseSpan(
             name=span.name,
