@@ -1,15 +1,16 @@
 ---
 id: tutorial-medical-chatbot-deployment
-title: Deployment
-sidebar_label: Deployment
+title: Setup Evals in Prod
+sidebar_label: Setup Evals in Prod
 ---
 
 In this section we'll learn how to set up tracing for our medical chatbot to observe it on a component level and ensure your chatbot performs well and gets full visibilty for debugging internal components.
 
 In the development section of this tutorial, we've already added `@observe` decorator to our chatbot's components, now we will add metrics and spans to this tracing setup to enable evaluations.
-## Setup Tracing 
 
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
+## Setup Tracing
+
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction),
 this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
 To add metrics and spans to your traces, modify your `MedicalChatbot` class like this:
@@ -23,8 +24,8 @@ from deepeval.metrics import ContextualRelevancyMetric
 
 class MedicalChatbot:
     def __init__(
-        self, 
-        document_path, 
+        self,
+        document_path,
         model="gpt-4",
         encoder="all-MiniLM-L6-v2",
         memory=":memory:",
@@ -42,7 +43,7 @@ class MedicalChatbot:
 
     def store_data(self, document_path):
         ...
-    
+
     @tool
     @observe(metrics=[ContextualRelevancyMetric()], type="retriever")
     def query_engine(self, query: str) -> str:
@@ -64,7 +65,7 @@ class MedicalChatbot:
             )
         )
         return "\n".join(contexts)
-    
+
     ... # Other tools here
 
     @observe(type="agent")
@@ -130,7 +131,7 @@ You can now use this thread id to evaluate this trace with the following code:
 
 ```python
 from deepeval.tracing import evaluate_thread
- 
+
 # Use your <thread id> here
 evaluate_thread(thread_id="your-thread-id", metric_collection="Metric Collection")
 ```
