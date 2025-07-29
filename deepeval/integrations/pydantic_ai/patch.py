@@ -32,14 +32,9 @@ def safe_patch_agent_run_method():
         with tracer.start_as_current_span('confident_ai evaluation') as run_span:
             
             result = await original_run(*args, **kwargs)
-
-            llm_test_cases = {
-                    'input': str(args[1]),
-                    'actual_output': str(result.output),
-                }
-            
             run_span.set_attribute('confident_ai.metric_collection', args[0].metric_collection)
-            run_span.set_attribute('confident_ai.llm_test_cases', [json.dumps(llm_test_cases)])
+            run_span.set_attribute('confident_ai.llm_test_case.input', str(args[1]))
+            run_span.set_attribute('confident_ai.llm_test_case.actual_output', str(result.output))
         return result
     
     # Apply the patch
