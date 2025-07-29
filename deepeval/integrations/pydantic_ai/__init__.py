@@ -1,6 +1,6 @@
 from typing import Optional
 from .agent import PydanticAIAgent as Agent
-
+from .patch import safe_patch_agent_run_method
 import deepeval
 # from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 from deepeval.tracing.otel.exporter_v1 import ConfidentSpanExporterV1
@@ -24,6 +24,7 @@ def is_opentelemetry_available():
 def setup_instrumentation(api_key: Optional[str] = None):
     capture_tracing_integration("pydantic_ai")
     is_opentelemetry_available()
+    safe_patch_agent_run_method()
 
     if api_key:
         deepeval.login_with_confident_api_key(api_key)
