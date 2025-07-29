@@ -184,14 +184,56 @@ class TestConfidentSpanExporterV1(unittest.TestCase):
             # Assert
             self.assertEqual(result, SpanExportResult.SUCCESS)
             
-            # Verify spans were processed in reverse order
-            # The mock_convert should be called with spans in reverse order
+            # Verify spans were converted in original order (first loop)
+            # The mock_convert should be called with spans in original order
             expected_calls = [
-                unittest.mock.call(spans[2]),  # span3
+                unittest.mock.call(spans[0]),  # span1
                 unittest.mock.call(spans[1]),  # span2
-                unittest.mock.call(spans[0])   # span1
+                unittest.mock.call(spans[2])   # span3
             ]
             mock_convert.assert_has_calls(expected_calls)
+            
+            # Verify that the conversion happened 3 times (once for each span)
+            self.assertEqual(mock_convert.call_count, 3)
+
+    def test_export_method_processing_order(self):
+        """Test that the export method processes converted spans in reverse order."""
+        # Arrange
+        spans = [
+            self.create_mock_readable_span(name="span1", span_id=1),
+            self.create_mock_readable_span(name="span2", span_id=2),
+            self.create_mock_readable_span(name="span3", span_id=3)
+        ]
+        
+        # Mock trace_manager methods
+        self.mock_trace_manager.get_trace_by_uuid.return_value = None
+        self.mock_trace_manager.active_traces.keys.return_value = ["trace1"]
+        mock_trace = Mock()
+        self.mock_trace_manager.get_trace_by_uuid.return_value = mock_trace
+        
+        # Create mock converted spans that we can track
+        converted_spans = []
+        
+        def mock_convert(span):
+            converted_span = Mock(name=f"converted_{span.name}", trace_uuid="trace1")
+            converted_spans.append(converted_span)
+            return converted_span
+        
+        with patch.object(self.exporter, '_convert_readable_span_to_base_span', side_effect=mock_convert):
+            # Act
+            result = self.exporter.export(spans)
+            
+            # Assert
+            self.assertEqual(result, SpanExportResult.SUCCESS)
+            
+            # Verify that add_span was called with converted spans in reverse order
+            # The export method processes converted_spans in reverse order
+            expected_add_span_calls = [
+                unittest.mock.call(converted_spans[2]),  # converted_span3
+                unittest.mock.call(converted_spans[1]),  # converted_span2
+                unittest.mock.call(converted_spans[0])   # converted_span1
+            ]
+            self.mock_trace_manager.add_span.assert_has_calls(expected_add_span_calls)
 
     def test_export_method_trace_management(self):
         """Test that export method properly manages traces."""
