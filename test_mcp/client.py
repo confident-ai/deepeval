@@ -122,9 +122,9 @@ class MCPClient:
                 turns.append(Turn(
                     role="assistant",
                     content=f"Tool call: {tool_name} with args {tool_args}",
-                    mcp_prompts_called=[{"name": "addingNote", "result": prompt}],
-                    mcp_tools_called=[{"name": tool_name, "args": tool_args, "result": result}],
-                    mcp_resources_called=[{"uri": "file:///project/src/notes.txt", "result": resource}]
+                    mcp_prompts_called=[prompt],
+                    mcp_tools_called=[result],
+                    mcp_resources_called=[resource]
                 ))
 
                 # Send tool result message
@@ -147,23 +147,19 @@ class MCPClient:
         print("Type your queries or 'quit' to exit.")
 
         while True:
-            try:
-                query = input("\nQuery: ").strip()
+            query = input("\nQuery: ").strip()
 
-                if query.lower() == 'quit':
-                    convo_test_case = ConversationalTestCase(
-                        turns=turns,
-                        mcp_data=mcp_data
-                    )
-                    print(convo_test_case)
-                    print("-"*50)
-                    break
+            if query.lower() == 'quit':
+                convo_test_case = ConversationalTestCase(
+                    turns=turns,
+                    mcp_data=mcp_data
+                )
+                print(convo_test_case)
+                print("-"*50)
+                break
 
-                response = await self.process_query(query)
-                print("\n" + response)
-
-            except Exception as e:
-                print(f"\nError: {str(e)}")
+            response = await self.process_query(query)
+            print("\n" + response)
 
     async def cleanup(self):
         """Clean up resources"""
