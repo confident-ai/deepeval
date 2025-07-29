@@ -5,9 +5,10 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, Reada
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import BaseSpan, TraceSpanStatus
-from deepeval.tracing.otel.utils import to_hex_string, set_trace_time, validate_and_prepare_llm_test_cases
+from deepeval.tracing.otel.utils import to_hex_string, set_trace_time
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
+from deepeval.test_case import LLMTestCase
 
 class ConfidentSpanExporterV1(SpanExporter):
     
@@ -56,11 +57,33 @@ class ConfidentSpanExporterV1(SpanExporter):
     def _convert_readable_span_to_base_span(self, span: ReadableSpan):
 
         metric_collection = span.attributes.get("confident_ai.metric_collection", None)
-        llm_test_cases = span.attributes.get("confident_ai.llm_test_cases", None)
-
-        # Convert llm_test_cases to a single llm_test_case (take the first one if multiple)
-        llm_test_case_list = validate_and_prepare_llm_test_cases(llm_test_cases) if llm_test_cases else []
-        llm_test_case = llm_test_case_list[0] if llm_test_case_list else None
+        if not isinstance(metric_collection, str):
+            metric_collection = None
+        
+        llm_test_case = None
+        try:
+            llm_test_case = LLMTestCase(
+                input=span.attributes.get("confident_ai.llm_test_case.input", None),
+                actual_output=span.attributes.get("confident_ai.llm_test_case.actual_output", None),
+                expected_output=span.attributes.get("confident_ai.llm_test_case.expected_output", None),
+                context=span.attributes.get("confident_ai.llm_test_case.context", None),
+                retrieval_context=span.attributes.get("confident_ai.llm_test_case.retrieval_context", None),
+                additional_metadata=span.attributes.get("confident_ai.llm_test_case.additional_metadata", None),
+                # tools_called=span.attributes.get("confident_ai.llm_test_case.tools_called", None), # TODO: handle tools_called
+                comments=span.attributes.get("confident_ai.llm_test_case.comments", None),
+                # expected_tools=span.attributes.get("confident_ai.llm_test_case.expected_tools", None), # TODO: handle expected_tools
+                token_cost=span.attributes.get("confident_ai.llm_test_case.token_cost", None), 
+                completion_time=span.attributes.get("confident_ai.llm_test_case.completion_time", None),
+                name=span.attributes.get("confident_ai.llm_test_case.name", None),
+                tags=span.attributes.get("confident_ai.llm_test_case.tags", None),
+                _trace_dict=span.attributes.get("confident_ai.llm_test_case._trace_dict", None),
+                _dataset_rank=span.attributes.get("confident_ai.llm_test_case._dataset_rank", None),
+                _dataset_alias=span.attributes.get("confident_ai.llm_test_case._dataset_alias", None),
+                _dataset_id=span.attributes.get("confident_ai.llm_test_case._dataset_id", None),
+                _identifier=span.attributes.get("confident_ai.llm_test_case._identifier", None),
+            )
+        except Exception as e:
+            print(f"Error converting llm_test_case: {e}")
         
         return BaseSpan(
             name=span.name,
