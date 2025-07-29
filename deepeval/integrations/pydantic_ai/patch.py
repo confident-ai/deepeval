@@ -24,17 +24,15 @@ def safe_patch_agent_run_method():
             model_used = args[0]._get_model(kwargs.get('model', None))
 
             if isinstance(model_used, InstrumentedModel):
-                instrumentation_settings = model_used.settings
                 tracer = model_used.settings.tracer
             else:
-                instrumentation_settings = None
                 tracer = NoOpTracer()
-        with tracer.start_as_current_span('confident_ai evaluation') as run_span:
+        with tracer.start_as_current_span('confident.evaluation') as run_span:
             
             result = await original_run(*args, **kwargs)
-            run_span.set_attribute('confident_ai.metric_collection', args[0].metric_collection)
-            run_span.set_attribute('confident_ai.llm_test_case.input', str(args[1]))
-            run_span.set_attribute('confident_ai.llm_test_case.actual_output', str(result.output))
+            run_span.set_attribute('confident.metric_collection', args[0].metric_collection)
+            run_span.set_attribute('confident.llm_test_case.input', str(args[1]))
+            run_span.set_attribute('confident.llm_test_case.actual_output', str(result.output))
         return result
     
     # Apply the patch
