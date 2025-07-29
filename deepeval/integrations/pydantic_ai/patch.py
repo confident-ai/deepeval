@@ -1,3 +1,4 @@
+import json
 from deepeval.integrations.pydantic_ai import Agent as PatchedAgent
 from opentelemetry.trace import NoOpTracer
 
@@ -28,19 +29,17 @@ def safe_patch_agent_run_method():
             else:
                 instrumentation_settings = None
                 tracer = NoOpTracer()
+        with tracer.start_as_current_span('confident_ai evaluation') as run_span:
+            
+            result = await original_run(*args, **kwargs)
 
-            run_span = tracer.start_span('confident_ai agent run evaluation')
-        
-        result = await original_run(*args, **kwargs)
-
-        run_span.set_attribute('confident_ai.metric_collection', args[0].metric_collection)
-        run_span.set_attribute('confident_ai.llm_test_cases', [
-            {
-                'input': str(args[1]),
-                'actual_output': str(result.output),
-            }
-        ])
-        run_span.end()
+            llm_test_cases = {
+                    'input': str(args[1]),
+                    'actual_output': str(result.output),
+                }
+            
+            run_span.set_attribute('confident_ai.metric_collection', args[0].metric_collection)
+            run_span.set_attribute('confident_ai.llm_test_cases', [json.dumps(llm_test_cases)])
         return result
     
     # Apply the patch
