@@ -20,19 +20,25 @@ def safe_patch_agent_run_method():
     
     # define patched run method
     async def patched_run(*args, **kwargs):
-        if isinstance(args[0], PatchedAgent):
-            model_used = args[0]._get_model(kwargs.get('model', None))
+        
+        if not isinstance(args[0], PatchedAgent):
+            return await original_run(*args, **kwargs)
+       
+        model_used = args[0]._get_model(kwargs.get('model', None))
 
-            if isinstance(model_used, InstrumentedModel):
-                tracer = model_used.settings.tracer
-            else:
-                tracer = NoOpTracer()
+        if isinstance(model_used, InstrumentedModel):
+            tracer = model_used.settings.tracer
+        else:
+            tracer = NoOpTracer()
+    
         with tracer.start_as_current_span('confident.evaluation') as run_span:
             
             result = await original_run(*args, **kwargs)
+            
             run_span.set_attribute('confident.metric_collection', args[0].metric_collection)
             run_span.set_attribute('confident.llm_test_case.input', str(args[1]))
             run_span.set_attribute('confident.llm_test_case.actual_output', str(result.output))
+    
         return result
     
     # Apply the patch
