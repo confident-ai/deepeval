@@ -8,7 +8,8 @@ from deepeval.tracing.types import BaseSpan, TraceSpanStatus
 from deepeval.tracing.otel.utils import to_hex_string, set_trace_time
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case import LLMTestCase, ToolCall
+from pydantic import ValidationError
 
 class ConfidentSpanExporterV1(SpanExporter):
     
@@ -56,29 +57,54 @@ class ConfidentSpanExporterV1(SpanExporter):
     
     def _convert_readable_span_to_base_span(self, span: ReadableSpan) -> BaseSpan:
 
-        metric_collection = span.attributes.get("confident.metric_collection", None)
+        # extract metric collection
+        metric_collection = span.attributes.get("confident.metric_collection")
         if not isinstance(metric_collection, str):
             metric_collection = None
         
+        # extract llm test case attributes (except additional_metadata, tools_called, expected_tools)
+        input = span.attributes.get("confident.llm_test_case.input")
+        actual_output = span.attributes.get("confident.llm_test_case.actual_output")
+        expected_output = span.attributes.get("confident.llm_test_case.expected_output")
+        context = span.attributes.get("confident.llm_test_case.context")
+        retrieval_context = span.attributes.get("confident.llm_test_case.retrieval_context")
+
+        # validate list of strings for tool calls and expected tools
+        tools_called_attr = span.attributes.get("confident.llm_test_case.tools_called")
+        expected_tools_attr = span.attributes.get("confident.llm_test_case.expected_tools")
+
+        tools_called: List[ToolCall] = []
+        expected_tools: List[ToolCall] = []
+
+        if tools_called_attr and isinstance(tools_called_attr, list):
+            for tool_call_json_str in tools_called_attr:
+                if isinstance(tool_call_json_str, str):
+                    try:
+                        tools_called.append(ToolCall.model_validate_json(tool_call_json_str))
+                    except ValidationError as err:
+                        print(f"Error converting tool call: {err}")
+        
+        if expected_tools_attr and isinstance(expected_tools_attr, list):
+            for tool_call_json_str in expected_tools_attr:
+                if isinstance(tool_call_json_str, str):
+                    try:
+                        expected_tools.append(ToolCall.model_validate_json(tool_call_json_str))
+                    except ValidationError as err:
+                        print(f"Error converting expected tool call: {err}")
+        
         llm_test_case = None
         try:
-            # Only create LLMTestCase if we have valid input and actual_output
-            input_value = span.attributes.get("confident.llm_test_case.input", None)
-            actual_output_value = span.attributes.get("confident.llm_test_case.actual_output", None)
-            
-            if input_value is not None and actual_output_value is not None:
-                llm_test_case = LLMTestCase(
-                    input=input_value,
-                    actual_output=actual_output_value,
-                    expected_output=span.attributes.get("confident.llm_test_case.expected_output", None),
-                    context=span.attributes.get("confident.llm_test_case.context", None),
-                    retrieval_context=span.attributes.get("confident.llm_test_case.retrieval_context", None),
-                    additional_metadata=span.attributes.get("confident.llm_test_case.additional_metadata", None),
-                    # tools_called=span.attributes.get("confident_ai.llm_test_case.tools_called", None), # TODO: handle tools_called
-                    # expected_tools=span.attributes.get("confident_ai.llm_test_case.expected_tools", None), # TODO: handle expected_tools
-                )
+            llm_test_case = LLMTestCase(
+                input=input,
+                actual_output=actual_output,
+                expected_output=expected_output,
+                context=context,
+                retrieval_context=retrieval_context,
+                tools_called=tools_called,
+                expected_tools=expected_tools
+            )
         except Exception as e:
-            print(f"Error converting llm_test_case: {e}")
+            print(f"Error converting llm test case: {e}")
         
         return BaseSpan(
             name=span.name,
