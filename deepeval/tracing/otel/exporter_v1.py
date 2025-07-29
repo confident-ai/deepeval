@@ -1,6 +1,7 @@
 import json
 import typing
 from typing import List
+from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, ReadableSpan
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
@@ -113,7 +114,7 @@ class ConfidentSpanExporterV1(SpanExporter):
             trace_uuid=to_hex_string(span.context.trace_id, 32),
             start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
             end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
-            status=TraceSpanStatus.SUCCESS, # TODO: handle status
+            status=TraceSpanStatus.ERRORED if span.status.status_code == StatusCode.ERROR else TraceSpanStatus.SUCCESS,
             children=[],
             metadata=json.loads(span.to_json()),
             metric_collection=metric_collection,
