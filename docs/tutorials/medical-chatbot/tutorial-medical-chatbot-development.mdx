@@ -14,7 +14,7 @@ We will be using `langchain` and `qdrant` to build our chatbot, with functionali
 We'll also implement our chatbot with an independent **model and system prompt** variable - which we'll be evaluating in the next section.
 
 :::tip
-If you already have an multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation).
+If you already have a multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation).
 :::
 
 ## Setup Your Model
@@ -63,7 +63,7 @@ AIMessage(
 
 ## Create RAG Pipeline For Diagnosis
 
-Since OpenAI models wasn't train specifically on medical knowledge, we'll need to leverage RAG to provide additional context at runtime to diagnose patients that are grounded in context.
+Since OpenAI models weren't specifically trained on medical knowledge, we'll need to leverage RAG to provide additional context at runtime to diagnose patients that are grounded in context.
 
 :::info
 We'll be using a text version of [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) as our knowledge base in this example. You will need to download it locally and convert it to a `.txt` file.
@@ -240,10 +240,11 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 
 Then we'll combine the agent setup and memory functionality into one clean implementation, including the `retrieve_knowledge` and `create_appointment` tools in our agent:
 
-```python title="main.py" {19,26,29}
+```python title="main.py" {20,28-29,33}
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.tools import StructuredTool
 ...
 
 class MedicalChatbot:
@@ -266,7 +267,10 @@ class MedicalChatbot:
         prompt = ChatPromptTemplate.from_messages([("system", self.system_prompt), MessagesPlaceholder(variable_name="chat_history"), ("human", "{input}")])
 
         # Create agent
-        tools = [self.retrieve_knowledge, self.create_appointment]
+        tools = [
+            StructuredTool.from_function(func=self.retrieve_knowledge), 
+            StructuredTool.from_function(func=self.create_appointment)
+        ]
         agent = create_tool_calling_agent(self.model, tools, prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools)
         self.agent_with_memory = RunnableWithMessageHistory(
@@ -300,7 +304,7 @@ def start_session(session_id: Optional[str] = None):
         if user_input.lower() == 'exit':
             break
 
-        response = self.agent_with_memory.invoke(
+        response = chatbot.agent_with_memory.invoke(
             {"input": user_input},
             config={"configurable": {"session_id": session_id}}
         )
