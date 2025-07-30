@@ -557,6 +557,8 @@ class TraceManager:
 
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
+            print("--------------------------------")
+            print(api_span)
 
             # Categorize spans by type
             if isinstance(span, AgentSpan):
@@ -652,9 +654,12 @@ class TraceManager:
             # For LlmSpan, input is attributes.input, output is attributes.output
             if span.attributes:
                 input_data = span.attributes.input
-                output_data = make_json_serializable(span.attributes.output)
+                output_data = span.attributes.output
+        elif isinstance(span, AgentSpan):
+            input_data = span.attributes.input
+            output_data = span.attributes.output
         else:
-            # For BaseSpan, Agent, or Tool types, use the standard logic
+            # For BaseSpan, or Tool types, use the standard logic
             input_data = span.input
             output_data = span.output
 
