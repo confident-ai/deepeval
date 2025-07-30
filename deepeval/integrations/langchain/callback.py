@@ -88,11 +88,13 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.remove_span(str(span.uuid))
 
         ######## Conditions to add metric_collection to span ########
-        if self.metric_collection and span.parent_uuid is None: # if span is a root span
+        if (
+            self.metric_collection and span.parent_uuid is None
+        ):  # if span is a root span
             span.metric_collection = self.metric_collection
 
         ######## Conditions to add metrics to span ########
-        if self.metrics and span.parent_uuid is None: # if span is a root span
+        if self.metrics and span.parent_uuid is None:  # if span is a root span
             span.metrics = self.metrics
 
             # prepare test_case for task_completion metric

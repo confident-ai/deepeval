@@ -176,6 +176,14 @@ from deepeval import evaluate
 goldens = [
     Golden(input="What's the weather like in SF?"),
     Golden(input="Tell me about Elon Musk."),
+    #    Golden(input="What's the weather like in SF?"),
+    # Golden(input="Tell me about Elon Musk."),
+    #    Golden(input="What's the weather like in SF?"),
+    # Golden(input="Tell me about Elon Musk."),
+    #    Golden(input="What's the weather like in SF?"),
+    # Golden(input="Tell me about Elon Musk."),
+    #    Golden(input="What's the weather like in SF?"),
+    # Golden(input="Tell me about Elon Musk.")
 ]
 
 # # Run Async
@@ -202,7 +210,7 @@ goldens = [
 evaluate(
     goldens=goldens,
     observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True),
+    async_config=AsyncConfig(run_async=False),
     display_config=DisplayConfig(show_indicator=True),
 )
 # evaluate(
