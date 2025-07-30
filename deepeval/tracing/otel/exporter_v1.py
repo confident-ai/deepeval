@@ -17,7 +17,6 @@ from deepeval.feedback.feedback import Feedback
 class ConfidentSpanExporterV1(SpanExporter):
     
     def __init__(self, api_key: Optional[str] = None):
-        
         capture_tracing_integration("deepeval.tracing.otel.exporter_v1")
         peb.init_clock_bridge()
         
@@ -35,12 +34,20 @@ class ConfidentSpanExporterV1(SpanExporter):
         spans_list: List[BaseSpan] = []
         
         for span in spans:
-            # TODO: map resource attributes for the trace 
+            resource_attributes = span.resource.attributes
+            
+            environment = resource_attributes.get("confident.environment")
+            if environment and isinstance(environment, str):
+                trace_manager.configure(environment=environment)
+            
+            sampling_rate = resource_attributes.get("confident.sampling_rate")
+            if sampling_rate and isinstance(sampling_rate, float):
+                trace_manager.configure(sampling_rate=sampling_rate)
+            
             spans_list.append(self._convert_readable_span_to_base_span(span))
         
         # list starts from root span
         for base_span in reversed(spans_list):
-            # TODO: use resource attributes to change the trace
             if not trace_manager.get_trace_by_uuid(base_span.trace_uuid):
                 trace_manager.start_new_trace(trace_uuid=base_span.trace_uuid)
             trace_manager.add_span(base_span)
