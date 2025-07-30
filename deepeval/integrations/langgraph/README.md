@@ -4,23 +4,23 @@ This module provides enhanced tracing and evaluation capabilities for LangGraph 
 
 ## Features
 
-### 🎯 **Graph-Level Tracing**
+### **Graph-Level Tracing**
 - Track complete graph execution from start to finish
 - Monitor graph compilation and configuration
 - Capture execution mode (sequential, parallel, conditional)
 
-### 🔍 **Node-Level Tracing**
+### **Node-Level Tracing**
 - Individual node execution tracking
 - Node dependencies and execution order
 - Conditional logic and parallel group monitoring
 - Performance metrics per node
 
-### 🔄 **State Transition Tracking**
+### **State Transition Tracking**
 - Monitor state changes between nodes
 - Track routing decisions and conditions
 - Capture state snapshots for debugging
 
-### 📊 **Enhanced Observability**
+### **Enhanced Observability**
 - Visual graph execution traces on Confident AI
 - Performance bottlenecks identification
 - Cost analysis and optimization insights
