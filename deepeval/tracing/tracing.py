@@ -655,7 +655,7 @@ class TraceManager:
             if span.attributes:
                 input_data = span.attributes.input
                 output_data = span.attributes.output
-        elif isinstance(span, AgentSpan):
+        elif isinstance(span, AgentSpan) and span.attributes: # change this after integrations code is changed
             input_data = span.attributes.input
             output_data = span.attributes.output
         else:
