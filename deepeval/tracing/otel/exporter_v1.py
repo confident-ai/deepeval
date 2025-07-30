@@ -11,8 +11,18 @@ from deepeval.tracing.otel.utils import to_hex_string, set_trace_time, validate_
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.test_case import LLMTestCase, ToolCall
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 from deepeval.feedback.feedback import Feedback
+
+class TraceAttributes(BaseModel):
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    thread_id: Optional[str] = None
+    user_id: Optional[str] = None
+
+class BaseSpanWrapper:
+    base_span: BaseSpan
+    trace_attributes: Optional[TraceAttributes] = None
 
 class ConfidentSpanExporterV1(SpanExporter):
     
@@ -31,11 +41,12 @@ class ConfidentSpanExporterV1(SpanExporter):
             timeout_millis: int = 30000
         ) -> SpanExportResult:
         
-        spans_list: List[BaseSpan] = []
+        spans_wrappers_list: List[BaseSpanWrapper] = []
         
         for span in spans:
+
+            # confugarion are attached to the resource attributes
             resource_attributes = span.resource.attributes
-            
             environment = resource_attributes.get("confident.environment")
             if environment and isinstance(environment, str):
                 trace_manager.configure(environment=environment)
@@ -44,15 +55,25 @@ class ConfidentSpanExporterV1(SpanExporter):
             if sampling_rate and isinstance(sampling_rate, float):
                 trace_manager.configure(sampling_rate=sampling_rate)
             
-            spans_list.append(self._convert_readable_span_to_base_span(span))
+            spans_wrappers_list.append(self._convert_readable_span_to_base_span(span))
         
         # list starts from root span
-        for base_span in reversed(spans_list):
-            if not trace_manager.get_trace_by_uuid(base_span.trace_uuid):
-                trace_manager.start_new_trace(trace_uuid=base_span.trace_uuid)
-            trace_manager.add_span(base_span)
-            trace_manager.add_span_to_trace(base_span)
+        for base_span_wrapper in reversed(spans_wrappers_list):
+            current_trace = trace_manager.get_trace_by_uuid(base_span_wrapper.base_span.trace_uuid)
+            if not current_trace:
+                current_trace = trace_manager.start_new_trace(trace_uuid=base_span_wrapper.base_span.trace_uuid)
+            
+            # set the trace attributes
+            if base_span_wrapper.trace_attributes:
+                current_trace.name = base_span_wrapper.trace_attributes.name
+                current_trace.tags = base_span_wrapper.trace_attributes.tags
+                current_trace.thread_id = base_span_wrapper.trace_attributes.thread_id
+                current_trace.user_id = base_span_wrapper.trace_attributes.user_id
+                
+            trace_manager.add_span(base_span_wrapper.base_span)
+            trace_manager.add_span_to_trace(base_span_wrapper.base_span)
             # no removing span because it can be parent of other spans
+
 
         # safely end all active traces
         active_traces_keys = list(trace_manager.active_traces.keys())
@@ -71,7 +92,7 @@ class ConfidentSpanExporterV1(SpanExporter):
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
     
-    def _convert_readable_span_to_base_span(self, span: ReadableSpan) -> BaseSpan:
+    def _convert_readable_span_to_base_span(self, span: ReadableSpan) -> BaseSpanWrapper:
         base_span = None
         try:
             base_span = self._prepare_boilerplate_base_span(span)
@@ -157,15 +178,29 @@ class ConfidentSpanExporterV1(SpanExporter):
             except Exception as e:
                 print(f"Invalid LLMTestCase data: {e}")
         
-        base_span.parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
-        base_span.name=span.name,
-        base_span.metadata=json.loads(span.to_json()),
-        base_span.error=error,
-        base_span.llm_test_case=llm_test_case,
-        base_span.metric_collection=metric_collection,
-        base_span.feedback=feedback,
+        base_span.parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None
+        base_span.name=span.name
+        base_span.metadata=json.loads(span.to_json())
+        base_span.error=error
+        base_span.llm_test_case=llm_test_case
+        base_span.metric_collection=metric_collection
+        base_span.feedback=feedback
 
-        return base_span
+        # extract trace attributes
+        trace_attributes = None
+        trace_attr_json_str = span.attributes.get("confident.trace.attributes")
+        if trace_attr_json_str:
+            try:
+                trace_attributes = TraceAttributes.model_validate_json(trace_attr_json_str)
+            except ValidationError as err:
+                print(f"Error converting trace attributes: {err}")
+
+        base_span_wrapper = BaseSpanWrapper(
+            base_span=base_span,
+            trace_attributes=trace_attributes
+        )
+
+        return base_span_wrapper
     
     def _prepare_boilerplate_base_span(self, span: ReadableSpan) -> Optional[BaseSpan]:
         span_type = span.attributes.get("confident.span.type", "base")
