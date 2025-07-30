@@ -62,6 +62,35 @@ class ToolAttributes(BaseModel):
     output: Optional[Any] = None
 
 
+class GraphAttributes(BaseModel):
+    """Attributes specific to LangGraph execution"""
+    graph_id: str
+    compilation_time: Optional[float] = None
+    total_nodes: int
+    execution_strategy: str
+    state_schema: Optional[Dict[str, Any]] = None
+
+
+class NodeAttributes(BaseModel):
+    """Attributes specific to LangGraph node execution"""
+    node_id: str
+    node_type: str
+    dependencies: List[str]
+    execution_order: int
+    conditional_logic: Optional[str] = None
+    parallel_group: Optional[str] = None
+
+
+class StateTransitionAttributes(BaseModel):
+    """Attributes specific to LangGraph state transitions"""
+    from_node: str
+    to_node: str
+    state_changes: Dict[str, Any]
+    transition_condition: Optional[str] = None
+    routing_decision: Optional[str] = None
+
+
 Attributes = Union[
-    AgentAttributes, LlmAttributes, RetrieverAttributes, ToolAttributes
+    AgentAttributes, LlmAttributes, RetrieverAttributes, ToolAttributes,
+    GraphAttributes, NodeAttributes, StateTransitionAttributes
 ]
