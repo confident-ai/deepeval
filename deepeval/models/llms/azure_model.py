@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import openai
 
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.openai_model import (
     structured_outputs_models,
     json_mode_models,
@@ -38,21 +38,21 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     ):
         # fetch Azure deployment parameters
         model_name = model_name or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_MODEL_NAME
+            ModelKeyValues.AZURE_MODEL_NAME
         )
         self.deployment_name = deployment_name or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_DEPLOYMENT_NAME
+            ModelKeyValues.AZURE_DEPLOYMENT_NAME
         )
         self.azure_openai_api_key = (
             azure_openai_api_key
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.AZURE_OPENAI_API_KEY)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.AZURE_OPENAI_API_KEY)
         )
         self.openai_api_version = (
             openai_api_version
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.OPENAI_API_VERSION)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
         )
         self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.AZURE_OPENAI_ENDPOINT
+            ModelKeyValues.AZURE_OPENAI_ENDPOINT
         )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")

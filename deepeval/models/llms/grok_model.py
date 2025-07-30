@@ -2,7 +2,7 @@ from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 import os
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
 
@@ -51,14 +51,14 @@ class GrokModel(DeepEvalBaseLLM):
         temperature: float = 0,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GROK_MODEL_NAME
+            ModelKeyValues.GROK_MODEL_NAME
         )
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Grok models: {', '.join(model_pricing.keys())}"
             )
         temperature_from_key = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.TEMPERATURE
+            ModelKeyValues.TEMPERATURE
         )
         if temperature_from_key is None:
             self.temperature = temperature

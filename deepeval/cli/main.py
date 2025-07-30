@@ -8,7 +8,7 @@ import string
 import socket
 import typer
 from enum import Enum
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
+from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues, EmbeddingKeyValues, ModelKeyValues
 from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
@@ -179,13 +179,13 @@ def set_openai_env(
     ),
 ):
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_OPENAI_MODEL, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.OPENAI_MODEL_NAME, model)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_OPENAI_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_MODEL_NAME, model)
     KEY_FILE_HANDLER.write_key(
-        KeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_output_token)
+        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_output_token)
     )
     KEY_FILE_HANDLER.write_key(
-        KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_input_token)
+        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_input_token)
     )
     print(
         f":raising_hands: Congratulations! You're now using OpenAI's `{model}` for all evals that require an LLM."
@@ -194,10 +194,10 @@ def set_openai_env(
 
 @app.command(name="unset-openai")
 def unset_openai_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_OPENAI_MODEL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_COST_PER_INPUT_TOKEN)
-    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_OPENAI_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN)
     print(
         ":raising_hands: Congratulations! You're now using default OpenAI settings on DeepEval for all evals that require an LLM."
     )
@@ -231,24 +231,24 @@ def set_azure_openai_env(
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(
-        KeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
+        ModelKeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
     )
-    KEY_FILE_HANDLER.write_key(KeyValues.AZURE_MODEL_NAME, openai_model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.AZURE_MODEL_NAME, openai_model_name)
     KEY_FILE_HANDLER.write_key(
-        KeyValues.AZURE_OPENAI_ENDPOINT, azure_openai_endpoint
+        ModelKeyValues.AZURE_OPENAI_ENDPOINT, azure_openai_endpoint
     )
-    KEY_FILE_HANDLER.write_key(KeyValues.OPENAI_API_VERSION, openai_api_version)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_API_VERSION, openai_api_version)
     KEY_FILE_HANDLER.write_key(
-        KeyValues.AZURE_DEPLOYMENT_NAME, azure_deployment_name
+        ModelKeyValues.AZURE_DEPLOYMENT_NAME, azure_deployment_name
     )
 
     if azure_model_version is not None:
         KEY_FILE_HANDLER.write_key(
-            KeyValues.AZURE_MODEL_VERSION, azure_model_version
+            ModelKeyValues.AZURE_MODEL_VERSION, azure_model_version
         )
 
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "NO")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "NO")
 
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI for all evals that require an LLM."
@@ -265,11 +265,11 @@ def set_azure_openai_embedding_env(
 ):
     clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(
-        KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
+        EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
     )
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "NO")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "NO")
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
     )
@@ -277,14 +277,13 @@ def set_azure_openai_embedding_env(
 
 @app.command(name="unset-azure-openai")
 def unset_azure_openai_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_OPENAI_ENDPOINT)
-    KEY_FILE_HANDLER.remove_key(KeyValues.OPENAI_API_VERSION)
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_DEPLOYMENT_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_MODEL_VERSION)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_AZURE_OPENAI)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_ENDPOINT)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_API_VERSION)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_DEPLOYMENT_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_MODEL_VERSION)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_AZURE_OPENAI)
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
@@ -293,8 +292,8 @@ def unset_azure_openai_env():
 
 @app.command(name="unset-azure-openai-embedding")
 def unset_azure_openai_embedding_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING)
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
@@ -317,11 +316,11 @@ def set_ollama_model_env(
     ),
 ):
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_BASE_URL, base_url)
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_API_KEY, "ollama")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "NO")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_API_KEY, "ollama")
     print(
         ":raising_hands: Congratulations! You're now using a local Ollama model for all evals that require an LLM."
     )
@@ -329,10 +328,10 @@ def set_ollama_model_env(
 
 @app.command(name="unset-ollama")
 def unset_ollama_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_LOCAL_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_API_KEY)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
@@ -351,11 +350,11 @@ def set_ollama_embeddings_env(
     ),
 ):
     clear_embedding_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_API_KEY, "ollama")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, "ollama")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "YES")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
 
     print(
         ":raising_hands: Congratulations! You're now using Ollama embeddings for all evals that require text embeddings."
@@ -364,10 +363,10 @@ def set_ollama_embeddings_env(
 
 @app.command(name="unset-ollama-embeddings")
 def unset_ollama_embeddings_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_BASE_URL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_EMBEDDINGS)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
@@ -397,14 +396,14 @@ def set_local_model_env(
     ),
 ):
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_BASE_URL, base_url)
     if api_key:
-        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_API_KEY, api_key)
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_API_KEY, api_key)
     if format:
-        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_FORMAT, format)
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_FORMAT, format)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "NO")
     print(
         ":raising_hands: Congratulations! You're now using a local model for all evals that require an LLM."
     )
@@ -412,11 +411,11 @@ def set_local_model_env(
 
 @app.command(name="unset-local-model")
 def unset_local_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_BASE_URL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_MODEL_FORMAT)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_FORMAT)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_LOCAL_MODEL)
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
@@ -441,10 +440,10 @@ def set_grok_model_env(
     ),
 ):
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.GROK_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.GROK_API_KEY, api_key)
-    KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_GROK_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.GROK_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.GROK_API_KEY, api_key)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.TEMPERATURE, str(temperature))
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GROK_MODEL, "YES")
     print(
         ":raising_hands: Congratulations! You're now using a Grok model for all evals that require an LLM."
     )
@@ -452,10 +451,10 @@ def set_grok_model_env(
 
 @app.command(name="unset-grok")
 def unset_grok_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.GROK_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.GROK_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.TEMPERATURE)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_GROK_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GROK_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GROK_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.TEMPERATURE)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_GROK_MODEL)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
@@ -479,10 +478,10 @@ def set_moonshot_model_env(
     ),
 ):
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.MOONSHOT_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.MOONSHOT_API_KEY, api_key)
-    KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_MOONSHOT_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.MOONSHOT_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.MOONSHOT_API_KEY, api_key)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.TEMPERATURE, str(temperature))
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_MOONSHOT_MODEL, "YES")
     print(
         ":raising_hands: Congratulations! You're now using a Moonshot model for all evals that require an LLM."
     )
@@ -490,10 +489,10 @@ def set_moonshot_model_env(
 
 @app.command(name="unset-moonshot")
 def unset_moonshot_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.MOONSHOT_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.MOONSHOT_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.TEMPERATURE)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_MOONSHOT_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.MOONSHOT_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.MOONSHOT_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.TEMPERATURE)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_MOONSHOT_MODEL)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
@@ -517,10 +516,10 @@ def set_deepseek_model_env(
     ),
 ):
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.DEEPSEEK_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.DEEPSEEK_API_KEY, api_key)
-    KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_DEEPSEEK_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.DEEPSEEK_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.DEEPSEEK_API_KEY, api_key)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.TEMPERATURE, str(temperature))
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_DEEPSEEK_MODEL, "YES")
     print(
         ":raising_hands: Congratulations! You're now using a DeepSeek model for all evals that require an LLM."
     )
@@ -528,10 +527,10 @@ def set_deepseek_model_env(
 
 @app.command(name="unset-deepseek")
 def unset_deepseek_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.DEEPSEEK_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.DEEPSEEK_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.TEMPERATURE)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_DEEPSEEK_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.DEEPSEEK_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.DEEPSEEK_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.TEMPERATURE)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_DEEPSEEK_MODEL)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
@@ -555,13 +554,13 @@ def set_local_embeddings_env(
     ),
 ):
     clear_embedding_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
     if api_key:
-        KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_API_KEY, api_key)
+        KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, api_key)
 
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_EMBEDDINGS, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "YES")
+    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
 
     print(
         ":raising_hands: Congratulations! You're now using local embeddings for all evals that require text embeddings."
@@ -570,10 +569,10 @@ def set_local_embeddings_env(
 
 @app.command(name="unset-local-embeddings")
 def unset_local_embeddings_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_BASE_URL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LOCAL_EMBEDDING_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LOCAL_EMBEDDINGS)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
@@ -609,21 +608,21 @@ def set_gemini_model_env(
             err=True,
         )
         raise typer.Exit(code=1)
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_GEMINI_MODEL, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GEMINI_MODEL, "YES")
     if model_name is not None:
-        KEY_FILE_HANDLER.write_key(KeyValues.GEMINI_MODEL_NAME, model_name)
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.GEMINI_MODEL_NAME, model_name)
     if google_api_key is not None:
-        KEY_FILE_HANDLER.write_key(KeyValues.GOOGLE_API_KEY, google_api_key)
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.GOOGLE_API_KEY, google_api_key)
     else:
-        KEY_FILE_HANDLER.write_key(KeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES")
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES")
 
     if google_cloud_project is not None:
         KEY_FILE_HANDLER.write_key(
-            KeyValues.GOOGLE_CLOUD_PROJECT, google_cloud_project
+            ModelKeyValues.GOOGLE_CLOUD_PROJECT, google_cloud_project
         )
     if google_cloud_location is not None:
         KEY_FILE_HANDLER.write_key(
-            KeyValues.GOOGLE_CLOUD_LOCATION, google_cloud_location
+            ModelKeyValues.GOOGLE_CLOUD_LOCATION, google_cloud_location
         )
     print(
         ":raising_hands: Congratulations! You're now using a Gemini model for all evals that require an LLM."
@@ -632,12 +631,12 @@ def set_gemini_model_env(
 
 @app.command(name="unset-gemini")
 def unset_gemini_model_env():
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_GEMINI_MODEL)
-    KEY_FILE_HANDLER.remove_key(KeyValues.GEMINI_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_CLOUD_PROJECT)
-    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_CLOUD_LOCATION)
-    KEY_FILE_HANDLER.remove_key(KeyValues.GOOGLE_GENAI_USE_VERTEXAI)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_GEMINI_MODEL)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GEMINI_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_CLOUD_PROJECT)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_CLOUD_LOCATION)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI)
 
     print(
         ":raised_hands: Gemini model has been unset. You're now using regular OpenAI for all evals that require an LLM."
@@ -656,15 +655,15 @@ def set_litellm_model_env(
 ):
     """Set up a LiteLLM model for evaluation."""
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_MODEL_NAME, model_name)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.LITELLM_MODEL_NAME, model_name)
     if api_key:
-        KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_API_KEY, api_key)
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.LITELLM_API_KEY, api_key)
     if api_base:
-        KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_API_BASE, api_base)
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LITELLM, "YES")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_AZURE_OPENAI, "NO")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "NO")
-    KEY_FILE_HANDLER.write_key(KeyValues.USE_GEMINI_MODEL, "NO")
+        KEY_FILE_HANDLER.write_key(ModelKeyValues.LITELLM_API_BASE, api_base)
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LITELLM, "YES")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "NO")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "NO")
+    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GEMINI_MODEL, "NO")
     print(
         ":raising_hands: Congratulations! You're now using a LiteLLM model for all evals that require an LLM."
     )
@@ -673,10 +672,10 @@ def set_litellm_model_env(
 @app.command(name="unset-litellm")
 def unset_litellm_model_env():
     """Remove LiteLLM model configuration."""
-    KEY_FILE_HANDLER.remove_key(KeyValues.LITELLM_MODEL_NAME)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LITELLM_API_KEY)
-    KEY_FILE_HANDLER.remove_key(KeyValues.LITELLM_API_BASE)
-    KEY_FILE_HANDLER.remove_key(KeyValues.USE_LITELLM)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LITELLM_MODEL_NAME)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LITELLM_API_KEY)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.LITELLM_API_BASE)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_LITELLM)
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
     )
