@@ -225,26 +225,26 @@ def main():
         try:
             test()
             passed += 1
-            print(f"✅ {test.__name__} passed")
+            print(f" {test.__name__} passed")
         except Exception as e:
-            print(f"❌ {test.__name__} failed: {e}")
+            print(f" {test.__name__} failed: {e}")
     
-    print(f"\n📊 Test Results: {passed}/{total} tests passed")
+    print(f"\n Test Results: {passed}/{total} tests passed")
     
     if passed == total:
-        print("\n🎉 All tests completed successfully!")
-        print("\n📋 What's been verified:")
+        print("\n All tests completed successfully!")
+        print("\n What's been verified:")
         print("   • Callback handler creation and configuration")
         print("   • Graph metadata extraction")
         print("   • New span types and classes availability")
         print("   • New attributes availability")
         print("   • LangGraph compatibility")
         print("   • Tracing configuration options")
-        print("\n💡 Next steps:")
+        print("\n Next steps:")
         print("   • Set OPENAI_API_KEY to test with real API calls")
         print("   • Run the full test suite with API integration")
     else:
-        print(f"\n⚠️  {total - passed} test(s) failed. Check the output above.")
+        print(f"\n {total - passed} test(s) failed. Check the output above.")
     
     return passed == total
 
