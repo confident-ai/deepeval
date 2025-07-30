@@ -40,7 +40,8 @@ class ConfidentSpanExporter(SpanExporter):
     def export(
             self,
             spans: typing.Sequence[ReadableSpan],
-            timeout_millis: int = 30000
+            timeout_millis: int = 30000, 
+            api_key: Optional[str] = None
         ) -> SpanExportResult:
         
         spans_wrappers_list: List[BaseSpanWrapper] = []
@@ -64,6 +65,9 @@ class ConfidentSpanExporter(SpanExporter):
             current_trace = trace_manager.get_trace_by_uuid(base_span_wrapper.base_span.trace_uuid)
             if not current_trace:
                 current_trace = trace_manager.start_new_trace(trace_uuid=base_span_wrapper.base_span.trace_uuid)
+            
+            if api_key:
+                current_trace.confident_api_key = api_key
             
             # set the trace attributes
             if base_span_wrapper.trace_attributes:
