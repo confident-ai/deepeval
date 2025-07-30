@@ -33,7 +33,7 @@ class ConfidentSpanExporter(SpanExporter):
         peb.init_clock_bridge()
         
         if api_key:
-            deepeval.login_with_confident_api_key(api_key) # TODO: send api keys dynamically to get it compatible with the collector framework
+            deepeval.login_with_confident_api_key(api_key)
         
         super().__init__()
 
