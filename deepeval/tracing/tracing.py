@@ -557,8 +557,6 @@ class TraceManager:
 
             # Convert BaseSpan to BaseApiSpan
             api_span = self._convert_span_to_api_span(span)
-            print("--------------------------------")
-            print(api_span)
 
             # Categorize spans by type
             if isinstance(span, AgentSpan):
