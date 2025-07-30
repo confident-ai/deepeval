@@ -18,7 +18,13 @@ from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
 )
-from deepeval.cli.utils import render_login_message, upload_and_open_link, PROD
+from deepeval.cli.utils import (
+    render_login_message,
+    upload_and_open_link,
+    PROD,
+    clear_evaluation_model_keys,
+    clear_embedding_model_keys,
+)
 
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
@@ -172,6 +178,7 @@ def set_openai_env(
         ..., "--cost_per_output_token", help="OpenAI cost per output token"
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.USE_OPENAI_MODEL, "YES")
     KEY_FILE_HANDLER.write_key(KeyValues.OPENAI_MODEL_NAME, model)
     KEY_FILE_HANDLER.write_key(
@@ -222,6 +229,7 @@ def set_azure_openai_env(
         None, "--model-version", help="Azure model version (optional)"
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
     )
@@ -255,6 +263,7 @@ def set_azure_openai_embedding_env(
         help="Azure embedding deployment name",
     ),
 ):
+    clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(
         KeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
@@ -307,6 +316,7 @@ def set_ollama_model_env(
         help="Base URL for the local model API",
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_BASE_URL, base_url)
     KEY_FILE_HANDLER.write_key(KeyValues.USE_LOCAL_MODEL, "YES")
@@ -340,6 +350,7 @@ def set_ollama_embeddings_env(
         help="Base URL for the Ollama embedding model API",
     ),
 ):
+    clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_API_KEY, "ollama")
@@ -385,6 +396,7 @@ def set_local_model_env(
         help="Format of the response from the local model (default: json)",
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_MODEL_BASE_URL, base_url)
     if api_key:
@@ -428,6 +440,7 @@ def set_grok_model_env(
         0, "--temperature", help="Temperature for the Grok model"
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.GROK_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.GROK_API_KEY, api_key)
     KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
@@ -465,6 +478,7 @@ def set_moonshot_model_env(
         0, "--temperature", help="Temperature for the Moonshot model"
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.MOONSHOT_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.MOONSHOT_API_KEY, api_key)
     KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
@@ -502,6 +516,7 @@ def set_deepseek_model_env(
         0, "--temperature", help="Temperature for the DeepSeek model"
     ),
 ):
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.DEEPSEEK_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.DEEPSEEK_API_KEY, api_key)
     KEY_FILE_HANDLER.write_key(KeyValues.TEMPERATURE, str(temperature))
@@ -539,6 +554,7 @@ def set_local_embeddings_env(
         None, "--api-key", help="API key for the local embeddings (if required)"
     ),
 ):
+    clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(KeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
     if api_key:
@@ -584,6 +600,7 @@ def set_gemini_model_env(
         None, "--location", help="Google Cloud location"
     ),
 ):
+    clear_evaluation_model_keys()
     if not google_api_key and not (
         google_cloud_project and google_cloud_location
     ):
@@ -638,6 +655,7 @@ def set_litellm_model_env(
     ),
 ):
     """Set up a LiteLLM model for evaluation."""
+    clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_MODEL_NAME, model_name)
     if api_key:
         KEY_FILE_HANDLER.write_key(KeyValues.LITELLM_API_KEY, api_key)
