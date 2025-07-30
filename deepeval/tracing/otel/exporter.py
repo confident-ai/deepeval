@@ -385,18 +385,20 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             available_tools: List[str] = []
-            try:
-                for tool in available_tools_attr:
-                    available_tools.append(str(tool))
-            except Exception as e:
-                print(f"Error converting available tools: {e}")
+            if available_tools_attr:
+                try:
+                    for tool in available_tools_attr:
+                        available_tools.append(str(tool))        
+                except Exception as e:
+                    print(f"Error converting available tools: {e}")
 
             agent_handoffs: List[str] = []
-            try:
-                for handoff in agent_handoffs_attr:
-                    agent_handoffs.append(str(handoff))
-            except Exception as e:
-                print(f"Error converting agent handoffs: {e}")
+            if agent_handoffs_attr:
+                try:
+                    for handoff in agent_handoffs_attr:
+                        agent_handoffs.append(str(handoff))
+                except Exception as e:
+                    print(f"Error converting agent handoffs: {e}")
 
             agent_span = AgentSpan(
                 uuid=uuid,
