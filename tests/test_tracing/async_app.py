@@ -72,7 +72,7 @@ async def custom_research_agent(query: str):
 
 @observe(
     available_tools=["get_weather", "get_location"],
-    metrics=[TaskCompletionMetric(), AnswerRelevancyMetric()],
+    metrics=[AnswerRelevancyMetric()],
 )
 async def weather_agent(query: str):
     update_current_span(

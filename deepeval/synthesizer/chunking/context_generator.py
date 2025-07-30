@@ -196,11 +196,12 @@ class ContextGenerator:
             )
 
             # Update progress bar total length for context generation after determining number of contexts
-            progress.update(
-                pbar_generate_contexts_id,
-                total=(self.max_retries + max_context_size - 1) * num_contexts,
-                completed=0,
-            )
+            if progress and pbar_generate_contexts_id:
+                progress.update(
+                    pbar_generate_contexts_id,
+                    total=(self.max_retries + max_context_size - 1) * num_contexts,
+                    completed=0,
+                )
 
             # Generate contexts for each source file
             for (
@@ -330,11 +331,12 @@ class ContextGenerator:
             )
 
             # Update progress bar total length for context generation after determining number of contexts
-            progress.update(
-                pbar_generate_contexts_id,
-                total=(self.max_retries + max_context_size - 1) * num_contexts,
-                completed=0,
-            )
+            if progress and pbar_generate_contexts_id:
+                progress.update(
+                    pbar_generate_contexts_id,
+                    total=(self.max_retries + max_context_size - 1) * num_contexts,
+                    completed=0,
+                )
 
             # Generate contexts for each source file
             tasks = []

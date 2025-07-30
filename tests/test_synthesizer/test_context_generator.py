@@ -11,7 +11,7 @@ from deepeval.models.embedding_models.openai_embedding_model import (
 @pytest.fixture
 def context_generator_fixture():
     generator = ContextGenerator(
-        document_paths=["../synthesizer_data/pdf_example.pdf"],
+        document_paths=["./synthesizer_data/pdf_example.pdf"],
         embedder=OpenAIEmbeddingModel(),
     )
     yield generator
@@ -19,7 +19,7 @@ def context_generator_fixture():
 
 @pytest.fixture
 def ensure_synthesizer_data():
-    data_dir = "../synthesizer_data"
+    data_dir = "./synthesizer_data"
     pdf_path = f"{data_dir}/pdf_example.pdf"
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)

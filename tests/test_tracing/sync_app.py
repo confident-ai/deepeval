@@ -161,7 +161,7 @@ def custom_research_agent(query: str):
 @observe(
     type="agent",
     available_tools=["get_weather", "get_location"],
-    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+    metrics=[BiasMetric()],
 )
 def weather_agent(query: str):
     try:
@@ -221,7 +221,7 @@ def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metrics=[AnswerRelevancyMetric(), BiasMetric()],
+    metrics=[AnswerRelevancyMetric()],
 )
 def meta_agent(input: str):
     try:
