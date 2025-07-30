@@ -199,7 +199,8 @@ class ContextGenerator:
             if progress and pbar_generate_contexts_id:
                 progress.update(
                     pbar_generate_contexts_id,
-                    total=(self.max_retries + max_context_size - 1) * num_contexts,
+                    total=(self.max_retries + max_context_size - 1)
+                    * num_contexts,
                     completed=0,
                 )
 
@@ -334,7 +335,8 @@ class ContextGenerator:
             if progress and pbar_generate_contexts_id:
                 progress.update(
                     pbar_generate_contexts_id,
-                    total=(self.max_retries + max_context_size - 1) * num_contexts,
+                    total=(self.max_retries + max_context_size - 1)
+                    * num_contexts,
                     completed=0,
                 )
 

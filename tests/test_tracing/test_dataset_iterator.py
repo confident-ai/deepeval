@@ -12,6 +12,7 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
+
 def test_async_run_async():
     for golden in dataset(
         goldens=goldens, async_config=AsyncConfig(run_async=True)

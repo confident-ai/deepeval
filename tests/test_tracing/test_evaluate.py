@@ -10,6 +10,7 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
+
 def test_async_run_async():
     evaluate(
         goldens=goldens,

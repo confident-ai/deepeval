@@ -13,7 +13,8 @@ from deepeval.dataset import Golden
 
 
 TABLES = {
-    "students": ["""CREATE TABLE Students (
+    "students": [
+        """CREATE TABLE Students (
         StudentID INT PRIMARY KEY,
         FirstName VARCHAR(50),
         LastName VARCHAR(50),
@@ -22,7 +23,8 @@ TABLES = {
         Gender CHAR(1),
         Address VARCHAR(200),
         PhoneNumber VARCHAR(15)
-    );"""],
+    );"""
+    ],
 }
 TEST_SCENARIOS = [
     {
@@ -102,8 +104,7 @@ def async_synthesizer(evolution_config, styling_config):
 
 def test_generate_goldens_from_contexts(sync_synthesizer: Synthesizer):
     goldens: List[Golden] = sync_synthesizer.generate_goldens_from_contexts(
-        contexts=SQL_CONTEXTS,
-        _send_data=False
+        contexts=SQL_CONTEXTS, _send_data=False
     )
 
     assert goldens is not None
@@ -156,9 +157,10 @@ def test_generate_goldens_from_scratch(sync_synthesizer: Synthesizer):
 async def test_async_generate_goldens_from_contexts(
     async_synthesizer: Synthesizer,
 ):
-    goldens: List[Golden] = await async_synthesizer.a_generate_goldens_from_contexts(
-        contexts=SQL_CONTEXTS,
-        include_expected_output=True
+    goldens: List[Golden] = (
+        await async_synthesizer.a_generate_goldens_from_contexts(
+            contexts=SQL_CONTEXTS, include_expected_output=True
+        )
     )
     assert goldens is not None
     assert isinstance(goldens, list)
@@ -174,7 +176,7 @@ async def test_async_generate_goldens_from_docs(
         max_goldens_per_context=1,
         document_paths=[TEST_FILES["txt"]],
         context_construction_config=context_config,
-        include_expected_output=True
+        include_expected_output=True,
     )
     assert goldens is not None
     assert isinstance(goldens, list)
