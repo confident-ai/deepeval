@@ -1,5 +1,6 @@
 import json
 import typing
+from dataclasses import dataclass
 from typing import List, Optional
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, ReadableSpan
@@ -20,6 +21,7 @@ class TraceAttributes(BaseModel):
     thread_id: Optional[str] = None
     user_id: Optional[str] = None
 
+@dataclass
 class BaseSpanWrapper:
     base_span: BaseSpan
     trace_attributes: Optional[TraceAttributes] = None
@@ -110,6 +112,8 @@ class ConfidentSpanExporterV1(SpanExporter):
                 children=[],
                 trace_uuid=to_hex_string(span.context.trace_id, 32),
                 parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
+                start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
+                end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
                 input=input,
                 output=output
             )
@@ -206,12 +210,12 @@ class ConfidentSpanExporterV1(SpanExporter):
         span_type = span.attributes.get("confident.span.type", "base")
         
         # required fields
-        uuid=to_hex_string(span.context.span_id, 16),
-        status=TraceSpanStatus.ERRORED if span.status.status_code == StatusCode.ERROR else TraceSpanStatus.SUCCESS,
-        children=[],
-        trace_uuid=to_hex_string(span.context.trace_id, 32),
-        parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None,
-        start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
+        uuid=to_hex_string(span.context.span_id, 16)
+        status=TraceSpanStatus.ERRORED if span.status.status_code == StatusCode.ERROR else TraceSpanStatus.SUCCESS
+        children=[]
+        trace_uuid=to_hex_string(span.context.trace_id, 32)
+        parent_uuid=to_hex_string(span.parent.span_id, 16) if span.parent else None
+        start_time=peb.epoch_nanos_to_perf_seconds(span.start_time)
         end_time=peb.epoch_nanos_to_perf_seconds(span.end_time)
         
         if span_type == "llm":
@@ -227,6 +231,8 @@ class ConfidentSpanExporterV1(SpanExporter):
                 parent_uuid=parent_uuid,
                 start_time=start_time,
                 end_time=end_time,
+
+                # llm span attributes
                 model=model,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token
@@ -239,13 +245,16 @@ class ConfidentSpanExporterV1(SpanExporter):
             input_token_count = span.attributes.get("confident.span.attributes.input_token_count")
             output_token_count = span.attributes.get("confident.span.attributes.output_token_count")
 
-            llm_span.set_attributes(LlmAttributes(
-                input=input,
-                output=output,
-                prompt=prompt,
-                input_token_count=input_token_count,
-                output_token_count=output_token_count
-            ))
+            try:
+                llm_span.set_attributes(LlmAttributes(
+                    input=input,
+                    output=output,
+                    prompt=prompt,
+                    input_token_count=input_token_count,
+                    output_token_count=output_token_count
+                ))
+            except Exception as e:
+                print(f"Error setting llm span attributes: {e}")
 
             return llm_span
         
@@ -262,19 +271,24 @@ class ConfidentSpanExporterV1(SpanExporter):
                 parent_uuid=parent_uuid,
                 start_time=start_time,
                 end_time=end_time,
-                name=name,
-                available_tools=available_tools,
-                agent_handoffs=agent_handoffs
+
+                # agent span attributes
+                name=name if name else "",
+                available_tools=available_tools if available_tools else [],
+                agent_handoffs=agent_handoffs if agent_handoffs else []
             )
 
             # set attributes
             input = span.attributes.get("confident.span.attributes.input")
             output = span.attributes.get("confident.span.attributes.output")
-
-            agent_span.set_attributes(AgentAttributes(
-                input=input,
-                output=output
-            ))
+            
+            try:
+                agent_span.set_attributes(AgentAttributes(
+                    input=input,
+                    output=output
+                ))
+            except Exception as e:
+                print(f"Error setting agent span attributes: {e}")
 
             return agent_span
         
@@ -289,7 +303,9 @@ class ConfidentSpanExporterV1(SpanExporter):
                 parent_uuid=parent_uuid,
                 start_time=start_time,
                 end_time=end_time,
-                embedder=embedder,
+
+                # retriever span attributes
+                embedder=embedder if embedder else "",
             )
 
             # set attributes
@@ -298,12 +314,15 @@ class ConfidentSpanExporterV1(SpanExporter):
             top_k = span.attributes.get("confident.span.attributes.top_k")
             chunk_size = span.attributes.get("confident.span.attributes.chunk_size")
 
-            retriever_span.set_attributes(RetrieverAttributes(
-                embedding_input=embedding_input,
-                retrieval_context=retrieval_context,
-                top_k=top_k,
-                chunk_size=chunk_size
-            ))
+            try:
+                retriever_span.set_attributes(RetrieverAttributes(
+                    embedding_input=embedding_input,
+                    retrieval_context=retrieval_context,
+                    top_k=top_k,
+                    chunk_size=chunk_size
+                ))
+            except Exception as e:
+                print(f"Error setting retriever span attributes: {e}")
 
             return retriever_span
 
@@ -319,7 +338,9 @@ class ConfidentSpanExporterV1(SpanExporter):
                 parent_uuid=parent_uuid,
                 start_time=start_time,
                 end_time=end_time,
-                name=name,
+
+                # tool span attributes
+                name=name if name else "",
                 description=description
             )
 
@@ -327,10 +348,13 @@ class ConfidentSpanExporterV1(SpanExporter):
             input_parameters = span.attributes.get("confident.span.attributes.input_parameters")
             output = span.attributes.get("confident.span.attributes.output")
 
-            tool_span.set_attributes(ToolAttributes(
-                input_parameters=input_parameters,
-                output=output
-            ))
+            try:
+                tool_span.set_attributes(ToolAttributes(
+                    input_parameters=input_parameters,
+                    output=output
+                ))
+            except Exception as e:
+                print(f"Error setting tool span attributes: {e}")
 
             return tool_span
         
