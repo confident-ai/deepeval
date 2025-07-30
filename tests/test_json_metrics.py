@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
 from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseLLM, GPTModel
 from deepeval.models.llms.openai_model import *
 
@@ -43,21 +43,21 @@ class CustomGPT(DeepEvalBaseLLM):
     def load_model(self):
         if self.should_use_azure_openai():
             openai_api_key = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_OPENAI_API_KEY
+                ModelKeyValues.AZURE_OPENAI_API_KEY
             )
 
             openai_api_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_API_VERSION
+                ModelKeyValues.OPENAI_API_VERSION
             )
             azure_deployment = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_DEPLOYMENT_NAME
+                ModelKeyValues.AZURE_DEPLOYMENT_NAME
             )
             azure_endpoint = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_OPENAI_ENDPOINT
+                ModelKeyValues.AZURE_OPENAI_ENDPOINT
             )
 
             model_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_MODEL_VERSION
+                ModelKeyValues.AZURE_MODEL_VERSION
             )
 
             if model_version is None:
@@ -114,7 +114,7 @@ class CustomGPT(DeepEvalBaseLLM):
         after=log_retry_error,
     )
     def should_use_azure_openai(self):
-        value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+        value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AZURE_OPENAI)
         return value.lower() == "yes" if value is not None else False
 
     def get_model_name(self):

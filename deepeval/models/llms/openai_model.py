@@ -1,5 +1,5 @@
 from openai.types.chat.chat_completion import ChatCompletion
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
@@ -163,20 +163,20 @@ class GPTModel(DeepEvalBaseLLM):
     ):
         model_name = None
         model = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.OPENAI_MODEL_NAME
+            ModelKeyValues.OPENAI_MODEL_NAME
         )
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
             else KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_COST_PER_INPUT_TOKEN
+                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN
             )
         )
         cost_per_output_token = (
             cost_per_output_token
             if cost_per_output_token is not None
             else KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
+                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
             )
         )
 

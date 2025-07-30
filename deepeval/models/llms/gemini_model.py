@@ -3,7 +3,7 @@ from google.genai import types
 from typing import Optional
 from google import genai
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseLLM
 
 default_gemini_model = "gemini-1.5-pro"
@@ -50,22 +50,22 @@ class GeminiModel(DeepEvalBaseLLM):
     ):
         model_name = (
             model_name
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.GEMINI_MODEL_NAME)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.GEMINI_MODEL_NAME)
             or default_gemini_model
         )
 
         # Get API key from key handler if not provided
         self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_API_KEY
+            ModelKeyValues.GOOGLE_API_KEY
         )
         self.project = project or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_CLOUD_PROJECT
+            ModelKeyValues.GOOGLE_CLOUD_PROJECT
         )
         self.location = location or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_CLOUD_LOCATION
+            ModelKeyValues.GOOGLE_CLOUD_LOCATION
         )
         self.use_vertexai = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_GENAI_USE_VERTEXAI
+            ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI
         )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")

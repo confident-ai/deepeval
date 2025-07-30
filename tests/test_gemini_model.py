@@ -6,7 +6,7 @@ from google.genai import types
 
 from deepeval.models import GeminiModel, MultimodalGeminiModel
 from deepeval.test_case import MLLMImage
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 
 # Mock credentials for testing
 TEST_API_KEY = ""
@@ -67,10 +67,10 @@ def mock_client():
 def mock_key_handler():
     with patch("deepeval.key_handler.KEY_FILE_HANDLER.fetch_data") as mock:
         mock.side_effect = lambda x: {
-            KeyValues.GOOGLE_API_KEY: TEST_API_KEY,
-            KeyValues.GOOGLE_CLOUD_PROJECT: TEST_PROJECT,
-            KeyValues.GOOGLE_CLOUD_LOCATION: TEST_LOCATION,
-            KeyValues.GOOGLE_GENAI_USE_VERTEXAI: "true",
+            ModelKeyValues.GOOGLE_API_KEY: TEST_API_KEY,
+            ModelKeyValues.GOOGLE_CLOUD_PROJECT: TEST_PROJECT,
+            ModelKeyValues.GOOGLE_CLOUD_LOCATION: TEST_LOCATION,
+            ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI: "true",
         }.get(x)
         yield mock
 

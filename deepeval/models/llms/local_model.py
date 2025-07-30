@@ -6,7 +6,7 @@ from openai.types.chat import ChatCompletion
 
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 
 
 class LocalModel(DeepEvalBaseLLM):
@@ -21,16 +21,16 @@ class LocalModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_NAME
+            ModelKeyValues.LOCAL_MODEL_NAME
         )
         self.local_model_api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_API_KEY
+            ModelKeyValues.LOCAL_MODEL_API_KEY
         )
         self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_BASE_URL
+            ModelKeyValues.LOCAL_MODEL_BASE_URL
         )
         self.format = format or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_FORMAT
+            ModelKeyValues.LOCAL_MODEL_FORMAT
         )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
@@ -82,7 +82,7 @@ class LocalModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
+        model_name = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_NAME)
         return f"{model_name} (Local Model)"
 
     def load_model(self, async_mode: bool = False):
