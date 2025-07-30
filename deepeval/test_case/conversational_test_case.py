@@ -79,6 +79,35 @@ class Turn:
     additional_metadata: Optional[Dict] = None
 
 
+    def __post_init__(self):
+        if (self.mcp_tools_called is not None or 
+            self.mcp_prompts_called is not None or
+            self.mcp_resources_called is not None
+        ):
+            from mcp.types import CallToolResult, ReadResourceResult, GetPromptResult
+
+            if self.mcp_tools_called is not None:
+                if not isinstance(self.mcp_tools_called, list) or not all(
+                    isinstance(tool_called, MCPToolCall) and 
+                    isinstance(tool_called.result, CallToolResult) for tool_called in self.mcp_tools_called
+                ):
+                    raise TypeError("The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types")
+                
+            if self.mcp_resources_called is not None:
+                if not isinstance(self.mcp_resources_called, list) or not all(
+                    isinstance(resource_called, MCPResourceCall) and 
+                    isinstance(resource_called.result, ReadResourceResult) for resource_called in self.mcp_resources_called
+                ):
+                    raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types")
+                
+            if self.mcp_prompts_called is not None:
+                if not isinstance(self.mcp_prompts_called, list) or not all(
+                    isinstance(prompt_called, MCPPromptCall) and
+                        isinstance(prompt_called.result, GetPromptResult) for prompt_called in self.mcp_prompts_called
+                ):
+                    raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types")
+
+
 @dataclass
 class ConversationalTestCase:
     turns: List[Turn]
@@ -101,17 +130,17 @@ class ConversationalTestCase:
 
         copied_turns = []
 
+        if self.mcp_data is not None:
+            self._validate_mcp_meta_data(self.mcp_data)
+
         for turn in self.turns:
             if not isinstance(turn, Turn):
                 raise TypeError("'turns' must be a list of `Turn`s")
             
-            if self.mcp_data is not None:
-                self._validate_mcp_calls(turn)
+            # if self.mcp_data is not None:
+            #     self._validate_mcp_calls(turn)
             
             copied_turns.append(deepcopy(turn))
-        
-        if self.mcp_data is not None:
-            self._validate_mcp_meta_data(self.mcp_data)
 
         self.turns = copied_turns
 
@@ -139,26 +168,26 @@ class ConversationalTestCase:
                     raise TypeError("'available_prompts' must be a list of 'Prompt' from mcp.types")
                 
                 
-    def _validate_mcp_calls(self, turn: Turn):
-        from mcp.types import CallToolResult, ReadResourceResult, GetPromptResult
+    # def _validate_mcp_calls(self, turn: Turn):
+    #     from mcp.types import CallToolResult, ReadResourceResult, GetPromptResult
         
-        if turn.mcp_tools_called is not None:
-            if not isinstance(turn.mcp_tools_called, list) or not all(
-                isinstance(tool_called, MCPToolCall) and 
-                isinstance(tool_called.result, CallToolResult) for tool_called in turn.mcp_tools_called
-            ):
-                raise TypeError("The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types")
+    #     if turn.mcp_tools_called is not None:
+    #         if not isinstance(turn.mcp_tools_called, list) or not all(
+    #             isinstance(tool_called, MCPToolCall) and 
+    #             isinstance(tool_called.result, CallToolResult) for tool_called in turn.mcp_tools_called
+    #         ):
+    #             raise TypeError("The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types")
         
-        if turn.mcp_resources_called is not None:
-            if not isinstance(turn.mcp_resources_called, list) or not all(
-                isinstance(resource_called, MCPResourceCall) and 
-                isinstance(resource_called.result, ReadResourceResult) for resource_called in turn.mcp_resources_called
-            ):
-                raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types")
+    #     if turn.mcp_resources_called is not None:
+    #         if not isinstance(turn.mcp_resources_called, list) or not all(
+    #             isinstance(resource_called, MCPResourceCall) and 
+    #             isinstance(resource_called.result, ReadResourceResult) for resource_called in turn.mcp_resources_called
+    #         ):
+    #             raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types")
             
-        if turn.mcp_prompts_called is not None:
-            if not isinstance(turn.mcp_prompts_called, list) or not all(
-                isinstance(prompt_called, MCPPromptCall) and
-                    isinstance(prompt_called.result, GetPromptResult) for prompt_called in turn.mcp_prompts_called
-            ):
-                raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types")
+    #     if turn.mcp_prompts_called is not None:
+    #         if not isinstance(turn.mcp_prompts_called, list) or not all(
+    #             isinstance(prompt_called, MCPPromptCall) and
+    #                 isinstance(prompt_called.result, GetPromptResult) for prompt_called in turn.mcp_prompts_called
+    #         ):
+    #             raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types")
