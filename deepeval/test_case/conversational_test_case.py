@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Literal
-from pydantic import AnyUrl
 from copy import deepcopy
 from enum import Enum
-
 from deepeval.test_case import ToolCall
+from pydantic import AnyUrl, BaseModel
 
 
 class TurnParams(Enum):
@@ -26,26 +25,6 @@ class TurnParams(Enum):
 
 
 # @dataclass
-# class MCPToolCall:
-#     name: str
-#     args: Dict
-#     structured_content: Dict # can use the "result" property in this for ease of access instead of using content
-#     is_error: bool
-#     content: Optional[List] = None# Will have to implement content types later on if needed from the MCP types.py
-
-
-# @dataclass
-# class MCPPromptCall:
-#     description: str
-#     messages: List
-
-
-# @dataclass
-# class MCPResourceCall:
-#     contents: List # Gotta use the .text / .blob    
-
-
-# @dataclass
 # class MCPResource:
 #     name: str
 #     mimeType: str
@@ -60,6 +39,22 @@ class TurnParams(Enum):
 #     arguments: List
 #     title: Optional[str] = None
 #     description: Optional[str] = None
+
+
+class MCPToolCall(BaseModel):
+    name: str
+    args: Dict
+    result: object
+
+
+class MCPPromptCall(BaseModel):
+    name: str
+    result: object
+
+
+class MCPResourceCall(BaseModel):
+    uri: AnyUrl 
+    result: object
 
 
 @dataclass
@@ -78,9 +73,9 @@ class Turn:
     user_id: Optional[str] = None
     retrieval_context: Optional[List[str]] = None
     tools_called: Optional[List[ToolCall]] = None
-    mcp_tools_called: Optional[List[Dict]] = None
-    mcp_resources_called: Optional[List[Dict]] = None
-    mcp_prompts_called: Optional[List[Dict]] = None
+    mcp_tools_called: Optional[List[MCPToolCall]] = None
+    mcp_resources_called: Optional[List[MCPResourceCall]] = None
+    mcp_prompts_called: Optional[List[MCPPromptCall]] = None
     additional_metadata: Optional[Dict] = None
 
 
@@ -99,14 +94,71 @@ class ConversationalTestCase:
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
 
+
     def __post_init__(self):
         if len(self.turns) == 0:
             raise TypeError("'turns' must not be empty")
 
         copied_turns = []
+
         for turn in self.turns:
             if not isinstance(turn, Turn):
                 raise TypeError("'turns' must be a list of `Turn`s")
+            
+            if self.mcp_data is not None:
+                self._validate_mcp_calls(turn)
+            
             copied_turns.append(deepcopy(turn))
+        
+        if self.mcp_data is not None:
+            self._validate_mcp_meta_data(self.mcp_data)
 
         self.turns = copied_turns
+
+
+    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
+        from mcp.types import Tool, Resource, Prompt
+
+        for mcp_data in mcp_data_list:
+            if mcp_data.available_tools is not None:
+                if not isinstance(mcp_data.available_tools, list) or not all(
+                    isinstance(tool, Tool) for tool in mcp_data.available_tools
+                ):
+                    raise TypeError("'available_tools' must be a list of 'Tool' from mcp.types")
+                
+            if mcp_data.available_resources is not None:
+                if not isinstance(mcp_data.available_resources, list) or not all(
+                    isinstance(resource, Resource) for resource in mcp_data.available_resources
+                ):
+                    raise TypeError("'available_resources' must be a list of 'Resource' from mcp.types")
+                
+            if mcp_data.available_prompts is not None:
+                if not isinstance(mcp_data.available_prompts, list) or not all(
+                    isinstance(prompt, Prompt) for prompt in mcp_data.available_prompts
+                ):
+                    raise TypeError("'available_prompts' must be a list of 'Prompt' from mcp.types")
+                
+                
+    def _validate_mcp_calls(self, turn: Turn):
+        from mcp.types import CallToolResult, ReadResourceResult, GetPromptResult
+        
+        if turn.mcp_tools_called is not None:
+            if not isinstance(turn.mcp_tools_called, list) or not all(
+                isinstance(tool_called, MCPToolCall) and 
+                isinstance(tool_called.result, CallToolResult) for tool_called in turn.mcp_tools_called
+            ):
+                raise TypeError("The 'tools_called' must be a list of 'MCPToolCall'")
+        
+        if turn.mcp_resources_called is not None:
+            if not isinstance(turn.mcp_resources_called, list) or not all(
+                isinstance(resource_called, MCPResourceCall) and 
+                isinstance(resource_called.result, ReadResourceResult) for resource_called in turn.mcp_resources_called
+            ):
+                raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall'")
+            
+        if turn.mcp_prompts_called is not None:
+            if not isinstance(turn.mcp_prompts_called, list) or not all(
+                isinstance(prompt_called, MCPPromptCall) and
+                    isinstance(prompt_called.result, GetPromptResult) for prompt_called in turn.mcp_prompts_called
+            ):
+                raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall'")
