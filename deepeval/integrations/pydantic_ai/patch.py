@@ -35,9 +35,16 @@ def safe_patch_agent_run_method():
             
             result = await original_run(*args, **kwargs)
             
-            run_span.set_attribute('confident.metric_collection', args[0].metric_collection)
-            run_span.set_attribute('confident.llm_test_case.input', str(args[1]))
-            run_span.set_attribute('confident.llm_test_case.actual_output', str(result.output))
+            # agent attributes
+            run_span.set_attribute('confident.span.type', 'agent')
+            run_span.set_attribute('confident.span.name', str(args[0].name))
+            run_span.set_attribute('confident.span.attributes.input', str(args[1]))
+            run_span.set_attribute('confident.span.attributes.output', str(result.output))
+            
+            # llm test case attributes
+            run_span.set_attribute('confident.span.metric_collection', args[0].metric_collection)
+            run_span.set_attribute('confident.span.llm_test_case.input', str(args[1]))
+            run_span.set_attribute('confident.span.llm_test_case.actual_output', str(result.output))
     
         return result
     
