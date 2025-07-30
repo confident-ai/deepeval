@@ -6,7 +6,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 from anthropic import Anthropic
-from deepeval.test_case import ConversationalTestCase, MCPMetaData, Turn
+from deepeval.test_case import ConversationalTestCase, MCPMetaData, Turn, MCPToolCall, MCPResourceCall, MCPPromptCall
 from dotenv import load_dotenv
 
 load_dotenv()  # load environment variables from .env
@@ -57,7 +57,7 @@ class MCPClient:
             server_name=server_script_path,
             available_tools=toolList.tools,
             available_resources=resourceList.resources,
-            available_prompts=promptList.prompts
+            available_prompts=promptList.prompts # Remove .prompts to check for mcp_data type validation
         ))
 
     async def process_query(self, query: str) -> str:
@@ -115,16 +115,31 @@ class MCPClient:
 
                 # Execute the tool
                 result = await self.session.call_tool(tool_name, tool_args)
+                tool_called = MCPToolCall(
+                    name=tool_name,
+                    args=tool_args,
+                    result=result
+                )
+                # Hard coded prompt calls in all turns for testing, comment them our to just check for the tools called
+                # Most model providers still don't support prompts and resources but included for future
                 prompt = await self.session.get_prompt("addingNote")
+                promt_called = MCPPromptCall(
+                    name="addingNote",
+                    result=prompt
+                )
                 resource = await self.session.read_resource("file:///project/src/notes.txt")
+                resource_called = MCPResourceCall(
+                    uri="file:///project/src/notes.txt",
+                    result=resource
+                )
 
                 # Track this tool usage in test logs
                 turns.append(Turn(
                     role="assistant",
                     content=f"Tool call: {tool_name} with args {tool_args}",
-                    mcp_prompts_called=[{"name": "addingNote", "result": prompt}],
-                    mcp_tools_called=[{"name": tool_name, "args": tool_args, "result": result}],
-                    mcp_resources_called=[{"uri": "file:///project/src/notes.txt", "result": resource}]
+                    mcp_prompts_called=[promt_called],
+                    mcp_tools_called=[tool_called],
+                    mcp_resources_called=[resource_called] # Use just resource instead of resource_called to check for validation
                 ))
 
                 # Send tool result message
@@ -147,23 +162,19 @@ class MCPClient:
         print("Type your queries or 'quit' to exit.")
 
         while True:
-            try:
-                query = input("\nQuery: ").strip()
+            query = input("\nQuery: ").strip()
 
-                if query.lower() == 'quit':
-                    convo_test_case = ConversationalTestCase(
-                        turns=turns,
-                        mcp_data=mcp_data
-                    )
-                    print(convo_test_case)
-                    print("-"*50)
-                    break
+            if query.lower() == 'quit':
+                convo_test_case = ConversationalTestCase(
+                    turns=turns,
+                    mcp_data=mcp_data
+                )
+                print(convo_test_case)
+                print("-"*50)
+                break
 
-                response = await self.process_query(query)
-                print("\n" + response)
-
-            except Exception as e:
-                print(f"\nError: {str(e)}")
+            response = await self.process_query(query)
+            print("\n" + response)
 
     async def cleanup(self):
         """Clean up resources"""
