@@ -1,14 +1,9 @@
-import pytest
-
-# from langchain_openai import OpenAIEmbeddings
-
-import deepeval
 from deepeval.test_case import (
-    LLMTestCase,
-    LLMTestCaseParams,
     ConversationalTestCase,
-    Turn,
+    LLMTestCaseParams,
+    LLMTestCase,
     ToolCall,
+    Turn,
 )
 from deepeval.metrics import (
     AnswerRelevancyMetric,
@@ -21,7 +16,6 @@ from deepeval.metrics import (
     ToxicityMetric,
     GEval,
     SummarizationMetric,
-    ToolCorrectnessMetric,
     ConversationRelevancyMetric,
     RoleAdherenceMetric,
     ConversationCompletenessMetric,
@@ -29,8 +23,7 @@ from deepeval.metrics import (
     JsonCorrectnessMetric,
     KnowledgeRetentionMetric,
 )
-from deepeval.metrics.ragas import RagasMetric
-from deepeval import assert_test
+from deepeval.evaluate import evaluate
 
 question = "What are the primary benefits of meditation?"
 answer = """
@@ -195,7 +188,6 @@ class TestClass(BaseModel):
 eval_model = "gpt-4o"
 
 
-@pytest.mark.skip(reason="openai is expensive")
 def test_everything():
     metric1 = AnswerRelevancyMetric(
         threshold=0.1,
@@ -284,7 +276,6 @@ def test_everything():
     )
     metric17 = JsonCorrectnessMetric(TestClass, model=eval_model)
     metric18 = KnowledgeRetentionMetric()
-
     test_case = LLMTestCase(
         input="What is this",
         actual_output="this is a latte",
@@ -293,11 +284,8 @@ def test_everything():
         context=["I love coffee"],
         tags=["test", "test2"],
     )
-    # c_test_case = ConversationalTestCase(
-    #     turns=[test_case, test_case], chatbot_role="have a conversation"
-    # )
-    assert_test(
-        test_case=test_case,
+    evaluate(
+        test_cases=[test_case],
         metrics=[
             metric1,
             metric2,
@@ -309,7 +297,7 @@ def test_everything():
             metric8,
             metric9,
             metric10,
-            # metric11,
+            metric11,
             # metric12,
             # # metric13,
             # metric14,
@@ -318,11 +306,9 @@ def test_everything():
             # metric17,
             # metric18,
         ],
-        run_async=True,
     )
 
 
-@pytest.mark.skip(reason="openapi is expensive")
 def test_everything_2():
     metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
     metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
@@ -333,22 +319,15 @@ def test_everything_2():
     metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
     metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
     metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
-    metric10 = (
-        GEval(
-            name="Coherence",
-            criteria="Coherence - determine if the actual output is coherent with the input.",
-            evaluation_params=[
-                LLMTestCaseParams.INPUT,
-                LLMTestCaseParams.ACTUAL_OUTPUT,
-            ],
-            strict_mode=True,
-        ),
+    metric10 = GEval(
+        name="Coherence",
+        criteria="Coherence - determine if the actual output is coherent with the input.",
+        evaluation_params=[
+            LLMTestCaseParams.INPUT,
+            LLMTestCaseParams.ACTUAL_OUTPUT,
+        ],
+        strict_mode=True,
     )
-    # metric11 = RagasMetric(
-    #     threshold=0.5, model="gpt-3.5-turbo", embeddings=OpenAIEmbeddings()
-    # )
-    # metric12 = ToolCorrectnessMetric()
-
     test_case = LLMTestCase(
         input="What is this again?",
         actual_output="this is a latte",
@@ -358,65 +337,19 @@ def test_everything_2():
         tags=["test3", "test4"],
     )
     metric12 = ConversationRelevancyMetric(model=eval_model)
-    assert_test(
-        test_case,
-        [
-            # metric1,
-            # metric2,
-            # metric3,
-            # metric4,
-            # metric5,
-            # metric6,
+    evaluate(
+        test_cases=[test_case],
+        metrics=[
+            metric1,
+            metric2,
+            metric3,
+            metric4,
+            metric5,
+            metric6,
             metric7,
-            # metric8,
-            # metric9,
-            # metric10,
-            # metric11,
+            metric8,
+            metric9,
+            metric10,
             # metric12,
         ],
-        # run_async=False,
     )
-
-
-# from deepeval.prompt import Prompt
-
-# prompt = Prompt(alias="First Prompt")
-# prompt.pull()
-
-
-@deepeval.log_hyperparameters
-def hyperparameters():
-    return {"temperature": 1, "model": "gpt-4"}
-
-
-# metric1 = AnswerRelevancyMetric(threshold=0.5, strict_mode=strict_mode)
-# metric2 = FaithfulnessMetric(threshold=0.5, strict_mode=strict_mode)
-# metric3 = ContextualPrecisionMetric(threshold=0.5, strict_mode=strict_mode)
-# metric4 = ContextualRecallMetric(threshold=0.5, strict_mode=strict_mode)
-# metric5 = ContextualRelevancyMetric(threshold=0.1, strict_mode=strict_mode)
-# metric6 = BiasMetric(threshold=0.2, strict_mode=strict_mode)
-# metric7 = ToxicityMetric(threshold=0.5, strict_mode=strict_mode)
-# metric8 = HallucinationMetric(threshold=0.5, strict_mode=strict_mode)
-# metric9 = SummarizationMetric(threshold=0.5, strict_mode=strict_mode, n=2)
-
-# from deepeval import evaluate
-# from deepeval.evaluate import AsyncConfig
-
-# test_case = LLMTestCase(
-#     input="What is this again?",
-#     actual_output="this is a latte",
-#     expected_output="this is a mocha",
-#     retrieval_context=["I love coffee"],
-#     context=["I love coffee"],
-# )
-# evaluate(
-#     [test_case]*20,
-#     [
-#         metric1,
-#         metric2,
-#         metric3,
-#     ],
-#     async_config=AsyncConfig(
-#         run_async=True,
-#     )
-# )
