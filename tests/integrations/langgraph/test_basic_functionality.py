@@ -16,19 +16,19 @@ def test_basic_imports():
     
     try:
         from deepeval.integrations.langgraph import LangGraphCallbackHandler
-        print("✅ LangGraphCallbackHandler import successful")
+        print("LangGraphCallbackHandler import successful")
         
         from deepeval.integrations.langgraph import create_langgraph_callback_config
-        print("✅ create_langgraph_callback_config import successful")
+        print("create_langgraph_callback_config import successful")
         
         return True
     except Exception as e:
-        print(f"❌ Import failed: {e}")
+        print(f"Import failed: {e}")
         return False
 
 def test_callback_handler():
     """Test callback handler creation and basic functionality"""
-    print("\n🧪 Testing Callback Handler...")
+    print("\nTesting Callback Handler...")
     
     try:
         from deepeval.integrations.langgraph import LangGraphCallbackHandler
@@ -40,7 +40,7 @@ def test_callback_handler():
             enable_state_tracing=True,
         )
         
-        print("✅ Callback handler created successfully")
+        print("Callback handler created successfully")
         
         # Test basic attributes
         assert hasattr(handler, 'active_trace_id')
@@ -49,11 +49,11 @@ def test_callback_handler():
         assert hasattr(handler, 'current_node')
         assert hasattr(handler, 'node_execution_order')
         
-        print("✅ Callback handler has all required attributes")
+        print("Callback handler has all required attributes")
         
         return True
     except Exception as e:
-        print(f"❌ Callback handler test failed: {e}")
+        print(f"Callback handler test failed: {e}")
         return False
 
 def test_utility_functions():
@@ -75,16 +75,16 @@ def test_utility_functions():
         assert len(config["callbacks"]) == 1
         assert isinstance(config["callbacks"][0], LangGraphCallbackHandler)
         
-        print("✅ Utility functions work correctly")
+        print("Utility functions work correctly")
         
         return True
     except Exception as e:
-        print(f"❌ Utility functions test failed: {e}")
+        print(f"Utility functions test failed: {e}")
         return False
 
 def test_span_types():
     """Test new span types are available"""
-    print("\n🧪 Testing New Span Types...")
+    print("\nTesting New Span Types...")
     
     try:
         from deepeval.tracing.tracing import SpanType
@@ -121,12 +121,12 @@ def test_span_classes():
         
         return True
     except Exception as e:
-        print(f"❌ Span classes test failed: {e}")
+        print(f"Span classes test failed: {e}")
         return False
 
 def test_attributes():
     """Test new attributes are available"""
-    print("\n🧪 Testing New Attributes...")
+    print("\nTesting New Attributes...")
     
     try:
         from deepeval.tracing.attributes import (
@@ -136,33 +136,33 @@ def test_attributes():
         )
         
         # Test attribute imports
-        print("✅ GraphAttributes available")
-        print("✅ NodeAttributes available")
-        print("✅ StateTransitionAttributes available")
+        print("GraphAttributes available")
+        print("NodeAttributes available")
+        print("StateTransitionAttributes available")
         
         return True
     except Exception as e:
-        print(f"❌ Attributes test failed: {e}")
+        print(f"Attributes test failed: {e}")
         return False
 
 def test_langgraph_compatibility():
     """Test LangGraph compatibility"""
-    print("\n🧪 Testing LangGraph Compatibility...")
+    print("\nTesting LangGraph Compatibility...")
     
     try:
         import langgraph
-        print(f"✅ LangGraph imported successfully")
+        print(f"LangGraph imported successfully")
         
         from langgraph.graph import StateGraph
         from typing import Dict, Any
         
         # Test basic StateGraph creation (without execution)
         workflow = StateGraph(state_schema=Dict[str, Any])
-        print("✅ StateGraph creation successful")
+        print("StateGraph creation successful")
         
         return True
     except Exception as e:
-        print(f"❌ LangGraph compatibility test failed: {e}")
+        print(f"LangGraph compatibility test failed: {e}")
         return False
 
 def main():
@@ -191,8 +191,8 @@ def main():
     print(f"\n📊 Test Results: {passed}/{total} tests passed")
     
     if passed == total:
-        print("\n🎉 All basic functionality tests completed successfully!")
-        print("\n📋 What's been verified:")
+        print("\n All basic functionality tests completed successfully!")
+        print("\n What's been verified:")
         print("   • All new modules can be imported")
         print("   • Callback handler can be created and configured")
         print("   • Utility functions work correctly")
@@ -200,12 +200,12 @@ def main():
         print("   • New span classes are available")
         print("   • New attributes are available")
         print("   • LangGraph compatibility is maintained")
-        print("\n💡 Next steps:")
+        print("\n Next steps:")
         print("   • Set OPENAI_API_KEY to test with real API calls")
         print("   • Run test_simple.py for full integration testing")
         print("   • Check the TESTING_GUIDE.md for detailed instructions")
     else:
-        print(f"\n⚠️  {total - passed} test(s) failed. Check the output above.")
+        print(f"\n  {total - passed} test(s) failed. Check the output above.")
     
     return passed == total
 

@@ -21,13 +21,13 @@ def test_basic_functionality():
         from deepeval.integrations.langgraph import LangGraphCallbackHandler
         from langgraph.prebuilt import create_react_agent
         
-        print("✅ Imports successful")
+        print("Imports successful")
         
         # Define a simple tool
         def get_weather(city: str) -> str:
             return f"It's always sunny in {city}!"
         
-        print("✅ Tool function defined")
+        print("Tool function defined")
         
         # Create agent
         agent = create_react_agent(
@@ -36,7 +36,7 @@ def test_basic_functionality():
             prompt="You are a helpful assistant that provides weather information.",
         )
         
-        print("✅ Agent created successfully")
+        print("Agent created successfully")
         
         # Create enhanced callback handler
         callback_handler = LangGraphCallbackHandler(
@@ -45,38 +45,38 @@ def test_basic_functionality():
             enable_state_tracing=True,
         )
         
-        print("✅ Enhanced callback handler created")
+        print("Enhanced callback handler created")
         
         # Test invocation
-        print("🔄 Testing agent invocation...")
+        print("Testing agent invocation...")
         result = agent.invoke(
             input={"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]},
             config={"callbacks": [callback_handler]}
         )
         
-        print(f"✅ Agent response: {result['messages'][-1]['content'][:100]}...")
-        print("✅ Basic functionality test passed!")
+        print(f"Agent response: {result['messages'][-1]['content'][:100]}...")
+        print("Basic functionality test passed!")
         
         # Wait for traces to be processed
         print("⏳ Waiting for traces to be processed...")
         time.sleep(3)
-        print("✅ Traces should be available on Confident AI")
+        print("Traces should be available on Confident AI")
         
         return True
         
     except ImportError as e:
-        print(f"❌ Import error: {e}")
-        print("💡 Make sure you have installed the dependencies:")
+        print(f"Import error: {e}")
+        print("Make sure you have installed the dependencies:")
         print("   pip install langgraph openai")
         return False
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f"Test failed: {e}")
         return False
 
 def test_traced_agent():
     """Test traced agent creation"""
-    print("\n🧪 Testing Traced Agent Creation...")
+    print("\nTesting Traced Agent Creation...")
     
     try:
         from deepeval.integrations.langgraph import create_traced_react_agent
@@ -98,16 +98,16 @@ def test_traced_agent():
         assert hasattr(agent, '_deepeval_config')
         assert agent._deepeval_config['metric_collection'] == "test_collection"
         
-        print("✅ Traced agent creation test passed!")
+        print("Traced agent creation test passed!")
         return True
         
     except Exception as e:
-        print(f"❌ Traced agent test failed: {e}")
+        print(f"Traced agent test failed: {e}")
         return False
 
 def test_utility_functions():
     """Test utility functions"""
-    print("\n🧪 Testing Utility Functions...")
+    print("\nTesting Utility Functions...")
     
     try:
         from deepeval.integrations.langgraph import create_langgraph_callback_config
@@ -123,25 +123,25 @@ def test_utility_functions():
         assert "callbacks" in config
         assert len(config["callbacks"]) == 1
         
-        print("✅ Utility functions test passed!")
+        print("Utility functions test passed!")
         return True
         
     except Exception as e:
-        print(f"❌ Utility functions test failed: {e}")
+        print(f"Utility functions test failed: {e}")
         return False
 
 def main():
     """Run all tests"""
-    print("🚀 Enhanced LangGraph Integration Test Suite")
+    print("Enhanced LangGraph Integration Test Suite")
     print("=" * 60)
     
     # Check prerequisites
     if not os.getenv("OPENAI_API_KEY"):
-        print("❌ OPENAI_API_KEY not set. Please set it and try again.")
+        print("OPENAI_API_KEY not set. Please set it and try again.")
         print("   export OPENAI_API_KEY='your-api-key-here'")
         return False
     
-    print("✅ OpenAI API key found")
+    print("OpenAI API key found")
     
     # Run tests
     tests = [
@@ -157,17 +157,17 @@ def main():
         if test():
             passed += 1
     
-    print(f"\n📊 Test Results: {passed}/{total} tests passed")
+    print(f"\nTest Results: {passed}/{total} tests passed")
     
     if passed == total:
-        print("\n🎉 All tests completed successfully!")
-        print("\n📊 Check your Confident AI dashboard to see:")
+        print("\nAll tests completed successfully!")
+        print("\nCheck your Confident AI dashboard to see:")
         print("   • Graph execution traces")
         print("   • Node-level execution details")
         print("   • State transition tracking")
         print("   • Metric evaluation results")
     else:
-        print(f"\n⚠️  {total - passed} test(s) failed. Check the output above.")
+        print(f"\n {total - passed} test(s) failed. Check the output above.")
     
     return passed == total
 
