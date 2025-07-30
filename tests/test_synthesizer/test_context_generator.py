@@ -7,6 +7,7 @@ from deepeval.models.embedding_models.openai_embedding_model import (
     OpenAIEmbeddingModel,
 )
 
+
 @pytest.fixture
 def context_generator_fixture():
     generator = ContextGenerator(

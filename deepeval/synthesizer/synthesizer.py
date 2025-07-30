@@ -977,7 +977,7 @@ class Synthesizer:
             # Extract styles from goldens if not already set
             if self.set_styling_config == False:
                 example_inputs = random.sample(
-                    [golden.input for golden in goldens], 10
+                    [golden.input for golden in goldens], min(len(goldens), 10)
                 )
                 styling_prompt = (
                     ExtractionTemplate.extract_prompt_structure_from_inputs(
@@ -1023,7 +1023,7 @@ class Synthesizer:
         # Extract styles from goldens if not already set
         if self.set_styling_config == False:
             example_inputs = random.sample(
-                [golden.input for golden in goldens], 10
+                [golden.input for golden in goldens], min(len(goldens), 10)
             )
             styling_prompt = (
                 ExtractionTemplate.extract_prompt_structure_from_inputs(

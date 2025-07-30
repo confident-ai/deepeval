@@ -57,6 +57,7 @@ def simulator_async():
     conversation_simulator.simulation_cost = 0
     return conversation_simulator
 
+
 # Test functions
 @pytest.mark.asyncio
 async def test_user_profile_generation(simulator_async: ConversationSimulator):
@@ -95,8 +96,12 @@ def test_simulate_sync(simulator_sync: ConversationSimulator, callback_fn):
     assert len(test_cases) > 0, "Should have at least one test case"
     for tc in test_cases:
         assert hasattr(tc, "turns"), "Test case should have turns attribute"
-        assert len(tc.turns) >= 2 * 2 + 1, "Test case should have at least min_turns"
-        assert len(tc.turns) <= 2 * 4 + 1, "Test case should have at most max_turns"
+        assert (
+            len(tc.turns) >= 2 * 2 + 1
+        ), "Test case should have at least min_turns"
+        assert (
+            len(tc.turns) <= 2 * 4 + 1
+        ), "Test case should have at most max_turns"
 
 
 def test_simulate_async(
@@ -112,5 +117,9 @@ def test_simulate_async(
     assert len(test_cases) > 0, "Should have at least one test case"
     for tc in test_cases:
         assert hasattr(tc, "turns"), "Test case should have turns attribute"
-        assert len(tc.turns) >= 2 * 2 + 1, "Test case should have at least min_turns"
-        assert len(tc.turns) <= 2 * 4 + 1, "Test case should have at most max_turns"
+        assert (
+            len(tc.turns) >= 2 * 2 + 1
+        ), "Test case should have at least min_turns"
+        assert (
+            len(tc.turns) <= 2 * 4 + 1
+        ), "Test case should have at most max_turns"
