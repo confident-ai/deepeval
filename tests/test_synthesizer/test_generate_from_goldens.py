@@ -23,7 +23,9 @@ def synthesizer():
 def test_expand_dataset_from_inputs(synthesizer: Synthesizer):
     goldens = synthesizer.generate_goldens_from_goldens(original_goldens)
     assert goldens is not None, "Generated goldens should not be None"
-    assert isinstance(goldens, list), "Generated goldens should be a list of Golden objects"
+    assert isinstance(
+        goldens, list
+    ), "Generated goldens should be a list of Golden objects"
     assert len(goldens) > 0, "Should generate at least one golden"
     assert all(
         isinstance(g, Golden) for g in goldens
