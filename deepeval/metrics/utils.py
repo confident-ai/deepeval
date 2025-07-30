@@ -31,7 +31,12 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
 )
-from deepeval.key_handler import KeyValues, ModelKeyValues, EmbeddingKeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import (
+    KeyValues,
+    ModelKeyValues,
+    EmbeddingKeyValues,
+    KEY_FILE_HANDLER,
+)
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -527,7 +532,9 @@ def is_native_mllm(
 
 
 def should_use_azure_openai_embedding():
-    value = KEY_FILE_HANDLER.fetch_data(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING)
+    value = KEY_FILE_HANDLER.fetch_data(
+        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING
+    )
     return value.lower() == "yes" if value is not None else False
 
 
@@ -537,7 +544,9 @@ def should_use_local_embedding():
 
 
 def should_use_ollama_embedding():
-    api_key = KEY_FILE_HANDLER.fetch_data(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY)
+    api_key = KEY_FILE_HANDLER.fetch_data(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
+    )
     return api_key == "ollama"
 
 

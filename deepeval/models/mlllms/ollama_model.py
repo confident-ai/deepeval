@@ -14,7 +14,9 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
     def __init__(
         self,
     ):
-        model_name = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_NAME)
+        model_name = KEY_FILE_HANDLER.fetch_data(
+            ModelKeyValues.LOCAL_MODEL_NAME
+        )
         self.base_url = KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.LOCAL_MODEL_BASE_URL
         )

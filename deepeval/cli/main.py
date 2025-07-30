@@ -8,7 +8,12 @@ import string
 import socket
 import typer
 from enum import Enum
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues, EmbeddingKeyValues, ModelKeyValues
+from deepeval.key_handler import (
+    KEY_FILE_HANDLER,
+    KeyValues,
+    EmbeddingKeyValues,
+    ModelKeyValues,
+)
 from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
@@ -233,11 +238,15 @@ def set_azure_openai_env(
     KEY_FILE_HANDLER.write_key(
         ModelKeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
     )
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.AZURE_MODEL_NAME, openai_model_name)
+    KEY_FILE_HANDLER.write_key(
+        ModelKeyValues.AZURE_MODEL_NAME, openai_model_name
+    )
     KEY_FILE_HANDLER.write_key(
         ModelKeyValues.AZURE_OPENAI_ENDPOINT, azure_openai_endpoint
     )
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_API_VERSION, openai_api_version)
+    KEY_FILE_HANDLER.write_key(
+        ModelKeyValues.OPENAI_API_VERSION, openai_api_version
+    )
     KEY_FILE_HANDLER.write_key(
         ModelKeyValues.AZURE_DEPLOYMENT_NAME, azure_deployment_name
     )
@@ -268,7 +277,9 @@ def set_azure_openai_embedding_env(
         EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
     )
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES")
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES"
+    )
     KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "NO")
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
@@ -292,7 +303,9 @@ def unset_azure_openai_env():
 
 @app.command(name="unset-azure-openai-embedding")
 def unset_azure_openai_embedding_env():
-    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME)
+    KEY_FILE_HANDLER.remove_key(
+        EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
+    )
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING)
 
     print(
@@ -350,11 +363,19 @@ def set_ollama_embeddings_env(
     ),
 ):
     clear_embedding_model_keys()
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, "ollama")
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name
+    )
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url
+    )
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, "ollama"
+    )
     KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "YES")
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO"
+    )
 
     print(
         ":raising_hands: Congratulations! You're now using Ollama embeddings for all evals that require text embeddings."
@@ -554,13 +575,21 @@ def set_local_embeddings_env(
     ),
 ):
     clear_embedding_model_keys()
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url)
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME, model_name
+    )
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url
+    )
     if api_key:
-        KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, api_key)
+        KEY_FILE_HANDLER.write_key(
+            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, api_key
+        )
 
     KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "YES")
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO")
+    KEY_FILE_HANDLER.write_key(
+        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO"
+    )
 
     print(
         ":raising_hands: Congratulations! You're now using local embeddings for all evals that require text embeddings."
@@ -612,9 +641,13 @@ def set_gemini_model_env(
     if model_name is not None:
         KEY_FILE_HANDLER.write_key(ModelKeyValues.GEMINI_MODEL_NAME, model_name)
     if google_api_key is not None:
-        KEY_FILE_HANDLER.write_key(ModelKeyValues.GOOGLE_API_KEY, google_api_key)
+        KEY_FILE_HANDLER.write_key(
+            ModelKeyValues.GOOGLE_API_KEY, google_api_key
+        )
     else:
-        KEY_FILE_HANDLER.write_key(ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES")
+        KEY_FILE_HANDLER.write_key(
+            ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES"
+        )
 
     if google_cloud_project is not None:
         KEY_FILE_HANDLER.write_key(

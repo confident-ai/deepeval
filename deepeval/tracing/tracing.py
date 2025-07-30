@@ -62,6 +62,7 @@ from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict, is_confident
 from deepeval.tracing.context import current_span_context, current_trace_context
 
+
 class TraceManager:
     def __init__(self):
         self.traces: List[Trace] = []
@@ -175,7 +176,9 @@ class TraceManager:
 
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
-            trace.end_time = perf_counter() if trace.end_time is None else trace.end_time
+            trace.end_time = (
+                perf_counter() if trace.end_time is None else trace.end_time
+            )
 
             # Default to SUCCESS for completed traces
             # This assumes that if a trace completes, it was successful overall

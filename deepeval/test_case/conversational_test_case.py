@@ -53,7 +53,7 @@ class MCPPromptCall(BaseModel):
 
 
 class MCPResourceCall(BaseModel):
-    uri: AnyUrl 
+    uri: AnyUrl
     result: object
 
 
@@ -78,34 +78,47 @@ class Turn:
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
     additional_metadata: Optional[Dict] = None
 
-
     def __post_init__(self):
-        if (self.mcp_tools_called is not None or 
-            self.mcp_prompts_called is not None or
-            self.mcp_resources_called is not None
+        if (
+            self.mcp_tools_called is not None
+            or self.mcp_prompts_called is not None
+            or self.mcp_resources_called is not None
         ):
-            from mcp.types import CallToolResult, ReadResourceResult, GetPromptResult
+            from mcp.types import (
+                CallToolResult,
+                ReadResourceResult,
+                GetPromptResult,
+            )
 
             if self.mcp_tools_called is not None:
                 if not isinstance(self.mcp_tools_called, list) or not all(
-                    isinstance(tool_called, MCPToolCall) and 
-                    isinstance(tool_called.result, CallToolResult) for tool_called in self.mcp_tools_called
+                    isinstance(tool_called, MCPToolCall)
+                    and isinstance(tool_called.result, CallToolResult)
+                    for tool_called in self.mcp_tools_called
                 ):
-                    raise TypeError("The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types")
-                
+                    raise TypeError(
+                        "The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types"
+                    )
+
             if self.mcp_resources_called is not None:
                 if not isinstance(self.mcp_resources_called, list) or not all(
-                    isinstance(resource_called, MCPResourceCall) and 
-                    isinstance(resource_called.result, ReadResourceResult) for resource_called in self.mcp_resources_called
+                    isinstance(resource_called, MCPResourceCall)
+                    and isinstance(resource_called.result, ReadResourceResult)
+                    for resource_called in self.mcp_resources_called
                 ):
-                    raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types")
-                
+                    raise TypeError(
+                        "The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types"
+                    )
+
             if self.mcp_prompts_called is not None:
                 if not isinstance(self.mcp_prompts_called, list) or not all(
-                    isinstance(prompt_called, MCPPromptCall) and
-                        isinstance(prompt_called.result, GetPromptResult) for prompt_called in self.mcp_prompts_called
+                    isinstance(prompt_called, MCPPromptCall)
+                    and isinstance(prompt_called.result, GetPromptResult)
+                    for prompt_called in self.mcp_prompts_called
                 ):
-                    raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types")
+                    raise TypeError(
+                        "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
+                    )
 
 
 @dataclass
@@ -123,7 +136,6 @@ class ConversationalTestCase:
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
 
-
     def __post_init__(self):
         if len(self.turns) == 0:
             raise TypeError("'turns' must not be empty")
@@ -136,11 +148,10 @@ class ConversationalTestCase:
         for turn in self.turns:
             if not isinstance(turn, Turn):
                 raise TypeError("'turns' must be a list of `Turn`s")
-            
+
             copied_turns.append(deepcopy(turn))
 
         self.turns = copied_turns
-
 
     def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
         from mcp.types import Tool, Resource, Prompt
@@ -150,17 +161,26 @@ class ConversationalTestCase:
                 if not isinstance(mcp_data.available_tools, list) or not all(
                     isinstance(tool, Tool) for tool in mcp_data.available_tools
                 ):
-                    raise TypeError("'available_tools' must be a list of 'Tool' from mcp.types")
-                
+                    raise TypeError(
+                        "'available_tools' must be a list of 'Tool' from mcp.types"
+                    )
+
             if mcp_data.available_resources is not None:
-                if not isinstance(mcp_data.available_resources, list) or not all(
-                    isinstance(resource, Resource) for resource in mcp_data.available_resources
+                if not isinstance(
+                    mcp_data.available_resources, list
+                ) or not all(
+                    isinstance(resource, Resource)
+                    for resource in mcp_data.available_resources
                 ):
-                    raise TypeError("'available_resources' must be a list of 'Resource' from mcp.types")
-                
+                    raise TypeError(
+                        "'available_resources' must be a list of 'Resource' from mcp.types"
+                    )
+
             if mcp_data.available_prompts is not None:
                 if not isinstance(mcp_data.available_prompts, list) or not all(
-                    isinstance(prompt, Prompt) for prompt in mcp_data.available_prompts
+                    isinstance(prompt, Prompt)
+                    for prompt in mcp_data.available_prompts
                 ):
-                    raise TypeError("'available_prompts' must be a list of 'Prompt' from mcp.types")
-                
+                    raise TypeError(
+                        "'available_prompts' must be a list of 'Prompt' from mcp.types"
+                    )

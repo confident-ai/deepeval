@@ -10,6 +10,7 @@ from openai import AsyncClient
 
 async_client = AsyncClient()
 
+
 @observe(
     type="llm",
     model="gpt-4o",
@@ -19,9 +20,7 @@ async_client = AsyncClient()
 async def meta_agent(query: str):
     response = await async_client.chat.completions.create(
         model="gpt-4o",
-        messages=[
-            {"role": "user", "content": query}
-        ],
+        messages=[{"role": "user", "content": query}],
     )
     update_current_span(
         metadata={"user_id": "11111", "date": "1/1/11"},
@@ -41,7 +40,7 @@ async def meta_agent(query: str):
             output_token_count=response.usage.total_tokens,
         ),
     )
-    return response.choices[0].message.content,
+    return (response.choices[0].message.content,)
 
 
 async def run_parallel_examples():

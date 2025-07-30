@@ -82,7 +82,9 @@ class LocalModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_model_name(self):
-        model_name = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_NAME)
+        model_name = KEY_FILE_HANDLER.fetch_data(
+            ModelKeyValues.LOCAL_MODEL_NAME
+        )
         return f"{model_name} (Local Model)"
 
     def load_model(self, async_mode: bool = False):

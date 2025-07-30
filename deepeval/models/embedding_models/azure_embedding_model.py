@@ -1,6 +1,10 @@
 from typing import List
 from openai import AzureOpenAI, AsyncAzureOpenAI
-from deepeval.key_handler import EmbeddingKeyValues, ModelKeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import (
+    EmbeddingKeyValues,
+    ModelKeyValues,
+    KEY_FILE_HANDLER,
+)
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
 

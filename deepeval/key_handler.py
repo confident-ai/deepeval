@@ -15,6 +15,7 @@ class KeyValues(Enum):
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"
 
+
 class ModelKeyValues(Enum):
     # General
     TEMPERATURE = "TEMPERATURE"
@@ -62,6 +63,7 @@ class ModelKeyValues(Enum):
     DEEPSEEK_MODEL_NAME = "DEEPSEEK_MODEL_NAME"
     DEEPSEEK_API_KEY = "DEEPSEEK_API_KEY"
 
+
 class EmbeddingKeyValues(Enum):
     # Azure OpenAI
     USE_AZURE_OPENAI_EMBEDDING = "USE_AZURE_OPENAI_EMBEDDING"
@@ -72,11 +74,14 @@ class EmbeddingKeyValues(Enum):
     LOCAL_EMBEDDING_BASE_URL = "LOCAL_EMBEDDING_BASE_URL"
     LOCAL_EMBEDDING_API_KEY = "LOCAL_EMBEDDING_API_KEY"
 
+
 class KeyFileHandler:
     def __init__(self):
         self.data = {}
 
-    def write_key(self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues], value):
+    def write_key(
+        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues], value
+    ):
         """Appends or updates data in the hidden file"""
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
@@ -97,7 +102,9 @@ class KeyFileHandler:
         with open(f"{HIDDEN_DIR}/{KEY_FILE}", "w") as f:
             json.dump(self.data, f)
 
-    def fetch_data(self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]):
+    def fetch_data(
+        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
+    ):
         """Fetches the data from the hidden file"""
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
@@ -111,7 +118,9 @@ class KeyFileHandler:
             self.data = {}
         return self.data.get(key.value)
 
-    def remove_key(self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]):
+    def remove_key(
+        self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
+    ):
         """Removes the specified key from the data."""
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:

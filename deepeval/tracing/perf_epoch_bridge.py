@@ -22,6 +22,7 @@ _anchor_perf_ns: int | None = None
 _anchor_wall_ns: int | None = None
 _offset_ns: int | None = None
 
+
 def init_clock_bridge() -> None:
     """Capture simultaneous perf & wall-clock samples and compute offset."""
     global _anchor_perf_ns, _anchor_wall_ns, _offset_ns
@@ -31,15 +32,18 @@ def init_clock_bridge() -> None:
     _anchor_wall_ns = time.time_ns()
     _offset_ns = _anchor_perf_ns - _anchor_wall_ns
 
+
 def epoch_nanos_to_perf_seconds(epoch_ns: int) -> float:
     """Translate a UNIX epoch (ns) timestamp onto perf_counter() seconds."""
     if _offset_ns is None:
         raise RuntimeError("init_clock_bridge() must be called first!")
     return (epoch_ns + _offset_ns) / 1_000_000_000.0
 
+
 def perf_seconds_now() -> float:
     """Return current perf_counter() reading (seconds)."""
     return time.perf_counter()
+
 
 # Optional: reverse conversion (perf → epoch)
 def perf_seconds_to_epoch_nanos(perf_sec: float) -> int:
