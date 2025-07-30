@@ -147,18 +147,18 @@ class ConversationalTestCase:
                 isinstance(tool_called, MCPToolCall) and 
                 isinstance(tool_called.result, CallToolResult) for tool_called in turn.mcp_tools_called
             ):
-                raise TypeError("The 'tools_called' must be a list of 'MCPToolCall'")
+                raise TypeError("The 'tools_called' must be a list of 'MCPToolCall' with result of type CallToolResult")
         
         if turn.mcp_resources_called is not None:
             if not isinstance(turn.mcp_resources_called, list) or not all(
                 isinstance(resource_called, MCPResourceCall) and 
                 isinstance(resource_called.result, ReadResourceResult) for resource_called in turn.mcp_resources_called
             ):
-                raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall'")
+                raise TypeError("The 'resources_called' must be a list of 'MCPResourceCall' with result of type ReadResourceResult")
             
         if turn.mcp_prompts_called is not None:
             if not isinstance(turn.mcp_prompts_called, list) or not all(
                 isinstance(prompt_called, MCPPromptCall) and
                     isinstance(prompt_called.result, GetPromptResult) for prompt_called in turn.mcp_prompts_called
             ):
-                raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall'")
+                raise TypeError("The 'prompts_called' must be a list of 'MCPPromptCall' with result of type GetPromptResult")
