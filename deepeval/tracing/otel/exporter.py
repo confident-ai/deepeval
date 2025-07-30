@@ -270,8 +270,22 @@ class ConfidentSpanExporter(SpanExporter):
         
         elif span_type == "agent":
             name = span.attributes.get("confident.span.name")
-            available_tools = span.attributes.get("confident.span.available_tools")
-            agent_handoffs = span.attributes.get("confident.span.agent_handoffs")
+            available_tools_attr = span.attributes.get("confident.span.available_tools")
+            agent_handoffs_attr = span.attributes.get("confident.span.agent_handoffs")
+
+            available_tools: List[str] = []
+            try:
+                for tool in available_tools_attr:
+                    available_tools.append(str(tool))        
+            except Exception as e:
+                print(f"Error converting available tools: {e}")
+
+            agent_handoffs: List[str] = []
+            try:
+                for handoff in agent_handoffs_attr:
+                    agent_handoffs.append(str(handoff))
+            except Exception as e:
+                print(f"Error converting agent handoffs: {e}")
 
             agent_span = AgentSpan(
                 uuid=uuid,
@@ -284,8 +298,8 @@ class ConfidentSpanExporter(SpanExporter):
 
                 # agent span attributes
                 name=name if name else "",
-                available_tools=available_tools if available_tools else [],
-                agent_handoffs=agent_handoffs if agent_handoffs else []
+                available_tools=available_tools,
+                agent_handoffs=agent_handoffs
             )
 
             # set attributes
