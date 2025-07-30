@@ -107,7 +107,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             if schema:
                 json_output = trim_and_load_json(content)
-                return schema(**json_output), cost  # Return both the schema instance and cost as defined as native model
+                return (
+                    schema(**json_output),
+                    cost,
+                )  # Return both the schema instance and cost as defined as native model
             else:
                 return content, cost  # Return tuple with cost
         except Exception as e:
@@ -150,7 +153,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             if schema:
                 json_output = trim_and_load_json(content)
-                return schema(**json_output), cost  # Return both the schema instance and cost as defined as native model
+                return (
+                    schema(**json_output),
+                    cost,
+                )  # Return both the schema instance and cost as defined as native model
             else:
                 return content, cost  # Return tuple with cost
         except Exception as e:

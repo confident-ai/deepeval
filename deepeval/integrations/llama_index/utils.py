@@ -3,16 +3,22 @@ from deepeval.tracing.types import BaseSpan
 from typing import Any
 
 try:
-    from llama_index.core.agent.workflow.workflow_events import AgentOutput, AgentWorkflowStartEvent
+    from llama_index.core.agent.workflow.workflow_events import (
+        AgentOutput,
+        AgentWorkflowStartEvent,
+    )
+
     llama_index_agent_installed = True
 except:
     llama_index_agent_installed = False
+
 
 def is_llama_index_agent_installed():
     if not llama_index_agent_installed:
         raise ImportError(
             "llama-index is neccesary for this functionality. Please install it with `pip install llama-index` or with package manager of choice."
         )
+
 
 def parse_id(id_: str) -> tuple[str, str]:
     """
@@ -34,36 +40,44 @@ def parse_id(id_: str) -> tuple[str, str]:
         # Return empty strings if any parsing fails
         return "", ""
 
-def prepare_input_llm_test_case_params(class_name: str, method_name: str, span: BaseSpan, args: dict):
-    
+
+def prepare_input_llm_test_case_params(
+    class_name: str, method_name: str, span: BaseSpan, args: dict
+):
+
     # condition for parent agent span
     if class_name == "Workflow" and method_name == "run":
         start_event = args.get("start_event")
-        
+
         is_llama_index_agent_installed()
         if isinstance(start_event, AgentWorkflowStartEvent):
             input = ""
             for key, value in start_event.items():
                 input += f"{key}: {value}\n"
-            
+
             span.llm_test_case = LLMTestCase(
                 input=input,
                 actual_output="",
             )
 
-def prepare_output_llm_test_case_params(class_name: str, method_name: str, result: Any, span: BaseSpan):
-    
+
+def prepare_output_llm_test_case_params(
+    class_name: str, method_name: str, result: Any, span: BaseSpan
+):
+
     if class_name == "Workflow" and method_name == "run":
-        
+
         is_llama_index_agent_installed()
         if isinstance(result, AgentOutput):
             span.llm_test_case.actual_output = result.response.content
 
             tool_calls = []
             for tool_call in result.tool_calls:
-                tool_calls.append(ToolCall(
-                    name=tool_call.tool_name,
-                    input_parameters=tool_call.tool_kwargs,
-                ))
-            
+                tool_calls.append(
+                    ToolCall(
+                        name=tool_call.tool_name,
+                        input_parameters=tool_call.tool_kwargs,
+                    )
+                )
+
             span.llm_test_case.tools_called = tool_calls

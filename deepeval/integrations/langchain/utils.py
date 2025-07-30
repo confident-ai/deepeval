@@ -5,7 +5,15 @@ from langchain_core.outputs import ChatGeneration
 def parse_prompts_to_messages(
     prompts: list[str], **kwargs
 ) -> List[Dict[str, str]]:
-    VALID_ROLES = ["system", "assistant", "ai", "user", "human", "tool", "function"]
+    VALID_ROLES = [
+        "system",
+        "assistant",
+        "ai",
+        "user",
+        "human",
+        "tool",
+        "function",
+    ]
 
     messages: List[Dict[str, str]] = []
     current_role = None
@@ -18,14 +26,20 @@ def parse_prompts_to_messages(
                 continue
 
             first_word, sep, rest = line.partition(":")
-            role = first_word.lower() if sep and first_word.lower() in VALID_ROLES else None
+            role = (
+                first_word.lower()
+                if sep and first_word.lower() in VALID_ROLES
+                else None
+            )
 
             if role:
                 if current_role and current_content:
-                    messages.append({
-                        "role": current_role,
-                        "content": "\n".join(current_content).strip()
-                    })
+                    messages.append(
+                        {
+                            "role": current_role,
+                            "content": "\n".join(current_content).strip(),
+                        }
+                    )
                 current_role = role
                 current_content = [rest.strip()]
             else:
@@ -34,10 +48,12 @@ def parse_prompts_to_messages(
                 current_content.append(line)
 
         if current_role and current_content:
-            messages.append({
-                "role": current_role,
-                "content": "\n".join(current_content).strip()
-            })
+            messages.append(
+                {
+                    "role": current_role,
+                    "content": "\n".join(current_content).strip(),
+                }
+            )
             current_role, current_content = None, []
 
     tools = kwargs.get("invocation_params", {}).get("tools", None)

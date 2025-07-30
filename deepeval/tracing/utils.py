@@ -54,7 +54,7 @@ def make_json_serializable(obj):
         seen.add(oid)
 
         # Handle containers
-        if isinstance(o, (list, tuple, set, deque)): # TODO: check if more
+        if isinstance(o, (list, tuple, set, deque)):  # TODO: check if more
             serialized = []
             for item in o:
                 serialized.append(_serialize(item))
@@ -108,6 +108,7 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     timestamp = time_diff + perf_counter_value
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+
 
 def replace_self_with_class_name(obj):
     try:

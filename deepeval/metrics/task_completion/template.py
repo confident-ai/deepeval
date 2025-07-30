@@ -3,6 +3,7 @@ import textwrap
 import json
 from deepeval.tracing.utils import make_json_serializable
 
+
 class TaskCompletionTemplate:
 
     # TODO: Deprecate this function soon
