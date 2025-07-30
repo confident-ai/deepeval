@@ -268,6 +268,7 @@ class GPTModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -327,6 +328,7 @@ class GPTModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
