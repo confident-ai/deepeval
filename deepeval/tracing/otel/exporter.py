@@ -1,4 +1,5 @@
 import json
+import os
 import typing
 from dataclasses import dataclass
 from typing import List, Optional
@@ -34,6 +35,14 @@ class ConfidentSpanExporter(SpanExporter):
         
         if api_key:
             deepeval.login_with_confident_api_key(api_key)
+        
+        environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
+        if environment:
+            trace_manager.configure(environment=environment)
+
+        sampling_rate = os.getenv("CONFIDENT_SAMPLE_RATE")
+        if sampling_rate:
+            trace_manager.configure(sampling_rate=sampling_rate)
         
         super().__init__()
 
