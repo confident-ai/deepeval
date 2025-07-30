@@ -373,6 +373,11 @@ class ConfidentSpanExporter(SpanExporter):
             output = span.attributes.get("confident.span.attributes.output")
 
             try:
+                input_parameters = json.loads(input_parameters) if input_parameters else None
+            except Exception as e:
+                print(f"Error converting input parameters: {e}")
+
+            try:
                 tool_span.set_attributes(ToolAttributes(
                     input_parameters=input_parameters,
                     output=output
