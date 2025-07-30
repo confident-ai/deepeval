@@ -1,7 +1,6 @@
-import asyncio
-import random
-import pytest
 from typing import List
+import asyncio
+import pytest
 
 from deepeval.conversation_simulator import ConversationSimulator
 from deepeval.test_case import ConversationalTestCase
@@ -15,7 +14,6 @@ user_profile = "Jeff Seid is available on Monday and Thursday afternoons, and hi
 user_intention = "Booking an appointment with a specialist"
 
 
-# Test fixtures
 @pytest.fixture
 def callback_fn():
     def callback(prompt: str, conversation_history):
@@ -38,28 +36,31 @@ async def async_callback_fn():
 
 @pytest.fixture
 def simulator_sync():
-    return ConversationSimulator(
+    conversation_simulator = ConversationSimulator(
         user_profiles=[user_profile],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
         async_mode=False,
     )
+    conversation_simulator.simulation_cost = 0
+    return conversation_simulator
 
 
 @pytest.fixture
 def simulator_async():
-    return ConversationSimulator(
+    conversation_simulator = ConversationSimulator(
         user_profiles=[user_profile],
         user_intentions=user_intentions,
         opening_message="Hi, I'm your personal medical chatbot.",
         async_mode=True,
     )
-
+    conversation_simulator.simulation_cost = 0
+    return conversation_simulator
 
 # Test functions
 @pytest.mark.asyncio
 async def test_user_profile_generation(simulator_async: ConversationSimulator):
-    tasks = [simulator_async._simulate_user_profile() for _ in range(3)]
+    tasks = [simulator_async._a_simulate_user_profile() for _ in range(3)]
     results = await asyncio.gather(*tasks)
     assert len(results) == 3, "Should generate 3 user profiles"
     for profile in results:
@@ -89,12 +90,13 @@ def test_simulate_sync(simulator_sync: ConversationSimulator, callback_fn):
         model_callback=callback_fn,
         stopping_criteria="The user has successfully booked an appointment",
     )
+    print(test_cases)
     assert test_cases is not None, "Should generate test cases"
     assert len(test_cases) > 0, "Should have at least one test case"
     for tc in test_cases:
         assert hasattr(tc, "turns"), "Test case should have turns attribute"
-        assert len(tc.turns) >= 2, "Test case should have at least min_turns"
-        assert len(tc.turns) <= 4, "Test case should have at most max_turns"
+        assert len(tc.turns) >= 2 * 2 + 1, "Test case should have at least min_turns"
+        assert len(tc.turns) <= 2 * 4 + 1, "Test case should have at most max_turns"
 
 
 def test_simulate_async(
@@ -110,5 +112,5 @@ def test_simulate_async(
     assert len(test_cases) > 0, "Should have at least one test case"
     for tc in test_cases:
         assert hasattr(tc, "turns"), "Test case should have turns attribute"
-        assert len(tc.turns) >= 2, "Test case should have at least min_turns"
-        assert len(tc.turns) <= 4, "Test case should have at most max_turns"
+        assert len(tc.turns) >= 2 * 2 + 1, "Test case should have at least min_turns"
+        assert len(tc.turns) <= 2 * 4 + 1, "Test case should have at most max_turns"
