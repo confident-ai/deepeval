@@ -1,8 +1,5 @@
-import json
-from typing import List
+from typing import List, Optional
 from deepeval.tracing.types import Trace
-from deepeval.tracing.types import LLMTestCase
-from deepeval.test_case import ToolCall
 
 def to_hex_string(id_value: int | bytes, length: int = 32) -> str:
     """
@@ -52,12 +49,19 @@ def set_trace_time(trace: Trace):
         trace.start_time = target_span.start_time
         trace.end_time = target_span.end_time
 
-def validate_llm_test_case_data(input, actual_output, expected_output, context, retrieval_context, tools_called, expected_tools):
+def validate_llm_test_case_data(
+        input: Optional[str], 
+        actual_output: Optional[str], 
+        expected_output: Optional[str], 
+        context: Optional[List[str]], 
+        retrieval_context: Optional[List[str]]
+    ) -> None:
+    
     """Validate LLMTestCase data before creation"""
-    if not isinstance(input, str):
+    if input is not None and not isinstance(input, str):
         raise ValueError(f"input must be a string, got {type(input)}")
     
-    if not isinstance(actual_output, str):
+    if actual_output is not None and not isinstance(actual_output, str):
         raise ValueError(f"actual_output must be a string, got {type(actual_output)}")
     
     if expected_output is not None and not isinstance(expected_output, str):
@@ -70,11 +74,3 @@ def validate_llm_test_case_data(input, actual_output, expected_output, context, 
     if retrieval_context is not None:
         if not isinstance(retrieval_context, list) or not all(isinstance(item, str) for item in retrieval_context):
             raise ValueError("retrieval_context must be None or a list of strings")
-    
-    if tools_called is not None:
-        if not isinstance(tools_called, list) or not all(isinstance(item, ToolCall) for item in tools_called):
-            raise ValueError("tools_called must be None or a list of ToolCall objects")
-    
-    if expected_tools is not None:
-        if not isinstance(expected_tools, list) or not all(isinstance(item, ToolCall) for item in expected_tools):
-            raise ValueError("expected_tools must be None or a list of ToolCall objects")

@@ -172,7 +172,13 @@ class ConfidentSpanExporter(SpanExporter):
         llm_test_case = None
         if test_case_input and test_case_actual_output:
             try:
-                validate_llm_test_case_data(test_case_input, test_case_actual_output, test_case_expected_output, test_case_context, test_case_retrieval_context, tools_called, expected_tools)
+                validate_llm_test_case_data(
+                    input=test_case_input, 
+                    actual_output=test_case_actual_output, 
+                    expected_output=test_case_expected_output, 
+                    context=test_case_context, 
+                    retrieval_context=test_case_retrieval_context
+                )
                 
                 llm_test_case = LLMTestCase(
                     input=test_case_input,
