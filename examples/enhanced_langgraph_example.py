@@ -282,7 +282,7 @@ def main():
     
     # Set up environment
     if not os.getenv("OPENAI_API_KEY"):
-        print("⚠️  Please set OPENAI_API_KEY environment variable")
+        print("Please set OPENAI_API_KEY environment variable")
         return
     
     try:
@@ -295,8 +295,8 @@ def main():
         demonstrate_graph_metadata_extraction()
         demonstrate_advanced_metrics()
         
-        print("🎉 All demonstrations completed successfully!")
-        print("\n📊 Check your Confident AI dashboard to see:")
+        print("All demonstrations completed successfully!")
+        print("\nCheck your Confident AI dashboard to see:")
         print("   • Graph execution traces")
         print("   • Node-level execution details")
         print("   • State transition tracking")
@@ -304,7 +304,7 @@ def main():
         print("   • Performance insights")
         
     except Exception as e:
-        print(f"❌ Error during demonstration: {e}")
+        print(f" Error during demonstration: {e}")
         print("Please check your setup and try again.")
 
 
