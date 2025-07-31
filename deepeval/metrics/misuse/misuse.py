@@ -135,7 +135,7 @@ class MisuseMetric(BaseMetric):
                 misuses.append(verdict.reason)
 
         prompt: dict = self.evaluation_template.generate_reason(
-            misuses=misuses,
+            misuse_violations=misuses,
             score=format(self.score, ".2f"),
         )
 
@@ -166,7 +166,7 @@ class MisuseMetric(BaseMetric):
                 misuses.append(verdict.reason)
 
         prompt: dict = self.evaluation_template.generate_reason(
-            misuses=misuses,
+            misuse_violations=misuses,
             score=format(self.score, ".2f"),
         )
 
