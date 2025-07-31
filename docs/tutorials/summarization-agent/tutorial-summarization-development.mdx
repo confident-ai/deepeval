@@ -1,19 +1,17 @@
 ---
 id: tutorial-summarization-development
-title: Development
-sidebar_label: Development
+title: Building Your Summarizer
+sidebar_label: Building the Summarizer
 ---
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-In this section, we're going to create our **Meeting Summarization Agent** using the OpenAI API. To create a summarization agent, we'll need to define a `MeetingSummarizer` class which can be used to create multiple instances that allow us to generate summaries and action items anytime and anywhere.
+In this section, we're going to create our **meeting summarization agent** using the OpenAI API. Our summarization agent should be able to take an entire meeting transcript as `input` and return a **concise summary** and a **list of action items** from the transcript.
+
+We will implement our summarizer with variables of **model and summary prompt** in a `MeetingSummarizer` class. This will be helpful for future evaluations and iterations on our summarizer.
 
 :::tip
-`deepeval` provides the `@observe` decorator that helps you monitor your LLM application's entire workflow, and it requires only a single line of code. It is highly recommended to add this tracing to your application right from the development stage to make your dev life easier.
-:::
-
-:::note
 If you already have an LLM-based summarization agent that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](tutorial-summarization-evaluation).
 :::
 
@@ -29,10 +27,6 @@ Keep the tone neutral and factual, avoid unnecessary detail, and do not add inte
 beyond the content of the conversation.
 ```
 
-:::tip
-Defining your agents using reusable classes and methods is generally considered best practice because you can create multiple instances of this agent in various places for evaluations and iterations.
-:::
-
 ### Using OpenAI API
 
 We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat completions API to generate summaries and action items using the system prompt mentioned above for any given transcript.
@@ -41,7 +35,6 @@ We are now going to create a `MeetingSummarizer` class that uses OpenAI's chat c
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from deepeval.tracing import observe
 
 load_dotenv()
 
@@ -54,15 +47,9 @@ class MeetingSummarizer:
         self.model = model
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.system_prompt = system_prompt or (
-            "You are an AI assistant tasked with summarizing meeting transcripts clearly"
-            "and accurately. Given the following conversation, generate a concise summary"
-            "that captures the key points discussed, along with a set of action items"
-            "reflecting the concrete next steps mentioned. Keep the tone neutral and"
-            "factual, avoid unnecessary detail, and do not add interpretation beyond"
-            "the content of the conversation."
+            "..." # Use the above system prompt here
         )
 
-    @observe()
     def summarize(self, transcript: str) -> str:
 
         response = self.client.chat.completions.create(
@@ -335,23 +322,17 @@ On the UX side, they agreed to implement fallback messaging for low-confidence r
 
 ## Updating Meeting Summarizer
 
-Since the LLM returns markdown-formatted strings by default, these responses are difficult to parse and structure for a UI. Without predictable formats like `json` or plain text, developers must write brittle regexes or manual parsers, which break easily. We will now update our `MeetingSummarizer` to generate responses in our desired format, which makes them more versatile.
+To improve response parsing and structure, we'll split our `MeetingSummarizer` into two helper functions:
 
-We can do that by sperating our summarizer's tasks into 2 independent helper functions. This means, we can create:
+* `get_summary()`: Generates the meeting summary
+* `get_action_items()`: Extracts action items
 
-- A function to generate summary
-- A function to generate action items
+This approach lets us use tailored system prompts for each task, ensuring predictable outputs (e.g., JSON or plain text). It also increases flexibility for evaluation — each function can be tested independently.
 
-This allows us to create 2 specific system prompts each for different task, giving us more control over what the agent generates and how it generates them.
-This also gives us more flexibility when evaluating our summarizer in the later stages. For example:
-
-- You can use only `get_summary()` to evaluate the summary generated.
-- You can use only `get_action_items()` to evaluate the action items generated.
 
 ### Generating summaries
 
-We will be creating a helper function which we can use to generate _only the summary_ of the transcript provided. We are creating this function because it gives us more flexibility on how the summary is generated.
-Also by making it a seperate function, we can do component level evaluations for our summarizer in the future. 
+We will now create a helper function to generate **only the summary** from the transcript. This gives us more control over how summaries are produced and enables **component-level evaluation** in future stages. Here's the system prompt we'll be using to generate summaries:
 
 #### System prompt for generating summaries:
 
@@ -363,18 +344,12 @@ any action items. Respond with only the summary as plain text — no headings,
 formatting, or explanations.
 ```
 
-:::tip
-It is also important to note that some models perform well for specific tasks, when you are dealing with different use cases, it is better to test different models to see which one performs best for this specific task. By creating individual functions we can find the best hyperparameters that work for our use case.
-:::
-
 Here's how we'll define our helper function to generate summaries:
 
 ```python
-from deepeval.tracing import observe
 ...
 class MeetingSummarizer:
     ...
-    @observe()
     def get_summary(self, transcript: str) -> str:
         try:
             response = self.client.chat.completions.create(
@@ -394,7 +369,7 @@ class MeetingSummarizer:
 
 ### Generating action items
 
-We will now be creating a helper function to generate _only the action items_ of the transcript provided. The action items must be generated in a `json` format, which will allow us to easily parse and render them in different representations.
+We will now be creating a helper function to generate **only the action item** of the transcript provided. The action items must be generated in a `json` format, which will allow us to easily parse and render them in different representations.
 
 #### System prompt for generating action items:
 
@@ -418,11 +393,8 @@ valid JSON format — no extra text or commentary.
 Here's how we'll define our helper function to generate action items:
 
 ```python
-from deepeval.tracing import observe
-...
 class MeetingSummarizer:
     ...
-    @observe()
     def get_action_items(self, transcript: str) -> dict:
         try:
             response = self.client.chat.completions.create(
@@ -446,11 +418,8 @@ class MeetingSummarizer:
 We can now call these helper functions in our `summarize()` function and return their respective responses. Here's how we can do that:
 
 ```python
-from deepeval.tracing import observe
-...
 class MeetingSummarizer:
     ...
-    @observe()
     def summarize(self, transcript: str) -> tuple[str, dict]:
         summary = self.get_summary(transcript)
         action_items = self.get_action_items(transcript)
@@ -472,9 +441,9 @@ print("JSON:")
 print(json.dumps(action_items, indent=2))
 ```
 
-With this new updated `MeetingSummarizer`, the output we get for summary is a string of text and the output for action items is a `JSON` object which we can parse and manipulate it in any way we want.
+✅ Congratulations! 🎉 You've just built a very robust summarization agent that generates a string of text as summary and outputs the action items in a `JSON` object which we can parse and manipulate it in any way we want.
 
-By running the new summarizer, I got the desirable output which can be used to create a webpage, here's both the UI and raw format of the outputs generated:
+Here is an example of a nice looking UI that shows how we can manipulate our new responses.
 
 <Tabs groups="summary-action_items-ui-raw">
 

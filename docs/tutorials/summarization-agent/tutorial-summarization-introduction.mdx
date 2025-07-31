@@ -1,6 +1,6 @@
 ---
 id: tutorial-summarization-introduction
-title: Introduction
+title: Introduction to LLM Evaluation
 sidebar_label: Introduction
 ---
 
@@ -8,16 +8,6 @@ import LinkCards from "@site/src/components/LinkCards"
 import TechStackCards from "@site/src/components/TechStackCards"
 
 Learn how to build, evaluate, and deploy a reliable **LLM-powered meeting summarization agent** using **OpenAI** and **DeepEval**.
-
-:::note
-If you're working with LLMs for summarization, this tutorial is for you. While we'll specifically focus on evaluating a meeting summarizer, the concepts and practices here can be applied to **any LLM application that generates summaries**.
-:::
-
-## Overview
-
-DeepEval is an open-source LLM evaluation framework that supports a wide-range of metrics to help evaluate and iterate on your LLM applications.
-
-In this tutorial, we'll be building a robust LLM-powered summarization agent using **OpenAI** and **DeepEval**. 
 
 <TechStackCards
     techStack={[
@@ -32,66 +22,79 @@ In this tutorial, we'll be building a robust LLM-powered summarization agent usi
     ]}
 />
 
-Here are the links to jump to different stages of this tutorial:
+:::note
+If you're working with LLMs for summarization, this tutorial is for you. While we'll specifically focus on evaluating a meeting summarizer, the concepts and practices here can be applied to **any LLM application tasked with summary generation**.
+:::
+
+## Get Started
+
+DeepEval is an open-source LLM evaluation framework that supports a wide-range of metrics to help evaluate and iterate on your LLM applications.
+
+Click on these links to jump to different stages of this tutorial:
 
 <LinkCards
     tutorials={[
         {
             number: 1,
-            title: 'Development',
-            description: 'Go to the Development stage',
+            icon: "Hammer",
+            title: 'Build your Summarizer',
+            objectives: [
+                "Use OpenAI to build a summarizer",
+                "Learn modular coding techniques to improve your summarizer",
+                "Learn parsing techniques to build production grade LLM applications"
+            ],
             to: '/tutorials/summarization-agent/tutorial-summarization-development',
         },
         {
             number: 2,
-            title: 'Evaluation',
-            description: 'Go to the Evaluation stage',
+            icon: "TestTubeDiagonal",
+            title: 'Evaluate your summarizer',
+            objectives: [
+                "Learn how to define your evaluation criteria",
+                "Create test cases using your summarizer",
+                "Run your first eval",
+                "Create datasets for future evaluations"
+            ],
             to: '/tutorials/summarization-agent/tutorial-summarization-evaluation',
         },
         {
             number: 3,
-            title: 'Improvement',
-            description: 'Go to the Improvement stage',
+            icon: "BookPlus",
+            title: 'Changing your model and prompts',
+            objectives: [
+                "Use evaluation scores to improve your summarizer",
+                "Iterate over different models to find the best one for your use case",
+                "Change your system prompts and check for regressions"
+            ],
             to: '/tutorials/summarization-agent/tutorial-summarization-improvement',
         },
         {
             number: 4,
-            title: 'Deployment',
-            description: 'Go to the Deployment stage',
+            title: 'Setup Evals in Production',
+            icon:"ShieldCheck",
+            objectives: [
+                "Trace your entire application workflow",
+                "Evaluate your summarizer during prod and choose your metrics",
+                "Setup CI/CD workflows to always get reliable summaries"
+            ],
             to: '/tutorials/summarization-agent/tutorial-summarization-deployment',
         },
     ]}
 />
 
-## What You'll Learn
+## What You Will Evaluate
 
-In this tutorial, you'll learn:
+In this tutorial you will build and evaluate a **meeting summarization agent** that is used by famous tools like **Otter.ai** and **Circleback** to generate their summaries and action items from meeting transcripts. You will use `deepeval` and evalue the summarization agent's ability to generate:
 
-- How to build a summarization agent.
-- How to define summarization criteria and choose the right evaluation metrics.
-- How to run evals on your summarization agent using `deepeval`.
-- How to improve your summarization agent using evaluation results.
-- How to prepare your summarization agent for production.
-
-## Meeting Summarizer
-
-Most meetings today happen over platforms like **Google Meet** and **Zoom**, making it easy for key points to be missed or forgotten.
-
-To solve this, tools like **Otter.ai** and **Circleback** convert transcripts into concise summaries and actionable takeaways—keeping teams aligned and productive.
-
-In this tutorial, you'll build a meeting summarization agent that takes a full transcript as `input` and generates:
-
-* A concise summary of the discussion
-* A clear list of action items
-
-Your goal is to create a reliable summarization agent that captures critical decisions and next steps—without missing important context.
+- A concise summary of the discussion
+- A clear list of action items
 
 Below is an example of what a deliverable from a meeting summarization platform might look like:
 
 ![Webpage Image](https://deepeval-docs.s3.us-east-1.amazonaws.com/tutorials:summarization-agent:summarizer-overview.png)
 
-This interface shows a typical output: **the meeting overview, full transcript, a concise summary, and a list of action items** — all designed to keep everyone aligned and informed.
+In the next section, we'll build this summarization agent from scratch using OpenAI API.
 
-In the rest of this tutorial, you'll build the core summarization agent behind platforms like **Otter.ai** and **Circleback** — capable of turning raw meeting transcripts into clear, actionable insights.
-
-Ready to get started? Let's move on to [developing the summarization agent](tutorial-summarization-development).
+:::tip
+If you already have an LLM agent to evaluate, you can skip to [Evaluation Section](tutorial-summarization-evaluation) of this tutorial.
+:::
