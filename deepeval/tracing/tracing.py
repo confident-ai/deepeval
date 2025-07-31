@@ -243,10 +243,6 @@ class TraceManager:
             parent_span = self.get_span_by_uuid(span.parent_uuid)
             if parent_span:
                 parent_span.children.append(span)
-            else:
-                raise ValueError(
-                    f"Parent span with UUID {span.parent_uuid} does not exist."
-                )
 
     def get_trace_by_uuid(self, trace_uuid: str) -> Optional[Trace]:
         """Get a trace by its UUID."""

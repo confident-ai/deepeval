@@ -35,6 +35,7 @@ from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.test_case import LLMTestCase, ToolCall
 from pydantic import BaseModel, ValidationError
 from deepeval.feedback.feedback import Feedback
+from collections import defaultdict
 
 
 class TraceAttributes(BaseModel):
@@ -75,61 +76,68 @@ class ConfidentSpanExporter(SpanExporter):
         timeout_millis: int = 30000,
         api_key: Optional[str] = None,
     ) -> SpanExportResult:
+        
+        forest = self.build_span_forest(spans)
+        spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
+        
+        for span_list in forest:
+            spans_wrappers_list: List[BaseSpanWrapper] = []
+            for span in span_list:
+                
+                # confugarion are attached to the resource attributes
+                resource_attributes = span.resource.attributes
+                environment = resource_attributes.get("confident.environment")
+                if environment and isinstance(environment, str):
+                    trace_manager.configure(environment=environment)
 
-        spans_wrappers_list: List[BaseSpanWrapper] = []
+                sampling_rate = resource_attributes.get("confident.sampling_rate")
+                if sampling_rate and isinstance(sampling_rate, float):
+                    trace_manager.configure(sampling_rate=sampling_rate)
 
-        for span in spans:
-
-            # confugarion are attached to the resource attributes
-            resource_attributes = span.resource.attributes
-            environment = resource_attributes.get("confident.environment")
-            if environment and isinstance(environment, str):
-                trace_manager.configure(environment=environment)
-
-            sampling_rate = resource_attributes.get("confident.sampling_rate")
-            if sampling_rate and isinstance(sampling_rate, float):
-                trace_manager.configure(sampling_rate=sampling_rate)
-
-            spans_wrappers_list.append(
-                self._convert_readable_span_to_base_span(span)
-            )
+                base_span_wrapper = self._convert_readable_span_to_base_span(span)
+                spans_wrappers_list.append(base_span_wrapper)
+            
+            spans_wrappers_forest.append(spans_wrappers_list)
 
         # list starts from root span
-        for base_span_wrapper in reversed(spans_wrappers_list):
-            current_trace = trace_manager.get_trace_by_uuid(
-                base_span_wrapper.base_span.trace_uuid
-            )
-            if not current_trace:
-                current_trace = trace_manager.start_new_trace(
-                    trace_uuid=base_span_wrapper.base_span.trace_uuid
+        for spans_wrappers_list in spans_wrappers_forest:
+
+            for base_span_wrapper in spans_wrappers_list:
+
+                current_trace = trace_manager.get_trace_by_uuid(
+                    base_span_wrapper.base_span.trace_uuid
                 )
+                if not current_trace:
+                    current_trace = trace_manager.start_new_trace(
+                        trace_uuid=base_span_wrapper.base_span.trace_uuid
+                    )
 
-            if api_key:
-                current_trace.confident_api_key = api_key
+                if api_key:
+                    current_trace.confident_api_key = api_key
 
-            # set the trace attributes
-            if base_span_wrapper.trace_attributes:
-                current_trace.name = base_span_wrapper.trace_attributes.name
-                current_trace.tags = base_span_wrapper.trace_attributes.tags
-                current_trace.thread_id = (
-                    base_span_wrapper.trace_attributes.thread_id
-                )
-                current_trace.user_id = (
-                    base_span_wrapper.trace_attributes.user_id
-                )
+                # set the trace attributes
+                if base_span_wrapper.trace_attributes:
+                    current_trace.name = base_span_wrapper.trace_attributes.name
+                    current_trace.tags = base_span_wrapper.trace_attributes.tags
+                    current_trace.thread_id = (
+                        base_span_wrapper.trace_attributes.thread_id
+                    )
+                    current_trace.user_id = (
+                        base_span_wrapper.trace_attributes.user_id
+                    )
 
-            trace_manager.add_span(base_span_wrapper.base_span)
-            trace_manager.add_span_to_trace(base_span_wrapper.base_span)
-            # no removing span because it can be parent of other spans
+                trace_manager.add_span(base_span_wrapper.base_span)
+                trace_manager.add_span_to_trace(base_span_wrapper.base_span)
+                # no removing span because it can be parent of other spans
 
-        # safely end all active traces
-        active_traces_keys = list(trace_manager.active_traces.keys())
+            # safely end all active traces
+            active_traces_keys = list(trace_manager.active_traces.keys())
 
-        for trace_key in active_traces_keys:
-            set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
-            trace_manager.end_trace(trace_key)
+            for trace_key in active_traces_keys:
+                set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
+                trace_manager.end_trace(trace_key)
 
-        trace_manager.clear_traces()
+            trace_manager.clear_traces()
 
         return SpanExportResult.SUCCESS
 
@@ -497,3 +505,60 @@ class ConfidentSpanExporter(SpanExporter):
 
         # if span type is not supported, return None
         return None
+
+    def build_span_forest(self, spans: typing.Sequence[ReadableSpan]) -> List[typing.Sequence[ReadableSpan]]:
+        
+        # Group spans by trace ID
+        trace_spans = defaultdict(list)
+        for span in spans:
+            trace_id = span.context.trace_id
+            trace_spans[trace_id].append(span)
+        
+        forest = []
+        
+        # Process each trace separately
+        for trace_id, trace_span_list in trace_spans.items():
+            # Build parent-child relationships for this trace
+            children = defaultdict(list)
+            span_map = {}
+            all_span_ids = set()
+            parent_map = {}
+            
+            for span in trace_span_list:
+                span_id = span.context.span_id
+                parent_id = span.parent.span_id if span.parent else None
+                
+                all_span_ids.add(span_id)
+                span_map[span_id] = span
+                parent_map[span_id] = parent_id
+                
+                if parent_id is not None:
+                    children[parent_id].append(span_id)
+            
+            # Identify roots: spans with no parent or parent not in this trace
+            roots = []
+            for span_id in all_span_ids:
+                parent_id = parent_map.get(span_id)
+                if parent_id is None or parent_id not in all_span_ids:
+                    roots.append(span_id)
+            
+            # Perform DFS from each root to collect spans in DFS order
+            def dfs(start_id):
+                order = []
+                stack = [start_id]
+                while stack:
+                    current_id = stack.pop()
+                    if current_id in span_map:  # Only add if span exists
+                        order.append(span_map[current_id])
+                    # Add children in reverse so that leftmost child is processed first
+                    for child_id in sorted(children[current_id], reverse=True):
+                        stack.append(child_id)
+                return order
+            
+            # Build forest for this trace
+            for root_id in sorted(roots):
+                tree_order = dfs(root_id)
+                if tree_order:  # Only add non-empty trees
+                    forest.append(tree_order)
+        
+        return forest
