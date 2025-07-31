@@ -38,19 +38,19 @@ async def run_concurrent_invokes():
         },
     ]
     
-    trace_attributes = TraceAttributes(
-        name="langgraph-test",
-        tags=["langgraph", "test"],
-        metadata={"environment": "test"},
-        thread_id="123",
-        user_id="456",
-    )
-    
     # Create tasks for concurrent execution
     tasks = [
         agent.ainvoke(
             input=input_data,
-            config={"callbacks": [CallbackHandler(trace_attributes=trace_attributes)]},
+            config={"callbacks": [
+                CallbackHandler(
+                    name="langgraph-test",
+                    tags=["langgraph", "test"],
+                    metadata={"environment": "test"},
+                    thread_id="123",
+                    user_id="456",
+                )
+            ]},
         )
         for input_data in inputs
     ]

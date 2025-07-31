@@ -1,4 +1,4 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import (
@@ -67,7 +67,11 @@ class CallbackHandler(BaseCallbackHandler):
         self,
         metrics: List[BaseMetric] = [],
         metric_collection: Optional[str] = None,
-        trace_attributes: Optional[TraceAttributes] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
@@ -75,7 +79,13 @@ class CallbackHandler(BaseCallbackHandler):
         is_langchain_installed()
         self.metrics = metrics
         self.metric_collection = metric_collection
-        self.trace_attributes = trace_attributes
+        self.trace_attributes = TraceAttributes(
+            name=name,
+            tags=tags,
+            metadata=metadata,
+            thread_id=thread_id,
+            user_id=user_id,
+        )
         super().__init__()
 
     def check_active_trace_id(self):
