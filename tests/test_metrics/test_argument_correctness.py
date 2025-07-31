@@ -10,7 +10,9 @@ test_case = LLMTestCase(
         ToolCall(
             name="WebSearch Tool",
             description="Tool to search for information on the web.",
-            input_parameters={"search_query": "Trump first raised tariffs year"},
+            input_parameters={
+                "search_query": "Trump first raised tariffs year"
+            },
         ),
         ToolCall(
             name="History FunFact Tool",
@@ -26,9 +28,14 @@ no_description_test_case = LLMTestCase(
     tools_called=[
         ToolCall(
             name="WebSearch Tool",
-            input_parameters={"search_query": "Trump first raised tariffs year"},
+            input_parameters={
+                "search_query": "Trump first raised tariffs year"
+            },
         ),
-        ToolCall(name="History FunFact Tool", input_parameters={"topic": "Trump tariffs"}),
+        ToolCall(
+            name="History FunFact Tool",
+            input_parameters={"topic": "Trump tariffs"},
+        ),
     ],
 )
 
@@ -53,18 +60,23 @@ empty_test_case = LLMTestCase(
     tools_called=[],
 )
 
-# evaluate(
-#     test_cases=[
-#         test_case,
-#         # empty_test_case,
-#         # no_description_test_case,
-#         # no_input_test_case,
-#     ],
-#     metrics=[ArgumentCorrectnessMetric(threshold=0.4)],
-#     async_config=AsyncConfig(run_async=True, max_concurrent=2),
-# )
+evaluate(
+    test_cases=[
+        test_case,
+        empty_test_case,
+        no_description_test_case,
+        no_input_test_case,
+    ],
+    metrics=[ArgumentCorrectnessMetric(threshold=0.4, model="gpt-4o")],
+    async_config=AsyncConfig(run_async=True, max_concurrent=2),
+)
 
 metric = ArgumentCorrectnessMetric(threshold=0.4)
-for test_case in [test_case, no_input_test_case, empty_test_case, no_description_test_case]:
+for test_case in [
+    test_case,
+    no_input_test_case,
+    empty_test_case,
+    no_description_test_case,
+]:
     metric.measure(test_case)
     print(metric.score, metric.reason)

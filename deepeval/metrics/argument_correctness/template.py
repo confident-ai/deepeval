@@ -14,7 +14,7 @@ class ArgumentCorrectnessTemplate:
             For the provided list of tool calls, determine whether each tool call input parameter is relevantly and correctly addresses the input.
 
             Please generate a list of JSON with two keys: `verdict` and `reason`.
-            The 'verdict' key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the tool call input parameter is relevant to addressing the original input, 'no' if the tool call input parameter is irrelevant.
+            The 'verdict' key should STRICTLY be either a 'yes' or 'no'. Answer 'yes' if the tool call input parameter is relevantly and correctly addresses the original input, 'no' if the tool call input parameter doesn't correctly and relevantly address the original input.
             The 'reason' is the reason for the verdict.
             Provide a 'reason' ONLY if the answer is 'no'. 
             If there is no input parameter, answer 'no' for the verdict and provide the reason as "No input parameter provided".
@@ -71,7 +71,7 @@ class ArgumentCorrectnessTemplate:
                     }},
                     {{
                         "verdict": "no",
-                        "reason": "A one-year warranty is a purchase benefit, not a feature of the laptop itself."
+                        "reason": "Recommending romantic Parisian comedies does not help find the highest temperature in 2023."
                     }}
                 ]  
             }}
@@ -95,7 +95,7 @@ class ArgumentCorrectnessTemplate:
         incorrect_tool_calls_reasons: List[str], input: str, score: float
     ):
         return textwrap.dedent(
-            f"""Given the argument correctness score, the list of reasons of incorrect tool calls, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
+            f"""Given the argument correctness score, the list of reasons of incorrect tool calls, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score. You can mention tool calls or input, but do not mention an output or a response.
             If there is nothing incorrect, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
 
             **

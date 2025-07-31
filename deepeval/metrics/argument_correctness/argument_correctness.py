@@ -57,18 +57,6 @@ class ArgumentCorrectnessMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(test_case, self._required_params, self)
-        if len(test_case.tools_called) == 0:
-            self.success = True
-            self.score = 1.0
-            self.reason = "No tool calls provided"
-            self.verbose_logs = construct_verbose_logs(
-                self,
-                steps=[
-                    "Verdicts: None",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
-            )
-            return self.score
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -84,13 +72,18 @@ class ArgumentCorrectnessMetric(BaseMetric):
                     )
                 )
             else:
-                self.verdicts: List[ArgumentCorrectnessVerdict] = (
-                    self._generate_verdicts(
-                        test_case.input, test_case.tools_called
+                if len(test_case.tools_called) == 0:
+                    self.verdicts = []
+                    self.score = 1.0
+                    self.reason = "No tool calls provided"
+                else:
+                    self.verdicts: List[ArgumentCorrectnessVerdict] = (
+                        self._generate_verdicts(
+                            test_case.input, test_case.tools_called
+                        )
                     )
-                )
-                self.score = self._calculate_score()
-                self.reason = self._generate_reason(test_case.input)
+                    self.score = self._calculate_score()
+                    self.reason = self._generate_reason(test_case.input)
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -110,18 +103,6 @@ class ArgumentCorrectnessMetric(BaseMetric):
     ) -> float:
 
         check_llm_test_case_params(test_case, self._required_params, self)
-        if len(test_case.tools_called) == 0:
-            self.success = True
-            self.score = 1.0
-            self.reason = "No tool calls provided"
-            self.verbose_logs = construct_verbose_logs(
-                self,
-                steps=[
-                    "Verdicts: None",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
-            )
-            return self.score
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -130,13 +111,18 @@ class ArgumentCorrectnessMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.verdicts: List[ArgumentCorrectnessVerdict] = (
-                await self._a_generate_verdicts(
-                    test_case.input, test_case.tools_called
+            if len(test_case.tools_called) == 0:
+                self.verdicts = []
+                self.score = 1.0
+                self.reason = "No tool calls provided"
+            else:
+                self.verdicts: List[ArgumentCorrectnessVerdict] = (
+                    await self._a_generate_verdicts(
+                        test_case.input, test_case.tools_called
+                    )
                 )
-            )
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(test_case.input)
+                self.score = self._calculate_score()
+                self.reason = await self._a_generate_reason(test_case.input)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
