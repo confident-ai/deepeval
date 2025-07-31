@@ -5,7 +5,9 @@ import asyncio
 import time
 
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
@@ -17,6 +19,7 @@ agent = create_react_agent(
     tools=[get_weather],
     prompt="You are a helpful assistant",
 )
+
 
 async def run_concurrent_invokes():
     # Define 3 different inputs for concurrent execution
@@ -37,20 +40,22 @@ async def run_concurrent_invokes():
             ]
         },
     ]
-    
+
     # Create tasks for concurrent execution
     tasks = [
         agent.ainvoke(
             input=input_data,
-            config={"callbacks": [
-                CallbackHandler(
-                    name="langgraph-test",
-                    tags=["langgraph", "test"],
-                    metadata={"environment": "test"},
-                    thread_id="123",
-                    user_id="456",
-                )
-            ]},
+            config={
+                "callbacks": [
+                    CallbackHandler(
+                        name="langgraph-test",
+                        tags=["langgraph", "test"],
+                        metadata={"environment": "test"},
+                        thread_id="123",
+                        user_id="456",
+                    )
+                ]
+            },
         )
         for input_data in inputs
     ]
