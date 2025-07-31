@@ -26,6 +26,7 @@ from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
+from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .conversation_relevancy.conversation_relevancy import (
     ConversationRelevancyMetric,
 )
