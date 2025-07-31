@@ -11,6 +11,7 @@
   padding-bottom: 2rem;
   display: flex;
   counter-increment: step;
+
 }
 
 .timelineStep {
@@ -57,4 +58,8 @@
 .timelineContent {
   padding-left: 1rem;
   flex: 1;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
