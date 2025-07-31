@@ -77,16 +77,19 @@ class ConfidentSpanExporter(SpanExporter):
         api_key: Optional[str] = None,
     ) -> SpanExportResult:
         
-        forest = self.build_span_forest(spans)
-        spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
+        # build forest of spans
+        forest = self._build_span_forest(spans)
         
+        # convert forest of spans to forest of base span wrappers
+        spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
         for span_list in forest:
             spans_wrappers_list: List[BaseSpanWrapper] = []
             for span in span_list:
                 
                 # confugarion are attached to the resource attributes
                 resource_attributes = span.resource.attributes
-                environment = resource_attributes.get("confident.environment")
+                environment = resource_attributes.get("confident.environment")  
+                
                 if environment and isinstance(environment, str):
                     trace_manager.configure(environment=environment)
 
@@ -95,10 +98,11 @@ class ConfidentSpanExporter(SpanExporter):
                     trace_manager.configure(sampling_rate=sampling_rate)
 
                 base_span_wrapper = self._convert_readable_span_to_base_span(span)
+                
                 spans_wrappers_list.append(base_span_wrapper)
-            
             spans_wrappers_forest.append(spans_wrappers_list)
 
+        # add spans to trace manager
         for spans_wrappers_list in spans_wrappers_forest:
             for base_span_wrapper in spans_wrappers_list:
 
@@ -134,7 +138,7 @@ class ConfidentSpanExporter(SpanExporter):
             set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
             trace_manager.end_trace(trace_key)
         trace_manager.clear_traces()
-        
+
         return SpanExportResult.SUCCESS
 
     def shutdown(self):
@@ -502,7 +506,7 @@ class ConfidentSpanExporter(SpanExporter):
         # if span type is not supported, return None
         return None
 
-    def build_span_forest(self, spans: typing.Sequence[ReadableSpan]) -> List[typing.Sequence[ReadableSpan]]:
+    def _build_span_forest(self, spans: typing.Sequence[ReadableSpan]) -> List[typing.Sequence[ReadableSpan]]:
         
         # Group spans by trace ID
         trace_spans = defaultdict(list)
