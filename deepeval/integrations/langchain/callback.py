@@ -1,4 +1,4 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
 from deepeval.tracing.attributes import (
@@ -53,6 +53,7 @@ from deepeval.tracing.types import (
     ToolSpan,
 )
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing.attributes import TraceAttributes
 
 
 class CallbackHandler(BaseCallbackHandler):
@@ -60,11 +61,17 @@ class CallbackHandler(BaseCallbackHandler):
     active_trace_id: Optional[str] = None
     metrics: List[BaseMetric] = []
     metric_collection: Optional[str] = None
+    trace_attributes: Optional[TraceAttributes] = None
 
     def __init__(
         self,
         metrics: List[BaseMetric] = [],
         metric_collection: Optional[str] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
     ):
         capture_tracing_integration(
             "deepeval.integrations.langchain.callback.CallbackHandler"
@@ -72,6 +79,13 @@ class CallbackHandler(BaseCallbackHandler):
         is_langchain_installed()
         self.metrics = metrics
         self.metric_collection = metric_collection
+        self.trace_attributes = TraceAttributes(
+            name=name,
+            tags=tags,
+            metadata=metadata,
+            thread_id=thread_id,
+            user_id=user_id,
+        )
         super().__init__()
 
     def check_active_trace_id(self):
@@ -118,6 +132,20 @@ class CallbackHandler(BaseCallbackHandler):
         if current_trace is not None:
             current_trace.input = span.input
             current_trace.output = span.output
+        
+        # set trace attributes
+        if self.trace_attributes:
+            if self.trace_attributes.name:
+                current_trace.name = self.trace_attributes.name
+            if self.trace_attributes.tags:
+                current_trace.tags = self.trace_attributes.tags
+            if self.trace_attributes.metadata:
+                current_trace.metadata = self.trace_attributes.metadata
+            if self.trace_attributes.thread_id:
+                current_trace.thread_id = self.trace_attributes.thread_id
+            if self.trace_attributes.user_id:
+                current_trace.user_id = self.trace_attributes.user_id
+        
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
