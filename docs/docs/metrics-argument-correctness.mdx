@@ -24,7 +24,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 The argument correctness metric is an agentic LLM metric that assesses your LLM agent's ability to generate the correct arguments for the tools it calls. It is calculated by determining whether the arguments for each tool call is correct based on the input.
 
 :::info
-The `ArgumentCorrectnessMetric` uses an LLM to determine argument correctness, and is also referenceless. If you're looking to determistically evaluate argument correctness, please refer to the [tool correctness metric](/docs/metrics-tool-correctness) instead.
+The `ArgumentCorrectnessMetric` uses an LLM to determine argument correctness, and is also referenceless. If you're looking to determistically evaluate argument correctness, refer to the [tool correctness metric](/docs/metrics-tool-correctness) instead.
 :::
 
 ## Required Arguments
@@ -130,7 +130,7 @@ The `ArgumentCorrectnessMetric` score is calculated according to the following e
 
 <Equation formula="\text{Argument Correctness} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
 
-The `ArgumentCorrectnessMetric` assesses the correctness of the arguments (input parameters) for each tool call, based on the task outline in the input.
+The `ArgumentCorrectnessMetric` assesses the correctness of the arguments (input parameters) for each tool call, based on the task outlined in the input.
 
 :::note
 You can set the `verbose_mode` of **ANY** `deepeval` metric to `True` to debug the `measure()` method:
