@@ -323,12 +323,12 @@ class ConfidentSpanExporter(SpanExporter):
         end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
 
         if span_type == "llm":
-            model = span.attributes.get("confident.span.model")
+            model = span.attributes.get("confident.llm.model")
             cost_per_input_token = span.attributes.get(
-                "confident.span.cost_per_input_token"
+                "confident.llm.cost_per_input_token"
             )
             cost_per_output_token = span.attributes.get(
-                "confident.span.cost_per_output_token"
+                "confident.llm.cost_per_output_token"
             )
 
             llm_span = LlmSpan(
@@ -346,14 +346,14 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # set attributes
-            input = span.attributes.get("confident.span.attributes.input")
-            output = span.attributes.get("confident.span.attributes.output")
-            prompt = span.attributes.get("confident.span.attributes.prompt")
+            input = span.attributes.get("confident.llm.attributes.input")
+            output = span.attributes.get("confident.llm.attributes.output")
+            prompt = span.attributes.get("confident.llm.attributes.prompt")
             input_token_count = span.attributes.get(
-                "confident.span.attributes.input_token_count"
+                "confident.llm.attributes.input_token_count"
             )
             output_token_count = span.attributes.get(
-                "confident.span.attributes.output_token_count"
+                "confident.llm.attributes.output_token_count"
             )
 
             try:
@@ -372,13 +372,9 @@ class ConfidentSpanExporter(SpanExporter):
             return llm_span
 
         elif span_type == "agent":
-            name = span.attributes.get("confident.span.name")
-            available_tools_attr = span.attributes.get(
-                "confident.span.available_tools"
-            )
-            agent_handoffs_attr = span.attributes.get(
-                "confident.span.agent_handoffs"
-            )
+            name = span.attributes.get("confident.agent.name")
+            available_tools_attr = span.attributes.get("confident.agent.available_tools")
+            agent_handoffs_attr = span.attributes.get("confident.agent.agent_handoffs")
 
             available_tools: List[str] = []
             try:
@@ -409,8 +405,8 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # set attributes
-            input = span.attributes.get("confident.span.attributes.input")
-            output = span.attributes.get("confident.span.attributes.output")
+            input = span.attributes.get("confident.agent.attributes.input")
+            output = span.attributes.get("confident.agent.attributes.output")
 
             try:
                 agent_span.set_attributes(
@@ -422,7 +418,7 @@ class ConfidentSpanExporter(SpanExporter):
             return agent_span
 
         elif span_type == "retriever":
-            embedder = span.attributes.get("confident.span.attributes.embedder")
+            embedder = span.attributes.get("confident.retriever.embedder")
 
             retriever_span = RetrieverSpan(
                 uuid=uuid,
@@ -438,14 +434,14 @@ class ConfidentSpanExporter(SpanExporter):
 
             # set attributes
             embedding_input = span.attributes.get(
-                "confident.span.attributes.embedding_input"
+                "confident.retriever.attributes.embedding_input"
             )
             retrieval_context = span.attributes.get(
-                "confident.span.attributes.retrieval_context"
+                "confident.retriever.attributes.retrieval_context"
             )
-            top_k = span.attributes.get("confident.span.attributes.top_k")
+            top_k = span.attributes.get("confident.retriever.attributes.top_k")
             chunk_size = span.attributes.get(
-                "confident.span.attributes.chunk_size"
+                "confident.retriever.attributes.chunk_size"
             )
 
             try:
@@ -463,8 +459,8 @@ class ConfidentSpanExporter(SpanExporter):
             return retriever_span
 
         elif span_type == "tool":
-            name = span.attributes.get("confident.span.name")
-            description = span.attributes.get("confident.span.description")
+            name = span.attributes.get("confident.tool.name")
+            description = span.attributes.get("confident.tool.description")
 
             tool_span = ToolSpan(
                 uuid=uuid,
@@ -481,9 +477,9 @@ class ConfidentSpanExporter(SpanExporter):
 
             # set attributes
             input_parameters = span.attributes.get(
-                "confident.span.attributes.input_parameters"
+                "confident.tool.attributes.input_parameters"
             )
-            output = span.attributes.get("confident.span.attributes.output")
+            output = span.attributes.get("confident.tool.attributes.output")
 
             try:
                 input_parameters = (
