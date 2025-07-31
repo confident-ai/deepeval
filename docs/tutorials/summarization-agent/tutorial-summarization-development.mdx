@@ -7,7 +7,10 @@ sidebar_label: Building the Summarizer
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-In this section, we're going to create our **meeting summarization agent** using the OpenAI API. Our summarization agent should be able to take an entire meeting transcript as `input` and return a **concise summary** and a **list of action items** from the transcript.
+In this section, we're going to create our **meeting summarization agent** using the OpenAI API. Our summarization agent should be able to take an entire meeting transcript as `input` and returns
+
+- A **concise summary** of the entire meeting
+- A **list of action items** mentioned in the meeting
 
 We will implement our summarizer with variables of **model and summary prompt** in a `MeetingSummarizer` class. This will be helpful for future evaluations and iterations on our summarizer.
 
