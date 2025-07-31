@@ -99,9 +99,7 @@ class ConfidentSpanExporter(SpanExporter):
             
             spans_wrappers_forest.append(spans_wrappers_list)
 
-        # list starts from root span
         for spans_wrappers_list in spans_wrappers_forest:
-
             for base_span_wrapper in spans_wrappers_list:
 
                 current_trace = trace_manager.get_trace_by_uuid(
@@ -130,15 +128,13 @@ class ConfidentSpanExporter(SpanExporter):
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
                 # no removing span because it can be parent of other spans
 
-            # safely end all active traces
-            active_traces_keys = list(trace_manager.active_traces.keys())
-
-            for trace_key in active_traces_keys:
-                set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
-                trace_manager.end_trace(trace_key)
-
-            trace_manager.clear_traces()
-
+        # safely end all active traces
+        active_traces_keys = list(trace_manager.active_traces.keys())
+        for trace_key in active_traces_keys:
+            set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
+            trace_manager.end_trace(trace_key)
+        trace_manager.clear_traces()
+        
         return SpanExportResult.SUCCESS
 
     def shutdown(self):
