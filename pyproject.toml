@@ -55,6 +55,8 @@ langchain_core = "*"
 langchain_community = "*"
 langchain_text_splitters = "*"
 tiktoken = "*"
+pypdf = "*"
+docx2txt = "*"
 
 [tool.black]
 line-length = 80
