@@ -283,7 +283,7 @@ class ConfidentSpanExporter(SpanExporter):
         base_span.parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
         )
-        base_span.name = span.name
+        base_span.name = span.name if base_span.name is None else base_span.name
         base_span.metadata = json.loads(span.to_json())
         base_span.error = error
         base_span.llm_test_case = llm_test_case
@@ -479,6 +479,8 @@ class ConfidentSpanExporter(SpanExporter):
 
         elif span_type == "tool":
             name = span.attributes.get("confident.tool.name")
+            if not name:
+                name = _check_tool_name_from_gen_ai_attributes(span)
             description = span.attributes.get("confident.tool.description")
 
             tool_span = ToolSpan(
@@ -495,17 +497,17 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # set attributes
-            input_parameters = span.attributes.get(
-                "confident.tool.attributes.input_parameters"
-            )
+            input_parameters = span.attributes.get("confident.tool.attributes.input_parameters")
             output = span.attributes.get("confident.tool.attributes.output")
 
             try:
-                input_parameters = (
-                    json.loads(input_parameters) if input_parameters else None
-                )
+                input_parameters = json.loads(input_parameters) if input_parameters else None
             except Exception as e:
+                input_parameters = None
                 print(f"Error converting input parameters: {e}")
+
+            if not input_parameters:
+                input_parameters = _check_tool_input_parameters_from_gen_ai_attributes(span)
 
             try:
                 tool_span.set_attributes(
@@ -617,4 +619,19 @@ def _check_llm__input_from_gen_ai_attributes(span: ReadableSpan):
     
     return None, None
     
+def _check_tool_name_from_gen_ai_attributes(span: ReadableSpan):
+    gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
+    if gen_ai_tool_name:
+        return gen_ai_tool_name
+    return None
+
+
+def _check_tool_input_parameters_from_gen_ai_attributes(span: ReadableSpan):
+    tool_arguments = span.attributes.get("tool_arguments")
+    if tool_arguments:
+        try:
+            return json.loads(tool_arguments)
+        except Exception as e:
+            pass
     
+    return None
