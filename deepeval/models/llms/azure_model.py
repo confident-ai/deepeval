@@ -34,7 +34,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
         user: Optional[str] = None,
-        *args,
         **kwargs,
     ):
         # fetch Azure deployment parameters
