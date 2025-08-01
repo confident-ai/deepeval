@@ -35,6 +35,7 @@ from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.test_case import LLMTestCase, ToolCall
 from pydantic import BaseModel, ValidationError
 from deepeval.feedback.feedback import Feedback
+from collections import defaultdict
 
 
 class TraceAttributes(BaseModel):
@@ -75,60 +76,67 @@ class ConfidentSpanExporter(SpanExporter):
         timeout_millis: int = 30000,
         api_key: Optional[str] = None,
     ) -> SpanExportResult:
+        
+        # build forest of spans
+        forest = self._build_span_forest(spans)
+        
+        # convert forest of spans to forest of base span wrappers
+        spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
+        for span_list in forest:
+            spans_wrappers_list: List[BaseSpanWrapper] = []
+            for span in span_list:
+                
+                # confugarion are attached to the resource attributes
+                resource_attributes = span.resource.attributes
+                environment = resource_attributes.get("confident.environment")  
+                
+                if environment and isinstance(environment, str):
+                    trace_manager.configure(environment=environment)
 
-        spans_wrappers_list: List[BaseSpanWrapper] = []
+                sampling_rate = resource_attributes.get("confident.sampling_rate")
+                if sampling_rate and isinstance(sampling_rate, float):
+                    trace_manager.configure(sampling_rate=sampling_rate)
 
-        for span in spans:
+                base_span_wrapper = self._convert_readable_span_to_base_span(span)
+                
+                spans_wrappers_list.append(base_span_wrapper)
+            spans_wrappers_forest.append(spans_wrappers_list)
 
-            # confugarion are attached to the resource attributes
-            resource_attributes = span.resource.attributes
-            environment = resource_attributes.get("confident.environment")
-            if environment and isinstance(environment, str):
-                trace_manager.configure(environment=environment)
+        # add spans to trace manager
+        for spans_wrappers_list in spans_wrappers_forest:
+            for base_span_wrapper in spans_wrappers_list:
 
-            sampling_rate = resource_attributes.get("confident.sampling_rate")
-            if sampling_rate and isinstance(sampling_rate, float):
-                trace_manager.configure(sampling_rate=sampling_rate)
-
-            spans_wrappers_list.append(
-                self._convert_readable_span_to_base_span(span)
-            )
-
-        # list starts from root span
-        for base_span_wrapper in reversed(spans_wrappers_list):
-            current_trace = trace_manager.get_trace_by_uuid(
-                base_span_wrapper.base_span.trace_uuid
-            )
-            if not current_trace:
-                current_trace = trace_manager.start_new_trace(
-                    trace_uuid=base_span_wrapper.base_span.trace_uuid
+                current_trace = trace_manager.get_trace_by_uuid(
+                    base_span_wrapper.base_span.trace_uuid
                 )
+                if not current_trace:
+                    current_trace = trace_manager.start_new_trace(
+                        trace_uuid=base_span_wrapper.base_span.trace_uuid
+                    )
 
-            if api_key:
-                current_trace.confident_api_key = api_key
+                if api_key:
+                    current_trace.confident_api_key = api_key
 
-            # set the trace attributes
-            if base_span_wrapper.trace_attributes:
-                current_trace.name = base_span_wrapper.trace_attributes.name
-                current_trace.tags = base_span_wrapper.trace_attributes.tags
-                current_trace.thread_id = (
-                    base_span_wrapper.trace_attributes.thread_id
-                )
-                current_trace.user_id = (
-                    base_span_wrapper.trace_attributes.user_id
-                )
+                # set the trace attributes
+                if base_span_wrapper.trace_attributes:
+                    current_trace.name = base_span_wrapper.trace_attributes.name
+                    current_trace.tags = base_span_wrapper.trace_attributes.tags
+                    current_trace.thread_id = (
+                        base_span_wrapper.trace_attributes.thread_id
+                    )
+                    current_trace.user_id = (
+                        base_span_wrapper.trace_attributes.user_id
+                    )
 
-            trace_manager.add_span(base_span_wrapper.base_span)
-            trace_manager.add_span_to_trace(base_span_wrapper.base_span)
-            # no removing span because it can be parent of other spans
+                trace_manager.add_span(base_span_wrapper.base_span)
+                trace_manager.add_span_to_trace(base_span_wrapper.base_span)
+                # no removing span because it can be parent of other spans
 
         # safely end all active traces
         active_traces_keys = list(trace_manager.active_traces.keys())
-
         for trace_key in active_traces_keys:
             set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
             trace_manager.end_trace(trace_key)
-
         trace_manager.clear_traces()
 
         return SpanExportResult.SUCCESS
@@ -315,12 +323,12 @@ class ConfidentSpanExporter(SpanExporter):
         end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
 
         if span_type == "llm":
-            model = span.attributes.get("confident.span.model")
+            model = span.attributes.get("confident.llm.model")
             cost_per_input_token = span.attributes.get(
-                "confident.span.cost_per_input_token"
+                "confident.llm.cost_per_input_token"
             )
             cost_per_output_token = span.attributes.get(
-                "confident.span.cost_per_output_token"
+                "confident.llm.cost_per_output_token"
             )
 
             llm_span = LlmSpan(
@@ -338,14 +346,14 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # set attributes
-            input = span.attributes.get("confident.span.attributes.input")
-            output = span.attributes.get("confident.span.attributes.output")
-            prompt = span.attributes.get("confident.span.attributes.prompt")
+            input = span.attributes.get("confident.llm.attributes.input")
+            output = span.attributes.get("confident.llm.attributes.output")
+            prompt = span.attributes.get("confident.llm.attributes.prompt")
             input_token_count = span.attributes.get(
-                "confident.span.attributes.input_token_count"
+                "confident.llm.attributes.input_token_count"
             )
             output_token_count = span.attributes.get(
-                "confident.span.attributes.output_token_count"
+                "confident.llm.attributes.output_token_count"
             )
 
             try:
@@ -364,13 +372,9 @@ class ConfidentSpanExporter(SpanExporter):
             return llm_span
 
         elif span_type == "agent":
-            name = span.attributes.get("confident.span.name")
-            available_tools_attr = span.attributes.get(
-                "confident.span.available_tools"
-            )
-            agent_handoffs_attr = span.attributes.get(
-                "confident.span.agent_handoffs"
-            )
+            name = span.attributes.get("confident.agent.name")
+            available_tools_attr = span.attributes.get("confident.agent.available_tools")
+            agent_handoffs_attr = span.attributes.get("confident.agent.agent_handoffs")
 
             available_tools: List[str] = []
             try:
@@ -401,8 +405,8 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # set attributes
-            input = span.attributes.get("confident.span.attributes.input")
-            output = span.attributes.get("confident.span.attributes.output")
+            input = span.attributes.get("confident.agent.attributes.input")
+            output = span.attributes.get("confident.agent.attributes.output")
 
             try:
                 agent_span.set_attributes(
@@ -414,7 +418,7 @@ class ConfidentSpanExporter(SpanExporter):
             return agent_span
 
         elif span_type == "retriever":
-            embedder = span.attributes.get("confident.span.attributes.embedder")
+            embedder = span.attributes.get("confident.retriever.embedder")
 
             retriever_span = RetrieverSpan(
                 uuid=uuid,
@@ -430,14 +434,14 @@ class ConfidentSpanExporter(SpanExporter):
 
             # set attributes
             embedding_input = span.attributes.get(
-                "confident.span.attributes.embedding_input"
+                "confident.retriever.attributes.embedding_input"
             )
             retrieval_context = span.attributes.get(
-                "confident.span.attributes.retrieval_context"
+                "confident.retriever.attributes.retrieval_context"
             )
-            top_k = span.attributes.get("confident.span.attributes.top_k")
+            top_k = span.attributes.get("confident.retriever.attributes.top_k")
             chunk_size = span.attributes.get(
-                "confident.span.attributes.chunk_size"
+                "confident.retriever.attributes.chunk_size"
             )
 
             try:
@@ -455,8 +459,8 @@ class ConfidentSpanExporter(SpanExporter):
             return retriever_span
 
         elif span_type == "tool":
-            name = span.attributes.get("confident.span.name")
-            description = span.attributes.get("confident.span.description")
+            name = span.attributes.get("confident.tool.name")
+            description = span.attributes.get("confident.tool.description")
 
             tool_span = ToolSpan(
                 uuid=uuid,
@@ -473,9 +477,9 @@ class ConfidentSpanExporter(SpanExporter):
 
             # set attributes
             input_parameters = span.attributes.get(
-                "confident.span.attributes.input_parameters"
+                "confident.tool.attributes.input_parameters"
             )
-            output = span.attributes.get("confident.span.attributes.output")
+            output = span.attributes.get("confident.tool.attributes.output")
 
             try:
                 input_parameters = (
@@ -497,3 +501,60 @@ class ConfidentSpanExporter(SpanExporter):
 
         # if span type is not supported, return None
         return None
+
+    def _build_span_forest(self, spans: typing.Sequence[ReadableSpan]) -> List[typing.Sequence[ReadableSpan]]:
+        
+        # Group spans by trace ID
+        trace_spans = defaultdict(list)
+        for span in spans:
+            trace_id = span.context.trace_id
+            trace_spans[trace_id].append(span)
+        
+        forest = []
+        
+        # Process each trace separately
+        for trace_id, trace_span_list in trace_spans.items():
+            # Build parent-child relationships for this trace
+            children = defaultdict(list)
+            span_map = {}
+            all_span_ids = set()
+            parent_map = {}
+            
+            for span in trace_span_list:
+                span_id = span.context.span_id
+                parent_id = span.parent.span_id if span.parent else None
+                
+                all_span_ids.add(span_id)
+                span_map[span_id] = span
+                parent_map[span_id] = parent_id
+                
+                if parent_id is not None:
+                    children[parent_id].append(span_id)
+            
+            # Identify roots: spans with no parent or parent not in this trace
+            roots = []
+            for span_id in all_span_ids:
+                parent_id = parent_map.get(span_id)
+                if parent_id is None or parent_id not in all_span_ids:
+                    roots.append(span_id)
+            
+            # Perform DFS from each root to collect spans in DFS order
+            def dfs(start_id):
+                order = []
+                stack = [start_id]
+                while stack:
+                    current_id = stack.pop()
+                    if current_id in span_map:  # Only add if span exists
+                        order.append(span_map[current_id])
+                    # Add children in reverse so that leftmost child is processed first
+                    for child_id in sorted(children[current_id], reverse=True):
+                        stack.append(child_id)
+                return order
+            
+            # Build forest for this trace
+            for root_id in sorted(roots):
+                tree_order = dfs(root_id)
+                if tree_order:  # Only add non-empty trees
+                    forest.append(tree_order)
+        
+        return forest
