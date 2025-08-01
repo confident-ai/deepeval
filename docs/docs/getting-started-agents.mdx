@@ -28,7 +28,7 @@ AI agent evaluation is different from other types of evals because agentic workf
 - A [Confident AI account](https://app.confident-ai.com) to get an API key
 
 :::info
-You'll need to log in to Confident AI to view your evaluation traces:
+We recommend logging in to Confident AI to view your evaluation traces:
 
 ```bash
 deepeval login
@@ -153,7 +153,7 @@ Run your agent as you would normally do:
 python main.py
 ```
 
-✅ Done. you should see a trace log like the one below in your CLI:
+✅ Done. you should see a trace log like the one below in your CLI if you're logged in to Confident AI:
 
 <pre>
   <code>
@@ -205,7 +205,7 @@ _Task Completion_ is the most powerful metric on `deepeval` for evaluating AI ag
 ```python
 from deepeval.metrics import TaskCompletionMetric
 
-metric = TaskCompletionMetric()
+task_completion_metric = TaskCompletionMetric()
 ```
 
 The task completion metric works by analyzing traces to determine the task at hand and the degree of completion of said task.
@@ -234,10 +234,10 @@ Use the `dataset` iterator to invoke your agent with a list of goldens. This wil
 
 Supply the task completion metric to the metrics argument inside the `@observe` decorator.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,3,10,15}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,9,14}"
 from deepeval.tracing import observe
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+...
 
 @observe()
 def your_ai_agent_tool():
@@ -248,7 +248,8 @@ def your_ai_agent(input):
     tool_call_result = your_ai_agent_tool()
     return 'Tool Call Result: ' + tool_call_result
 
-for golden in dataset(goldens=[Golden(input="This is a test query")]):
+dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
+for golden in dataset.as_iterator():
     your_ai_agent(golden.input)
 ```
 
@@ -257,11 +258,11 @@ for golden in dataset(goldens=[Golden(input="This is a test query")]):
 
 Supply the task completion metric to the metrics argument inside the `CallbackHandler`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,4,19}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,16,20}"
 from deepeval.integrations.langchain import CallbackHandler
 from langgraph.prebuilt import create_react_agent
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+...
 
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
@@ -273,7 +274,8 @@ agent = create_react_agent(
     prompt="You are a helpful assistant",
 )
 
-for golden in dataset(goldens=[Golden(input="This is a test query")]):
+dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
+for golden in dataset.as_iterator():
     agent.invoke(
         input={"messages": [{"role": "user", "content": golden.input}]},
         config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]},
@@ -285,11 +287,11 @@ for golden in dataset(goldens=[Golden(input="This is a test query")]):
 
 Supply the task completion metric to the metrics argument inside the `CallbackHandler`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,4,15}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,12,16}"
 from deepeval.integrations.langchain import CallbackHandler
 from langchain.chat_models import init_chat_model
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+...
 
 def multiply(a: int, b: int) -> int:
     return a * b
@@ -297,7 +299,8 @@ def multiply(a: int, b: int) -> int:
 llm = init_chat_model("gpt-4.1", model_provider="openai")
 llm_with_tools = llm.bind_tools([multiply])
 
-for golden in dataset(goldens=[Golden(input="This is a test query")]):
+dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
+for golden in dataset.as_iterator():
     llm_with_tools.invoke(
         "What is 3 * 12?",
         config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]},
@@ -309,13 +312,13 @@ for golden in dataset(goldens=[Golden(input="This is a test query")]):
 
 Supply the task completion metric to the metrics argument inside the `Agent` from `deepeval`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,3,12,16}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,12,15}"
 from deepeval.integrations.crewai import instrumentator, Agent
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
 from crewai import Task, Crew
+...
 
-instrumentator(api_key="q8/AU3bxv2MX0mBnW9I8ynOVNx/iV3mMH3oqkl2Isu4=")
+instrumentator(api_key="<your-confident-api-key>")
 
 coder = Agent(
     role='Consultant',
@@ -324,7 +327,8 @@ coder = Agent(
     metrics=[task_completion_metric]
 )
 
-for golden in dataset(goldens=[Golden(input="Explain the latest trends in AI.")]):
+dataset = EvaluationDataset(goldens=[Golden(input="Explain the latest trends in AI.")])
+for golden in dataset.as_iterator():
     task = Task(description="Explain the latest trends in AI.", agent=coder, expected_output="A clear and concise explanation.")
     crew = Crew(agents=[coder], tasks=[task])
     result = crew.kickoff()
@@ -369,92 +373,91 @@ If you're on Confident AI, we recommend going directly to the [tracing docs.](ht
 
 ## Evaluate Agentic Components
 
-Component-level evaluations allow for fine-grained evaluation of specific components in your agent.
+[Component-level evaluations](/docs/getting-started-agents#component-level-evaluations) treats your agent as a white box, allowing you to isolate and evaluate the performance of individual components in your agent.
 
 :::caution
-Component-level evaluations are **not available** for integrations at this time.
+Component-level evaluation integrations are **not available** on DeepEval at this time. If you're building with an LLM framework, manually trace your agent with `@observe` decorators to evaluate agentic components.
 :::
 
 <Timeline>
-<TimelineItem title="Set up test cases">
+<TimelineItem title="Define metrics">
 
-Set up test cases for each function in your agent. You can learn more about available [test case parameters here.](/docs/evaluation-test-cases)
+Any [single-turn metric](/docs/metrics-introduction) can be used to evaluate agentic components.
 
-```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,7,19}"
-from deepeval.tracing import observe, update_span
-from deepeval.test_case import LLMTestCase, ToolCall
+```python title=main.py showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import TaskCompletionMetric, ToolCorrectnessMetric
 
-@observe()
-def your_ai_agent_tool():
-    update_span(
-        test_case=LLMTestCase(
-            tools_called=[ToolCall(name='Tool A')],
-            expected_tools=[ToolCall(name='Tool A')]
-        )
-    )
-    return 'tool call result'
-
-@observe()
-def your_ai_agent(input):
-    tool_call_result = your_ai_agent_tool()
-    output = 'Tool Call Result: ' + tool_call_result
-    update_span(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=output
-        )
-    )
-    return output
+tool_correctness_metric = ToolCorrectnessMetric()
+task_completion_metric = TaskCompletionMetric()
 ```
 
+:::tip
+What metrics you ultimately choose depend on the types of components you're evaluating. For example, [Tool Correctness](/docs/metrics-tool-correctness) is suitable for evaluating tool-calling components, while [RAG metrics](/docs/metrics-answer-relevancy) are useful for retrievers.
+:::
+
 </TimelineItem>
-<TimelineItem title="Configure metrics">
+<TimelineItem title="Set up metrics">
 
-Supply the metrics to the `@observe` decorator of each function. Each metric will require different test case parameters.
+Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span`. The test case should include [parameters](/docs/metrics-introduction#test-case-parameters) required by the metrics you supply.
 
-```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{3,6,10,11,16,22,23}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{5,9,10,11,12,17,23,24}"
 from deepeval.tracing import observe, update_span
 from deepeval.test_case import LLMTestCase, ToolCall
-from deepeval.metrics import TaskCompletionMetric, ToolCorrectness
-
-@observe(metrics=[ToolCorrectness()])
-def your_ai_agent_tool():
-    update_span(
-        test_case=LLMTestCase(
-            tools_called=[ToolCall(name='Tool A')],
-            expected_tools=[ToolCall(name='Tool A')]
-        )
-    )
-    return 'tool call result'
-
-@observe(metrics=[TaskCompletionMetric()])
-def your_ai_agent(input):
-    tool_call_result = your_ai_agent_tool()
-    output = 'Tool Call Result: ' + tool_call_result
-    update_span(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=output
-        )
-    )
-    return output
-```
-
-</TimelineItem>
-<TimelineItem title="Run Evaluations">
-
-Finally, run a query for each golden using the `dataset` iterator.
-
-```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,2,5}"
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
 ...
 
-for golden in dataset(goldens=[Golden(input='This is a test query')]):
+@observe(metrics=[tool_correctness_metric])
+def your_ai_agent_tool(input):
+    update_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output='tool call result',
+            tools_called=[ToolCall(name='Tool A')],
+            expected_tools=[ToolCall(name='Tool A')]
+        )
+    )
+    return 'tool call result'
+
+@observe(metrics=[task_completion_metric])
+def your_ai_agent(input):
+    tool_call_result = your_ai_agent_tool()
+    output = 'Tool Call Result: ' + tool_call_result
+    update_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=output
+        )
+    )
+    return output
+```
+
+</TimelineItem>
+<TimelineItem title="Run an evaluation">
+
+Finally, use the `dataset` iterator to invoke your agent on a list of goldens.
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4}"
+from deepeval.dataset import EvaluationDataset, Golden
+...
+
+dataset = EvaluationDataset(goldens=[Golden(input='This is a test query')])
+for golden in dataset.as_iterator():
     tool_call_result = your_ai_agent(golden.input)
 ```
 
-`deepeval` will automatically generate a component-level test report on Confident AI.
+</TimelineItem>
+
+<TimelineItem title="View on Confident AI">
+
+If you're logged in, `deepeval` will automatically generate a test report on [Confident AI](https://app.confident.ai), DeepEval's platform.
+
+:::tip
+We recommend logging in to Confident AI to view and debug your evaluation traces in detail:
+
+```bash
+deepeval login
+```
+
+:::
 
 <VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Aend-to-end.mp4" />
 
