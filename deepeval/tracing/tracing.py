@@ -657,8 +657,12 @@ class TraceManager:
             if span.attributes:
                 input_data = span.attributes.input
                 output_data = span.attributes.output
+        elif isinstance(span, ToolSpan):
+            if span.attributes:
+                input_data = span.attributes.input_parameters
+                output_data = span.attributes.output
         else:
-            # For BaseSpan, or Tool types, use the standard logic
+            # For BaseSpan use the standard logic
             input_data = span.input
             output_data = span.output
 
