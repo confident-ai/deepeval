@@ -72,7 +72,11 @@ module.exports = {
         {
           type: "category",
           label: "Agentic",
-          items: ["metrics-task-completion", "metrics-tool-correctness"],
+          items: [
+            "metrics-task-completion",
+            "metrics-tool-correctness",
+            "metrics-argument-correctness",
+          ],
           collapsed: true,
         },
         {

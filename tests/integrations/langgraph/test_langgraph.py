@@ -1,9 +1,12 @@
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain.callback import CallbackHandler
+from deepeval.tracing import TraceAttributes
 import asyncio
 import time
-import os
-import deepeval
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def get_weather(city: str) -> str:
@@ -42,7 +45,17 @@ async def run_concurrent_invokes():
     tasks = [
         agent.ainvoke(
             input=input_data,
-            config={"callbacks": [CallbackHandler()]},
+            config={
+                "callbacks": [
+                    CallbackHandler(
+                        name="langgraph-test",
+                        tags=["langgraph", "test"],
+                        metadata={"environment": "test"},
+                        thread_id="123",
+                        user_id="456",
+                    )
+                ]
+            },
         )
         for input_data in inputs
     ]
