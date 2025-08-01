@@ -37,6 +37,7 @@ from pydantic import BaseModel, ValidationError
 from deepeval.feedback.feedback import Feedback
 from collections import defaultdict
 
+GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
 
 class TraceAttributes(BaseModel):
     name: Optional[str] = None
@@ -309,7 +310,9 @@ class ConfidentSpanExporter(SpanExporter):
     def _prepare_boilerplate_base_span(
         self, span: ReadableSpan
     ) -> Optional[BaseSpan]:
-        span_type = span.attributes.get("confident.span.type", "base")
+        span_type = span.attributes.get("confident.span.type")
+        if not span_type:
+            span_type = _check_span_type_from_gen_ai_attributes(span)
 
         # required fields
         uuid = to_hex_string(span.context.span_id, 16)
@@ -328,6 +331,9 @@ class ConfidentSpanExporter(SpanExporter):
 
         if span_type == "llm":
             model = span.attributes.get("confident.llm.model")
+            if not model:
+                model = _check_model_from_gen_ai_attributes(span)
+            
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
             )
@@ -570,3 +576,26 @@ class ConfidentSpanExporter(SpanExporter):
                     forest.append(tree_order)
 
         return forest
+
+
+def _check_span_type_from_gen_ai_attributes(span: ReadableSpan):
+    
+    gen_ai_operation_name = span.attributes.get("gen_ai.operation.name")
+    gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
+    
+    if gen_ai_operation_name and gen_ai_operation_name in GEN_AI_OPERATION_NAMES:
+        return "llm"
+    
+    elif gen_ai_tool_name:
+        return "tool"
+    
+    return "base"
+
+
+def _check_model_from_gen_ai_attributes(span: ReadableSpan):
+    gen_ai_request_model_name = span.attributes.get("gen_ai.request.model")
+    if gen_ai_request_model_name:
+        return gen_ai_request_model_name
+    
+    return None
+    
