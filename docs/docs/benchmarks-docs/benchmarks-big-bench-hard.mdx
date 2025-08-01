@@ -1,0 +1,94 @@
+---
+id: benchmarks-big-bench-hard
+title: BIG-Bench Hard
+sidebar_label: BIG-Bench Hard
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/benchmarks-big-bench-hard"
+  />
+</head>
+
+The **BIG-Bench Hard (BBH)** benchmark comprises 23 challenging BIG-Bench tasks where prior language model evaluations have not outperformed the average human rater. BBH evaluates models using both few-shot and chain-of-thought (CoT) prompting techniques. For more details, you can [visit the BIG-Bench Hard GitHub page](https://github.com/suzgunmirac/BIG-Bench-Hard).
+
+## Arguments
+
+There are **THREE** optional arguments when using the `BigBenchHard` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`BigBenchHardTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `BigBenchHardTask` enums can be found [here](#big-bench-hard-tasks).
+- [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This number ranges strictly from 0-3, and is **set to 3 by default**.
+- [Optional] `enable_cot`: a boolean that determines if CoT prompting is used for evaluation. This is set to `True` by default.
+
+:::info
+**Chain-of-Thought (CoT) prompting** is an approach where the model is prompted to articulate its reasoning process to arrive at an answer. Meanwhile, **few-shot prompting** is a method where the model is provided with a few examples (or "shots") to learn from before making predictions. When combined, few-shot prompting and CoT can significantly enhance performance. You can learn more about CoT [here](https://arxiv.org/abs/2201.11903).
+:::
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) on Boolean Expressions and Causal Judgement in `BigBenchHard` using 3-shot CoT prompting.
+
+```python
+from deepeval.benchmarks import BigBenchHard
+from deepeval.benchmarks.tasks import BigBenchHardTask
+
+# Define benchmark with specific tasks and shots
+benchmark = BigBenchHard(
+    tasks=[BigBenchHardTask.BOOLEAN_EXPRESSIONS, BigBenchHardTask.CAUSAL_JUDGEMENT],
+    n_shots=3,
+    enable_cot=True
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, which is the proportion of total correct predictions according to the target labels for each respective task. The **exact match** scorer is used for BIG-Bench Hard.
+
+BBH answers exhibit a greater variety of answers compared to benchmarks that use multiple-choice questions, since different tasks in BBH require different types of outputs (for example, boolean values in boolean expression tasks versus numbers in arithmetic tasks). To enhance benchmark performance, employing **CoT** prompting will prove to be extremely helpful.
+
+:::tip
+Utilizing more few-shot examples (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+:::
+
+## BIG-Bench Hard Tasks
+
+The `BigBenchHardTask` enum classifies the diverse range of tasks covered in the BIG-Bench Hard benchmark.
+
+```python
+from deepeval.benchmarks.tasks import BigBenchHardTask
+
+big_tasks = [BigBenchHardTask.BOOLEAN_EXPRESSIONS]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `BOOLEAN_EXPRESSIONS`
+- `CAUSAL_JUDGEMENT`
+- `DATE_UNDERSTANDING`
+- `DISAMBIGUATION_QA`
+- `DYCK_LANGUAGES`
+- `FORMAL_FALLACIES`
+- `GEOMETRIC_SHAPES`
+- `HYPERBATON`
+- `LOGICAL_DEDUCTION_FIVE_OBJECTS`
+- `LOGICAL_DEDUCTION_SEVEN_OBJECTS`
+- `LOGICAL_DEDUCTION_THREE_OBJECTS`
+- `MOVIE_RECOMMENDATION`
+- `MULTISTEP_ARITHMETIC_TWO`
+- `NAVIGATE`
+- `OBJECT_COUNTING`
+- `PENGUINS_IN_A_TABLE`
+- `REASONING_ABOUT_COLORED_OBJECTS`
+- `RUIN_NAMES`
+- `SALIENT_TRANSLATION_ERROR_DETECTION`
+- `SNARKS`
+- `SPORTS_UNDERSTANDING`
+- `TEMPORAL_SEQUENCES`
+- `TRACKING_SHUFFLED_OBJECTS_FIVE_OBJECTS`
+- `TRACKING_SHUFFLED_OBJECTS_SEVEN_OBJECTS`
+- `TRACKING_SHUFFLED_OBJECTS_THREE_OBJECTS`
+- `WEB_OF_LIES`
+- `WORD_SORTING`

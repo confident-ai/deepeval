@@ -1,0 +1,104 @@
+---
+id: benchmarks-truthful-qa
+title: TruthfulQA
+sidebar_label: TruthfulQA
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/benchmarks-truthful-qa"
+  />
+</head>
+
+**TruthfulQA** assesses the accuracy of language models in answering questions truthfully. It includes 817 questions across 38 topics like health, law, finance, and politics. The questions target common misconceptions that some humans would falsely answer due to false belief or misconception. For more information, [visit the TruthfulQA GitHub page](https://github.com/sylinrl/TruthfulQA).
+
+## Arguments
+
+There are **TWO** optional arguments when using the `TruthfulQA` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`TruthfulQATask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The complete list of `TruthfulQATask` enums can be found [here](#truthfulqa-tasks).
+- [Optional] mode: a `TruthfulQAMode` enum that selects the evaluation mode. This is set to `TruthfulQAMode.MC1` by default. `deepeval` currently supports 2 modes: **MC1 and MC2**.
+
+:::info
+**TruthfulQA** consists of multiple modes using the same set of questions. **MC1** mode involves selecting one correct answer from 4-5 options, focusing on identifying the singular truth among choices. **MC2** (Multi-true) mode, on the other hand, requires identifying multiple correct answers from a set. Both MC1 and MC2 are **multiple choice** evaluations.
+:::
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) on Advertising and Fiction tasks in `TruthfulQA` using MC2 mode evaluation.
+
+```python
+from deepeval.benchmarks import TruthfulQA
+from deepeval.benchmarks.tasks import TruthfulQATask
+from deepeval.benchmarks.modes import TruthfulQAMode
+
+# Define benchmark with specific tasks and shots
+benchmark = TruthfulQA(
+    tasks=[TruthfulQATask.ADVERTISING, TruthfulQATask.FICTION],
+    mode=TruthfulQAMode.MC2
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` ranges from 0 to 1, signifying the fraction of accurate predictions across tasks. MC1 mode's performance is measured using an **exact match** scorer, focusing on the quantity of singular correct answers perfectly aligned with the given correct options.
+
+Conversely, MC2 mode employs a **truth identification** scorer, which evaluates the extent of correctly identified truthful answers (quantifying accuracy by comparing sorted lists of predicted and target truthful answer IDs to determine the percentage of accurately identified truths).
+
+:::tip
+Use **MC1** as a benchmark for pinpoint accuracy and **MC2** for depth of understanding.
+:::
+
+## TruthfulQA Tasks
+
+The `TruthfulQATask` enum classifies the diverse range of tasks covered in the TruthfulQA benchmark.
+
+```python
+from deepeval.benchmarks.tasks import TruthfulQATask
+
+truthful_tasks = [TruthfulQATask.ADVERTISING]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `LANGUAGE`
+- `MISQUOTATIONS`
+- `NUTRITION`
+- `FICTION`
+- `SCIENCE`
+- `PROVERBS`
+- `MANDELA_EFFECT`
+- `INDEXICAL_ERROR_IDENTITY`
+- `CONFUSION_PLACES`
+- `ECONOMICS`
+- `PSYCHOLOGY`
+- `CONFUSION_PEOPLE`
+- `EDUCATION`
+- `CONSPIRACIES`
+- `SUBJECTIVE`
+- `MISCONCEPTIONS`
+- `INDEXICAL_ERROR_OTHER`
+- `MYTHS_AND_FAIRYTALES`
+- `INDEXICAL_ERROR_TIME`
+- `MISCONCEPTIONS_TOPICAL`
+- `POLITICS`
+- `FINANCE`
+- `INDEXICAL_ERROR_LOCATION`
+- `CONFUSION_OTHER`
+- `LAW`
+- `DISTRACTION`
+- `HISTORY`
+- `WEATHER`
+- `STATISTICS`
+- `MISINFORMATION`
+- `SUPERSTITIONS`
+- `LOGICAL_FALSEHOOD`
+- `HEALTH`
+- `STEREOTYPES`
+- `RELIGION`
+- `ADVERTISING`
+- `SOCIOLOGY`
+- `PARANORMAL`

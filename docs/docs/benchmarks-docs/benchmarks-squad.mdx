@@ -1,0 +1,111 @@
+---
+id: benchmarks-squad
+title: SQuAD
+sidebar_label: SQuAD
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-squad" />
+</head>
+
+**SQuAD (Stanford Question Answering Dataset)** is a QA benchmark designed to test a language model's reading comprehension capabilities. It consists of 100K question-answer pairs (including 10K in the validation set), where each answer is a segment of text taken directly from the accompanying reading passage. To learn more about the dataset and its construction, you can [read the original SQuAD paper here](https://arxiv.org/pdf/1606.05250).
+
+:::info
+SQuAD was constructed by sampling **536 articles from the top 10K Wikipedia articles**. A total of 23,215 paragraphs were extracted, and question-answer pairs were manually curated for these paragraphs.
+:::
+
+## Arguments
+
+There are **THREE** optional arguments when using the `SQuAD` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`SQuADTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `SQuADTask` enums can be found [here](#squad-tasks).
+- [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
+- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use for scoring, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
+
+:::note
+Unlike most benchmarks, `DeepEval`'s SQuAD implementation requires an `evaluation_model`, using an **LLM-as-a-judge** to generate a binary score determining if the prediction and expected output align given the context.
+:::
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here](/guides/guides-using-custom-llms) to learn how to use ANY custom LLM) on passages about pharmacy and Normans in `SQuAD` using 3-shot prompting.
+
+```python
+from deepeval.benchmarks import SQuAD
+from deepeval.benchmarks.tasks import SQuADTask
+
+# Define benchmark with specific tasks and shots
+benchmark = SQuAD(
+    tasks=[SQuADTask.PHARMACY, SQuADTask.NORMANS],
+    n_shots=3
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on LLM-as-a-judge, is calculated by evaluating whether the predicted answer aligns with the expected output based on the passage context.
+
+For example, if the question asks, "How many atoms are present?" and the model predicts "two atoms," the LLM-as-a-judge determines whether this aligns with the expected answer of "2" by assessing semantic equivalence rather than exact text matching.
+
+## SQuAD Tasks
+
+The `SQuADTask` enum classifies the diverse range of categories covered in the SQuAD benchmark.
+
+```python
+from deepeval.benchmarks.tasks import SQuADTask
+
+math_qa_tasks = [SQuADTask.PHARMACY]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `PHARMACY`
+- `NORMANS`
+- `HUGUENOT`
+- `DOCTOR_WHO`
+- `OIL_CRISIS_1973`
+- `COMPUTATIONAL_COMPLEXITY_THEORY`
+- `WARSAW`
+- `AMERICAN_BROADCASTING_COMPANY`
+- `CHLOROPLAST`
+- `APOLLO_PROGRAM`
+- `TEACHER`
+- `MARTIN_LUTHER`
+- `ECONOMIC_INEQUALITY`
+- `YUAN_DYNASTY`
+- `SCOTTISH_PARLIAMENT`
+- `ISLAMISM`
+- `UNITED_METHODIST_CHURCH`
+- `IMMUNE_SYSTEM`
+- `NEWCASTLE_UPON_TYNE`
+- `CTENOPHORA`
+- `FRESNO_CALIFORNIA`
+- `STEAM_ENGINE`
+- `PACKET_SWITCHING`
+- `FORCE`
+- `JACKSONVILLE_FLORIDA`
+- `EUROPEAN_UNION_LAW`
+- `SUPER_BOWL_50`
+- `VICTORIA_AND_ALBERT_MUSEUM`
+- `BLACK_DEATH`
+- `CONSTRUCTION`
+- `SKY_UK`
+- `UNIVERSITY_OF_CHICAGO`
+- `VICTORIA_AUSTRALIA`
+- `FRENCH_AND_INDIAN_WAR`
+- `IMPERIALISM`
+- `PRIVATE_SCHOOL`
+- `GEOLOGY`
+- `HARVARD_UNIVERSITY`
+- `RHINE`
+- `PRIME_NUMBER`
+- `INTERGOVERNMENTAL_PANEL_ON_CLIMATE_CHANGE`
+- `AMAZON_RAINFOREST`
+- `KENYA`
+- `SOUTHERN_CALIFORNIA`
+- `NIKOLA_TESLA`
+- `CIVIL_DISOBEDIENCE`
+- `GENGHIS_KHAN`
+- `OXYGEN`

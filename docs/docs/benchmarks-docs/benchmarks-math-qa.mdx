@@ -1,0 +1,66 @@
+---
+id: benchmarks-math-qa
+title: MathQA
+sidebar_label: MathQA
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-math-qa" />
+</head>
+
+**MathQA** is a large-scale benchmark consisting of 37K English multiple-choice math word problems across diverse domains such as probability and geometry. It is designed to assess an LLM's capability for multi-step mathematical reasoning. To learn more about the dataset and its construction, you can [read the original MathQA paper here](https://arxiv.org/pdf/1905.13319.pdf).
+
+:::info
+`MathQA` was constructed from the AQuA dataset, which contains over 100K **GRE- and GMAT-level** math word problems.
+:::
+
+## Arguments
+
+There are **TWO** optional arguments when using the `MathQA` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`MathQATask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `MathQATask` enums can be found [here](#mathqa-tasks).
+- [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here](/guides/guides-using-custom-llms) to learn how to use ANY custom LLM) on geometry and probability in `MathQA` using 3-shot prompting.
+
+```python
+from deepeval.benchmarks import MathQA
+from deepeval.benchmarks.tasks import MathQATask
+
+# Define benchmark with specific tasks and shots
+benchmark = MathQA(
+    tasks=[MathQATask.PROBABILITY, MathQATask.GEOMETRY],
+    n_shots=3
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of questions for which the model produces the precise correct multiple choice answer (e.g. 'A' or ‘C’) in relation to the total number of questions.
+
+:::tip
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+:::
+
+## MathQA Tasks
+
+The `MathQATask` enum classifies the diverse range of categories covered in the MathQA benchmark.
+
+```python
+from deepeval.benchmarks.tasks import MathQATask
+
+math_qa_tasks = [MathQATask.PROBABILITY]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `PROBABILITY`
+- `GEOMETRY`
+- `PHYSICS`
+- `GAIN`
+- `GENERAL`
+- `OTHER`

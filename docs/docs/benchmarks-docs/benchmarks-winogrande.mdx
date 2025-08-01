@@ -1,0 +1,49 @@
+---
+id: benchmarks-winogrande
+title: Winogrande
+sidebar_label: Winogrande
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/benchmarks-windogrande"
+  />
+</head>
+
+**Winogrande** is a dataset consisting of 44K binary-choice problems, inspired by the original WinoGrad Schema Challenge (WSC) benchmark for commonsense reasoning. It has been adjusted to enhance both scale and difficulty.
+
+:::info
+Learn more about the construction of WinoGrande [here](https://arxiv.org/pdf/1907.10641).
+:::
+
+## Arguments
+
+There are **TWO** optional arguments when using the `Winogrande` benchmark:
+
+- [Optional] `n_problems`: the number of problems for model evaluation. By default, this is set to 1267 (all problems).
+- [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) on 10 problems in `Winogrande` using 3-shot CoT prompting.
+
+```python
+from deepeval.benchmarks import Winogrande
+
+# Define benchmark with n_problems and shots
+benchmark = Winogrande(
+    n_problems=10,
+    n_shots=3,
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of questions for which the model produces the precise correct answer (i.e. 'A' or 'B') in relation to the total number of questions.
+
+:::tip
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+:::

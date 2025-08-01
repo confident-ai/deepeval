@@ -1,0 +1,253 @@
+---
+id: benchmarks-human-eval
+title: HumanEval
+sidebar_label: HumanEval
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/benchmarks-human-eval"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+
+The **HumanEval** benchmark is a dataset designed to evaluate an LLM’s code generation capabilities. The benchmark consists of 164 hand-crafted programming challenges comparable to simple software interview questions. For more information, [visit the HumanEval GitHub page](https://github.com/openai/human-eval).
+
+:::info
+`HumanEval` assesses the **functional correctness** of generated code instead of merely measuring textual similarity to a reference solution.
+:::
+
+## Arguments
+
+There are **TWO** optional arguments when using the `HumanEval` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`HumanEvalTask` enums), specifying which of the **164 programming tasks** to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `HumanEvalTask` enum can be found [here](#humaneval-tasks).
+- [Optional] `n`: the number of code generation samples for each task for model evaluation using the pass@k metric. This is set to **200 by default**. A more detailed description of the `pass@k` metric and `n` parameter can be found [here](#passk-metric).
+
+:::caution
+By default, each task will be evaluated 200 times, as specified by `n`, the number of code generation samples. This means your LLM is being invoked **200 times on the same prompt** by default.
+:::
+
+## Usage
+
+The code below evaluates a custom `GPT-4` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) and assesses its performance on HAS_CLOSE_ELEMENTS and SORT_NUMBERS tasks using 100 code generation samples.
+
+```python
+from deepeval.benchmarks import HumanEval
+from deepeval.benchmarks.tasks import HumanEvalTask
+
+# Define benchmark with specific tasks and number of code generations
+benchmark = HumanEval(
+    tasks=[HumanEvalTask.HAS_CLOSE_ELEMENTS, HumanEvalTask.SORT_NUMBERS],
+    n=100
+)
+
+# Replace 'gpt_4' with your own custom model
+benchmark.evaluate(model=gpt_4, k=10)
+print(benchmark.overall_score)
+```
+
+**You must define a** `generate_samples` **method in your custom model to perform HumanEval evaluation**. In addition, when calling `evaluate`, you must supply `k`, the number of top samples chosen for the `pass@k` metric.
+
+```python
+# Define a custom GPT-4 model class
+class GPT4Model(DeepEvalBaseLLM):
+        ...
+    def generate_samples(
+        self, prompt: str, n: int, temperature: float
+    ) -> Tuple[AIMessage, float]:
+        chat_model = self.load_model()
+        og_parameters = {"n": chat_model.n, "temp": chat_model.temperature}
+        chat_model.n = n
+        chat_model.temperature = temperature
+        generations = chat_model._generate([HumanMessage(prompt)]).generations
+        completions = [r.text for r in generations]
+        return completions
+        ...
+
+gpt_4 = GPT4Model()
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on the **pass@k** metric, is calculated by determining the proportion of code generations for which the model passes all the test cases (7.7 test cases average per problem) for at least k samples in relation to the total number of questions.
+
+## Pass@k Metric
+
+The pass@k metric evaluates the **functional correctness** of generated code samples by focusing on whether at least one of the top k samples passes predefined unit tests. It calculates this probability by determining the complement of the probability that all k chosen samples are incorrect, using the formula:
+
+<Equation formula="\text{pass@k} = 1 - \frac{C(n-c, k)}{C(n, k)}" />
+
+where C represents combinations, n is the total number of samples, c is the number of correct samples, and k is the number of top samples chosen.
+
+Using n helps ensure that the evaluation metric considers the full range of generated outputs, thereby reducing the risk of bias that can arise from only considering a small, possibly non-representative set of samples.
+
+## HumanEval Tasks
+
+The HumanEvalTask enum classifies the diverse range of subject areas covered in the HumanEval benchmark.
+
+```python
+from deepeval.benchmarks.tasks import HumanEvalTask
+
+human_eval_tasks = [HumanEvalTask.HAS_CLOSE_ELEMENTS]
+```
+
+Below is the comprehensive list of all available tasks:
+
+- `HAS_CLOSE_ELEMENTS`
+- `SEPARATE_PAREN_GROUPS`
+- `TRUNCATE_NUMBER`
+- `BELOW_ZERO`
+- `MEAN_ABSOLUTE_DEVIATION`
+- `INTERSPERSE`
+- `PARSE_NESTED_PARENS`
+- `FILTER_BY_SUBSTRING`
+- `SUM_PRODUCT`
+- `ROLLING_MAX`
+- `MAKE_PALINDROME`
+- `STRING_XOR`
+- `LONGEST`
+- `GREATEST_COMMON_DIVISOR`
+- `ALL_PREFIXES`
+- `STRING_SEQUENCE`
+- `COUNT_DISTINCT_CHARACTERS`
+- `PARSE_MUSIC`
+- `HOW_MANY_TIMES`
+- `SORT_NUMBERS`
+- `FIND_CLOSEST_ELEMENTS`
+- `RESCALE_TO_UNIT`
+- `FILTER_INTEGERS`
+- `STRLEN`
+- `LARGEST_DIVISOR`
+- `FACTORIZE`
+- `REMOVE_DUPLICATES`
+- `FLIP_CASE`
+- `CONCATENATE`
+- `FILTER_BY_PREFIX`
+- `GET_POSITIVE`
+- `IS_PRIME`
+- `FIND_ZERO`
+- `SORT_THIRD`
+- `UNIQUE`
+- `MAX_ELEMENT`
+- `FIZZ_BUZZ`
+- `SORT_EVEN`
+- `DECODE_CYCLIC`
+- `PRIME_FIB`
+- `TRIPLES_SUM_TO_ZERO`
+- `CAR_RACE_COLLISION`
+- `INCR_LIST`
+- `PAIRS_SUM_TO_ZERO`
+- `CHANGE_BASE`
+- `TRIANGLE_AREA`
+- `FIB4`
+- `MEDIAN`
+- `IS_PALINDROME`
+- `MODP`
+- `DECODE_SHIFT`
+- `REMOVE_VOWELS`
+- `BELOW_THRESHOLD`
+- `ADD`
+- `SAME_CHARS`
+- `FIB`
+- `CORRECT_BRACKETING`
+- `MONOTONIC`
+- `COMMON`
+- `LARGEST_PRIME_FACTOR`
+- `SUM_TO_N`
+- `DERIVATIVE`
+- `FIBFIB`
+- `VOWELS_COUNT`
+- `CIRCULAR_SHIFT`
+- `DIGITSUM`
+- `FRUIT_DISTRIBUTION`
+- `PLUCK`
+- `SEARCH`
+- `STRANGE_SORT_LIST`
+- `WILL_IT_FLY`
+- `SMALLEST_CHANGE`
+- `TOTAL_MATCH`
+- `IS_MULTIPLY_PRIME`
+- `IS_SIMPLE_POWER`
+- `IS_CUBE`
+- `HEX_KEY`
+- `DECIMAL_TO_BINARY`
+- `IS_HAPPY`
+- `NUMERICAL_LETTER_GRADE`
+- `PRIME_LENGTH`
+- `STARTS_ONE_ENDS`
+- `SOLVE`
+- `ANTI_SHUFFLE`
+- `GET_ROW`
+- `SORT_ARRAY`
+- `ENCRYPT`
+- `NEXT_SMALLEST`
+- `IS_BORED`
+- `ANY_INT`
+- `ENCODE`
+- `SKJKASDKD`
+- `CHECK_DICT_CASE`
+- `COUNT_UP_TO`
+- `MULTIPLY`
+- `COUNT_UPPER`
+- `CLOSEST_INTEGER`
+- `MAKE_A_PILE`
+- `WORDS_STRING`
+- `CHOOSE_NUM`
+- `ROUNDED_AVG`
+- `UNIQUE_DIGITS`
+- `BY_LENGTH`
+- `EVEN_ODD_PALINDROME`
+- `COUNT_NUMS`
+- `MOVE_ONE_BALL`
+- `EXCHANGE`
+- `HISTOGRAM`
+- `REVERSE_DELETE`
+- `ODD_COUNT`
+- `MINSUBARRAYSUM`
+- `MAX_FILL`
+- `SELECT_WORDS`
+- `GET_CLOSEST_VOWEL`
+- `MATCH_PARENS`
+- `MAXIMUM`
+- `SOLUTION`
+- `ADD_ELEMENTS`
+- `GET_ODD_COLLATZ`
+- `VALID_DATE`
+- `SPLIT_WORDS`
+- `IS_SORTED`
+- `INTERSECTION`
+- `PROD_SIGNS`
+- `MINPATH`
+- `TRI`
+- `DIGITS`
+- `IS_NESTED`
+- `SUM_SQUARES`
+- `CHECK_IF_LAST_CHAR_IS_A_LETTER`
+- `CAN_ARRANGE`
+- `LARGEST_SMALLEST_INTEGERS`
+- `COMPARE_ONE`
+- `IS_EQUAL_TO_SUM_EVEN`
+- `SPECIAL_FACTORIAL`
+- `FIX_SPACES`
+- `FILE_NAME_CHECK`
+- `WORDS_IN_SENTENCE`
+- `SIMPLIFY`
+- `ORDER_BY_POINTS`
+- `SPECIALFILTER`
+- `GET_MAX_TRIPLES`
+- `BF`
+- `SORTED_LIST_SUM`
+- `X_OR_Y`
+- `DOUBLE_THE_DIFFERENCE`
+- `COMPARE`
+- `STRONGEST_EXTENSION`
+- `CYCPATTERN_CHECK`
+- `EVEN_ODD_COUNT`
+- `INT_TO_MINI_ROMAN`
+- `RIGHT_ANGLE_TRIANGLE`
+- `FIND_MAX`
+- `EAT`
+- `DO_ALGEBRA`
+- `STRING_TO_MD5`
+- `GENERATE_INTEGERS`

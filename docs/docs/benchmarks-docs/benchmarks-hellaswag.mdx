@@ -1,0 +1,254 @@
+---
+id: benchmarks-hellaswag
+title: HellaSwag
+sidebar_label: HellaSwag
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-hellaswag" />
+</head>
+
+**HellaSwag** is a benchmark designed to evaluate language models' commonsense reasoning through sentence completion tasks. It provides 10,000 challenges spanning various subject areas. For more details, you can [visit the Hellaswag GitHub page](https://github.com/rowanz/hellaswag).
+
+:::info
+`Hellaswag` emphasizes commonsense reasoning and depth of understanding in real-world situations, making it an excellent tool for pinpointing where models might **struggle with nuanced or complex contexts**.
+:::
+
+## Arguments
+
+There are **TWO** optional arguments when using the `HellaSwag` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`HellaSwagTask` enums), which specifies the subject areas for sentence completion evaluation. By default, this is set to all tasks. The list of `HellaSwagTask` enums can be found [here](#hellaswag-tasks).
+- [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is **set to 10** by default and **cannot exceed 15**.
+
+:::note
+Notice unlike `BIGBenchHard`, there is no CoT prompting for the `HellaSwag` benchmark.
+:::
+
+## Usage
+
+The code below evaluates a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) and its ability to complete sentences related to 'Trimming Branches or Hedges' and 'Baton Twirling' subjects using 5-shot learning.
+
+```python
+from deepeval.benchmarks import HellaSwag
+from deepeval.benchmarks.tasks import HellaSwagTask
+
+# Define benchmark with specific tasks and shots
+benchmark = HellaSwag(
+    tasks=[HellaSwagTask.TRIMMING_BRANCHES_OR_HEDGES, HellaSwagTask.BATON_TWIRLING],
+    n_shots=5
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of multiple-choice sentence-completion questions for which the model produces the precise correct letter answer (e.g. 'A') in relation to the total number of questions.
+
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+
+## HellaSwag Tasks
+
+The HellaSwagTask enum classifies the diverse range of categories covered in the HellaSwag benchmark.
+
+```python
+from deepeval.benchmarks.tasks import HellaSwagTask
+
+hella_tasks = [HellaSwagTask.APPLYING_SUNSCREEN]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `APPLYING_SUNSCREEN`
+- `TRIMMING_BRANCHES_OR_HEDGES`
+- `DISC_DOG`
+- `WAKEBOARDING`
+- `SKATEBOARDING`
+- `WATERSKIING`
+- `WASHING_HANDS`
+- `SAILING`
+- `PLAYING_CONGAS`
+- `BALLET`
+- `ROOF_SHINGLE_REMOVAL`
+- `HAND_CAR_WASH`
+- `KITE_FLYING`
+- `PLAYING_POOL`
+- `PLAYING_LACROSSE`
+- `LAYUP_DRILL_IN_BASKETBALL`
+- `HOME_AND_GARDEN`
+- `PLAYING_BEACH_VOLLEYBALL`
+- `CALF_ROPING`
+- `SCUBA_DIVING`
+- `MIXING_DRINKS`
+- `PUTTING_ON_SHOES`
+- `MAKING_A_LEMONADE`
+- `UNCATEGORIZED`
+- `ZUMBA`
+- `PLAYING_BADMINTON`
+- `PLAYING_BAGPIPES`
+- `FOOD_AND_ENTERTAINING`
+- `PERSONAL_CARE_AND_STYLE`
+- `CRICKET`
+- `SHOVELING_SNOW`
+- `PING_PONG`
+- `HOLIDAYS_AND_TRADITIONS`
+- `ICE_FISHING`
+- `BEACH_SOCCER`
+- `TABLE_SOCCER`
+- `SWIMMING`
+- `BATON_TWIRLING`
+- `JAVELIN_THROW`
+- `SHOT_PUT`
+- `DOING_CRUNCHES`
+- `POLISHING_SHOES`
+- `TRAVEL`
+- `USING_UNEVEN_BARS`
+- `PLAYING_HARMONICA`
+- `RELATIONSHIPS`
+- `HIGH_JUMP`
+- `MAKING_A_SANDWICH`
+- `POWERBOCKING`
+- `REMOVING_ICE_FROM_CAR`
+- `SHAVING`
+- `SHARPENING_KNIVES`
+- `WELDING`
+- `USING_PARALLEL_BARS`
+- `HOME_CATEGORIES`
+- `ROCK_CLIMBING`
+- `SNOW_TUBING`
+- `WASHING_FACE`
+- `ASSEMBLING_BICYCLE`
+- `TENNIS_SERVE_WITH_BALL_BOUNCING`
+- `SHUFFLEBOARD`
+- `DODGEBALL`
+- `CAPOEIRA`
+- `PAINTBALL`
+- `DOING_A_POWERBOMB`
+- `DOING_MOTOCROSS`
+- `PLAYING_ICE_HOCKEY`
+- `PHILOSOPHY_AND_RELIGION`
+- `ARCHERY`
+- `CARS_AND_OTHER_VEHICLES`
+- `RUNNING_A_MARATHON`
+- `THROWING_DARTS`
+- `PAINTING_FURNITURE`
+- `HAVING_AN_ICE_CREAM`
+- `SLACKLINING`
+- `CAMEL_RIDE`
+- `ARM_WRESTLING`
+- `HULA_HOOP`
+- `SURFING`
+- `PLAYING_PIANO`
+- `GARGLING_MOUTHWASH`
+- `PLAYING_ACCORDION`
+- `HORSEBACK_RIDING`
+- `PUTTING_IN_CONTACT_LENSES`
+- `PLAYING_SAXOPHONE`
+- `FUTSAL`
+- `LONG_JUMP`
+- `LONGBOARDING`
+- `POLE_VAULT`
+- `BUILDING_SANDCASTLES`
+- `PLATFORM_DIVING`
+- `PAINTING`
+- `SPINNING`
+- `CARVING_JACK_O_LANTERNS`
+- `BRAIDING_HAIR`
+- `YOUTH`
+- `PLAYING_VIOLIN`
+- `CANOEING`
+- `CHEERLEADING`
+- `PETS_AND_ANIMALS`
+- `KAYAKING`
+- `CLEANING_SHOES`
+- `KNITTING`
+- `BAKING_COOKIES`
+- `DOING_FENCING`
+- `PLAYING_GUITARRA`
+- `USING_THE_ROWING_MACHINE`
+- `GETTING_A_HAIRCUT`
+- `MOOPING_FLOOR`
+- `RIVER_TUBING`
+- `CLEANING_SINK`
+- `GROOMING_DOG`
+- `DISCUS_THROW`
+- `CLEANING_WINDOWS`
+- `FINANCE_AND_BUSINESS`
+- `HANGING_WALLPAPER`
+- `ROPE_SKIPPING`
+- `WINDSURFING`
+- `KNEELING`
+- `GETTING_A_PIERCING`
+- `ROCK_PAPER_SCISSORS`
+- `SPORTS_AND_FITNESS`
+- `BREAKDANCING`
+- `WALKING_THE_DOG`
+- `PLAYING_DRUMS`
+- `PLAYING_WATER_POLO`
+- `BMX`
+- `SMOKING_A_CIGARETTE`
+- `BLOWING_LEAVES`
+- `BULLFIGHTING`
+- `DRINKING_COFFEE`
+- `BATHING_DOG`
+- `TANGO`
+- `WRAPPING_PRESENTS`
+- `PLASTERING`
+- `PLAYING_BLACKJACK`
+- `FUN_SLIDING_DOWN`
+- `WORK_WORLD`
+- `TRIPLE_JUMP`
+- `TUMBLING`
+- `SKIING`
+- `DOING_KICKBOXING`
+- `BLOW_DRYING_HAIR`
+- `DRUM_CORPS`
+- `SMOKING_HOOKAH`
+- `MOWING_THE_LAWN`
+- `VOLLEYBALL`
+- `LAYING_TILE`
+- `STARTING_A_CAMPFIRE`
+- `SUMO`
+- `HURLING`
+- `PLAYING_KICKBALL`
+- `MAKING_A_CAKE`
+- `FIXING_THE_ROOF`
+- `PLAYING_POLO`
+- `REMOVING_CURLERS`
+- `ELLIPTICAL_TRAINER`
+- `HEALTH`
+- `SPREAD_MULCH`
+- `CHOPPING_WOOD`
+- `BRUSHING_TEETH`
+- `USING_THE_POMMEL_HORSE`
+- `SNATCH`
+- `CLIPPING_CAT_CLAWS`
+- `PUTTING_ON_MAKEUP`
+- `HAND_WASHING_CLOTHES`
+- `HITTING_A_PINATA`
+- `TAI_CHI`
+- `GETTING_A_TATTOO`
+- `DRINKING_BEER`
+- `SHAVING_LEGS`
+- `DOING_KARATE`
+- `PLAYING_RUBIK_CUBE`
+- `FAMILY_LIFE`
+- `ROLLERBLADING`
+- `EDUCATION_AND_COMMUNICATIONS`
+- `FIXING_BICYCLE`
+- `BEER_PONG`
+- `IRONING_CLOTHES`
+- `CUTTING_THE_GRASS`
+- `RAKING_LEAVES`
+- `PLAYING_SQUASH`
+- `HOPSCOTCH`
+- `INSTALLING_CARPET`
+- `POLISHING_FURNITURE`
+- `DECORATING_THE_CHRISTMAS_TREE`
+- `PREPARING_SALAD`
+- `PREPARING_PASTA`
+- `VACUUMING_FLOOR`
+- `CLEAN_AND_JERK`
+- `COMPUTERS_AND_ELECTRONICS`
+- `CROQUET`

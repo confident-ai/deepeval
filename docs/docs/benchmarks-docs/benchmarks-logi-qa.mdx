@@ -1,0 +1,65 @@
+---
+id: benchmarks-logi-qa
+title: LogiQA
+sidebar_label: LogiQA
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/benchmarks-logi-qa" />
+</head>
+
+**LogiQA** is a comprehensive dataset designed to assess an LLM's logical reasoning capabilities, encompassing various types of deductive reasoning, including categorical and disjunctive reasoning. It features 8,678 multiple-choice questions, each paired with a reading passage. To learn more about the dataset and its construction, you can [read the original paper here](https://arxiv.org/pdf/2007.08124).
+
+:::info
+LogiQA is derived from publicly available logical comprehension questions from China's **National Civil Servants Examination**. These questions are designed to evaluate candidates' critical thinking and problem-solving skills.
+:::
+
+## Arguments
+
+There are **TWO** optional arguments when using the `LogiQA` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`LogiQATask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `LogiQATask` enums can be found [here](#logiqa-tasks).
+- [Optional] `n_shots`: the number of examples for few-shot learning. This is **set to 5** by default and **cannot exceed 5**.
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here](/guides/guides-using-custom-llms) to learn how to use ANY custom LLM) on categorical reasoning and sufficient conditional reasoning using 3-shot prompting.
+
+```python
+from deepeval.benchmarks import LogiQA
+from deepeval.benchmarks.tasks import LogiQATask
+
+# Define benchmark with specific tasks and shots
+benchmark = LogiQA(
+    tasks=[LogiQATask.CATEGORICAL_REASONING, LogiQATask.SUFFICIENT_CONDITIONAL_REASONING],
+    n_shots=3
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of questions for which the model produces the precise correct multiple choice answer (e.g. 'A' or ‘C’) in relation to the total number of questions.
+
+:::tip
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+:::
+
+## LogiQA Tasks
+
+The `LogiQATask` enum classifies the diverse range of reasoning categories covered in the LogiQA benchmark.
+
+```python
+from deepeval.benchmarks.tasks import LogiQATask
+
+math_qa_tasks = [LogiQATask.CATEGORICAL_REASONING]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `CATEGORICAL_REASONING`
+- `SUFFICIENT_CONDITIONAL_REASONING`
+- `NECESSARY_CONDITIONAL_REASONING`
+- `DISJUNCTIVE_REASONING`
+- `CONJUNCTIVE_REASONING`
