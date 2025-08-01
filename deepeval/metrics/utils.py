@@ -117,6 +117,20 @@ def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
 
+def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
+        unit_interactions = []
+        unit_interaction = []
+        for turn in turns:
+            if turn.role == "user":
+                if len(unit_interaction) > 0:
+                    unit_interactions.append(unit_interaction)
+                unit_interaction = [turn]
+            else:
+                unit_interaction.append(turn)
+        if len(unit_interaction) > 0:
+            unit_interactions.append(unit_interaction)
+        return unit_interactions
+
 
 def print_tools_called(tools_called_list: List[ToolCall]):
     string = "[\n"
