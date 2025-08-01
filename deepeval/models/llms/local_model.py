@@ -92,13 +92,11 @@ class LocalModel(DeepEvalBaseLLM):
             return OpenAI(
                 api_key=self.local_model_api_key,
                 base_url=self.base_url,
-                *self.args,
                 **self.kwargs,
             )
         else:
             return AsyncOpenAI(
                 api_key=self.local_model_api_key,
                 base_url=self.base_url,
-                *self.args,
                 **self.kwargs,
             )

@@ -69,6 +69,7 @@ class KimiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0,
+        **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.MOONSHOT_MODEL_NAME
@@ -90,6 +91,7 @@ class KimiModel(DeepEvalBaseLLM):
             ModelKeyValues.MOONSHOT_API_KEY
         )
         self.base_url = "https://api.moonshot.cn/v1"
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -186,9 +188,9 @@ class KimiModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(api_key=self.api_key, base_url=self.base_url)
+            return OpenAI(api_key=self.api_key, base_url=self.base_url, **self.kwargs)
         else:
-            return AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+            return AsyncOpenAI(api_key=self.api_key, base_url=self.base_url, **self.kwargs)
 
     def get_model_name(self):
         return f"{self.model_name}"

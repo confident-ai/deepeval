@@ -49,6 +49,7 @@ class GrokModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0,
+        **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.GROK_MODEL_NAME
@@ -71,6 +72,7 @@ class GrokModel(DeepEvalBaseLLM):
             or KEY_FILE_HANDLER.fetch_data(KeyValues.GROK_API_KEY)
             or os.getenv("GROK_API_KEY")
         )
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -172,9 +174,9 @@ class GrokModel(DeepEvalBaseLLM):
             from xai_sdk import Client, AsyncClient
 
             if not async_mode:
-                return Client(api_key=self.api_key)
+                return Client(api_key=self.api_key, **self.kwargs)
             else:
-                return AsyncClient(api_key=self.api_key)
+                return AsyncClient(api_key=self.api_key, **self.kwargs)
         except ImportError:
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"

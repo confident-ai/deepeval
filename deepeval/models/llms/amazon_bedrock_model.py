@@ -34,6 +34,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         temperature: float = 0,
         input_token_cost: float = 0,
         output_token_cost: float = 0,
+        *args,
+        **kwargs,
     ):
         _check_aiobotocore_available()
         super().__init__(model_id)
@@ -55,6 +57,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self._session = get_session()
         self._config = Config(retries={"max_attempts": 5, "mode": "adaptive"})
         self._exit_stack = AsyncExitStack()
+        self.args = args
+        self.kwargs = kwargs
         self._client = None
 
     ###############################################
@@ -99,6 +103,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 aws_access_key_id=self.aws_access_key_id,
                 aws_secret_access_key=self.aws_secret_access_key,
                 config=self._config,
+                **self.kwargs,
             )
             self._client = await self._exit_stack.enter_async_context(cm)
         return self._client
