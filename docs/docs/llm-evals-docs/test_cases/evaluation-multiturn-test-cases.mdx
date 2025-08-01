@@ -1,0 +1,129 @@
+---
+id: evaluation-multiturn-test-cases
+title: Multi-Turn Test Case
+sidebar_label: Multi-Turn
+---
+
+## Quick Summary
+
+A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **FIVE** parameters:
+
+- `turns`
+- [Optional] `scenario`
+- [Optional] `expected_outcome`
+- [Optional] `user_description`
+- [Optional] `chatbot_role`
+
+:::note
+`deepeval` makes the assumption that a multi-turn use case are mainly conversational chatbots. Agents on the other hand, should be evaluated via [component-level evaluation](/docs/evaluation-component-level-llm-evals) instead, where each component in your agentic workflow is assessed individually.
+:::
+
+Here's an example implementation of a `ConversationalTestCase`:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn
+
+test_case = ConversationalTestCase(
+    scenario="User chit-chatting randomly with AI.",
+    expected_outcome="AI should respond in friendly manner.",
+    turns=[
+        Turn(role="user", content="How are you doing?"),
+        Turn(role="assistant", content="Why do you care?")
+    ]
+)
+```
+
+## Multi-Turn LLM Interaction
+
+Different from a [single-turn LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), a multi-turn LLM interaction encapsulates exchanges between a user and a conversational agent/chatbot, which is represented by a `ConversationalTestCase` in `deepeval`.
+
+![Conversational Test Case](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
+
+The `turns` parameter in a conversational test case is vital to specifying the roles and content of a conversation (in OpenAI API format), and allows you to supply any optional `tools_called` and `retrieval_context`. Additional optional parameters such as `scenario` and `expected outcome` is best suited for users converting [`ConversationalGolden`s](/docs/evaluation-datasets#goldens-data-model) to test cases at evaluation time.
+
+## Conversational Test Case
+
+While a [single-turn test case](/docs/evaluation-test-cases) represents an individual LLM system interaction, a `ConversationalTestCase` encapsulates a series of `Turn`s that make up an LLM-based conversation. This is particular useful if you're looking to for example evaluate a conversation between a user and an LLM-based chatbot.
+
+A `ConversationalTestCase` can only be evaluated using **conversational metrics.**
+
+```python title="main.py"
+from deepeval.test_case import Turn, ConversationalTestCase
+
+turns = [
+    Turn(role="user", content="Why did the chicken cross the road?"),
+    Turn(role="assistant", content="Are you trying to be funny?"),
+]
+
+test_case = ConversationalTestCase(turns=turns)
+```
+
+:::note
+Similar to how the term 'test case' refers to an `LLMTestCase` if not explicitly specified, the term 'metrics' also refer to non-conversational metrics throughout `deepeval`.
+:::
+
+### Turns
+
+The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. If you're using [`ConversationalGEval`](/docs/metrics-conversational-g-eval), you might also want to supply different parameteres to a `Turn`. A `Turn` is made up of the following parameters:
+
+```python
+class Turn:
+    role: Literal["user", "assistant"]
+    content: str
+    user_id: Optional[str] = None
+    retrieval_context: Optional[List[str]] = None
+    tools_called: Optional[List[ToolCall]] = None
+```
+
+:::info
+You should only provide the `retrieval_context` and `tools_called` parameter if the `role` is `"assistant"`.
+:::
+
+The `role` parameter specifies whether a particular turn is by the `"user"` (end user) or `"assistant"` (LLM). This is similar to OpenAI's API.
+
+### Scenario
+
+The `scenario` parameter is an **optional** parameter that specifies the circumstances of which a conversation is taking place in.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(scenario="Frustrated user asking for a refund.", turns=[Turn(...)])
+```
+
+### Expected Outcome
+
+The `expected_outcome` parameter is an **optional** parameter that specifies the expected outcome of a given `scenario`.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    scenario="Frustrated user asking for a refund.",
+    expected_outcome="AI routes to a real human agent.",
+    turns=[Turn(...)]
+)
+```
+
+### Chatbot Role
+
+The `chatbot_role` parameter is an **optional** parameter that specifies what role the chatbot is supposed to play. This is currently only required for the `RoleAdherenceMetric`, where it is particularly useful for a role-playing evaluation use case.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(chatbot_role="A happy jolly wizard.", turns=[Turn(...)])
+```
+
+### User Description
+
+The `user_description` parameter is an **optional** parameter that specifies the profile of the user for a given conversation.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    user_description="John Smith, lives in NYC, has a dog, divorced.",
+    turns=[Turn(...)]
+)
+```
