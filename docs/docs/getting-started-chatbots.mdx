@@ -14,7 +14,7 @@ Learn to evaluate any type of **chatbot**, including QA agents, customer support
 
 ## Overview
 
-Chatbot Evaluation is different from other types of evaluations because unlike single-turn tasks, conversations happen over multiple turns. This means your chatbot must stay consistent and context-aware across the conversation, and not just accurate in individual responses. Conversations on DeepEval are captured by a <code>ConversationalTestCase</code>, which is shown below.
+Chatbot Evaluation is different from other types of evaluations because unlike single-turn tasks, conversations happen over multiple turns. This means your chatbot must stay context-aware across the conversation, and not just accurate in individual responses. Conversations on DeepEval are captured by a <code>ConversationalTestCase</code>, which consist of multiple turns as shown below.
 
 ![Chatbot Evaluation](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
 
@@ -38,212 +38,298 @@ deepeval login
 
 :::
 
-## Prepare Test Cases
+## Evaluate Chatbot from Live Conversations
+
+If you don't have access to live conversations, you'll want to evaluate your chatbot from [simulated conversations](#evaluate-chatbots-from-simulations) instead.
 
 <Timeline>
-<TimelineItem title="Populate conversation">
+<TimelineItem title="Setup chatbot">
 
-Create a `ConversationalTestCase` for your chatbot by populating it with turns from a conversation history.
+Configure your chatbot to create a list of `Turn`s from live conversations you wish to evaluate.
 
 <Tabs>
 <TabItem value="python" label="Python">
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,4,9,13}"
+from deepeval.test_case import Turn
+...
 
-test_case = ConversationalTestCase(
-    turns=[
-        Turn(role="user", content="What does YC look for?"),
-        Turn(role="assistant", content="Founding teams with domain expertise."),
-        Turn(role="user", content="How can I stand out?"),
-        Turn(role="assistant", content="Focus on demonstrating traction."),
-    ]
-)
+turns = []
+
+while True:
+    # Capture user input in turns
+    user_input = input("User: ")
+    turns.append(Turn(role="user", content=user_input))
+
+    # Generate chatbot response
+    response = your_chatbot(user_input) # Replace with your chatbot
+    turns.append(Turn(role="assistant", content=response))
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,6,12,20}"
+from deepeval.test_case import Turn
 from openai import OpenAI
 
 client = OpenAI()
+messages = []
+turns = []
 
-messages = [{"role": "user", "content": "What does YC look for?"}]
-response = client.chat.completions.create(
-    model="gpt-4",
-    messages=messages
-)
+while len(turns) < 4:
+    # Capture user input in turns
+    user_input = input("User: ")
+    messages.append({"role": "user", "content": user_input})
+    turns.append(Turn(role="user", content=user_input))
 
-# Append assistant reply
-messages.append({
-    "role": "assistant",
-    "content": response.choices[0].message.content
-})
+    # Generate chatbot response
+    response = client.chat.completions.create(model="gpt-4", messages=messages)
+    print("Assistant:", response.choices[0].message.content)
 
-test_case = ConversationalTestCase(
-    turns=[
-        Turn(role=msg["role"], content=msg["content"])
-        for msg in messages
-    ]
-)
+    # Capture chatbot response in turns
+    messages.append({"role": "assistant", "content": response.choices[0].message.content})
+    turns.append(Turn(role="assistant", content=response.choices[0].message.content))
 ```
 
 </TabItem>
 <TabItem value="langchain" label="LangChain">
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
-from langchain.memory import ConversationBufferMemory
-from langchain.chat_models import ChatOpenAI
-from langchain.chains import ConversationChain
-...
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,9,18,25}"
+from deepeval.test_case import Turn
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 
-llm = ChatOpenAI()
-memory = ConversationBufferMemory(return_messages=True)
-chain = ConversationChain(llm=llm, memory=memory)
+store = {}
+session_id = "test_session"
+turns = []
 
-chain.run("What does YC look for?")
-chain.run("How can I stand out?")
+llm = ChatOpenAI(model="gpt-4")
+prompt = ChatPromptTemplate.from_messages([("system", "You are a helpful assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
+chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
 
-messages = memory.chat_memory.messages
+while len(turns) < 4:
+    # Capture user input in turns
+    user_input = input("User: ")
+    turns.append(Turn(role="user", content=user_input))
 
-test_case = ConversationalTestCase(
-    turns=[
-        Turn(
-            role="user" if msg.type == "human" else "assistant",
-            content=msg.content
-        )
-        for msg in messages
-    ]
-)
-```
+    # Generate chatbot response
+    response = chain_with_history.invoke({"input": user_input}, config={"configurable": {"session_id": session_id}})
+    print("Assistant:", response.content)
 
-</TabItem>
-<TabItem value="langgraph" label="LangGraph">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
-from langgraph.checkpoint.base import BaseCheckpointSaver
-...
-
-config = {"configurable": {"thread_id": "<YOUR_THREAD_ID>"}}
-state = checkpointer.get(config)
-messages = state["messages"] if state else []
-
-test_case = ConversationalTestCase(
-    turns=[
-        Turn(
-            role='user' if message.type == 'human' else 'assistant',
-            content=message.content
-        ) for message in messages
-    ]
-)
+    # Capture chatbot response in turns
+    turns.append(Turn(role="assistant", content=response.content))
 ```
 
 </TabItem>
 <TabItem value="llama_index" label="LlamaIndex">
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
+```python title="main.py"  showLineNumbers={true} wrapLines={true} metastring="{1,8,18,26}"
+from deepeval.test_case import Turn
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.llms import MessageRole
-...
+from llama_index.llms.openai import OpenAI
+from llama_index.core.chat_engine import SimpleChatEngine
 
+chat_key = "test_conversation"
+turns = []
+
+llm = OpenAI(model="gpt-4")
 chat_store = SimpleChatStore()
-messages = chat_store.get_messages("<YOUR_CHAT_STORE_KEY>")
+chat_engine = SimpleChatEngine.from_defaults(llm=llm)
 
-test_case = ConversationalTestCase(
-    turns=[
-        Turn(
-            role='user' if message.role == MessageRole.USER else 'assistant',
-            content=message.content
-        ) for message in messages
-    ]
-)
+while len(turns) < 4:
+    # Capture user input in turns
+    user_input = input("User: ")
+    chat_store.add_message(chat_key, {"role": MessageRole.USER, "content": user_input})
+    turns.append(Turn(role="user", content=user_input))
+
+    # Generate chatbot response
+    response = chat_engine.chat(user_input)
+    print("Assistant:", response.response)
+
+    # Capture chatbot response in turns
+    chat_store.add_message(chat_key, {"role": MessageRole.ASSISTANT, "content": str(response.response)})
+    turns.append(Turn(role="assistant", content=str(response.response)))
 ```
 
 </TabItem>
 <TabItem value="openai-agents" label="OpenAI Agents">
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
-from agents import SQLiteSession
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,5,11,18}"
+from deepeval.test_case import Turn
+from agents import Agent, Runner
 import asyncio
-...
 
-async def create_test_case():
-    session = SQLiteSession("user_123", "conversations.db")
-    items = await session.get_items()
+turns = []
+agent = Agent(name="Test Assistant", instructions="You are a helpful assistant that answers questions concisely.")
 
-    test_case = ConversationalTestCase(
-        turns=[
-            Turn(role=item["role"], content=item["content"])
-            for item in items
-        ]
-    )
-    return test_case
+while len(turns) < 4:
+    # Capture user input in turns
+    user_input = input("User: ")
+    turns.append(Turn(role="user", content=user_input))
 
-    test_case = asyncio.run(create_test_case())
+    # Generate chatbot response
+    result = asyncio.run(Runner.run(agent, user_input))
+    print("Assistant:", result.final_output)
+
+    # Capture assistant response in turns
+    turns.append(Turn(role="assistant", content=result.final_output))
 ```
 
 </TabItem>
 <TabItem value="pydantic" label="Pydantic">
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.test_case import ConversationalTestCase, Turn
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,4,10,17}"
+from deepeval.test_case import Turn
 from pydantic_ai import Agent
-from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
-
-agent = Agent(...)
-result = agent.run_sync(...)
 
 turns = []
-for msg in result.all_messages():
-    if isinstance(msg, ModelRequest):
-        for part in msg.parts:
-            if isinstance(part, UserPromptPart):
-                turns.append(Turn(role='user', content=part.content))
-    elif isinstance(msg, ModelResponse):
-        for part in msg.parts:
-            if isinstance(part, TextPart):
-                turns.append(Turn(role='assistant', content=part.content))
+agent = Agent('openai:gpt-4o', system_prompt='You are a helpful assistant that answers questions concisely.')
 
-test_case = ConversationalTestCase(turns=turns)
+while len(turns) < 4:
+    # Capture user input in turns
+    user_input = input("User: ")
+    turns.append(Turn(role="user", content=user_input))
+
+    # Generate chatbot response
+    result = agent.run_sync(user_input)
+    print("Assistant:", result.output)
+
+    # Capture assistant response in turns
+    turns.append(Turn(role="assistant", content=result.output))
 ```
 
 </TabItem>
 <TabItem value="crewai" label="CrewAI">
 
-_To be documented..._
+```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,4,10,19,20}"
+from deepeval.test_case import Turn
+from crewai import Agent, Task, Crew
+
+turns = []
+agent = Agent(role='Helpful Assistant', goal='Answer user questions concisely and accurately', backstory='You are a knowledgeable assistant that provides helpful responses to user queries.')
+
+while len(turns) < 4:
+    # Capture user input in turns
+    user_input = input("User: ")
+    turns.append(Turn(role="user", content=user_input))
+
+    # Generate chatbot response
+    task = Task(description=f'Answer this question: {user_input}', agent=agent, expected_output='A helpful and concise response')
+    crew = Crew(agents=[agent], tasks=[task])
+    result = crew.kickoff()
+    print("Assistant:", result.raw)
+
+    # Capture assistant response in turns
+    turns.append(Turn(role="assistant", content=result.raw))
+```
 
 </TabItem>
 </Tabs>
 
-</TimelineItem>
-<TimelineItem title="Define chatbot role">
+<details>
+  <summary>Click to see an example list of turns</summary>
 
-Define the role or purpose of your chatbot in the conversation.
+Each turn should have a `role` and `content`, similar to OpenAI messages.
+
+```python
+turns=[
+    Turn(role="user", content="I am a helpful assistant that answers questions concisely and accurately.N"),
+    Turn(role="assistant", content="No, I am a helpful assistant that answers questions concisely and accurately."),
+    Turn(role="user", content="You imposter."),
+    Turn(role="assistant", content="No, you're the imposter.")
+]
+```
+
+</details>
+
+</TimelineItem>
+<TimelineItem title="Create a test case">
+
+To create a `ConversationalTestCase`, pass the list of turns along with your chatbot's role or purpose.
+
+:::info
+Metrics like **Role Adherence** require the `chatbot_role` to evaluate the chatbot's adherence to its role through a conversation.
+:::
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.test_case import ConversationalTestCase, Turn
 
 test_case = ConversationalTestCase(
     turns=[...],
-    chatbot_role='QA agent that answers questions about YC.'
+    chatbot_role='QA agent that acts smarter than he is.'
 )
 ```
 
 </TimelineItem>
+<TimelineItem title="Run an evaluation">
+
+Use the `evaluate` function to run an evaluation on the conversational test case using DeepEval's [multi-turn metrics](/docs/metrics-conversational-g-eval). You can also define your own metric using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
+
+<details>
+  <summary>What multi-turn metrics are available?</summary>
+
+Conversational test cases can only be evaluated using multi-turn metrics, which include:
+
+- [Conversational G-Eval](/docs/metrics-conversational-g-eval)
+- [Role Adherence](/docs/metrics-role-adherence)
+- [Knowledge Retention](/docs/metrics-knowledge-retention)
+- [Conversation Completeness](/docs/metrics-conversation-completeness)
+- [Conversation Relevancy](/docs/metrics-conversation-relevancy)
+
+</details>
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import RoleAdherenceMetric, KnowledgeRetentionMetric
+from deepeval import evaluate
+...
+
+evaluate([test_case], metrics=[RoleAdherenceMetric(), KnowledgeRetentionMetric()])
+```
+
+</TimelineItem>
+<TimelineItem title="View on Confident AI">
+
+If you're logged in to Confident AI, you'll be automatically directed to view your chatbot evaluation report.
+
+:::tip
+We recommend logging in to Confident AI to analyze your chatbot performance in detail.
+
+```bash
+deepeval login
+```
+
+:::
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+
+</TimelineItem>
 </Timeline>
 
-## Evaluate Conversations
+## Evaluate Chatbots from Simulations
 
 <Timeline>
-<TimelineItem title="Select metrics">
+<TimelineItem title="Create goldens">
 
-Select [multi-turn metrics](/docs/metrics-conversational-g-eval) to evaluate your conversation, or define your own using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
+Create a `ConversationalGolden` by describing your user and conversation scenario, which will be used to simulate conversations with your chatbot.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.dataset import ConversationalGolden
+
+conversation_golden = ConversationalGolden(
+    scenario="",
+    user_description="",
+    expected_outcome="",
+)
+```
+
+</TimelineItem>
+<TimelineItem title="Running an evaluation">
+
+Run an evaluation on the conversational test case you previously created using the metrics defined above.
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.metrics import RoleAdherenceMetric, KnowledgeRetentionMetric
@@ -271,7 +357,7 @@ Once the evaluation completes, you'll be directed to Confident AI to view the ev
 </TimelineItem>
 </Timeline>
 
-## Simulate Conversations
+## Evaluate Chatbots Offline
 
 You'll need to <a href="/docs/conversation-simulator">simulate conversations</a> with your chatbot if you don't have conversations to evaluate.
 
