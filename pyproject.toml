@@ -49,6 +49,7 @@ pyfiglet = "*"
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
 black = "*"
+chromadb = "*"
 
 [tool.black]
 line-length = 80
