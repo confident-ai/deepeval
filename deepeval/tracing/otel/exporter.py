@@ -76,29 +76,33 @@ class ConfidentSpanExporter(SpanExporter):
         timeout_millis: int = 30000,
         api_key: Optional[str] = None,
     ) -> SpanExportResult:
-        
+
         # build forest of spans
         forest = self._build_span_forest(spans)
-        
+
         # convert forest of spans to forest of base span wrappers
         spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
         for span_list in forest:
             spans_wrappers_list: List[BaseSpanWrapper] = []
             for span in span_list:
-                
+
                 # confugarion are attached to the resource attributes
                 resource_attributes = span.resource.attributes
-                environment = resource_attributes.get("confident.environment")  
-                
+                environment = resource_attributes.get("confident.environment")
+
                 if environment and isinstance(environment, str):
                     trace_manager.configure(environment=environment)
 
-                sampling_rate = resource_attributes.get("confident.sampling_rate")
+                sampling_rate = resource_attributes.get(
+                    "confident.sampling_rate"
+                )
                 if sampling_rate and isinstance(sampling_rate, float):
                     trace_manager.configure(sampling_rate=sampling_rate)
 
-                base_span_wrapper = self._convert_readable_span_to_base_span(span)
-                
+                base_span_wrapper = self._convert_readable_span_to_base_span(
+                    span
+                )
+
                 spans_wrappers_list.append(base_span_wrapper)
             spans_wrappers_forest.append(spans_wrappers_list)
 
@@ -373,8 +377,12 @@ class ConfidentSpanExporter(SpanExporter):
 
         elif span_type == "agent":
             name = span.attributes.get("confident.agent.name")
-            available_tools_attr = span.attributes.get("confident.agent.available_tools")
-            agent_handoffs_attr = span.attributes.get("confident.agent.agent_handoffs")
+            available_tools_attr = span.attributes.get(
+                "confident.agent.available_tools"
+            )
+            agent_handoffs_attr = span.attributes.get(
+                "confident.agent.agent_handoffs"
+            )
 
             available_tools: List[str] = []
             try:
@@ -502,16 +510,18 @@ class ConfidentSpanExporter(SpanExporter):
         # if span type is not supported, return None
         return None
 
-    def _build_span_forest(self, spans: typing.Sequence[ReadableSpan]) -> List[typing.Sequence[ReadableSpan]]:
-        
+    def _build_span_forest(
+        self, spans: typing.Sequence[ReadableSpan]
+    ) -> List[typing.Sequence[ReadableSpan]]:
+
         # Group spans by trace ID
         trace_spans = defaultdict(list)
         for span in spans:
             trace_id = span.context.trace_id
             trace_spans[trace_id].append(span)
-        
+
         forest = []
-        
+
         # Process each trace separately
         for trace_id, trace_span_list in trace_spans.items():
             # Build parent-child relationships for this trace
@@ -519,25 +529,25 @@ class ConfidentSpanExporter(SpanExporter):
             span_map = {}
             all_span_ids = set()
             parent_map = {}
-            
+
             for span in trace_span_list:
                 span_id = span.context.span_id
                 parent_id = span.parent.span_id if span.parent else None
-                
+
                 all_span_ids.add(span_id)
                 span_map[span_id] = span
                 parent_map[span_id] = parent_id
-                
+
                 if parent_id is not None:
                     children[parent_id].append(span_id)
-            
+
             # Identify roots: spans with no parent or parent not in this trace
             roots = []
             for span_id in all_span_ids:
                 parent_id = parent_map.get(span_id)
                 if parent_id is None or parent_id not in all_span_ids:
                     roots.append(span_id)
-            
+
             # Perform DFS from each root to collect spans in DFS order
             def dfs(start_id):
                 order = []
@@ -550,11 +560,11 @@ class ConfidentSpanExporter(SpanExporter):
                     for child_id in sorted(children[current_id], reverse=True):
                         stack.append(child_id)
                 return order
-            
+
             # Build forest for this trace
             for root_id in sorted(roots):
                 tree_order = dfs(root_id)
                 if tree_order:  # Only add non-empty trees
                     forest.append(tree_order)
-        
+
         return forest

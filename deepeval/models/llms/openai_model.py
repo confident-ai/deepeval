@@ -158,7 +158,6 @@ class GPTModel(DeepEvalBaseLLM):
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
         temperature: float = 0,
-        *args,
         **kwargs,
     ):
         model_name = None
@@ -212,7 +211,6 @@ class GPTModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)
 
@@ -433,5 +431,11 @@ class GPTModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(api_key=self._openai_api_key, base_url=self.base_url)
-        return AsyncOpenAI(api_key=self._openai_api_key, base_url=self.base_url)
+            return OpenAI(
+                api_key=self._openai_api_key,
+                base_url=self.base_url,
+                **self.kwargs,
+            )
+        return AsyncOpenAI(
+            api_key=self._openai_api_key, base_url=self.base_url, **self.kwargs
+        )

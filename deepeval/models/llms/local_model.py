@@ -17,7 +17,6 @@ class LocalModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         temperature: float = 0,
         format: Optional[str] = None,
-        *args,
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
@@ -35,7 +34,6 @@ class LocalModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)
 
@@ -92,13 +90,11 @@ class LocalModel(DeepEvalBaseLLM):
             return OpenAI(
                 api_key=self.local_model_api_key,
                 base_url=self.base_url,
-                *self.args,
                 **self.kwargs,
             )
         else:
             return AsyncOpenAI(
                 api_key=self.local_model_api_key,
                 base_url=self.base_url,
-                *self.args,
                 **self.kwargs,
             )

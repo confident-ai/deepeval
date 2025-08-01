@@ -132,7 +132,7 @@ class CallbackHandler(BaseCallbackHandler):
         if current_trace is not None:
             current_trace.input = span.input
             current_trace.output = span.output
-        
+
         # set trace attributes
         if self.trace_attributes:
             if self.trace_attributes.name:
@@ -145,7 +145,7 @@ class CallbackHandler(BaseCallbackHandler):
                 current_trace.thread_id = self.trace_attributes.thread_id
             if self.trace_attributes.user_id:
                 current_trace.user_id = self.trace_attributes.user_id
-        
+
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
