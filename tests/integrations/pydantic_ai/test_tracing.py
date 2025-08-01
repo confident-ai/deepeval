@@ -2,13 +2,18 @@ import os
 import time
 from deepeval.integrations.pydantic_ai import setup_instrumentation
 from pydantic_ai import Agent
+from dotenv import load_dotenv
 
-setup_instrumentation(api_key="<your-api-key>")
+load_dotenv()
 
-os.environ['OPENAI_API_KEY'] = '<your-api-key>'
+setup_instrumentation(api_key=os.getenv("CONFIDENT_API_KEY"))
+
+os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
 
 Agent.instrument_all()
 
+# this will not create `confident agent run` as it is not using `deepeval.integrations.pydantic_ai import Agent`
+# it will just create spans sent by pydantic ai to the ConfidentExporter
 agent = Agent(  
     'openai:gpt-4o-mini',
     system_prompt='Be concise, reply with one sentence.',  
