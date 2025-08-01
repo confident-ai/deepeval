@@ -13,5 +13,7 @@ evaluate(
             actual_output="I've a dog",
         ),
     ],
-    metrics=[AnswerRelevancyMetric()],
+    metrics=[
+        AnswerRelevancyMetric(),
+    ],
 )
