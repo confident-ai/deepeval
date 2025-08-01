@@ -1,0 +1,96 @@
+---
+id: evaluation-arena-test-cases
+title: Arena Test Case
+sidebar_label: Arena
+---
+
+## Quick Summary
+
+An **arena test case** is a blueprint provided by `deepeval` for you to compare which iteration of your LLM app performed better. It works by comparing each contestants's `LLMTestCase` to run comparisons, and currently only supports the `LLMTestCase` for single-turn, text-based comparisons.
+
+:::info
+Support for `ConversationalTestCase` and `MLLMTestCase` is coming soon.
+:::
+
+The `ArenaTestCase` currently only runs with the `ArenaGEval` metric, and all that is required is to provide a dictionary of contestant names to test cases:
+
+```python title="main.py"
+from deepeval.test_case import ArenaTestCase, LLMTestCase
+
+test_case = ArenaTestCase(
+    contestants={
+        "GPT-4": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Paris",
+        ),
+        "Claude-4": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Paris is the capital of France.",
+        ),
+        "Gemini 2.0": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Absolutely! The capital of France is Paris 😊",
+        ),
+        "Deepseek R1": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
+        ),
+    },
+)
+```
+
+Note that all `input`s and `expected_output`s you provide across contestants **MUST** match.
+
+:::tip
+For those wondering why we took the choice to include multiple duplicated `input`s in `LLMTestCase` instead of moving it to the `ArenaTestCase` class, it is because an `LLMTestCase` integrates nicely with the existing ecosystem.
+
+You also shouldn't worry about unexpected errors because `deepeval` will throw an error if `input`s or `expected_output`s aren't matching.
+:::
+
+## Arena Test Case
+
+The `ArenaTestCase` takes a simple `contestants` argument, which is a dictionary of contestant names to `LLMTestCase`s:
+
+```python
+contestants = {
+    "GPT-4": LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris",
+    ),
+    "Claude-4": LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Paris is the capital of France.",
+    ),
+    "Gemini 2.0": LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Absolutely! The capital of France is Paris 😊",
+    ),
+    "Deepseek R1": LLMTestCase(
+        input="What is the capital of France?",
+        actual_output="Hey there! It’s Paris—the beautiful City of Light. Have a wonderful day!",
+    ),
+}
+
+test_case = ArenaTestCase(contestants=contestants)
+```
+
+The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that uses an `ArenaTestCase`, which pickes a "winner" out of the list of contestants:
+
+```python
+from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
+...
+
+arena_geval = ArenaGEval(
+    name="Friendly",
+    criteria="Choose the winter of the more friendly contestant based on the input and actual output",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
+
+arena_geval.measure(test_case)
+print(arena.winner, arena.reason)
+```
+
+The `ArenaTestCase` streamlines the evaluation by automatically masking contestant names (to ensure unbiased judging) and randomizing their order.
