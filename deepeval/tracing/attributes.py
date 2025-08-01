@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from deepeval.prompt import Prompt
 
+
 class AgentAttributes(BaseModel):
     # input
     input: Union[str, Dict, list]
@@ -64,6 +65,7 @@ class ToolAttributes(BaseModel):
 Attributes = Union[
     AgentAttributes, LlmAttributes, RetrieverAttributes, ToolAttributes
 ]
+
 
 class TraceAttributes(BaseModel):
     name: Optional[str] = None
