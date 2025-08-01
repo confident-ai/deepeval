@@ -1,0 +1,174 @@
+---
+id: conversation-simulator
+title: Conversation Simulator
+sidebar_label: Conversation Simulator
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/conversation-simulator"
+  />
+</head>
+
+## Quick Summary
+
+While the [`Synthesizer`](/docs/synthesizer-introduction) generates regular goldens representing single, atomic [LLM interactions](/docs/evaluation-test-cases#what-is-an-llm-interaction), `deepeval`'s `ConversationSimulator` mimics a fake user interacting with your chatbot to generate **conversational goldens** instead.
+
+```python showLineNumbers
+from deepeval.conversation_simulator import ConversationSimulator
+
+# Define simulator
+simulator = ConversationSimulator(
+    user_intentions={"Opening a bank account": 1},
+    user_profile_items=[
+        "full name",
+        "current address",
+        "bank account number",
+        "date of birth",
+        "mother's maiden name",
+        "phone number",
+        "country code",
+    ],
+)
+
+# Define model callback
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    return f"I don't know how to answer this: {input}"
+
+# Start simluation
+convo_test_cases = simulator.simulate(
+  model_callback=model_callback,
+  stopping_criteria="Stop when the user's banking request has been fully resolved.",
+)
+print(convo_test_cases)
+```
+
+The `ConversationSimulator` uses an LLM to generate fake user profiles and scenarios, before using it to simulate back-and-forth exchanges with your chatbot. The resulting dialogue is used to create `ConversationalTestCase`s for evaluation using `deepeval`'s conversational metrics.
+
+:::info
+Alternatively, you can skip generating user profiles entirely, and instead supply a list of fake user profiles via the `user_profiles` parameter. See the following section for more details.
+:::
+
+## Create Your First Simulator
+
+```python
+from deepeval.conversation_simulator import ConversationSimulator
+
+user_intentions = {
+  "opening a bank account": 1,
+  "disputing a payment": 2,
+  "enquiring a recent transaction": 2
+}
+user_profile_items = ["first name", "last name", "address", "social security number"]
+
+simulator = ConversationSimulator(user_intentions=user_intentions, user_profile_items=user_profile_items)
+```
+
+There are **ONE** mandatory and **SIX** optional parameters when creating a `ConversationSimulator`:
+
+- `user_intentions`: a dictionary of type `Dict[str, int]`, where string keys specify the possible user intentions of a fake user profile, and integer values specify the number of conversations to generate for each corresponding intention.
+- [Optional] `user_profile_items`: a list of strings representing the fake user properties that should be generated for each user profile, which must be supplied if `user_profiles` isn't provided. Defaulted to `None`.
+- [Optional] `user_profiles`: a list of strings representing complete fake user profiles, which must be supplied if `user_profile_items` isn't provided. Defaulted to `None`.
+- [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
+- [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
+- [Optional] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
+
+If you already have a list of `user_profiles` you wish to supply directly, you can do so using the `user_profiles` argument instead of `user_profile_items`:
+
+```python
+...
+
+# This skips generating user profiles
+user_profiles = [
+  "Emily Carter lives at 159 Oakwood Drive, Denver, CO 80203, and her Social Security Number is 345-67-8901.",
+  "Marcus Lee lives at 984 Pine Street, Brooklyn, NY 11201, and his Social Security Number is 789-12-3456."
+]
+simulator = ConversationSimulator(user_profiles=user_profiles, ...)
+```
+
+:::tip
+The example shown above will simulate fake user profiles for a financial LLM chatbot use case.
+:::
+
+## Simulate Your First Conversation
+
+To simulate your first conversation, simply define a callback that wraps around your LLM chatbot and call the `simulate()` method:
+
+```python
+...
+
+# Remove `async` if `async_mode` is `True
+async def model_callback(input: str, conversation_history: List[Dict[str, str]]) -> str:
+    # Access conversation_history
+    print(conversation_history)
+    # Replace this with your LLM application
+    return f"I don't know how to answer this: {input}"
+
+convo_test_cases = simulator.simulate(
+  model_callback=model_callback,
+  stopping_criteria="Stop when the user's banking request (opening an account, disputing a payment, or querying a transaction) has been fully resolved.",
+)
+```
+
+There are **ONE** mandatory and **FOUR** optional parameters when calling the `simulate` method:
+
+- `model_callback`: a callback of type `Callable[[str], str]` that wraps around the target LLM application you wish to generate output from.
+- [Optional] `min_turns`: an integer that specifies the minimum number of turns to simulate per conversation. Defaulted to `5`.
+- [Optional] `max_turns`: an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `20`.
+- [Optional] `stopping_criteria`: a string that defines the criteria under which the simulation should terminate. Defaulted to `None`.
+
+A conversation ends either when `stopping_criteria` is met (if provided), or when the `max_turns` has been reached.
+
+:::caution
+Your `model_callback` is a wrapper around your LLM chatbot and **MUST**:
+
+- Take a positional argument of type `str` which specifies the model input.
+- Take a keyword argument `conversation_history` of type `List[Dict[str, str]]` which represents the past conversation history.
+- Return a `str`.
+
+:::
+
+The `simulate` function returns a list of `ConversationalTestCase`s, which can be used to evaluate your LLM chatbot using `deepeval`'s conversational metrics. Each generated `ConversationalTestCase` includes the user profile and user intention, which can be accessed via `additional_metadata` attribute.
+
+```python
+...
+
+print(convo_test_cases[0].additional_metadata)
+```
+
+## Advanced Usage
+
+While `conversation_history` captures the dialogue context for each turn, some applications must persist additional state across turns — for example, when invoking external APIs or tracking user-specific data (e.g. session IDs). In these cases, `conversation_history` is insufficient.
+
+```python
+async def model_callback(
+    input: str, conversation_history: List[Dict[str, str]], **kwargs
+) -> Tuple[str, Dict[str, Any]]:
+    # Extract state from kwargs if it exists
+    session_id = kwargs.get("session_id")
+    if not session_id:
+        session_id = await do_something()
+
+    res = await your_llm_app(input, conversation_history, session_id)
+    return res, {"session_id": session_id}
+```
+
+To persist state information across turns, extend the signature of your `model_callback` to accept arbitrary keyword arguments and return a tuple of `(response, kwargs)` rather than a lone string.
+
+:::tip
+Add `print()` statements inside your `model_callback` to get a better sense of what variables are passed in and out for each simulation.
+:::
+
+## Using Simulated Conversations
+
+Use simulated conversations to run [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluations:
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import ConversationRelevancyMetric
+...
+
+evaluate(test_cases=convo_test_cases, metrics=[ConversationRelevancyMetric()])
+```
