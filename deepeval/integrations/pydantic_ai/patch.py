@@ -24,22 +24,21 @@ def safe_patch_agent_run_method():
         if not isinstance(args[0], PatchedAgent):
             return await original_run(*args, **kwargs)
        
+        # get tracer from model
         model_used = args[0]._get_model(kwargs.get('model', None))
-
         if isinstance(model_used, InstrumentedModel):
             tracer = model_used.settings.tracer
         else:
             tracer = NoOpTracer()
-    
-        with tracer.start_as_current_span('confident.evaluation') as run_span:
-            
+        with tracer.start_as_current_span('confident agent run') as run_span:
+
             result = await original_run(*args, **kwargs)
             
             # agent attributes
             run_span.set_attribute('confident.span.type', 'agent')
-            run_span.set_attribute('confident.span.name', str(args[0].name))
-            run_span.set_attribute('confident.span.attributes.input', str(args[1]))
-            run_span.set_attribute('confident.span.attributes.output', str(result.output))
+            run_span.set_attribute('confident.agent.name', str(args[0].name))
+            run_span.set_attribute('confident.agent.attributes.input', str(args[1]))
+            run_span.set_attribute('confident.agent.attributes.output', str(result.output))
             
             # llm test case attributes
             run_span.set_attribute('confident.span.metric_collection', args[0].metric_collection)
