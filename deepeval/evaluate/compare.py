@@ -82,9 +82,15 @@ async def a_execute_arena_test_cases(
 
     async def evaluate_single_test_case(
         test_case: ArenaTestCase,
+        index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ):
+        pbar_test_case_id = add_pbar(
+            progress,
+            f"    🎯 Evaluating test case #{index}",
+            total=1,
+        )
         metric_copy = ArenaGEval(
             name=metric.name,
             evaluation_params=metric.evaluation_params,
@@ -98,7 +104,7 @@ async def a_execute_arena_test_cases(
                 else metric.verbose_mode
             ),
         )
-        winner = _handle_metric_measurement(
+        winner = await _a_handle_metric_measurement(
             metric=metric_copy,
             test_case=test_case,
             ignore_errors=ignore_errors,
@@ -108,6 +114,7 @@ async def a_execute_arena_test_cases(
             winners.append(winner)
 
         update_pbar(progress, pbar_id)
+        update_pbar(progress, pbar_test_case_id)
 
     # Create tasks for all test cases
     if show_indicator:
@@ -125,12 +132,13 @@ async def a_execute_arena_test_cases(
                 total=len(test_cases),
             )
             tasks = []
-            for test_case in test_cases:
+            for i, test_case in enumerate(test_cases):
                 task = execute_with_semaphore(
                     func=evaluate_single_test_case,
                     test_case=test_case,
                     progress=progress,
                     pbar_id=pbar_id,
+                    index=i,
                 )
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(throttle_value)
@@ -229,6 +237,47 @@ def _handle_metric_measurement(
     except TypeError:
         try:
             winner = metric.measure(test_case)
+            return winner
+        except MissingTestCaseParamsError as e:
+            if skip_on_missing_params:
+                return None
+            else:
+                if ignore_errors:
+                    metric.error = str(e)
+                    metric.success = False
+                    return None
+                else:
+                    raise
+        except Exception as e:
+            if ignore_errors:
+                metric.error = str(e)
+                metric.success = False
+                return None
+            else:
+                raise
+
+async def _a_handle_metric_measurement(
+    metric: ArenaGEval,
+    test_case: ArenaTestCase,
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+) -> Optional[str]:
+    try:
+        winner = await metric.a_measure(test_case, _show_indicator=False)
+        return winner
+    except MissingTestCaseParamsError as e:
+        if skip_on_missing_params:
+            return None
+        else:
+            if ignore_errors:
+                metric.error = str(e)
+                metric.success = False
+                return None
+            else:
+                raise
+    except TypeError:
+        try:
+            winner = await metric.a_measure(test_case)
             return winner
         except MissingTestCaseParamsError as e:
             if skip_on_missing_params:

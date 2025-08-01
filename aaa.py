@@ -1,3 +1,4 @@
+from deepeval.evaluate.configs import AsyncConfig
 from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import ArenaGEval
 from deepeval import compare
@@ -35,5 +36,4 @@ metric = ArenaGEval(
     ],
 )
 
-
-compare(test_cases=[a_test_case, a_test_case2], metric=metric)
+compare(test_cases=[a_test_case, a_test_case2] * 10, metric=metric, async_config=AsyncConfig(run_async=True))
