@@ -10,7 +10,6 @@ from tenacity import (
 import os
 
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.utils import parse_model_name
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 

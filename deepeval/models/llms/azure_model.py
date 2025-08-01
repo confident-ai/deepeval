@@ -33,7 +33,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
-        *args,
         **kwargs,
     ):
         # fetch Azure deployment parameters
@@ -59,7 +58,6 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self.temperature = temperature
 
         # args and kwargs will be passed to the underlying model, in load_model function
-        self.args = args
         self.kwargs = kwargs
         super().__init__(parse_model_name(model_name))
 

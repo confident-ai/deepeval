@@ -1,1 +1,0 @@
-from .category import CyberattackCategory

@@ -188,9 +188,13 @@ class KimiModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(api_key=self.api_key, base_url=self.base_url, **self.kwargs)
+            return OpenAI(
+                api_key=self.api_key, base_url=self.base_url, **self.kwargs
+            )
         else:
-            return AsyncOpenAI(api_key=self.api_key, base_url=self.base_url, **self.kwargs)
+            return AsyncOpenAI(
+                api_key=self.api_key, base_url=self.base_url, **self.kwargs
+            )
 
     def get_model_name(self):
         return f"{self.model_name}"

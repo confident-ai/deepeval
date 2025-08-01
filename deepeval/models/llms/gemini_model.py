@@ -45,7 +45,6 @@ class GeminiModel(DeepEvalBaseLLM):
         project: Optional[str] = None,
         location: Optional[str] = None,
         temperature: float = 0,
-        *args,
         **kwargs,
     ):
         model_name = (
@@ -70,9 +69,8 @@ class GeminiModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.args = args
         self.kwargs = kwargs
-        super().__init__(model_name, *args, **kwargs)
+        super().__init__(model_name, **kwargs)
 
     def should_use_vertexai(self):
         """Checks if the model should use Vertex AI for generation.
@@ -110,7 +108,10 @@ class GeminiModel(DeepEvalBaseLLM):
 
             # Create client for Vertex AI
             self.client = genai.Client(
-                vertexai=True, project=self.project, location=self.location, **self.kwargs
+                vertexai=True,
+                project=self.project,
+                location=self.location,
+                **self.kwargs,
             )
         else:
             if not self.api_key:

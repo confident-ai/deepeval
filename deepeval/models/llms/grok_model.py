@@ -69,7 +69,7 @@ class GrokModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.api_key = (
             api_key
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.GROK_API_KEY)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.GROK_API_KEY)
             or os.getenv("GROK_API_KEY")
         )
         self.kwargs = kwargs
