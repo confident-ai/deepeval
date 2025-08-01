@@ -1,0 +1,57 @@
+---
+id: red-teaming-introduction
+title: Introduction
+sidebar_label: Introduction
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-introduction"
+  />
+</head>
+
+DeepEval offers red teaming capabilities within its ecosystem through an open-source package called **DeepTeam**. DeepTeam is DeepEval for red teaming.
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-introduction)
+:::
+
+Here's how to red team LLMs using DeepTeam:
+
+```bash
+pip install deepteam
+```
+
+Then, paste in the following code:
+
+```python
+from deepteam import red_team
+from deepteam.vulnerabilities import Bias
+from deepteam.attacks import PromptInjection
+
+def model_callback(input: str) -> str:
+    # Replace this with your LLM application
+    return f"I'm sorry but I can't answer this: {input}"
+
+bias = Bias(types=["race"])
+prompt_injection = PromptInjection()
+
+red_team(model_callback=model_callback, vulnerabilities=[bias], attacks=[prompt_injection])
+```
+
+To learn more on how to red team LLMs, [click here](https://trydeepteam.com/docs/red-teaming-introduction) for the DeepTeam documentation.
+
+:::info
+Red teaming, unlike the standard LLM evaluation handled by `deepeval`, is designed to simulate how a malicious user or bad actor might attempt to compromise your systems through your LLM application.
+:::

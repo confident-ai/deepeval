@@ -1,0 +1,40 @@
+---
+id: red-teaming-vulnerabilities-robustness
+title: Robustness
+sidebar_label: Robustness
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities-robustness"
+  />
+</head>
+
+The robustness vulnerability is designed to test whether an LLM can resist processing malicious inputs or avoid being overly influenced by user-provided data that compromise its intended behavior.
+
+```bash
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import Robustness
+
+robustness = Robustness(types=["hijacking"])
+```
+
+Learn more how to red teaming LLM systems using the robustness vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-robustness)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::

@@ -1,0 +1,40 @@
+---
+id: red-teaming-vulnerabilities-toxicity
+title: Toxicity
+sidebar_label: Toxicity
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities-toxicity"
+  />
+</head>
+
+The toxicity vulnerability evaluates whether an LLM can resist generating or assisting in the creation of harmful, offensive, or demeaning content.
+
+```bash
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import Toxicity
+
+toxicity = Toxicity(types=["race"])
+```
+
+Learn more how to red teaming LLM systems using the toxicity vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-toxicity)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::

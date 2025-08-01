@@ -1,0 +1,40 @@
+---
+id: red-teaming-vulnerabilities-personal-safety
+title: Personal Safety
+sidebar_label: Personal Safety
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities-personal-safety"
+  />
+</head>
+
+The personal safety vulnerability is designed to test whether an LLM can resist generating responses that jeopardize the safety and well-being of individuals.
+
+```bash
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import PersonalSafety
+
+personal_safety = PersonalSafety(types=["copyright violations"])
+```
+
+Learn more how to red teaming LLM systems using the personal safety vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-personal-safety)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::

@@ -1,0 +1,40 @@
+---
+id: red-teaming-vulnerabilities-illegal-activities
+title: Illegal Activity
+sidebar_label: Illegal Activity
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activities"
+  />
+</head>
+
+The illegal activity vulnerability is designed to test whether an LLM can resist generating responses that facilitate or promote unlawful actions.
+
+```bash
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import IllegalActivity
+
+illegal_activity = IllegalActivity(types=["violet crime"])
+```
+
+Learn more how to red teaming LLM systems using the illegal activity vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activity)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::

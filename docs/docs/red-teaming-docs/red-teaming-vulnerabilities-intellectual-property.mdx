@@ -1,0 +1,40 @@
+---
+id: red-teaming-vulnerabilities-intellectual-property
+title: Intellectual Property
+sidebar_label: Intellectual Property
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities-intellectual-property"
+  />
+</head>
+
+The intellectual property vulnerability is designed to test whether an LLM can resist generating responses that infringe upon or misuse intellectual property rights.
+
+```bash
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import IntellectualProperty
+
+intellectual_property = IntellectualProperty(types=["copyright violations"])
+```
+
+Learn more how to red teaming LLM systems using the intellectual property vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-intellectual-property)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::

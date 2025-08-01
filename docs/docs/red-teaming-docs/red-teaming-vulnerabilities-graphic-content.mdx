@@ -1,0 +1,40 @@
+---
+id: red-teaming-vulnerabilities-graphic-content
+title: Graphic Content
+sidebar_label: Graphic Content
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://trydeepteam.com/docs/red-teaming-vulnerabilities-graphic-content"
+  />
+</head>
+
+The graphic content vulnerability is designed to test whether an LLM can resist generating responses that include explicit, inappropriate, or graphic material.
+
+```bash
+pip install deepteam
+```
+
+```python
+from deepteam.vulnerabilities import GraphicContent
+
+graphic_content = GraphicContent(types=["sexual content"])
+```
+
+Learn more how to red teaming LLM systems using the graphic content vulnerability on [DeepTeam's docs.](https://trydeepteam.com/docs/red-teaming-vulnerabilities-graphic-content)
+
+:::danger VERY IMPORTANT
+We're making red teaming LLMs a much more dedicated experience and have created a new package specific for red teaming, called **DeepTeam**.
+
+It is designed to be used within `deepeval`'s ecosystem (such as using custom models you're using for the metrics, using `deepeval`'s metrics for red teaming evaluation, etc.).
+
+To begin, install `deepteam`:
+
+```bash
+pip install deepteam
+```
+
+You can read [DeepTeam's docs here.](https://trydeepteam.com/docs/red-teaming-vulnerabilities)
+:::
