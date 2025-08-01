@@ -244,9 +244,7 @@ class TraceManager:
             if parent_span:
                 parent_span.children.append(span)
             else:
-                raise ValueError(
-                    f"Parent span with UUID {span.parent_uuid} does not exist."
-                )
+                trace.root_spans.append(span)
 
     def get_trace_by_uuid(self, trace_uuid: str) -> Optional[Trace]:
         """Get a trace by its UUID."""
@@ -400,7 +398,7 @@ class TraceManager:
                     body = trace_api.dict(by_alias=True, exclude_none=True)
                 # If the main thread is still alive, send now
                 body = make_json_serializable(body)
-
+                
                 if main_thr.is_alive():
                     api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
