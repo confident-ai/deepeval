@@ -1,0 +1,138 @@
+---
+id: metrics-tool-correctness
+title: Tool Correctness
+sidebar_label: Tool Correctness
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-tool-correctness"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer
+  singleTurn={true}
+  usesLLMs={false}
+  agent={true}
+  referenceless={true}
+/>
+
+The tool correctness metric is an agentic LLM metric that assesses your LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called.
+
+:::note
+The `ToolCorrectnessMetric` allows you to define the **strictness** of correctness. By default, it considers matching tool names to be correct, but you can also require input parameters and output to match.
+:::
+
+## Required Arguments
+
+To use the `ToolCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `tools_called`
+- `expected_tools`
+
+The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
+## Usage
+
+The `ToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase, ToolCall
+from deepeval.metrics import ToolCorrectnessMetric
+
+test_case = LLMTestCase(
+    input="What if these shoes don't fit?",
+    actual_output="We offer a 30-day full refund at no extra cost.",
+    # Replace this with the tools that was actually used by your LLM agent
+    tools_called=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery")],
+    expected_tools=[ToolCall(name="WebSearch")],
+)
+metric = ToolCorrectnessMetric()
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `ToolCorrectnessMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+  [Optional] `evaluation_params`: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Defaults to a an empty list.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `should_consider_ordering`: a boolean which when set to `True`, will consider the ordering in which the tools were called in. For example, if `expected_tools=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery"), ToolCall(name="WebSearch")]` and `tools_called=[ToolCall(name="WebSearch"), ToolCall(name="WebSearch"),  ToolCall(name="ToolQuery")]`, the metric will consider the tool calling to be correct. Only available for `ToolCallParams.TOOL` and defaulted to `False`.
+- [Optional] `should_exact_match`: a boolean which when set to `True`, will required the `tools_called` and `expected_tools` to be exactly the same. Available for `ToolCallParams.TOOL` and `ToolCallParams.INPUT_PARAMETERS` and Defaulted to `False`.
+
+:::info
+Since `should_exact_match` is a stricter criteria than `should_consider_ordering`, setting `should_consider_ordering` will have no effect when `should_exact_match` is set to `True`.
+:::
+
+### Within components
+
+You can also run the `ToolCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+
+```python
+from deepeval.dataset import Golden
+from deepeval.tracing import observe, update_current_span
+...
+
+@observe(metrics=[metric])
+def inner_component():
+    # Set test case at runtime
+    test_case = LLMTestCase(input="...", actual_output="...")
+    update_current_span(test_case=test_case)
+    return
+
+@observe
+def llm_app(input: str):
+    # Component can be anything from an LLM call, retrieval, agent, tool use, etc.
+    inner_component()
+    return
+
+evaluate(observed_callback=llm_app, goldens=[Golden(input="Hi!")])
+```
+
+### As a standalone
+
+You can also run the `ToolCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+## How Is It Calculated?
+
+:::note
+The `ToolCorrectnessMetric`, unlike all other `deepeval` metrics, are not calculated using any models or LLMs, and instead via exact matching between the `expected_tools` and `tools_called` parameters.
+:::
+
+The **tool correctness metric** score is calculated according to the following equation:
+
+<Equation
+  formula="\text{Tool Correctness} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}
+"
+/>
+
+This metric assesses the accuracy of your agent's tool usage by comparing the `tools_called` by your LLM agent to the list of `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent were called correctly according to the list of `expected_tools`, `should_consider_ordering`, and `should_exact_match`, while a score of 0 signifies that none of the `tools_called` were called correctly.
+
+:::info
+If `exact_match` is not specified and `ToolCall.INPUT_PARAMETERS` is included in `evaluation_params`, correctness may be a percentage score based on the proportion of correct input parameters (assuming the name and output are correct, if applicable).
+
+:::
