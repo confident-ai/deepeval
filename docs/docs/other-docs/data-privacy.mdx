@@ -1,0 +1,35 @@
+---
+id: data-privacy
+title: Data Privacy
+sidebar_label: Data Privacy
+---
+
+<head>
+  <link rel="canonical" href="https://deepeval.com/docs/data-privacy" />
+</head>
+
+With a mission to ensure consumers are able to be confident in the AI applications they interact with, the team at Confident AI takes data security way more seriously than anyone else.
+
+:::danger
+If at any point you think you might have accidentally sent us sensitive data, **please email support@confident-ai.com immediately to request for your data to be deleted.**
+:::
+
+## Your Privacy Using DeepEval
+
+By default, `deepeval` uses `Sentry` to track only very basic telemetry data (number of evaluations run and which metric is used). Personally identifiable information is explicitly excluded. We also provide the option of opting out of the telemetry data collection through an environment variable:
+
+```bash
+export DEEPEVAL_TELEMETRY_OPT_OUT="YES"
+```
+
+`deepeval` also only tracks errors and exceptions raised within the package **only if you have explicitly opted in**, and **does not collect any user or company data in any way**. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to "YES".
+
+```bash
+export ERROR_REPORTING="YES"
+```
+
+## Your Privacy Using Confident AI
+
+All data sent to Confident AI is securely stored in databases within our private cloud hosted on AWS (unless your organization is on the VIP plan). **Your organization is the sole entity that can access the data you store.**
+
+We understand that there might still be concerns regarding data security from a compliance point of view. For enhanced security and features, consider upgrading your membership [here.](https://confident-ai.com/pricing)
