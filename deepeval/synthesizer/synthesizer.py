@@ -628,6 +628,8 @@ class Synthesizer:
         synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
             prompt
         )
+        # Limit the length of the synthetic inputs to the maximum allowed
+        synthetic_inputs = synthetic_inputs[:max_goldens_per_context]
         update_pbar(progress, pbar_generate_inputs_id, remove=False)
 
         # Qualify inputs

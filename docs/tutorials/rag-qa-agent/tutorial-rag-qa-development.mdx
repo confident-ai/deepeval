@@ -1,42 +1,30 @@
 ---
 id: tutorial-rag-qa-development
-title: Development
-sidebar_label: Development
+title: Developing Your RAG Agent
+sidebar_label: Develop Your RAG Agent
 ---
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-In this section, we're going to create our **RAG QA Agent** using **_Langchain_** and **_OpenAI_**. A RAG application typically consists of two
-components — A **retriever** and a **generator**.
+In this section, we're going to create our **RAG QA Agent** using `langchain` for orchestration. Our RAG application consists of two components:
 
-The retriever is used for retrieving all the relevant documents from the knowledge base for a given query. 
-The generator is responsible for generating an answer to the user's query by using the retrieved context. 
-Both of them combined make up a RAG (_Retrieval-Augmented Generation_) application.
+- **Retriever** to retrieve data from knowledge base
+- **Generator** for generating a natural sounding answer from retrieved context
 
-:::tip
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be. It is highly recommended to add this tracing to your application right from the development stage to make your dev life easier.
-:::
+Both of them combined make up a RAG (_Retrieval-Augmented Generation_) application. We will create our components with flexibility in mind by using indepen variables like **generation model**, **vector store**, **embedding model**, **chunk size** — these variables will allow us to change our RAG configuration and evaluate it.
 
 :::note
 If you already have a RAG application that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](/tutorials/rag-qa-agent/tutorial-rag-qa-evaluation).
 :::
 
-## Creating The RAG Agent
+## Create Agent and Load Data
 
-We are going to create a class called `RAGAgent` that combines both the retriever and generator's responses to answer the user's query. 
-We'll separate retrieval and generation into two different helper functions. This allows us to evaluate our retriever 
-and generator's quality independently, which helps us improve our agent in later stages. Before we can retrieve any data, we first need to store our 
-data in a database that the retriever can easily access and look through. We can do this using vector stores offered by `langchain`.
+We'll create a `RAGAgent` class that combines retrieval and generation to answer user queries. By separating retrieval and generation into helper functions, we can evaluate and improve each part independently.
 
-:::note
-A **vector store** is a specialized database that efficiently stores and indexes **vector embeddings** (numerical representations of data's 
-meaning) to enable rapid **similarity search**, it is crucial for AI applications like RAG.
-:::
+Before retrieving data, we need to store it in a format the retriever can access — a **vector store**. This is a database that stores **vector embeddings** (numerical representations of data) for fast similarity search, essential for RAG systems.
 
-We can use various embedding models that can convert data into numerical representations of their meanings to turn our data into a vector 
-store — our knowledge base. We will be using the `OpenAIEmbeddings` and `FAISS` vector store provided by `langchain` for this example, you 
-can use any embedding model and vector store you like. Here's how to create a vector store for our data using `langchain`:
+We'll use `OpenAIEmbeddings` and the `FAISS` vector store from `langchain` to build our knowledge base, though other models and stores can be used.
 
 ```python
 from langchain.vectorstores import FAISS
@@ -76,28 +64,34 @@ class RAGAgent:
         return self.vector_store_class.from_documents(documents, self.embedding_model)
 ```
 
-You can modify the above code to use an embedding model or vector store of your choice. Next, we'll define a `retrieve()` method to fetch relevant documents from the vector store.
+:::note
+You can modify the above code to use an embedding model or vector store of your choice.
+:::
+
+You can sanity check yourself by printing the vector store to see if it has been stored stored:
+
+```python
+document_paths = ["theranos_legacy.txt"]
+agent = RAGAgent(document_paths)
+print(agent.vector_store)
+```
+
+✅ Done. Now we'll define a `retrieve()` method to fetch relevant documents from the vector store.
 
 ### Creating Retriever
 
-In the context of **Retrieval-Augmented Generation (RAG)**, the retriever is a crucial component responsible for efficiently identifying and 
-extracting the most relevant information from a large, external knowledge base — our vector store in this case. We will now create a `retrieve()` function in our `RAGAgent` class 
-that allows us to retrieve the relevant data for a particular query. Here's how we can do that:
+In **Retrieval-Augmented Generation (RAG)**, the **retriever** finds the most relevant info from a knowledge base — our vector store.
+We'll now add a `retrieve()` method to the `RAGAgent` class to fetch relevant data for a given query.
+
 
 ```python
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from deepeval.tracing import observe
 
 class RAGAgent:
-    def __init(...):
-        ...
-    
-    def _load_vector_store(...):
-        ...
+        ... # Same functions from above
 
-    @observe()
     def retrieve(self, query: str):
         docs = self.vector_store.similarity_search(query, k=self.k)
         context = [doc.page_content for doc in docs]
@@ -214,40 +208,31 @@ Company Motto: “One Drop Changes Everything™”
 </details>
 :::
 
-This is the output of the above code:
+Running the above code should let you see something like this:
 
 ```text
-['The NanoDrop 3000 is a compact, portable diagnostic device capable of performing over 300 blood tests using just 1-2 microliters of capillary blood. The device integrates microfluidics, spectrometry, and Theranos’s patented NanoAnalysis Engine™ to provide lab-grade results in under 20 minutes.',
- 'Key Features:\n- Sample volume: 1.2 microliters (average)\n- Test menu: 325+ assays including metabolic, hormonal, infectious, hematologic, and genomic panels']
+[
+  'The NanoDrop 3000 is a compact, portable diagnostic device capable of performing over 300 blood tests using just 1-2 microliters of capillary blood. The device integrates microfluidics, spectrometry, and Theranos’s patented NanoAnalysis Engine™ to provide lab-grade results in under 20 minutes.',
+  'Key Features:\n- Sample volume: 1.2 microliters (average)\n- Test menu: 325+ assays including metabolic, hormonal, infectious, hematologic, and genomic panels',
+]
 ```
 
-Now that we have a working retriever, we can move on to creating our generator.
+✅ Retriever done. Now we can move on to creating our generator.
 
 ### Creating generator
+In a **RAG (Retrieval-Augmented Generation)** system, the **generator** creates a natural language response using the user’s query and the retrieved documents.
 
-In a **Retrieval-Augmented Generation (RAG)** system, the **generator** is the component that produces natural language responses based on 
-both the input query and the retrieved documents. We will now add the `generate()` function in our `RAGAgent` class that takes the retrieved 
-context and generates an answer using the `OpenAI` LLM provided by `langchain`.
+We'll now add a `generate()` method to our `RAGAgent` class. This function will take the retrieved context and use an OpenAI language model (via `langchain`) to generate the final answer.
 
 ```python
 from langchain.vectorstores import FAISS
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.llms import OpenAI
-from deepeval.tracing import observe
 
 class RAGAgent:
-    def __init(...):
-        ...
-    
-    def _load_vector_store(...):
-        ...
+        ... # Same methods as above
 
-    @observe
-    def retrieve(...):
-        ...
-
-    @observe()
     def generate(
         self,
         query: str, 
@@ -278,38 +263,19 @@ generated_answer = retriever.generate(query, retrieved_docs)
 print(generated_answer)
 ```
 
-This is the output of the above code:
+Running the above code will get you an output similar to the following:
 
 ```text
 The NanoDrop 3000 can perform over 325 blood tests using just 1-2 microliters of capillary blood. 
 This enables comprehensive diagnostics with minimal sample volume.
 ```
 
-We can use these helper functions in a final `answer()` function that will be used to answer any query. Here's how we can do that:
+✅ Generator done. We will now create a final `answer()` function that will retrieve and send context to our generator to answer any query.
 
 ```python
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.llms import OpenAI
-from deepeval.tracing import observe
-
 class RAGAgent:
-    def __init(...):
-        ...
-    
-    def _load_vector_store(...):
-        ...
+        ... # Same functions and imports
 
-    @observe()
-    def retrieve(...):
-        ...
-
-    @observe()
-    def generate(...):
-        ...
-
-    @observe()
     def answer(
         self, 
         query: str,
@@ -321,18 +287,20 @@ class RAGAgent:
         return generated_answer, retrieved_docs
 ```
 
-We have now created a RAG Agent that answers a user's query. Now let's try and use our retriever to answer a user's query to see how it answers:
+You can now send a query and test your entire RAG QA Agent.
 
 ```python
 document_paths = ["theranos_legacy.txt"]
 query = "What is the NanoDrop 3000, and what certifications does Theranos hold?"
 
 retriever = RAGAgent(document_paths)
-answer, _ = retriever.answer(query)
+answer, retrieved_docs = retriever.answer(query)
 ```
 
-The LLM outputs a response in markdown format by default, which makes it harder to extract structured data such as citations. This is not ideal because we cannot parse the 
-output to show citations in the UI. The following is the best we can do with what our retriever generates for now:
+🎉🥳 Congratulations! You've just built a complete RAG QA Agent. Let's now understand how we can improve our RAG Agent.
+
+Most LLMs output a response in markdown format by default, which makes it harder to extract structured data such as citations. This is not ideal because we cannot parse the 
+output to show citations in the UI. Below is an example of what using raw output from LLMs look like:
 
 <Tabs groups="ui-raw">
 
@@ -365,11 +333,9 @@ output to show citations in the UI. The following is the best we can do with wha
 </Tabs>
 
 ## Updating The RAG Agent
+We can improve our agent's responses by using a better prompt that outputs answers in `json` format. This makes it easier to parse and display the data as needed.
 
-We can update the way our agent responds by using a better prompt. This allows our agent to answer in a `json` format which helps us parse the 
-given output and use it to render the data in any style we want. Here's how we'll update our `RAGAgent` class and the new prompt we'll use to generate `json` formatted answers:
-
-We can use the following prompt template to generate our response in `json`:
+We can use the following prompt template to generate our response in json:
 
 ```text
 You are a helpful assistant. Use the context below to answer the user's query. 
@@ -404,17 +370,9 @@ Query:
 We can update our `answer()` function to parse the output as `json` and return the `json` object. Here's how to update our `answer()` function: 
 
 ```python
-import json
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.llms import OpenAI
-from deepeval.tracing import observe
-
 class RAGAgent:
-    ...
-
-    @observe()
+    ... # Same functions from above
+    
     def answer(self, query: str):
         retrieved_docs = self.retrieve(query)
         generated_answer = self.generate(query, retrieved_docs)

@@ -4,6 +4,7 @@ from .attributes import (
     RetrieverAttributes,
     ToolAttributes,
     AgentAttributes,
+    TraceAttributes,
 )
 from .types import BaseSpan, Trace, Feedback, TurnContext
 from .tracing import observe, trace_manager
