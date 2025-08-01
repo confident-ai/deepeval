@@ -1,0 +1,75 @@
+---
+id: metrics-arena-g-eval
+title: Arena G-Eval
+sidebar_label: Arena G-Eval
+---
+
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer singleTurn={true} custom={true} />
+
+The arena G-Eval is an adopted version of `deepeval`'s popular [`GEval` metric](/docs/metrics-llm-evals) but for choosing which `LLMTestCase` performed better instead.
+
+:::info
+To ensure non-bias, `ArenaGEval` utilizes a blinded, randomized positioned, n-pairwise LLM-as-a-Judge approach to pick the best performing iteration of your LLM app by representing them as "contestants".
+:::
+
+## Required Arguments
+
+To use the `ArenaGEval` metric, you'll have to provide the following arguments when creating an [`ArenaTestCase`](/docs/evaluation-arena-test-cases):
+
+- `contestants`
+
+You'll also need to supply any additional arguments such as `expected_output` and `context` within the `LLMTestCase` of `contestants` if your evaluation criteria depends on these parameters.
+
+## Usage
+
+To create a custom metric that chooses the best `LLMTestCase`, simply instantiate a `ArenaGEval` class and define an evaluation criteria in everyday language:
+
+```python
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import ArenaGEval
+
+a_test_case = ArenaTestCase(
+    contestants={
+        "GPT-4": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Paris",
+        ),
+        "Claude-4": LLMTestCase(
+            input="What is the capital of France?",
+            actual_output="Paris is the capital of France.",
+        ),
+    },
+)
+metric = ArenaGEval(
+    name="Friendly",
+    criteria="Choose the winner of the more friendly contestant based on the input and actual output",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
+
+
+metric.measure(a_test_case)
+print(metric.winner, metric.reason)
+```
+
+There are **THREE** mandatory and **FOUR** optional parameters required when instantiating an `ArenaGEval` class:
+
+- `name`: name of metric. This will **not** affect the evaluation.
+- `criteria`: a description outlining the specific evaluation aspects for each test case.
+- `evaluation_params`: a list of type `LLMTestCaseParams`, include only the parameters that are relevant for evaluation..
+- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, `ConversationalGEval` will generate a series of `evaluation_steps` on your behalf based on the provided `criteria`. You can only provide either `evaluation_steps` **OR** `criteria`, and not both.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+:::danger
+For accurate and valid results, only evaluation parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
+:::
+
+## How Is It Calculated?
+
+The `ArenaGEval` is an adapted version of [`GEval`](/docs/metrics-llm-evals), so alike `GEval`, the `ArenaGEval` metric is a two-step algorithm that first generates a series of `evaluation_steps` using chain of thoughts (CoTs) based on the given `criteria`, before using the generated `evaluation_steps` to determine the winner based on the `evaluation_params` presented in each `LLMTestCase`.
