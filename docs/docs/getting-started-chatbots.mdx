@@ -10,35 +10,27 @@ import TabItem from "@theme/TabItem";
 import CodeBlock from "@theme/CodeBlock";
 import VideoDisplay from "@site/src/components/VideoDisplayer";
 
-You can use DeepEval to evaluate any type of **chatbot**, including QA agents, customer support chatbots, and even chatrooms.
+Learn to evaluate any type of **chatbot**, including QA agents, customer support chatbots, and even chatrooms.
 
-<details>
-  <summary>Click to learn more about chatbot evaluation</summary>
+## Overview
 
-Chatbot Evaluation is different from other types of evaluations because most metrics on DeepEval evaluates an single-turn interaction between a user and the LLM, which is captured by an `LLMTestCase`.
-
-Chatbots, on the other hand, requires evaluating multi-turn interactions between a user and the LLM, which requires a <code>ConversationalTestCase</code>.
+Chatbot Evaluation is different from other types of evaluations because unlike single-turn tasks, conversations happen over multiple turns. This means your chatbot must stay consistent and context-aware across the conversation, and not just accurate in individual responses. Conversations on DeepEval are captured by a <code>ConversationalTestCase</code>, which is shown below.
 
 ![Chatbot Evaluation](https://deepeval-docs.s3.amazonaws.com/docs:conversational-test-case.png)
 
-Conversational test cases can only be evaluated using **multi-turn metrics**, which include:
-
-- [Conversational G-Eval](/docs/metrics-conversational-g-eval)
-- [Role Adherence](/docs/metrics-role-adherence)
-- [Knowledge Retention](/docs/metrics-knowledge-retention)
-- [Conversation Completeness](/docs/metrics-conversation-completeness)
-- [Conversation Relevancy](/docs/metrics-conversation-relevancy)
-
-</details>
-
-In this guide, you'll learn how to set up your chatbot for evaluations in **under 5 minutes**:
+**In this 5 min quickstart, you'll learn how to:**
 
 1. Prepare conversational test cases.
 2. Evaluate chatbot conversations.
 3. Simulate conversations.
 
+## Prerequisites
+
+- Install `deepeval`
+- A [Confident AI account](https://app.confident-ai.com) to get an API key
+
 :::info
-**Log in to Confident AI** in order to view your chatbot evaluation report:
+We recommend logging in to Confident AI to view your chatbot evaluation report and multi-turn datasets:
 
 ```bash
 deepeval login
