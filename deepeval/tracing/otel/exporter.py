@@ -366,6 +366,9 @@ class ConfidentSpanExporter(SpanExporter):
                 "confident.llm.attributes.output_token_count"
             )
 
+            if not input and not output:
+                input, output = _check_llm__input_from_gen_ai_attributes(span)
+
             try:
                 llm_span.set_attributes(
                     LlmAttributes(
@@ -598,4 +601,20 @@ def _check_model_from_gen_ai_attributes(span: ReadableSpan):
         return gen_ai_request_model_name
     
     return None
+
+
+def _check_llm__input_from_gen_ai_attributes(span: ReadableSpan):
+    try:
+        input = json.loads(span.attributes.get("events"))
+        if input and isinstance(input, list):
+            # check if the last event is a genai choice
+            last_event = input.pop()
+            if last_event and last_event.get("event.name") == "gen_ai.choice":
+                return input, last_event
+    
+    except Exception as e:
+        pass
+    
+    return None, None
+    
     
