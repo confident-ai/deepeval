@@ -89,7 +89,7 @@ async def a_execute_arena_test_cases(
         pbar_test_case_id = add_pbar(
             progress,
             f"    🎯 Evaluating test case #{index}",
-            total=1,
+            total=3,
         )
         metric_copy = ArenaGEval(
             name=metric.name,
@@ -109,12 +109,13 @@ async def a_execute_arena_test_cases(
             test_case=test_case,
             ignore_errors=ignore_errors,
             skip_on_missing_params=skip_on_missing_params,
+            _progress=progress,
+            _pbar_id=pbar_test_case_id,
         )
         if winner:
             winners.append(winner)
 
         update_pbar(progress, pbar_id)
-        update_pbar(progress, pbar_test_case_id)
 
     # Create tasks for all test cases
     if show_indicator:
@@ -167,7 +168,7 @@ def execute_arena_test_cases(
             pbar_test_case_id = add_pbar(
                 progress,
                 f"    🎯 Evaluating test case #{i}",
-                total=1,
+                total=3,
             )
             metric_copy = ArenaGEval(
                 name=metric.name,
@@ -187,11 +188,12 @@ def execute_arena_test_cases(
                 test_case=test_case,
                 ignore_errors=ignore_errors,
                 skip_on_missing_params=skip_on_missing_params,
+                _progress=progress,
+                _pbar_id=pbar_test_case_id,
             )
             if winner:
                 winners.append(winner)
 
-            update_pbar(progress, pbar_test_case_id)
             update_pbar(progress, pbar_id)
 
     if show_indicator:
@@ -220,9 +222,16 @@ def _handle_metric_measurement(
     test_case: ArenaTestCase,
     ignore_errors: bool,
     skip_on_missing_params: bool,
+    _progress: Optional[Progress] = None,
+    _pbar_id: Optional[int] = None,
 ) -> Optional[str]:
     try:
-        winner = metric.measure(test_case, _show_indicator=False)
+        winner = metric.measure(
+            test_case,
+            _show_indicator=False,
+            _progress=_progress,
+            _pbar_id=_pbar_id,
+        )
         return winner
     except MissingTestCaseParamsError as e:
         if skip_on_missing_params:
@@ -256,14 +265,22 @@ def _handle_metric_measurement(
             else:
                 raise
 
+
 async def _a_handle_metric_measurement(
     metric: ArenaGEval,
     test_case: ArenaTestCase,
     ignore_errors: bool,
     skip_on_missing_params: bool,
+    _progress: Optional[Progress] = None,
+    _pbar_id: Optional[int] = None,
 ) -> Optional[str]:
     try:
-        winner = await metric.a_measure(test_case, _show_indicator=False)
+        winner = await metric.a_measure(
+            test_case,
+            _show_indicator=False,
+            _progress=_progress,
+            _pbar_id=_pbar_id,
+        )
         return winner
     except MissingTestCaseParamsError as e:
         if skip_on_missing_params:
