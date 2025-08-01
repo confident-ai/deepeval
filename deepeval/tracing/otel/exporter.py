@@ -29,6 +29,11 @@ from deepeval.tracing.otel.utils import (
     to_hex_string,
     set_trace_time,
     validate_llm_test_case_data,
+    check_llm_input_from_gen_ai_attributes,
+    check_tool_name_from_gen_ai_attributes,
+    check_tool_input_parameters_from_gen_ai_attributes,
+    check_span_type_from_gen_ai_attributes,
+    check_model_from_gen_ai_attributes,
 )
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
@@ -36,8 +41,6 @@ from deepeval.test_case import LLMTestCase, ToolCall
 from pydantic import BaseModel, ValidationError
 from deepeval.feedback.feedback import Feedback
 from collections import defaultdict
-
-GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
 
 class TraceAttributes(BaseModel):
     name: Optional[str] = None
@@ -312,7 +315,10 @@ class ConfidentSpanExporter(SpanExporter):
     ) -> Optional[BaseSpan]:
         span_type = span.attributes.get("confident.span.type")
         if not span_type:
-            span_type = _check_span_type_from_gen_ai_attributes(span)
+            try:
+                span_type = check_span_type_from_gen_ai_attributes(span)
+            except Exception as e:
+                pass
 
         # required fields
         uuid = to_hex_string(span.context.span_id, 16)
@@ -332,7 +338,10 @@ class ConfidentSpanExporter(SpanExporter):
         if span_type == "llm":
             model = span.attributes.get("confident.llm.model")
             if not model:
-                model = _check_model_from_gen_ai_attributes(span)
+                try:
+                    model = check_model_from_gen_ai_attributes(span)
+                except Exception as e:
+                    pass
             
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
@@ -367,7 +376,10 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             if not input and not output:
-                input, output = _check_llm__input_from_gen_ai_attributes(span)
+                try:
+                    input, output = check_llm_input_from_gen_ai_attributes(span)
+                except Exception as e:
+                    pass
 
             try:
                 llm_span.set_attributes(
@@ -480,7 +492,11 @@ class ConfidentSpanExporter(SpanExporter):
         elif span_type == "tool":
             name = span.attributes.get("confident.tool.name")
             if not name:
-                name = _check_tool_name_from_gen_ai_attributes(span)
+                try:
+                    name = check_tool_name_from_gen_ai_attributes(span)
+                except Exception as e:
+                    pass
+
             description = span.attributes.get("confident.tool.description")
 
             tool_span = ToolSpan(
@@ -507,7 +523,10 @@ class ConfidentSpanExporter(SpanExporter):
                 print(f"Error converting input parameters: {e}")
 
             if not input_parameters:
-                input_parameters = _check_tool_input_parameters_from_gen_ai_attributes(span)
+                try:
+                    input_parameters = check_tool_input_parameters_from_gen_ai_attributes(span)
+                except Exception as e:
+                    pass
 
             try:
                 tool_span.set_attributes(
@@ -581,57 +600,3 @@ class ConfidentSpanExporter(SpanExporter):
                     forest.append(tree_order)
 
         return forest
-
-
-def _check_span_type_from_gen_ai_attributes(span: ReadableSpan):
-    
-    gen_ai_operation_name = span.attributes.get("gen_ai.operation.name")
-    gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
-    
-    if gen_ai_operation_name and gen_ai_operation_name in GEN_AI_OPERATION_NAMES:
-        return "llm"
-    
-    elif gen_ai_tool_name:
-        return "tool"
-    
-    return "base"
-
-
-def _check_model_from_gen_ai_attributes(span: ReadableSpan):
-    gen_ai_request_model_name = span.attributes.get("gen_ai.request.model")
-    if gen_ai_request_model_name:
-        return gen_ai_request_model_name
-    
-    return None
-
-
-def _check_llm__input_from_gen_ai_attributes(span: ReadableSpan):
-    try:
-        input = json.loads(span.attributes.get("events"))
-        if input and isinstance(input, list):
-            # check if the last event is a genai choice
-            last_event = input.pop()
-            if last_event and last_event.get("event.name") == "gen_ai.choice":
-                return input, last_event
-    
-    except Exception as e:
-        pass
-    
-    return None, None
-    
-def _check_tool_name_from_gen_ai_attributes(span: ReadableSpan):
-    gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
-    if gen_ai_tool_name:
-        return gen_ai_tool_name
-    return None
-
-
-def _check_tool_input_parameters_from_gen_ai_attributes(span: ReadableSpan):
-    tool_arguments = span.attributes.get("tool_arguments")
-    if tool_arguments:
-        try:
-            return json.loads(tool_arguments)
-        except Exception as e:
-            pass
-    
-    return None
