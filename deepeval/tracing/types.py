@@ -26,6 +26,11 @@ class SpanType(Enum):
     LLM = "llm"
     RETRIEVER = "retriever"
     TOOL = "tool"
+    GRAPH_EXECUTION = "graph_execution"
+    NODE_EXECUTION = "node_execution"
+    STATE_TRANSITION = "state_transition"
+    CONDITIONAL_ROUTING = "conditional_routing"
+    PARALLEL_EXECUTION = "parallel_execution"
 
 
 class TraceSpanStatus(Enum):
@@ -98,6 +103,43 @@ class ToolSpan(BaseSpan):
     description: Optional[str] = None
 
     def set_attributes(self, attributes: ToolAttributes):
+        self.attributes = attributes
+
+
+class GraphSpan(BaseSpan):
+    """Span for tracking LangGraph execution"""
+    graph_config: Optional[Dict[str, Any]] = None
+    node_count: Optional[int] = None
+    execution_mode: Optional[str] = None  # 'sequential', 'parallel', 'conditional'
+    attributes: Optional["GraphAttributes"] = None
+
+    def set_attributes(self, attributes: "GraphAttributes"):
+        self.attributes = attributes
+
+
+class NodeSpan(BaseSpan):
+    """Span for tracking individual node execution in LangGraph"""
+    node_type: Optional[str] = None  # 'function', 'conditional', 'join', 'end'
+    dependencies: Optional[List[str]] = None
+    execution_order: Optional[int] = None
+    conditional_logic: Optional[str] = None
+    parallel_group: Optional[str] = None
+    attributes: Optional["NodeAttributes"] = None
+
+    def set_attributes(self, attributes: "NodeAttributes"):
+        self.attributes = attributes
+
+
+class StateTransitionSpan(BaseSpan):
+    """Span for tracking state transitions between nodes"""
+    from_node: Optional[str] = None
+    to_node: Optional[str] = None
+    state_snapshot: Optional[Dict[str, Any]] = None
+    transition_reason: Optional[str] = None
+    routing_decision: Optional[str] = None
+    attributes: Optional["StateTransitionAttributes"] = None
+
+    def set_attributes(self, attributes: "StateTransitionAttributes"):
         self.attributes = attributes
 
 
