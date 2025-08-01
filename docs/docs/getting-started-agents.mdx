@@ -385,9 +385,9 @@ Component-level evaluation integrations are **not available** on DeepEval at thi
 Any [single-turn metric](/docs/metrics-introduction) can be used to evaluate agentic components.
 
 ```python title=main.py showLineNumbers={true} wrapLines={true}
-from deepeval.metrics import TaskCompletionMetric, ToolCorrectnessMetric
+from deepeval.metrics import TaskCompletionMetric, ArgCorrectnessMetric
 
-tool_correctness_metric = ToolCorrectnessMetric()
+tool_correctness_metric = ArgCorrectnessMetric()
 task_completion_metric = TaskCompletionMetric()
 ```
 
@@ -398,36 +398,73 @@ What metrics you ultimately choose depend on the types of components you're eval
 </TimelineItem>
 <TimelineItem title="Set up metrics">
 
-Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span`. The test case should include [parameters](/docs/metrics-introduction#test-case-parameters) required by the metrics you supply.
+Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span` if needed. The test case should include every [parameter](/docs/metrics-introduction#test-case-parameters) required by the metrics you select.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{5,9,10,11,12,17,23,24}"
+<details>
+<summary>Click to see a detailed explanation of the code example below</summary>
+
+`your_ai_agent` is an AI agent that can answer any user query by searching the web for information.
+
+It does so by invoking `llm`, which calls the LLM using [OpenAI’s Responses API](https://platform.openai.com/docs/api-reference/responses). The LLM can decide to either produce a direct response to the user query or call `web_search_tool` to perform a web search.
+
+:::info
+Although `tools=[...]` is condensed in the example below, it must be defined in the following format before being passed to OpenAI’s `client.responses.create` method.
+
+```python
+tools = [{
+    "type": "function",
+    "name": "web_search_tool",
+    "description": "Search the web for information.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "web_query": {"type": "string"}
+        },
+        "required": ["web_query"],
+        "additionalProperties": False
+    },
+    "strict": True
+}]
+```
+
+:::
+
+In the example below, [Task Completion](/docs/metrics-task-completion) is used to evaluate the performance of the `your_ai_agent` function, while [Argument Correctness](/docs/metrics-argument-correctness) is used to evaluate `llm`.
+
+This is because while Argument Correctness requires [setting up a test case](/docs/metrics-introduction#test-case-parameters) with the input, actual output, and tools called, Task Completion is the only metric on DeepEval that **doesn't require a test case**.
+
+</details>
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,9,13,16,25}"
 from deepeval.tracing import observe, update_span
 from deepeval.test_case import LLMTestCase, ToolCall
+from openai import OpenAI
 ...
 
-@observe(metrics=[tool_correctness_metric])
-def your_ai_agent_tool(input):
+client = OpenAI()
+tools = [...]
+
+@observe()
+def web_search_tool(web_query):
+    return "Web search results"
+
+@observe(metrics=[arg_correctness_metric])
+def llm(query):
+    response = client.responses.create(model="gpt-4.1",input=[{"role": "user", "content": query}],tools=tools)
     update_span(
         test_case=LLMTestCase(
-            input=input,
-            actual_output='tool call result',
-            tools_called=[ToolCall(name='Tool A')],
-            expected_tools=[ToolCall(name='Tool A')]
+            input=query,
+            actual_output=str(response.output),
+            tools_called=[ToolCall(name=tool_call.name, arguments=tool_call.arguments) for tool_call in response.output if tool_call.type == "function_call"]
         )
     )
-    return 'tool call result'
+    return response.output
 
 @observe(metrics=[task_completion_metric])
-def your_ai_agent(input):
-    tool_call_result = your_ai_agent_tool()
-    output = 'Tool Call Result: ' + tool_call_result
-    update_span(
-        test_case=LLMTestCase(
-            input=input,
-            actual_output=output
-        )
-    )
-    return output
+def your_ai_agent(query: str) -> str:
+    llm_output = llm(query)
+    search_results = "".join([web_search_tool(**json.loads(tool_call.arguments)) for tool_call in llm_output if tool_call.type == "function_call"])
+    return "The answer to your question is: " + search_results
 ```
 
 </TimelineItem>
@@ -441,7 +478,7 @@ from deepeval.dataset import EvaluationDataset, Golden
 
 dataset = EvaluationDataset(goldens=[Golden(input='This is a test query')])
 for golden in dataset.as_iterator():
-    tool_call_result = your_ai_agent(golden.input)
+    your_ai_agent(golden.input)
 ```
 
 </TimelineItem>
