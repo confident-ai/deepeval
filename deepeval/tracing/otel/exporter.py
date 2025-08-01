@@ -283,10 +283,14 @@ class ConfidentSpanExporter(SpanExporter):
             except Exception as e:
                 print(f"Invalid LLMTestCase data: {e}")
 
-        base_span.parent_uuid = (
-            to_hex_string(span.parent.span_id, 16) if span.parent else None
-        )
-        base_span.name = span.name if base_span.name is None else base_span.name
+        base_span.parent_uuid = (to_hex_string(span.parent.span_id, 16) if span.parent else None)
+        
+        # base span name takes precedence over span name
+        _name = None
+        if base_span.name is not None and base_span.name != "None":
+            _name = base_span.name
+
+        base_span.name = _name if _name else span.name
         base_span.metadata = json.loads(span.to_json())
         base_span.error = error
         base_span.llm_test_case = llm_test_case
