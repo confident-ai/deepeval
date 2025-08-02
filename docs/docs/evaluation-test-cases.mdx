@@ -500,135 +500,16 @@ mllm_test_case = MLLMTestCase(
 )
 ```
 
-## Assert A Test Case
-
-Before we begin going through the final sections, we highly recommend you to login to [Confident AI](https://confident-ai.com) (the platform powering deepeval) via the CLI. This way, you can keep track of all evaluation results generated each time you execute `deepeval test run`.
-
-```
-deepeval login
-```
-
-Similar to Pytest, `deepeval` allows you to assert any test case you create by calling the `assert_test` function by running `deepeval test run` via the CLI.
-
-**A test case passes only if all metrics passes.** Depending on the metric, a combination of `input`, `actual_output`, `expected_output`, `context`, and `retrieval_context` is used to ascertain whether their criterion have been met.
-
-```python title="test_assert_example.py"
-# A hypothetical LLM application example
-import chatbot
-import deepeval
-from deepeval import assert_test
-from deepeval.metrics import HallucinationMetric
-from deepeval.test_case import LLMTestCase
-
-def test_assert_example():
-    input = "Why did the chicken cross the road?"
-    test_case = LLMTestCase(
-        input=input,
-        actual_output=chatbot.run(input),
-        context=["The chicken wanted to cross the road."],
-    )
-    metric = HallucinationMetric(threshold=0.7)
-    assert_test(test_case, metrics=[metric])
-
-
-# Optionally log hyperparameters to pick the best hyperparameter for your LLM application
-# using Confident AI. (run `deepeval login` in the CLI to login)
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
-def hyperparameters():
-    # Return a dict to log additional hyperparameters.
-    # You can also return an empty dict {} if there's no additional parameters to log
-    return {
-        "temperature": 1,
-        "chunk size": 500
-    }
-```
-
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function:
-
-- `test_case`: an `LLMTestCase`
-- `metrics`: a list of metrics of type `BaseMetric`
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics. Defaulted to `True`.
-
-You can find the full documentation on `deepeval test run`, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-deepeval-test-run-in-cicd-pipelines) and [component-level](/docs/evaluation-component-level-llm-evals#use-deepeval-test-run-in-cicd-pipelines) evaluation by clicking on their respective links.
-
-:::info
-The `run_async` parameter overrides the `async_mode` property of all metrics being evaluated. The `async_mode` property, as you'll learn later in the [metrics section](/docs/metrics-introduction), determines whether each metric can execute asynchronously.
-:::
-
-To execute the test cases, run `deepeval test run` via the CLI, which uses `deepeval`'s Pytest integration under the hood to execute these tests. You can also include an optional `-n` flag follow by a number (that determines the number of processes that will be used) to run tests in parallel.
-
-```bash
-deepeval test run test_assert_example.py -n 4
-```
-
-You can include the `deepeval test run` command as a step in a `.yaml` file in your CI/CD workflows to run pre-deployment checks on your LLM application.
-
-## Evaluate Test Cases in Bulk
-
-Lastly, `deepeval` offers an `evaluate` function to evaluate multiple test cases at once, which similar to `assert_test` but without the need for Pytest or the CLI.
-
-```python
-# A hypothetical LLM application example
-import chatbot
-from deepeval import evaluate
-from deepeval.metrics import HallucinationMetric
-from deepeval.test_case import LLMTestCase
-
-test_case = LLMTestCase(
-    input=input,
-    actual_output=chatbot.run(input),
-    context=["The chicken wanted to cross the road."],
-)
-
-metric = HallucinationMetric(threshold=0.7)
-evaluate([test_case], [metric])
-```
-
-There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function:
-
-- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
-- `metrics`: a list of metrics of type `BaseMetric`.
-- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
-- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
-- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
-- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
-- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
-- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
-
-You can find the full documentation on `evaluate()`, for both [end-to-end](/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts) and [component-level](/docs/evaluation-component-level-llm-evals#use-evaluate-in-python-scripts) evaluation by clicking on their respective links.
-
-:::tip DID YOU KNOW?
-Similar to `assert_test`, `evaluate` allows you to log and view test results and the hyperparameters associated with each on Confident AI.
-
-```bash
-deepeval login
-```
-
-```python
-from deepeval import evaluate
-...
-
-evaluate(
-    test_cases=[test_case],
-    metrics=[metric],
-    hyperparameters={"model": "gpt-4.1", "prompt template": "..."}
-)
-```
-
-For more examples of `evaluate`, visit the [datasets section](/docs/evaluation-datasets).
-:::
-
-## Labeling Test Cases for Confident AI
+## Label Test Cases For Confident AI
 
 ### Name
 
 If you're using Confident AI, the optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
 
 ```python
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(name="my-external-unique-id", ...)
-convo_test_case = ConversationalTestCase(name="my-external-unique-id", ...)
 ```
 
 ### Tags
@@ -640,3 +521,13 @@ from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(tags=["Topic 1", "Topic 3"], ...)
 ```
+
+## Using Test Cases For Evals
+
+You can create test cases for three types of evaluation:
+
+- [End-to-end](/docs/evaluation-end-to-end-llm-evals) - Treats your LLM app as a black-box, and evaluates the overall system inputs and outputs. Your test case lives at the **system level** and covers the entire application
+- [Component-level](/docs/evaluation-component-level-llm-evals) - Evaluates individual components within your LLM system using the `@observe` decorator. Your test case lives at the **component level** and focuses on specific parts of your system
+- One-Off Standalone - Executes individual metrics on single test cases for debugging or custom evaluation pipelines
+
+Click on each of the links to learn how to use test cases for evals.

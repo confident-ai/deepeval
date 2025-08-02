@@ -17948,7 +17948,6 @@ goldens = [Golden(input="...")]
 
 # Evaluate with `observed_callback`
 evaluate(goldens=goldens, observed_callback=your_llm_app)
-
 ```
 
 There are **TWO** mandatory and **FIVE** optional parameters when calling the `evaluate()` function for **COMPONENT-LEVEL** evaluation:

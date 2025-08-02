@@ -152,14 +152,6 @@ for golden in dataset.evals_iterator():
     dataset.evaluate(task)
 ```
 
-There are **FIVE** optional parameters when calling the `dataset` iterator for **COMPONENT-LEVEL** evaluation:
-
-- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
-- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
-- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
-- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
-- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
-
 </TabItem>
 
 <TabItem value="sync" label="dataset (Sync)">
@@ -177,6 +169,10 @@ for golden in dataset.evals_iterator():
     your_llm_app(golden.input)
 ```
 
+</TabItem>
+
+</Tabs>
+
 There are **five** optional parameters when calling the `dataset` iterator for **COMPONENT-LEVEL** evaluation:
 
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
@@ -184,43 +180,6 @@ There are **five** optional parameters when calling the `dataset` iterator for *
 - [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
 - [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
 - [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
-
-</TabItem>
-
-<TabItem value="evaluate" label="evaluate">
-
-To use `evaluate()` for component-level testing, supply a list of `Golden`s instead of `LLMTestCase`s, and an `observed_callback` which is the `@observe` decorated LLM application you wish to run evals on.
-
-```python title="main.py"
-from somewhere import your_llm_app # Replace with your LLM app
-
-from deepeval.dataset import Golden
-from deepeval import evaluate
-
-# Goldens from your dataset
-goldens = [Golden(input="...")]
-
-# Evaluate with `observed_callback`
-evaluate(goldens=goldens, observed_callback=your_llm_app)
-```
-
-There are **TWO** mandatory and **FIVE** optional parameters when calling the `evaluate()` function for **COMPONENT-LEVEL** evaluation:
-
-- `goldens`: a list of `Golden`s that you wish to invoke your `observed_callback` with.
-- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
-- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
-- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
-- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
-- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
-- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
-
-:::tip
-You'll notice that unlike end-to-end evaluation, there is no declaration of `metrics` because those are defined in `@observe` in the `metrics` parameter, and there are no creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
-:::
-
-</TabItem>
-
-</Tabs>
 
 ### Use `deepeval test run` in CI/CD pipelines
 
