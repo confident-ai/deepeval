@@ -143,16 +143,16 @@ module.exports = {
             activeBasePath: "docs",
           },
           {
-            to: "guides/guides-rag-evaluation",
-            position: "left",
-            label: "Guides",
-            activeBasePath: "guides",
-          },
-          {
             to: "tutorials/tutorial-introduction",
             position: "left",
             label: "Tutorials",
             activeBasePath: "tutorials",
+          },
+          {
+            to: "guides/guides-rag-evaluation",
+            position: "left",
+            label: "Guides",
+            activeBasePath: "guides",
           },
           {
             to: "integrations/models/openai",
