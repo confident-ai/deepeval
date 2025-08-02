@@ -11,9 +11,7 @@ sidebar_label: Conversation Simulator
   />
 </head>
 
-## Quick Summary
-
-DeepEval's `ConversationSimulator` allows you to simulate full conversations between a fake user and your chatbot, unlike the [synthesizer](/docs/synthesizer-introduction) which generates regular goldens representing single, atomic LLM interactions.
+`deepeval`'s `ConversationSimulator` allows you to simulate full conversations between a fake user and your chatbot, unlike the [synthesizer](/docs/synthesizer-introduction) which generates regular goldens representing single, atomic LLM interactions.
 
 ```python showLineNumbers
 from deepeval.conversation_simulator import ConversationSimulator
@@ -68,7 +66,7 @@ Only the `input` argument is required when defining your `model_callback`, but y
 
 While turns captures the dialogue context for each turn, some applications must persist additional state across turns — for example, when invoking external APIs or tracking user-specific data. In these cases, you'll want to take advantage of the `thread_id`.
 
-```python
+```python title="main.py"
 from deepeval.test_case import Turn
 
 async def model_callback(input: str, turns: List[Turn], thread_id: str) -> str:
