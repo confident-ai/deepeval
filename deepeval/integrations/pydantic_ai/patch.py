@@ -1,5 +1,7 @@
 import json
+from contextlib import asynccontextmanager
 from deepeval.integrations.pydantic_ai import Agent as PatchedAgent
+from opentelemetry import trace
 from opentelemetry.trace import NoOpTracer
 
 try:
@@ -13,16 +15,12 @@ def is_pydantic_ai_installed():
     if not pydantic_ai_installed:
         raise ImportError("Pydantic AI is not installed. Please install it with `pip install pydantic-ai`.")
 
-
 def safe_patch_agent_run_method():
     is_pydantic_ai_installed()
     original_run = Agent.run
     
     # define patched run method
     async def patched_run(*args, **kwargs):
-        
-        if not isinstance(args[0], PatchedAgent):
-            return await original_run(*args, **kwargs)
        
         # get tracer from model
         model_used = args[0]._get_model(kwargs.get('model', None))
@@ -30,7 +28,7 @@ def safe_patch_agent_run_method():
             tracer = model_used.settings.tracer
         else:
             tracer = NoOpTracer()
-        with tracer.start_as_current_span('confident agent run') as run_span:
+        with tracer.start_as_current_span('agent') as run_span:
 
             result = await original_run(*args, **kwargs)
             
@@ -41,8 +39,9 @@ def safe_patch_agent_run_method():
             run_span.set_attribute('confident.agent.attributes.output', str(result.output))
             
             # llm test case attributes
-            if args[0].metric_collection:
-                run_span.set_attribute('confident.span.metric_collection', args[0].metric_collection)
+            if isinstance(args[0], PatchedAgent):
+                if args[0].metric_collection:
+                    run_span.set_attribute('confident.span.metric_collection', args[0].metric_collection)
             
             run_span.set_attribute('confident.span.llm_test_case.input', str(args[1]))
             run_span.set_attribute('confident.span.llm_test_case.actual_output', str(result.output))
@@ -51,3 +50,30 @@ def safe_patch_agent_run_method():
     
     # Apply the patch
     Agent.run = patched_run
+    
+
+def safe_patch_agent_iter_method():
+    is_pydantic_ai_installed()
+    original_iter = Agent.iter
+    
+
+    @asynccontextmanager
+    async def patched_iter(self, *args, **kwargs):
+        """
+        A patched version of Agent.iter that captures the run_span
+        and adds a custom attribute to it.
+        """
+        # Call the original iter method as an async context manager
+        async with original_iter(self, *args, **kwargs) as agent_run:
+            
+            # Because we are inside the context of the original iter,
+            # the run_span is active. We can get it.
+            run_span = trace.get_current_span()
+
+            # Now you can set any attributes you want on the span
+            run_span.set_attribute("confident.span.name", "agent iter")
+
+            # Yield the agent_run to the original caller
+            yield agent_run
+
+    Agent.iter = patched_iter
