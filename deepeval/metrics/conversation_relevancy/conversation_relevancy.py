@@ -70,7 +70,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
                 turns_windows: List[List[Turn]] = [
-                    window
+                    list(itertools.chain(*window))
                     for window in get_turns_in_sliding_window(
                         unit_interactions, self.window_size
                     )
@@ -112,7 +112,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
             turns_windows: List[List[Turn]] = [
-                window
+                list(itertools.chain(*window))
                 for window in get_turns_in_sliding_window(
                     unit_interactions, self.window_size
                 )
@@ -125,6 +125,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
+
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
@@ -199,10 +200,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
     async def _a_generate_verdict(
         self, turns_sliding_window: List[Turn]
     ) -> ConversationRelevancyVerdict:
-        turns_sliding_windows = list(itertools.chain(*turns_sliding_window))
         prompt = ConversationRelevancyTemplate.generate_verdicts(
             sliding_window=[
-                convert_turn_to_dict(turn) for turn in turns_sliding_windows
+                convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
         )
         if self.using_native_model:
@@ -225,10 +225,9 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
     def _generate_verdict(
         self, turns_sliding_window: List[Turn]
     ) -> ConversationRelevancyVerdict:
-        turns_sliding_windows = list(itertools.chain(*turns_sliding_window))
         prompt = ConversationRelevancyTemplate.generate_verdicts(
             sliding_window=[
-                convert_turn_to_dict(turn) for turn in turns_sliding_windows
+                convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
         )
         if self.using_native_model:
