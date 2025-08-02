@@ -13,7 +13,7 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
@@ -26,11 +26,10 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
-    is_confident,
     is_in_ci_env,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
-from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR
+from deepeval.constants import HIDDEN_DIR
 
 TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"

@@ -1,4 +1,4 @@
-name: Lint
+name: Lint Lint Lint
 
 on: [pull_request]
 

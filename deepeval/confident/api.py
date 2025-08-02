@@ -3,6 +3,7 @@ from typing import Optional
 import aiohttp
 import requests
 from enum import Enum
+import os
 
 from tenacity import (
     retry,
@@ -34,6 +35,17 @@ def get_deepeval_base_url():
         return DEEPEVAL_BASE_URL_EU
     else:
         return DEEPEVAL_BASE_URL
+
+
+def get_confident_api_key():
+    return KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY) or os.getenv(
+        "CONFIDENT_API_KEY"
+    )
+
+
+def is_confident():
+    confident_api_key = get_confident_api_key()
+    return confident_api_key is not None
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -78,7 +90,6 @@ class Api:
         self.api_key = api_key
         self._headers = {
             "Content-Type": "application/json",
-            # "User-Agent": "Python/Requests",
             "CONFIDENT_API_KEY": api_key,
         }
         self.base_api_url = base_url or get_base_api_url()

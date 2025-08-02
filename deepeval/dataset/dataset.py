@@ -16,7 +16,7 @@ from deepeval.metrics import (
     BaseMetric,
 )
 from deepeval.evaluate.types import EvaluationResult
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
@@ -36,7 +36,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
 )
-from deepeval.utils import convert_keys_to_snake_case, is_confident
+from deepeval.utils import convert_keys_to_snake_case
 
 valid_file_types = ["csv", "json", "jsonl"]
 

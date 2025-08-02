@@ -9,6 +9,7 @@ from deepeval.confident.api import (
     Endpoints,
     get_deepeval_base_url,
     HttpMethods,
+    is_confident,
 )
 from deepeval.confident.types import (
     ConfidentEvaluateRequestData,
@@ -16,7 +17,6 @@ from deepeval.confident.types import (
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.test_case.utils import check_valid_test_cases_type
-from deepeval.utils import is_confident
 
 
 def confident_evaluate(
