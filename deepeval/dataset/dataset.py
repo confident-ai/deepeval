@@ -1,5 +1,4 @@
 from asyncio import Task
-from enum import Enum
 from typing import Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from rich.console import Console
@@ -16,10 +15,6 @@ from deepeval.evaluate.utils import (
     aggregate_metric_pass_rates,
     print_test_result,
     write_test_result_to_file,
-)
-from deepeval.metrics import (
-    BaseConversationalMetric,
-    BaseMetric,
 )
 from deepeval.evaluate.types import EvaluationResult
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
@@ -220,25 +215,6 @@ class EvaluationDataset:
             raise TypeError(
                 "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGolden."
             )
-
-    def __len__(self):
-        return len(self.test_cases)
-
-    def __iter__(self):
-        return iter(self.test_cases)
-
-    def evaluate(
-        self,
-        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
-    ) -> EvaluationResult:
-        from deepeval import evaluate
-
-        if len(self.test_cases) == 0:
-            raise ValueError(
-                "No test cases found in evaluation dataset. Unable to evaluate empty dataset."
-            )
-
-        return evaluate(self.test_cases, metrics)
 
     def add_test_cases_from_csv_file(
         self,
@@ -1009,7 +985,7 @@ class EvaluationDataset:
             raise ValueError("You must provide 'goldens' to dataset().")
 
         goldens = self.goldens
-        with capture_evaluation_run("looped evaluate()"):
+        with capture_evaluation_run("traceable evaluate()"):
             global_test_run_manager.reset()
             start_time = time.perf_counter()
             test_results: List[TestResult] = []
