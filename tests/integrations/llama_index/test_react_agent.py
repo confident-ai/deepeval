@@ -14,9 +14,11 @@ agent = ReActAgent(
     metric_collection="test_collection_1",
 )
 
+
 async def main():
     response = await agent.run("What is the capital of France?")
     print(response)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

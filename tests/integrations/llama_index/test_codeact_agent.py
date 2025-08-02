@@ -11,8 +11,10 @@ os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
 from llama_index.llms.openai import OpenAI
 
 import deepeval
+
 deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
 instrument_llama_index(instrument.get_dispatcher())
+
 
 # Define a few helper functions
 def add(a: int, b: int) -> int:
@@ -33,6 +35,7 @@ def multiply(a: int, b: int) -> int:
 def divide(a: int, b: int) -> float:
     """Divide two numbers"""
     return a / b
+
 
 from typing import Any, Dict, Tuple
 import io
@@ -81,9 +84,9 @@ class SimpleCodeExecutor:
         return_value = None
         try:
             # Execute with captured output
-            with contextlib.redirect_stdout(
-                stdout
-            ), contextlib.redirect_stderr(stderr):
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(
+                stderr
+            ):
                 # Try to detect if there's a return value (last expression)
                 try:
                     tree = ast.parse(code)
@@ -123,7 +126,7 @@ class SimpleCodeExecutor:
             output += "\n\n" + str(return_value)
 
         return output
-    
+
 
 code_executor = SimpleCodeExecutor(
     # give access to our functions defined above
@@ -172,9 +175,7 @@ async def run_agent_verbose(agent, ctx, query):
     print(f"User:  {query}")
     async for event in handler.stream_events():
         if isinstance(event, ToolCallResult):
-            print(
-                f"\n-----------\nCode execution result:\n{event.tool_output}"
-            )
+            print(f"\n-----------\nCode execution result:\n{event.tool_output}")
         elif isinstance(event, ToolCall):
             print(f"\n-----------\nParsed code:\n{event.tool_kwargs['code']}")
         elif isinstance(event, AgentStream):
@@ -182,11 +183,13 @@ async def run_agent_verbose(agent, ctx, query):
 
     return await handler
 
+
 async def main():
     response = await run_agent_verbose(
         agent, ctx, "Calculate the sum of all numbers from 1 to 10"
     )
     print(response)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -2,7 +2,7 @@ from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
 
@@ -69,16 +69,17 @@ class KimiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0,
+        **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.MOONSHOT_MODEL_NAME
+            ModelKeyValues.MOONSHOT_MODEL_NAME
         )
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Moonshot models: {', '.join(model_pricing.keys())}"
             )
         temperature_from_key = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.TEMPERATURE
+            ModelKeyValues.TEMPERATURE
         )
         if temperature_from_key is None:
             self.temperature = temperature
@@ -87,9 +88,10 @@ class KimiModel(DeepEvalBaseLLM):
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.MOONSHOT_API_KEY
+            ModelKeyValues.MOONSHOT_API_KEY
         )
         self.base_url = "https://api.moonshot.cn/v1"
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -186,9 +188,13 @@ class KimiModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(api_key=self.api_key, base_url=self.base_url)
+            return OpenAI(
+                api_key=self.api_key, base_url=self.base_url, **self.kwargs
+            )
         else:
-            return AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+            return AsyncOpenAI(
+                api_key=self.api_key, base_url=self.base_url, **self.kwargs
+            )
 
     def get_model_name(self):
         return f"{self.model_name}"

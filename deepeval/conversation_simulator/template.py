@@ -1,70 +1,17 @@
+from dataclasses import asdict
+from typing import List
 import textwrap
+import json
+
+from deepeval.dataset import ConversationalGolden
+from deepeval.test_case import Turn
 
 
 class ConversationSimulatorTemplate:
-    @staticmethod
-    def generate_user_profile(user_profile_items: str, language: str) -> str:
-        prompt = textwrap.dedent(
-            f"""You are a User Profile Generator. Your task is to create a concise, natural-language user profile summary in {language}
-            based on the given profile items.
-
-            Guidelines:
-            1. Use the provided items to generate a coherent, human-readable profile.
-            2. Ensure the profile is concise and includes all the information described in the input requirements, seamlessly integrated into a natural format.
-            3. Avoid rigidly listing the items; instead, craft the profile as if writing a short and concise bio.
-
-            IMPORTANT: The output must be formatted as a JSON object with a single key `user_profile`, where the value 
-            is the generated user profile in {language}.
-
-            Example Language: english
-            Example User Profile Items:
-            ["name (first and last)", "phone number", "availabilities (between Monday and Friday)"]
-            Example JSON Output:
-            {{
-                "user_profile": "Jeff Seid is available on Monday and Thursday afternoons, and his phone number is 0010281839."
-            }}
-
-            Language: {language}
-            User Profile Items:
-            "{user_profile_items}"
-            JSON Output:
-        """
-        )
-        return prompt
 
     @staticmethod
-    def generate_scenario(user_profile: str, intent: str, language: str) -> str:
-        prompt = textwrap.dedent(
-            f"""You are a Scenario Generator. Your task is to create a detailed and realistic scenario in {language}
-            based on the given user profile and their intent for interacting with the LLM.
-
-            Guidelines:
-            1. Use the user profile to establish the context, incorporating any relevant personal details (e.g., name, availability, location).
-            2. Clearly articulate the user's intent, turning it into a concrete, real-life situation.
-            3. The scenario should be written in a natural, narrative tone and provide enough background to understand the user's motivation and interaction goals.
-            4. Ensure the scenario is concise but specific enough to describe the context and purpose.
-
-            IMPORTANT: The output must be formatted as a JSON object with a single key `scenario`, where the value is the generated scenario description in {language}.
-
-            Example Language: english
-            Example User Profile: "Jeff Seid, is available Monday and Thursday afternoons, and their phone number is 0010281839."
-            Example Intent: "Picking products up because somebody died or moved into intensive care."
-            Example Output:
-            {{
-                "scenario": "Your name is Jeff Seid, and your mother Karen Springfield (born 19th of August 1949) recently passed away. You still have a wheelchair and a wheeled walker at her house at 545 Stranger Road, which should be picked up by the provider. You are currently performing a phone call with the provider to arrange the retrieval of these products."
-            }}
-
-            Language: {language}
-            User Profile: "{user_profile}"
-            Intent: "{intent}"
-            JSON Output:
-        """
-        )
-        return prompt
-
-    @staticmethod
-    def generate_first_input(
-        scenario: str, user_profile: str, language: str
+    def simulate_first_user_turn(
+        golden: ConversationalGolden, language: str
     ) -> str:
         prompt = textwrap.dedent(
             f"""Pretend you are a user of an LLM app. Your goal is to start a conversation in {language} based on a scenario 
@@ -88,20 +35,20 @@ class ConversationSimulatorTemplate:
             }}
 
             Language: {language}
-            User Profile: "{user_profile}"             
-            Scenario: "{scenario}"
+            User Profile: "{golden.user_description}"             
+            Scenario: "{golden.scenario}"
             JSON Output:
         """
         )
         return prompt
 
     @staticmethod
-    def generate_next_user_input(
-        scenario: str,
-        user_profile: str,
-        previous_conversation: str,
+    def simulate_user_turn(
+        golden: ConversationalGolden,
+        turns: List[Turn],
         language: str,
     ) -> str:
+        previous_conversation = json.dumps([asdict(t) for t in turns], indent=4)
         prompt = textwrap.dedent(
             f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
@@ -130,8 +77,8 @@ class ConversationSimulatorTemplate:
             }}
 
             Language: {language}
-            User Profile: "{user_profile}"
-            Scenario: "{scenario}"
+            User Profile: "{golden.user_description}"
+            Scenario: "{golden.scenario}"
             Previous Conversation:
             {previous_conversation}
 
@@ -141,22 +88,22 @@ class ConversationSimulatorTemplate:
         return prompt
 
     @staticmethod
-    def check_conversation_completed(
-        previous_conversation: str, stopping_criteria: str
+    def stop_simulation(
+        previous_conversation: str, expected_outcome: str
     ) -> str:
         prompt = textwrap.dedent(
             f"""You are a Conversation Completion Checker.
-            Your task is to determine whether the conversation satisfies the provided stopping criteria and should be terminated.
+            Your task is to determine whether the conversation has achieved the expected outcome and should be terminated.
 
             Guidelines:
-            1. Review the entire conversation and decide if the stopping criteria have been met and the conversation has ended.
-            2. If the criteria have been met, mark the conversation as complete.
+            1. Review the entire conversation and decide if the expected outcome has been met and the conversation has ended.
+            2. If the expected outcome has been met, mark the conversation as complete.
             3. If not, mark it as incomplete and briefly describe what remains to be done.
 
             IMPORTANT: The output must be formatted as a JSON object with two keys:
             `is_complete` (a boolean) and `reason` (a string).
 
-            Example Stopping Criteria: "The user has succesfully reset their password."
+            Example Expected Outcome: "The user has succesfully reset their password."
             Example Conversation History:
             [
                 {{"role": "user", "content": "I forgot my password and need to reset it."}},
@@ -168,7 +115,7 @@ class ConversationSimulatorTemplate:
                 "reason": "The assistant explained how to forget password but ahas not confirmed that the user successfully set a new password."
             }}
 
-            Stopping Criteria: "{stopping_criteria}"
+            Expected Outcome: "{expected_outcome}"
             Conversation History:
             {previous_conversation}
             JSON Output:

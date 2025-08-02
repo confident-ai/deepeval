@@ -1,6 +1,5 @@
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.tracing.context import current_trace_context
-from deepeval.utils import is_confident
 from deepeval.tracing.offline_evals.api import EvaluateTraceRequestBody
 
 

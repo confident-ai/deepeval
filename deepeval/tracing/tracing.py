@@ -20,7 +20,7 @@ from deepeval.constants import (
     CONFIDENT_SAMPLE_RATE,
     CONFIDENT_TRACE_ENVIRONMENT,
 )
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
 from deepeval.tracing.api import (
     BaseApiSpan,
@@ -59,7 +59,7 @@ from deepeval.tracing.utils import (
     validate_sampling_rate,
 )
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
-from deepeval.utils import dataclass_to_dict, is_confident
+from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 
 
@@ -150,9 +150,11 @@ class TraceManager:
         self,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
+        trace_uuid: Optional[str] = None,
     ) -> Trace:
         """Start a new trace and set it as the current trace."""
-        trace_uuid = str(uuid.uuid4())
+        if trace_uuid is None:
+            trace_uuid = str(uuid.uuid4())
         new_trace = Trace(
             uuid=trace_uuid,
             root_spans=[],
@@ -174,7 +176,9 @@ class TraceManager:
 
         if trace_uuid in self.active_traces:
             trace = self.active_traces[trace_uuid]
-            trace.end_time = perf_counter()
+            trace.end_time = (
+                perf_counter() if trace.end_time is None else trace.end_time
+            )
 
             # Default to SUCCESS for completed traces
             # This assumes that if a trace completes, it was successful overall
@@ -240,9 +244,7 @@ class TraceManager:
             if parent_span:
                 parent_span.children.append(span)
             else:
-                raise ValueError(
-                    f"Parent span with UUID {span.parent_uuid} does not exist."
-                )
+                trace.root_spans.append(span)
 
     def get_trace_by_uuid(self, trace_uuid: str) -> Optional[Trace]:
         """Get a trace by its UUID."""
@@ -650,7 +652,7 @@ class TraceManager:
             # For LlmSpan, input is attributes.input, output is attributes.output
             if span.attributes:
                 input_data = span.attributes.input
-                output_data = span.attributes.output
+                output_data = make_json_serializable(span.attributes.output)
         else:
             # For BaseSpan, Agent, or Tool types, use the standard logic
             input_data = span.input
@@ -682,6 +684,7 @@ class TraceManager:
             else None
         )
         from deepeval.evaluate.utils import create_metric_data
+
         # Create the base API span
         api_span = BaseApiSpan(
             uuid=span.uuid,
@@ -1073,13 +1076,17 @@ def observe(
                 bound_args = sig.bind(*args, **func_kwargs)
                 bound_args.apply_defaults()
                 complete_kwargs = dict(bound_args.arguments)
-                
+
                 if "self" in complete_kwargs:
-                    complete_kwargs["self"] = replace_self_with_class_name(complete_kwargs["self"])
+                    complete_kwargs["self"] = replace_self_with_class_name(
+                        complete_kwargs["self"]
+                    )
 
                 observer_kwargs = {
                     "observe_kwargs": observe_kwargs,
-                    "function_kwargs": make_json_serializable(complete_kwargs), # serilaizing it before it goes to trace api and raises circular reference error
+                    "function_kwargs": make_json_serializable(
+                        complete_kwargs
+                    ),  # serilaizing it before it goes to trace api and raises circular reference error
                 }
                 with Observer(
                     type,
@@ -1091,7 +1098,9 @@ def observe(
                     # Call the original function
                     result = func(*args, **func_kwargs)
                     # Capture the result
-                    observer.result = make_json_serializable(result) # serilaizing it before it goes to trace api and raises circular reference error
+                    observer.result = make_json_serializable(
+                        result
+                    )  # serilaizing it before it goes to trace api and raises circular reference error
                     return result
 
             # Set the marker attribute on the wrapper

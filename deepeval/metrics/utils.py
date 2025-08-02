@@ -31,7 +31,12 @@ from deepeval.models import (
     GrokModel,
     DeepSeekModel,
 )
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import (
+    KeyValues,
+    ModelKeyValues,
+    EmbeddingKeyValues,
+    KEY_FILE_HANDLER,
+)
 from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
@@ -373,47 +378,47 @@ def trimAndLoadJson(
 
 
 def should_use_azure_openai():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_AZURE_OPENAI)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_local_model():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_MODEL)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LOCAL_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_ollama_model():
-    base_url = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_API_KEY)
+    base_url = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_API_KEY)
     return base_url == "ollama"
 
 
 def should_use_gemini_model():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GEMINI_MODEL)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GEMINI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_openai_model():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_OPENAI_MODEL)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_OPENAI_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_litellm():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LITELLM)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_LITELLM)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_deepseek_model():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_DEEPSEEK_MODEL)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_DEEPSEEK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_moonshot_model():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_MOONSHOT_MODEL)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_MOONSHOT_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_grok_model():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_GROK_MODEL)
+    value = KEY_FILE_HANDLER.fetch_data(ModelKeyValues.USE_GROK_MODEL)
     return value.lower() == "yes" if value is not None else False
 
 
@@ -445,7 +450,7 @@ def initialize_model(
     elif should_use_local_model():
         return LocalModel(), True
     elif should_use_azure_openai():
-        return AzureOpenAIModel(model=model), True
+        return AzureOpenAIModel(model_name=model), True
     elif should_use_moonshot_model():
         return KimiModel(model=model), True
     elif should_use_grok_model():
@@ -527,17 +532,21 @@ def is_native_mllm(
 
 
 def should_use_azure_openai_embedding():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_AZURE_OPENAI_EMBEDDING)
+    value = KEY_FILE_HANDLER.fetch_data(
+        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING
+    )
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_local_embedding():
-    value = KEY_FILE_HANDLER.fetch_data(KeyValues.USE_LOCAL_EMBEDDINGS)
+    value = KEY_FILE_HANDLER.fetch_data(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
     return value.lower() == "yes" if value is not None else False
 
 
 def should_use_ollama_embedding():
-    api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_EMBEDDING_API_KEY)
+    api_key = KEY_FILE_HANDLER.fetch_data(
+        EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
+    )
     return api_key == "ollama"
 
 

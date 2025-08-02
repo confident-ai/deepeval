@@ -26,7 +26,7 @@ class LlmAttributes(BaseModel):
     # input
     input: Union[str, List[Dict[str, Any]]]
     # output
-    output: Union[str, LlmOutput, List[Dict[str, Any]]]
+    output: Union[str, LlmOutput, List[Dict[str, Any]], Any]
     prompt: Optional[Prompt] = None
 
     # Optional variables
@@ -65,3 +65,11 @@ class ToolAttributes(BaseModel):
 Attributes = Union[
     AgentAttributes, LlmAttributes, RetrieverAttributes, ToolAttributes
 ]
+
+
+class TraceAttributes(BaseModel):
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    metadata: Optional[Dict[str, Any]] = None
+    thread_id: Optional[str] = None
+    user_id: Optional[str] = None

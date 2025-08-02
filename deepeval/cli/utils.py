@@ -4,7 +4,12 @@ import pyfiglet
 from typing import Optional
 from opentelemetry.trace import Span
 
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
+from deepeval.key_handler import (
+    KEY_FILE_HANDLER,
+    KeyValues,
+    ModelKeyValues,
+    EmbeddingKeyValues,
+)
 from deepeval.test_run.test_run import (
     global_test_run_manager,
 )
@@ -51,3 +56,13 @@ def upload_and_open_link(_span: Span):
         print(
             "❌ No test run found in cache. Run 'deepeval login' + an evaluation to get started 🚀."
         )
+
+
+def clear_evaluation_model_keys():
+    for key in ModelKeyValues:
+        KEY_FILE_HANDLER.remove_key(key)
+
+
+def clear_embedding_model_keys():
+    for key in EmbeddingKeyValues:
+        KEY_FILE_HANDLER.remove_key(key)

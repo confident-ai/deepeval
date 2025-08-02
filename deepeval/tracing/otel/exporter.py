@@ -1,365 +1,570 @@
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.trace import StatusCode
-from typing import Dict, List, Optional
-from datetime import datetime, timezone
-from deepeval.tracing.api import TraceSpanApiStatus
-from deepeval.tracing.otel.utils import to_hex_string
-from deepeval.tracing.tracing import (
-    BaseApiSpan,
-    SpanApiType,
-    TraceApi,
-    to_zod_compatible_iso,
-    trace_manager,
-)
-import typing
 import json
+import os
+import typing
+from dataclasses import dataclass
+from typing import List, Optional
+from opentelemetry.trace.status import StatusCode
+from opentelemetry.sdk.trace.export import (
+    SpanExporter,
+    SpanExportResult,
+    ReadableSpan,
+)
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.tracing import trace_manager
+from deepeval.tracing.attributes import (
+    AgentAttributes,
+    LlmAttributes,
+    RetrieverAttributes,
+    ToolAttributes,
+)
+from deepeval.tracing.types import (
+    AgentSpan,
+    BaseSpan,
+    LlmSpan,
+    RetrieverSpan,
+    ToolSpan,
+    TraceSpanStatus,
+)
+from deepeval.tracing.otel.utils import (
+    to_hex_string,
+    set_trace_time,
+    validate_llm_test_case_data,
+)
+import deepeval
+from deepeval.tracing import perf_epoch_bridge as peb
+from deepeval.test_case import LLMTestCase, ToolCall
+from pydantic import BaseModel, ValidationError
+from deepeval.feedback.feedback import Feedback
+from collections import defaultdict
+
+
+class TraceAttributes(BaseModel):
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    thread_id: Optional[str] = None
+    user_id: Optional[str] = None
+
+
+@dataclass
+class BaseSpanWrapper:
+    base_span: BaseSpan
+    trace_attributes: Optional[TraceAttributes] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
-    def __init__(self):
-        capture_tracing_integration("otel")
-        self.trace_manager = trace_manager
+
+    def __init__(self, api_key: Optional[str] = None):
+        capture_tracing_integration("deepeval.tracing.otel.exporter")
+        peb.init_clock_bridge()
+
+        if api_key:
+            deepeval.login_with_confident_api_key(api_key)
+
+        environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
+        if environment:
+            trace_manager.configure(environment=environment)
+
+        sampling_rate = os.getenv("CONFIDENT_SAMPLE_RATE")
+        if sampling_rate:
+            trace_manager.configure(sampling_rate=sampling_rate)
+
         super().__init__()
 
-    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
-        base_api_spans = [self.convert_to_base_api_span(span) for span in spans]
-        traces = self.aggregate_base_api_spans_to_traces(base_api_spans)
-        for trace in traces:
-            self.trace_manager.post_trace_api(trace)
+    def export(
+        self,
+        spans: typing.Sequence[ReadableSpan],
+        timeout_millis: int = 30000,
+        api_key: Optional[str] = None,
+    ) -> SpanExportResult:
+
+        # build forest of spans
+        forest = self._build_span_forest(spans)
+
+        # convert forest of spans to forest of base span wrappers
+        spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
+        for span_list in forest:
+            spans_wrappers_list: List[BaseSpanWrapper] = []
+            for span in span_list:
+
+                # confugarion are attached to the resource attributes
+                resource_attributes = span.resource.attributes
+                environment = resource_attributes.get("confident.environment")
+
+                if environment and isinstance(environment, str):
+                    trace_manager.configure(environment=environment)
+
+                sampling_rate = resource_attributes.get(
+                    "confident.sampling_rate"
+                )
+                if sampling_rate and isinstance(sampling_rate, float):
+                    trace_manager.configure(sampling_rate=sampling_rate)
+
+                base_span_wrapper = self._convert_readable_span_to_base_span(
+                    span
+                )
+
+                spans_wrappers_list.append(base_span_wrapper)
+            spans_wrappers_forest.append(spans_wrappers_list)
+
+        # add spans to trace manager
+        for spans_wrappers_list in spans_wrappers_forest:
+            for base_span_wrapper in spans_wrappers_list:
+
+                current_trace = trace_manager.get_trace_by_uuid(
+                    base_span_wrapper.base_span.trace_uuid
+                )
+                if not current_trace:
+                    current_trace = trace_manager.start_new_trace(
+                        trace_uuid=base_span_wrapper.base_span.trace_uuid
+                    )
+
+                if api_key:
+                    current_trace.confident_api_key = api_key
+
+                # set the trace attributes
+                if base_span_wrapper.trace_attributes:
+                    current_trace.name = base_span_wrapper.trace_attributes.name
+                    current_trace.tags = base_span_wrapper.trace_attributes.tags
+                    current_trace.thread_id = (
+                        base_span_wrapper.trace_attributes.thread_id
+                    )
+                    current_trace.user_id = (
+                        base_span_wrapper.trace_attributes.user_id
+                    )
+
+                trace_manager.add_span(base_span_wrapper.base_span)
+                trace_manager.add_span_to_trace(base_span_wrapper.base_span)
+                # no removing span because it can be parent of other spans
+
+        # safely end all active traces
+        active_traces_keys = list(trace_manager.active_traces.keys())
+        for trace_key in active_traces_keys:
+            set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
+            trace_manager.end_trace(trace_key)
+        trace_manager.clear_traces()
 
         return SpanExportResult.SUCCESS
 
     def shutdown(self):
-        # TODO: implement
         pass
 
-    def force_flush(self, timeout_millis=30000):
-        self.trace_manager.flush_traces()
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
 
-    def convert_to_base_api_span(
+    def _convert_readable_span_to_base_span(
         self, span: ReadableSpan
-    ) -> Optional[BaseApiSpan]:
-        # if span is not relevant confident spans, return None
-        if not (span.context.trace_id and span.context.span_id):
-            return None
+    ) -> BaseSpanWrapper:
+        base_span = None
+        try:
+            base_span = self._prepare_boilerplate_base_span(span)
+        except Exception as e:
+            print(f"Error converting span: {e}")
 
-        uuid = to_hex_string(span.context.span_id, 16)  # uuid
-        name = span.name if span.name else None  # name
-        # default to success, if error, set to errored
-        status = (
-            TraceSpanApiStatus.ERRORED
-            if span.status.status_code == StatusCode.ERROR
-            else TraceSpanApiStatus.SUCCESS
+        # fallback to base span with default values
+        if not base_span:
+            input = span.attributes.get("confident.span.input")
+            output = span.attributes.get("confident.span.output")
+
+            base_span = BaseSpan(
+                uuid=to_hex_string(span.context.span_id, 16),
+                status=(
+                    TraceSpanStatus.ERRORED
+                    if span.status.status_code == StatusCode.ERROR
+                    else TraceSpanStatus.SUCCESS
+                ),
+                children=[],
+                trace_uuid=to_hex_string(span.context.trace_id, 32),
+                parent_uuid=(
+                    to_hex_string(span.parent.span_id, 16)
+                    if span.parent
+                    else None
+                ),
+                start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
+                end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
+                input=input,
+                output=output,
+            )
+
+        # extract error
+        error = span.attributes.get("confident.span.error")
+
+        # validate feedback
+        feedback_json_str = span.attributes.get("confident.span.feedback")
+        feedback = None
+        if feedback_json_str:
+            try:
+                feedback = Feedback.model_validate_json(feedback_json_str)
+            except ValidationError as err:
+                print(f"Error converting feedback: {err}")
+
+        # extract metric collection
+        metric_collection = span.attributes.get(
+            "confident.span.metric_collection"
         )
-        trace_uuid = to_hex_string(span.context.trace_id, 32)  # trace_uuid
+        if not isinstance(metric_collection, str):
+            metric_collection = None
+
+        # extract llm test case attributes (except additional_metadata, tools_called, expected_tools)
+        test_case_input = span.attributes.get(
+            "confident.span.llm_test_case.input"
+        )
+        test_case_actual_output = span.attributes.get(
+            "confident.span.llm_test_case.actual_output"
+        )
+        test_case_expected_output = span.attributes.get(
+            "confident.span.llm_test_case.expected_output"
+        )
+        test_case_context = span.attributes.get(
+            "confident.span.llm_test_case.context"
+        )
+        test_case_retrieval_context = span.attributes.get(
+            "confident.span.llm_test_case.retrieval_context"
+        )
+
+        # validate list of strings for tool calls and expected tools
+        test_case_tools_called_attr = span.attributes.get(
+            "confident.span.llm_test_case.tools_called"
+        )
+        test_case_expected_tools_attr = span.attributes.get(
+            "confident.span.llm_test_case.expected_tools"
+        )
+
+        tools_called: List[ToolCall] = []
+        expected_tools: List[ToolCall] = []
+
+        if test_case_tools_called_attr and isinstance(
+            test_case_tools_called_attr, list
+        ):
+            for tool_call_json_str in test_case_tools_called_attr:
+                if isinstance(tool_call_json_str, str):
+                    try:
+                        tools_called.append(
+                            ToolCall.model_validate_json(tool_call_json_str)
+                        )
+                    except ValidationError as err:
+                        print(f"Error converting tool call: {err}")
+
+        if test_case_expected_tools_attr and isinstance(
+            test_case_expected_tools_attr, list
+        ):
+            for tool_call_json_str in test_case_expected_tools_attr:
+                if isinstance(tool_call_json_str, str):
+                    try:
+                        expected_tools.append(
+                            ToolCall.model_validate_json(tool_call_json_str)
+                        )
+                    except ValidationError as err:
+                        print(f"Error converting expected tool call: {err}")
+
+        llm_test_case = None
+        if test_case_input and test_case_actual_output:
+            try:
+                validate_llm_test_case_data(
+                    input=test_case_input,
+                    actual_output=test_case_actual_output,
+                    expected_output=test_case_expected_output,
+                    context=test_case_context,
+                    retrieval_context=test_case_retrieval_context,
+                )
+
+                llm_test_case = LLMTestCase(
+                    input=test_case_input,
+                    actual_output=test_case_actual_output,
+                    expected_output=test_case_expected_output,
+                    context=test_case_context,
+                    retrieval_context=test_case_retrieval_context,
+                    tools_called=tools_called,
+                    expected_tools=expected_tools,
+                )
+            except Exception as e:
+                print(f"Invalid LLMTestCase data: {e}")
+
+        base_span.parent_uuid = (
+            to_hex_string(span.parent.span_id, 16) if span.parent else None
+        )
+        base_span.name = span.name
+        base_span.metadata = json.loads(span.to_json())
+        base_span.error = error
+        base_span.llm_test_case = llm_test_case
+        base_span.metric_collection = metric_collection
+        base_span.feedback = feedback
+
+        # extract trace attributes
+        trace_attributes = None
+        trace_attr_json_str = span.attributes.get("confident.trace.attributes")
+        if trace_attr_json_str:
+            try:
+                trace_attributes = TraceAttributes.model_validate_json(
+                    trace_attr_json_str
+                )
+            except ValidationError as err:
+                print(f"Error converting trace attributes: {err}")
+
+        base_span_wrapper = BaseSpanWrapper(
+            base_span=base_span, trace_attributes=trace_attributes
+        )
+
+        return base_span_wrapper
+
+    def _prepare_boilerplate_base_span(
+        self, span: ReadableSpan
+    ) -> Optional[BaseSpan]:
+        span_type = span.attributes.get("confident.span.type", "base")
+
+        # required fields
+        uuid = to_hex_string(span.context.span_id, 16)
+        status = (
+            TraceSpanStatus.ERRORED
+            if span.status.status_code == StatusCode.ERROR
+            else TraceSpanStatus.SUCCESS
+        )
+        children = []
+        trace_uuid = to_hex_string(span.context.trace_id, 32)
         parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
         )
-        start_time = to_zod_compatible_iso(
-            datetime.fromtimestamp(span.start_time / 1e9, tz=timezone.utc)
-        )
-        end_time = to_zod_compatible_iso(
-            datetime.fromtimestamp(span.end_time / 1e9, tz=timezone.utc)
-        )
-        error = (
-            span.status.description
-            if status == TraceSpanApiStatus.ERRORED
-            else None
-        )
-        # span_test_case
-        # metrics
-        # metrics_data
+        start_time = peb.epoch_nanos_to_perf_seconds(span.start_time)
+        end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
 
-        base_api_span = BaseApiSpan(
-            uuid=uuid,
-            name=name,
-            status=status,
-            type=SpanApiType.BASE,
-            parentUuid=parent_uuid,
-            startTime=start_time,
-            endTime=end_time,
-            error=error,
-        )
-
-        _attributes = span.attributes if span.attributes else {}
-
-        if _attributes.get("gen_ai.operation.name") in [
-            "chat",
-            "text_completion",
-            "generate_content",
-        ]:
-            _llm_attributes = self._extract_llm_attributes(span, res={})
-            base_api_span.type = SpanApiType.LLM
-            base_api_span.input = _llm_attributes.get("input")
-            base_api_span.output = _llm_attributes.get("output")
-            base_api_span.model = _llm_attributes.get("model")
-            base_api_span.input_token_count = _llm_attributes.get(
-                "input_token_count"
+        if span_type == "llm":
+            model = span.attributes.get("confident.llm.model")
+            cost_per_input_token = span.attributes.get(
+                "confident.llm.cost_per_input_token"
             )
-            base_api_span.output_token_count = _llm_attributes.get(
-                "output_token_count"
-            )
-            base_api_span.cost_per_input_token = _llm_attributes.get(
-                "cost_per_input_token"
-            )
-            base_api_span.cost_per_output_token = _llm_attributes.get(
-                "cost_per_output_token"
+            cost_per_output_token = span.attributes.get(
+                "confident.llm.cost_per_output_token"
             )
 
-        elif _attributes.get("gen_ai.operation.name") in ["execute_tool"]:
-            _tool_attributes = self._extract_tool_attributes(span, res={})
-            base_api_span.type = SpanApiType.TOOL
-            base_api_span.input = _tool_attributes.get("input")
-            base_api_span.output = _tool_attributes.get("output")
-            base_api_span.description = _tool_attributes.get("description")
-
-        elif _attributes.get("gen_ai.operation.name") in [
-            "create_agent",
-            "invoke_agent",
-        ]:
-            _agent_attributes = self._extract_agent_attributes(span, res={})
-            base_api_span.type = SpanApiType.AGENT
-            base_api_span.input = _agent_attributes.get("input")
-            base_api_span.output = _agent_attributes.get("output")
-            base_api_span.available_tools = _agent_attributes.get(
-                "available_tools"
-            )
-            base_api_span.agent_handoffs = _agent_attributes.get(
-                "agent_handoffs"
+            llm_span = LlmSpan(
+                uuid=uuid,
+                status=status,
+                children=children,
+                trace_uuid=trace_uuid,
+                parent_uuid=parent_uuid,
+                start_time=start_time,
+                end_time=end_time,
+                # llm span attributes
+                model=model,
+                cost_per_input_token=cost_per_input_token,
+                cost_per_output_token=cost_per_output_token,
             )
 
-        elif _attributes.get("gen_ai.operation.name") in ["embeddings"]:
-            _retriever_attributes = self._extract_retriever_attributes(
-                span, res={}
+            # set attributes
+            input = span.attributes.get("confident.llm.attributes.input")
+            output = span.attributes.get("confident.llm.attributes.output")
+            prompt = span.attributes.get("confident.llm.attributes.prompt")
+            input_token_count = span.attributes.get(
+                "confident.llm.attributes.input_token_count"
             )
-            base_api_span.type = SpanApiType.RETRIEVER
-            base_api_span.input = _retriever_attributes.get("input")
-            base_api_span.output = _retriever_attributes.get("output")
-            base_api_span.top_k = _retriever_attributes.get("top_k")
-            base_api_span.chunk_size = _retriever_attributes.get("chunk_size")
+            output_token_count = span.attributes.get(
+                "confident.llm.attributes.output_token_count"
+            )
 
-        # dump span to metadata dict
-        # todo: dump only relevant attributes
-        base_api_span.metadata = {"span": json.loads(span.to_json())}
-        return base_api_span
-
-    def _extract_llm_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
-        res["input"] = []
-        for event in span.events:
-            # input
-            if event.name in ["gen_ai.system.message", "gen_ai.user.message"]:
-                attributes = event.attributes
-                res["input"].append(
-                    {
-                        "role": event.name,
-                        "content": (
-                            dict(attributes) if attributes is not None else {}
-                        ),
-                    }
+            try:
+                llm_span.set_attributes(
+                    LlmAttributes(
+                        input=input,
+                        output=output,
+                        prompt=prompt,
+                        input_token_count=input_token_count,
+                        output_token_count=output_token_count,
+                    )
                 )
-            # output
-            if event.name in [
-                "gen_ai.assistant.message",
-                "gen_ai.choice",
-                "gen_ai.tool.message",
-            ]:
-                res["output"] = str(event.attributes)
+            except Exception as e:
+                print(f"Error setting llm span attributes: {e}")
 
-        model = span.attributes.get("gen_ai.request.model")
-        res["model"] = str(model) if model is not None else None
+            return llm_span
 
-        input_tokens = span.attributes.get("gen_ai.usage.input_tokens")
-        res["input_token_count"] = (
-            int(input_tokens) if input_tokens is not None else None
-        )
+        elif span_type == "agent":
+            name = span.attributes.get("confident.agent.name")
+            available_tools_attr = span.attributes.get(
+                "confident.agent.available_tools"
+            )
+            agent_handoffs_attr = span.attributes.get(
+                "confident.agent.agent_handoffs"
+            )
 
-        output_tokens = span.attributes.get("gen_ai.usage.output_tokens")
-        res["output_token_count"] = (
-            int(output_tokens) if output_tokens is not None else None
-        )
+            available_tools: List[str] = []
+            try:
+                for tool in available_tools_attr:
+                    available_tools.append(str(tool))
+            except Exception as e:
+                print(f"Error converting available tools: {e}")
 
-        cost_per_input = span.attributes.get(
-            "confident.llm.cost_per_input_token"
-        )
-        res["cost_per_input_token"] = (
-            float(cost_per_input) if cost_per_input is not None else None
-        )
+            agent_handoffs: List[str] = []
+            try:
+                for handoff in agent_handoffs_attr:
+                    agent_handoffs.append(str(handoff))
+            except Exception as e:
+                print(f"Error converting agent handoffs: {e}")
 
-        cost_per_output = span.attributes.get(
-            "confident.llm.cost_per_output_token"
-        )
-        res["cost_per_output_token"] = (
-            float(cost_per_output) if cost_per_output is not None else None
-        )
+            agent_span = AgentSpan(
+                uuid=uuid,
+                status=status,
+                children=children,
+                trace_uuid=trace_uuid,
+                parent_uuid=parent_uuid,
+                start_time=start_time,
+                end_time=end_time,
+                # agent span attributes
+                name=name if name else "",
+                available_tools=available_tools,
+                agent_handoffs=agent_handoffs,
+            )
 
-        return res
+            # set attributes
+            input = span.attributes.get("confident.agent.attributes.input")
+            output = span.attributes.get("confident.agent.attributes.output")
 
-    def _extract_tool_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
-        for event in span.events:
-            # input
-            if event.name in ["confident.tool.input"]:
-                res["input"] = (
-                    dict(event.attributes)
-                    if event.attributes is not None
-                    else {}
+            try:
+                agent_span.set_attributes(
+                    AgentAttributes(input=input, output=output)
                 )
-            # output
-            if event.name in ["confident.tool.output"]:
-                res["output"] = (
-                    dict(event.attributes)
-                    if event.attributes is not None
-                    else {}
+            except Exception as e:
+                print(f"Error setting agent span attributes: {e}")
+
+            return agent_span
+
+        elif span_type == "retriever":
+            embedder = span.attributes.get("confident.retriever.embedder")
+
+            retriever_span = RetrieverSpan(
+                uuid=uuid,
+                status=status,
+                children=children,
+                trace_uuid=trace_uuid,
+                parent_uuid=parent_uuid,
+                start_time=start_time,
+                end_time=end_time,
+                # retriever span attributes
+                embedder=embedder if embedder else "",
+            )
+
+            # set attributes
+            embedding_input = span.attributes.get(
+                "confident.retriever.attributes.embedding_input"
+            )
+            retrieval_context = span.attributes.get(
+                "confident.retriever.attributes.retrieval_context"
+            )
+            top_k = span.attributes.get("confident.retriever.attributes.top_k")
+            chunk_size = span.attributes.get(
+                "confident.retriever.attributes.chunk_size"
+            )
+
+            try:
+                retriever_span.set_attributes(
+                    RetrieverAttributes(
+                        embedding_input=embedding_input,
+                        retrieval_context=retrieval_context,
+                        top_k=top_k,
+                        chunk_size=chunk_size,
+                    )
                 )
+            except Exception as e:
+                print(f"Error setting retriever span attributes: {e}")
 
-        description = span.attributes.get("gen_ai.tool.description")
-        res["description"] = (
-            str(description) if description is not None else None
-        )
+            return retriever_span
 
-        return res
+        elif span_type == "tool":
+            name = span.attributes.get("confident.tool.name")
+            description = span.attributes.get("confident.tool.description")
 
-    def _extract_agent_attributes(self, span: ReadableSpan, res: Dict) -> Dict:
-        for event in span.events:
-            # input
-            if event.name in ["confident.agent.input"]:
-                res["input"] = (
-                    dict(event.attributes)
-                    if event.attributes is not None
-                    else {}
+            tool_span = ToolSpan(
+                uuid=uuid,
+                status=status,
+                children=children,
+                trace_uuid=trace_uuid,
+                parent_uuid=parent_uuid,
+                start_time=start_time,
+                end_time=end_time,
+                # tool span attributes
+                name=name if name else "",
+                description=description,
+            )
+
+            # set attributes
+            input_parameters = span.attributes.get(
+                "confident.tool.attributes.input_parameters"
+            )
+            output = span.attributes.get("confident.tool.attributes.output")
+
+            try:
+                input_parameters = (
+                    json.loads(input_parameters) if input_parameters else None
                 )
-            # output
-            if event.name in ["confident.agent.output"]:
-                res["output"] = (
-                    dict(event.attributes)
-                    if event.attributes is not None
-                    else {}
+            except Exception as e:
+                print(f"Error converting input parameters: {e}")
+
+            try:
+                tool_span.set_attributes(
+                    ToolAttributes(
+                        input_parameters=input_parameters, output=output
+                    )
                 )
+            except Exception as e:
+                print(f"Error setting tool span attributes: {e}")
 
-        available_tools = span.attributes.get("confident.agent.available_tools")
-        if isinstance(available_tools, tuple):
-            res["available_tools"] = [str(tool) for tool in available_tools]
+            return tool_span
 
-        agent_handoffs = span.attributes.get("confident.agent.agent_handoffs")
-        if isinstance(agent_handoffs, tuple):
-            res["agent_handoffs"] = [str(handoff) for handoff in agent_handoffs]
+        # if span type is not supported, return None
+        return None
 
-        return res
+    def _build_span_forest(
+        self, spans: typing.Sequence[ReadableSpan]
+    ) -> List[typing.Sequence[ReadableSpan]]:
 
-    def _extract_retriever_attributes(
-        self, span: ReadableSpan, res: Dict
-    ) -> Dict:
-        for event in span.events:
-            # input
-            if event.name in ["confident.retriever.input"]:
-                res["input"] = str(event.attributes)
-
-            # output
-            if event.name in ["confident.retriever.output"]:
-                attributes = (
-                    event.attributes
-                )  # event attributes might not be a tuple (#TODO: check)
-                if isinstance(attributes, tuple):
-                    res["output"] = [str(attribute) for attribute in attributes]
-
-        res["embedder"] = str(span.attributes.get("gen_ai.request.model"))
-        top_k = span.attributes.get("confident.retriever.top_k")
-        res["top_k"] = int(top_k) if top_k is not None else None
-        chunk_size = span.attributes.get("confident.retriever.chunk_size")
-        res["chunk_size"] = int(chunk_size) if chunk_size is not None else None
-        return res
-
-    def aggregate_base_api_spans_to_traces(
-        self,
-        spans: List[BaseApiSpan],
-        environment: Optional[str] = "development",
-    ) -> List[TraceApi]:
-        traces_dict = {}
-
+        # Group spans by trace ID
+        trace_spans = defaultdict(list)
         for span in spans:
-            trace_uuid = span.trace_uuid
-            if trace_uuid not in traces_dict:
-                traces_dict[trace_uuid] = {
-                    "baseSpans": [],
-                    "agentSpans": [],
-                    "llmSpans": [],
-                    "retrieverSpans": [],
-                    "toolSpans": [],
-                    "metadata": None,
-                    "tags": None,
-                    "startTime": None,
-                    "endTime": None,
-                }
+            trace_id = span.context.trace_id
+            trace_spans[trace_id].append(span)
 
-            # Add span to appropriate list based on type
-            if span.type == SpanApiType.AGENT:
-                traces_dict[trace_uuid]["agentSpans"].append(span)
-            elif span.type == SpanApiType.LLM:
-                traces_dict[trace_uuid]["llmSpans"].append(span)
-            elif span.type == SpanApiType.RETRIEVER:
-                traces_dict[trace_uuid]["retrieverSpans"].append(span)
-            elif span.type == SpanApiType.TOOL:
-                traces_dict[trace_uuid]["toolSpans"].append(span)
-            else:  # BASE type or any other type
-                traces_dict[trace_uuid]["baseSpans"].append(span)
+        forest = []
 
-            # Track earliest start time and latest end time for the trace
-            span_start_time = span.start_time
-            span_end_time = span.end_time
+        # Process each trace separately
+        for trace_id, trace_span_list in trace_spans.items():
+            # Build parent-child relationships for this trace
+            children = defaultdict(list)
+            span_map = {}
+            all_span_ids = set()
+            parent_map = {}
 
-            if span_start_time:
-                # Parse ISO string to datetime for comparison
-                span_start_dt = datetime.fromisoformat(
-                    span_start_time.replace("Z", "+00:00")
-                )
-                current_start_dt = (
-                    datetime.fromisoformat(
-                        traces_dict[trace_uuid]["startTime"].replace(
-                            "Z", "+00:00"
-                        )
-                    )
-                    if traces_dict[trace_uuid]["startTime"]
-                    else None
-                )
+            for span in trace_span_list:
+                span_id = span.context.span_id
+                parent_id = span.parent.span_id if span.parent else None
 
-                if not current_start_dt or span_start_dt < current_start_dt:
-                    traces_dict[trace_uuid]["startTime"] = span_start_time
+                all_span_ids.add(span_id)
+                span_map[span_id] = span
+                parent_map[span_id] = parent_id
 
-            if span_end_time:
-                # Parse ISO string to datetime for comparison
-                span_end_dt = datetime.fromisoformat(
-                    span_end_time.replace("Z", "+00:00")
-                )
-                current_end_dt = (
-                    datetime.fromisoformat(
-                        traces_dict[trace_uuid]["endTime"].replace(
-                            "Z", "+00:00"
-                        )
-                    )
-                    if traces_dict[trace_uuid]["endTime"]
-                    else None
-                )
+                if parent_id is not None:
+                    children[parent_id].append(span_id)
 
-                if not current_end_dt or span_end_dt > current_end_dt:
-                    traces_dict[trace_uuid]["endTime"] = span_end_time
+            # Identify roots: spans with no parent or parent not in this trace
+            roots = []
+            for span_id in all_span_ids:
+                parent_id = parent_map.get(span_id)
+                if parent_id is None or parent_id not in all_span_ids:
+                    roots.append(span_id)
 
-        # Create TraceApi objects from the grouped spans
-        trace_apis = []
-        for trace_uuid, trace_data in traces_dict.items():
-            trace_api = TraceApi(
-                uuid=trace_uuid,
-                baseSpans=trace_data["baseSpans"],
-                agentSpans=trace_data["agentSpans"],
-                llmSpans=trace_data["llmSpans"],
-                retrieverSpans=trace_data["retrieverSpans"],
-                toolSpans=trace_data["toolSpans"],
-                startTime=trace_data["startTime"],
-                endTime=trace_data["endTime"],
-                metadata=trace_data["metadata"],
-                tags=trace_data["tags"],
-                environment=environment,
-            )
-            trace_apis.append(trace_api)
+            # Perform DFS from each root to collect spans in DFS order
+            def dfs(start_id):
+                order = []
+                stack = [start_id]
+                while stack:
+                    current_id = stack.pop()
+                    if current_id in span_map:  # Only add if span exists
+                        order.append(span_map[current_id])
+                    # Add children in reverse so that leftmost child is processed first
+                    for child_id in sorted(children[current_id], reverse=True):
+                        stack.append(child_id)
+                return order
 
-        return trace_apis
+            # Build forest for this trace
+            for root_id in sorted(roots):
+                tree_order = dfs(root_id)
+                if tree_order:  # Only add non-empty trees
+                    forest.append(tree_order)
+
+        return forest

@@ -60,7 +60,7 @@ def secure_exec(code_str, global_vars=None, local_vars=None):
         # Compile the code first to validate syntax
         compiled_code = compile(code_str, "<string>", "exec")
         # Execute with restricted environment
-        secure_exec(compiled_code, safe_globals, local_vars)
+        exec(compiled_code, safe_globals, local_vars)
         return local_vars
     except Exception as e:
         raise e

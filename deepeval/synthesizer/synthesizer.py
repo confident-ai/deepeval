@@ -1,10 +1,6 @@
 from typing import List, Optional, Union, Tuple, Dict, Literal
 from rich.progress import (
     Progress,
-    TextColumn,
-    BarColumn,
-    TaskProgressColumn,
-    TimeElapsedColumn,
 )
 from rich.console import Console, Theme
 from pydantic import BaseModel
@@ -20,7 +16,7 @@ import csv
 import os
 from contextlib import nullcontext
 
-from deepeval.utils import get_or_create_event_loop, is_confident
+from deepeval.utils import get_or_create_event_loop
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
     is_native_model,
@@ -28,7 +24,7 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.progress_context import synthesizer_progress_context
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.dataset.golden import Golden
 from deepeval.synthesizer.types import *
@@ -628,6 +624,8 @@ class Synthesizer:
         synthetic_inputs: List[SyntheticData] = await self._a_generate_inputs(
             prompt
         )
+        # Limit the length of the synthetic inputs to the maximum allowed
+        synthetic_inputs = synthetic_inputs[:max_goldens_per_context]
         update_pbar(progress, pbar_generate_inputs_id, remove=False)
 
         # Qualify inputs
@@ -977,7 +975,7 @@ class Synthesizer:
             # Extract styles from goldens if not already set
             if self.set_styling_config == False:
                 example_inputs = random.sample(
-                    [golden.input for golden in goldens], 10
+                    [golden.input for golden in goldens], min(len(goldens), 10)
                 )
                 styling_prompt = (
                     ExtractionTemplate.extract_prompt_structure_from_inputs(
@@ -1023,7 +1021,7 @@ class Synthesizer:
         # Extract styles from goldens if not already set
         if self.set_styling_config == False:
             example_inputs = random.sample(
-                [golden.input for golden in goldens], 10
+                [golden.input for golden in goldens], min(len(goldens), 10)
             )
             styling_prompt = (
                 ExtractionTemplate.extract_prompt_structure_from_inputs(

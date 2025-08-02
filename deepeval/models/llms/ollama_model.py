@@ -3,7 +3,7 @@ from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 
 
 class OllamaModel(DeepEvalBaseLLM):
@@ -15,16 +15,17 @@ class OllamaModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_NAME
+            ModelKeyValues.LOCAL_MODEL_NAME
         )
         self.base_url = (
             base_url
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_BASE_URL)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_BASE_URL)
             or "http://localhost:11434"
         )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -75,9 +76,9 @@ class OllamaModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return Client(host=self.base_url)
+            return Client(host=self.base_url, **self.kwargs)
         else:
-            return AsyncClient(host=self.base_url)
+            return AsyncClient(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"

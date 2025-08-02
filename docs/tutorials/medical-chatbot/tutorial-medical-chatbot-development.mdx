@@ -1,356 +1,350 @@
 ---
 id: tutorial-medical-chatbot-development
-title: Development
-sidebar_label: Development
+title: Building Your Chatbot
+sidebar_label: Building Your Chatbot
 ---
 
-In this section, we are going to create a **conversational medical chatbot** that can use various tools to diagnose and schedule appointments for users based on their symptoms.
-We will be using `langchain` and `qdrant` to build our chatbot.
+In this section, we are going to create a **multi-turn** chatbot that can use various tools to diagnose and schedule appointments for users based on their symptoms.
+We will be using `langchain` and `qdrant` to build our chatbot, with functionalies including a:
+
+- **RAG pipeline** to retrieve medical knowledge to diagnose patients
+- **Custom tools** to create new appointments based on patient symptoms
+- **Memory system** to keep track of chat histories
+
+We'll also implement our chatbot with an independent **model and system prompt** variable - which we'll be evaluating in the next section.
 
 :::tip
-`deepeval` provides the `@observe` decorator that helps you monitor your LLM application's entire workflow, and it requires only a single line of code. It is highly recommended to add this tracing to your application right from the development stage to make your dev life easier.
+If you already have a multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation).
 :::
 
-:::note
-If you already have an multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation).
-:::
+## Setup Your Model
 
-## Developing The Chatbot
+First create a `MedicalChatbot` class and use `langchain`'s chat models to call `OpenAI`:
 
-We will use `langchain`'s OpenAI [chat model](https://python.langchain.com/docs/concepts/chat_models/) to create our main chatbot. You can use your own model here, but ensure your model supports `langchain`'s agentic api usage. Here's how you can create an OpenAI chat model using `langchain`:
-
-:::info
-For the purpose of this tutorial, we'll be using a text version of [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) as our knowledge base. You will need to convert this to a `.txt` file for the code to work.
-:::
-
-```python
+```python title="main.py"
 from langchain_openai import ChatOpenAI
 
 class MedicalChatbot:
-    def __init__(self, model="gpt-4o-mini"):
+    def __init__(self, model: str):
         self.model = ChatOpenAI(model=model)
         # Choose the LLM that will drive the agent
         # Only certain models support this so ensure your model supports it as well
 ```
 
-You can use your chatbot as shown below:
+:::note
+You can also use other interfaces to call OpenAI, or any other model.
+:::
 
-```python
-messages = [
-    ("system", "You are a medical assistant, help user's with their concerns in a gentle way"),
-    ("user", "I have fever and cold.")
-]
-chatbot = MedicalChatbot()
-chatbot.model.invoke(messages)
+Try prompting it with a messages array:
+
+```python title="main.py"
+chatbot = MedicalChatbot(model="gpt-4o-mini")
+chatbot.model.invoke([{"user": "Hi!"}])
 ```
-This above code gives an output similar to the following:
+
+Which should let you see something like this:
 
 ```text
-AIMessage(content="Okay, I understand you're experiencing a fever and a cold. I'm sorry to hear that you're not feeling well.\n\nTo help me understand your situation better and offer some helpful advice, could you tell me a little more about your symptoms? For example:\n\n*   **How high is your fever?** Have you taken your temperature?\n*   **What other symptoms do you have besides fever and cold?** (e.g., cough, sore throat, body aches, headache, congestion, runny nose, sneezing, fatigue)\n*   **How long have you been feeling this way?**\n*   **Do you have any underlying health conditions?**\n*   **Are you taking any medications?**\n\nIn the meantime, here are some general recommendations for managing a fever and cold:\n\n*   **Rest:** Get plenty of sleep and avoid strenuous activities.\n*   **Hydration:** Drink lots of fluids like water, clear broths, and herbal tea.\n*   **Over-the-counter medications:** Consider using over-the-counter pain relievers like acetaminophen (Tylenol) or ibuprofen (Advil) to reduce fever and body aches. Decongestants or antihistamines might help with congestion and a runny nose. *Always follow the instructions on the label and talk to a pharmacist if you have any questions.*\n*   **Sore throat relief:** Gargle with warm salt water or use throat lozenges.\n*   **Humidifier:** Use a humidifier or take a steamy shower to help loosen congestion.\n\n**Important Note:** While these are general recommendations, it's always best to seek advice from a healthcare professional for personalized guidance. If your symptoms worsen, you have difficulty breathing, experience chest pain, or have any other concerning symptoms, please seek medical attention promptly.\n\nI'm here to listen and provide information to the best of my ability. Please feel free to share more details, and I'll do my best to assist you.", additional_kwargs={}, response_metadata={'prompt_feedback': {'block_reason': 0, 'safety_ratings': []}, 'finish_reason': 'STOP', 'model_name': 'gpt-4o-mini', 'safety_ratings': []}, id='run--c2786aa1-75c4-4644-ae59-9327a2e8c153-0', usage_metadata={'input_tokens': 23, 'output_tokens': 417, 'total_tokens': 440, 'input_token_details': {'cache_read': 0}})
+AIMessage(
+    content="Hey, how can I help you today?",
+    additional_kwargs={},
+    response_metadata={
+        'prompt_feedback': {'block_reason': 0, 'safety_ratings': []},
+        'finish_reason': 'STOP',
+        'model_name': 'gpt-4o-mini',
+        'safety_ratings': []
+    },
+    id='run--c2786aa1-75c4-4644-ae59-9327a2e8c153-0',
+    usage_metadata={'input_tokens': 23, 'output_tokens': 417, 'total_tokens': 440, 'input_token_details': {'cache_read': 0}}
+)
 ```
 
-## Creating Tools
+✅ Done. Now let's create some tools for the chatbot to start booking appointments.
 
-We will now create various tools for our chatbot to use, this will allow our chatbot to use an external knowledge base to do diagnosis on symptoms specified and also create or update meeting appointments for the user.
+## Create RAG Pipeline For Diagnosis
 
-### Creating RAG Engine
+Since OpenAI models weren't specifically trained on medical knowledge, we'll need to leverage RAG to provide additional context at runtime to diagnose patients that are grounded in context.
 
-We will use the [Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) as our knowledge base and store it in a vector database. This will allow us to create a **RAG engine** which can handle all patient diagnosis.
-We will use `qdrant` and `sentence-transformers` to create and store our vector database. Here's how we can do that:
+:::info
+We'll be using a text version of [The Gale Encyclopedia of Alternative Medicine](https://dl.icdst.org/pdfs/files/03cb46934164321f675385fb74ac1bed.pdf) as our knowledge base in this example. You will need to download it locally and convert it to a `.txt` file.
+:::
 
-```python
+### Index medical knowledge
+
+We'll ingest "The Gale Encyclopedia of Alternative Medicine" to Qdrant, a popular vector database choice for fast and accurate retrievals:
+
+```python title="main.py"
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_openai import ChatOpenAI
 
 class MedicalChatbot:
-    def __init__(self, document_path, model="gpt-4o-mini"):
+    def __init__(self, model: str):
         self.model = ChatOpenAI(model=model)
-        self.appointments = {}
+        # For RAG engine
         self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
         self.client = QdrantClient(":memory:")
-        self.store_data(document_path)
 
-    def store_data(self, document_path):
+    def index_knowledge(self, document_path: str):
         with open(document_path) as file:
             documents = file.readlines()
 
+        # Create namespace in qdrant
         self.client.create_collection(
             collection_name="gale_encyclopedia",
-            vectors_config=models.VectorParams(
-                size=self.encoder.get_sentence_embedding_dimension(),  # Vector size is defined by used model
-                distance=models.Distance.COSINE,
-            ),
+            vectors_config=models.VectorParams(size=self.encoder.get_sentence_embedding_dimension(), distance=models.Distance.COSINE),
         )
 
+        # Vectorize and index into qdrant
         self.client.upload_points(
             collection_name="gale_encyclopedia",
-            points=[
-                models.PointStruct(
-                    id=idx, vector=self.encoder.encode(doc).tolist(), payload={"content": doc}
-                ) for idx, doc in enumerate(documents)
-            ],
+            points=[models.PointStruct(id=idx, vector=self.encoder.encode(doc).tolist(), payload={"content": doc}) for idx, doc in enumerate(documents)],
         )
 ```
 
-We can now create a query engine and use it to retrieve information for the medical chatbot. Here's how we can do that:
+Then, simply run your `index_knowledge` method usign the encyclopedia you've downloaded as `.txt`:
 
-```python
+```python title="main.py"
+chatbot = MedicalChatbot()
+chatbot.index_knowledge("path-to-your-encyclopedia.txt")
+```
+
+✅ Done. Now let's try querying it to sanity check yourself.
+
+:::note
+You only have the run `index_knowledge` once.
+:::
+
+### Query your knowledge base
+
+Simply implement a **TOOL** to query from qdrant. in this case `retrieve_knowledge`:
+
+```python title="main.py" {14}
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from deepeval.tracing import observe
 
 class MedicalChatbot:
-    def __init__(self, document_path, model="gpt-4o-mini"):
-        ...
-
-    def store_data(self, document_path):
-        ...
+    def __init__(self, model: str):
+        self.model = ChatOpenAI(model=model)
+        # For RAG engine
+        self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+        self.client = QdrantClient(":memory:")
 
     @tool
-    @observe()
-    def query_engine(self, query: str) -> str:
+    def retrieve_knowledge(self, query: str) -> str:
         """"A tool to retrive data on various diagnosis methods from gale encyclopedia"""
-        # Give an appropriate description of the tool
-        hits = self.client.query_points(
-            collection_name="gale_encyclopedia",
-            query=self.encoder.encode(query).tolist(),
-            limit=3,
-        ).points
+        hits = self.client.query_points(collection_name="gale_encyclopedia", query=self.encoder.encode(query).tolist(), limit=3).points
 
         contexts = [hit.payload['content'] for hit in hits]
         return "\n".join(contexts)
+
+    def index_knowledge(self, document_path: str):
+        # Same as above
+        pass
 ```
 
-### Function-calling Tools
+:::info
+The `@tool` decorator tells `langchain` that the `retrieve_knowledge` method can be called as a function call and will come in handy in later sections.
+:::
 
-We can now create different functions to create, update and delete appointments for the user. Before we begin, since our chatbot will be recording patient information, we'll need a structured way to store it. We'll define a pydantic model with the relevant fields (symptoms, diagnoses, and personal information) to ensure that our agent can accurately store data in the correct format. Here's how we can do that:
+Now try calling it:
 
-```python
-from pydantic import BaseModel
-from typing import Optional
-
-class MedicalAppointment(BaseModel):
-    name: Optional[str] = None
-    email: Optional[str] = None
-    date: Optional[str] = None
-    symptoms: Optional[str] = None
-    diagnosis: Optional[str] = None
+```python title="main.py"
+chatbot = MedicalChatbot()
+chatbot.retrieve_knowledge("Cough, fever, and diarrhea.")
 ```
 
-Functions to store data in the model
+Great! Now that we have the essentials for making a diagnosis, time to move on to implementing a way to book appointments after a diagnosis.
 
-```python
+## Create Tool To Book Appointments
+
+Since we need a way for our chatbot to book appointments based on the diagnosis at hand, this section will focus on creating the tools required to do so. There's only one tool for booking appointments for the sake of simplicity:
+
+- `create_appointment`: Creates a new appointment **in memory** (you can also use something like SQLite for persistance storage)
+
+First, let's create a simple data model for appointments:
+
+```python title="main.py"
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import date
+
+class Appointment(BaseModel):
+    id: str
+    name: str
+    email: str
+    date: date
+    symptoms: Optional[List[str]] = Field(default=None)
+    diagnosis: Optional[str] = Field(default=None)
+```
+
+Now let's implement the `create_appointment` tool:
+
+```python title="main.py" {14}
+import uuid
 ...
+
 class MedicalChatbot:
-    def __init__(self, document_path, model="gpt-4o-mini"):
-        ...
-
-    def store_data(self, document_path):
-        ...
+    def __init__(self, model: str):
+        self.model = ChatOpenAI(model=model)
+        # For RAG engine
+        self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+        self.client = QdrantClient(":memory:")
+        # For managing appointments
+        self.appointments: List[Appointment] = []
 
     @tool
-    @observe()
-    def query_engine(self, query: str) -> str:
-        ...
-
-    # Retrieves the current state of an appointment based on its ID.
-    @tool
-    def get_appointment_state(self, appointment_id: str) -> str:
+    def create_appointment(self, name: str, email: str, date: str) -> str:
+        """Create a new appointment with the given ID, name, email, and date"""
         try:
-            return str(self.appointments[appointment_id].dict())
-        except KeyError:
-            return f"Appointment ID {appointment_id} not found"
+            appointment = Appointment(
+                id=str(uuid.uuid4()),
+                name=name,
+                email=email,
+                date=date.fromisoformat(date)
+            )
+            self.appointments.append(appointment)
+            return f"Created new appointment with ID: {appointment.id} for {name} on {date}."
+        except ValueError:
+            return f"Invalid date format. Please use YYYY-MM-DD format."
 
-    # Updates a specific property of an appointment.
     @tool
-    def update_appointment(self, appointment_id: str, property: str, value: str) -> str:
-        appointment = self.appointments.get(appointment_id)
-        if appointment:
-            setattr(appointment, property, value)
-            return f"Appointment ID {appointment_id} updated with {property} = {value}"
-        return "Appointment not found"
+    def retrieve_knowledge(self, query: str) -> str:
+        # Same as above
+        pass
 
-    # Creates a new appointment with a unique ID.
-    @tool
-    def create_appointment(self, appointment_id: str) -> str:
-        self.appointments[appointment_id] = MedicalAppointment()
-        return "Appointment created."
-
-    # Records a diagnosis for an appointment after symptoms have been noted.
-    @tool
-    def record_diagnosis(self, appointment_id: str, diagnosis: str) -> str:
-        appointment: MedicalAppointment = self.appointments.get(appointment_id)
-        if appointment and appointment.symptoms:
-            appointment.diagnosis = diagnosis
-            return f"Diagnosis recorded for Appointment ID {appointment_id}. Diagnosis: {diagnosis}"
-        return "Diagnosis cannot be recorded. Please tell me more about your symptoms."
+    def index_knowledge(self, document_path: str):
+        # Same as above
+        pass
 ```
 
-Now we can create a function to setup all our tools at once, here's the code for that:
+Great! Now let's glue everything together using LangChain.
 
-```python
-from langchain_core.tools import StructuredTool
+## Implementing Chat Histories
 
-class MedicalChatbot:
-    ...
+First create a helper method that retrieves conversation histories, which would be required for our LLM:
 
-    def setup_tools(self):
-        self.get_appointment_state_tool = StructuredTool.from_function(func=self.get_appointment_state)
-        self.update_appointment_tool = StructuredTool.from_function(func=self.update_appointment)
-        self.create_appointment_tool = StructuredTool.from_function(func=self.create_appointment)
-        self.record_diagnosis_tool = StructuredTool.from_function(func=self.record_diagnosis)
-        self.medical_diagnosis_tool = StructuredTool.from_function(func=self.query_engine)
-        # You can add your names and descriptions for these tools as needed
-```
-
-Here are the tools we've created:
-
-- `get_appointment_state_tool`: Retrieves the state of a specific appointment.
-- `update_appointment_tool`: Updates a property of an appointment.
-- `create_appointment_tool`: Creates a new appointment.
-- `record_diagnosis_tool`: Records a diagnosis for an appointment.
-
-## Creating Interactive Session
-
-Now that we have set up the tools and data systems, it's time to finalize the chatbot agent. Using the `langchain`'s `create_tool_calling_agent` and `AgentExecutor` to dynamically manage user interactions and choose the appropriate tool based on the input and context. This involves defining the LLM, system prompt, and tool integrations.
-
-```python
-from langchain.agents import create_tool_calling_agent
-from langchain.agents import AgentExecutor
-
-...
-class MedicalChatbot:
-    ...
-    def setup_agent(self, system_prompt: str):
-        tools = [
-            self.get_appointment_state_tool,
-            self.update_appointment_tool,
-            self.create_appointment_tool,
-            self.record_diagnosis_tool,
-            self.medical_diagnosis_tool,
-        ]
-        system_prompt = system_prompt or (
-            "You are BayMax, a personal heathcare companion, answer the user's concerns in an empathetic way."
-        ) # Your system prompt here
-
-        agent = create_tool_calling_agent(self.model, tools, system_prompt)
-        self.agent_executer = AgentExecutor(agent=agent, tools=tools)
-```
-
-Finally, we'll create an interactive environment where users can engage with the chatbot. This involves configuring input/output, managing conversation flow, and processing user queries.
-
-```python
-from deepeval.tracing import observe
-...
-class MedicalChatbot:
-    ...
-    @observe()
-    def interactive_session(self):
-        print("Hello! I am Baymax, your personal health care companian")
-        print("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.")
-
-        while True:
-            user_input = input("Your query: ")
-            if user_input.lower() == 'exit':
-                break
-
-            response = self.agent_executer.invoke({"input": user_input})
-            print("Agent Response:", response["output"])
-```
-
-We now have an interactive chatbot but it doesn't have memory, we will now add memory to our chatbot.
-
-## Adding memory
-
-We will use `langchain` to add memory to our chatbot using `RunnableWithMessageHistory`. Here's how we can do that:
-
-```python
+```python title"main.py"
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.chat_history import BaseChatMessageHistory
-from langchain_core.runnables.history import RunnableWithMessageHistory
 
-store = {}
-
+# Simple in-memory store for chat histories
+chat_store = {}
 def get_session_history(session_id: str) -> BaseChatMessageHistory:
-    if session_id not in store:
-        store[session_id] = ChatMessageHistory()
-    return store[session_id]
+    if session_id not in chat_store:
+        chat_store[session_id] = ChatMessageHistory()
+    return chat_store[session_id]
 ```
 
-We can now change the setup agent to use a new agent with chat history and update our interactive session
+Then we'll combine the agent setup and memory functionality into one clean implementation, including the `retrieve_knowledge` and `create_appointment` tools in our agent:
 
-```python
-from langchain.agents import create_tool_calling_agent
-from langchain.agents import AgentExecutor
+```python title="main.py" {20,28-29,33}
+from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from deepeval.tracing import observe
-
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.tools import StructuredTool
 ...
-class MedicalChatbot:
-    ...
-    def setup_agent(self, system_prompt: str):
-        tools = [
-            self.get_appointment_state_tool,
-            self.update_appointment_tool,
-            self.create_appointment_tool,
-            self.record_diagnosis_tool,
-            self.medical_diagnosis_tool,
-        ]
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                MessagesPlaceholder(variable_name="chat_history"),
-                ("human", "{input}"),
-                MessagesPlaceholder(variable_name="agent_scratchpad"),
-            ]
-        )
 
+class MedicalChatbot:
+    def __init__(self, model: str, system_prompt: str):
+        self.model = ChatOpenAI(model=model)
+        self.system_prompt = system_prompt
+        # For RAG engine
+        self.encoder = SentenceTransformer("all-MiniLM-L6-v2")
+        self.client = QdrantClient(":memory:")
+        # For managing appointments
+        self.appointments: List[Appointment] = []
+
+        # Setup agent with memory
+        self.setup_agent()
+
+    def setup_agent(self):
+        """Setup the agent with tools and memory"""
+
+        # Create prompt messages
+        prompt = ChatPromptTemplate.from_messages([("system", self.system_prompt), MessagesPlaceholder(variable_name="chat_history"), ("human", "{input}")])
+
+        # Create agent
+        tools = [
+            StructuredTool.from_function(func=self.retrieve_knowledge), 
+            StructuredTool.from_function(func=self.create_appointment)
+        ]
         agent = create_tool_calling_agent(self.model, tools, prompt)
-        self.agent_executer = AgentExecutor(agent=agent, tools=tools)
-        self.agent_with_chat_history = RunnableWithMessageHistory(
-            self.agent_executer,
+        agent_executor = AgentExecutor(agent=agent, tools=tools)
+        self.agent_with_memory = RunnableWithMessageHistory(
+            agent_executor,
             get_session_history,
             input_messages_key="input",
             history_messages_key="chat_history",
         )
 
-    @observe()
-    def interactive_session(self, session_id):
-        print("Hello! I am Baymax, your personal health care companian")
-        print("Please enter your symptoms or ask about appointment details. Type 'exit' to quit.")
-
-        while True:
-            user_input = input("Your query: ")
-            if user_input.lower() == 'exit':
-                break
-
-            response = self.agent_with_chat_history.invoke(
-                {"input": user_input},
-                config={"configurable": {"session_id": session_id}}
-            )
-            print("Agent Response:", response["output"])
+    # Other methods from above goes here
+    ...
 ```
 
-We have now created a complete medical chatbot with chat history using `langchain`. Here's how we can use our chatbot:
+🎉🥳 Congratulations! You've just created a fully functional medical chatbot with memory, the abiliy to diagnose users, and book appointments when needed.
 
-```python
-chatbot = MedicalChatbot("gale_encyclopedia.txt")
-chatbot.interactive_session(1)
+## Eyeball Your First Output
+
+Now that you have your chatbot, its time to query it to see if it lives up to your expectations. Create a method so you can interact with it in the CLI, and **supply your model and choice and system prompt**:
+
+```python title="main.py" {22,23,28}
+def start_session(session_id: Optional[str] = None):
+    """Start an interactive session with the chatbot"""
+    print("Hello! I am Baymax, your personal healthcare companion.")
+    print("How are you feeling today? (type 'exit' to quit."))
+
+    while True:
+        if session_id is None:
+            session_id = str(uuid.uuid4())
+
+        user_input = input("Your query: ")
+        if user_input.lower() == 'exit':
+            break
+
+        response = chatbot.agent_with_memory.invoke(
+            {"input": user_input},
+            config={"configurable": {"session_id": session_id}}
+        )
+        print("Baymax:", response["output"])
+
+
+# These parameters will be evaluated later
+MODEL = "gpt-4o-mini"
+SYSTEM_PROMPT = """"""
+
+# Initialize chatbot and start session
+chatbot = MedicalChatbot(model=MODEL, system_prompt=SYSTEM_PROMPT)
+chatbot.index_knowledge("path-to-your-encyclopedia.txt")
+start_session()
 ```
 
-Here's an example output of how the chatbot works now:
+:::tip
+The model and system prompt are the variables you'll want to be improving in the next section.
+:::
+
+Then simply execute the file in the CLI:
+
+```bash
+python main.py
+```
+
+Here's an example conversation:
 
 ```text
-Hello! I am Baymax, your personal health care companion
-Please enter your symptoms or ask about appointment details. Type 'exit' to quit.
+Hello! I am Baymax, your personal healthcare companion.
+How are you feeling today? (type 'exit' to quit.")
 
 Your query: Hello Baymax, I've been feeling unwell. I have a fever and a sore throat.
-Agent Response: I'm sorry to hear you're not feeling well. A fever is an elevated body temperature, often a sign of infection, and a sore throat is a common symptom of upper respiratory infections like the common cold. For a fever, rest, fluids, and over-the-counter pain relievers can help. For a sore throat, rest, fluids, and sometimes decongestants are recommended. If your symptoms are severe or persistent, it's always best to consult a doctor. Would you like to schedule an appointment to discuss your symptoms further?
+Baymax: I'm sorry to hear you're not feeling well. A fever and sore throat are common symptoms of upper respiratory infections. Based on medical knowledge, rest, fluids, and over-the-counter pain relievers can help. If your symptoms are severe or persistent, it's best to consult a doctor. Would you like me to help you schedule an appointment?
 
-...
+Your query: Yes, please book an appointment for tomorrow at 2 PM.
+Baymax: I'll help you create an appointment. I need your name and email to proceed. Could you please provide those details?
+
+Your query: My name is John Doe and my email is john@example.com
+Baymax: Created new appointment with ID: 550e8400-e29b-41d4-a716-446655440000 for John Doe on 2024-01-16.
 ```
 
-Now that we're done with the development of medical chatbot, in the next section we're going to see [how to evauate your chatbot](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation) using `deepeval`.
+Was this what you really wanted? Is this diagnosis a good one? Was the appointment booked appropriately? The process of making these judgements yourself are known as **eyeballing** LLM outputs. It works, but isn't very scalable nor reliable - especially when conversations get long and you find yourself skimming instead of evaluating.

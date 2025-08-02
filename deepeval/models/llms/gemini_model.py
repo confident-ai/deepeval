@@ -3,7 +3,7 @@ from google.genai import types
 from typing import Optional
 from google import genai
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseLLM
 
 default_gemini_model = "gemini-1.5-pro"
@@ -45,32 +45,32 @@ class GeminiModel(DeepEvalBaseLLM):
         project: Optional[str] = None,
         location: Optional[str] = None,
         temperature: float = 0,
-        *args,
         **kwargs,
     ):
         model_name = (
             model_name
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.GEMINI_MODEL_NAME)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.GEMINI_MODEL_NAME)
             or default_gemini_model
         )
 
         # Get API key from key handler if not provided
         self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_API_KEY
+            ModelKeyValues.GOOGLE_API_KEY
         )
         self.project = project or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_CLOUD_PROJECT
+            ModelKeyValues.GOOGLE_CLOUD_PROJECT
         )
         self.location = location or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_CLOUD_LOCATION
+            ModelKeyValues.GOOGLE_CLOUD_LOCATION
         )
         self.use_vertexai = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GOOGLE_GENAI_USE_VERTEXAI
+            ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI
         )
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        super().__init__(model_name, *args, **kwargs)
+        self.kwargs = kwargs
+        super().__init__(model_name, **kwargs)
 
     def should_use_vertexai(self):
         """Checks if the model should use Vertex AI for generation.
@@ -108,7 +108,10 @@ class GeminiModel(DeepEvalBaseLLM):
 
             # Create client for Vertex AI
             self.client = genai.Client(
-                vertexai=True, project=self.project, location=self.location
+                vertexai=True,
+                project=self.project,
+                location=self.location,
+                **self.kwargs,
             )
         else:
             if not self.api_key:
@@ -117,7 +120,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     "or set it in your DeepEval configuration."
                 )
             # Create client for Gemini API
-            self.client = genai.Client(api_key=self.api_key)
+            self.client = genai.Client(api_key=self.api_key, **self.kwargs)
 
         # Configure default model generation settings
         self.model_safety_settings = [

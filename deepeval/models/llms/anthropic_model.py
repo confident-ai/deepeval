@@ -27,6 +27,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         model: str = "claude-3-7-sonnet-latest",
         temperature: float = 0,
         _anthropic_api_key: Optional[str] = None,
+        **kwargs,
     ):
         model_name = parse_model_name(model)
         self._anthropic_api_key = _anthropic_api_key
@@ -35,6 +36,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
 
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -124,12 +126,14 @@ class AnthropicModel(DeepEvalBaseLLM):
         if not async_mode:
             return Anthropic(
                 api_key=os.environ.get("ANTHROPIC_API_KEY")
-                or self._anthropic_api_key
+                or self._anthropic_api_key,
+                **self.kwargs,
             )
         else:
             return AsyncAnthropic(
                 api_key=os.environ.get("ANTHROPIC_API_KEY")
-                or self._anthropic_api_key
+                or self._anthropic_api_key,
+                **self.kwargs,
             )
 
     def get_model_name(self):

@@ -1,5 +1,5 @@
 from openai.types.chat.chat_completion import ChatCompletion
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
@@ -158,25 +158,24 @@ class GPTModel(DeepEvalBaseLLM):
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
         temperature: float = 0,
-        *args,
         **kwargs,
     ):
         model_name = None
         model = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.OPENAI_MODEL_NAME
+            ModelKeyValues.OPENAI_MODEL_NAME
         )
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
             else KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_COST_PER_INPUT_TOKEN
+                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN
             )
         )
         cost_per_output_token = (
             cost_per_output_token
             if cost_per_output_token is not None
             else KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
+                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
             )
         )
 
@@ -212,7 +211,6 @@ class GPTModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
-        self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)
 
@@ -268,6 +266,7 @@ class GPTModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -327,6 +326,7 @@ class GPTModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -431,5 +431,11 @@ class GPTModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(api_key=self._openai_api_key, base_url=self.base_url)
-        return AsyncOpenAI(api_key=self._openai_api_key, base_url=self.base_url)
+            return OpenAI(
+                api_key=self._openai_api_key,
+                base_url=self.base_url,
+                **self.kwargs,
+            )
+        return AsyncOpenAI(
+            api_key=self._openai_api_key, base_url=self.base_url, **self.kwargs
+        )

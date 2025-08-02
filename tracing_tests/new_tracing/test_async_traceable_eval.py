@@ -50,7 +50,7 @@ metric = DAGMetric(dag=dag, name="DAG")
 #######################################################
 
 
-@observe(type="llm", model="gpt-4o", metrics=[TaskCompletionMetric()])
+@observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
     attributes = LlmAttributes(
@@ -65,7 +65,7 @@ async def generate_text(prompt: str):
 
 
 # Example of a retrieval node with embedded embedder
-@observe(type="retriever", embedder="text-embedding-ada-002", metrics=[TaskCompletionMetric()])
+@observe(type="retriever", embedder="text-embedding-ada-002")
 async def retrieve_documents(query: str, top_k: int = 3):
     documents = [
         f"Document 1 about {query}",
@@ -81,14 +81,14 @@ async def retrieve_documents(query: str, top_k: int = 3):
     return documents
 
 
-@observe("CustomEmbedder", metrics=[TaskCompletionMetric()])
+@observe("CustomEmbedder")
 async def custom_embed(text: str, model: str = "custom-model"):
     embedding = [0.1, 0.2, 0.3]
     await sleep(random.uniform(1, 3))
     return embedding
 
 
-@observe("CustomRetriever", name="custom retriever", metrics=[TaskCompletionMetric()])
+@observe("CustomRetriever", name="custom retriever")
 async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
     embedding = await custom_embed(query, embedding_model)
     documents = [
@@ -98,14 +98,14 @@ async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
     await sleep(random.uniform(1, 3))
 
 
-@observe("CustomLLM", metrics=[TaskCompletionMetric()])
+@observe("CustomLLM")
 async def custom_generate(prompt: str, model: str = "custom-model"):
     response = f"Custom response for: {prompt}"
     await sleep(random.uniform(1, 3))
     return response
 
 
-@observe(type="agent", available_tools=["custom_retrieve", "custom_generate"], metrics=[TaskCompletionMetric()])
+@observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
 async def custom_research_agent(query: str):
     if random.random() < 0.5:
         docs = await custom_retrieve(query)
@@ -119,7 +119,7 @@ async def custom_research_agent(query: str):
 
 @observe(
     available_tools=["get_weather", "get_location"],
-    metrics=[TaskCompletionMetric()]
+    metrics=[TaskCompletionMetric()],
 )
 async def weather_agent(query: str):
     update_current_span(
@@ -131,7 +131,7 @@ async def weather_agent(query: str):
     return "Weather information unavailable"
 
 
-@observe(type="agent", available_tools=["retrieve_documents", "generate_text"], metrics=[TaskCompletionMetric()])
+@observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
 async def research_agent(query: str):
     if random.random() < 0.5:
         docs = await retrieve_documents(query)
@@ -148,7 +148,7 @@ async def research_agent(query: str):
 @observe(
     type="agent",
     agent_handoffs=["research_agent", "custom_research_agent"],
-    metrics=[TaskCompletionMetric(task="Get the weather")],
+    metrics=[TaskCompletionMetric(task="Get the weather"), geval_metric],
     metric_collection="Test",
 )
 async def meta_agent(input: str):
@@ -173,10 +173,18 @@ async def meta_agent(input: str):
 from deepeval.dataset import Golden
 from deepeval import evaluate
 
-goldens = [
-    Golden(input="What's the weather like in SF?"),
-    Golden(input="Tell me about Elon Musk."),
-]
+# goldens = [
+#     Golden(input="What's the weather like in SF?"),
+#     Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk.")
+# ]
 
 # # Run Async
 #    goldens=goldens * 40,
@@ -185,13 +193,13 @@ goldens = [
 #    cache_config=CacheConfig(write_cache=False),
 #    # display_config=DisplayConfig(show_indicator=False),
 
-evaluate(
-    goldens=goldens,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True, max_concurrent=40),
-    cache_config=CacheConfig(write_cache=False),
-    display_config=DisplayConfig(show_indicator=True),
-)
+# evaluate(
+#     goldens=goldens,
+#     observed_callback=meta_agent,
+# async_config=AsyncConfig(run_async=True, max_concurrent=40),
+# cache_config=CacheConfig(write_cache=False),
+# display_config=DisplayConfig(show_indicator=False),
+# )
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
@@ -199,12 +207,12 @@ evaluate(
 #     display_config=DisplayConfig(show_indicator=False),
 # )
 # # Run Sync
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=True),
-#     display_config=DisplayConfig(show_indicator=True),
-# )
+evaluate(
+    goldens=goldens,
+    observed_callback=meta_agent,
+    async_config=AsyncConfig(run_async=False),
+    display_config=DisplayConfig(show_indicator=True),
+)
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
@@ -224,7 +232,7 @@ evaluate(
 #     assert_test(golden=golden, observed_callback=meta_agent)
 
 # # Gather multiple traceable tasks
-import asyncio
+# import asyncio
 
 
 # async def run_parallel_examples():
@@ -245,5 +253,5 @@ import asyncio
 #     await asyncio.gather(*tasks)
 
 
-# # Run it
+# # # Run it
 # asyncio.run(run_parallel_examples())

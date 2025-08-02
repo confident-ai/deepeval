@@ -204,7 +204,7 @@ def set_should_use_cache(yes: bool):
         os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
 
 
-def login_with_confident_api_key(api_key: string):
+def login_with_confident_api_key(api_key: str):
     if not api_key or not isinstance(api_key, str):
         raise ValueError("Oh no! Please provide an api key string to login.")
     elif len(api_key) == 0:
@@ -253,11 +253,6 @@ def is_in_ci_env() -> bool:
             return True
 
     return False
-
-
-def is_confident():
-    confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
-    return confident_api_key is not None
 
 
 def capture_contextvars(single_obj):

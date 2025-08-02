@@ -10,9 +10,8 @@ from tenacity import (
 import os
 
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.utils import parse_model_name
 from deepeval.models.llms.utils import trim_and_load_json
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 
 
 def log_retry_error(retry_state: RetryCallState):
@@ -41,7 +40,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Get model name from parameter or key file
         model_name = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LITELLM_MODEL_NAME
+            ModelKeyValues.LITELLM_MODEL_NAME
         )
         if not model_name:
             raise ValueError(
@@ -51,7 +50,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         # Get API key from parameter, key file, or environment variable
         self.api_key = (
             api_key
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.LITELLM_API_KEY)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_KEY)
             or os.getenv("OPENAI_API_KEY")
             or os.getenv("ANTHROPIC_API_KEY")
             or os.getenv("GOOGLE_API_KEY")
@@ -60,7 +59,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         # Get API base from parameter, key file, or environment variable
         self.api_base = (
             api_base
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.LITELLM_API_BASE)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_BASE)
             or os.getenv("LITELLM_API_BASE")
         )
 
@@ -94,8 +93,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add schema if provided
         if schema:
-            completion_params["response_format"] = {"type": "json_object"}
-            completion_params["json_schema"] = schema.model_json_schema()
+            completion_params["response_format"] = schema
 
         # Add any additional parameters
         completion_params.update(self.kwargs)
@@ -107,7 +105,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             if schema:
                 json_output = trim_and_load_json(content)
-                return schema(**json_output)  # Return just the schema instance
+                return (
+                    schema(**json_output),
+                    cost,
+                )  # Return both the schema instance and cost as defined as native model
             else:
                 return content, cost  # Return tuple with cost
         except Exception as e:
@@ -137,8 +138,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add schema if provided
         if schema:
-            completion_params["response_format"] = {"type": "json_object"}
-            completion_params["json_schema"] = schema.model_json_schema()
+            completion_params["response_format"] = schema
 
         # Add any additional parameters
         completion_params.update(self.kwargs)
@@ -150,7 +150,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
             if schema:
                 json_output = trim_and_load_json(content)
-                return schema(**json_output)  # Return just the schema instance
+                return (
+                    schema(**json_output),
+                    cost,
+                )  # Return both the schema instance and cost as defined as native model
             else:
                 return content, cost  # Return tuple with cost
         except Exception as e:

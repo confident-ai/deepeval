@@ -2,7 +2,7 @@ from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 import os
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
 
@@ -49,16 +49,17 @@ class GrokModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0,
+        **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
-            KeyValues.GROK_MODEL_NAME
+            ModelKeyValues.GROK_MODEL_NAME
         )
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Grok models: {', '.join(model_pricing.keys())}"
             )
         temperature_from_key = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.TEMPERATURE
+            ModelKeyValues.TEMPERATURE
         )
         if temperature_from_key is None:
             self.temperature = temperature
@@ -68,9 +69,10 @@ class GrokModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.api_key = (
             api_key
-            or KEY_FILE_HANDLER.fetch_data(KeyValues.GROK_API_KEY)
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.GROK_API_KEY)
             or os.getenv("GROK_API_KEY")
         )
+        self.kwargs = kwargs
         super().__init__(model_name)
 
     ###############################################
@@ -172,9 +174,9 @@ class GrokModel(DeepEvalBaseLLM):
             from xai_sdk import Client, AsyncClient
 
             if not async_mode:
-                return Client(api_key=self.api_key)
+                return Client(api_key=self.api_key, **self.kwargs)
             else:
-                return AsyncClient(api_key=self.api_key)
+                return AsyncClient(api_key=self.api_key, **self.kwargs)
         except ImportError:
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"

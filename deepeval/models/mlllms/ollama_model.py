@@ -5,7 +5,7 @@ import requests
 import base64
 import io
 
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
+from deepeval.key_handler import KEY_FILE_HANDLER, ModelKeyValues
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 
@@ -14,9 +14,11 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
     def __init__(
         self,
     ):
-        model_name = KEY_FILE_HANDLER.fetch_data(KeyValues.LOCAL_MODEL_NAME)
+        model_name = KEY_FILE_HANDLER.fetch_data(
+            ModelKeyValues.LOCAL_MODEL_NAME
+        )
         self.base_url = KEY_FILE_HANDLER.fetch_data(
-            KeyValues.LOCAL_MODEL_BASE_URL
+            ModelKeyValues.LOCAL_MODEL_BASE_URL
         )
         super().__init__(model_name)
 
