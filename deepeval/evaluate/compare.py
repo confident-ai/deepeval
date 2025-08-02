@@ -88,7 +88,7 @@ async def a_execute_arena_test_cases(
     ):
         pbar_test_case_id = add_pbar(
             progress,
-            f"    🎯 Evaluating test case #{index}",
+            f"    🧐 Picking a winner (#{index + 1})",
             total=3,
         )
         metric_copy = ArenaGEval(
@@ -129,7 +129,7 @@ async def a_execute_arena_test_cases(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Evaluating {len(test_cases)} test case(s) sequentially",
+                f"🆚 Comparing {len(test_cases)} contestants concurrently",
                 total=len(test_cases),
             )
             tasks = []
@@ -167,7 +167,7 @@ def execute_arena_test_cases(
         for i, test_case in enumerate(test_cases):
             pbar_test_case_id = add_pbar(
                 progress,
-                f"    🎯 Evaluating test case #{i}",
+                f"    🧐 Picking a winner (#{i + 1})",
                 total=3,
             )
             metric_copy = ArenaGEval(
@@ -207,7 +207,7 @@ def execute_arena_test_cases(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Evaluating {len(test_cases)} test case(s) sequentially",
+                f"🆚 Comparing {len(test_cases)} contestants sequentially",
                 total=len(test_cases),
             )
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
