@@ -87,4 +87,6 @@ conversation_golden = ConversationalGolden(
     user_description="Andy Byron is the former CEO of Astronomer.",
 )
 
-test_cases = simulator.simulate([conversation_golden, conversation_golden, conversation_golden], max_turns=3)
+test_cases = simulator.simulate(
+    [conversation_golden, conversation_golden, conversation_golden], max_turns=3
+)
