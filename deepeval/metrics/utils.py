@@ -121,20 +121,32 @@ def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
 def flatten_2d_list(input_list):
     return list(itertools.chain(*input_list))
 
-def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
-        unit_interactions = []
-        unit_interaction = []
-        for turn in turns:
-            if turn.role == "user":
-                if len(unit_interaction) > 0:
-                    unit_interactions.append(unit_interaction)
-                unit_interaction = [turn]
-            else:
-                unit_interaction.append(turn)
-        if len(unit_interaction) > 0:
-            unit_interactions.append(unit_interaction)
-        return unit_interactions
+def get_unit_interactions(turns: List['Turn']) -> List[List['Turn']]:
+    unit_interactions = []
+    unit_interaction = []
+    for turn in turns:
+        if turn.role == "user":
+            if unit_interaction and unit_interaction[-1].role != "user":
+                unit_interactions.append(unit_interaction)
+                unit_interaction = []
+            unit_interaction.append(turn)
+        else:
+            unit_interaction.append(turn)
+    if unit_interaction:
+        unit_interactions.append(unit_interaction)
+    return unit_interactions
 
+def filter_unit_interactions(unit_interactions: List[List[Turn]]):
+    valid_interactions = []
+    invalid_interactions = []
+    for unit_interaction in unit_interactions:
+        if (len(unit_interaction) > 1 and 
+            unit_interaction[0].role == "user" and 
+            unit_interaction[-1].role == "assistant"):
+            valid_interactions.append(unit_interaction)
+        else:
+            invalid_interactions.append(unit_interaction)
+    return valid_interactions, invalid_interactions
 
 def print_tools_called(tools_called_list: List[ToolCall]):
     string = "[\n"

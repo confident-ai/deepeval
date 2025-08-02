@@ -10,6 +10,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
     get_turns_in_sliding_window,
     get_unit_interactions,
+    filter_unit_interactions,
     flatten_2d_list,
     trimAndLoadJson,
     initialize_model,
@@ -69,10 +70,11 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                 )
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
+                valid_interactions, _ = filter_unit_interactions(unit_interactions)
                 turns_windows: List[List[Turn]] = [
                     window
                     for window in get_turns_in_sliding_window(
-                        unit_interactions, self.window_size
+                        valid_interactions, self.window_size
                     )
                 ]
 
@@ -111,10 +113,11 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             _in_component=_in_component,
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
+            valid_interactions, _ = filter_unit_interactions(unit_interactions)
             turns_windows: List[List[Turn]] = [
                 window
                 for window in get_turns_in_sliding_window(
-                    unit_interactions, self.window_size
+                    valid_interactions, self.window_size
                 )
             ]
 
