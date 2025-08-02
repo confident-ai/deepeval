@@ -1,6 +1,8 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Dict, Optional, List, Tuple, Union
+from rich.progress import Progress
+
 from deepeval.metrics import BaseArenaMetric
 from deepeval.metrics.arena_g_eval.utils import format_arena_test_case
 from deepeval.test_case import (
@@ -23,6 +25,7 @@ from deepeval.metrics.g_eval.utils import (
     validate_criteria_and_evaluation_steps,
     number_evaluation_steps,
 )
+from deepeval.utils import update_pbar
 
 
 class ArenaGEval(BaseArenaMetric):
@@ -52,6 +55,8 @@ class ArenaGEval(BaseArenaMetric):
         self,
         test_case: ArenaTestCase,
         _show_indicator: bool = True,
+        _progress: Optional[Progress] = None,
+        _pbar_id: Optional[int] = None,
     ) -> str:
         check_arena_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -69,13 +74,19 @@ class ArenaGEval(BaseArenaMetric):
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
+                if _progress:
+                    update_pbar(_progress, _pbar_id)
                 masked_winner, masked_reason, dummy_to_real_names = (
                     self._compare(test_case)
                 )
+                if _progress:
+                    update_pbar(_progress, _pbar_id)
                 self.winner = dummy_to_real_names[masked_winner]
                 self.reason = self._generate_rewritten_reason(
                     masked_reason, dummy_to_real_names
                 )
+                if _progress:
+                    update_pbar(_progress, _pbar_id)
                 self.success = True
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -93,6 +104,8 @@ class ArenaGEval(BaseArenaMetric):
         self,
         test_case: ArenaTestCase,
         _show_indicator: bool = True,
+        _progress: Optional[Progress] = None,
+        _pbar_id: Optional[int] = None,
     ) -> str:
         check_arena_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -105,13 +118,19 @@ class ArenaGEval(BaseArenaMetric):
             self.evaluation_steps: List[str] = (
                 await self._a_generate_evaluation_steps()
             )
+            if _progress:
+                update_pbar(_progress, _pbar_id)
             masked_winner, masked_reason, dummy_to_real_names = (
                 await self._a_compare(test_case)
             )
+            if _progress:
+                update_pbar(_progress, _pbar_id)
             self.winner = dummy_to_real_names[masked_winner]
             self.reason = await self._a_generate_rewritten_reason(
                 masked_reason, dummy_to_real_names
             )
+            if _progress:
+                update_pbar(_progress, _pbar_id)
             self.success = True
             self.verbose_logs = construct_verbose_logs(
                 self,

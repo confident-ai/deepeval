@@ -255,11 +255,6 @@ def is_in_ci_env() -> bool:
     return False
 
 
-def is_confident():
-    confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
-    return confident_api_key is not None
-
-
 def capture_contextvars(single_obj):
     contextvars_dict = {}
     for attr in dir(single_obj):

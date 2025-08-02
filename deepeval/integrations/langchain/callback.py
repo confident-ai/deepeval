@@ -11,8 +11,6 @@ from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.test_run import global_test_run_manager
-from deepeval.evaluate.utils import create_api_test_case
-from deepeval.test_run import LLMApiTestCase
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler

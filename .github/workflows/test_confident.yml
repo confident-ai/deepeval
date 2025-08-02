@@ -1,4 +1,4 @@
-name: Run All Tests with Poetry
+name: Run Confident Tests with Poetry
 
 on:
   push:
@@ -42,13 +42,13 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
+        run: poetry install --no-interaction --no-root --only main
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
 
       - name: Install project
-        run: poetry install --no-interaction
+        run: poetry install --no-interaction --only main
 
       #----------------------------------------------
       #              run test suite
@@ -56,5 +56,6 @@ jobs:
       - name: Run tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
         run: |
-          poetry run pytest
+          poetry run pytest tests/test_confident/

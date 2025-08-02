@@ -1,10 +1,6 @@
 from typing import List, Optional, Union, Tuple, Dict, Literal
 from rich.progress import (
     Progress,
-    TextColumn,
-    BarColumn,
-    TaskProgressColumn,
-    TimeElapsedColumn,
 )
 from rich.console import Console, Theme
 from pydantic import BaseModel
@@ -20,7 +16,7 @@ import csv
 import os
 from contextlib import nullcontext
 
-from deepeval.utils import get_or_create_event_loop, is_confident
+from deepeval.utils import get_or_create_event_loop
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
     is_native_model,
@@ -28,7 +24,7 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.progress_context import synthesizer_progress_context
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.dataset.golden import Golden
 from deepeval.synthesizer.types import *

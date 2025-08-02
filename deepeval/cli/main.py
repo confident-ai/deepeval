@@ -18,7 +18,7 @@ from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
-from deepeval.utils import delete_file_if_exists, is_confident
+from deepeval.utils import delete_file_if_exists
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
@@ -30,6 +30,7 @@ from deepeval.cli.utils import (
     clear_evaluation_model_keys,
     clear_embedding_model_keys,
 )
+from deepeval.confident.api import is_confident
 
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")

@@ -13,8 +13,7 @@ from deepeval.prompt.api import (
     PromptInterpolationType,
 )
 from deepeval.prompt.utils import interpolate_text
-from deepeval.utils import is_confident
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 
 from deepeval.constants import HIDDEN_DIR
 

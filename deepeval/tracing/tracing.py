@@ -20,7 +20,7 @@ from deepeval.constants import (
     CONFIDENT_SAMPLE_RATE,
     CONFIDENT_TRACE_ENVIRONMENT,
 )
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
 from deepeval.tracing.api import (
     BaseApiSpan,
@@ -59,7 +59,7 @@ from deepeval.tracing.utils import (
     validate_sampling_rate,
 )
 from deepeval.feedback.utils import convert_feedback_to_api_feedback
-from deepeval.utils import dataclass_to_dict, is_confident
+from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 
 
