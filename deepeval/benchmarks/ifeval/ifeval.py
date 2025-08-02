@@ -394,6 +394,7 @@ class IFEval(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.n_problems = n_problems
