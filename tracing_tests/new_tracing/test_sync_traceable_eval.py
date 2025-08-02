@@ -276,9 +276,13 @@ Please provide a well-structured analysis that synthesizes the information from 
 def meta_agent(input: str):
     try:
         # Gather information from all specialized agents
+        print(f"Calling weather_agent with input: {input}")
         weather_info = weather_agent(input)
+        print(f"Calling research_agent with input: {input}")
         research_info = research_agent(input)
+        print(f"Calling custom_research_agent with input: {input}")
         custom_info = custom_research_agent(input)
+        print(f"Synthesizing response with input: {input}")
 
         # Use OpenAI to synthesize a coherent final response
         synthesis_prompt = f"""You are a meta-agent that synthesizes information from multiple specialized agents. 
@@ -331,58 +335,23 @@ Please provide a well-structured, coherent response that integrates all this inf
 
 ###################################v
 
-from deepeval.dataset import Golden
+from deepeval.dataset import Golden, EvaluationDataset
 
 goldens = [
     Golden(input="What's the weather like in SF?"),
-    Golden(input="Tell me about Elon Musk."),
-    Golden(input="Summarize the latest research on quantum computing."),
-    Golden(input="Who won the FIFA World Cup in 2018?"),
-    Golden(input="What are the health benefits of meditation?"),
-    Golden(input="Explain the theory of relativity in simple terms."),
-    Golden(input="What's the capital of Australia?"),
-    Golden(
-        input="How does machine learning differ from traditional programming?"
-    ),
-    Golden(input="Give me a brief history of the internet."),
-    Golden(input="What are the main causes of climate change?"),
+    # Golden(input="Tell me about Elon Musk."),
+    # Golden(input="Summarize the latest research on quantum computing."),
+    # Golden(input="Who won the FIFA World Cup in 2018?"),
+    # Golden(input="What are the health benefits of meditation?"),
+    # Golden(input="Explain the theory of relativity in simple terms."),
+    # Golden(input="What's the capital of Australia?"),
+    # Golden(
+    #     input="How does machine learning differ from traditional programming?"
+    # ),
+    # Golden(input="Give me a brief history of the internet."),
+    # Golden(input="What are the main causes of climate change?"),
 ]
 
-# # Run Async
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=True),
-#     display_config=DisplayConfig(show_indicator=True),
-# )
-
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=True),
-#     display_config=DisplayConfig(show_indicator=False),
-# )
-# # Run Sync
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=False),
-#     display_config=DisplayConfig(show_indicator=True),
-# )
-# evaluate(
-#     goldens=goldens,
-#     observed_callback=meta_agent,
-#     async_config=AsyncConfig(run_async=True),
-#     display_config=DisplayConfig(show_indicator=True),
-# )
-
-
-# # Assert Test
-# def test_meta_agent_0():
-#     golden = Golden(input="What's the weather like in SF?")
-#     assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
-
-
-# def test_meta_agent_1():
-#     golden = Golden(input="What's the weather like in SF?")
-#     assert_test(golden=golden, observed_callback=meta_agent, run_async=False)
+dataset = EvaluationDataset(goldens=goldens)
+for golden in dataset.evals_iterator():
+    meta_agent(golden.input)

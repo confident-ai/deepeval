@@ -1757,12 +1757,12 @@ def a_execute_agentic_test_cases_from_loop(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Running Component-Level Evals (async)",
+                f"Running Component-Level Evals (sync)",
                 total=len(goldens) * 2,
             )
             pbar_callback_id = add_pbar(
                 progress,
-                f"\t⚡ Invoking your LLM application",
+                f"\t⚡ Calling LLM app (with {len(goldens)} goldens)",
                 total=len(goldens),
             )
             yield from evaluate_test_cases(

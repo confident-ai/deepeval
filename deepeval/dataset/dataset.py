@@ -11,12 +11,6 @@ import datetime
 import time
 import ast
 
-from deepeval.evaluate.utils import (
-    aggregate_metric_pass_rates,
-    print_test_result,
-    write_test_result_to_file,
-)
-from deepeval.evaluate.types import EvaluationResult
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -40,19 +34,8 @@ from deepeval.test_case import (
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TEMP_FILE_PATH
 from deepeval.utils import convert_keys_to_snake_case, get_or_create_event_loop
-from deepeval.evaluate.configs import (
-    AsyncConfig,
-    DisplayConfig,
-    CacheConfig,
-    ErrorConfig,
-)
 from deepeval.test_run import (
     global_test_run_manager,
-)
-from deepeval.evaluate.types import EvaluationResult, TestResult
-from deepeval.evaluate.execute import (
-    a_execute_agentic_test_cases_from_loop,
-    execute_agentic_test_cases_from_loop,
 )
 from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.openai.utils import openai_test_case_pairs
@@ -976,13 +959,39 @@ class EvaluationDataset:
     def evals_iterator(
         self,
         identifier: Optional[str] = None,
-        display_config: Optional[DisplayConfig] = DisplayConfig(),
-        cache_config: Optional[CacheConfig] = CacheConfig(),
-        error_config: Optional[ErrorConfig] = ErrorConfig(),
-        async_config: Optional[AsyncConfig] = AsyncConfig(),
+        display_config: Optional["DisplayConfig"] = None,
+        cache_config: Optional["CacheConfig"] = None,
+        error_config: Optional["ErrorConfig"] = None,
+        async_config: Optional["AsyncConfig"] = None,
     ) -> Iterator[Golden]:
-        if not self.goldens:
-            raise ValueError("You must provide 'goldens' to dataset().")
+        from deepeval.evaluate.utils import (
+            aggregate_metric_pass_rates,
+            print_test_result,
+            write_test_result_to_file,
+        )
+        from deepeval.evaluate.types import EvaluationResult, TestResult
+        from deepeval.evaluate.execute import (
+            a_execute_agentic_test_cases_from_loop,
+            execute_agentic_test_cases_from_loop,
+        )
+        from deepeval.evaluate.configs import (
+            AsyncConfig,
+            DisplayConfig,
+            CacheConfig,
+            ErrorConfig,
+        )
+
+        if display_config is None:
+            display_config = DisplayConfig()
+        if cache_config is None:
+            cache_config = CacheConfig()
+        if error_config is None:
+            error_config = ErrorConfig()
+        if async_config is None:
+            async_config = AsyncConfig()
+
+        if not self.goldens or len(self.goldens) == 0:
+            raise ValueError("Unable to evaluate dataset with no goldens.")
 
         goldens = self.goldens
         with capture_evaluation_run("traceable evaluate()"):
