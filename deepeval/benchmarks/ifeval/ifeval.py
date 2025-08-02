@@ -8,7 +8,7 @@ from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.schema import StringSchema
 from deepeval.telemetry import capture_benchmark_run
-from deepeval.scorer import Scorer
+# from deepeval.scorer import Scorer
 
 
 class IFEvalInstructionVerifier:
@@ -394,6 +394,7 @@ class IFEval(DeepEvalBaseBenchmark):
         verbose_mode: bool = False,
         **kwargs,
     ):
+        from deepeval.scorer import Scorer
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.n_problems = n_problems
