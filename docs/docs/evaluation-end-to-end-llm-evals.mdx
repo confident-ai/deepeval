@@ -125,47 +125,41 @@ Both gives you exactly the same functionality, and integrates 100% with Confiden
 <Tabs>
 <TabItem value="python" label="Python">
 
-```python title="main.py" showLineNumbers {15}
+```python title="main.py" showLineNumbers {14}
 from somewhere import your_llm_app # Replace with your LLM app
 
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval import evaluate
 
-goldens = [Golden(input="...")]
-
+dataset = EvaluationDataset(goldens=[Golden(input="...")])
 
 # Create test cases from goldens
-test_case = []
-for golden in goldens:
+for golden in dataset.goldens:
     res, text_chunks = your_llm_app(golden.input)
     test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
-    test_cases.append(test_case)
-
+    dataset.add_test_case(test_case)
 
 # Evaluate end-to-end
-evaluate(test_cases=test_cases, metrics=[AnswerRelevancyMetric()])
-
+evaluate(test_cases=dataset.test_case, metrics=[AnswerRelevancyMetric()])
 ```
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
 
-```python title="main.py" showLineNumbers {1,20}
+```python title="main.py" showLineNumbers {1,18}
 from deepeval.openai import OpenAI # import OpenAI from deepeval instead
 
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.evaluate import dataset
 
-goldens = [Golden(input="...")]
+dataset = EvaluationDataset(goldens=[Golden(input="...")])
 client = OpenAI()
 
-
-# Evaluate end-to-end
-for golden in dataset(goldens=goldens):
+# Loop through dataset
+for golden in dataset.evals_iterator():
     client.chat.completions.create(
         model="gpt-4o",
         messages=[

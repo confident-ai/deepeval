@@ -8,8 +8,7 @@ import time
 
 import deepeval
 from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import Golden
-from deepeval.evaluate import dataset, test_run
+from deepeval.dataset import EvaluationDataset, Golden
 
 # Don't forget to setup tracing
 deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
@@ -40,9 +39,10 @@ async def llm_app(golden: Golden):
 
 
 def main():
-    for golden in dataset(goldens=goldens):
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator():
         task = asyncio.create_task(llm_app(golden))
-        test_run.append(task)
+        dataset.evaluate(task)
 
 
 if __name__ == "__main__":

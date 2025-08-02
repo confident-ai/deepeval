@@ -6,13 +6,10 @@ from typing import (
     Dict,
     Any,
     Awaitable,
-    Iterator,
 )
 from rich.console import Console
-import asyncio
 import time
 
-from deepeval.dataset.dataset import EvaluationDataset
 from deepeval.evaluate.configs import (
     AsyncConfig,
     DisplayConfig,
@@ -57,16 +54,13 @@ from deepeval.test_run import (
     MetricData,
 )
 from deepeval.utils import get_is_running_deepeval
-from deepeval.evaluate.types import EvaluationResult, TestResult
+from deepeval.evaluate.types import EvaluationResult
 from deepeval.evaluate.execute import (
-    a_execute_agentic_test_cases_from_loop,
-    execute_agentic_test_cases_from_loop,
     a_execute_agentic_test_cases,
     a_execute_test_cases,
     execute_agentic_test_cases,
     execute_test_cases,
 )
-from deepeval.openai.utils import openai_test_case_pairs
 
 
 def assert_test(
@@ -332,91 +326,6 @@ def evaluate(
 
         test_run = global_test_run_manager.get_test_run()
         test_run.hyperparameters = process_hyperparameters(hyperparameters)
-        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
-        confident_link = global_test_run_manager.wrap_up_test_run(
-            run_duration, display_table=False
-        )
-        return EvaluationResult(
-            test_results=test_results, confident_link=confident_link
-        )
-
-
-def dataset(
-    alias: Optional[str] = None,
-    goldens: Optional[List[Golden]] = None,
-    hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
-    identifier: Optional[str] = None,
-    display_config: Optional[DisplayConfig] = DisplayConfig(),
-    cache_config: Optional[CacheConfig] = CacheConfig(),
-    error_config: Optional[ErrorConfig] = ErrorConfig(),
-    async_config: Optional[AsyncConfig] = AsyncConfig(),
-) -> Iterator[Golden]:
-    if not alias and not goldens:
-        raise ValueError(
-            "You must provide either 'goldens' or 'alias' to dataset()."
-        )
-
-    if alias:
-        dataset = EvaluationDataset()
-        dataset.pull(alias)
-        goldens = dataset.goldens
-
-    with capture_evaluation_run("looped evaluate()"):
-        global_test_run_manager.reset()
-        start_time = time.perf_counter()
-        test_results: List[TestResult] = []
-
-        if async_config.run_async:
-            loop = get_or_create_event_loop()
-            yield from a_execute_agentic_test_cases_from_loop(
-                goldens=goldens,
-                verbose_mode=display_config.verbose_mode,
-                ignore_errors=error_config.ignore_errors,
-                skip_on_missing_params=error_config.skip_on_missing_params,
-                show_indicator=display_config.show_indicator,
-                loop=loop,
-                throttle_value=async_config.throttle_value,
-                max_concurrent=async_config.max_concurrent,
-                test_results=test_results,
-                save_to_disk=cache_config.write_cache,
-                identifier=identifier,
-            )
-        else:
-            yield from execute_agentic_test_cases_from_loop(
-                goldens=goldens,
-                verbose_mode=display_config.verbose_mode,
-                ignore_errors=error_config.ignore_errors,
-                skip_on_missing_params=error_config.skip_on_missing_params,
-                show_indicator=display_config.show_indicator,
-                test_results=test_results,
-                save_to_disk=cache_config.write_cache,
-                identifier=identifier,
-            )
-
-        end_time = time.perf_counter()
-        run_duration = end_time - start_time
-        if display_config.print_results:
-            for test_result in test_results:
-                print_test_result(test_result, display_config.display_option)
-                aggregate_metric_pass_rates(test_results)
-        if display_config.file_output_dir is not None:
-            for test_result in test_results:
-                write_test_result_to_file(
-                    test_result,
-                    display_config.display_option,
-                    display_config.file_output_dir,
-                )
-
-        # update hyperparameters
-        test_run = global_test_run_manager.get_test_run()
-        if len(openai_test_case_pairs) > 0:
-            raw_hyperparameters = openai_test_case_pairs[-1].hyperparameters
-            test_run.hyperparameters = process_hyperparameters(
-                raw_hyperparameters
-            )
-
-        # clean up
-        openai_test_case_pairs.clear()
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
         confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False
