@@ -173,18 +173,18 @@ async def meta_agent(input: str):
 from deepeval.dataset import Golden
 from deepeval import evaluate
 
-goldens = [
-    Golden(input="What's the weather like in SF?"),
-    Golden(input="Tell me about Elon Musk."),
-    #    Golden(input="What's the weather like in SF?"),
-    # Golden(input="Tell me about Elon Musk."),
-    #    Golden(input="What's the weather like in SF?"),
-    # Golden(input="Tell me about Elon Musk."),
-    #    Golden(input="What's the weather like in SF?"),
-    # Golden(input="Tell me about Elon Musk."),
-    #    Golden(input="What's the weather like in SF?"),
-    # Golden(input="Tell me about Elon Musk.")
-]
+# goldens = [
+#     Golden(input="What's the weather like in SF?"),
+#     Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk."),
+#     #    Golden(input="What's the weather like in SF?"),
+#     # Golden(input="Tell me about Elon Musk.")
+# ]
 
 # # Run Async
 #    goldens=goldens * 40,
@@ -232,7 +232,7 @@ evaluate(
 #     assert_test(golden=golden, observed_callback=meta_agent)
 
 # # Gather multiple traceable tasks
-import asyncio
+# import asyncio
 
 
 # async def run_parallel_examples():
@@ -253,5 +253,5 @@ import asyncio
 #     await asyncio.gather(*tasks)
 
 
-# # Run it
+# # # Run it
 # asyncio.run(run_parallel_examples())
