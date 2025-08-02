@@ -9,6 +9,9 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     get_turns_in_sliding_window,
+    get_unit_interactions,
+    filter_unit_interactions,
+    flatten_2d_list,
     trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
@@ -66,10 +69,12 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                unit_interactions = get_unit_interactions(test_case.turns)
+                valid_interactions, _ = filter_unit_interactions(unit_interactions)
                 turns_windows: List[List[Turn]] = [
                     window
                     for window in get_turns_in_sliding_window(
-                        test_case.turns, self.window_size
+                        valid_interactions, self.window_size
                     )
                 ]
 
@@ -107,10 +112,12 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            unit_interactions = get_unit_interactions(test_case.turns)
+            valid_interactions, _ = filter_unit_interactions(unit_interactions)
             turns_windows: List[List[Turn]] = [
                 window
                 for window in get_turns_in_sliding_window(
-                    test_case.turns, self.window_size
+                    valid_interactions, self.window_size
                 )
             ]
 
@@ -195,9 +202,10 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
     async def _a_generate_verdict(
         self, turns_sliding_window: List[Turn]
     ) -> ConversationRelevancyVerdict:
+        turns_sliding_windows = flatten_2d_list(turns_sliding_window)
         prompt = ConversationRelevancyTemplate.generate_verdicts(
             sliding_window=[
-                convert_turn_to_dict(turn) for turn in turns_sliding_window
+                convert_turn_to_dict(turn) for turn in turns_sliding_windows
             ]
         )
         if self.using_native_model:
@@ -220,9 +228,10 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
     def _generate_verdict(
         self, turns_sliding_window: List[Turn]
     ) -> ConversationRelevancyVerdict:
+        turns_sliding_windows = flatten_2d_list(turns_sliding_window)
         prompt = ConversationRelevancyTemplate.generate_verdicts(
             sliding_window=[
-                convert_turn_to_dict(turn) for turn in turns_sliding_window
+                convert_turn_to_dict(turn) for turn in turns_sliding_windows
             ]
         )
         if self.using_native_model:
