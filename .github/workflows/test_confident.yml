@@ -1,4 +1,4 @@
-name: Run Core Tests with Poetry
+name: Run Confident Tests with Poetry
 
 on:
   push:
