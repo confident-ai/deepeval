@@ -123,13 +123,18 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
     unit_interaction = []
     for turn in turns:
         if turn.role == "user":
-            if unit_interaction and unit_interaction[-1].role != "user":
+            if unit_interaction and unit_interaction[-1].role == "assistant":
                 unit_interactions.append(unit_interaction)
                 unit_interaction = []
             unit_interaction.append(turn)
         else:
             unit_interaction.append(turn)
-    if unit_interaction:
+
+    if (
+        unit_interaction
+        and len(unit_interaction) > 1
+        and unit_interaction[-1].role == "assistant"
+    ):
         unit_interactions.append(unit_interaction)
     return unit_interactions
 
