@@ -140,7 +140,7 @@ Here’s how you can use the `ConversationSimulator` to generate synthetic `Conv
 
 ```python
 import asyncio
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 from deepeval.test_case import ConversationalTestCase
 from typing import List, Dict
 from chatbot import SimpleChatbot  # Assuming your chatbot class is in chatbot.py
@@ -442,7 +442,7 @@ import pytest
 import asyncio
 from typing import List, Dict
 from deepeval.test_case import ConversationalTestCase
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 from deepeval.metrics import (
     KnowledgeRetentionMetric,
     RoleAdherenceMetric,

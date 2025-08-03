@@ -1,4 +1,4 @@
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 from deepeval.dataset import ConversationalGolden
 from deepeval.test_case import Turn
 from openai import AsyncOpenAI

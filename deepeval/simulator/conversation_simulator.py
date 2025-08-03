@@ -11,18 +11,17 @@ from deepeval.utils import (
     get_or_create_event_loop,
     update_pbar,
     add_pbar,
-    remove_pbars,
 )
 from deepeval.metrics.utils import (
     initialize_model,
     trimAndLoadJson,
 )
 from deepeval.test_case import ConversationalTestCase, Turn
-from deepeval.conversation_simulator.template import (
+from deepeval.simulator.template import (
     ConversationSimulatorTemplate,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.conversation_simulator.schema import (
+from deepeval.simulator.schema import (
     SimulatedInput,
     ConversationCompletion,
 )

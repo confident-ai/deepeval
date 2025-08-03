@@ -138,7 +138,7 @@ dataset.add_golden(Golden(input="Nice."))
 
 dataset.add_golden(
     ConversationalGolden(
-        scenario="User expressing gratitude for redirecting to human.", 
+        scenario="User expressing gratitude for redirecting to human.",
         expected_outcome="Appreciates the gratitude."
     )
 )
@@ -509,7 +509,7 @@ For more information on how `deepeval`'s `Synthesizer` works, visit the [synthes
 While a `Synthesizer` generates goldens, the `ConversationSimulator` works slightly different as it generates `turns` in a `ConversationalTestCase` instead:
 
 ```python
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Define simulator
 simulator = ConversationSimulator(

@@ -15645,7 +15645,7 @@ On this page
 While the [`Synthesizer`](https://deepeval.com/docs/synthesizer-introduction) generates regular goldens representing single, atomic [LLM interactions](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), `deepeval`'s `ConversationSimulator` mimics a fake user interacting with your chatbot to generate **conversational goldens** instead.
 
 ```codeBlockLines_e6Vv codeBlockLinesWithNumbering_o6Pm
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Define simulator
 simulator = ConversationSimulator()
@@ -15672,7 +15672,7 @@ Alternatively, you can skip generating user profiles entirely, and instead suppl
 ## Create Your First Simulator [​](https://deepeval.com/docs/conversation-simulator\#create-your-first-simulator "Direct link to Create Your First Simulator")
 
 ```codeBlockLines_e6Vv
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 user_intentions = {
   "opening a bank account": 1,
