@@ -13,7 +13,7 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
@@ -697,9 +697,6 @@ class TestRunManager:
             "",
         )
         print(table)
-        print(
-            f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
-        )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
         if (
@@ -882,7 +879,7 @@ class TestRunManager:
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
-        if self.disable_request is False:
+        if is_confident() and self.disable_request is False:
             return self.post_test_run(test_run)
         else:
             self.save_test_run(
@@ -890,10 +887,14 @@ class TestRunManager:
                 save_under_key=LATEST_TEST_RUN_DATA_KEY,
             )
             console.print(
-                "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval view'[/bold] to analyze, debug, and save evaluation results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n",
-                # LOGIN_PROMPT,
-                # "\n",
+                f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {round(test_run.evaluation_cost, 5)} USD)\n"
+                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
+                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
+                "=" * 80,
+                "\n\n» What to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
             )
+
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:
         try:

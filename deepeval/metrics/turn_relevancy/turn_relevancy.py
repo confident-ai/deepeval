@@ -3,7 +3,7 @@ import itertools
 from typing import Optional, Union, Dict, List
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.conversation_relevancy.template import (
+from deepeval.metrics.turn_relevancy.template import (
     TurnRelevancyTemplate,
 )
 from deepeval.metrics.utils import (
@@ -19,7 +19,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.conversation_relevancy.schema import *
+from deepeval.metrics.turn_relevancy.schema import *
 
 
 class TurnRelevancyMetric(BaseConversationalMetric):
@@ -158,8 +158,10 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             return res.reason
         else:
             try:
-                res: TurnRelevancyScoreReason = await self.model.a_generate(
-                    prompt, schema=TurnRelevancyScoreReason
+                res: TurnRelevancyScoreReason = (
+                    await self.model.a_generate(
+                        prompt, schema=TurnRelevancyScoreReason
+                    )
                 )
                 return res.reason
             except TypeError:
@@ -229,7 +231,9 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             ]
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=TurnRelevancyVerdict)
+            res, cost = self.model.generate(
+                prompt, schema=TurnRelevancyVerdict
+            )
             self.evaluation_cost += cost
             return res
         else:
