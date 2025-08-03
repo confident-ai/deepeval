@@ -10,6 +10,7 @@ from typing import List
 
 client = AsyncOpenAI()
 
+
 async def sync_model_callback(
     input: str,
     turns: List[Turn],
@@ -24,7 +25,6 @@ async def sync_model_callback(
         model="gpt-4o-mini", messages=messages
     )
     return Turn(role="assistant", content=response.choices[0].message.content)
-
 
 
 async def async_model_callback(

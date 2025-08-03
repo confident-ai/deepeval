@@ -40,7 +40,9 @@ class ConversationSimulator:
         async_mode: bool = True,
     ):
         self.model_callback = model_callback
-        self.is_callback_async = inspect.iscoroutinefunction(self.model_callback)
+        self.is_callback_async = inspect.iscoroutinefunction(
+            self.model_callback
+        )
         self.simulator_model, self.using_native_model = initialize_model(
             simulator_model
         )
@@ -102,7 +104,7 @@ class ConversationSimulator:
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
-    
+
         async def simulate_conversations(
             golden: ConversationalGolden,
             conversation_index: int,
@@ -138,11 +140,13 @@ class ConversationSimulator:
             raise ValueError("max_turns must be greater than 0")
 
         # Define pbar
-        max_turns_including_opening = max_turns + 1 if self.opening_message else max_turns
+        max_turns_including_opening = (
+            max_turns + 1 if self.opening_message else max_turns
+        )
         pbar_turns_id = add_pbar(
             progress,
             f"\t⚡ Test case #{index}",
-            total=max_turns_including_opening
+            total=max_turns_including_opening,
         )
 
         additional_metadata = {"User Description": golden.user_description}
@@ -155,7 +159,9 @@ class ConversationSimulator:
 
         # Generate first user input
         prompt = self.template.simulate_first_user_turn(golden, self.language)
-        simulated_input: SimulatedInput = self.generate_schema(prompt, SimulatedInput)
+        simulated_input: SimulatedInput = self.generate_schema(
+            prompt, SimulatedInput
+        )
         turns.append(Turn(role="user", content=simulated_input.simulated_input))
         update_pbar(progress, pbar_turns_id)
 
@@ -184,12 +190,14 @@ class ConversationSimulator:
             if len(turns) >= max_turns_including_opening:
                 break
             if self.is_callback_async:
-                turn = asyncio.run(self.a_generate_turn_from_callback(
-                    user_input,
-                    model_callback=self.model_callback,
-                    turns=turns,
-                    thread_id=thread_id,
-                ))
+                turn = asyncio.run(
+                    self.a_generate_turn_from_callback(
+                        user_input,
+                        model_callback=self.model_callback,
+                        turns=turns,
+                        thread_id=thread_id,
+                    )
+                )
             else:
                 turn = self.generate_turn_from_callback(
                     user_input,
@@ -199,7 +207,7 @@ class ConversationSimulator:
                 )
             turns.append(turn)
             update_pbar(progress, pbar_turns_id)
-        
+
         update_pbar(progress, pbar_id)
         return ConversationalTestCase(
             turns=turns,
@@ -216,7 +224,6 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
-    
 
     async def _a_simulate_single_conversation(
         self,
@@ -230,11 +237,13 @@ class ConversationSimulator:
             raise ValueError("max_turns must be greater than 0")
 
         # Define pbar
-        max_turns_including_opening = max_turns + 1 if self.opening_message else max_turns
+        max_turns_including_opening = (
+            max_turns + 1 if self.opening_message else max_turns
+        )
         pbar_turns_id = add_pbar(
             progress,
             f"\t⚡ Test case #{index}",
-            total=max_turns_including_opening
+            total=max_turns_including_opening,
         )
 
         additional_metadata = {"User Description": golden.user_description}
@@ -247,7 +256,9 @@ class ConversationSimulator:
 
         # Generate first user input
         prompt = self.template.simulate_first_user_turn(golden, self.language)
-        simulated_input: SimulatedInput = await self.a_generate_schema(prompt, SimulatedInput)
+        simulated_input: SimulatedInput = await self.a_generate_schema(
+            prompt, SimulatedInput
+        )
         turns.append(Turn(role="user", content=simulated_input.simulated_input))
         update_pbar(progress, pbar_turns_id)
 
@@ -291,7 +302,7 @@ class ConversationSimulator:
                 )
             turns.append(turn)
             update_pbar(progress, pbar_turns_id)
-        
+
         update_pbar(progress, pbar_id)
         return ConversationalTestCase(
             turns=turns,
