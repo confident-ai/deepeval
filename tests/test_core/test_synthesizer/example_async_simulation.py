@@ -10,50 +10,11 @@ from typing import List
 
 client = AsyncOpenAI()
 
-
-async def async_model_callback_1(input: str):
-    messages = [
-        {"role": "system", "content": "You are a ticket purchasing assistant"},
-        {"role": "user", "content": input},
-    ]
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini", messages=messages
-    )
-    return response.choices[0].message.content
-
-
-async def async_model_callback_2(input: str, thread_id: str):
-    messages = [
-        {"role": "system", "content": "You are a ticket purchasing assistant"},
-        {"role": "user", "content": input},
-    ]
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini", messages=messages
-    )
-    return response.choices[0].message.content
-
-
-async def async_model_callback_3(
-    input: str,
-    turns: List[Turn],
-):
-    messages = [
-        {"role": "system", "content": "You are a ticket purchasing assistant"},
-        *[{"role": t.role, "content": t.content} for t in turns],
-        {"role": "user", "content": input},
-    ]
-    response = await client.chat.completions.create(
-        model="gpt-4o-mini", messages=messages
-    )
-    return response.choices[0].message.content
-
-
-async def async_model_callback_4(
+async def sync_model_callback(
     input: str,
     turns: List[Turn],
     thread_id: str,
 ):
-    print(thread_id)
     messages = [
         {"role": "system", "content": "You are a ticket purchasing assistant"},
         *[{"role": t.role, "content": t.content} for t in turns],
@@ -62,19 +23,42 @@ async def async_model_callback_4(
     response = await client.chat.completions.create(
         model="gpt-4o-mini", messages=messages
     )
-    return response.choices[0].message.content
+    return Turn(role="assistant", content=response.choices[0].message.content)
+
+
+
+async def async_model_callback(
+    input: str,
+    turns: List[Turn],
+    thread_id: str,
+):
+    messages = [
+        {"role": "system", "content": "You are a ticket purchasing assistant"},
+        *[{"role": t.role, "content": t.content} for t in turns],
+        {"role": "user", "content": input},
+    ]
+    response = await client.chat.completions.create(
+        model="gpt-4o-mini", messages=messages
+    )
+    return Turn(role="assistant", content=response.choices[0].message.content)
 
 
 ########################################
 # Initialize Conversation Simulator
 ########################################
 
-simulator = ConversationSimulator(
-    model_callback=async_model_callback_4,
+simulator_async = ConversationSimulator(
+    model_callback=async_model_callback,
     simulator_model="gpt-4o-mini",
     opening_message="You are a helpful assistant that answers questions concisely.",
     max_concurrent=5,
-    async_mode=True,
+)
+
+simulator_sync = ConversationSimulator(
+    model_callback=sync_model_callback,
+    simulator_model="gpt-4o-mini",
+    opening_message="You are a helpful assistant that answers questions concisely.",
+    max_concurrent=5,
 )
 
 ########################################
@@ -87,6 +71,13 @@ conversation_golden = ConversationalGolden(
     user_description="Andy Byron is the former CEO of Astronomer.",
 )
 
-test_cases = simulator.simulate(
-    [conversation_golden, conversation_golden, conversation_golden], max_turns=3
+# simulator_async.simulate(
+#     [conversation_golden, conversation_golden, conversation_golden],
+#     max_turns=3,
+# )
+
+asdf = simulator_sync.simulate(
+    [conversation_golden, conversation_golden, conversation_golden],
+    max_turns=3,
 )
+print(asdf)
