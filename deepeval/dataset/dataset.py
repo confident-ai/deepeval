@@ -1,5 +1,5 @@
-from enum import Enum
-from typing import List, Optional, Union, Literal
+from asyncio import Task
+from typing import Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
@@ -11,11 +11,6 @@ import datetime
 import time
 import ast
 
-from deepeval.metrics import (
-    BaseConversationalMetric,
-    BaseMetric,
-)
-from deepeval.evaluate.types import EvaluationResult
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
@@ -30,13 +25,21 @@ from deepeval.dataset.api import (
     APIQueueDataset,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
-from deepeval.telemetry import capture_pull_dataset
+from deepeval.telemetry import capture_evaluation_run, capture_pull_dataset
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     ToolCall,
 )
-from deepeval.utils import convert_keys_to_snake_case
+from deepeval.test_run.hyperparameters import process_hyperparameters
+from deepeval.test_run.test_run import TEMP_FILE_PATH
+from deepeval.utils import convert_keys_to_snake_case, get_or_create_event_loop
+from deepeval.test_run import (
+    global_test_run_manager,
+)
+from deepeval.dataset.types import global_evaluation_tasks
+from deepeval.openai.utils import openai_test_case_pairs
+
 
 valid_file_types = ["csv", "json", "jsonl"]
 
@@ -195,25 +198,6 @@ class EvaluationDataset:
             raise TypeError(
                 "You cannot add a single-turn Golden to a multi-turn dataset. You can only add a ConversationalGolden."
             )
-
-    def __len__(self):
-        return len(self.test_cases)
-
-    def __iter__(self):
-        return iter(self.test_cases)
-
-    def evaluate(
-        self,
-        metrics: Union[List[BaseMetric], List[BaseConversationalMetric]],
-    ) -> EvaluationResult:
-        from deepeval import evaluate
-
-        if len(self.test_cases) == 0:
-            raise ValueError(
-                "No test cases found in evaluation dataset. Unable to evaluate empty dataset."
-            )
-
-        return evaluate(self.test_cases, metrics)
 
     def add_test_cases_from_csv_file(
         self,
@@ -971,3 +955,110 @@ class EvaluationDataset:
 
         print(f"Evaluation dataset saved at {full_file_path}!")
         return full_file_path
+
+    def evals_iterator(
+        self,
+        identifier: Optional[str] = None,
+        display_config: Optional["DisplayConfig"] = None,
+        cache_config: Optional["CacheConfig"] = None,
+        error_config: Optional["ErrorConfig"] = None,
+        async_config: Optional["AsyncConfig"] = None,
+    ) -> Iterator[Golden]:
+        from deepeval.evaluate.utils import (
+            aggregate_metric_pass_rates,
+            print_test_result,
+            write_test_result_to_file,
+        )
+        from deepeval.evaluate.types import EvaluationResult, TestResult
+        from deepeval.evaluate.execute import (
+            a_execute_agentic_test_cases_from_loop,
+            execute_agentic_test_cases_from_loop,
+        )
+        from deepeval.evaluate.configs import (
+            AsyncConfig,
+            DisplayConfig,
+            CacheConfig,
+            ErrorConfig,
+        )
+
+        if display_config is None:
+            display_config = DisplayConfig()
+        if cache_config is None:
+            cache_config = CacheConfig()
+        if error_config is None:
+            error_config = ErrorConfig()
+        if async_config is None:
+            async_config = AsyncConfig()
+
+        if not self.goldens or len(self.goldens) == 0:
+            raise ValueError("Unable to evaluate dataset with no goldens.")
+
+        goldens = self.goldens
+        with capture_evaluation_run("traceable evaluate()"):
+            global_test_run_manager.reset()
+            start_time = time.perf_counter()
+            test_results: List[TestResult] = []
+
+            if async_config.run_async:
+                loop = get_or_create_event_loop()
+                yield from a_execute_agentic_test_cases_from_loop(
+                    goldens=goldens,
+                    verbose_mode=display_config.verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
+                    loop=loop,
+                    throttle_value=async_config.throttle_value,
+                    max_concurrent=async_config.max_concurrent,
+                    test_results=test_results,
+                    save_to_disk=cache_config.write_cache,
+                    identifier=identifier,
+                )
+            else:
+                yield from execute_agentic_test_cases_from_loop(
+                    goldens=goldens,
+                    verbose_mode=display_config.verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
+                    test_results=test_results,
+                    save_to_disk=cache_config.write_cache,
+                    identifier=identifier,
+                )
+
+            end_time = time.perf_counter()
+            run_duration = end_time - start_time
+            if display_config.print_results:
+                for test_result in test_results:
+                    print_test_result(
+                        test_result, display_config.display_option
+                    )
+                    aggregate_metric_pass_rates(test_results)
+            if display_config.file_output_dir is not None:
+                for test_result in test_results:
+                    write_test_result_to_file(
+                        test_result,
+                        display_config.display_option,
+                        display_config.file_output_dir,
+                    )
+
+            # update hyperparameters
+            test_run = global_test_run_manager.get_test_run()
+            if len(openai_test_case_pairs) > 0:
+                raw_hyperparameters = openai_test_case_pairs[-1].hyperparameters
+                test_run.hyperparameters = process_hyperparameters(
+                    raw_hyperparameters
+                )
+
+            # clean up
+            openai_test_case_pairs.clear()
+            global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+            confident_link = global_test_run_manager.wrap_up_test_run(
+                run_duration, display_table=False
+            )
+            return EvaluationResult(
+                test_results=test_results, confident_link=confident_link
+            )
+
+    def evaluate(self, task: Task):
+        global_evaluation_tasks.append(task)

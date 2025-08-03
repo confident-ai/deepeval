@@ -2,13 +2,13 @@ import inspect
 import json
 import re
 import sys
+import itertools
 from typing import Any, Dict, Optional, List, Union, Tuple
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
     MismatchedTestCaseInputsError,
 )
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
     DeepEvalBaseLLM,
     DeepEvalBaseMLLM,
@@ -32,7 +32,6 @@ from deepeval.models import (
     DeepSeekModel,
 )
 from deepeval.key_handler import (
-    KeyValues,
     ModelKeyValues,
     EmbeddingKeyValues,
     KEY_FILE_HANDLER,
@@ -45,6 +44,7 @@ from deepeval.metrics import (
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
+    Turn,
     LLMTestCase,
     LLMTestCaseParams,
     MLLMTestCase,
@@ -116,6 +116,27 @@ def convert_turn_to_dict(
 def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
+
+
+def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
+    unit_interactions = []
+    unit_interaction = []
+    for turn in turns:
+        if turn.role == "user":
+            if unit_interaction and unit_interaction[-1].role == "assistant":
+                unit_interactions.append(unit_interaction)
+                unit_interaction = []
+            unit_interaction.append(turn)
+        else:
+            unit_interaction.append(turn)
+
+    if (
+        unit_interaction
+        and len(unit_interaction) > 1
+        and unit_interaction[-1].role == "assistant"
+    ):
+        unit_interactions.append(unit_interaction)
+    return unit_interactions
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):

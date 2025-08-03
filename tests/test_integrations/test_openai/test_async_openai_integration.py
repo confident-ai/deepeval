@@ -1,14 +1,11 @@
-from deepeval.evaluate.configs import AsyncConfig
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.evaluate import dataset, test_run
 from deepeval.openai import AsyncOpenAI
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
 import asyncio
 
 from tests.integrations.openai.resources import (
     async_llm_app,
     CHAT_TOOLS,
-    RESPONSE_TOOLS,
 )
 
 goldens = [
@@ -19,7 +16,8 @@ goldens = [
 
 def test_end_to_end_evaluation():
     openai_client = AsyncOpenAI()
-    for golden in dataset(goldens=goldens):
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator():
         task = asyncio.create_task(
             openai_client.chat.completions.create(
                 model="gpt-4o",
@@ -34,33 +32,22 @@ def test_end_to_end_evaluation():
                 metrics=[AnswerRelevancyMetric(), BiasMetric()],
             ),
         )
-        test_run.append(task)
-
-    # for golden in dataset(goldens=goldens):
-    #     task = asyncio.create_task(
-    #         openai_client.responses.create(
-    #             model="gpt-4o",
-    #             instructions="You are a helpful chatbot. Always generate a string response.",
-    #             input=golden.input,
-    #             tools=RESPONSE_TOOLS,
-    #             metrics=[AnswerRelevancyMetric(), BiasMetric()],
-    #         )
-    #     )
-    #     test_run.append(task)
+        dataset.evaluate(task)
 
 
 def test_component_level_loop():
-    for golden in dataset(goldens=goldens):
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator():
         task = asyncio.create_task(
             async_llm_app(golden.input, completion_mode="chat")
         )
-        test_run.append(task)
+        dataset.evaluate(task)
 
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         task = asyncio.create_task(
             async_llm_app(golden.input, completion_mode="response")
         )
-        test_run.append(task)
+        dataset.evaluate(task)
 
 
 async def test_tracing():
