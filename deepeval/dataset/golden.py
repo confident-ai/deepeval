@@ -45,6 +45,7 @@ class ConversationalGolden(BaseModel):
     user_description: Optional[str] = Field(
         None, serialization_alias="userDescription"
     )
+    context: Optional[List[str]] = Field(default=None)
     additional_metadata: Optional[Dict] = Field(
         default=None, serialization_alias="additionalMetadata"
     )

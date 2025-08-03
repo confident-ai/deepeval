@@ -13,7 +13,7 @@ from rich.console import Console
 from rich import print
 
 from deepeval.metrics import BaseMetric
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.test_run.api import (
     LLMApiTestCase,
     ConversationalApiTestCase,
@@ -709,6 +709,8 @@ class TestRunManager:
             print("No test cases found, unable to upload to Confident AI.")
             return
 
+        api = Api()
+
         is_conversational_run = len(test_run.conversational_test_cases) > 0
         all_test_cases_to_process = (
             test_run.conversational_test_cases
@@ -742,7 +744,6 @@ class TestRunManager:
         json_str = json.dumps(body, cls=TestRunEncoder)
         body = json.loads(json_str)
 
-        api = Api()
         result = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.TEST_RUN_ENDPOINT,
@@ -881,7 +882,7 @@ class TestRunManager:
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
-        if is_confident() and self.disable_request is False:
+        if self.disable_request is False:
             return self.post_test_run(test_run)
         else:
             self.save_test_run(

@@ -81,8 +81,10 @@ class Endpoints(Enum):
 class Api:
     def __init__(self, api_key: Optional[str] = None, base_url=None):
         if api_key is None:
-            # get API key if none is supplied after you log in
-            api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+            api_key = (
+                KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+                or get_confident_api_key()
+            )
 
         if not api_key:
             raise ValueError("Please provide a valid Confident AI API Key.")

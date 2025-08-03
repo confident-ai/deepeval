@@ -125,9 +125,14 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
 
     for turn in turns:
         # Boundary: user after assistant, but only if we've already seen a user in current
-        if current and current[-1].role == "assistant" and turn.role == "user" and has_user:
-            units.append(current)           # finalize previous unit
-            current = [turn]                # start new unit with this user
+        if (
+            current
+            and current[-1].role == "assistant"
+            and turn.role == "user"
+            and has_user
+        ):
+            units.append(current)  # finalize previous unit
+            current = [turn]  # start new unit with this user
             has_user = True
             continue
 
@@ -137,12 +142,15 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
             has_user = True
 
     # Finalize last unit only if it ends with assistant and includes a user
-    if current and len(current) > 1 and current[-1].role == "assistant" and has_user:
+    if (
+        current
+        and len(current) > 1
+        and current[-1].role == "assistant"
+        and has_user
+    ):
         units.append(current)
 
     return units
-
-
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):

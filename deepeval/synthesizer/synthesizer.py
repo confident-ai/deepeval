@@ -5,7 +5,6 @@ from rich.progress import (
 from rich.console import Console, Theme
 from pydantic import BaseModel
 from itertools import chain
-import webbrowser
 import datetime
 import asyncio
 import random
@@ -24,7 +23,6 @@ from deepeval.metrics.utils import (
     initialize_model,
 )
 from deepeval.progress_context import synthesizer_progress_context
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.dataset.golden import Golden
 from deepeval.synthesizer.types import *
@@ -50,10 +48,6 @@ from deepeval.synthesizer.config import (
     EvolutionConfig,
     StylingConfig,
     ContextConstructionConfig,
-)
-from deepeval.dataset.api import (
-    APIDataset,
-    CreateDatasetHttpResponse,
 )
 from deepeval.synthesizer.utils import (
     print_synthesizer_status,
@@ -1389,51 +1383,6 @@ class Synthesizer:
         )
 
         return df
-
-    def push(
-        self,
-        alias: str,
-    ):
-        console = Console()
-        if is_confident():
-            if not alias:
-                alias = input("Enter the dataset alias: ").strip()
-            if len(self.synthetic_goldens) == 0:
-                raise ValueError(
-                    "Unable to push empty dataset to Confident AI. There must be at least one dataset or golden data entry."
-                )
-            try:
-                console.print(
-                    "Sending a large dataset to Confident AI. This might take a bit longer than usual..."
-                )
-                goldens = self.synthetic_goldens
-                api_dataset = APIDataset(alias=alias, goldens=goldens)
-                try:
-                    body = api_dataset.model_dump(
-                        by_alias=True, exclude_none=True
-                    )
-                except AttributeError:
-                    body = api_dataset.dict(by_alias=True, exclude_none=True)
-                api = Api()
-                result = api.send_request(
-                    method=HttpMethods.POST,
-                    endpoint=Endpoints.DATASET_ENDPOINT,
-                    body=body,
-                )
-                if result:
-                    response = CreateDatasetHttpResponse(link=result["link"])
-                    link = response.link
-                    console.print(
-                        f"✅ Dataset successfully pushed to Confident AI! View at [link={link}]{link}[/link]"
-                    )
-                    webbrowser.open(link)
-            except Exception as e:
-                message = f"Unexpected error when sending the dataset. Incomplete dataset push is available at {link if 'link' in locals() else 'N/A'}."
-                raise Exception(message) from e
-        else:
-            console.print(
-                "[rgb(5,245,141)]✓[/rgb(5,245,141)] Generation finished 🎉! You can also run 'deepeval login' to generate and save goldens directly on Confident AI."
-            )
 
     def save_as(
         self,
