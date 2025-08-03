@@ -92,6 +92,7 @@ class SimpleChatbot:
         self.history.append({"role": "assistant", "content": reply})
         return reply
 ```
+
 </details>
 
 :::note
@@ -115,10 +116,10 @@ Evaluating a multi-turn chatbot remains a complex task. That’s where **DeepEva
 
 Here are the key metrics **DeepEval** offers for evaluating any multi-turn chatbot:
 
+- [Turn Relevancy](https://deepeval.com/docs/metrics-turn-relevancy) — Checks whether the chatbot's responses remain relevant to the user's input.
 - [Role Adherence](https://deepeval.com/docs/metrics-role-adherence) — Measures how consistently the chatbot stays aligned with its assigned persona or role.
 - [Knowledge Retention](https://deepeval.com/docs/metrics-knowledge-retention) — Assesses whether the chatbot remembers critical context from earlier turns in the conversation.
 - [Conversation Completeness](https://deepeval.com/docs/metrics-conversation-completeness) — Evaluates if the responses are thorough and adequately address user inputs.
-- [Conversation Relevancy](https://deepeval.com/docs/metrics-conversation-relevancy) — Checks whether the chatbot's responses remain relevant to the user's input.
 - [Custom metrics](https://deepeval.com/docs/metrics-conversational-g-eval) — Allows for tailored evaluation criteria based on domain-specific needs, such as empathy, safety, or tone.
 
 ## Evaluating Your Chatbot with DeepEval
@@ -232,7 +233,7 @@ evaluate(test_cases=convo_test_cases, metrics=metrics)
 With the evaluation complete, it's clear our chatbot has room for improvement. These were the results when I evaluated the chatbot:
 
 | Metric                    | Score |
-|---------------------------|-------|
+| ------------------------- | ----- |
 | Knowledge Retention       | 0.7   |
 | Role Adherence            | 0.6   |
 | Medical Assistant Quality | 0.5   |
@@ -330,6 +331,7 @@ class SimpleChatbot:
     async def a_chat(self, user_input: str) -> str:
         # Use `acreate` method and implement the asynchronous chat method here
 ```
+
 </details>
 
 Now that our chatbot supports these hyperparameters, we can begin experimenting with different combinations to see which configuration performs best across evaluation metrics.
@@ -386,7 +388,7 @@ for model_name in models:
                 test_case.chatbot_role = "a professional, empathetic medical assistant"
 
             # Evaluate and print metrics
-            evaluate(test_cases=convo_test_cases, metrics=metrics)    
+            evaluate(test_cases=convo_test_cases, metrics=metrics)
 ```
 
 After running all combinations, one configuration clearly stood out:
@@ -398,7 +400,7 @@ After running all combinations, one configuration clearly stood out:
 This setup consistently delivered high scores across all evaluation metrics:
 
 | Metric                    | Score |
-|---------------------------|-------|
+| ------------------------- | ----- |
 | Knowledge Retention       | 0.9   |
 | Role Adherence            | 0.9   |
 | Medical Assistant Quality | 0.8   |
@@ -406,7 +408,7 @@ This setup consistently delivered high scores across all evaluation metrics:
 Here’s a quick before-and-after comparison:
 
 | Metric                    | Initial Version | Optimized Version |
-|---------------------------|-----------------|-------------------|
+| ------------------------- | --------------- | ----------------- |
 | Knowledge Retention       | 0.7             | 0.9               |
 | Role Adherence            | 0.6             | 0.9               |
 | Medical Assistant Quality | 0.5             | 0.8               |
@@ -554,6 +556,6 @@ We’ve seen how even a simple chatbot can miss the mark — and how **DeepEval*
 
 By simulating real conversations, defining the right metrics, and plugging evaluation into CI, you catch issues early — before they ever reach a real user. No guesswork. No assumptions. Just measurable, repeatable quality.
 
-Whether you're fixing hallucinations or fine-tuning prompts, the mindset is the same: treat your chatbot like any other critical system — test it, iterate on it, and never ship blind. 
+Whether you're fixing hallucinations or fine-tuning prompts, the mindset is the same: treat your chatbot like any other critical system — test it, iterate on it, and never ship blind.
 
 Already have a bot in production? Start evaluating it. You might be surprised by what you find.

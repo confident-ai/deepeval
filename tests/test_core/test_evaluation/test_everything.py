@@ -16,7 +16,7 @@ from deepeval.metrics import (
     ToxicityMetric,
     GEval,
     SummarizationMetric,
-    ConversationRelevancyMetric,
+    TurnRelevancyMetric,
     RoleAdherenceMetric,
     ConversationCompletenessMetric,
     PromptAlignmentMetric,
@@ -267,7 +267,7 @@ def test_everything():
         model=eval_model,
         verbose_mode=verbose_mode,
     )
-    metric12 = ConversationRelevancyMetric(model=eval_model)
+    metric12 = TurnRelevancyMetric(model=eval_model)
     # metric13 = ToolCorrectnessMetric()
     metric14 = ConversationCompletenessMetric(model=eval_model)
     metric15 = RoleAdherenceMetric(model=eval_model)
@@ -336,7 +336,7 @@ def test_everything_2():
         context=["I love coffee"],
         tags=["test3", "test4"],
     )
-    metric12 = ConversationRelevancyMetric(model=eval_model)
+    metric12 = TurnRelevancyMetric(model=eval_model)
     evaluate(
         test_cases=[test_case],
         metrics=[

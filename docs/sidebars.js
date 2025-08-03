@@ -83,10 +83,10 @@ module.exports = {
           type: "category",
           label: "Multi-Turn",
           items: [
+            "metrics-turn-relevancy",
             "metrics-role-adherence",
             "metrics-knowledge-retention",
             "metrics-conversation-completeness",
-            "metrics-conversation-relevancy",
           ],
           collapsed: true,
         },

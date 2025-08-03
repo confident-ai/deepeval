@@ -111,8 +111,8 @@ The `simulate` function returns a list of `ConversationalTestCase`s, which can b
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import TurnRelevancyMetric
 ...
 
-evaluate(test_cases=conversational_test_cases, metrics=[ConversationRelevancyMetric()])
+evaluate(test_cases=conversational_test_cases, metrics=[TurnRelevancyMetric()])
 ```

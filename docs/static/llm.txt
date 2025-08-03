@@ -25,7 +25,7 @@
 - [Image Coherence Metric](https://deepeval.com/docs/multimodal-metrics-image-coherence): Evaluate image coherence with accompanying text for MLLM.
 - [Knowledge Retention Metric](https://deepeval.com/docs/metrics-knowledge-retention): Learn how to measure knowledge retention in LLM chatbots.
 - [Conversation Completeness Metric](https://deepeval.com/docs/metrics-conversation-completeness): Evaluate conversation completeness for LLM chatbots effectively.
-- [Conversation Relevancy Metric](https://deepeval.com/docs/metrics-conversation-relevancy): Evaluate conversation relevancy for LLM chatbot conversations.
+- [Conversation Relevancy Metric](https://deepeval.com/docs/metrics-turn-relevancy): Evaluate conversation relevancy for LLM chatbot conversations.
 - [RAGAS Metrics Overview](https://deepeval.com/docs/metrics-ragas): Evaluate RAG pipelines using RAGAS metrics.
 - [DeepEval Update Warnings](https://deepeval.com/docs/miscellaneous): Opt-in for update warnings in DeepEval documentation.
 - [Gemini Model Integration](https://deepeval.com/integrations/models/gemini): Integrate Gemini models with DeepEval using CLI or Python.

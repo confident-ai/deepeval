@@ -27,8 +27,8 @@ from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
-from .conversation_relevancy.conversation_relevancy import (
-    ConversationRelevancyMetric,
+from .turn_relevancy.turn_relevancy import (
+    TurnRelevancyMetric,
 )
 from .conversation_completeness.conversation_completeness import (
     ConversationCompletenessMetric,
