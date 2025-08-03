@@ -107,16 +107,12 @@ deepeval login
 
 ## Evaluate Chatbots from Simulations
 
-Evaluating your chatbot from [simulated conversations](/docs/getting-started-chatbots#evaluate-chatbots-from-simulations) is the recommended approach for chatbot evaluation, because it allows you to quickly test your chatbot in any scenario, including unseen ones.
+Evaluating your chatbot from [simulated conversations](/docs/getting-started-chatbots#evaluate-chatbots-from-simulations) is the recommended approach for chatbot evaluation, because it allows you to quickly test your chatbot in any scenario, including edge cases.
 
 <Timeline>
 <TimelineItem title="Create goldens">
 
 Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
-
-:::tip
-One `ConversationalGolden` will generate a single conversation. The quality and amount of details in the descriptions you provide to the golden directly impacts the quality a simulated conversation.
-:::
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.dataset import ConversationalGolden
@@ -131,9 +127,11 @@ conversation_golden = ConversationalGolden(
 <details>
   <summary>Curating goldens in bulk</summary>
 
-We recommend using Confident AI's dataset editor to curate goldens in bulk.
+One `ConversationalGolden` will generate a single conversation. The quality and amount of details in the descriptions you provide to the golden directly impacts the quality a simulated conversation.
 
-<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%multiturn-dataset.mp4" />
+We recommend using [Confident AI's dataset editor](https://app.confident-ai.com) to curate goldens in bulk, which allows you to edit, annotate, and assign golden creation tasks to your team.
+
+<VideoDisplay src="http://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Amultiturn-dataset.mp4" />
 
 </details>
 
@@ -276,7 +274,7 @@ conversational_test_cases = simulator.simulate(
 )
 ```
 
-The test cases should now be populated with simulated conversation `Turn`s.
+Your generated test cases should be populated with simulated `Turn`s.
 
 <details>
 <summary>Click to view an example simulated test case</summary>
@@ -332,7 +330,7 @@ deepeval login
 
 ## Evaluate Chatbots in Production
 
-You'll need a [Confident AI](https://app.confident-ai.com) account to trace conversations in production and run offline evaluations.
+`deepeval` allows you to evaluate your chatbot conversations from production as well, but you'll need a [Confident AI](https://app.confident-ai.com) account to trace and store these conversations to run offline evaluations.
 
 <Timeline>
 <TimelineItem title="Setup tracing">
