@@ -62,6 +62,7 @@ def convert_convo_goldens_to_convo_test_cases(
             turns=[],
             scenario=golden.scenario,
             user_description=golden.user_description,
+            context=golden.context,
             name=golden.name,
             additional_metadata=golden.additional_metadata,
             comments=golden.comments,

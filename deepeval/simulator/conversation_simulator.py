@@ -213,6 +213,7 @@ class ConversationSimulator:
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
             user_description=golden.user_description,
+            context=golden.context,
             name=golden.name,
             additional_metadata={
                 **(golden.additional_metadata or {}),
@@ -308,6 +309,7 @@ class ConversationSimulator:
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
             user_description=golden.user_description,
+            context=golden.context,
             name=golden.name,
             additional_metadata={
                 **(golden.additional_metadata or {}),
