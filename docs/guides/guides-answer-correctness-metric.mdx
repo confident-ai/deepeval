@@ -196,7 +196,7 @@ correctness_metric = GEval(
     ],
 )
 
-deepeval.login_with_confident_api_key("your_api_key_here")
+deepeval.login("your_api_key_here")
 dataset = EvaluationDataset()
 dataset.pull(alias="dataset_for_correctness")
 

@@ -9,7 +9,7 @@ import time
 import deepeval
 
 # Don't forget to setup tracing
-deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
+deepeval.login("<CONFIDENT_API_KEY>")
 instrument_llama_index(instrument.get_dispatcher())
 
 os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"

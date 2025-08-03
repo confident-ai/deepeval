@@ -9,7 +9,7 @@ from deepeval.feedback import collect_feedback, a_collect_feedback
 from deepeval.evaluate import evaluate, assert_test
 from deepeval.evaluate.compare import compare
 from deepeval.test_run import on_test_run_end, log_hyperparameters
-from deepeval.utils import login_with_confident_api_key
+from deepeval.utils import login
 from deepeval.telemetry import *
 from deepeval.confident import confident_evaluate
 
@@ -19,7 +19,7 @@ if os.getenv("DEEPEVAL_GRPC_LOGGING") != "YES":
     os.environ["GRPC_TRACE"] = ""
 
 __all__ = [
-    "login_with_confident_api_key",
+    "login",
     "log_hyperparameters",
     "track",
     "a_collect_feedback",

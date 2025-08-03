@@ -2914,7 +2914,7 @@ You can also login directly in Python once you have your API key:
 main.py
 
 ```codeBlockLines_e6Vv
-deepeval.login_with_confident_api_key("your-confident-api-key")
+deepeval.login("your-confident-api-key")
 
 ```
 
@@ -3610,7 +3610,7 @@ Alternatively, if you already have an account, you can log in directly using Pyt
 main.py
 
 ```codeBlockLines_e6Vv
-deepeval.login_with_confident_api_key("your-confident-api-key")
+deepeval.login("your-confident-api-key")
 
 ```
 
