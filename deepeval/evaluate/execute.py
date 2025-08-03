@@ -38,6 +38,7 @@ from deepeval.tracing.api import (
     BaseApiSpan,
 )
 from deepeval.dataset import Golden
+from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.utils import (
@@ -71,10 +72,7 @@ from deepeval.test_run.cache import (
     CachedTestCase,
     CachedMetricData,
 )
-from deepeval.evaluate.types import (
-    TestResult,
-    global_test_run_tasks,
-)
+from deepeval.evaluate.types import TestResult
 from deepeval.evaluate.utils import (
     create_metric_data,
     create_test_result,
@@ -1675,16 +1673,16 @@ def a_execute_agentic_test_cases_from_loop(
         try:
             for golden in goldens:
                 yield golden
-                if global_test_run_tasks.num_tasks() == 0:
+                if global_evaluation_tasks.num_tasks() == 0:
                     update_pbar(progress, pbar_callback_id)
                     update_pbar(progress, pbar_id)
         finally:
             asyncio.create_task = original_create_task
 
-        if global_test_run_tasks.num_tasks() > 0:
+        if global_evaluation_tasks.num_tasks() > 0:
             loop.run_until_complete(
                 asyncio.gather(
-                    *global_test_run_tasks.get_tasks(),
+                    *global_evaluation_tasks.get_tasks(),
                 )
             )
 
@@ -1759,12 +1757,12 @@ def a_execute_agentic_test_cases_from_loop(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Running Component-Level Evals (async)",
+                f"Running Component-Level Evals (sync)",
                 total=len(goldens) * 2,
             )
             pbar_callback_id = add_pbar(
                 progress,
-                f"\t⚡ Invoking your LLM application",
+                f"\t⚡ Calling LLM app (with {len(goldens)} goldens)",
                 total=len(goldens),
             )
             yield from evaluate_test_cases(
@@ -1779,7 +1777,7 @@ def a_execute_agentic_test_cases_from_loop(
     local_trace_manager.evaluating = False
     local_trace_manager.traces_to_evaluate_order = []
     local_trace_manager.traces_to_evaluate = []
-    global_test_run_tasks.clear_tasks()
+    global_evaluation_tasks.clear_tasks()
     asyncio.create_task = original_create_task
 
 

@@ -78,6 +78,24 @@ class Turn:
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
     additional_metadata: Optional[Dict] = None
 
+    def __repr__(self):
+        attrs = [f"role={self.role!r}", f"content={self.content!r}"]
+        if self.user_id is not None:
+            attrs.append(f"user_id={self.user_id!r}")
+        if self.retrieval_context is not None:
+            attrs.append(f"retrieval_context={self.retrieval_context!r}")
+        if self.tools_called is not None:
+            attrs.append(f"tools_called={self.tools_called!r}")
+        if self.mcp_tools_called is not None:
+            attrs.append(f"mcp_tools_called={self.mcp_tools_called!r}")
+        if self.mcp_resources_called is not None:
+            attrs.append(f"mcp_resources_called={self.mcp_resources_called!r}")
+        if self.mcp_prompts_called is not None:
+            attrs.append(f"mcp_prompts_called={self.mcp_prompts_called!r}")
+        if self.additional_metadata is not None:
+            attrs.append(f"additional_metadata={self.additional_metadata!r}")
+        return f"Turn({', '.join(attrs)})"
+
     def __post_init__(self):
         if (
             self.mcp_tools_called is not None

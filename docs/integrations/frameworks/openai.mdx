@@ -8,28 +8,25 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
-## Quick Summary
+`deepeval` streamlines the process of evaluating and tracing your OpenAI applications through an **OpenAI client wrapper**, and supports both end-to-end and component-level evaluations, and online evaluations in production.
 
-DeepEval streamlines the process of evaluating and tracing your OpenAI applications through an **OpenAI client wrapper**, and supports both end-to-end and component-level evaluations, and online evaluations in production.
+## End-to-End Evals
 
-## End-to-End Evaluation
+To begin evaluating your OpenAI application, simply replace your OpenAI client with `deepeval`'s OpenAI client, and pass in the `metrics` you wish to use.
 
-To begin evaluating your OpenAI application, simply replace your OpenAI client with DeepEval's OpenAI client, and pass in the `metrics` you wish to use.
-
-<Tabs>
+<Tabs groupId="openai">
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python showLineNumbers {2,18}
-from deepeval.tracing import observe
+```python title="main.py" showLineNumbers {1,17}
 from deepeval.openai import OpenAI
-from deepeval.evaluate import dataset
-
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+
+dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
 client = OpenAI()
 
-for golden in dataset(alias="Your Dataset Name"):
+for golden in dataset.evals_iterator():
     # run OpenAI client
     client.chat.completions.create(
         model="gpt-4o",
@@ -44,17 +41,16 @@ for golden in dataset(alias="Your Dataset Name"):
 </TabItem>
 <TabItem value="response" label="Responses">
 
-```python showLineNumbers {2,16}
-from deepeval.tracing import observe
+```python title="main.py" showLineNumbers {1,15}
 from deepeval.openai import OpenAI
-from deepeval.evaluate import dataset
-
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+
+dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
 client = OpenAI()
 
-for golden in dataset(alias="Your Dataset Name"):
+for golden in dataset.evals_iterator():
     # run OpenAI client
     client.responses.create(
         model="gpt-4o",
@@ -67,17 +63,16 @@ for golden in dataset(alias="Your Dataset Name"):
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python showLineNumbers {2,19}
-from deepeval.tracing import observe
-from deepeval.openai import AsyncOpenAI
-from deepeval.evaluate import dataset, test_run
-
+```python title="main.py" showLineNumbers {1,18}
+from deepeval.openai import OpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+
+dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
 client = AsyncOpenAI()
 
-for golden in dataset(alias="Your Dataset Name"):
+for golden in dataset.evals_iterator():
     # add OpenAI client task
     task = asyncio.create_task(
         client.chat.completions.create(
@@ -89,23 +84,22 @@ for golden in dataset(alias="Your Dataset Name"):
             metrics=[AnswerRelevancyMetric(), BiasMetric()]
         )
     )
-    test_run.append(task)
+    dataset.evaluate(task)
 ```
 
 </TabItem>
 <TabItem value="async-response" label="Async Responses">
 
-```python showLineNumbers {2,17}
-from deepeval.tracing import observe
-from deepeval.openai import AsyncOpenAI
-from deepeval.evaluate import dataset, test_run
-
+```python title="main.py" showLineNumbers {2,17}
+from deepeval.openai import OpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
+from deepeval.dataset import EvaluationDataset, Golden
+
+dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
 client = AsyncOpenAI()
 
-for golden in dataset(alias="Your Dataset Name"):
+for golden in dataset.evals_iterator():
     # add OpenAI client task
     task = asyncio.create_task(
         client.responses.create(
@@ -115,13 +109,13 @@ for golden in dataset(alias="Your Dataset Name"):
             metrics=[AnswerRelevancyMetric(), BiasMetric()]
         )
     )
-    test_run.append(task)
+    dataset.evaluate(task)
 ```
 
 </TabItem>
 </Tabs>
 
-There are **FIVE** optional parameters when using DeepEval's OpenAI client's chat completion and response methods:
+There are **FIVE** optional parameters when using `deepeval`'s OpenAI client's chat completion and response methods:
 
 - [Optional] `metrics`: a list of metrics of type `BaseMetric`
 - [Optional] `expected_output`: a string specifying the expected output of your OpenAI generation.
@@ -130,24 +124,23 @@ There are **FIVE** optional parameters when using DeepEval's OpenAI client's cha
 - [Optional] `expected_tools`: a list of strings, representing the expected tools to be called during OpenAI generation.
 
 :::info
-DeepEval’s OpenAI client automatically extracts the `input` and `actual_output` from each API response, enabling you to use metrics like **Answer Relevancy** out of the box. For metrics such as **Faithfulness**—which rely on additional parameters such as retrieval context—you’ll need to explicitly set these parameters when invoking the client.
+`deepeval` OpenAI client automatically extracts the `input` and `actual_output` from each API response, enabling you to use metrics like **Answer Relevancy** out of the box. For metrics such as **Faithfulness**—which rely on additional parameters such as retrieval context—you’ll need to explicitly set these parameters when invoking the client.
 :::
 
-## Using OpenAI in Component-Level Evaluation
+## Component-Level Evals
 
-You can also use DeepEval's OpenAI client **within component-level evaluations**. To set up component-level evaluations, add the `@observe` decorator to your llm_application's components, and simply replace existing OpenAI clients with DeepEval's OpenAI client, passing in the metrics you wish to use.
+You can also use `deepeval`'s OpenAI client **within component-level evaluations**. To set up component-level evaluations, add the `@observe` decorator to your llm_application's components, and simply replace existing OpenAI clients with `deepeval`'s OpenAI client, passing in the metrics you wish to use.
 
-<Tabs>
+<Tabs groupId="openai">
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python showLineNumbers {2,25}
+```python title="main.py" showLineNumbers {4,23}
 from deepeval.tracing import observe
-from deepeval.openai import OpenAI
-from deepeval.evaluate import dataset
-
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.openai import OpenAI
+
+client = OpenAI()
 
 @observe()
 def retrieve_docs(query):
@@ -158,7 +151,6 @@ def retrieve_docs(query):
 
 @observe()
 def llm_app(input):
-    client = OpenAI()
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[
@@ -169,7 +161,11 @@ def llm_app(input):
     )
     return response.choices[0].message.content
 
-for golden in dataset(alias="Your Dataset Name"):
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="...")])
+
+# Iterate through goldens
+for golden in dataset.evals_iterator():
     # run your LLM application
     llm_app(input=golden.input)
 ```
@@ -177,14 +173,11 @@ for golden in dataset(alias="Your Dataset Name"):
 </TabItem>
 <TabItem value="responses" label="Responses">
 
-```python showLineNumbers {2,23}
+```python title="main.py" showLineNumbers {4,20}
 from deepeval.tracing import observe
-from deepeval.openai import OpenAI
-from deepeval.evaluate import dataset
-
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.openai import OpenAI
 
 @observe()
 def retrieve_docs(query):
@@ -204,7 +197,11 @@ def llm_app(input):
     )
     return response.output_text
 
-for golden in dataset(alias="Your Dataset Name"):
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="...")])
+
+# Iterate through goldens
+for golden in dataset.evals_iterator():
     # run your LLM application
     llm_app(input=golden.input)
 ```
@@ -212,14 +209,11 @@ for golden in dataset(alias="Your Dataset Name"):
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python showLineNumbers {2,25}
+```python title="main.py" showLineNumbers {4,22}
 from deepeval.tracing import observe
-from deepeval.openai import AsyncOpenAI
-from deepeval.evaluate import dataset
-
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.openai import AsyncOpenAI
 
 @observe()
 async def retrieve_docs(query):
@@ -241,23 +235,24 @@ async def llm_app(input):
     )
     return response.choices[0].message.content
 
-for golden in dataset(alias="Your Dataset Name"):
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="...")])
+
+# Iterate through goldens
+for golden in dataset.evals_iterator():
     # add LLM App task to test_run
     task = asyncio.create_task(llm_app(input=golden.input))
-    test_run.append(task)
+    dataset.evaluate(task)
 ```
 
 </TabItem>
 <TabItem value="async-responses" label="Async Responses">
 
-```python showLineNumbers {2,23}
+```python title="main.py" showLineNumbers {4,20}
 from deepeval.tracing import observe
-from deepeval.openai import AsyncOpenAI
-from deepeval.evaluate import dataset
-
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.openai import AsyncOpenAI
 
 @observe()
 async def retrieve_docs(query):
@@ -277,16 +272,20 @@ async def llm_app(input):
     )
     return response.output_text
 
-for golden in dataset(alias="Your Dataset Name"):
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="...")])
+
+# Iterate through goldens
+for golden in dataset.evals_iterator():
     # add LLM App task to test_run
     task = asyncio.create_task(llm_app(input=golden.input))
-    test_run.append(task)
+    dataset.evaluate(task)
 ```
 
 </TabItem>
 </Tabs>
 
-When used inside `@observe` components, DeepEval’s OpenAI client automatically:
+When used inside `@observe` components, `deepeval`'s OpenAI client automatically:
 
 - Generates an LLM span for every OpenAI API call, including nested Tool spans for any tool invocations.
 - Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
@@ -301,6 +300,6 @@ When used inside `@observe` components, DeepEval’s OpenAI client automatically
   />
 </div>
 
-## Online Evaluation in Production
+## Online Evals in Production
 
 ...To be documented

@@ -1,13 +1,9 @@
-import os
 import asyncio
 import time
 from deepeval.integrations.langchain.callback import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
-import deepeval
 from langgraph.prebuilt import create_react_agent
-from deepeval.evaluate import dataset, test_run
-from deepeval.dataset import Golden
-from deepeval.evaluate.configs import AsyncConfig
+from deepeval.dataset import EvaluationDataset, Golden
 
 
 task_completion = TaskCompletionMetric(
@@ -33,8 +29,9 @@ goldens = [
 
 
 def main():
-    for golden in dataset(goldens=goldens):
-        test_run.append(
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator():
+        dataset.evaluate(
             asyncio.create_task(
                 agent.ainvoke(
                     input={

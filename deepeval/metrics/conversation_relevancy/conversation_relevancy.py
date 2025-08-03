@@ -1,4 +1,5 @@
 import asyncio
+import itertools
 from typing import Optional, Union, Dict, List
 
 from deepeval.metrics import BaseConversationalMetric
@@ -9,6 +10,7 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
     get_turns_in_sliding_window,
+    get_unit_interactions,
     trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
@@ -66,10 +68,11 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                unit_interactions = get_unit_interactions(test_case.turns)
                 turns_windows: List[List[Turn]] = [
-                    window
+                    list(itertools.chain(*window))
                     for window in get_turns_in_sliding_window(
-                        test_case.turns, self.window_size
+                        unit_interactions, self.window_size
                     )
                 ]
 
@@ -107,10 +110,11 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            unit_interactions = get_unit_interactions(test_case.turns)
             turns_windows: List[List[Turn]] = [
-                window
+                list(itertools.chain(*window))
                 for window in get_turns_in_sliding_window(
-                    test_case.turns, self.window_size
+                    unit_interactions, self.window_size
                 )
             ]
 
@@ -121,6 +125,7 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
             self.success = self.score >= self.threshold
+
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[

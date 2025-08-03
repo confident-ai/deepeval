@@ -2,13 +2,13 @@ import inspect
 import json
 import re
 import sys
+import itertools
 from typing import Any, Dict, Optional, List, Union, Tuple
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
     MismatchedTestCaseInputsError,
 )
-from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.models import (
     DeepEvalBaseLLM,
     DeepEvalBaseMLLM,
@@ -32,7 +32,6 @@ from deepeval.models import (
     DeepSeekModel,
 )
 from deepeval.key_handler import (
-    KeyValues,
     ModelKeyValues,
     EmbeddingKeyValues,
     KEY_FILE_HANDLER,
@@ -45,6 +44,7 @@ from deepeval.metrics import (
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
+    Turn,
     LLMTestCase,
     LLMTestCaseParams,
     MLLMTestCase,
@@ -116,6 +116,33 @@ def convert_turn_to_dict(
 def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
     for i in range(len(turns)):
         yield turns[max(0, i - window_size + 1) : i + 1]
+
+
+def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
+    units: List[List[Turn]] = []
+    current: List[Turn] = []
+    has_user = False
+
+    for turn in turns:
+        # Boundary: user after assistant, but only if we've already seen a user in current
+        if current and current[-1].role == "assistant" and turn.role == "user" and has_user:
+            units.append(current)           # finalize previous unit
+            current = [turn]                # start new unit with this user
+            has_user = True
+            continue
+
+        # Otherwise just accumulate
+        current.append(turn)
+        if turn.role == "user":
+            has_user = True
+
+    # Finalize last unit only if it ends with assistant and includes a user
+    if current and len(current) > 1 and current[-1].role == "assistant" and has_user:
+        units.append(current)
+
+    return units
+
+
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):

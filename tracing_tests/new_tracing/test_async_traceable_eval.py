@@ -1,4 +1,3 @@
-from time import perf_counter
 from asyncio import sleep
 import random
 
@@ -17,14 +16,11 @@ from deepeval.tracing import (
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.dag import (
     DeepAcyclicGraph,
-    TaskNode,
     BinaryJudgementNode,
-    NonBinaryJudgementNode,
     VerdictNode,
 )
 from deepeval.metrics import DAGMetric, GEval
-from deepeval import assert_test
-from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
+from deepeval.evaluate.configs import AsyncConfig, DisplayConfig
 
 geval_metric = GEval(
     name="Persuasiveness",
@@ -170,21 +166,29 @@ async def meta_agent(input: str):
 
 ###################################v
 
-from deepeval.dataset import Golden
+import asyncio
+from deepeval.dataset import Golden, EvaluationDataset
 from deepeval import evaluate
 
-# goldens = [
-#     Golden(input="What's the weather like in SF?"),
-#     Golden(input="Tell me about Elon Musk."),
-#     #    Golden(input="What's the weather like in SF?"),
-#     # Golden(input="Tell me about Elon Musk."),
-#     #    Golden(input="What's the weather like in SF?"),
-#     # Golden(input="Tell me about Elon Musk."),
-#     #    Golden(input="What's the weather like in SF?"),
-#     # Golden(input="Tell me about Elon Musk."),
-#     #    Golden(input="What's the weather like in SF?"),
-#     # Golden(input="Tell me about Elon Musk.")
-# ]
+goldens = [
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+    Golden(input="What's the weather like in SF?"),
+    Golden(input="Tell me about Elon Musk."),
+]
+
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(meta_agent(golden.input))
+    dataset.evaluate(task)
+
 
 # # Run Async
 #    goldens=goldens * 40,
@@ -206,13 +210,6 @@ from deepeval import evaluate
 #     async_config=AsyncConfig(run_async=True),
 #     display_config=DisplayConfig(show_indicator=False),
 # )
-# # Run Sync
-evaluate(
-    goldens=goldens,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=False),
-    display_config=DisplayConfig(show_indicator=True),
-)
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
