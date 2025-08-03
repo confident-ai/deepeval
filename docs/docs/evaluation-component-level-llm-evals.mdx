@@ -127,18 +127,17 @@ flowchart LR
 You can run component-level LLM evaluations in either:
 
 - **CI/CD pipelines** using `deepeval test run`, or
-- **Python scripts** using the `evaluate()` function or
-- **Python scripts** using the `dataset` iterator
+- **Python scripts** by looping through your dataset
 
 All 3 methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
 ### Use Python scripts
 
+To use a dataset for component-level testing, initialize a dataset with a list of `Golden`s, then invoke your `@observe` decorated LLM application within the loop of `evals_iterator()`.
+
 <Tabs>
 
 <TabItem value="async" label="dataset (Async)">
-
-To use the `dataset` iterator for component-level testing, supply your dataset alias or a list of `Golden`s to the iterator, then invoke your `@observe` decorated LLM application within the loop.
 
 ```python title="main.py"
 from somewhere import your_async_llm_app # Replace with your async LLM app
@@ -156,8 +155,6 @@ for golden in dataset.evals_iterator():
 
 <TabItem value="sync" label="dataset (Sync)">
 
-To use the `dataset` iterator for component-level testing, supply your dataset alias or a list of `Golden`s to the iterator, then invoke your `@observe` decorated LLM application within the loop.
-
 ```python title="main.py"
 from somewhere import your_llm_app # Replace with your LLM app
 from deepeval.dataset import EvaluationDataset, Golden
@@ -173,7 +170,7 @@ for golden in dataset.evals_iterator():
 
 </Tabs>
 
-There are **five** optional parameters when calling the `dataset` iterator for **COMPONENT-LEVEL** evaluation:
+There are **five** optional parameters when using the `evals_iterator()` for **COMPONENT-LEVEL** evaluation:
 
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
