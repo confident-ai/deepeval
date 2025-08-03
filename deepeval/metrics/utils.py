@@ -119,24 +119,30 @@ def get_turns_in_sliding_window(turns: List[Turn], window_size: int):
 
 
 def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
-    unit_interactions = []
-    unit_interaction = []
-    for turn in turns:
-        if turn.role == "user":
-            if unit_interaction and unit_interaction[-1].role == "assistant":
-                unit_interactions.append(unit_interaction)
-                unit_interaction = []
-            unit_interaction.append(turn)
-        else:
-            unit_interaction.append(turn)
+    units: List[List[Turn]] = []
+    current: List[Turn] = []
+    has_user = False
 
-    if (
-        unit_interaction
-        and len(unit_interaction) > 1
-        and unit_interaction[-1].role == "assistant"
-    ):
-        unit_interactions.append(unit_interaction)
-    return unit_interactions
+    for turn in turns:
+        # Boundary: user after assistant, but only if we've already seen a user in current
+        if current and current[-1].role == "assistant" and turn.role == "user" and has_user:
+            units.append(current)           # finalize previous unit
+            current = [turn]                # start new unit with this user
+            has_user = True
+            continue
+
+        # Otherwise just accumulate
+        current.append(turn)
+        if turn.role == "user":
+            has_user = True
+
+    # Finalize last unit only if it ends with assistant and includes a user
+    if current and len(current) > 1 and current[-1].role == "assistant" and has_user:
+        units.append(current)
+
+    return units
+
+
 
 
 def print_tools_called(tools_called_list: List[ToolCall]):
