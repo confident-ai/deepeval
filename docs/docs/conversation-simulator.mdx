@@ -40,24 +40,22 @@ The `ConversationSimulator` uses the scenario and user description from a `Conve
 To create a `ConversationSimulator`, you'll need to define a callback that wraps around your LLM chatbot.
 
 ```python
+from deepeval.test_case import Turn
 from deepeval.conversation_simulator import ConversationSimulator
 
-async def model_callback(input, turns, thread_id) -> str:
-    return f"I don't know how to answer this: {input}"
+async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
+    return Turn(role="assistant", content=f"I don't know how to answer this: {input}")
 
 simulator = ConversationSimulator(model_callback=model_callback)
 ```
 
 There are **ONE** mandatory and **FOUR** optional parameters when creating a `ConversationSimulator`:
 
-- `model_callback`: a callback of type `Callable[[str], str]` that wraps around your conversational agent.
+- `model_callback`: a callback that wraps around your conversational agent.
 - [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
 - [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
-
-<details>
-<summary>Defining a model callback for your chatbot</summary>
 
 Only the `input` argument is required when defining your `model_callback`, but you may also define these optional arguments:
 
@@ -66,10 +64,10 @@ Only the `input` argument is required when defining your `model_callback`, but y
 
 While turns captures the dialogue context for each turn, some applications must persist additional state across turns — for example, when invoking external APIs or tracking user-specific data. In these cases, you'll want to take advantage of the `thread_id`.
 
-```python title="main.py"l
+```python title="main.py"
 from deepeval.test_case import Turn
 
-async def model_callback(input: str, turns: List[Turn], thread_id: str) -> str:
+async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
 
     # Inspect the turns and thread_id
     print(turns)
@@ -77,10 +75,8 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> str:
 
     # Replace with your chatbot
     res = await your_llm_app(input, turns, thread_id)
-    return res
+    return Turn(role="assistant", content=res)
 ```
-
-</details>
 
 ## Simulate Your First Conversation
 
