@@ -129,7 +129,7 @@ conversation_golden = ConversationalGolden(
 
 One `ConversationalGolden` will generate a single conversation. The quality and amount of details in the descriptions you provide to the golden directly impacts the quality a simulated conversation.
 
-We recommend using [Confident AI's dataset editor](https://app.confident-ai.com) to curate goldens in bulk, which allows you to edit, annotate, and assign golden creation tasks to your team.
+We recommend using [Confident AI's dataset editor](https://app.confident-ai.com) to curate goldens in bulk, which allows you to edit, annotate, and assign golden creation tasks to your team members.
 
 <VideoDisplay src="http://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Amultiturn-dataset.mp4" />
 
@@ -141,7 +141,7 @@ We recommend using [Confident AI's dataset editor](https://app.confident-ai.com)
 Define a callback function to generate the **next chatbot response** in a conversation, given the conversation history.
 
 :::info
-Your model callback should accept an `input`, and optionally `turns` and `thread_id`, and return a `Turn` object.
+Your model callback should accept an `input`, and optionally `turns` and `thread_id`. It should return a `Turn` object.
 :::
 
 <Tabs>
@@ -274,10 +274,10 @@ conversational_test_cases = simulator.simulate(
 )
 ```
 
-Your generated test cases should be populated with simulated `Turn`s.
-
 <details>
 <summary>Click to view an example simulated test case</summary>
+
+Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, `expected_outcome`, and `user_description` from the conversation golden.
 
 ```python
 ConversationalTestCase(
@@ -351,13 +351,6 @@ async def chatbot(input):
     return response
 ```
 
-</TimelineItem>
-<TimelineItem title="Invoke your chatbot">
-
-Talk to your chatbot as you normally would. If you're logged in, all conversations will be automatically traced and sent to [Confident AI](https://app.confident-ai.com).
-
-<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Athreads.mp4" />
-
 If you're running your chatbot locally, set the `CONFIDENT_TRACE_FLUSH` environment variable to `YES` to enable tracing.
 
 ```bash
@@ -365,9 +358,44 @@ export CONFIDENT_TRACE_FLUSH=YES
 ```
 
 </TimelineItem>
+<TimelineItem title="Invoke your chatbot">
+
+Talk to your chatbot as you normally would. If you're logged in, all conversations will be automatically traced and sent to [Confident AI](https://app.confident-ai.com).
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Athreads.mp4" />
+
+:::note
+
+You should see a trace log like the one below in your CLI for each conversation turn, if tracing is successfully set up.
+
+<pre>
+  <code>
+    <span
+      style={{ color: "#7f7f7f", fontWeight: "bold", whiteSpace: "nowrap" }}
+    >
+      [Confident AI Trace Log]{"  "}
+    </span>
+    <span style={{ color: "#00ff00", whiteSpace: "nowrap" }}>
+      Successfully posted trace (...):{" "}
+    </span>
+    <span
+      style={{
+        color: "#5f5fff",
+        textDecoration: "underline",
+        whiteSpace: "nowrap",
+      }}
+    >
+      https://app.confident.ai/[...]
+    </span>
+  </code>
+</pre>
+
+:::
+
+</TimelineItem>
 <TimelineItem title="Create metric collection">
 
-Navigate to [Confident AI](https://app.confident-ai.com) and create a [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud#create-a-metric-collection) with the metrics you wish to use.
+Navigate to [Confident AI](https://app.confident-ai.com) and create a [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud#create-a-metric-collection) with the multi-turn metrics you wish to use.
 
 <VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Ametric-collection.mp4" />
 
