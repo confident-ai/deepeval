@@ -895,7 +895,6 @@ class TestRunManager:
                 "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
             )
 
-
     def get_latest_test_run_data(self) -> Optional[TestRun]:
         try:
             if os.path.exists(LATEST_TEST_RUN_FILE_PATH):

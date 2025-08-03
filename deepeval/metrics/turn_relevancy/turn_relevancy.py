@@ -158,10 +158,8 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             return res.reason
         else:
             try:
-                res: TurnRelevancyScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=TurnRelevancyScoreReason
-                    )
+                res: TurnRelevancyScoreReason = await self.model.a_generate(
+                    prompt, schema=TurnRelevancyScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -231,9 +229,7 @@ class TurnRelevancyMetric(BaseConversationalMetric):
             ]
         )
         if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=TurnRelevancyVerdict
-            )
+            res, cost = self.model.generate(prompt, schema=TurnRelevancyVerdict)
             self.evaluation_cost += cost
             return res
         else:

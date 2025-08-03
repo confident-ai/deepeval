@@ -89,7 +89,7 @@ class Api:
 
         if not api_key:
             raise ValueError(
-                f"No API key found. Please run `deepeval login` or set the {CONFIDENT_API_KEY_ENV_VAR} environment variable in the CLI."
+                f"No Confident API key found. Please run `deepeval login` or set the {CONFIDENT_API_KEY_ENV_VAR} environment variable in the CLI."
             )
 
         self.api_key = api_key
