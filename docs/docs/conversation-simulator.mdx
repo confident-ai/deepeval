@@ -57,6 +57,8 @@ There are **ONE** mandatory and **FOUR** optional parameters when creating a `Co
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
 - [Optional] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
 
+### Model callback
+
 Only the `input` argument is required when defining your `model_callback`, but you may also define these optional arguments:
 
 - [Optional] `turns`: a list of `Turn`s, which include the role and content of each message in the conversation.
@@ -78,7 +80,7 @@ async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     return Turn(role="assistant", content=res)
 ```
 
-## Simulate Your First Conversation
+## Simulate A Conversation
 
 To simulate your first conversation, simply pass in a list of `ConversationalGolden`s to the `simulate` method:
 
