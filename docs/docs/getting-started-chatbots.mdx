@@ -115,7 +115,7 @@ Evaluating your chatbot from [simulated conversations](/docs/getting-started-cha
 Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
 
 :::tip
-The quality and amount of details in the descriptions you provide to `ConversationalGolden` will directly impact the quality of your simulated conversations.
+One `ConversationalGolden` will generate a single conversation. The quality and amount of details in the descriptions you provide to the golden directly impacts the quality a simulated conversation.
 :::
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
@@ -131,17 +131,19 @@ conversation_golden = ConversationalGolden(
 <details>
   <summary>Curating goldens in bulk</summary>
 
-#TODO: add confident ai dataset editor
+We recommend using Confident AI's dataset editor to curate goldens in bulk.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%multiturn-dataset.mp4" />
 
 </details>
 
 </TimelineItem>
 <TimelineItem title="Setup chatbot">
 
-Define a callback function that generates the **next chatbot response** in a conversation.
+Define a callback function to generate the **next chatbot response** in a conversation, given the conversation history.
 
 :::info
-Your model callback should accept an `input`, and optionally `turns` and `thread_id`.
+Your model callback should accept an `input`, and optionally `turns` and `thread_id`, and return a `Turn` object.
 :::
 
 <Tabs>
@@ -150,10 +152,10 @@ Your model callback should accept an `input`, and optionally `turns` and `thread
 ```python title="main.py" showLineNumbers={true} wrapLines={true}"
 from deepeval.test_case import Turn
 
-async def model_callback(input: str, turns: List[Turn], thread_id: str) -> str:
+async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     # Replace with your chatbot
     response = await your_chatbot(input, turns, thread_id)
-    return response
+    return Turn(role="assistant", content=response)
 ```
 
 </TabItem>
@@ -172,7 +174,7 @@ async def model_callback(input: str, turns: List[Turn]) -> str:
         {"role": "user", "content": input},
     ]
     response = await client.chat.completions.create(model="gpt-4.1", messages=messages)
-    return response.choices[0].message.content
+    return Turn(role="assistant", content=response.choices[0].message.content)
 ```
 
 </TabItem>
@@ -189,12 +191,12 @@ llm = ChatOpenAI(model="gpt-4")
 prompt = ChatPromptTemplate.from_messages([("system", "You are a ticket purchasing assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
 chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
 
-async def model_callback(input: str, thread_id: str) -> str:
+async def model_callback(input: str, thread_id: str) -> Turn:
     response = chain_with_history.invoke(
         {"input": input},
         config={"configurable": {"session_id": thread_id}}
     )
-    return response.content
+    return Turn(role="assistant", content=response.content)
 ```
 
 </TabItem>
@@ -209,11 +211,11 @@ from llama_index.core.memory import ChatMemoryBuffer
 chat_store = SimpleChatStore()
 llm = OpenAI(model="gpt-4")
 
-async def model_callback(input: str, thread_id: str) -> str:
+async def model_callback(input: str, thread_id: str) -> Turn:
     memory = ChatMemoryBuffer.from_defaults(chat_store=chat_store, chat_store_key=thread_id)
     chat_engine = SimpleChatEngine.from_defaults(llm=llm, memory=memory)
     response = chat_engine.chat(input)
-    return response.response
+    return Turn(role="assistant", content=response.response)
 ```
 
 </TabItem>
@@ -225,12 +227,12 @@ from agents import Agent, Runner, SQLiteSession
 sessions = {}
 agent = Agent(name="Test Assistant", instructions="You are a helpful assistant that answers questions concisely.")
 
-async def model_callback(input: str, thread_id: str) -> str:
+async def model_callback(input: str, thread_id: str) -> Turn:
     if thread_id not in sessions:
         sessions[thread_id] = SQLiteSession(thread_id)
     session = sessions[thread_id]
     result = await Runner.run(agent, input, session=session)
-    return result.final_output
+    return Turn(role="assistant", content=result.final_output)
 ```
 
 </TabItem>
@@ -245,7 +247,7 @@ from typing import List
 
 agent = Agent('openai:gpt-4', system_prompt="You are a helpful assistant that answers questions concisely.")
 
-async def model_callback(input: str, turns: List[Turn]) -> str:
+async def model_callback(input: str, turns: List[Turn]) -> Turn:
     message_history = []
     for turn in turns:
         if turn.role == "user":
@@ -253,32 +255,63 @@ async def model_callback(input: str, turns: List[Turn]) -> str:
         elif turn.role == "assistant":
             message_history.append(ModelResponse(parts=[TextPart(content=turn.content)], model_name='gpt-4', timestamp=datetime.now(), kind='response'))
     result = await agent.run(input, message_history=message_history)
-    return result.output
+    return Turn(role="assistant", content=result.output)
 ```
 
 </TabItem>
 </Tabs>
 
 </TimelineItem>
-<TimelineItem title="Running an evaluation">
+<TimelineItem title="Simulate conversations">
 
-Create a `ConversationSimulator` with the model callback you've defined, and run simulations to generate conversational test cases. Then, evaluate the test cases using `deepeval`'s [multi-turn metrics](/docs/metrics-conversation-relevancy).
+Create a [conversation simulator](/docs/conversation-simulator) with the model callback, and run simulations to generate conversational test cases from the conversational golden you created.
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval import evaluate
 from deepeval.conversation_simulator import ConversationSimulator
-from deepeval.metrics import ConversationRelevancyMetric
-...
 
-# Simulate conversations
 simulator = ConversationSimulator(model_callback=chatbot_callback)
-conversational_test_cases = simulator.simulate(goldens=[conversation_golden])
+conversational_test_cases = simulator.simulate(
+    goldens=[conversation_golden],
+    max_turns=10,
+)
+```
 
-# Evaluate conversations
-evaluate(conversational_test_cases, metrics=[role_adherence, knowledge_retention])
+The test cases should now be populated with simulated conversation `Turn`s.
+
+<details>
+<summary>Click to view an example simulated test case</summary>
+
+```python
+ConversationalTestCase(
+    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    user_description="Andy Byron is the CEO of Astronomer.",
+    turns=[
+        Turn(role="user", content="Hello, how are you?"),
+        Turn(role="assistant", content="I'm doing well, thank you!"),
+        Turn(role="user", content="How can I help you today?"),
+        Turn(role="assistant", content="I'd like to buy a ticket to a Coldplay concert."),
+    ]
+)
+```
+
+</details>
+
+</TimelineItem>
+
+<TimelineItem title="Run an evaluation">
+
+Run an evaluation on the simulated test cases using `deepeval`'s [multi-turn metrics](/docs/metrics-conversational-g-eval).
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import ConversationRelevancyMetric
+from deepeval import evaluate
+
+evaluate(conversational_test_cases, metrics=[ConversationRelevancyMetric()])
 ```
 
 </TimelineItem>
+
 <TimelineItem title="View on Confident AI">
 
 If you're logged in to Confident AI, you'll be automatically directed to view your chatbot evaluation report.
@@ -299,210 +332,62 @@ deepeval login
 
 ## Evaluate Chatbots in Production
 
-You'll need to <a href="/docs/conversation-simulator">simulate conversations</a> with your chatbot if you don't have conversations to evaluate.
+You'll need a [Confident AI](https://app.confident-ai.com) account to trace conversations in production and run offline evaluations.
 
 <Timeline>
-<TimelineItem title="Setup chatbot">
+<TimelineItem title="Setup tracing">
 
-Setup your chatbot to return a response, given the user input and conversation history.
+Attach the `@observe` decorator to your chatbot's outermost function, and record the user input, chatbot response, and thread ID in `update_current_trace`.
 
-<Tabs>
-<TabItem value="python" label="Python">
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,3,7,8,9}"
+from deepeval.tracing import observe, update_current_trace
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-async def chatbot(input, conversation_history):
-    # Replace this with your chatbot's response
-    return f"Chatbot response to: {input} and {conversation_history}"
-```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-import openai
-import json
-
-client = openai.OpenAI()
-
-async def chatbot(input, conversation_history):
-    # Parse conversation history from JSON string
-    history = json.loads(conversation_history)
-    messages = []
-    for turn in history:
-        messages.append({"role": turn["role"], "content": turn["content"]})
-
-    # Add current user input
-    messages.append({"role": "user", "content": input})
-
-    # Replace with your chatbot's response
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=messages
+@observe()
+async def chatbot(input):
+    response = f"Chatbot response to: {input}"
+    update_current_trace(
+        input=input,
+        output=response,
+        thread_id="thread_id",
     )
-    return response.choices[0].message.content
-```
-
-</TabItem>
-<TabItem value="langchain" label="LangChain">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from langchain.schema import HumanMessage, AIMessage
-from langchain_openai import ChatOpenAI
-import json
-
-llm = ChatOpenAI(model="gpt-4")
-
-async def chatbot(input, conversation_history):
-    # Parse conversation history from JSON string
-    history = json.loads(conversation_history)
-    messages = []
-    for turn in history:
-        if turn["role"] == "user":
-            messages.append(HumanMessage(content=turn["content"]))
-        else:
-            messages.append(AIMessage(content=turn["content"]))
-
-    # Add current user input
-    messages.append(HumanMessage(content=input))
-
-    # Replace with your chatbot's response
-    response = await llm.ainvoke(messages)
-    return response.content
-```
-
-</TabItem>
-<TabItem value="langgraph" label="LangGraph">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from langgraph.graph import MessagesState
-from langchain_core.messages import HumanMessage, AIMessage
-import json
-
-async def chatbot(input, conversation_history):
-    # Parse conversation history from JSON string
-    history = json.loads(conversation_history)
-    messages = []
-    for turn in history:
-        if turn["role"] == "user":
-            messages.append(HumanMessage(content=turn["content"]))
-        else:
-            messages.append(AIMessage(content=turn["content"]))
-
-    # Add current user input
-    messages.append(HumanMessage(content=input))
-
-    # Replace with your chatbot's response
-    state = {"messages": messages}
-    result = await your_graph.ainvoke(state)
-    return result["messages"][-1].content
-```
-
-</TabItem>
-<TabItem value="llama_index" label="LlamaIndex">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from llama_index.core.llms import ChatMessage, MessageRole
-from llama_index.core.chat_engine import SimpleChatEngine
-import json
-...
-
-async def chatbot(input, conversation_history):
-    # Parse conversation history from JSON string
-    history = json.loads(conversation_history)
-    messages = []
-    for turn in history:
-        role = MessageRole.USER if turn["role"] == "user" else MessageRole.ASSISTANT
-        messages.append(ChatMessage(role=role, content=turn["content"]))
-
-    # Add current user input
-    messages.append(ChatMessage(role=MessageRole.USER, content=input))
-
-    # Replace with your chatbot's response
-    response = await chat_engine.achat(input, chat_history=messages[:-1])
-    return str(response)
-```
-
-</TabItem>
-<TabItem value="openai-agents" label="OpenAI Agents">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from agents import Agent, Runner, SQLiteSession
-import json
-...
-
-agent = Agent(name="Assistant", instructions="You are a helpful assistant")
-session = SQLiteSession("conversation_session")
-
-async def chatbot(input, conversation_history):
-    # Parse conversation history from JSON string
-    history = json.loads(conversation_history)
-    history_items = []
-    for turn in history:
-        history_items.append({"role": turn["role"], "content": turn["content"]})
-    await session.add_items(history_items)
-
-    # Replace with your chatbot's response
-    result = await Runner.run(agent, input, session=session)
-    return result.final_output
-```
-
-</TabItem>
-<TabItem value="pydantic" label="Pydantic AI">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from pydantic_ai import Agent
-from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
-import json
-...
-
-agent = Agent('openai:gpt-4o', system_prompt='Be a helpful assistant.')
-
-async def chatbot(input, conversation_history):
-    # Parse conversation history from JSON string
-    history = json.loads(conversation_history)
-    message_history = []
-    for turn in history:
-        if turn["role"] == "user":
-            message_history.append(
-                ModelRequest(parts=[UserPromptPart(content=turn["content"])])
-            )
-        else:
-            message_history.append(
-                ModelResponse(parts=[TextPart(content=turn["content"])])
-            )
-
-    # Replace with your chatbot's response
-    result = await agent.run(input, message_history=message_history)
-    return result.data
-```
-
-</TabItem>
-</Tabs>
-
-</TimelineItem>
-<TimelineItem title="Define user profile">
-
-Define user profiles to interact with your chatbot.
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-user_profiles = [
-  'Garry Tan, YC Partner. Probably has a keyboard with only the Enter key.',
-  'Jessica Livingston, YC Partner. Can spot a unicorn before it’s even born.'
-]
+    return response
 ```
 
 </TimelineItem>
-<TimelineItem title="Simulate conversations">
+<TimelineItem title="Invoke your chatbot">
 
-Run simulations with the user profiles and chatbot callback function you previously defined.
+Talk to your chatbot as you normally would. If you're logged in, all conversations will be automatically traced and sent to [Confident AI](https://app.confident-ai.com).
 
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from deepeval.conversation_simulator import ConversationSimulator
-...
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Athreads.mp4" />
 
-simulator = ConversationSimulator(user_profiles=user_profiles)
-test_cases = simulator.simulate(chatbot)
+If you're running your chatbot locally, set the `CONFIDENT_TRACE_FLUSH` environment variable to `YES` to enable tracing.
+
+```bash
+export CONFIDENT_TRACE_FLUSH=YES
 ```
 
 </TimelineItem>
+<TimelineItem title="Create metric collection">
+
+Navigate to [Confident AI](https://app.confident-ai.com) and create a [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud#create-a-metric-collection) with the metrics you wish to use.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Ametric-collection.mp4" />
+
+</TimelineItem>
+<TimelineItem title="Run an evaluation">
+
+Find the thread ID of the conversation you wish to evaluate and run an evaluation using the metric collection you created.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.tracing import evaluate_thread
+
+evaluate_thread(thread_id="your_thread_id", metric_collection="Collection Name")
+```
+
+If you're logged in to [Confident AI](https://app.confident-ai.com), you can view these evaluations in the [Evaluations](https://app.confident-ai.com/evaluations) tab of each thread.
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Aoffline-evals.mp4" />
+
+</TimelineItem>
+
 </Timeline>
