@@ -255,7 +255,7 @@ export CONFIDENT_TRACE_FLUSH=YES
 
 Select [RAG metrics](/docs/metrics-answer-relevancy) to evaluate your RAG components, or define your own using [G-Eval](/docs/metrics-llm-evals).
 
-```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,6}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,6}"
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
 
 answer_relevancy = AnswerRelevancyMetric(threshold=0.8)
