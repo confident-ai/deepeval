@@ -26,7 +26,7 @@ def setup_instrumentation(api_key: Optional[str] = None):
     safe_patch_agent_run_method()
 
     if api_key:
-        deepeval.login_with_confident_api_key(api_key)
+        deepeval.login(api_key)
     
     if not isinstance(trace.get_tracer_provider(), TracerProvider):
         tracer_provider = TracerProvider()
