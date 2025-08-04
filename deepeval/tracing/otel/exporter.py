@@ -12,10 +12,8 @@ from opentelemetry.sdk.trace.export import (
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import (
-    AgentAttributes,
     LlmAttributes,
     RetrieverAttributes,
-    ToolAttributes,
 )
 from deepeval.tracing.types import (
     AgentSpan,
