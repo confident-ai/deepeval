@@ -145,7 +145,7 @@ Create a test case using retrieval context and LLM output from your RAG pipeline
 ```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,4}"
 from deepeval.test_case import LLMTestCase
 
-input = 'What does YC look for?'
+input = 'How do I purchase tickets to a Coldplay concert?'
 actual_output, retrieved_contexts = rag_pipeline(input)
 
 test_case = LLMTestCase(
@@ -179,7 +179,7 @@ DeepEval offers a total of 5 RAG metrics, which are:
 - [Contextual Precision](/docs/metrics-contextual-precision)
 - [Contextual Recall](/docs/metrics-contextual-recall)
 
-Each metric measures a [different parameter](/guides/guides-rag-evaluation) in your RAG pipeline's quality, and can help you determine the best prompts, models, and retriever settings for your use-case.
+Each metric measures a [different parameter](/guides/guides-rag-evaluation) in your RAG pipeline's quality, and each can help you determine the best prompts, models, or retriever settings for your use-case.
 
 </details>
 
@@ -253,7 +253,7 @@ export CONFIDENT_TRACE_FLUSH=YES
 </TimelineItem>
 <TimelineItem title="Define metrics">
 
-Select [RAG metrics](/docs/metrics-answer-relevancy) to evaluate your RAG pipeline, or define your own using [G-Eval](/docs/metrics-llm-evals).
+Select [RAG metrics](/docs/metrics-answer-relevancy) to evaluate your RAG components, or define your own using [G-Eval](/docs/metrics-llm-evals).
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true} metastring="{1,6}"
 from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
@@ -265,7 +265,7 @@ faithfulness = FaithfulnessMetric(threshold=0.8)
 </TimelineItem>
 <TimelineItem title="Configure metrics">
 
-Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span` with the parameters required by the metrics defined above.
+Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span` with the input, output, and retrieval context.
 
 ```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,8,12,13,14,19,23,24,25}"
 from deepeval.tracing import observe, update_current_span
@@ -329,7 +329,7 @@ deepeval login
 
 :::
 
-<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aai-agent-evals%3Aend-to-end.mp4" />
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag-evals%3Acomponent.mp4" />
 
 </TimelineItem>
 </Timeline>
@@ -424,7 +424,7 @@ deepeval login
 
 :::
 
-<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Arag-evals%3Aconversation.mp4" />
 
 </TimelineItem>
 </Timeline>
