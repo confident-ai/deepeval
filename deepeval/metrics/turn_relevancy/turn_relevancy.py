@@ -3,8 +3,8 @@ import itertools
 from typing import Optional, Union, Dict, List
 
 from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.conversation_relevancy.template import (
-    ConversationRelevancyTemplate,
+from deepeval.metrics.turn_relevancy.template import (
+    TurnRelevancyTemplate,
 )
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
@@ -19,10 +19,10 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.conversation_relevancy.schema import *
+from deepeval.metrics.turn_relevancy.schema import *
 
 
-class ConversationRelevancyMetric(BaseConversationalMetric):
+class TurnRelevancyMetric(BaseConversationalMetric):
     _required_test_case_params = [TurnParams.CONTENT, TurnParams.ROLE]
 
     def __init__(
@@ -147,21 +147,19 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                     {"message number": f"{index+1}", "reason": verdict.reason}
                 )
 
-        prompt = ConversationRelevancyTemplate.generate_reason(
+        prompt = TurnRelevancyTemplate.generate_reason(
             score=self.score, irrelevancies=irrelevancies
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=ConversationRelevancyScoreReason
+                prompt, schema=TurnRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ConversationRelevancyScoreReason = (
-                    await self.model.a_generate(
-                        prompt, schema=ConversationRelevancyScoreReason
-                    )
+                res: TurnRelevancyScoreReason = await self.model.a_generate(
+                    prompt, schema=TurnRelevancyScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -177,19 +175,19 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
                     {"message number": f"{index+1}", "reason": verdict.reason}
                 )
 
-        prompt = ConversationRelevancyTemplate.generate_reason(
+        prompt = TurnRelevancyTemplate.generate_reason(
             score=self.score, irrelevancies=irrelevancies
         )
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=ConversationRelevancyScoreReason
+                prompt, schema=TurnRelevancyScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ConversationRelevancyScoreReason = self.model.generate(
-                    prompt, schema=ConversationRelevancyScoreReason
+                res: TurnRelevancyScoreReason = self.model.generate(
+                    prompt, schema=TurnRelevancyScoreReason
                 )
                 return res.reason
             except TypeError:
@@ -199,53 +197,51 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
 
     async def _a_generate_verdict(
         self, turns_sliding_window: List[Turn]
-    ) -> ConversationRelevancyVerdict:
-        prompt = ConversationRelevancyTemplate.generate_verdicts(
+    ) -> TurnRelevancyVerdict:
+        prompt = TurnRelevancyTemplate.generate_verdicts(
             sliding_window=[
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=ConversationRelevancyVerdict
+                prompt, schema=TurnRelevancyVerdict
             )
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: ConversationRelevancyVerdict = await self.model.a_generate(
-                    prompt, schema=ConversationRelevancyVerdict
+                res: TurnRelevancyVerdict = await self.model.a_generate(
+                    prompt, schema=TurnRelevancyVerdict
                 )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ConversationRelevancyVerdict(**data)
+                return TurnRelevancyVerdict(**data)
 
     def _generate_verdict(
         self, turns_sliding_window: List[Turn]
-    ) -> ConversationRelevancyVerdict:
-        prompt = ConversationRelevancyTemplate.generate_verdicts(
+    ) -> TurnRelevancyVerdict:
+        prompt = TurnRelevancyTemplate.generate_verdicts(
             sliding_window=[
                 convert_turn_to_dict(turn) for turn in turns_sliding_window
             ]
         )
         if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ConversationRelevancyVerdict
-            )
+            res, cost = self.model.generate(prompt, schema=TurnRelevancyVerdict)
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: ConversationRelevancyVerdict = self.model.generate(
-                    prompt, schema=ConversationRelevancyVerdict
+                res: TurnRelevancyVerdict = self.model.generate(
+                    prompt, schema=TurnRelevancyVerdict
                 )
                 return res
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ConversationRelevancyVerdict(**data)
+                return TurnRelevancyVerdict(**data)
 
     def _calculate_score(self) -> float:
         number_of_verdicts = len(self.verdicts)
@@ -272,4 +268,4 @@ class ConversationRelevancyMetric(BaseConversationalMetric):
 
     @property
     def __name__(self):
-        return "Conversation Relevancy"
+        return "Turn Relevancy"

@@ -14,7 +14,7 @@ sidebar_label: Conversation Simulator
 `deepeval`'s `ConversationSimulator` allows you to simulate full conversations between a fake user and your chatbot, unlike the [synthesizer](/docs/synthesizer-introduction) which generates regular goldens representing single, atomic LLM interactions.
 
 ```python showLineNumbers
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Create ConversationalGolden
 conversation_golden = ConversationalGolden(
@@ -41,7 +41,7 @@ To create a `ConversationSimulator`, you'll need to define a callback that wraps
 
 ```python
 from deepeval.test_case import Turn
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
     return Turn(role="assistant", content=f"I don't know how to answer this: {input}")
@@ -111,8 +111,8 @@ The `simulate` function returns a list of `ConversationalTestCase`s, which can b
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import TurnRelevancyMetric
 ...
 
-evaluate(test_cases=conversational_test_cases, metrics=[ConversationRelevancyMetric()])
+evaluate(test_cases=conversational_test_cases, metrics=[TurnRelevancyMetric()])
 ```

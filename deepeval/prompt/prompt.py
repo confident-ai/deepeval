@@ -13,7 +13,7 @@ from deepeval.prompt.api import (
     PromptInterpolationType,
 )
 from deepeval.prompt.utils import interpolate_text
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 from deepeval.constants import HIDDEN_DIR
 
@@ -160,88 +160,96 @@ class Prompt:
         version: Optional[str] = None,
         fallback_to_cache: bool = True,
         write_to_cache: bool = True,
+        default_to_cache: bool = True,
     ):
         if self.alias is None:
             raise TypeError(
                 "Unable to pull prompt from Confident AI when no alias is provided."
             )
 
-        if is_confident():
-            api = Api()
-            with Progress(
-                SpinnerColumn(style="rgb(106,0,255)"),
-                BarColumn(bar_width=60),
-                TextColumn("[progress.description]{task.description}"),
-                transient=False,
-            ) as progress:
-                task_id = progress.add_task(
-                    f"Pulling [rgb(106,0,255)]'{self.alias}' (version='{version or 'latest'}')[/rgb(106,0,255)] from Confident AI...",
-                    total=100,
-                )
-                start_time = time.perf_counter()
-                try:
-                    result = api.send_request(
-                        method=HttpMethods.GET,
-                        endpoint=Endpoints.PROMPT_ENDPOINT,
-                        params={"alias": self.alias, "version": version},
+        if default_to_cache:
+            try:
+                cached_prompt = self._read_from_cache(self.alias, version)
+                if cached_prompt:
+                    self.version = cached_prompt.version
+                    self._text_template = cached_prompt.template
+                    self._messages_template = cached_prompt.messages_template
+                    self._prompt_version_id = cached_prompt.prompt_version_id
+                    self._type = PromptType(cached_prompt.type)
+                    self._interpolation_type = PromptInterpolationType(
+                        cached_prompt.interpolation_type
                     )
-                    response = PromptHttpResponse(
-                        promptVersionId=result["promptVersionId"],
-                        template=result["value"],
-                        messages=result["messages"],
-                        type=result["type"],
-                        interpolation_type=result["interpolationType"],
-                    )
-                except:
-                    try:
-                        if fallback_to_cache:
-                            cached_prompt = self._read_from_cache(
-                                self.alias, version
-                            )
-                            if cached_prompt:
-                                self.version = cached_prompt.version
-                                self._text_template = cached_prompt.template
-                                self._messages_template = (
-                                    cached_prompt.messages_template
-                                )
-                                self._prompt_version_id = (
-                                    cached_prompt.prompt_version_id
-                                )
-                                self._type = PromptType(cached_prompt.type)
-                                self._interpolation_type = (
-                                    PromptInterpolationType(
-                                        cached_prompt.interpolation_type
-                                    )
-                                )
+                    return
+            except:
+                pass
 
-                                end_time = time.perf_counter()
-                                time_taken = format(
-                                    end_time - start_time, ".2f"
-                                )
-                                progress.update(
-                                    task_id,
-                                    description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
-                                )
-                                return
-                    except:
-                        raise
-
-                self.version = version or "latest"
-                self._text_template = response.template
-                self._messages_template = response.messages
-                self._prompt_version_id = response.promptVersionId
-                self._type = response.type
-                self._interpolation_type = response.interpolation_type
-
-                end_time = time.perf_counter()
-                time_taken = format(end_time - start_time, ".2f")
-                progress.update(
-                    task_id,
-                    description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Done! ({time_taken}s)",
-                )
-                if write_to_cache:
-                    self._write_to_cache()
-        else:
-            raise Exception(
-                "Run `deepeval login` to pull prompt template from Confident AI"
+        api = Api()
+        with Progress(
+            SpinnerColumn(style="rgb(106,0,255)"),
+            BarColumn(bar_width=60),
+            TextColumn("[progress.description]{task.description}"),
+            transient=False,
+        ) as progress:
+            task_id = progress.add_task(
+                f"Pulling [rgb(106,0,255)]'{self.alias}' (version='{version or 'latest'}')[/rgb(106,0,255)] from Confident AI...",
+                total=100,
             )
+            start_time = time.perf_counter()
+            try:
+                result = api.send_request(
+                    method=HttpMethods.GET,
+                    endpoint=Endpoints.PROMPT_ENDPOINT,
+                    params={"alias": self.alias, "version": version},
+                )
+                response = PromptHttpResponse(
+                    promptVersionId=result["promptVersionId"],
+                    template=result["value"],
+                    messages=result["messages"],
+                    type=result["type"],
+                    interpolation_type=result["interpolationType"],
+                )
+            except:
+                try:
+                    if fallback_to_cache:
+                        cached_prompt = self._read_from_cache(
+                            self.alias, version
+                        )
+                        if cached_prompt:
+                            self.version = cached_prompt.version
+                            self._text_template = cached_prompt.template
+                            self._messages_template = (
+                                cached_prompt.messages_template
+                            )
+                            self._prompt_version_id = (
+                                cached_prompt.prompt_version_id
+                            )
+                            self._type = PromptType(cached_prompt.type)
+                            self._interpolation_type = PromptInterpolationType(
+                                cached_prompt.interpolation_type
+                            )
+
+                            end_time = time.perf_counter()
+                            time_taken = format(end_time - start_time, ".2f")
+                            progress.update(
+                                task_id,
+                                description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
+                            )
+                            return
+                except:
+                    raise
+
+            self.version = version or "latest"
+            self._text_template = response.template
+            self._messages_template = response.messages
+            self._prompt_version_id = response.promptVersionId
+            self._type = response.type
+            self._interpolation_type = response.interpolation_type
+
+            end_time = time.perf_counter()
+            time_taken = format(end_time - start_time, ".2f")
+            progress.update(
+                task_id,
+                description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Done! ({time_taken}s)",
+            )
+            if write_to_cache:
+                self._write_to_cache()

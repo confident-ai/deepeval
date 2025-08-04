@@ -83,10 +83,10 @@ module.exports = {
           type: "category",
           label: "Multi-Turn",
           items: [
+            "metrics-turn-relevancy",
             "metrics-role-adherence",
             "metrics-knowledge-retention",
             "metrics-conversation-completeness",
-            "metrics-conversation-relevancy",
           ],
           collapsed: true,
         },
@@ -142,10 +142,17 @@ module.exports = {
       className: "sidebar-item-icon-synthetic-data",
       items: [
         "synthesizer-introduction",
-        "synthesizer-generate-from-docs",
-        "synthesizer-generate-from-contexts",
-        "synthesizer-generate-from-scratch",
-        "synthesizer-generate-from-goldens",
+        {
+          type: "category",
+          label: "Generate Goldens",
+          items: [
+            "synthesizer-generate-from-docs",
+            "synthesizer-generate-from-contexts",
+            "synthesizer-generate-from-scratch",
+            "synthesizer-generate-from-goldens",
+          ],
+          collapsed: false,
+        },
         "conversation-simulator",
       ],
       collapsed: false,

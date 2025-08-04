@@ -58,7 +58,7 @@ class ConfidentSpanExporter(SpanExporter):
         peb.init_clock_bridge()
 
         if api_key:
-            deepeval.login_with_confident_api_key(api_key)
+            deepeval.login(api_key)
 
         environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
         if environment:

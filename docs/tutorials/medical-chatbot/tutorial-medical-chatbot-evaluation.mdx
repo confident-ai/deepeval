@@ -108,7 +108,7 @@ While the [`Synthesizer`](/docs/synthesizer-introduction) generates regular gold
 The `ConversationSimulator` uses an LLM to generate fake user profiles and scenarios, before using it to simulate back-and-forth exchanges with your chatbot. The resulting dialogue is used to create `ConversationalTestCase`s for evaluation using `deepeval`'s conversational metrics.
 
 ```python
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Define simulator
 simulator = ConversationSimulator(

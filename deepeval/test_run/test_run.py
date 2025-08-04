@@ -697,9 +697,6 @@ class TestRunManager:
             "",
         )
         print(table)
-        print(
-            f"Total estimated evaluation tokens cost: {test_run.evaluation_cost} USD"
-        )
 
     def post_test_run(self, test_run: TestRun) -> Optional[str]:
         if (
@@ -708,6 +705,8 @@ class TestRunManager:
         ):
             print("No test cases found, unable to upload to Confident AI.")
             return
+
+        api = Api()
 
         is_conversational_run = len(test_run.conversational_test_cases) > 0
         all_test_cases_to_process = (
@@ -742,7 +741,6 @@ class TestRunManager:
         json_str = json.dumps(body, cls=TestRunEncoder)
         body = json.loads(json_str)
 
-        api = Api()
         result = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.TEST_RUN_ENDPOINT,
@@ -889,9 +887,12 @@ class TestRunManager:
                 save_under_key=LATEST_TEST_RUN_DATA_KEY,
             )
             console.print(
-                "\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Tests finished 🎉! Run [bold]'deepeval view'[/bold] to analyze, debug, and save evaluation results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n",
-                # LOGIN_PROMPT,
-                # "\n",
+                f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {test_run.evaluation_cost} USD)\n"
+                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
+                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
+                "=" * 80,
+                "\n\n» What to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
             )
 
     def get_latest_test_run_data(self) -> Optional[TestRun]:

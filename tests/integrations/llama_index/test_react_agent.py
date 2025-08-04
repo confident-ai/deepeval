@@ -11,7 +11,7 @@ from llama_index.llms.openai import OpenAI
 
 import deepeval
 
-deepeval.login_with_confident_api_key("<CONFIDENT_API_KEY>")
+deepeval.login("<CONFIDENT_API_KEY>")
 instrument_llama_index(instrument.get_dispatcher())
 
 agent = ReActAgent(

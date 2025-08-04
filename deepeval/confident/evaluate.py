@@ -9,7 +9,6 @@ from deepeval.confident.api import (
     Endpoints,
     get_deepeval_base_url,
     HttpMethods,
-    is_confident,
 )
 from deepeval.confident.types import (
     ConfidentEvaluateRequestData,
@@ -25,71 +24,64 @@ def confident_evaluate(
     disable_browser_opening: Optional[bool] = False,
 ):
     check_valid_test_cases_type(test_cases)
+    api = Api(base_url=get_deepeval_base_url())
 
-    if is_confident():
-        response = None
-        with Progress(
-            SpinnerColumn(style="rgb(106,0,255)"),
-            BarColumn(bar_width=60),
-            TextColumn("[progress.description]{task.description}"),
-            transient=False,
-        ) as progress:
-            task_id = progress.add_task(
-                f"Sending {len(test_cases)} test case(s) to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]...",
-                total=100,
+    response = None
+    with Progress(
+        SpinnerColumn(style="rgb(106,0,255)"),
+        BarColumn(bar_width=60),
+        TextColumn("[progress.description]{task.description}"),
+        transient=False,
+    ) as progress:
+        task_id = progress.add_task(
+            f"Sending {len(test_cases)} test case(s) to [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]...",
+            total=100,
+        )
+        start_time = time.perf_counter()
+
+        api = Api(base_url=get_deepeval_base_url())
+        confident_request_data = ConfidentEvaluateRequestData(
+            metricCollection=metric_collection, testCases=test_cases
+        )
+        try:
+            body = confident_request_data.model_dump(
+                by_alias=True, exclude_none=True
             )
-            start_time = time.perf_counter()
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = confident_request_data.dict(by_alias=True, exclude_none=True)
 
-            api = Api(base_url=get_deepeval_base_url())
-            confident_request_data = ConfidentEvaluateRequestData(
-                metricCollection=metric_collection, testCases=test_cases
+        try:
+            result = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.EVALUATE_ENDPOINT,
+                body=body,
             )
-            try:
-                body = confident_request_data.model_dump(
-                    by_alias=True, exclude_none=True
-                )
-            except AttributeError:
-                # Pydantic version below 2.0
-                body = confident_request_data.dict(
-                    by_alias=True, exclude_none=True
-                )
-
-            try:
-                result = api.send_request(
-                    method=HttpMethods.POST,
-                    endpoint=Endpoints.EVALUATE_ENDPOINT,
-                    body=body,
-                )
-            except Exception as e:
-                end_time = time.perf_counter()
-                time_taken = format(end_time - start_time, ".2f")
-                finished_description = f"{progress.tasks[task_id].description} [rgb(245,5,57)]Errored! ({time_taken}s)"
-                progress.update(task_id, description=finished_description)
-                raise e
-
+        except Exception as e:
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
-            if result:
-                response = ConfidentEvaluateResponseData(
-                    link=result["link"],
-                )
+            finished_description = f"{progress.tasks[task_id].description} [rgb(245,5,57)]Errored! ({time_taken}s)"
+            progress.update(task_id, description=finished_description)
+            raise e
 
-                finished_description = f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)"
-                progress.update(
-                    task_id,
-                    description=finished_description,
-                )
-
-        if response:
-            Console().print(
-                f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation of metric collection '{metric_collection}' started! View progress on "
-                f"[link={response.link}]{response.link}[/link]"
+        end_time = time.perf_counter()
+        time_taken = format(end_time - start_time, ".2f")
+        if result:
+            response = ConfidentEvaluateResponseData(
+                link=result["link"],
             )
 
-            if disable_browser_opening == False:
-                webbrowser.open(response.link)
+            finished_description = f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)"
+            progress.update(
+                task_id,
+                description=finished_description,
+            )
 
-    else:
-        raise Exception(
-            "To run evaluations on Confident AI, run `deepeval login`."
+    if response:
+        Console().print(
+            f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation of metric collection '{metric_collection}' started! View progress on "
+            f"[link={response.link}]{response.link}[/link]"
         )
+
+        if disable_browser_opening == False:
+            webbrowser.open(response.link)

@@ -6,12 +6,13 @@ sidebar_label: Multi-Turn
 
 ## Quick Summary
 
-A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **FIVE** parameters:
+A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a series of LLM interactions. A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **SIX** parameters:
 
 - `turns`
 - [Optional] `scenario`
 - [Optional] `expected_outcome`
 - [Optional] `user_description`
+- [Optional] `context`
 - [Optional] `chatbot_role`
 
 :::note
@@ -127,3 +128,53 @@ test_case = ConversationalTestCase(
     turns=[Turn(...)]
 )
 ```
+
+### Context
+
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    context=["Customers must be over 50 to be eligible for a refund."],
+    turns=[Turn(...)]
+)
+```
+
+:::info
+A single-turn `LLMTestCase` also contains `context`.
+:::
+
+## Label Test Cases For Confident AI
+
+If you're using Confident AI, these are some additional parameters to help manage your test cases.
+
+### Name
+
+The optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
+
+```python
+from deepeval.test_case import ConversationalTestCase
+
+test_case = ConversationalTestCase(name="my-external-unique-id", ...)
+```
+
+### Tags
+
+Alternatively, you can also tag test cases for filtering and searching on Confident AI:
+
+```python
+from deepeval.test_case import ConversationalTestCase
+
+test_case = ConversationalTestCase(tags=["Topic 1", "Topic 3"], ...)
+```
+
+## Using Test Cases For Evals
+
+You can create test cases for two types of evaluation:
+
+- [End-to-end](/docs/evaluation-end-to-end-llm-evals) - Treats your multi-turn LLM app as a black-box, and evaluates the overall conversation by considering each turn's inputs and outputs.
+- One-Off Standalone - Executes individual metrics on single test cases for debugging or custom evaluation pipelines
+
+Unlike for single-turn test cases, the concept of component-level evaluation does not exist for multi-turn use cases.
