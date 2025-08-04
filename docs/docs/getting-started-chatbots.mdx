@@ -395,14 +395,14 @@ You should see a trace log like the one below in your CLI for each conversation 
 </TimelineItem>
 <TimelineItem title="Create metric collection">
 
-Navigate to [Confident AI](https://app.confident-ai.com) and create a [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud#create-a-metric-collection) with the multi-turn metrics you wish to use.
+Navigate to [Confident AI](https://app.confident-ai.com) and create a [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud#create-a-metric-collection) with multi-turn metrics.
 
 <VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Achatbot-evals%3Ametric-collection.mp4" />
 
 </TimelineItem>
 <TimelineItem title="Run an evaluation">
 
-Find the thread ID of the conversation you wish to evaluate and run an evaluation using the metric collection you created.
+Find the thread ID of the conversation you wish to evaluate and run an evaluation using the metric collection name.
 
 ```python title="main.py" showLineNumbers={true} wrapLines={true}
 from deepeval.tracing import evaluate_thread
