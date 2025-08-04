@@ -42,9 +42,13 @@ def safe_patch_agent_run_method():
             if isinstance(args[0], PatchedAgent):
                 if args[0].metric_collection:
                     run_span.set_attribute('confident.span.metric_collection', args[0].metric_collection)
+                
+                if args[0].trace_attributes:
+                    if isinstance(args[0].trace_attributes, dict):
+                        run_span.set_attribute('confident.trace.attributes', json.dumps(args[0].trace_attributes))
             
             run_span.set_attribute('confident.span.llm_test_case.input', str(args[1]))
-            run_span.set_attribute('confident.span.llm_test_case.actual_output', str(result.output))
+            run_span.set_attribute('confident.span.llm_test_case.actual_output', (result.output))
     
         return result
     
