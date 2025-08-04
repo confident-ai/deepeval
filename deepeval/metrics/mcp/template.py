@@ -2,6 +2,7 @@ from typing import List, Dict
 from deepeval.metrics.mcp.schema import Task
 from deepeval.test_case import MCPMetaData
 
+
 class MCPTaskCompletionTemplate:
     @staticmethod
     def get_args_correctness_score(task: Task, mcp_data: List[MCPMetaData]):
@@ -47,7 +48,7 @@ Example Output:
 
 JSON:
 """
-    
+
     @staticmethod
     def get_tool_correctness_score(task: Task, mcp_data: List[MCPMetaData]):
         available_tools = [data.available_tools for data in mcp_data]
@@ -86,7 +87,7 @@ Example Output:
 
 JSON:
 """
-    
+
     @staticmethod
     def get_task_completion_score(task: Task):
         steps_taken = "\n".join(task.steps_taken)

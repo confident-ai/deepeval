@@ -6,6 +6,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
+    get_unit_interactions,
     trimAndLoadJson,
     initialize_model,
 )
@@ -18,11 +19,11 @@ from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
 
 class MCPArgsCorrectnessMetric(BaseConversationalMetric):
     _required_test_case_params = [
-        TurnParams.ROLE, 
-        TurnParams.CONTENT, 
+        TurnParams.ROLE,
+        TurnParams.CONTENT,
         TurnParams.MCP_TOOLS,
         TurnParams.MCP_RESOURCES,
-        TurnParams.MCP_PROMPTS
+        TurnParams.MCP_PROMPTS,
     ]
 
     def __init__(
@@ -46,7 +47,7 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
         self,
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
-        _in_component: bool = False
+        _in_component: bool = False,
     ):
         check_conversational_test_case_params(
             test_case, self._required_test_case_params, self
@@ -62,13 +63,11 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
                     self.a_measure(
                         test_case,
                         _show_indicator=False,
-                        _in_component=_in_component
+                        _in_component=_in_component,
                     )
                 )
             else:
-                self.unit_interactions = self._get_unit_interactions(
-                    test_case.turns
-                )
+                self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
                 self.task_scores = [
                     self._get_args_score(task, test_case) for task in self.tasks
@@ -88,10 +87,10 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
                     ],
                 )
             return self.score
-        
+
     async def a_measure(
-        self, 
-        test_case: ConversationalTestCase, 
+        self,
+        test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
@@ -103,20 +102,19 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            self.unit_interactions = await self._a_get_unit_interactions(
-                test_case.turns
-            )
-            self.tasks = await self._a_get_tasks(self.unit_interactions)
+            self.unit_interactions = get_unit_interactions(test_case.turns)
+            self.tasks = self._get_tasks(self.unit_interactions)
             self.task_scores = await asyncio.gather(
                 *[
-                    self._a_get_args_score(task, test_case) for task in self.tasks
+                    self._a_get_args_score(task, test_case)
+                    for task in self.tasks
                 ]
             )
             self.scores_reasons_list = [
                 (score, reason) for score, reason in self.task_scores
             ]
             self.score = self._calculate_score(self.task_scores)
-            self.reason = self._a_generate_reason(self.task_scores)
+            self.reason = self._generate_reason(self.task_scores)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -127,7 +125,7 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
                 ],
             )
         return self.score
-        
+
     def _generate_reason(self, task_scores: List[ArgsScore]) -> str:
         reason = "["
         for task_score in task_scores:
@@ -138,36 +136,34 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
                 )
         reason += "]"
         return reason
-    
-    def _a_generate_reason(self, task_scores: List[ArgsScore]) -> str:
-        return self._generate_reason(task_scores)
 
-    
-    def _get_args_score(self, task: Task, test_case: ConversationalTestCase) -> ArgsScore:
-        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(task, test_case.mcp_data)
+    def _get_args_score(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> ArgsScore:
+        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
+            task, test_case.mcp_data
+        )
         if self.using_native_model:
-            res, cost = self.model.generate(
-                prompt, schema=ArgsScore
-            )
+            res, cost = self.model.generate(prompt, schema=ArgsScore)
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: ArgsScore = self.model.generate(
-                    prompt, schema=ArgsScore
-                )
+                res: ArgsScore = self.model.generate(prompt, schema=ArgsScore)
                 return res
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return ArgsScore(**data)
-            
-    async def _a_get_args_score(self, task: Task, test_case: ConversationalTestCase) -> ArgsScore:
-        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(task, test_case.mcp_data)
+
+    async def _a_get_args_score(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> ArgsScore:
+        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
+            task, test_case.mcp_data
+        )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=ArgsScore
-            )
+            res, cost = await self.model.a_generate(prompt, schema=ArgsScore)
             self.evaluation_cost += cost
             return res
         else:
@@ -181,35 +177,12 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return ArgsScore(**data)
 
-
-    def _get_unit_interactions(self, turns: List[Turn]) -> List[Turn]:
-        unit_interactions = []
-        unit_interaction = []
-        for turn in turns:
-            if turn.role == "user":
-                if len(unit_interaction) > 0:
-                    unit_interactions.append(unit_interaction)
-                unit_interaction = [turn]
-            else:
-                unit_interaction.append(turn)
-        if len(unit_interaction) > 0:
-            unit_interactions.append(unit_interaction)
-        return unit_interactions
-    
-    async def _a_get_unit_interactions(self, turns: List[Turn]) -> List[List[Turn]]:
-        return self._get_unit_interactions(turns)
-
-    
-
     def _get_tasks(self, unit_interactions: List) -> List[Task]:
         tasks = []
         for unit_interaction in unit_interactions:
             if len(unit_interaction) <= 2:
                 continue
-            new_task = Task(
-                task=unit_interaction[0].content,
-                steps_taken=[]
-            )
+            new_task = Task(task=unit_interaction[0].content, steps_taken=[])
             for turn in unit_interaction[1:]:
                 if turn.mcp_interaction:
                     mcp_interaction = "Tools called by agent: \n"
@@ -241,17 +214,15 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
                             )
                     new_task.steps_taken.append(mcp_interaction)
                 else:
-                    new_task.steps_taken.append("Agent's response to user: \n" + turn.content)
+                    new_task.steps_taken.append(
+                        "Agent's response to user: \n" + turn.content
+                    )
             tasks.append(new_task)
         return tasks
-    
-    async def _a_get_tasks(self, unit_interactions: List) -> List[Task]:
-        return self._get_tasks(unit_interactions)
 
     def _calculate_score(self, scores: List[ArgsScore]) -> float:
         total_score = sum(score.score for score in scores)
         return total_score / len(scores)
-    
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -262,8 +233,7 @@ class MCPArgsCorrectnessMetric(BaseConversationalMetric):
             except:
                 self.success = False
         return self.success
-    
-    
+
     @property
     def __name__(self):
         return "MCP Args Correctness"
