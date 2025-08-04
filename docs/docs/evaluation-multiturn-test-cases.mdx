@@ -127,3 +127,34 @@ test_case = ConversationalTestCase(
     turns=[Turn(...)]
 )
 ```
+
+## Label Test Cases For Confident AI
+
+### Name
+
+If you're using Confident AI, the optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
+
+```python
+from deepeval.test_case import ConversationalTestCase
+
+test_case = ConversationalTestCase(name="my-external-unique-id", ...)
+```
+
+### Tags
+
+Alternatively, you can also tag test cases for filtering and searching on Confident AI:
+
+```python
+from deepeval.test_case import ConversationalTestCase
+
+test_case = ConversationalTestCase(tags=["Topic 1", "Topic 3"], ...)
+```
+
+## Using Test Cases For Evals
+
+You can create test cases for two types of evaluation:
+
+- [End-to-end](/docs/evaluation-end-to-end-llm-evals) - Treats your multi-turn LLM app as a black-box, and evaluates the overall conversation by considering each turn's inputs and outputs.
+- One-Off Standalone - Executes individual metrics on single test cases for debugging or custom evaluation pipelines
+
+Unlike for single-turn test cases, the concept of component-level evaluation does not exist for multi-turn use cases.
