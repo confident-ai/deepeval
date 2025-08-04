@@ -36,16 +36,10 @@ from deepeval.tracing.otel.utils import (
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.test_case import LLMTestCase, ToolCall
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from deepeval.feedback.feedback import Feedback
 from collections import defaultdict
-
-class TraceAttributes(BaseModel):
-    name: Optional[str] = None
-    tags: Optional[List[str]] = None
-    thread_id: Optional[str] = None
-    user_id: Optional[str] = None
-
+from deepeval.tracing.attributes import TraceAttributes
 
 @dataclass
 class BaseSpanWrapper:
