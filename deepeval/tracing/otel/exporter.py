@@ -70,9 +70,8 @@ class ConfidentSpanExporter(SpanExporter):
         self,
         spans: typing.Sequence[ReadableSpan],
         timeout_millis: int = 30000,
-        api_key: Optional[str] = None,
+        api_key: Optional[str] = None, # dynamic api key
     ) -> SpanExportResult:
-
         # build forest of spans
         forest = self._build_span_forest(spans)
 
