@@ -16,7 +16,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer multiTurn={true} chatbot={true} referenceBased={true} />
 
-The MCP tool correctness metric is a conversational metric that uses LLM-as-a-judge to evaluate how effectively an **MCP based LLM used the tools to complete a task**. Task Completion is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
+The MCP tool correctness metric is a conversational metric that uses LLM-as-a-judge to evaluate how effectively an **MCP based LLM used the tools to complete a task**. Tool Correctness is a self-explaining LLM-Eval, meaning it outputs a reason for its metric score.
 
 ## Required Arguments
 
@@ -51,7 +51,7 @@ metric = MCPToolCorrectnessMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
+There are **SEVEN** optional parameters when creating a `MCPToolCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
