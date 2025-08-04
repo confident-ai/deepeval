@@ -24,7 +24,7 @@ def safe_patch_agent_run_method():
        
         # get tracer from model
         model_used = args[0]._get_model(kwargs.get('model', None))
-        if isinstance(model_used, InstrumentedModel):
+        if isinstance(model_used, InstrumentedModel) and model_used.settings is not None:
             tracer = model_used.settings.tracer
         else:
             tracer = NoOpTracer()
