@@ -1,4 +1,5 @@
 import json
+import inspect
 from contextlib import asynccontextmanager
 from deepeval.integrations.pydantic_ai import Agent as PatchedAgent
 from opentelemetry import trace
@@ -21,15 +22,21 @@ def safe_patch_agent_run_method():
     
     # define patched run method
     async def patched_run(*args, **kwargs):
-       
-        # get tracer from model
-        model_used = args[0]._get_model(kwargs.get('model', None))
-        if isinstance(model_used, InstrumentedModel) and model_used.settings is not None:
-            tracer = model_used.settings.tracer
+        
+        model = kwargs.get('model', None)
+        infer_name = kwargs.get('infer_name', True)
+
+        if infer_name and args[0].name is None:
+            args[0]._infer_name(inspect.currentframe())
+        model_used = args[0]._get_model(model)
+        del model
+        
+        if isinstance(model_used, InstrumentedModel):
+            tracer = model_used.instrumentation_settings.tracer
         else:
             tracer = NoOpTracer()
+        
         with tracer.start_as_current_span('agent') as run_span:
-
             result = await original_run(*args, **kwargs)
             
             # agent attributes
