@@ -1,0 +1,123 @@
+---
+id: evaluation-mcp-test-cases
+title: MCP Test Case
+sidebar_label: MCP
+---
+
+## Quick Summary
+
+The **MCP test case** is the same [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases) with an extra parameter to pass `MCPMetaData` that contains information about MCP server and the primitives it provides.
+A multi-turn test case in `deepeval` is represented by a `ConversationalTestCase`, and has **SEVEN** parameters:
+
+- `turns`
+- [Optional] `scenario`
+- [Optional] `expected_outcome`
+- [Optional] `user_description`
+- [Optional] `context`
+- [Optional] `chatbot_role`
+- [Optional] `mcp_data`
+
+The **MCP test case** needs you to provide the optional seventh parameter:
+
+- [Optional] `mcp_data`
+
+Here's an example implementation of `ConversationalTestCase` with `mcp_data`:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MCPMetaData
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="How are you doing?"),
+        Turn(role="assistant", content="Why do you care?")
+    ],
+    mcp_data=[MCPMetaData(...)]
+)
+```
+
+## MCP Meta Data
+
+The `mcp_data` parameter takes a list of `MCPMetaData` objects that contain information about different MCP servers and the primitives they provide. Here's an example implementation of how to create a `MCPMetaData` object:
+
+```python
+from deepeval.test_case import ConversationalTestCase, Turn, MCPMetaData
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="How are you doing?"),
+        Turn(role="assistant", content="Why do you care?")
+    ],
+    mcp_data=[
+        MCPMetaData(
+            server_name="server_name",
+            transport="stdio",
+            available_tools=toolList.tools,
+            available_resources=resourceList.resources,
+            available_prompts=promptList.prompts
+        )
+    ],
+)
+```
+
+The `MCPMetaData` accepts **FIVE** parameters:
+- [Optional] `server_name`: an optional string you can provide to store details about your MCP server.
+- [Optional] `transport`: an optional literal that stores on the type of transport your MCP server uses. This information does not affect the evaluation of your MCP test case.
+- [Optional] `available_tools`: an optional list of tools that your MCP server enables you to use. `deepeval` expects you to provide the direct result from the `list_tools()` function from the official MCP python SDK which returns `Tool` objects from `mcp.types`.
+- [Optional] `available_prompts`: an optional list of prompts that your MCP server enables you to use. `deepeval` expects you to provide the direct result from the `list_prompts()` function from the official MCP python SDK which returns `Prompt` objects from `mcp.types`.
+- [Optional] `available_resources`: an optional list of resources that your MCP server enables you to use. `deepeval` expects you to provide the direct result from the `list_resources()` function from the official MCP python SDK which returns `Resource` objects from `mcp.types`.
+
+## MCP Primitives Used
+
+The `turns` parameter is a list of `Turn`s and is basically a list of messages/exchanges in a user-LLM conversation. A `Turn` is made up of the following parameters:
+
+```python
+class Turn:
+    role: Literal["user", "assistant"]
+    content: str
+    user_id: Optional[str] = None
+    retrieval_context: Optional[List[str]] = None
+    tools_called: Optional[List[ToolCall]] = None
+    mcp_interaction: Optional[bool] = False
+    mcp_tools_called: Optional[List[MCPToolCall]] = None
+    mcp_resources_called: Optional[List[MCPResourceCall]] = None
+    mcp_prompts_called: Optional[List[MCPPromptCall]] = None
+    additional_metadata: Optional[Dict] = None
+```
+
+You will need to provide the resources your agent used for every MCP interaction and add them in the following arguments:
+
+- `mcp_tools_called`: an optional list of mcp_tools_called by your agent. `deepeval` expects you to provide a list of `MCPToolCall` objects with tool `name`, `args` and the `result`.
+- `mcp_resources_called`: an optional list of mcp_resources_called by your agent. `deepeval` expects you to provide a list of `MCPResourceCall` objects with `uri` and `result`.
+- `mcp_prompts_called`: an optional list of mcp_prompts_called by your agent. `deepeval` expects you to provide a list of `MCPPromptCall` objects with prompt `name` and `result`.
+
+Here's an example of how to create turns for MCP test cases:
+
+```python
+from deepeval.test_case import Turn, MCPToolCall, MCPResourceCall, MCPPromptCall
+turns = [
+    Turn(role="assistant",
+        content="...",
+        user_id=None,
+        retrieval_context=None,
+        tools_called=None,
+        mcp_interaction=True,
+        mcp_tools_called=[MCPToolCall(
+            name="...",
+            args="...",
+            result=CallToolResult(...)
+        )],
+        mcp_resources_called=[MCPResourceCall(
+            uri="...",
+            result=ReadResourceResult(...)
+        )],
+        mcp_prompts_called=[MCPPromptCall(
+            name="...",
+            result=GetPromptResult(...)
+        )],
+        additional_metadata=None,
+    ),
+    ...
+]
+```
+
+The `result` provided in these arguments must be of types `CallToolResult`, `ReadResourceResult` and `GetPromptResult` for tools, resources and prompts respectively.
