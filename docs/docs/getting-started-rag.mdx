@@ -77,7 +77,7 @@ def rag_pipeline(input):
 
     # Generate response
     state = {"messages": [HumanMessage(content=input + "\\n\\n".join(context_texts))]}
-    result = your_graph.invoke(state)
+    result = llm.invoke(state)
     return result["messages"][-1].content, context_texts
 ```
 
@@ -128,52 +128,6 @@ def rag_pipeline(input):
     if hasattr(response, 'source_nodes'):
         context_texts = [node.text for node in response.source_nodes]
     return str(response), context_texts
-```
-
-</TabItem>
-<TabItem value="pydantic" label="Pydantic AI">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from pydantic_ai import Agent
-from your_embedding_service import EmbeddingService
-
-agent = Agent(
-    model='openai:gpt-4o',
-    system_prompt='Use the provided context to answer questions accurately.'
-)
-embedding_service = EmbeddingService()
-
-def rag_pipeline(input):
-    # Extract retrieval context
-    retrieved_contexts = embedding_service.search_sync(input, top_k=3)
-    context_texts = [ctx.text for ctx in retrieved_contexts]
-
-    # Generate response
-    result = agent.run_sync(input + '\n\n'.join(context_texts))
-    return result.data, context_texts
-```
-
-</TabItem>
-<TabItem value="openai-agents" label="OpenAI Agents">
-
-```python title="main.py" showLineNumbers={true} wrapLines={true}
-from agents import Agent, Runner
-from your_vector_store import VectorStore
-
-agent = Agent(
-    name="RAG Assistant",
-    instructions="You are a helpful assistant that uses provided context"
-)
-vector_store = VectorStore()
-
-def rag_pipeline(input):
-    # Extract retrieval context
-    retrieved_docs = vector_store.similarity_search(input, k=3)
-    context_texts = [doc.page_content for doc in retrieved_docs]
-
-    # Generate response
-    result = Runner.run_sync(agent, input + "\\n\\n".join(context_texts))
-    return result.final_output, context_texts
 ```
 
 </TabItem>
@@ -313,8 +267,9 @@ faithfulness = FaithfulnessMetric(threshold=0.8)
 
 Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span` with the parameters required by the metrics defined above.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,7,11,12,13,1,22,23,24}"
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,8,12,13,14,19,23,24,25}"
 from deepeval.tracing import observe, update_current_span
+from deepeval.test_case import LLMTestCase
 ...
 
 @observe()
@@ -325,7 +280,7 @@ def your_multi_rag_agent(input):
         update_current_span(
           test_case=LLMTestCase(
             input=input,
-            actual_output="rag pipeline output"
+            actual_output="rag pipeline output",
             retrieval_context=["context 1", "context 2"]
           )
         )
@@ -336,7 +291,7 @@ def your_multi_rag_agent(input):
         update_current_span(
           test_case=LLMTestCase(
             input=input,
-            actual_output="rag pipeline output"
+            actual_output="rag pipeline output",
             retrieval_context=["context 3", "context 4"]
           )
         )
@@ -380,3 +335,96 @@ deepeval login
 </Timeline>
 
 ## Evaluate RAG in Chatbot Systems
+
+DeepEval also lets you evaluate RAG in chatbot systems at a conversation level. This is especially useful for chatbot systems that rely on RAG to generate responses, such as customer support chatbots and QA agents.
+
+<Timeline>
+
+<TimelineItem title="Create a test case">
+
+Create a `ConversationalTestCase` by passing in a list of `Turn`s from an existing conversation, similar to OpenAI's message format.
+
+:::note
+Since your chatbot uses RAG, each turn from the assistant should also include the `retrieval_context` parameter.
+:::
+
+```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{1,9,15}"
+from deepeval.test_case import ConversationalTestCase, Turn
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="I'd like to buy a ticket to a Coldplay concert."),
+        Turn(
+            role="assistant",
+            content="Great! I can help you with that. Which city would you like to attend?",
+            retrieval_context=["Concert cities: New York, Los Angeles, Chicago"]
+        ),
+        Turn(role="user", content="New York, please."),
+        Turn(
+            role="assistant",
+            content="Perfect! I found VIP and standard tickets for the Coldplay concert in New York. Which one would you like?",
+            retrieval_context=["VIP ticket details", "Standard ticket details"]
+        )
+    ]
+)
+```
+
+</TimelineItem>
+<TimelineItem title="Create a metric">
+
+Define a custom conversational RAG metric to evaluate your chatbot system using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval.metrics import ConversationalGEval
+from deepeval.test_case import TurnParams
+
+conversational_faithfulness = ConversationalGEval(
+    name="Faithfulness",
+    criteria="Determine whether the assistant's responses are factually supported by the retrieved context across the entire conversation.",
+    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT, TurnParams.RETRIEVAL_CONTEXT]
+)
+```
+
+<details>
+  <summary>What multi-turn metrics are available?</summary>
+
+DeepEval offers the following multi-turn metrics out-of-the-box, but they do not evaluate RAG-specific parameters such as retrieval context:
+
+- [Conversational G-Eval](/docs/metrics-conversational-g-eval)
+- [Role Adherence](/docs/metrics-role-adherence)
+- [Knowledge Retention](/docs/metrics-knowledge-retention)
+- [Conversation Completeness](/docs/metrics-conversation-completeness)
+- [Conversation Relevancy](/docs/metrics-conversation-relevancy)
+
+</details>
+
+</TimelineItem>
+<TimelineItem title="Run an evaluation">
+
+Run an evaluation on the test case using the `evaluate` function and the conversational RAG metric you've defined.
+
+```python title="main.py" showLineNumbers={true} wrapLines={true}
+from deepeval import evaluate
+...
+
+evaluate([test_case], metrics=[conversational_faithfulness])
+```
+
+</TimelineItem>
+<TimelineItem title="View on Confident AI">
+
+If you're logged in to Confident AI, you'll be automatically directed to view your RAG chatbot evaluation report.
+
+:::tip
+We recommend logging in to Confident AI to analyze your RAG performance in detail.
+
+```bash
+deepeval login
+```
+
+:::
+
+<VideoDisplay src="https://deepeval-docs.s3.us-east-1.amazonaws.com/getting-started%3Aconversation-test-report.mp4" />
+
+</TimelineItem>
+</Timeline>
