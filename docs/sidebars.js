@@ -23,6 +23,7 @@ module.exports = {
               items: [
                 "evaluation-test-cases",
                 "evaluation-multiturn-test-cases",
+                "evaluation-mcp-test-cases",
                 "evaluation-arena-test-cases",
               ],
               collapsed: true,
@@ -87,6 +88,16 @@ module.exports = {
             "metrics-role-adherence",
             "metrics-knowledge-retention",
             "metrics-conversation-completeness",
+          ],
+          collapsed: true,
+        },
+        {
+          type: "category",
+          label: "MCP",
+          items: [
+            "metrics-mcp-args-correctness",
+            "metrics-mcp-task-completion",
+            "metrics-mcp-tool-correctness",
           ],
           collapsed: true,
         },
