@@ -444,9 +444,8 @@ class ConfidentSpanExporter(SpanExporter):
             output = span.attributes.get("confident.agent.attributes.output")
 
             try:
-                agent_span.set_attributes(
-                    AgentAttributes(input=input, output=output)
-                )
+                agent_span.input = trace_manager.mask(input)
+                agent_span.output = trace_manager.mask(output)
             except Exception as e:
                 print(f"Error setting agent span attributes: {e}")
 
@@ -533,11 +532,8 @@ class ConfidentSpanExporter(SpanExporter):
                     pass
 
             try:
-                tool_span.set_attributes(
-                    ToolAttributes(
-                        input_parameters=input_parameters, output=output
-                    )
-                )
+                tool_span.input = trace_manager.mask(input_parameters)
+                tool_span.output = trace_manager.mask(output)
             except Exception as e:
                 print(f"Error setting tool span attributes: {e}")
 
