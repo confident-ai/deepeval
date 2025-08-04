@@ -249,7 +249,7 @@ def your_ai_agent(input):
     return 'Tool Call Result: ' + tool_call_result
 
 dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
-for golden in dataset.as_iterator():
+for golden in dataset.evals_iterator():
     your_ai_agent(golden.input)
 ```
 
@@ -275,7 +275,7 @@ agent = create_react_agent(
 )
 
 dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
-for golden in dataset.as_iterator():
+for golden in dataset.evals_iterator():
     agent.invoke(
         input={"messages": [{"role": "user", "content": golden.input}]},
         config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]},
@@ -300,7 +300,7 @@ llm = init_chat_model("gpt-4.1", model_provider="openai")
 llm_with_tools = llm.bind_tools([multiply])
 
 dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
-for golden in dataset.as_iterator():
+for golden in dataset.evals_iterator():
     llm_with_tools.invoke(
         "What is 3 * 12?",
         config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]},
@@ -328,7 +328,7 @@ coder = Agent(
 )
 
 dataset = EvaluationDataset(goldens=[Golden(input="Explain the latest trends in AI.")])
-for golden in dataset.as_iterator():
+for golden in dataset.evals_iterator():
     task = Task(description="Explain the latest trends in AI.", agent=coder, expected_output="A clear and concise explanation.")
     crew = Crew(agents=[coder], tasks=[task])
     result = crew.kickoff()
@@ -477,7 +477,7 @@ from deepeval.dataset import EvaluationDataset, Golden
 ...
 
 dataset = EvaluationDataset(goldens=[Golden(input='This is a test query')])
-for golden in dataset.as_iterator():
+for golden in dataset.evals_iterator():
     your_ai_agent(golden.input)
 ```
 
