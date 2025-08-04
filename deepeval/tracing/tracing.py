@@ -652,9 +652,9 @@ class TraceManager:
             # For LlmSpan, input is attributes.input, output is attributes.output
             if span.attributes:
                 input_data = span.attributes.input
-                output_data = span.attributes.output
+                output_data = make_json_serializable(span.attributes.output)
         else:
-            # For BaseSpan, AgentSpan, ToolSpan use the standard logic
+            # For BaseSpan, Agent, or Tool types, use the standard logic
             input_data = span.input
             output_data = span.output
 
