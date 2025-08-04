@@ -310,10 +310,7 @@ class ConfidentSpanExporter(SpanExporter):
     ) -> Optional[BaseSpan]:
         span_type = span.attributes.get("confident.span.type")
         if not span_type:
-            try:
-                span_type = check_span_type_from_gen_ai_attributes(span)
-            except Exception as e:
-                pass
+            span_type = check_span_type_from_gen_ai_attributes(span)
 
         # required fields
         uuid = to_hex_string(span.context.span_id, 16)
@@ -333,10 +330,7 @@ class ConfidentSpanExporter(SpanExporter):
         if span_type == "llm":
             model = span.attributes.get("confident.llm.model")
             if not model:
-                try:
-                    model = check_model_from_gen_ai_attributes(span)
-                except Exception as e:
-                    pass
+                model = check_model_from_gen_ai_attributes(span)
             
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
@@ -371,10 +365,7 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             if not input and not output:
-                try:
-                    input, output = check_llm_input_from_gen_ai_attributes(span)
-                except Exception as e:
-                    pass
+                input, output = check_llm_input_from_gen_ai_attributes(span)
 
             try:
                 llm_span.set_attributes(
@@ -486,10 +477,7 @@ class ConfidentSpanExporter(SpanExporter):
         elif span_type == "tool":
             name = span.attributes.get("confident.tool.name")
             if not name:
-                try:
-                    name = check_tool_name_from_gen_ai_attributes(span)
-                except Exception as e:
-                    pass
+                name = check_tool_name_from_gen_ai_attributes(span)
 
             description = span.attributes.get("confident.tool.description")
 
@@ -517,10 +505,7 @@ class ConfidentSpanExporter(SpanExporter):
                 print(f"Error converting input parameters: {e}")
 
             if not input_parameters:
-                try:
-                    input_parameters = check_tool_input_parameters_from_gen_ai_attributes(span)
-                except Exception as e:
-                    pass
+                input_parameters = check_tool_input_parameters_from_gen_ai_attributes(span)
 
             try:
                 tool_span.input = trace_manager.mask(input_parameters)

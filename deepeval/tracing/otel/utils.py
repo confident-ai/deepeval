@@ -93,47 +93,61 @@ def validate_llm_test_case_data(
 ####### gen ai attributes utils (warning: use in try except)#######
 
 def check_llm_input_from_gen_ai_attributes(span: ReadableSpan) -> Tuple[Optional[list], Optional[dict]]:
-    input = json.loads(span.attributes.get("events"))
-    if input and isinstance(input, list):
-        # check if the last event is a genai choice
-        last_event = input.pop()
-        if last_event and last_event.get("event.name") == "gen_ai.choice":
-            return input, last_event
+    try:
+        input = json.loads(span.attributes.get("events"))
+        if input and isinstance(input, list):
+            # check if the last event is a genai choice
+            last_event = input.pop()
+            if last_event and last_event.get("event.name") == "gen_ai.choice":
+                return input, last_event
+    except Exception as e:
+        pass
         
     return None, None
     
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
-    gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
-    if gen_ai_tool_name:
-        return gen_ai_tool_name
+    try:
+        gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
+        if gen_ai_tool_name:
+            return gen_ai_tool_name
+    except Exception as e:
+        pass
     
     return None
 
 
 def check_tool_input_parameters_from_gen_ai_attributes(span: ReadableSpan) -> Optional[dict]:
-    tool_arguments = span.attributes.get("tool_arguments")
-    if tool_arguments:
-        return json.loads(tool_arguments)
+    try:
+        tool_arguments = span.attributes.get("tool_arguments")
+        if tool_arguments:
+            return json.loads(tool_arguments)
+    except Exception as e:
+        pass
     
     return None
 
 def check_span_type_from_gen_ai_attributes(span: ReadableSpan):
-    
-    gen_ai_operation_name = span.attributes.get("gen_ai.operation.name")
-    gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
-    
-    if gen_ai_operation_name and gen_ai_operation_name in GEN_AI_OPERATION_NAMES:
-        return "llm"
-    
-    elif gen_ai_tool_name:
-        return "tool"
+    try:
+        gen_ai_operation_name = span.attributes.get("gen_ai.operation.name")
+        gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
+        
+        if gen_ai_operation_name and gen_ai_operation_name in GEN_AI_OPERATION_NAMES:
+            return "llm"
+        
+        elif gen_ai_tool_name:
+            return "tool"
+    except Exception as e:
+        pass
     
     return "base"
 
 
 def check_model_from_gen_ai_attributes(span: ReadableSpan):
-    gen_ai_request_model_name = span.attributes.get("gen_ai.request.model")
-    if gen_ai_request_model_name:
-        return gen_ai_request_model_name
+    try:
+        gen_ai_request_model_name = span.attributes.get("gen_ai.request.model")
+        if gen_ai_request_model_name:
+            return gen_ai_request_model_name
+    except Exception as e:
+        pass
     
     return None
