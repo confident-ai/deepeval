@@ -2,7 +2,7 @@ import json
 import os
 import typing
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import (
     SpanExporter,
@@ -45,7 +45,9 @@ from deepeval.tracing.attributes import TraceAttributes
 @dataclass
 class BaseSpanWrapper:
     base_span: BaseSpan
-    trace_attributes: Optional[TraceAttributes] = None
+    trace_input: Optional[Any] = None
+    trace_output: Optional[Any] = None
+    trace_attributes: Optional[TraceAttributes] = None  
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -127,6 +129,12 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace.user_id = (
                         base_span_wrapper.trace_attributes.user_id
                     )
+
+                # set the trace input and output
+                if base_span_wrapper.trace_input:
+                    current_trace.input = base_span_wrapper.trace_input
+                if base_span_wrapper.trace_output:
+                    current_trace.output = base_span_wrapper.trace_output
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -302,8 +310,15 @@ class ConfidentSpanExporter(SpanExporter):
             except ValidationError as err:
                 print(f"Error converting trace attributes: {err}")
 
+        # extract trace input and output
+        trace_input = span.attributes.get("confident.trace.input")
+        trace_output = span.attributes.get("confident.trace.output")
+
         base_span_wrapper = BaseSpanWrapper(
-            base_span=base_span, trace_attributes=trace_attributes
+            base_span=base_span, 
+            trace_attributes=trace_attributes, 
+            trace_input=trace_input, 
+            trace_output=trace_output
         )
 
         return base_span_wrapper
