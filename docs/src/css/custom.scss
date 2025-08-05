@@ -488,6 +488,13 @@ html[data-theme="dark"] .menu {
 
 // CODE STYLING
 
+[class*="codeLineNumber"]::before {
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 
 [class*="codeBlockTitle"] {
   font-size: 14px !important;
