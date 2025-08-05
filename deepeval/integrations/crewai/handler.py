@@ -78,7 +78,7 @@ class CrewAIEventsListener(BaseEventListener):
 
 
 def instrumentator(api_key: Optional[str] = None):
-    capture_tracing_integration("deepeval.integrations.crewai.instrumentator")
+    capture_tracing_integration("crewai.instrumentator")
     is_crewai_installed()
     if api_key:
         deepeval.login(api_key)

@@ -53,7 +53,7 @@ class BaseSpanWrapper:
 class ConfidentSpanExporter(SpanExporter):
 
     def __init__(self, api_key: Optional[str] = None):
-        capture_tracing_integration("deepeval.tracing.otel.ConfidentSpanExporter")
+        capture_tracing_integration("otel.ConfidentSpanExporter")
         peb.init_clock_bridge()
 
         if api_key:

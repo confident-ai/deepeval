@@ -22,7 +22,7 @@ class PydanticAIAgent(Agent):
         trace_attributes: dict = None,
         **kwargs
     ):
-        capture_tracing_integration("deepeval.integrations.pydantic_ai.agent.PydanticAIAgent")
+        capture_tracing_integration("pydantic_ai.agent.PydanticAIAgent")
         is_pydantic_ai_installed()
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection

@@ -80,7 +80,7 @@ class Agent(CrewAIAgent):
         metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
-        capture_tracing_integration("deepeval.integrations.crewai.agent.Agent")
+        capture_tracing_integration("crewai.agent.Agent")
         is_crewai_installed()
         super().__init__(*args, **kwargs)
         # Register this agent instance with its metric collection

@@ -245,7 +245,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
 
 def instrument_llama_index(dispatcher: Dispatcher):
-    capture_tracing_integration("deepeval.integrations.llama_index.instrument_llama_index")
+    capture_tracing_integration("llama_index.instrument_llama_index")
     handler = LLamaIndexHandler()
     dispatcher.add_event_handler(handler)
     dispatcher.add_span_handler(handler)
