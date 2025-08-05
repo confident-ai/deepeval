@@ -28,13 +28,18 @@ def setup_instrumentation(api_key: Optional[str] = None):
     if api_key:
         deepeval.login(api_key)
     
+    created_new_provider = False
     if not isinstance(trace.get_tracer_provider(), TracerProvider):
         tracer_provider = TracerProvider()
         trace.set_tracer_provider(tracer_provider)
+        created_new_provider = True
     else:
         tracer_provider = trace.get_tracer_provider()
 
     exporter = ConfidentSpanExporter()
     span_processor = BatchSpanProcessor(exporter)
     tracer_provider.add_span_processor(span_processor)
-    set_tracer_provider(tracer_provider)
+    
+    # Only set tracer provider if we created a new one, not if we're reusing existing
+    if created_new_provider:
+        set_tracer_provider(tracer_provider)
