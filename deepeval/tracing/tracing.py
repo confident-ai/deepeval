@@ -329,7 +329,7 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not is_confident() and self.confident_api_key is None:
+        if not is_confident() and self.confident_api_key is None and trace_api.confident_api_key is None:
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
                 trace_worker_status=TraceWorkerStatus.FAILURE,
@@ -348,7 +348,7 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not is_confident() and self.confident_api_key is None:
+        if not is_confident() and self.confident_api_key is None and trace.confident_api_key is None:
             self._print_trace_status(
                 message="No Confident AI API key found. Skipping trace posting.",
                 trace_worker_status=TraceWorkerStatus.FAILURE,
