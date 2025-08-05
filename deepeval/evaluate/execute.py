@@ -82,7 +82,6 @@ from deepeval.evaluate.utils import (
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import TestCaseMetricPair, openai_test_case_pairs
-from deepeval.test_run.hyperparameters import process_hyperparameters
 
 
 def execute_test_cases(
