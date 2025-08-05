@@ -24,7 +24,7 @@ def is_opentelemetry_available():
 
 
 def setup_instrumentation(api_key: Optional[str] = None):
-    capture_tracing_integration("pydantic_ai")
+    capture_tracing_integration("deepeval.integrations.pydantic_ai.setup_instrumentation")
     is_opentelemetry_available()
     # safe_patch_agent_iter_method()
     safe_patch_agent_run_method()
