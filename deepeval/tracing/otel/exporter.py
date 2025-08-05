@@ -41,6 +41,7 @@ from deepeval.feedback.feedback import Feedback
 from collections import defaultdict
 from deepeval.tracing.attributes import TraceAttributes
 
+
 @dataclass
 class BaseSpanWrapper:
     base_span: BaseSpan
@@ -70,7 +71,7 @@ class ConfidentSpanExporter(SpanExporter):
         self,
         spans: typing.Sequence[ReadableSpan],
         timeout_millis: int = 30000,
-        api_key: Optional[str] = None, # dynamic api key
+        api_key: Optional[str] = None,  # dynamic api key
     ) -> SpanExportResult:
         # build forest of spans
         forest = self._build_span_forest(spans)
@@ -274,8 +275,10 @@ class ConfidentSpanExporter(SpanExporter):
             except Exception as e:
                 print(f"Invalid LLMTestCase data: {e}")
 
-        base_span.parent_uuid = (to_hex_string(span.parent.span_id, 16) if span.parent else None)
-        
+        base_span.parent_uuid = (
+            to_hex_string(span.parent.span_id, 16) if span.parent else None
+        )
+
         # base span name takes precedence over span name
         _name = None
         if base_span.name is not None and base_span.name != "None":
@@ -331,7 +334,7 @@ class ConfidentSpanExporter(SpanExporter):
             model = span.attributes.get("confident.llm.model")
             if not model:
                 model = check_model_from_gen_ai_attributes(span)
-            
+
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
             )
@@ -395,7 +398,7 @@ class ConfidentSpanExporter(SpanExporter):
             if available_tools_attr:
                 try:
                     for tool in available_tools_attr:
-                        available_tools.append(str(tool))        
+                        available_tools.append(str(tool))
                 except Exception as e:
                     print(f"Error converting available tools: {e}")
 
@@ -495,17 +498,23 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             # set attributes
-            input_parameters = span.attributes.get("confident.tool.attributes.input_parameters")
+            input_parameters = span.attributes.get(
+                "confident.tool.attributes.input_parameters"
+            )
             output = span.attributes.get("confident.tool.attributes.output")
 
             try:
-                input_parameters = json.loads(input_parameters) if input_parameters else None
+                input_parameters = (
+                    json.loads(input_parameters) if input_parameters else None
+                )
             except Exception as e:
                 input_parameters = None
                 print(f"Error converting input parameters: {e}")
 
             if not input_parameters:
-                input_parameters = check_tool_input_parameters_from_gen_ai_attributes(span)
+                input_parameters = (
+                    check_tool_input_parameters_from_gen_ai_attributes(span)
+                )
 
             try:
                 tool_span.input = trace_manager.mask(input_parameters)

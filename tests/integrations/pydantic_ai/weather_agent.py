@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Any
 import os
 import time
+
 # import logfire
 from httpx import AsyncClient
 from pydantic import BaseModel
@@ -23,10 +24,12 @@ from pydantic import BaseModel
 from pydantic_ai import Agent, RunContext
 
 from dotenv import load_dotenv
+
 load_dotenv()
 from deepeval.integrations.pydantic_ai import setup_instrumentation
+
 setup_instrumentation(api_key=os.getenv("CONFIDENT_API_KEY"))
-os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 Agent.instrument_all()
 
 # 'if-token-present' means nothing will be sent (and the example will work) if you don't have logfire configured
@@ -40,10 +43,10 @@ class Deps:
 
 
 weather_agent = Agent(
-    'openai:gpt-4.1-mini',
+    "openai:gpt-4.1-mini",
     # 'Be concise, reply with one sentence.' is enough for some models (like openai) to use
     # the below tools appropriately, but others like anthropic and gemini require a bit more direction.
-    instructions='Be concise, reply with one sentence.',
+    instructions="Be concise, reply with one sentence.",
     deps_type=Deps,
     retries=2,
 )
@@ -55,7 +58,9 @@ class LatLng(BaseModel):
 
 
 @weather_agent.tool
-async def get_lat_lng(ctx: RunContext[Deps], location_description: str) -> LatLng:
+async def get_lat_lng(
+    ctx: RunContext[Deps], location_description: str
+) -> LatLng:
     """Get the latitude and longitude of a location.
 
     Args:
@@ -64,15 +69,17 @@ async def get_lat_lng(ctx: RunContext[Deps], location_description: str) -> LatLn
     """
     # NOTE: the response here will be random, and is not related to the location description.
     r = await ctx.deps.client.get(
-        'https://demo-endpoints.pydantic.workers.dev/latlng',
-        params={'location': location_description},
+        "https://demo-endpoints.pydantic.workers.dev/latlng",
+        params={"location": location_description},
     )
     r.raise_for_status()
     return LatLng.model_validate_json(r.content)
 
 
 @weather_agent.tool
-async def get_weather(ctx: RunContext[Deps], lat: float, lng: float) -> dict[str, Any]:
+async def get_weather(
+    ctx: RunContext[Deps], lat: float, lng: float
+) -> dict[str, Any]:
     """Get the weather at a location.
 
     Args:
@@ -83,19 +90,19 @@ async def get_weather(ctx: RunContext[Deps], lat: float, lng: float) -> dict[str
     # NOTE: the responses here will be random, and are not related to the lat and lng.
     temp_response, descr_response = await asyncio.gather(
         ctx.deps.client.get(
-            'https://demo-endpoints.pydantic.workers.dev/number',
-            params={'min': 10, 'max': 30},
+            "https://demo-endpoints.pydantic.workers.dev/number",
+            params={"min": 10, "max": 30},
         ),
         ctx.deps.client.get(
-            'https://demo-endpoints.pydantic.workers.dev/weather',
-            params={'lat': lat, 'lng': lng},
+            "https://demo-endpoints.pydantic.workers.dev/weather",
+            params={"lat": lat, "lng": lng},
         ),
     )
     temp_response.raise_for_status()
     descr_response.raise_for_status()
     return {
-        'temperature': f'{temp_response.text} °C',
-        'description': descr_response.text,
+        "temperature": f"{temp_response.text} °C",
+        "description": descr_response.text,
     }
 
 
@@ -104,11 +111,11 @@ async def main():
         # logfire.instrument_httpx(client, capture_all=True)
         deps = Deps(client=client)
         result = await weather_agent.run(
-            'What is the weather like in London and in Wiltshire?', deps=deps
+            "What is the weather like in London and in Wiltshire?", deps=deps
         )
-        print('Response:', result.output)
+        print("Response:", result.output)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())
     time.sleep(20)
