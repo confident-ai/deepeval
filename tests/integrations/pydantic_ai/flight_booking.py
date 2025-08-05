@@ -40,8 +40,6 @@ class FlightDetails(BaseModel):
     price: int
     origin: str = Field(description="Three-letter airport code")
     destination: str = Field(description="Three-letter airport code")
-    origin: str = Field(description="Three-letter airport code")
-    destination: str = Field(description="Three-letter airport code")
     date: datetime.date
 
 
@@ -65,7 +63,6 @@ search_agent = Agent[Deps, FlightDetails | NoFlightFound](
     retries=4,
     system_prompt=(
         "Your job is to find the cheapest flight for the user on the given date. "
-        "Your job is to find the cheapest flight for the user on the given date. "
     ),
 )
 
@@ -75,7 +72,6 @@ extraction_agent = Agent(
     "openai:gpt-4o",
     "openai:gpt-4o",
     output_type=list[FlightDetails],
-    system_prompt="Extract all the flight details from the given text.",
     system_prompt="Extract all the flight details from the given text.",
 )
 
@@ -101,23 +97,17 @@ async def validate_output(
     if output.origin != ctx.deps.req_origin:
         errors.append(
             f"Flight should have origin {ctx.deps.req_origin}, not {output.origin}"
-            f"Flight should have origin {ctx.deps.req_origin}, not {output.origin}"
         )
     if output.destination != ctx.deps.req_destination:
         errors.append(
-            f"Flight should have destination {ctx.deps.req_destination}, not {output.destination}"
             f"Flight should have destination {ctx.deps.req_destination}, not {output.destination}"
         )
     if output.date != ctx.deps.req_date:
         errors.append(
             f"Flight should be on {ctx.deps.req_date}, not {output.date}"
         )
-        errors.append(
-            f"Flight should be on {ctx.deps.req_date}, not {output.date}"
-        )
 
     if errors:
-        raise ModelRetry("\n".join(errors))
         raise ModelRetry("\n".join(errors))
     else:
         return output
@@ -125,7 +115,6 @@ async def validate_output(
 
 class SeatPreference(BaseModel):
     row: int = Field(ge=1, le=30)
-    seat: Literal["A", "B", "C", "D", "E", "F"]
     seat: Literal["A", "B", "C", "D", "E", "F"]
 
 
@@ -140,9 +129,6 @@ seat_preference_agent = Agent[None, SeatPreference | Failed](
     output_type=SeatPreference | Failed,  # type: ignore
     system_prompt=(
         "Extract the user's seat preference. "
-        "Seats A and F are window seats. "
-        "Row 1 is the front row and has extra leg room. "
-        "Rows 14, and 20 also have extra leg room. "
         "Seats A and F are window seats. "
         "Row 1 is the front row and has extra leg room. "
         "Rows 14, and 20 also have extra leg room. "
@@ -211,8 +197,6 @@ async def main():
         web_page_text=flights_web_page,
         req_origin="SFO",
         req_destination="ANC",
-        req_origin="SFO",
-        req_destination="ANC",
         req_date=datetime.date(2025, 1, 10),
     )
     message_history: list[ModelMessage] | None = None
@@ -221,7 +205,6 @@ async def main():
     while True:
         result = await search_agent.run(
             f"Find me a flight from {deps.req_origin} to {deps.req_destination} on {deps.req_date}",
-            f"Find me a flight from {deps.req_origin} to {deps.req_destination} on {deps.req_date}",
             deps=deps,
             usage=usage,
             message_history=message_history,
@@ -229,11 +212,9 @@ async def main():
         )
         if isinstance(result.output, NoFlightFound):
             print("No flight found")
-            print("No flight found")
             break
         else:
             flight = result.output
-            print(f"Flight found: {flight}")
             print(f"Flight found: {flight}")
             answer = Prompt.ask(
                 "Do you want to buy this flight, or keep searching? (buy/*search)",
