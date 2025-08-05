@@ -238,11 +238,8 @@ async def main():
             answer = Prompt.ask(
                 "Do you want to buy this flight, or keep searching? (buy/*search)",
                 choices=["buy", "search", ""],
-                "Do you want to buy this flight, or keep searching? (buy/*search)",
-                choices=["buy", "search", ""],
                 show_choices=False,
             )
-            if answer == "buy":
             if answer == "buy":
                 seat = await find_seat(usage)
                 await buy_tickets(flight, seat)
@@ -250,14 +247,12 @@ async def main():
             else:
                 message_history = result.all_messages(
                     output_tool_return_content="Please suggest another flight"
-                    output_tool_return_content="Please suggest another flight"
                 )
 
 
 async def find_seat(usage: Usage) -> SeatPreference:
     message_history: list[ModelMessage] | None = None
     while True:
-        answer = Prompt.ask("What seat would you like?")
         answer = Prompt.ask("What seat would you like?")
 
         result = await seat_preference_agent.run(
@@ -270,19 +265,15 @@ async def find_seat(usage: Usage) -> SeatPreference:
             return result.output
         else:
             print("Could not understand seat preference. Please try again.")
-            print("Could not understand seat preference. Please try again.")
             message_history = result.all_messages()
 
 
 async def buy_tickets(flight_details: FlightDetails, seat: SeatPreference):
     print(f"Purchasing flight {flight_details=!r} {seat=!r}...")
-    print(f"Purchasing flight {flight_details=!r} {seat=!r}...")
 
 
-if __name__ == "__main__":
 if __name__ == "__main__":
     import asyncio
 
     asyncio.run(main())
     time.sleep(10)
-
