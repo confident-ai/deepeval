@@ -328,13 +328,14 @@ class TraceManager:
     def post_trace_api(self, trace_api: TraceApi) -> Optional[str]:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
-
-        if not is_confident() and self.confident_api_key is None and trace_api.confident_api_key is None:
-            self._print_trace_status(
-                message="No Confident AI API key found. Skipping trace posting.",
-                trace_worker_status=TraceWorkerStatus.FAILURE,
-            )
-            return None
+        
+        if not trace_api.confident_api_key:
+            if not is_confident() and self.confident_api_key is None:
+                self._print_trace_status(
+                    message="No Confident AI API key found. Skipping trace posting.",
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                )
+                return None
 
         if not self._should_sample_trace():
             return None
@@ -348,12 +349,13 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not is_confident() and self.confident_api_key is None and trace.confident_api_key is None:
-            self._print_trace_status(
-                message="No Confident AI API key found. Skipping trace posting.",
-                trace_worker_status=TraceWorkerStatus.FAILURE,
-            )
-            return None
+        if not trace.confident_api_key:
+            if not is_confident() and self.confident_api_key is None:
+                self._print_trace_status(
+                    message="No Confident AI API key found. Skipping trace posting.",
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                )
+                return None
 
         if not self._should_sample_trace():
             return None
