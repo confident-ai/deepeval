@@ -98,6 +98,35 @@ def prettify_list(lst: List[Any]):
     return f"[\n    {formatted_list}\n]"
 
 
+def prettify_nested_list(lst: List[Any], indent: int = 0) -> str:
+    if len(lst) == 0:
+        return "[]"
+
+    current_indent = "    " * indent
+    next_indent = "    " * (indent + 1)
+    formatted_elements = []
+
+    for item in lst:
+        # handle nested lists (recursively)
+        if isinstance(item, list):
+            formatted_elements.append(prettify_nested_list(item, indent + 1))
+        elif isinstance(item, str):
+            formatted_elements.append(f'"{item}"')
+        elif isinstance(item, BaseModel):
+            try:
+                jsonObj = item.model_dump()
+            except AttributeError:
+                jsonObj = item.dict()
+            json_str = json.dumps(jsonObj, indent=4, ensure_ascii=True)
+            indented_json = json_str.replace("\n", "\n" + next_indent)
+            formatted_elements.append(indented_json)
+        else:
+            formatted_elements.append(repr(item))
+
+    formatted_list = (",\n" + next_indent).join(formatted_elements)
+    return f"[\n{next_indent}{formatted_list}\n{current_indent}]"
+
+
 def generate_uuid() -> str:
     return str(uuid.uuid4())
 
@@ -202,6 +231,18 @@ def set_should_use_cache(yes: bool):
         os.environ["ENABLE_DEEPEVAL_CACHE"] = "YES"
     else:
         os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
+
+
+def set_repeat(repeat: Optional[int]):
+    if repeat is not None:
+        os.environ["REPEAT"] = str(repeat)
+
+
+def get_repeat() -> int:
+    try:
+        return int(os.environ["REPEAT"])
+    except:
+        return 1
 
 
 def login(api_key: str):
