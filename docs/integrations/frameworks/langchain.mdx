@@ -1,0 +1,114 @@
+---
+id: langchain
+title: LangChain
+sidebar_label: LangChain
+---
+
+# LangChain
+
+[LangChain](https://www.langchain.com/) is a framework for building LLM applications.
+
+## Quickstart
+
+Confident AI provides a `CallbackHandler` that can be used to trace LangChain's execution.
+
+Install the following packages:
+
+```bash
+pip install -U deepeval langchain langchain-openai
+```
+
+Login with your API key and configure DeepEval's `CallbackHandler` as a callback for LangChain:
+
+```python filename="main.py" showLineNumbers {9, 20}
+import os
+import time
+from langchain.chat_models import init_chat_model
+
+from deepeval
+from deepeval.integrations.langchain import CallbackHandler
+
+os.environ["OPENAI_API_KEY"] = "<your-openai-api-key>"
+deepeval.login("<your-confident-api-key>")
+
+def multiply(a: int, b: int) -> int:
+    """Returns the product of two numbers"""
+    return a * b
+
+llm = init_chat_model("gpt-4o-mini", model_provider="openai")
+llm_with_tools = llm.bind_tools([multiply])
+
+llm_with_tools.invoke(
+    "What is 3 * 12?", 
+    config = {"callbacks": [CallbackHandler()]}
+)
+
+time.sleep(5) # Wait for the trace to be published
+```
+
+Run your script:
+
+```bash
+python main.py
+```
+
+You can directly view the traces in the **Observatory** by clicking on the link in the output printed in the console.
+
+:::tip
+DeepEval's `CallbackHandler` is an implementation of LangChain's [BaseCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html).
+:::
+
+## Advanced Usage
+
+### Trace attributes
+
+You can set custom trace attributes in your `CallbackHandler` by providing it for each agent invocation, including:
+
+- [Name](/docs/llm-tracing/tracing-features/name)
+- [Tags](/docs/llm-tracing/tracing-features/tags)
+- [Metadata](/docs/llm-tracing/tracing-features/metadata)
+- [Thread](/docs/llm-tracing/tracing-features/threads)
+- [User](/docs/llm-tracing/tracing-features/users)
+
+Each of the attributes are **optional**, and works exactly the same way as you would expect for the native tracing features on Confident AI:
+
+```python filename="main.py" showLineNumbers
+...
+
+llm_with_tools.invoke(
+    input=input,
+    config={
+        "callbacks": [
+            CallbackHandler(
+                name="Name of Trace",
+                tags=["Tag 1", "Tag 2"],
+                metadata={"Key": "Value"},
+                thread_id="your-thread-id",
+                user_id="your-user-id",
+            )
+        ]
+    },
+)
+```
+
+### Online evals
+You can run [online evaluations](https://documentation.confident-ai.com/docs/llm-tracing/evaluations) in production on your Langchain agents by simply providing `metric_collection` as an argument to `CallbackHandler`.
+
+:::info
+Only **task completion** metric is supported for the LangChain integration. Therefore, you should only include the task completion metric when creating the [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud) for your LangChain agent.
+:::
+
+```python filename="main.py" showLineNumbers {8}
+from deepeval.integrations.langchain import CallbackHandler
+...
+
+# Invoke your agent with the metric collection name
+llm_with_tools.invoke(
+    "What is 3 * 12?", 
+    config = {"callbacks": [
+        CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")
+    ]}
+)
+```
+
+This will evaluate the entire traced execution flow of your LangChain agent using the metric collection containing the [task completion](https://deepeval.com/docs/metrics-task-completion) metric.
