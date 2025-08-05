@@ -1,5 +1,5 @@
 ---
-id: tutorial-rag-qa-evaluation
+id: evaluation
 title: Evaluating Your RAG Components
 sidebar_label: Evaluate Retriever & Generator
 ---
@@ -52,14 +52,16 @@ You can run online evals by adding your metric collection on the platform. Click
 
 :::note
 Make sure you are logged in to your [Confident AI](https://www.confident-ai.com) account to get your traces, click here to [set up](https://deepeval.com/tutorials/tutorial-setup) or run the following command in your terminal:
+
 ```bash
 deepeval login
 ```
+
 :::
 
 ## Defining Evaluation Criteria
 
-**Retrieval-Augmented Generation (RAG)** applications are made up of two components — a retriever and a generator. Each component performs it's own tasks and is prune to errors in their own ways, which is why it is necessary to evaluate them in isolation and as a single unit too. 
+**Retrieval-Augmented Generation (RAG)** applications are made up of two components — a retriever and a generator. Each component performs it's own tasks and is prune to errors in their own ways, which is why it is necessary to evaluate them in isolation and as a single unit too.
 
 For a **retriever**, the retrieved context must follow the below criterion:
 
@@ -95,6 +97,7 @@ precision = ContextualPrecisionMetric()
 ```
 
 For the generator, since we have defined a criteria that is specific to our use case, we will be using a custom metric twice and that is the [G-Eval](https://deepeval.com/docs/metrics-llm-evals) — a custom metric that can be used to evaluate any custom criteria. We will use the following metrics for generator evaluation:
+
 1. [Answer Correctness](https://deepeval.com/docs/metrics-llm-evals) — To evaluate only the answer from our `json`.
 2. [Citation Accuracy](https://deepeval.com/docs/metrics-llm-evals) — To evaluate the citations mentioned in the `json`.
 
@@ -116,7 +119,7 @@ citation_accuracy = GEval(
 )
 ```
 
-## Creating Test Cases 
+## Creating Test Cases
 
 We will now use our RAG QA agent to answer a few user queries to generate some `LLMTestCase`s that we can use to evaluate our agent. We will create them with the queries as `input`s and the agent's responses as `actual_output`s.
 
@@ -213,16 +216,18 @@ You'll see your evaluation results, including scores and reasoning, printed in t
 
 :::tip
 It is highly recommended that you use [**Confident AI**](https://www.confident-ai.com), `deepeval`'s cloud platform that allows you to view your test results in a much more intuitive way. Here's how you can [set up Confident AI](https://deepeval.com/tutorials/tutorial-setup#setting-up-confident-ai). Or you can simply run the following code in the terminal to set it up yourself:
+
 ```bash
 deepeval login
 ```
+
 **It's free to get started!** _(No credit card required.)_
 :::
 
 After running this evaluation, I got the following average scores:
 
 | Metric               | Score |
-|----------------------|-------|
+| -------------------- | ----- |
 | Contextual Relevancy | 0.6   |
 | Contextual Recall    | 0.7   |
 | Contextual Precision | 0.6   |
@@ -275,10 +280,10 @@ deepeval test run test_generator.py
 
 After running this evaluation, I got the following average scores:
 
-| Metric               | Score |
-|----------------------|-------|
-| Answer Correctness   | 0.5   |
-| Citation Accuracy    | 0.5   |
+| Metric             | Score |
+| ------------------ | ----- |
+| Answer Correctness | 0.5   |
+| Citation Accuracy  | 0.5   |
 
 Most of `deepeval`'s metrics provide a reason along with a score which let's us know why certain test cases fail. From all the reasons, these were the observations made:
 
@@ -337,9 +342,11 @@ You can edit, finalize and do much more to this dataset on the [Confident AI](ht
 
 :::note
 You must be logged in to your [Confident AI](https://confident-ai.com) account to manage datasets on cloud. Set up Confident AI as shown [here](https://deepeval.com/tutorials/tutorial-setup#setting-up-confident-ai) or just run the following code in your terminal to get started:
+
 ```bash
 deepeval login
 ```
+
 :::
 
 These stored datasets can later be pulled and used wherever needed.
