@@ -156,14 +156,6 @@ class ConversationSimulator:
             turns.append(Turn(role="assistant", content=self.opening_message))
             update_pbar(progress, pbar_turns_id)
 
-        # Generate first user input
-        prompt = self.template.simulate_first_user_turn(golden, self.language)
-        simulated_input: SimulatedInput = self.generate_schema(
-            prompt, SimulatedInput
-        )
-        turns.append(Turn(role="user", content=simulated_input.simulated_input))
-        update_pbar(progress, pbar_turns_id)
-
         while True:
             # Stop conversation if needed
             stop_conversation = self.stop_conversation(
@@ -175,12 +167,19 @@ class ConversationSimulator:
             # Generate turn from user
             if len(turns) >= max_turns_including_opening:
                 break
-            prompt = self.template.simulate_user_turn(
-                golden, turns, self.language
-            )
-            simulated_input: SimulatedInput = self.generate_schema(
-                prompt, SimulatedInput
-            )
+            if len(turns) == 0 or (len(turns) == 1 and self.opening_message):
+                # Generate first user input
+                prompt = self.template.simulate_first_user_turn(golden, self.language)
+                simulated_input: SimulatedInput = self.generate_schema(
+                    prompt, SimulatedInput
+                )
+            else:
+                prompt = self.template.simulate_user_turn(
+                    golden, turns, self.language
+                )
+                simulated_input: SimulatedInput = self.generate_schema(
+                    prompt, SimulatedInput
+                )
             user_input = simulated_input.simulated_input
             turns.append(Turn(role="user", content=user_input))
             update_pbar(progress, pbar_turns_id)
@@ -254,14 +253,6 @@ class ConversationSimulator:
             turns.append(Turn(role="assistant", content=self.opening_message))
             update_pbar(progress, pbar_turns_id)
 
-        # Generate first user input
-        prompt = self.template.simulate_first_user_turn(golden, self.language)
-        simulated_input: SimulatedInput = await self.a_generate_schema(
-            prompt, SimulatedInput
-        )
-        turns.append(Turn(role="user", content=simulated_input.simulated_input))
-        update_pbar(progress, pbar_turns_id)
-
         while True:
             # Stop conversation if needed
             stop_conversation = await self.a_stop_conversation(
@@ -273,12 +264,19 @@ class ConversationSimulator:
             # Generate turn from user
             if len(turns) >= max_turns_including_opening:
                 break
-            prompt = self.template.simulate_user_turn(
-                golden, turns, self.language
-            )
-            simulated_input: SimulatedInput = await self.a_generate_schema(
-                prompt, SimulatedInput
-            )
+            if len(turns) == 0 or (len(turns) == 1 and self.opening_message):
+                # Generate first user input
+                prompt = self.template.simulate_first_user_turn(golden, self.language)
+                simulated_input: SimulatedInput = await self.a_generate_schema(
+                    prompt, SimulatedInput
+                )
+            else:
+                prompt = self.template.simulate_user_turn(
+                    golden, turns, self.language
+                )
+                simulated_input: SimulatedInput = await self.a_generate_schema(
+                    prompt, SimulatedInput
+                )
             user_input = simulated_input.simulated_input
             turns.append(Turn(role="user", content=user_input))
             update_pbar(progress, pbar_turns_id)
