@@ -1,5 +1,5 @@
 ---
-id: tutorial-medical-chatbot-development
+id: development
 title: Building Your Chatbot
 sidebar_label: Building Your Chatbot
 ---
@@ -14,7 +14,7 @@ We will be using `langchain` and `qdrant` to build our chatbot, with functionali
 We'll also implement our chatbot with an independent **model and system prompt** variable - which we'll be evaluating in the next section.
 
 :::tip
-If you already have a multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/tutorial-medical-chatbot-evaluation).
+If you already have a multi-turn chatbot that you want to evaluate, feel free to skip to the [**evaluation section of this tuorial**](/tutorials/medical-chatbot/evaluation).
 :::
 
 ## Setup Your Model
@@ -268,7 +268,7 @@ class MedicalChatbot:
 
         # Create agent
         tools = [
-            StructuredTool.from_function(func=self.retrieve_knowledge), 
+            StructuredTool.from_function(func=self.retrieve_knowledge),
             StructuredTool.from_function(func=self.create_appointment)
         ]
         agent = create_tool_calling_agent(self.model, tools, prompt)
