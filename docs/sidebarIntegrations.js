@@ -7,6 +7,7 @@ module.exports = {
         "frameworks/openai",
         "frameworks/langchain",
         "frameworks/langgraph",
+        "frameworks/pydanticai",
       ],
       collapsed: false,
     },
