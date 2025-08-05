@@ -400,7 +400,10 @@ class TraceManager:
                 body = make_json_serializable(body)
 
                 if main_thr.is_alive():
-                    api = Api(api_key=self.confident_api_key)
+                    if trace_api.confident_api_key:
+                        api = Api(api_key=trace_api.confident_api_key)
+                    else:
+                        api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -623,6 +626,7 @@ class TraceManager:
             llmTestCase=trace_test_case,
             metricCollection=trace.metric_collection,
             turnContext=trace.turn_context,
+            confident_api_key=trace.confident_api_key,
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
