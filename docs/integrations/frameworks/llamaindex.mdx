@@ -1,0 +1,130 @@
+---
+id: llamaindex
+title: LlamaIndex
+sidebar_label: LlamaIndex
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+
+# LlamaIndex
+
+[LlamaIndex](https://www.llamaindex.ai/) is a framework that makes it easy to build production agents that can find information, synthesize insights, generate reports, and take actions over the most complex enterprise data.
+
+## Quickstart
+
+Confident AI provides a `LlamaIndexSpanHandler` that can be used to trace LlamaIndex **spans.**
+
+Install the following packages:
+
+```bash
+pip install -U deepeval llama-index
+```
+
+Login with your API key and configure DeepEval as an span handler for LlamaIndex:
+
+```python filename="main.py" showLineNumbers {6, 9}
+import llama_index.core.instrumentation as instrument
+from deepeval.integrations.llama_index import instrument_llama_index
+import deepeval
+
+# Login
+deepeval.login("<your-confident-api-key>")
+
+# Let DeepEval collect traces
+instrument_llama_index(instrument.get_dispatcher())
+```
+
+Now whenever you use LlamaIndex, DeepEval will collect LlamaIndex spans as traces and publish them to Confident AI.
+
+:::note
+[Span](https://docs.llamaindex.ai/en/stable/module_guides/observability/instrumentation/) in LlamaIndex represents the execution flow of a particular part in the application’s code.
+:::
+
+## Example Agent
+
+The example agent will be able to perform calculations using the `multiply` tool.
+
+```python showLineNumbers filename="main.py" {10, 11, 19}
+import os
+from llama_index.core.agent.workflow import FunctionAgent
+from llama_index.llms.openai import OpenAI
+import llama_index.core.instrumentation as instrument
+
+from deepeval.integrations.llama_index import instrument_llama_index
+import deepeval
+
+# Don't forget to setup tracing
+deepeval.login("<your-confident-api-key>")
+instrument_llama_index(instrument.get_dispatcher())
+
+os.environ["OPENAI_API_KEY"] = "<your-openai-api-key>"
+
+def multiply(a: float, b: float) -> float:
+    """Useful for multiplying two numbers."""
+    return a * b
+
+agent = FunctionAgent(
+    tools=[multiply],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant that can perform calculations.",
+)
+```
+
+Finally, try calling your agent to see your traces on Confident AI:
+
+```python filename="main.py"
+import asyncio
+import time
+...
+
+async def main():   
+    response = await agent.run("What's 7 * 8?")
+    print(response)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+```bash
+python main.py
+```
+
+You can directly view the traces in the **Observatory** by clicking on the link in the output printed in the console.
+
+:::note
+As the agent is running, it will export **spans** to the `dispatcher`. The `dispatcher` will send the spans to the `LlamaIndexSpanHandler` which will collect them to create a **trace** and send it to the [Observatory](/docs/llm-tracing/introduction).
+:::
+
+## Online Evals in Production
+
+Confident AI supports online evaluation on your LlamaIndex `FunctionAgent`, `ReActAgent` and `CodeActAgent`.
+
+1. Replace your **Workflow** agent with DeepEval's **Agent** wrapper
+2. Provide `metric_collection` as an argument
+3. Run your agent
+
+:::note
+The **Workflow** agent wrapper auto-populates the `input`, `actual_output`, and `tools_called` fields of [LLMTestCase](https://deepeval.com/docs/evaluation-test-cases) for each `Agent`. Therefore, you can't include metrics that require other parameters (e.g. `retrieval_context`) when creating your [metric collection](https://deepeval.com/docs/metrics-task-completion).
+:::
+
+```python filename="main.py" showLineNumbers {1, 9}
+from deepeval.integrations.llama_index import FunctionAgent
+
+...
+
+agent = FunctionAgent(
+    tools=[multiply],
+    llm=OpenAI(model="gpt-4o-mini"),
+    system_prompt="You are a helpful assistant that can perform calculations.",
+    metric_collection="test_collection_1",
+)
+
+async def main():   
+    response = await agent.run("What's 7 * 8?")
+    print(response)
+ 
+if __name__ == "__main__":
+    asyncio.run(main())
+```
