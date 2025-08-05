@@ -23,8 +23,8 @@ module.exports = {
               items: [
                 "evaluation-test-cases",
                 "evaluation-multiturn-test-cases",
-                "evaluation-mcp-test-cases",
                 "evaluation-arena-test-cases",
+                "evaluation-mcp-test-cases",
               ],
               collapsed: true,
             },
