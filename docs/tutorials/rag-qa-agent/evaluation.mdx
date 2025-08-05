@@ -19,8 +19,8 @@ Our RAG agent first retrieves context from our knowledge base and uses the retri
 from deepeval.test_case import LLMTestCase
 
 test_case = LLMTestCase(
-    input="...", # Your transcript
-    actual_output="...", # The summary or action items
+    input="...", # Your query
+    actual_output="...", # The answer from RAG
     retrieval_context="..." # Your retrieved context
 )
 ```
