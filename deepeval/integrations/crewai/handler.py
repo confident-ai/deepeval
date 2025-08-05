@@ -77,7 +77,7 @@ class CrewAIEventsListener(BaseEventListener):
                         )
 
 
-def instrumentator(api_key: Optional[str] = None):
+def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
     if api_key:
         deepeval.login(api_key)

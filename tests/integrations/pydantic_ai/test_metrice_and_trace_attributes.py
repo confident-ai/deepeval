@@ -1,12 +1,12 @@
 import os
 import time
 from dotenv import load_dotenv
-from deepeval.integrations.pydantic_ai import setup_instrumentation
+from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
 from deepeval.integrations.pydantic_ai import Agent
 
 load_dotenv()
 
-setup_instrumentation(api_key=os.getenv("CONFIDENT_API_KEY"))
+instrument_pydantic_ai(api_key=os.getenv("CONFIDENT_API_KEY"))
 
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
