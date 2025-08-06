@@ -121,7 +121,7 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Tasks:\n{prettify_list(self.tasks)}",
+                    f"Tasks and Tools Called:\n{prettify_list(self.tasks)}",
                     f"Individual Scores & Reasons:\n{prettify_list(self.scores_reasons_list)}",
                     f"Score: {self.score}",
                 ],
@@ -184,7 +184,13 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
         for unit_interaction in unit_interactions:
             if len(unit_interaction) <= 2:
                 continue
-            new_task = Task(task=unit_interaction[0].content, steps_taken=[])
+            user_messages = ""
+            for turn in unit_interaction:
+                if turn.role == "user":
+                    user_messages += turn.content + "\n"
+                else:
+                    break
+            new_task = Task(task=user_messages, steps_taken=[])
             for turn in unit_interaction[1:]:
                 if turn.mcp_interaction:
                     mcp_interaction = "Tools called by agent: \n"
@@ -202,6 +208,7 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
                         for resource in turn.mcp_resources_called:
                             mcp_interaction += (
                                 f"\n<Resource Called>\n"
+                                f"\n**This does not appear to user**\n"
                                 f"URI: {resource.uri}\n"
                                 f"Result: {str(resource.result)}\n"
                                 f"</Resource Called>\n"
@@ -210,6 +217,7 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
                         for prompt in turn.mcp_prompts_called:
                             mcp_interaction += (
                                 f"\n<Prompt Called>\n"
+                                f"\n**This does not appear to user**\n"
                                 f"Name: {prompt.name}\n"
                                 f"Result: {str(prompt.result)}\n"
                                 f"</Prompt Called>\n"

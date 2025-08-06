@@ -195,6 +195,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                         for resource in turn.mcp_resources_called:
                             mcp_interaction += (
                                 f"\n<Resource Called>\n"
+                                f"\n**This does not appear to user**\n"
                                 f"URI: {resource.uri}\n"
                                 f"Result: {str(resource.result)}\n"
                                 f"</Resource Called>\n"
@@ -203,6 +204,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                         for prompt in turn.mcp_prompts_called:
                             mcp_interaction += (
                                 f"\n<Prompt Called>\n"
+                                f"\n**This does not appear to user**\n"
                                 f"Name: {prompt.name}\n"
                                 f"Result: {str(prompt.result)}\n"
                                 f"</Prompt Called>\n"
