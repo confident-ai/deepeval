@@ -15,6 +15,8 @@ current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
 
 
 def update_current_span(
+    input: Optional[Any] = None,
+    output: Optional[Any] = None,
     test_case: Optional[LLMTestCase] = None,
     attributes: Optional[Attributes] = None,
     metadata: Optional[Dict[str, Any]] = None,
@@ -31,6 +33,10 @@ def update_current_span(
         current_span.metadata = metadata
     if feedback:
         current_span.feedback = feedback
+    if input:
+        current_span.input = input
+    if output:
+        current_span.output = output
 
 
 def update_current_trace(
