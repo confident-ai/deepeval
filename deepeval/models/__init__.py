@@ -41,3 +41,35 @@ from deepeval.models.embedding_models import (
 #     AnswerRelevancyModel,
 #     CrossEncoderAnswerRelevancyModel,
 # )
+
+__all__ = [
+    # Base model classes
+    "DeepEvalBaseModel",
+    "DeepEvalBaseLLM",
+    "DeepEvalBaseMLLM",
+    "DeepEvalBaseEmbeddingModel",
+    
+    # LLM models
+    "GPTModel",
+    "AzureOpenAIModel",
+    "LocalModel",
+    "OllamaModel",
+    "AnthropicModel",
+    "GeminiModel",
+    "AmazonBedrockModel",
+    "LiteLLMModel",
+    "KimiModel",
+    "GrokModel",
+    "DeepSeekModel",
+    
+    # Multimodal models
+    "MultimodalOpenAIModel",
+    "MultimodalOllamaModel",
+    "MultimodalGeminiModel",
+    
+    # Embedding models
+    "OpenAIEmbeddingModel",
+    "AzureOpenAIEmbeddingModel",
+    "LocalEmbeddingModel",
+    "OllamaEmbeddingModel",
+]
