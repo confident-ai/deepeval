@@ -4,6 +4,9 @@ title: LLM Arena Evaluation
 sidebar_label: LLM Arena
 ---
 
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import NavigationCards from "@site/src/components/NavigationCards";
+
 Learn how to evaluate different versions of your LLM app using LLM Arena-as-a-Judge in `deepeval`, a comparison-based LLM eval.
 
 ## Overview
@@ -21,13 +24,140 @@ Instead of comparing LLM outputs using a single-output LLM-as-a-Judge method as 
 
 ## Setup LLM Arena
 
-[Needa do here]
+In `deepeval`, arena test cases are used to compare two contestants i.e, two models to see which one performs better. Each test case is an arena for different models that are evaluated based on their corresponding `LLMTestCase`
+
+<Timeline>
+
+<TimelineItem title="Create an arena test cases">
+
+Create an `ArenaTestCase` by passing a dictionary of contestants with thier names as keys and their corresponding `LLMTestCase` as values.
+
+```python title="main.py"
+from deepeval.test_case import ArenaTestCase, LLMTestCase
+
+test_case = ArenaTestCase(
+    contestants={
+        "GPT-4": LLMTestCase(
+            input='Who wrote the novel "1984"?',
+            actual_output="George Orwell",
+        ),
+        "Claude-4": LLMTestCase(
+            input='Who wrote the novel "1984"?',
+            actual_output='"1984" was written by George Orwell.',
+        ),
+        "Gemini 2.0": LLMTestCase(
+            input='Who wrote the novel "1984"?',
+            actual_output="That dystopian masterpiece was penned by George Orwell 📚",
+        ),
+        "Deepseek R1": LLMTestCase(
+            input='Who wrote the novel "1984"?',
+            actual_output="George Orwell is the brilliant mind behind the novel '1984'.",
+        ),
+    },
+)
+... # Create more test cases as shown above
+```
+
+You can learn more about `LLMTestCase` [here](https://deepeval.com/docs/evaluation-test-cases).
+
+</TimelineItem>
+
+<TimelineItem title="Define arena metric">
+
+The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the only metric that is compatible with `ArenaTestCase`. It picks a winner among the contestants based on the criteria defined.
+
+```python title="main.py"
+from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
+
+arena_geval = ArenaGEval(
+    name="Friendly",
+    criteria="Choose the winner of the more friendly contestant based on the input and actual output",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
+```
+
+</TimelineItem>
+
+</Timeline>
+
+✅ Done. You have now successfully created an arena test cases with the contestants and an evaluation crieteria. You can now run evals and find the winner of the contestants.
 
 ## Run Your First Arena Evals
 
-[Needa do this, show compare() method (find in code)]
+Now that you have created an arena with both contestants and metric, you can run evals by using the `compare()` method:
+
+```python {3,11} title="main.py"
+from deepeval.test_case import ArenaTestCase, LLMTestCase
+from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
+from deepeval import compare
+
+test_case = ArenaTestCase(
+    contestants={...}, # Use the same pairs you've created before
+)
+
+arena_geval = ArenaGEval(...) # Use the same metric you've created before
+
+compare(test_cases=[test_case], metric=arena_geval)
+```
+
+You can now run this python file to get your results:
+
+```
+python main.py
+```
+
+This should let you see the results of the arena as shown below:
+
+```text
+Counter({'Gemini 2.0': 5, 'Deepseek R1': 1})
+```
+
+These are the number of wins each contestant had in the arena. The sum of all wins will be equal to the number of test cases you provided.
 
 ## Next Steps
 
-[Use navigation cards to route them back to agents rags or chatbot, say that arena is just for picking winners]
-[follow same format as before]
+Now that you have run your first Arena evals, you should:
+
+1. **Customize your metrics**: You can change the criteria of your metric to be more specific to your use-case.
+2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
+
+The arena metric is only used for picking winners among the contestants, it's not used for evaluating the answers themselves. To evaluate your LLM application on specific use cases you can read the other quickstarts here:
+
+<NavigationCards
+  columns={3}
+  items={[
+    {
+      title: "AI Agents",
+      icon: "Bot",
+      listDescription: [
+        "Setup LLM tracing",
+        "Test end-to-end task completion",
+        "Evaluate individual components",
+      ],
+      to: "/docs/getting-started-agents",
+    },
+    {
+      title: "RAG",
+      icon: "FileSearch",
+      listDescription: [
+        "Evaluate RAG end-to-end",
+        "Test retriever and generator separately",
+        "Multi-turn RAG evals",
+      ],
+      to: "/docs/getting-started-rag",
+    },
+    {
+      title: "Chatbots",
+      icon: "MessagesSquare",
+      listDescription: [
+        "Setup multi-turn test cases",
+        "Evaluate turns in a conversation",
+        "Simulate user interactions",
+      ],
+      to: "/docs/getting-started-chatbots",
+    },
+  ]}
+/>
