@@ -1,4 +1,5 @@
 from deepeval.telemetry import capture_tracing_integration
+
 try:
     from pydantic_ai.agent import Agent
 

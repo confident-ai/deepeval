@@ -2,6 +2,7 @@ from typing import TypeVar, cast, Optional, List
 from pydantic import Field
 from deepeval.metrics import BaseMetric
 from deepeval.telemetry import capture_tracing_integration
+
 try:
     from llama_index.core.agent.workflow import (
         FunctionAgent,

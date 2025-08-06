@@ -5,6 +5,7 @@ from deepeval.integrations.crewai.agent import (
     agent_registry,
 )
 from deepeval.telemetry import capture_tracing_integration
+
 try:
     from crewai.crew import Crew
     from crewai.llm import LLM
