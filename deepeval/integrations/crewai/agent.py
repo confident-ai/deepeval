@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Any, List
 import weakref
 from deepeval.metrics import BaseMetric
+from deepeval.telemetry import capture_tracing_integration
 
 try:
     from crewai.agent import Agent as CrewAIAgent
@@ -80,6 +81,7 @@ class Agent(CrewAIAgent):
         metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
+        capture_tracing_integration("crewai.agent.Agent")
         is_crewai_installed()
         super().__init__(*args, **kwargs)
         # Register this agent instance with its metric collection

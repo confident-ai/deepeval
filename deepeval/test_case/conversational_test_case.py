@@ -13,6 +13,9 @@ class TurnParams(Enum):
     EXPECTED_OUTCOME = "expected_outcome"
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
+    MCP_TOOLS = "mcp_tools_called"
+    MCP_RESOURCES = "mcp_resources_called"
+    MCP_PROMPTS = "mcp_prompts_called"
 
 
 # @dataclass
@@ -73,6 +76,7 @@ class Turn:
     user_id: Optional[str] = None
     retrieval_context: Optional[List[str]] = None
     tools_called: Optional[List[ToolCall]] = None
+    mcp_interaction: Optional[bool] = False
     mcp_tools_called: Optional[List[MCPToolCall]] = None
     mcp_resources_called: Optional[List[MCPResourceCall]] = None
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
@@ -107,6 +111,11 @@ class Turn:
                 ReadResourceResult,
                 GetPromptResult,
             )
+
+            if not self.mcp_interaction:
+                raise TypeError(
+                    "You have to set 'mcp_interaction' to true if you want to add 'mcp_tools_called' or 'mcp_resources_called' or 'mcp_prompts_called'."
+                )
 
             if self.mcp_tools_called is not None:
                 if not isinstance(self.mcp_tools_called, list) or not all(

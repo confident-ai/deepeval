@@ -4,6 +4,7 @@ from deepeval.integrations.crewai.agent import (
     Agent as PatchedAgent,
     agent_registry,
 )
+from deepeval.telemetry import capture_tracing_integration
 
 try:
     from crewai.crew import Crew
@@ -77,7 +78,7 @@ class CrewAIEventsListener(BaseEventListener):
                         )
 
 
-def instrumentator(api_key: Optional[str] = None):
+def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
     if api_key:
         deepeval.login(api_key)

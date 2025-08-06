@@ -329,12 +329,13 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not is_confident() and self.confident_api_key is None:
-            self._print_trace_status(
-                message="No Confident AI API key found. Skipping trace posting.",
-                trace_worker_status=TraceWorkerStatus.FAILURE,
-            )
-            return None
+        if not trace_api.confident_api_key:
+            if not is_confident() and self.confident_api_key is None:
+                self._print_trace_status(
+                    message="No Confident AI API key found. Skipping trace posting.",
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                )
+                return None
 
         if not self._should_sample_trace():
             return None
@@ -348,12 +349,13 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not is_confident() and self.confident_api_key is None:
-            self._print_trace_status(
-                message="No Confident AI API key found. Skipping trace posting.",
-                trace_worker_status=TraceWorkerStatus.FAILURE,
-            )
-            return None
+        if not trace.confident_api_key:
+            if not is_confident() and self.confident_api_key is None:
+                self._print_trace_status(
+                    message="No Confident AI API key found. Skipping trace posting.",
+                    trace_worker_status=TraceWorkerStatus.FAILURE,
+                )
+                return None
 
         if not self._should_sample_trace():
             return None
@@ -956,7 +958,8 @@ class Observer:
 
     def update_span_attributes(self, current_span: BaseSpan):
         """Update the span instance with execution results."""
-
+        current_span_input = current_span.input
+        current_span_output = current_span.output
         if isinstance(current_span, AgentSpan):
             if current_span and isinstance(
                 current_span.attributes, AgentAttributes
@@ -1009,6 +1012,10 @@ class Observer:
         else:
             current_span.input = trace_manager.mask(self.function_kwargs)
             current_span.output = trace_manager.mask(self.result)
+        if current_span_input is not None:
+            current_span.input = trace_manager.mask(current_span_input)
+        if current_span_output is not None:
+            current_span.output = trace_manager.mask(current_span_output)
 
 
 ########################################################

@@ -71,9 +71,7 @@ class CallbackHandler(BaseCallbackHandler):
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
     ):
-        capture_tracing_integration(
-            "deepeval.integrations.langchain.callback.CallbackHandler"
-        )
+        capture_tracing_integration("langchain.callback.CallbackHandler")
         is_langchain_installed()
         self.metrics = metrics
         self.metric_collection = metric_collection
