@@ -51,7 +51,6 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     open_ai_astream_to_llm_span_map: Dict[str, str] = {}
 
     def __init__(self):
-        capture_tracing_integration("llama-index")
         is_llama_index_installed()
         super().__init__()
 
@@ -246,6 +245,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
 
 def instrument_llama_index(dispatcher: Dispatcher):
+    capture_tracing_integration("llama_index.instrument_llama_index")
     handler = LLamaIndexHandler()
     dispatcher.add_event_handler(handler)
     dispatcher.add_span_handler(handler)

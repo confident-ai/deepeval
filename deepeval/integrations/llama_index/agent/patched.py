@@ -1,7 +1,7 @@
 from typing import TypeVar, cast, Optional, List
 from pydantic import Field
 from deepeval.metrics import BaseMetric
-
+from deepeval.telemetry import capture_tracing_integration
 try:
     from llama_index.core.agent.workflow import (
         FunctionAgent,
@@ -37,6 +37,7 @@ def with_metrics(cls: T) -> T:
 @with_metrics
 class FunctionAgent(FunctionAgent):
     def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
+        capture_tracing_integration("llama_index.agent.patched.FunctionAgent")
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
         self.metrics = metrics
@@ -45,6 +46,7 @@ class FunctionAgent(FunctionAgent):
 @with_metrics
 class ReActAgent(ReActAgent):
     def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
+        capture_tracing_integration("llama_index.agent.patched.ReActAgent")
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
         self.metrics = metrics
@@ -53,6 +55,7 @@ class ReActAgent(ReActAgent):
 @with_metrics
 class CodeActAgent(CodeActAgent):
     def __init__(self, *args, metric_collection=None, metrics=None, **kwargs):
+        capture_tracing_integration("llama_index.agent.patched.CodeActAgent")
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection
         self.metrics = metrics

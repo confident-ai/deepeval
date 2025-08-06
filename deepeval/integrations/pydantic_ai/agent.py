@@ -1,3 +1,4 @@
+from deepeval.telemetry import capture_tracing_integration
 try:
     from pydantic_ai.agent import Agent
 
@@ -21,6 +22,7 @@ class PydanticAIAgent(Agent):
         trace_attributes: dict = None,
         **kwargs
     ):
+        capture_tracing_integration("pydantic_ai.agent.PydanticAIAgent")
         is_pydantic_ai_installed()
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection

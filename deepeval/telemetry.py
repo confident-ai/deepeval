@@ -564,7 +564,7 @@ def capture_tracing_integration(integration_name: str):
     if telemetry_opt_out():
         yield
     else:
-        event = f"Tracing Integration: {integration_name}"
+        event = f"Tracing Integration: deepeval.integrations.{integration_name}"
         distinct_id = get_unique_id()
         properties = {
             "logged_in_with": get_logged_in_with(),
