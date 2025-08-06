@@ -5,6 +5,7 @@ import json
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
 
+
 def to_hex_string(id_value: int | bytes, length: int = 32) -> str:
     """
     Convert a trace ID or span ID to a hex string.
@@ -90,9 +91,13 @@ def validate_llm_test_case_data(
                 "retrieval_context must be None or a list of strings"
             )
 
+
 ####### gen ai attributes utils (warning: use in try except)#######
 
-def check_llm_input_from_gen_ai_attributes(span: ReadableSpan) -> Tuple[Optional[list], Optional[dict]]:
+
+def check_llm_input_from_gen_ai_attributes(
+    span: ReadableSpan,
+) -> Tuple[Optional[list], Optional[dict]]:
     try:
         input = json.loads(span.attributes.get("events"))
         if input and isinstance(input, list):
@@ -102,9 +107,10 @@ def check_llm_input_from_gen_ai_attributes(span: ReadableSpan) -> Tuple[Optional
                 return input, last_event
     except Exception as e:
         pass
-        
+
     return None, None
-    
+
+
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
     try:
         gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
@@ -112,33 +118,39 @@ def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
             return gen_ai_tool_name
     except Exception as e:
         pass
-    
+
     return None
 
 
-def check_tool_input_parameters_from_gen_ai_attributes(span: ReadableSpan) -> Optional[dict]:
+def check_tool_input_parameters_from_gen_ai_attributes(
+    span: ReadableSpan,
+) -> Optional[dict]:
     try:
         tool_arguments = span.attributes.get("tool_arguments")
         if tool_arguments:
             return json.loads(tool_arguments)
     except Exception as e:
         pass
-    
+
     return None
+
 
 def check_span_type_from_gen_ai_attributes(span: ReadableSpan):
     try:
         gen_ai_operation_name = span.attributes.get("gen_ai.operation.name")
         gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
-        
-        if gen_ai_operation_name and gen_ai_operation_name in GEN_AI_OPERATION_NAMES:
+
+        if (
+            gen_ai_operation_name
+            and gen_ai_operation_name in GEN_AI_OPERATION_NAMES
+        ):
             return "llm"
-        
+
         elif gen_ai_tool_name:
             return "tool"
     except Exception as e:
         pass
-    
+
     return "base"
 
 
@@ -149,5 +161,5 @@ def check_model_from_gen_ai_attributes(span: ReadableSpan):
             return gen_ai_request_model_name
     except Exception as e:
         pass
-    
+
     return None

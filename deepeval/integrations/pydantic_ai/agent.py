@@ -1,15 +1,26 @@
 try:
     from pydantic_ai.agent import Agent
+
     pydantic_ai_installed = True
-except :
+except:
     pydantic_ai_installed = False
+
 
 def is_pydantic_ai_installed():
     if not pydantic_ai_installed:
-        raise ImportError("Pydantic AI is not installed. Please install it with `pip install pydantic-ai`.")
+        raise ImportError(
+            "Pydantic AI is not installed. Please install it with `pip install pydantic-ai`."
+        )
+
 
 class PydanticAIAgent(Agent):
-    def __init__(self, *args, metric_collection: str = None, trace_attributes: dict = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        metric_collection: str = None,
+        trace_attributes: dict = None,
+        **kwargs
+    ):
         is_pydantic_ai_installed()
         super().__init__(*args, **kwargs)
         self.metric_collection = metric_collection

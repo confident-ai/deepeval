@@ -2,11 +2,11 @@ import os
 import time
 from crewai import Task, Crew, Agent
 
-from deepeval.integrations.crewai import instrumentator
+from deepeval.integrations.crewai import instrument_crewai
 
 os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
 
-instrumentator(api_key="<YOUR_CONFIDENT_API_KEY>")
+instrument_crewai(api_key="<YOUR_CONFIDENT_API_KEY>")
 
 # Define your agents with roles and goals
 coder = Agent(
