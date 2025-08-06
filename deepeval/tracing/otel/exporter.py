@@ -2,7 +2,7 @@ import json
 import os
 import typing
 from dataclasses import dataclass
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import (
     SpanExporter,
@@ -47,7 +47,14 @@ class BaseSpanWrapper:
     base_span: BaseSpan
     trace_input: Optional[Any] = None
     trace_output: Optional[Any] = None
+    # trace attributes (to be deprecated)
     trace_attributes: Optional[TraceAttributes] = None
+    # trace attributes
+    trace_name: Optional[str] = None
+    trace_tags: Optional[List[str]] = None
+    trace_metadata: Optional[Dict[str, Any]] = None
+    trace_thread_id: Optional[str] = None
+    trace_user_id: Optional[str] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -119,16 +126,54 @@ class ConfidentSpanExporter(SpanExporter):
                 if api_key:
                     current_trace.confident_api_key = api_key
 
-                # set the trace attributes
+                # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
-                    current_trace.name = base_span_wrapper.trace_attributes.name
-                    current_trace.tags = base_span_wrapper.trace_attributes.tags
-                    current_trace.thread_id = (
-                        base_span_wrapper.trace_attributes.thread_id
-                    )
-                    current_trace.user_id = (
-                        base_span_wrapper.trace_attributes.user_id
-                    )
+                    if base_span_wrapper.trace_name:
+                        current_trace.name = base_span_wrapper.trace_name
+                    if base_span_wrapper.trace_tags:
+                        current_trace.tags = base_span_wrapper.trace_tags
+                    if base_span_wrapper.trace_thread_id:
+                        current_trace.thread_id = (
+                            base_span_wrapper.trace_thread_id
+                        )
+                    if base_span_wrapper.trace_user_id:
+                        current_trace.user_id = base_span_wrapper.trace_user_id
+
+                # set the trace attributes
+                if base_span_wrapper.trace_name and isinstance(
+                    base_span_wrapper.trace_name, str
+                ):
+                    current_trace.name = base_span_wrapper.trace_name
+                
+                if base_span_wrapper.trace_tags and isinstance(
+                    base_span_wrapper.trace_tags, list
+                ):
+                    try:
+                        current_trace.tags = [
+                            str(tag) for tag in base_span_wrapper.trace_tags
+                        ]
+                    except Exception as e:
+                        print(f"Error converting trace tags: {e}")
+                
+                if base_span_wrapper.trace_metadata and isinstance(
+                    base_span_wrapper.trace_metadata, str
+                ):
+                    try:
+                        current_trace.metadata = json.loads(
+                            base_span_wrapper.trace_metadata
+                        )
+                    except Exception as e:
+                        print(f"Error converting trace metadata: {e}")
+                
+                if base_span_wrapper.trace_thread_id and isinstance(
+                    base_span_wrapper.trace_thread_id, str
+                ):
+                    current_trace.thread_id = base_span_wrapper.trace_thread_id
+                
+                if base_span_wrapper.trace_user_id and isinstance(
+                    base_span_wrapper.trace_user_id, str
+                ):
+                    current_trace.user_id = base_span_wrapper.trace_user_id
 
                 # set the trace input and output
                 if base_span_wrapper.trace_input:
@@ -299,7 +344,7 @@ class ConfidentSpanExporter(SpanExporter):
         base_span.metric_collection = metric_collection
         base_span.feedback = feedback
 
-        # extract trace attributes
+        # extract trace attributes (to be deprecated)
         trace_attributes = None
         trace_attr_json_str = span.attributes.get("confident.trace.attributes")
         if trace_attr_json_str:
@@ -310,6 +355,16 @@ class ConfidentSpanExporter(SpanExporter):
             except ValidationError as err:
                 print(f"Error converting trace attributes: {err}")
 
+        # extract trace name, tags, metadata, thread_id, user_id
+        trace_name = span.attributes.get("confident.trace.name")
+        trace_tags = span.attributes.get("confident.trace.tags")
+        trace_metadata = span.attributes.get("confident.trace.metadata")
+        trace_thread_id = span.attributes.get("confident.trace.thread_id")
+        trace_user_id = span.attributes.get("confident.trace.user_id")
+
+        if trace_tags and isinstance(trace_tags, tuple):
+            trace_tags = list(trace_tags)
+
         # extract trace input and output
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
@@ -319,6 +374,11 @@ class ConfidentSpanExporter(SpanExporter):
             trace_attributes=trace_attributes,
             trace_input=trace_input,
             trace_output=trace_output,
+            trace_name=trace_name,
+            trace_tags=trace_tags,
+            trace_metadata=trace_metadata,
+            trace_thread_id=trace_thread_id,
+            trace_user_id=trace_user_id,
         )
 
         return base_span_wrapper
