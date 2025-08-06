@@ -14,6 +14,8 @@ from deepeval.tracing import (
 )
 def meta_agent(query: str):
     update_current_span(
+        input="Testing the span input",
+        output="Testing the span output",
         metadata={"user_id": "11111", "date": "1/1/11"},
         test_case=LLMTestCase(
             input="What is this again?",

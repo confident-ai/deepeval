@@ -956,7 +956,8 @@ class Observer:
 
     def update_span_attributes(self, current_span: BaseSpan):
         """Update the span instance with execution results."""
-
+        current_span_input = current_span.input
+        current_span_output = current_span.output
         if isinstance(current_span, AgentSpan):
             if current_span and isinstance(
                 current_span.attributes, AgentAttributes
@@ -1009,6 +1010,10 @@ class Observer:
         else:
             current_span.input = trace_manager.mask(self.function_kwargs)
             current_span.output = trace_manager.mask(self.result)
+        if current_span_input is not None:
+            current_span.input = trace_manager.mask(current_span_input)
+        if current_span_output is not None:
+            current_span.output = trace_manager.mask(current_span_output)
 
 
 ########################################################
