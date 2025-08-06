@@ -17,6 +17,7 @@ from typing import Any
 import os
 import time
 
+
 # import logfire
 from httpx import AsyncClient
 from pydantic import BaseModel
@@ -25,10 +26,11 @@ from pydantic_ai import Agent, RunContext
 
 from dotenv import load_dotenv
 
-load_dotenv()
-from deepeval.integrations.pydantic_ai import setup_instrumentation
 
-setup_instrumentation(api_key=os.getenv("CONFIDENT_API_KEY"))
+load_dotenv()
+from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
+
+instrument_pydantic_ai(api_key=os.getenv("CONFIDENT_API_KEY"))
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 Agent.instrument_all()
 
@@ -43,6 +45,7 @@ class Deps:
 
 
 weather_agent = Agent(
+    "openai:gpt-4.1-mini",
     "openai:gpt-4.1-mini",
     # 'Be concise, reply with one sentence.' is enough for some models (like openai) to use
     # the below tools appropriately, but others like anthropic and gemini require a bit more direction.

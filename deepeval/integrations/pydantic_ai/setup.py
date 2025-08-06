@@ -23,8 +23,8 @@ def is_opentelemetry_available():
     return True
 
 
-def setup_instrumentation(api_key: Optional[str] = None):
-    capture_tracing_integration("pydantic_ai.setup_instrumentation")
+def instrument_pydantic_ai(api_key: Optional[str] = None):
+    capture_tracing_integration("pydantic_ai")
     is_opentelemetry_available()
     # safe_patch_agent_iter_method()
     safe_patch_agent_run_method()

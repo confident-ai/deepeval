@@ -9,6 +9,7 @@ from typing import Literal
 import os
 import time
 
+
 # import logfire
 from pydantic import BaseModel, Field
 from rich.prompt import Prompt
@@ -23,10 +24,11 @@ from pydantic_ai.usage import Usage, UsageLimits
 
 from dotenv import load_dotenv
 
-load_dotenv()
-from deepeval.integrations.pydantic_ai import setup_instrumentation
 
-setup_instrumentation(api_key=os.getenv("CONFIDENT_API_KEY"))
+load_dotenv()
+from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
+
+instrument_pydantic_ai(api_key=os.getenv("CONFIDENT_API_KEY"))
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 Agent.instrument_all()
 
@@ -56,6 +58,7 @@ class Deps:
 # This agent is responsible for controlling the flow of the conversation.
 search_agent = Agent[Deps, FlightDetails | NoFlightFound](
     "openai:gpt-4o",
+    "openai:gpt-4o",
     output_type=FlightDetails | NoFlightFound,  # type: ignore
     retries=4,
     system_prompt=(
@@ -66,6 +69,7 @@ search_agent = Agent[Deps, FlightDetails | NoFlightFound](
 
 # This agent is responsible for extracting flight details from web page text.
 extraction_agent = Agent(
+    "openai:gpt-4o",
     "openai:gpt-4o",
     output_type=list[FlightDetails],
     system_prompt="Extract all the flight details from the given text.",
@@ -120,6 +124,7 @@ class Failed(BaseModel):
 
 # This agent is responsible for extracting the user's seat selection
 seat_preference_agent = Agent[None, SeatPreference | Failed](
+    "openai:gpt-4o",
     "openai:gpt-4o",
     output_type=SeatPreference | Failed,  # type: ignore
     system_prompt=(

@@ -47,7 +47,7 @@ class BaseSpanWrapper:
     base_span: BaseSpan
     trace_input: Optional[Any] = None
     trace_output: Optional[Any] = None
-    trace_attributes: Optional[TraceAttributes] = None  
+    trace_attributes: Optional[TraceAttributes] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -315,10 +315,10 @@ class ConfidentSpanExporter(SpanExporter):
         trace_output = span.attributes.get("confident.trace.output")
 
         base_span_wrapper = BaseSpanWrapper(
-            base_span=base_span, 
-            trace_attributes=trace_attributes, 
-            trace_input=trace_input, 
-            trace_output=trace_output
+            base_span=base_span,
+            trace_attributes=trace_attributes,
+            trace_input=trace_input,
+            trace_output=trace_output,
         )
 
         return base_span_wrapper

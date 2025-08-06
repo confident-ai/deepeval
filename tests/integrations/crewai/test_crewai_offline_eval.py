@@ -2,13 +2,13 @@ from crewai import Task, Crew
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.integrations.crewai.agent import Agent
 import os
-from deepeval.integrations.crewai import instrumentator
+from deepeval.integrations.crewai import instrument_crewai
 import time
 from deepeval.dataset import Golden
 from deepeval.evaluate import dataset
 
 os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
-instrumentator(api_key="<YOUR_CONFIDENT_API_KEY>")
+instrument_crewai(api_key="<YOUR_CONFIDENT_API_KEY>")
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 
