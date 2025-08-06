@@ -346,6 +346,7 @@ class TraceManager:
         return
 
     def post_trace(self, trace: Trace) -> Optional[str]:
+        print(f">>>>>>>>>>>>>Posting trace: {trace.confident_api_key}")
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
