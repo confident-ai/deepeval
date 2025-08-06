@@ -82,8 +82,6 @@ arena_geval = ArenaGEval(
 
 </Timeline>
 
-🎉🥳 **Congratulations!** You have now successfully created an arena test case with the contestants and defined an arena metric. You can now run evals and find the winner of the contestants.
-
 ## Run Your First Arena Evals
 
 Now that you have created an arena with contestants and defined a metric, you can run evals by using the `compare()` method:
@@ -114,7 +112,14 @@ This should let you see the results of the arena as shown below:
 Counter({'Version 3': 1})
 ```
 
-These are the number of wins each contestant had in the arena. The sum of all wins will be equal to the number of test cases you provided.
+🎉🥳 **Congratulations!** You have just ran your first LLM arena-based evaluation. Here's what happened:
+
+- When you call `compare()`, `deepeval` loops through each `ArenaTestCase`
+- For each test case, `deepeval` uses the `ArenaGEval` metric to pick the "winner"
+- To make the arena unbiased, `deepeval` masks the names of each contestant and randomizes their positions
+- In the end, you get the number of "wins" each contestant got as the final output.
+
+Unlike single-output LLM-as-a-Judge (which is everything but LLM arena evals), the concept of a "passing" test case does not exist for arena evals.
 
 ## Next Steps
 
