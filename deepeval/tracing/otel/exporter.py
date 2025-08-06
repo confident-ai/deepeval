@@ -2,7 +2,7 @@ import json
 import os
 import typing
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Any, List, Optional
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import (
     SpanExporter,
@@ -12,10 +12,8 @@ from opentelemetry.sdk.trace.export import (
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.attributes import (
-    AgentAttributes,
     LlmAttributes,
     RetrieverAttributes,
-    ToolAttributes,
 )
 from deepeval.tracing.types import (
     AgentSpan,
@@ -29,25 +27,26 @@ from deepeval.tracing.otel.utils import (
     to_hex_string,
     set_trace_time,
     validate_llm_test_case_data,
+    check_llm_input_from_gen_ai_attributes,
+    check_tool_name_from_gen_ai_attributes,
+    check_tool_input_parameters_from_gen_ai_attributes,
+    check_span_type_from_gen_ai_attributes,
+    check_model_from_gen_ai_attributes,
 )
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.test_case import LLMTestCase, ToolCall
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 from deepeval.feedback.feedback import Feedback
 from collections import defaultdict
-
-
-class TraceAttributes(BaseModel):
-    name: Optional[str] = None
-    tags: Optional[List[str]] = None
-    thread_id: Optional[str] = None
-    user_id: Optional[str] = None
+from deepeval.tracing.attributes import TraceAttributes
 
 
 @dataclass
 class BaseSpanWrapper:
     base_span: BaseSpan
+    trace_input: Optional[Any] = None
+    trace_output: Optional[Any] = None
     trace_attributes: Optional[TraceAttributes] = None
 
 
@@ -58,7 +57,7 @@ class ConfidentSpanExporter(SpanExporter):
         peb.init_clock_bridge()
 
         if api_key:
-            deepeval.login_with_confident_api_key(api_key)
+            deepeval.login(api_key)
 
         environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
         if environment:
@@ -74,9 +73,8 @@ class ConfidentSpanExporter(SpanExporter):
         self,
         spans: typing.Sequence[ReadableSpan],
         timeout_millis: int = 30000,
-        api_key: Optional[str] = None,
+        api_key: Optional[str] = None,  # dynamic api key
     ) -> SpanExportResult:
-
         # build forest of spans
         forest = self._build_span_forest(spans)
 
@@ -131,6 +129,12 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace.user_id = (
                         base_span_wrapper.trace_attributes.user_id
                     )
+
+                # set the trace input and output
+                if base_span_wrapper.trace_input:
+                    current_trace.input = base_span_wrapper.trace_input
+                if base_span_wrapper.trace_output:
+                    current_trace.output = base_span_wrapper.trace_output
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -282,7 +286,13 @@ class ConfidentSpanExporter(SpanExporter):
         base_span.parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
         )
-        base_span.name = span.name
+
+        # base span name takes precedence over span name
+        _name = None
+        if base_span.name is not None and base_span.name != "None":
+            _name = base_span.name
+
+        base_span.name = _name if _name else span.name
         base_span.metadata = json.loads(span.to_json())
         base_span.error = error
         base_span.llm_test_case = llm_test_case
@@ -300,8 +310,15 @@ class ConfidentSpanExporter(SpanExporter):
             except ValidationError as err:
                 print(f"Error converting trace attributes: {err}")
 
+        # extract trace input and output
+        trace_input = span.attributes.get("confident.trace.input")
+        trace_output = span.attributes.get("confident.trace.output")
+
         base_span_wrapper = BaseSpanWrapper(
-            base_span=base_span, trace_attributes=trace_attributes
+            base_span=base_span,
+            trace_attributes=trace_attributes,
+            trace_input=trace_input,
+            trace_output=trace_output,
         )
 
         return base_span_wrapper
@@ -309,7 +326,9 @@ class ConfidentSpanExporter(SpanExporter):
     def _prepare_boilerplate_base_span(
         self, span: ReadableSpan
     ) -> Optional[BaseSpan]:
-        span_type = span.attributes.get("confident.span.type", "base")
+        span_type = span.attributes.get("confident.span.type")
+        if not span_type:
+            span_type = check_span_type_from_gen_ai_attributes(span)
 
         # required fields
         uuid = to_hex_string(span.context.span_id, 16)
@@ -328,6 +347,9 @@ class ConfidentSpanExporter(SpanExporter):
 
         if span_type == "llm":
             model = span.attributes.get("confident.llm.model")
+            if not model:
+                model = check_model_from_gen_ai_attributes(span)
+
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
             )
@@ -360,6 +382,9 @@ class ConfidentSpanExporter(SpanExporter):
                 "confident.llm.attributes.output_token_count"
             )
 
+            if not input and not output:
+                input, output = check_llm_input_from_gen_ai_attributes(span)
+
             try:
                 llm_span.set_attributes(
                     LlmAttributes(
@@ -385,18 +410,20 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
             available_tools: List[str] = []
-            try:
-                for tool in available_tools_attr:
-                    available_tools.append(str(tool))
-            except Exception as e:
-                print(f"Error converting available tools: {e}")
+            if available_tools_attr:
+                try:
+                    for tool in available_tools_attr:
+                        available_tools.append(str(tool))
+                except Exception as e:
+                    print(f"Error converting available tools: {e}")
 
             agent_handoffs: List[str] = []
-            try:
-                for handoff in agent_handoffs_attr:
-                    agent_handoffs.append(str(handoff))
-            except Exception as e:
-                print(f"Error converting agent handoffs: {e}")
+            if agent_handoffs_attr:
+                try:
+                    for handoff in agent_handoffs_attr:
+                        agent_handoffs.append(str(handoff))
+                except Exception as e:
+                    print(f"Error converting agent handoffs: {e}")
 
             agent_span = AgentSpan(
                 uuid=uuid,
@@ -417,9 +444,8 @@ class ConfidentSpanExporter(SpanExporter):
             output = span.attributes.get("confident.agent.attributes.output")
 
             try:
-                agent_span.set_attributes(
-                    AgentAttributes(input=input, output=output)
-                )
+                agent_span.input = trace_manager.mask(input)
+                agent_span.output = trace_manager.mask(output)
             except Exception as e:
                 print(f"Error setting agent span attributes: {e}")
 
@@ -468,6 +494,9 @@ class ConfidentSpanExporter(SpanExporter):
 
         elif span_type == "tool":
             name = span.attributes.get("confident.tool.name")
+            if not name:
+                name = check_tool_name_from_gen_ai_attributes(span)
+
             description = span.attributes.get("confident.tool.description")
 
             tool_span = ToolSpan(
@@ -494,14 +523,17 @@ class ConfidentSpanExporter(SpanExporter):
                     json.loads(input_parameters) if input_parameters else None
                 )
             except Exception as e:
+                input_parameters = None
                 print(f"Error converting input parameters: {e}")
 
-            try:
-                tool_span.set_attributes(
-                    ToolAttributes(
-                        input_parameters=input_parameters, output=output
-                    )
+            if not input_parameters:
+                input_parameters = (
+                    check_tool_input_parameters_from_gen_ai_attributes(span)
                 )
+
+            try:
+                tool_span.input = trace_manager.mask(input_parameters)
+                tool_span.output = trace_manager.mask(output)
             except Exception as e:
                 print(f"Error setting tool span attributes: {e}")
 

@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 
-class ConversationRelevancyTemplate:
+class TurnRelevancyTemplate:
     @staticmethod
     def generate_verdicts(sliding_window: List[Dict]):
         return f"""Based on the given list of message exchanges between a user and an LLM, generate a JSON object to indicate whether the LAST `assistant` message is relevant to context in messages. The JSON will have 2 fields: 'verdict' and 'reason'.

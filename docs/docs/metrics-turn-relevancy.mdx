@@ -1,13 +1,13 @@
 ---
-id: metrics-conversation-relevancy
-title: Conversation Relevancy
-sidebar_label: Conversation Relevancy
+id: metrics-turn-relevancy
+title: Turn Relevancy
+sidebar_label: Turn Relevancy
 ---
 
 <head>
   <link
     rel="canonical"
-    href="https://deepeval.com/docs/metrics-conversation-relevancy"
+    href="https://deepeval.com/docs/metrics-turn-relevancy"
   />
 </head>
 
@@ -20,7 +20,7 @@ The conversation relevancy metric is a conversational metric that determines whe
 
 ## Required Arguments
 
-To use the `ConversationRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+To use the `TurnRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
@@ -28,17 +28,17 @@ You must provide the `role` and `content` for evaluation to happen. Read the [Ho
 
 ## Usage
 
-The `ConversationRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
+The `TurnRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
 
 ```python
 from deepeval import evaluate
 from deepeval.test_case import Turn, ConversationalTestCase
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import TurnRelevancyMetric
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")]
 )
-metric = ConversationRelevancyMetric(threshold=0.5)
+metric = TurnRelevancyMetric(threshold=0.5)
 
 # To run metric as a standalone
 # metric.measure(convo_test_case)
@@ -47,7 +47,7 @@ metric = ConversationRelevancyMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `ConversationRelevancyMetric`:
+There are **SEVEN** optional parameters when creating a `TurnRelevancyMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
@@ -74,8 +74,8 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-The `ConversationRelevancyMetric` score is calculated according to the following equation:
+The `TurnRelevancyMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Conversation Relevancy} = \frac{\text{Number of Turns with Relevant Assistant Content}}{\text{Total Number of Assistant Turns}}" />
 
-The `ConversationRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `"assistant"` content that is relevant to the previous conversational context found in the sliding window.
+The `TurnRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `"assistant"` content that is relevant to the previous conversational context found in the sliding window.

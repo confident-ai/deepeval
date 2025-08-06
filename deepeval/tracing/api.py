@@ -129,3 +129,6 @@ class TraceApi(BaseModel):
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
     turn_context: Optional[TurnContext] = Field(None, alias="turnContext")
+
+    # Don't serialize these
+    confident_api_key: Optional[str] = Field(None, exclude=True)

@@ -92,7 +92,6 @@ There are different ways you scope an interaction:
 - **Agent-Level:** The entire process initiated by the agent, including the RAG pipeline and web search tool usage
 
 - **RAG Pipeline:** Just the RAG flow — retriever + LLM
-
   - **Retriever:** Only test whether relevant documents are being retrieved
   - **LLM:** Focus purely on how well the LLM generates text from the input/context
 
@@ -275,9 +274,7 @@ test_case = LLMTestCase(
 
 ### Context
 
-The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant to a specific input. Context allows your LLM to generate customized outputs that are outside the scope of the data it was trained on.
-
-In RAG applications, contextual information is typically stored in your selected vector database, which is represented by `retrieval_context` in an `LLMTestCase` and is not to be confused with `context`. Conversely, for a fine-tuning use case, this data is usually found in training datasets used to fine-tune your model. Providing the appropriate contextual information when constructing your evaluation dataset is one of the most challenging part of evaluating LLMs, since data in your knowledge base can constantly be changing.
+The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
 
 Unlike other parameters, a context accepts a list of strings.
 
@@ -502,9 +499,11 @@ mllm_test_case = MLLMTestCase(
 
 ## Label Test Cases For Confident AI
 
+If you're using Confident AI, these are some additional parameters to help manage your test cases.
+
 ### Name
 
-If you're using Confident AI, the optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
+The optional `name` parameter allows you to provide a string identifier to label `LLMTestCase`s and `ConversationalTestCase`s for you to easily search and filter for on Confident AI. This is particularly useful if you're importing test cases from an external datasource.
 
 ```python
 from deepeval.test_case import LLMTestCase

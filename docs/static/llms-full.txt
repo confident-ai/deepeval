@@ -2914,7 +2914,7 @@ You can also login directly in Python once you have your API key:
 main.py
 
 ```codeBlockLines_e6Vv
-deepeval.login_with_confident_api_key("your-confident-api-key")
+deepeval.login("your-confident-api-key")
 
 ```
 
@@ -3610,7 +3610,7 @@ Alternatively, if you already have an account, you can log in directly using Pyt
 main.py
 
 ```codeBlockLines_e6Vv
-deepeval.login_with_confident_api_key("your-confident-api-key")
+deepeval.login("your-confident-api-key")
 
 ```
 
@@ -5488,7 +5488,7 @@ If you want to do both, go with Confident AI. Most observability tools cover the
 - [Conclusion](https://deepeval.com/blog/deepeval-vs-arize#conclusion)
 
 ## Chatbot Conversation Metrics
-[Skip to main content](https://deepeval.com/docs/metrics-conversation-relevancy#__docusaurus_skipToContent_fallback)
+[Skip to main content](https://deepeval.com/docs/metrics-turn-relevancy#__docusaurus_skipToContent_fallback)
 
 ⭐️ If you like DeepEval, give it a star on [GitHub](https://github.com/confident-ai/deepeval)! ⭐️
 
@@ -5502,9 +5502,9 @@ Chatbot metric
 
 The conversation relevancy metric is a conversational metric that determines whether your LLM chatbot is able to consistently generate relevant responses **throughout a conversation**.
 
-## Required Arguments [​](https://deepeval.com/docs/metrics-conversation-relevancy\#required-arguments "Direct link to Required Arguments")
+## Required Arguments [​](https://deepeval.com/docs/metrics-turn-relevancy\#required-arguments "Direct link to Required Arguments")
 
-To use the `ConversationRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases):
+To use the `TurnRelevancyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
@@ -5513,17 +5513,17 @@ Additionally, each `LLMTestCase` s in `turns` requires the following arguments:
 - `input`
 - `actual_output`
 
-## Usage [​](https://deepeval.com/docs/metrics-conversation-relevancy\#usage "Direct link to Usage")
+## Usage [​](https://deepeval.com/docs/metrics-turn-relevancy\#usage "Direct link to Usage")
 
 ```codeBlockLines_e6Vv
 from deepeval import evaluate
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import TurnRelevancyMetric
 
 convo_test_case = ConversationalTestCase(
     turns=[LLMTestCase(input="...", actual_output="...")]
 )
-metric = ConversationRelevancyMetric(threshold=0.5)
+metric = TurnRelevancyMetric(threshold=0.5)
 
 # To run metric as a standalone
 # metric.measure(convo_test_case)
@@ -5533,17 +5533,17 @@ evaluate(test_cases=[convo_test_case], metrics=[metric])
 
 ```
 
-There are **SEVEN** optional parameters when creating a `ConversationRelevancyMetric`:
+There are **SEVEN** optional parameters when creating a `TurnRelevancyMetric`:
 
 - \[Optional\] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - \[Optional\] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](https://deepeval.com/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
 - \[Optional\] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
 - \[Optional\] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - \[Optional\] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](https://deepeval.com/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
-- \[Optional\] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](https://deepeval.com/docs/metrics-conversation-relevancy#how-is-it-calculated) section. Defaulted to `False`.
+- \[Optional\] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](https://deepeval.com/docs/metrics-turn-relevancy#how-is-it-calculated) section. Defaulted to `False`.
 - \[Optional\] `window_size`: an integer which defines the size of the sliding window of turns used during evaluation. Defaulted to `10`.
 
-### As a standalone [​](https://deepeval.com/docs/metrics-conversation-relevancy\#as-a-standalone "Direct link to As a standalone")
+### As a standalone [​](https://deepeval.com/docs/metrics-turn-relevancy\#as-a-standalone "Direct link to As a standalone")
 
 You can also run the `ContextualRelevancyMetric` on a single test case as a standalone, one-off execution.
 
@@ -5559,18 +5559,18 @@ caution
 
 This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports, Confident AI platform) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
 
-## How Is It Calculated? [​](https://deepeval.com/docs/metrics-conversation-relevancy\#how-is-it-calculated "Direct link to How Is It Calculated?")
+## How Is It Calculated? [​](https://deepeval.com/docs/metrics-turn-relevancy\#how-is-it-calculated "Direct link to How Is It Calculated?")
 
-The `ConversationRelevancyMetric` score is calculated according to the following equation:
+The `TurnRelevancyMetric` score is calculated according to the following equation:
 
 Conversation Relevancy=Number of Turns with Relevant Actual OutputsTotal Number of Turns\\text{Conversation Relevancy} = \\frac{\\text{Number of Turns with Relevant Actual Outputs}}{\\text{Total Number of Turns}}Conversation Relevancy=Total Number of TurnsNumber of Turns with Relevant Actual Outputs​
 
-The `ConversationRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `actual_output` that is relevant to the `input` based on previous conversational context found in the sliding window.
+The `TurnRelevancyMetric` first constructs a sliding windows of turns for each turn, before using an LLM to determine whether the last turn in each sliding window has an `actual_output` that is relevant to the `input` based on previous conversational context found in the sliding window.
 
-- [Required Arguments](https://deepeval.com/docs/metrics-conversation-relevancy#required-arguments)
-- [Usage](https://deepeval.com/docs/metrics-conversation-relevancy#usage)
-  - [As a standalone](https://deepeval.com/docs/metrics-conversation-relevancy#as-a-standalone)
-- [How Is It Calculated?](https://deepeval.com/docs/metrics-conversation-relevancy#how-is-it-calculated)
+- [Required Arguments](https://deepeval.com/docs/metrics-turn-relevancy#required-arguments)
+- [Usage](https://deepeval.com/docs/metrics-turn-relevancy#usage)
+  - [As a standalone](https://deepeval.com/docs/metrics-turn-relevancy#as-a-standalone)
+- [How Is It Calculated?](https://deepeval.com/docs/metrics-turn-relevancy#how-is-it-calculated)
 
 ## Metrics Selection Guide
 [Skip to main content](https://deepeval.com/tutorials/tutorial-metrics-selection#__docusaurus_skipToContent_fallback)
@@ -15645,7 +15645,7 @@ On this page
 While the [`Synthesizer`](https://deepeval.com/docs/synthesizer-introduction) generates regular goldens representing single, atomic [LLM interactions](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), `deepeval`'s `ConversationSimulator` mimics a fake user interacting with your chatbot to generate **conversational goldens** instead.
 
 ```codeBlockLines_e6Vv codeBlockLinesWithNumbering_o6Pm
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Define simulator
 simulator = ConversationSimulator()
@@ -15672,7 +15672,7 @@ Alternatively, you can skip generating user profiles entirely, and instead suppl
 ## Create Your First Simulator [​](https://deepeval.com/docs/conversation-simulator\#create-your-first-simulator "Direct link to Create Your First Simulator")
 
 ```codeBlockLines_e6Vv
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 user_intentions = {
   "opening a bank account": 1,
@@ -15790,10 +15790,10 @@ Use simulated conversations to run [end-to-end](https://deepeval.com/docs/evalua
 
 ```codeBlockLines_e6Vv
 from deepeval import evaluate
-from deepeval.metrics import ConversationRelevancyMetric
+from deepeval.metrics import TurnRelevancyMetric
 ...
 
-evaluate(test_cases=convo_test_cases, metrics=[ConversationRelevancyMetric()])
+evaluate(test_cases=convo_test_cases, metrics=[TurnRelevancyMetric()])
 
 ```
 

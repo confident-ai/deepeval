@@ -77,10 +77,10 @@ class CrewAIEventsListener(BaseEventListener):
                         )
 
 
-def instrumentator(api_key: Optional[str] = None):
+def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
     if api_key:
-        deepeval.login_with_confident_api_key(api_key)
+        deepeval.login(api_key)
 
     Crew.kickoff = observe(Crew.kickoff)
     LLM.call = observe(LLM.call)

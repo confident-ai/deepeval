@@ -149,7 +149,7 @@ test_cases = create_deepeval_dataset(
     qdrant_qna_dataset, EVAL_SIZE, RETRIEVAL_SIZE
 )
 
-deepeval.login_with_confident_api_key(CONFIDENT_AI_API_KEY)
+deepeval.login(CONFIDENT_AI_API_KEY)
 
 deepeval.evaluate(
     test_cases=test_cases,

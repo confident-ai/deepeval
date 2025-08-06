@@ -1,17 +1,33 @@
 from deepeval import evaluate
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, Turn
 
 evaluate(
     test_cases=[
-        LLMTestCase(
-            input="What is the weather in San Francisco?",
-            actual_output="It is sunny and 70 degrees.",
+        ConversationalTestCase(
+            scenario="You are a helpful assistant.",
+            user_description="What is the weather in San Francisco?",
+            context=["It is sunny and 70 degrees."],
+            tags=["weather"],
+            turns=[
+                Turn(
+                    role="user",
+                    content="What is the weather in San Francisco?",
+                ),
+            ],
         ),
-        LLMTestCase(
-            input="What is the weather in San Francisco?",
-            actual_output="I've a dog",
+        ConversationalTestCase(
+            scenario="You are a helpful assistant.",
+            user_description="What is the weather in San Francisco?",
+            context=["It is sunny and 70 degrees."],
+            tags=["something else"],
+            turns=[
+                Turn(
+                    role="user",
+                    content="What is the weather in San Francisco?",
+                ),
+            ],
         ),
     ],
-    metrics=[AnswerRelevancyMetric(), AnswerRelevancyMetric()],
+    metrics=[TurnRelevancyMetric()],
 )

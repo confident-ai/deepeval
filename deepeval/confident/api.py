@@ -14,6 +14,7 @@ from tenacity import (
 
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 
+CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
 API_BASE_URL = "https://api.confident-ai.com"
@@ -39,7 +40,7 @@ def get_deepeval_base_url():
 
 def get_confident_api_key():
     return KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY) or os.getenv(
-        "CONFIDENT_API_KEY"
+        CONFIDENT_API_KEY_ENV_VAR
     )
 
 
@@ -81,11 +82,15 @@ class Endpoints(Enum):
 class Api:
     def __init__(self, api_key: Optional[str] = None, base_url=None):
         if api_key is None:
-            # get API key if none is supplied after you log in
-            api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+            api_key = (
+                KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+                or get_confident_api_key()
+            )
 
         if not api_key:
-            raise ValueError("Please provide a valid Confident AI API Key.")
+            raise ValueError(
+                f"No Confident API key found. Please run `deepeval login` or set the {CONFIDENT_API_KEY_ENV_VAR} environment variable in the CLI."
+            )
 
         self.api_key = api_key
         self._headers = {

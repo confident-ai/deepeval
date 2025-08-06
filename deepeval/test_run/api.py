@@ -84,24 +84,6 @@ class LLMApiTestCase(BaseModel):
             if success is False:
                 self.success = False
 
-    # # TODO: Do a post init check for multi modal and tracing scenario
-    # @model_validator(mode="before")
-    # def check_input_and_multimodal_input(cls, values: Dict[str, Any]):
-    #     input = values.get("input")
-    #     actual_output = values.get("actualOutput")
-    #     multimodal_input = values.get("multimodalInput")
-    #     multimodal_actual_output = values.get("multimodalActualOutput")
-
-    #     # Ensure that either input/actual_output or multimodal_input/multimodal_actual_output is present
-    #     if (input is None or actual_output is None) and (
-    #         multimodal_input is None or multimodal_actual_output is None
-    #     ):
-    #         raise ValueError(
-    #             "Either 'input' and 'actualOutput' or 'multimodalInput' and 'multimodalActualOutput' must be provided."
-    #         )
-
-    #     return values
-
     def is_multimodal(self):
         if (
             self.multimodal_input is not None
@@ -135,10 +117,12 @@ class ConversationalApiTestCase(BaseModel):
     scenario: Optional[str] = Field(None)
     expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
     user_description: Optional[str] = Field(None, alias="userDescription")
+    context: Optional[list] = Field(None)
     comments: Optional[str] = Field(None)
     additional_metadata: Optional[Dict] = Field(
         None, alias="additionalMetadata"
     )
+    tags: Optional[List[str]] = Field(None)
 
     def update_metric_data(self, metrics_data: MetricData):
         if self.metrics_data is None:

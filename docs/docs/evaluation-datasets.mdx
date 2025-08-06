@@ -14,28 +14,6 @@ import TabItem from "@theme/TabItem";
 
 In `deepeval`, an evaluation dataset, or just dataset, is a collection of goldens. A golden is a precursor to a test case. At evaluation time, you would first convert all goldens in your dataset to test cases, before running evals on these test cases.
 
-<details>
-
-<summary>What Are Goldens?</summary>
-
-Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, goldens:
-
-- Only require `input`/`scenario` to initialize
-- Store expected results like `expected_output`/`expected_outcome`
-- Serve as templates before becoming fully-formed test cases
-
-Goldens excel in development workflows where you need to:
-
-- Evaluate changes across different iterations of your LLM application
-- Compare performance between model versions
-- Test with `input`s that haven't yet been processed by your LLM
-
-Think of goldens as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements (`actual_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
-
-You can scroll to the bottom to see the [data model of a golden.](#goldens-data-model)
-
-</details>
-
 ## Quick Summary
 
 There are two approaches to running evals using datasets in `deepeval`:
@@ -509,7 +487,7 @@ For more information on how `deepeval`'s `Synthesizer` works, visit the [synthes
 While a `Synthesizer` generates goldens, the `ConversationSimulator` works slightly different as it generates `turns` in a `ConversationalTestCase` instead:
 
 ```python
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Define simulator
 simulator = ConversationSimulator(
@@ -539,7 +517,23 @@ print(convo_test_cases)
 
 You can learn more in the [conversation simulator page.](/docs/conversation-simulator)
 
-## Goldens Data Model
+## What Are Goldens?
+
+Goldens represent a more flexible alternative to test cases in the `deepeval`, and **is the preferred way to initialize a dataset**. Unlike test cases, goldens:
+
+- Only require `input`/`scenario` to initialize
+- Store expected results like `expected_output`/`expected_outcome`
+- Serve as templates before becoming fully-formed test cases
+
+Goldens excel in development workflows where you need to:
+
+- Evaluate changes across different iterations of your LLM application
+- Compare performance between model versions
+- Test with `input`s that haven't yet been processed by your LLM
+
+Think of goldens as "pending test cases" - they contain all the input data and expected results, but are missing the dynamic elements (`actual_output`, `retrieval_context`, `tools_called`) that will be generated when your LLM processes them.
+
+### Data model
 
 The golden data model is nearly identical to their single/multi-turn test case counterparts (aka. `LLMTestCase` and `ConversationalTestCase`).
 

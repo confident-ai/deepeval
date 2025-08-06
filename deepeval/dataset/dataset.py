@@ -11,7 +11,7 @@ import datetime
 import time
 import ast
 
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
@@ -49,7 +49,6 @@ class EvaluationDataset:
     _multi_turn: bool = field(default=False)
     _alias: Union[str, None] = field(default=None)
     _id: Union[str, None] = field(default=None)
-    _confident_api_key: Optional[str] = None
 
     _goldens: List[Golden] = field(default_factory=[], repr=None)
     _conversational_goldens: List[ConversationalGolden] = field(
@@ -605,42 +604,35 @@ class EvaluationDataset:
                 "Unable to push empty dataset to Confident AI, there must be at least one golden in dataset."
             )
 
-        if is_confident():
-            api_dataset = APIDataset(
-                alias=alias,
-                overwrite=overwrite,
-                goldens=self.goldens if not self._multi_turn else None,
-                conversationalGoldens=(
-                    self.goldens if self._multi_turn else None
-                ),
-            )
-            try:
-                body = api_dataset.model_dump(by_alias=True, exclude_none=True)
-            except AttributeError:
-                # Pydantic version below 2.0
-                body = api_dataset.dict(by_alias=True, exclude_none=True)
+        api = Api()
+        api_dataset = APIDataset(
+            alias=alias,
+            overwrite=overwrite,
+            goldens=self.goldens if not self._multi_turn else None,
+            conversationalGoldens=(self.goldens if self._multi_turn else None),
+        )
+        try:
+            body = api_dataset.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_dataset.dict(by_alias=True, exclude_none=True)
 
-            api = Api()
-            result = api.send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.DATASET_ENDPOINT,
-                body=body,
+        result = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.DATASET_ENDPOINT,
+            body=body,
+        )
+        if result:
+            response = CreateDatasetHttpResponse(
+                link=result["link"],
             )
-            if result:
-                response = CreateDatasetHttpResponse(
-                    link=result["link"],
-                )
-                link = response.link
-                console = Console()
-                console.print(
-                    "✅ Dataset successfully pushed to Confident AI! View at "
-                    f"[link={link}]{link}[/link]"
-                )
-                webbrowser.open(link)
-        else:
-            raise Exception(
-                "To push dataset to Confident AI, run `deepeval login`"
+            link = response.link
+            console = Console()
+            console.print(
+                "✅ Dataset successfully pushed to Confident AI! View at "
+                f"[link={link}]{link}[/link]"
             )
+            webbrowser.open(link)
 
     def pull(
         self,
@@ -648,82 +640,77 @@ class EvaluationDataset:
         finalized: bool = True,
         auto_convert_goldens_to_test_cases: bool = False,
     ):
+        api = Api()
         with capture_pull_dataset():
-            if is_confident() or self._confident_api_key is not None:
-                api = Api(api_key=self._confident_api_key)
-                with Progress(
-                    SpinnerColumn(style="rgb(106,0,255)"),
-                    BarColumn(bar_width=60),
-                    TextColumn("[progress.description]{task.description}"),
-                    transient=False,
-                ) as progress:
-                    task_id = progress.add_task(
-                        f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
-                        total=100,
-                    )
-                    start_time = time.perf_counter()
-                    result = api.send_request(
-                        method=HttpMethods.GET,
-                        endpoint=Endpoints.DATASET_ENDPOINT,
-                        params={
-                            "alias": alias,
-                            "finalized": str(finalized).lower(),
-                        },
-                    )
+            with Progress(
+                SpinnerColumn(style="rgb(106,0,255)"),
+                BarColumn(bar_width=60),
+                TextColumn("[progress.description]{task.description}"),
+                transient=False,
+            ) as progress:
+                task_id = progress.add_task(
+                    f"Pulling [rgb(106,0,255)]'{alias}'[/rgb(106,0,255)] from Confident AI...",
+                    total=100,
+                )
+                start_time = time.perf_counter()
+                result = api.send_request(
+                    method=HttpMethods.GET,
+                    endpoint=Endpoints.DATASET_ENDPOINT,
+                    params={
+                        "alias": alias,
+                        "finalized": str(finalized).lower(),
+                    },
+                )
 
-                    response = DatasetHttpResponse(
-                        goldens=convert_keys_to_snake_case(
-                            result.get("goldens", None)
-                        ),
-                        conversationalGoldens=convert_keys_to_snake_case(
-                            result.get("conversationalGoldens", None)
-                        ),
-                        datasetId=result["datasetId"],
-                    )
+                response = DatasetHttpResponse(
+                    goldens=convert_keys_to_snake_case(
+                        result.get("goldens", None)
+                    ),
+                    conversationalGoldens=convert_keys_to_snake_case(
+                        result.get("conversationalGoldens", None)
+                    ),
+                    datasetId=result["datasetId"],
+                )
 
-                    self._alias = alias
-                    self._id = response.datasetId
-                    self._multi_turn = response.goldens is None
-                    self.goldens = []
-                    self.test_cases = []
+                self._alias = alias
+                self._id = response.datasetId
+                self._multi_turn = response.goldens is None
+                self.goldens = []
+                self.test_cases = []
 
-                    if auto_convert_goldens_to_test_cases:
-                        if not self._multi_turn:
-                            llm_test_cases = convert_goldens_to_test_cases(
-                                response.goldens, alias, response.datasetId
-                            )
-                            self._llm_test_cases.extend(llm_test_cases)
-                        else:
-                            conversational_test_cases = (
-                                convert_convo_goldens_to_convo_test_cases(
-                                    response.conversational_goldens,
-                                    alias,
-                                    response.datasetId,
-                                )
-                            )
-                            self._conversational_test_cases.extend(
-                                conversational_test_cases
-                            )
+                if auto_convert_goldens_to_test_cases:
+                    if not self._multi_turn:
+                        llm_test_cases = convert_goldens_to_test_cases(
+                            response.goldens, alias, response.datasetId
+                        )
+                        self._llm_test_cases.extend(llm_test_cases)
                     else:
-                        if not self._multi_turn:
-                            self.goldens = response.goldens
-                        else:
-                            self.goldens = response.conversational_goldens
+                        conversational_test_cases = (
+                            convert_convo_goldens_to_convo_test_cases(
+                                response.conversational_goldens,
+                                alias,
+                                response.datasetId,
+                            )
+                        )
+                        self._conversational_test_cases.extend(
+                            conversational_test_cases
+                        )
+                else:
+                    if not self._multi_turn:
+                        self.goldens = response.goldens
+                    else:
+                        self.goldens = response.conversational_goldens
 
-                        for golden in self.goldens:
-                            golden._dataset_alias = alias
-                            golden._dataset_id = response.datasetId
+                    for golden in self.goldens:
+                        golden._dataset_alias = alias
+                        golden._dataset_id = response.datasetId
 
-                    end_time = time.perf_counter()
-                    time_taken = format(end_time - start_time, ".2f")
-                    progress.update(
-                        task_id,
-                        description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
-                        completed=100,
-                    )
-            else:
-                raise Exception(
-                    "Run `deepeval login` to pull dataset from Confident AI"
+                end_time = time.perf_counter()
+                time_taken = format(end_time - start_time, ".2f")
+                progress.update(
+                    task_id,
+                    description=f"{progress.tasks[task_id].description} [rgb(25,227,160)]Done! ({time_taken}s)",
+                    completed=100,
                 )
 
     def queue(
@@ -736,42 +723,36 @@ class EvaluationDataset:
             raise ValueError(
                 f"Can't queue empty list of goldens to dataset with alias: {alias} on Confident AI."
             )
+        api = Api()
 
         multi_turn = isinstance(goldens[0], ConversationalGolden)
 
-        if is_confident():
-            api = Api()
-            api_dataset = APIQueueDataset(
-                alias=alias,
-                goldens=goldens if not multi_turn else None,
-                conversationalGoldens=goldens if multi_turn else None,
-            )
-            try:
-                body = api_dataset.model_dump(by_alias=True, exclude_none=True)
-            except AttributeError:
-                # Pydantic version below 2.0
-                body = api_dataset.dict(by_alias=True, exclude_none=True)
+        api_dataset = APIQueueDataset(
+            alias=alias,
+            goldens=goldens if not multi_turn else None,
+            conversationalGoldens=goldens if multi_turn else None,
+        )
+        try:
+            body = api_dataset.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_dataset.dict(by_alias=True, exclude_none=True)
 
-            api = Api()
-            result = api.send_request(
-                method=HttpMethods.POST,
-                endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
-                body=body,
-                url_params={"alias": alias},
+        result = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
+            body=body,
+            url_params={"alias": alias},
+        )
+        if result and print_response:
+            response = CreateDatasetHttpResponse(
+                link=result["link"],
             )
-            if result and print_response:
-                response = CreateDatasetHttpResponse(
-                    link=result["link"],
-                )
-                link = response.link
-                console = Console()
-                console.print(
-                    "✅ Goldens successfully queued to Confident AI! Annotate & finalized them at "
-                    f"[link={link}]{link}[/link]"
-                )
-        else:
-            raise Exception(
-                "To push dataset to Confident AI, run `deepeval login`"
+            link = response.link
+            console = Console()
+            console.print(
+                "✅ Goldens successfully queued to Confident AI! Annotate & finalized them at "
+                f"[link={link}]{link}[/link]"
             )
 
     def generate_goldens_from_docs(

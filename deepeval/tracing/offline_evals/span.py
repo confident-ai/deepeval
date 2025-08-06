@@ -1,4 +1,4 @@
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateSpanRequestBody
 
@@ -8,8 +8,7 @@ def evaluate_span(span_uuid: str, metric_collection: str):
     api_key = None
     if trace:
         api_key = trace.confident_api_key
-    if not api_key and not is_confident():
-        return
+    api = Api(api_key=api_key)
 
     evaluate_span_request_body = EvaluateSpanRequestBody(
         spanUuid=span_uuid,
@@ -24,7 +23,6 @@ def evaluate_span(span_uuid: str, metric_collection: str):
         # Pydantic version below 2.0
         body = evaluate_span_request_body.dict(by_alias=True, exclude_none=True)
 
-    api = Api(api_key=api_key)
     api.send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.EVALUATE_SPAN_ENDPOINT,
@@ -38,8 +36,7 @@ async def a_evaluate_span(span_uuid: str, metric_collection: str):
     api_key = None
     if trace:
         api_key = trace.confident_api_key
-    if not api_key and not is_confident():
-        return
+    api = Api(api_key=api_key)
 
     evaluate_span_request_body = EvaluateSpanRequestBody(
         spanUuid=span_uuid,
@@ -54,7 +51,6 @@ async def a_evaluate_span(span_uuid: str, metric_collection: str):
         # Pydantic version below 2.0
         body = evaluate_span_request_body.dict(by_alias=True, exclude_none=True)
 
-    api = Api(api_key=api_key)
     await api.a_send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.EVALUATE_TRACE_ENDPOINT,

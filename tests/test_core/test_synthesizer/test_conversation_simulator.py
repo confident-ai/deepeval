@@ -2,7 +2,7 @@
 # import asyncio
 # import pytest
 
-# from deepeval.conversation_simulator import ConversationSimulator
+# from deepeval.simulator import ConversationSimulator
 # from deepeval.test_case import ConversationalTestCase
 # from deepeval.models import GPTModel
 

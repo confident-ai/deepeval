@@ -1,4 +1,4 @@
-from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateTraceRequestBody
 
@@ -8,8 +8,7 @@ def evaluate_trace(trace_uuid: str, metric_collection: str):
     api_key = None
     if trace:
         api_key = trace.confident_api_key
-    if not api_key and not is_confident():
-        return
+    api = Api(api_key=api_key)
 
     evaluate_trace_request_body = EvaluateTraceRequestBody(
         traceUuid=trace_uuid,
@@ -26,7 +25,6 @@ def evaluate_trace(trace_uuid: str, metric_collection: str):
             by_alias=True, exclude_none=True
         )
 
-    api = Api(api_key=api_key)
     api.send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.EVALUATE_TRACE_ENDPOINT,
@@ -40,8 +38,7 @@ async def a_evaluate_trace(trace_uuid: str, metric_collection: str):
     api_key = None
     if trace:
         api_key = trace.confident_api_key
-    if not api_key and not is_confident():
-        return
+    api = Api(api_key=api_key)
 
     evaluate_trace_request_body = EvaluateTraceRequestBody(
         traceUuid=trace_uuid,
@@ -58,7 +55,6 @@ async def a_evaluate_trace(trace_uuid: str, metric_collection: str):
             by_alias=True, exclude_none=True
         )
 
-    api = Api(api_key=api_key)
     await api.a_send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.EVALUATE_TRACE_ENDPOINT,
