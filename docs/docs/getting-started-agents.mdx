@@ -1,6 +1,6 @@
 ---
 id: getting-started-agents
-title: LLM Evals for AI Agents
+title: AI Agent Evaluation
 sidebar_label: AI Agents
 ---
 
@@ -18,9 +18,9 @@ AI agent evaluation is different from other types of evals because agentic workf
 
 **In this 5 min quickstart, you'll learn how to:**
 
-1. Set up LLM tracing for your agent
-2. Evaluate your agent end-to-end
-3. Evaluate individual components in your agent
+- Set up LLM tracing for your agent
+- Evaluate your agent end-to-end
+- Evaluate individual components in your agent
 
 ## Prerequisites
 
@@ -41,14 +41,14 @@ CONFIDENT_API_KEY="confident_us..."
 In LLM tracing, a **trace** represents an end-to-end system interaction, whereas **spans** represents individual components in your agent. One or more spans make up a trace.
 
 <Timeline>
-<TimelineItem title="Choose your techstack">
+<TimelineItem title="Choose your implementation">
 
 <Tabs groupId="techstack">
 <TabItem value="python" label="Python">
 
 Attach the <code>@observe</code> decorator to functions/methods that make up your agent. These will represent individual components in your agent.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{3,7}"
+```python title=main.py showLineNumbers={true}  {3,7}
 from deepeval.tracing import observe
 
 @observe()
@@ -66,7 +66,7 @@ def your_ai_agent(input):
 
 Pass in `deepeval`'s `CallbackHandler` for LangGraph to your agent's invoke method.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,16}"
+```python title=main.py showLineNumbers={true} {2,16}
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain import CallbackHandler
 
@@ -91,7 +91,7 @@ result = agent.invoke(
 
 Pass in `deepeval`'s `CallbackHandler` for LangChain to your agent's invoke method.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{2,12}"
+```python title=main.py showLineNumbers={true} {2,12}
 from langchain.chat_models import init_chat_model
 from deepeval.integrations.langchain import CallbackHandler
 
@@ -112,7 +112,7 @@ llm_with_tools.invoke(
 
 Instrument `deepeval` as an span handler for CrewAI and import your `Agent` from `deepeval` instead.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{4}"
+```python title=main.py showLineNumbers={true} {4}
 from crewai import Task, Crew
 from deepeval.integrations.crewai import instrument_crewai, Agent
 
@@ -242,7 +242,7 @@ This will benchmark your agent for this point-in-time and **create a test run.**
 
 Supply the **task completion metric** to the metrics argument inside the `@observe` decorator.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{10,16,19}"
+```python title=main.py showLineNumbers={true} {10,16,19}
 from deepeval.tracing import observe
 from deepeval.dataset import EvaluationDataset, Golden
 ...
@@ -270,7 +270,7 @@ for golden in dataset.evals_iterator():
 
 Supply the **task completion metric** to the metrics argument inside the `CallbackHandler`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{17,20,24}"
+```python title=main.py showLineNumbers={true} {17,20,24}
 from deepeval.integrations.langchain import CallbackHandler
 from langgraph.prebuilt import create_react_agent
 from deepeval.dataset import EvaluationDataset, Golden
@@ -303,7 +303,7 @@ for golden in dataset.evals_iterator():
 
 Supply the **task completion metric** to the metrics argument inside the `CallbackHandler`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{13,16,20}"
+```python title=main.py showLineNumbers={true}  {13,16,20}
 from langchain.chat_models import init_chat_model
 from deepeval.integrations.langchain import CallbackHandler
 from deepeval.dataset import EvaluationDataset, Golden
@@ -332,7 +332,7 @@ for golden in dataset.evals_iterator():
 
 Supply the **task completion metric** to the metrics argument inside the `Agent` from `deepeval`.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{9,13,16}"
+```python title=main.py showLineNumbers={true}  {9,13,16}
 from crewai import Task, Crew
 from deepeval.dataset import EvaluationDataset, Golden
 ...
@@ -424,21 +424,19 @@ Component-level evaluation integrations are **not available** on `deepeval` at t
 
 Any [single-turn metric](/docs/metrics-introduction) can be used to evaluate agentic components.
 
-```python title=main.py showLineNumbers={true} wrapLines={true}
+```python title=main.py showLineNumbers={true}
 from deepeval.metrics import TaskCompletionMetric, ArgCorrectnessMetric
 
 tool_correctness_metric = ArgCorrectnessMetric()
 task_completion_metric = TaskCompletionMetric()
 ```
 
-What metrics you ultimately choose depend on the types of components you're evaluating. For example, [Tool Correctness](/docs/metrics-tool-correctness) is suitable for evaluating tool-calling components, while [RAG metrics](/docs/metrics-answer-relevancy) are useful for retrievers.
-
 </TimelineItem>
 <TimelineItem title="Setup test cases & metrics">
 
 Supply the metrics to the `@observe` decorator of each function, then define a test case in `update_span` if needed. The test case should include every parameter required by the metrics you select.
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{14,23,28}"
+```python title=main.py showLineNumbers={true} {3,15}
 from openai import OpenAI
 from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.tracing import observe, update_span
@@ -518,7 +516,7 @@ Similar to end-ot-end evals, the `dataset` iterator to invoke your agent with a 
 
 This will benchmark your agent for this point-in-time and **create a test run.**
 
-```python title=main.py showLineNumbers={true} wrapLines={true} metastring="{5,8}"
+```python title=main.py showLineNumbers={true}  {5,8}
 from deepeval.dataset import EvaluationDataset, Golden
 ...
 
@@ -563,7 +561,7 @@ Evals on traces are [end-to-end evaluations](/docs/evaluation-end-to-end-llm-eva
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
   confidentUrl="/docs/llm-tracing/introduction"
-  label="Learn how to setup LLM tracing for Confident AI"
+  label="Trace-Level Evals in Production"
 />
 
 </TabItem>
@@ -575,7 +573,7 @@ Spans make up a trace and evals on spans represents [component-level evaluations
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
   confidentUrl="/docs/llm-tracing/introduction"
-  label="Learn how to setup LLM tracing for Confident AI"
+  label="Span-Level Evals in Production"
 />
 
 </TabItem>

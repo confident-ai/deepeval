@@ -1,6 +1,6 @@
 ---
 id: evaluation-component-level-llm-evals
-title: Component-Level Evals
+title: Component-Level LLM Evaluation
 sidebar_label: Component-Level Evals
 ---
 
@@ -8,6 +8,14 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
+
+![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
+
+Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, run:
+
+```
+deepeval login
+```
 
 <details>
 <summary><strong>When should you run Component-Level evaluations?</strong></summary>
@@ -27,14 +35,6 @@ Common use cases that are suitable for component-level evaluation include (not i
 The trend you'll notice is use cases that are more complex in architecture are more suited for component-level evaluation.
 
 </details>
-
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
-
-Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, run:
-
-```
-deepeval login
-```
 
 ## Prerequisites
 

@@ -4,9 +4,11 @@ from langgraph.prebuilt import create_react_agent
 from deepeval.evaluate import dataset
 from deepeval.dataset import Golden
 
+
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
     return f"It's always sunny in {city}!"
+
 
 agent = create_react_agent(
     model="openai:gpt-4.1",

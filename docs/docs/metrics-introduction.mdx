@@ -12,18 +12,13 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
-`deepeval` offers 40+ SOTA, read-to-use metrics for you to quickly get started with, ranging from single-turn custom, RAG-based, agentic, multimodal, to multi-turn conversational metrics.
-
-:::tip
-In `deepeval`, a metric serves as a standard of measurement for evaluating the performance of an LLM output based on a specific criteria of interest. Essentially, while the metric acts as the ruler, a test case represents the thing you're trying to measure.
-
-:::
+`deepeval` offers 40+ SOTA, read-to-use metrics for you to quickly get started with. Essentially, while the metric acts as the ruler based on a specific criteria of interest, a test case represents the thing you're trying to measure.
 
 ## Quick Summary
 
 Almost all predefined metrics on `deepeval` uses **LLM-as-a-judge**, with various techniques such as **QAG** (question-answer-generation), **DAG** (deep acyclic graphs), and **G-Eval** to score [test cases](/docs/evaluation-test-cases), which represents atomic interactions with your LLM app.
 
-All of `deepeval`'s metrics output a **score between 0-1** with a well-defined equation to it, as well as **reasoning**. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
+All of `deepeval`'s metrics output a **score between 0-1** based on its corresponding equation, as well as score **reasoning**. A metric is only successful if the evaluation score is equal to or greater than `threshold`, which is defaulted to `0.5` for all metrics.
 
 <Tabs>
 
@@ -47,7 +42,6 @@ You should aim to have **at least one** custom metric in your LLM evals pipeline
 RAG (retrieval augmented generation) metrics focus on the **retriever and generator components** independently.
 
 - Retriever:
-
   - Contextual Relevancy
   - Contextual Precision
   - Contextual Recall
@@ -160,117 +154,231 @@ More information on everything can be found on the [Confident AI evaluation docs
 
 Apart from the variety of metrics offered, `deepeval`'s metrics are a step up to other implementations because they:
 
-- Make deterministic metric scores possible (when using `DAGMetric`).
-- Can be scored using any LLM judge.
-- Are "routable" - meaning you can apply different metrics based on different scenarios.
-- Can be used for both end-to-end and component-level evaluation.
-- Easily customizable (`GEval` and `DAGMetric`).
-- Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores.
-- Provide a comprehensive reason for the scores computed.
-- Can be customized by [overriding evaluation prompts.](/docs/metrics-introduction#customizing-metric-prompts)
-- Integrated 100% with Confident AI.
+- Research-backed LLM-as-as-Judge (`GEval`)
+- Make deterministic metric scores possible (when using `DAGMetric`)
+- Are extra reliable as LLMs are only used for extremely confined tasks during evaluation to greatly reduce stochasticity and flakiness in scores
+- Provide a comprehensive reason for the scores computed
+- Integrated 100% with Confident AI
 
-Additionally, `deepeval`'s metrics can also be used for both **end-to-end** evals:
-
-```python
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval import evaluate
-
-evaluate(test_cases=[LLMTestCase(...)], metrics=[AnswerRelevancyMetric()])
-```
-
-And **component-level** evals:
-
-```python
-from deepeval.dataset import Golden
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span
-from deepeval import evaluate
-
-@observe(metrics=[AnswerRelevancyMetric()])
-def nested_component():
-    update_current_span(test_case=LLMTestCase(...))
-    pass
-
-@observe
-def llm_app(input: str):
-    nested_component()
-
-evaluate(goldens=[Golden(...)], observed_callback=[llm_app])
-```
-
-## Types of Metrics
-
-`deepeval` offers a wide range of **custom** and **generic** metrics and all of them uses LLM-as-a-judge. This choice is deliberate because our experience tells us LLM-as-a-judge better align with human expectations when compared to traditional model based approaches.
-
-:::info
-In the early versions of `deepeval` back in late 2023, our initial implementation relied on non-LLM-as-judge approaches, but we found these methods significantly underperformed compared to LLM-based evaluation techniques in terms of alignment with human judgment.
-:::
+## Create Your First Metric
 
 ### Custom Metrics
 
-Custom metrics are **use case specific** (i.e. system agnostic). They work across different implementation approaches, allowing you to use the same evaluation criteria whether your application uses RAG, agents, or a hybrid architecture. A use case refers to the specific application context—such as a medical chatbot, meeting summarizer, or travel planner agent.
+`deepeval` provides G-Eval, a state-of-the-art LLM evaluation framework for anyone to create a custom LLM-evaluated metric using natural language. G-Eval is available for all single-turn, multi-turn, and multimodal evals.
 
-There are two types of custom metrics, with varying degree of deterministicity:
+<Tabs>
 
-- [G-Eval](/docs/metrics-llm-evals)
-- [DAG](/docs/metrics-dag)
+<TabItem value="geval" label="G-Eval">
 
-The DAG metric is a decision-tree based LLM-evaluated metric, and is currently the most versatile metric `deepeval` has to offer. However, G-Eval is also extremely competent and takes no effort at all to setup so we recommend everyone to start with G-Eval and move to DAG if there's a need for it.
+```python
+from deepeval.test_case import LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import GEval
+
+test_case = LLMTestCase(input="...", actual_output="...", expected_output="...")
+correctness = GEval(
+    name="Correctness",
+    criteria="Correctness - determine if the actual output is correct according to the expected output.",
+    evaluation_params=[LLMTestCaseParams.ACTUAL_OUTPUT, LLMTestCaseParams.EXPECTED_OUTPUT],
+    strict_mode=True
+)
+
+correctness.measure(test_case)
+print(correctness.score, correctness.reason)
+```
+
+</TabItem>
+<TabItem value="conversational-geval" label="Conversational G-Eval">
+
+```python
+from deepeval.test_case import Turn, TurnParams, ConversationalTestCase
+from deepeval.metrics import ConversationalGEval
+
+convo_test_case = ConversationalTestCase(turns=[Turn(role="...", content="..."), Turn(role="...", content="...")])
+professionalism_metric = ConversationalGEval(
+    name="Professionalism",
+    criteria="Determine whether the assistant has acted professionally based on the content."
+    evaluation_params=[TurnParams.CONTENT],
+    strict_mode=True
+)
+
+professionalism_metric.measure(convo_test_case)
+print(professionalism_metric.score, professionalism_metric.reason)
+```
+
+</TabItem>
+
+<TabItem value="multimodal" label="Multimodal G-Eval">
+
+```python
+from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.metrics import MultimodalGEval
+
+m_test_case = MLLMTestCase(input=[...], actual_output=[...])
+text_image_coherence = MultimodalGEval(
+    name="Text-Image Coherence",
+    criteria="Determine whether the images and text is coherence in the actual output.",
+    evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
+    strict_mode=True
+)
+
+text_image_coherence.measure(convo_test_case)
+print(text_image_coherence.score, text_image_coherence.reason)
+```
+
+</TabItem>
+</Tabs>
+
+Under the hood, `deepeval` first generates a series of evaluation steps, before using these steps in conjunction with information in an `LLMTestCase` for evaluation. For more information, visit the [G-Eval documentation page.](/docs/metrics-llm-evals)
 
 :::tip
 
-If your evaluation criteria is more subjective (e.g. answer "correctness", coherence, and tonality), go for G-Eval. If your evaluation criteria involves objective requirements (e.g. format correctness), choose DAG. If it is a mixture of both (e.g. ensure the format of an LLM output is correct before assessing its tonality), you can use G-Eval within the DAG metric.
+If you're looking for decision-tree based LLM-as-a-Judge, checkout the [Deep Acyclic Graph (DAG)](/docs/metrics-dag) metric.
 
 :::
 
-You can also inherit a `BaseMetric` class to create your own custom metric. They are extremely easy to create and almost 10% of all metrics ran using `deepeval` are self-built metrics.
+### Default Metrics
 
-### Generic Metrics
+<Tabs>
 
-`deepeval` also offers **generic metrics** that are **system specific** (i.e. use case agnostic). These metrics target particular LLM architectures regardless of domain:
+<TabItem value="RAG" label="RAG">
 
-- **RAG metrics** evaluate retrieval and generation quality
-- **Agent metrics** assess tool usage, task completion
-- **Conversational metrics** measure overall conversation quality
+The most used RAG metrics include:
 
-Here are the most popular RAG metrics `deepeval` offers out-of-the-box:
+- **Answer Relevancy:** Evaluates if the generated answer is relevant to the user query
+- **Faithfulness:** Measures if the generated answer is factually consistent with the provided context
+- **Contextual Relevancy:** Assesses if the retrieved context is relevant to the user query
+- **Contextual Recall:** Evaluates if the retrieved context contains all relevant information
+- **Contextual Precision:** Measures if the retrieved context is precise and focused
 
-- [Answer Relevancy](/docs/metrics-answer-relevancy)
-- [Faithfulness](/docs/metrics-faithfulness)
-- [Contextual Relevancy](/docs/metrics-contextual-relevancy)
-- [Contextual Precision](/docs/metrics-contextual-precision)
-- [Contextual Recall](/docs/metrics-contextual-recall)
+Which can be simply imported from the `deepeval.metrics` module:
 
-For complex LLM applications combining multiple architectures (like RAG systems with agentic capabilities or multi-step reasoning workflows), use a combination of targeted metrics to evaluate each component effectively. This modular approach ensures comprehensive evaluation across your entire application pipeline.
+```python title="main.py"
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
 
-### Referenceless Metrics
+test_case = LLMTestCase(input="...", actual_output="...")
+relevancy = AnswerRelevancyMetric(threshold=0.5)
 
-Metrics in `deepeval` are categorized by whether they require ground truth for evaluation:
+relevancy.measure(test_case)
+print(relevancy.score, relevancy.reason)
+```
 
-- **Reference-based metrics** require ground truth data through specific test case parameters. Examples include contextual recall/precision (needs `expected_output`), tool correctness (needs `expected_tools`), and hallucination detection (needs original `context`).
+</TabItem>
+<TabItem value="Agents" label="Agents">
 
-- **Referenceless metrics** evaluate outputs without ground truth comparisons. Most generic metrics in `deepeval` are referenceless, allowing evaluation without labeled datasets.
+The most used agentic metrics include:
 
-For custom metrics (G-Eval and DAG), reference requirements depend on your evaluation criteria. For instance, users define answer correctness in G-Eval typically compares `actual_output` with `expected_output`. Check each metric's "Required Parameters" section in its documentation to see whether it is a referenceless metric or not.
+- **Task Completion:** Assesses if the agent successfully completed a given task for a given LLM trace
+- **Tool Correctness:** Evaluates if tools were called and used correctly
 
-:::note
-By definition, [online metrics used in production](https://documentation.confident-ai.com/docs/llm-tracing/tracing-features/online-evaluation) **cannot** be reference-based.
-:::
+There's not a lot of metrics required for agents since most is taken care of by task completion. To use the task completion metric, you have to [setup tracing](/docs/evaluation-llm-tracing) (just like for component-level evals shown above):
+
+```python title="main.py" {8,11}
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.tracing import observe
+from deepeval.dataset import Golden
+from deepeval import evaluate
+
+task_completion = TaskCompletionMetric(threshold=0.5)
+
+@observe(metrics=[task_completion])
+def trip_planner_agent(input):
+
+    @observe()
+    def itinerary_generator(destination, days):
+        return ["Eiffel Tower", "Louvre Museum", "Montmartre"][:days]
+
+    return itinerary_generator("Paris", 2)
+
+evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")])
+```
+
+</TabItem>
+
+<TabItem value="Chatbots" label="Chatbots">
+
+Chatbots require "conversational" (or multi-turn) metrics and they include:
+
+- **Conversation Completeness:** Evaluates if conversation satisify user needs.
+- **Conversation Relevancy:** Measures if the generated outputs are relevant to user inputs.
+- **Role Adherence:** Assesses if the chatbot stays in character throughout a conversation.
+- **Knowledge Retention:** Evaluates if the chatbot is able to retain knowledge learnt throughout a conversation.
+
+You'll need to also use [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case)s instead of regular `LLMTestCase` for conversational metrics:
+
+```python title="main.py"
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import ConversationalGEval
+
+convo_test_case = ConversationalTestCase(turns=[Turn(role="...", content="..."), Turn(role="...", content="...")])
+role_adherence = RoleAdherenceMetric(threshold=0.5)
+
+role_adherence.measure(convo_test_case)
+print(role_adherence.score, role_adherence.reason)
+```
+
+</TabItem>
+
+<TabItem value="Multimodal" label="Multimodal">
+
+```python
+from deepeval.test_case import MLLMTestCase, MLLMImage
+from deepeval.metrics import ImageCoherenceMetric
+
+m_test_case = MLLMTestCase(input=[...], actual_output=[...])
+image_coherence = ImageCoherenceMetric(threshold=0.5)
+
+image_coherence.measure(m_test_case)
+print(image_coherence.score, image_coherence.reason)
+```
+
+</TabItem>
+
+<TabItem value="Safety" label="Safety">
+
+```python
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import BiasMetric
+
+test_case = LLMTestCase(input="...", actual_output="...")
+bias = BiasMetric(threshold=0.5)
+
+bias.measure(test_case)
+print(bias.score, bias.reason)
+```
+
+</TabItem>
+
+</Tabs>
 
 ## Choosing Your Metrics
 
-When deciding which metrics to use, it is very tempting to evaluate everything (I mean, who doesn't like to evaluate bias in their RAG QA app?). But using too many metrics means evaluating nothing at all. Limit yourself to **no more than 5 metrics**, with this breakdown:
+These are the metric categories to consider when choosing your metrics:
+
+- **Custom metrics** are use case specific and architecture agnostic:
+  - G-Eval – best for **subjective** criteria like correctness, coherence, or tone; easy to set up.
+  - DAG – **decision-tree** metric for **objective or mixed** criteria (e.g., verify format before tone).
+  - Start with G-Eval for simplicity; use DAG for more control. You can also subclass `BaseMetric` to create your own.
+- **Generic metrics** are system specific and use case agnostic:
+  - RAG metrics: measures retriever and generator separately
+  - Agent metrics: evaluate tool usage and task completion
+  - Multi-turn metrics: measure overall dialogue quality
+  - Combine these for multi-component LLM systems.
+- **Reference vs. Referenceless**:
+  - Reference-based metrics need **ground truth** (e.g., contextual recall or tool correctness).
+  - Referenceless metrics work **without labeled data**, ideal for online or production evaluation.
+  - Check each metric’s docs for required parameters.
+
+:::info
+If you're running metrics in production, you _must_ choose a referenceless metric since no labelled data will exist.
+:::
+
+When deciding on metrics, no matter how tempting, try to limit yourself to **no more than 5 metrics**, with this breakdown:
 
 - **2-3** generic, system-specific metrics (e.g. contextual precision for RAG, tool correctness for agents)
 - **1-2** custom, use case-specific metrics (e.g. helpfulness for a medical chatbot, format correctness for summarization)
 
-If you feel extreme pain and struggle when trying to cut down on your metric selection, especially for generic ones, you're on the right track. The goal is to force yourself to prioritize and clearly define your evaluation criteria. This will not only help you use `deepeval`, but also help you understand what you care most about in your LLM application.
-
-:::note
-In some cases, where your LLM model is doing most of the heavy lifting (e.g. drafting documents, summarizers), it is not uncommon for there to be more use case targeted metric than system targeted ones.
-:::
+The goal is to force yourself to prioritize and clearly define your evaluation criteria. This will not only help you use `deepeval`, but also help you understand what you care most about in your LLM application.
 
 <div style={{textAlign: 'center', margin: "1rem 0"}}>
 
@@ -295,11 +403,7 @@ Here are some additional ideas if you're not sure:
 - **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
 - **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks
 
-If you're not sure which metric to use, [join our discord](https://discord.com/invite/a3K9c8GRGt) community or run the follow command to get some suggestions:
-
-```bash
-deepeval recommend metrics
-```
+In some cases, where your LLM model is doing most of the heavy lifting, it is not uncommon to have more use case specific metrics.
 
 ## Configure LLM Judges
 
@@ -518,33 +622,41 @@ test_case = LLMTestCase(input="...", actual_output="...")
 evaluate(test_cases=[test_case], metrics=[AnswerRelevancyMetric()])
 ```
 
-### For Component-Level Evals
-
-To run component-level evaluations of your LLM system using any metric of your choice, simply decorate your components with `@observe` and create [test cases](/docs/evaluation-test-cases) at runtime:
-
-```python
-from deepeval.dataset import Golden
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span
-from deepeval import evaluate
-
-@observe(metrics=[AnswerRelevancyMetric()])
-def nested_component():
-    update_current_span(test_case=LLMTestCase(...))
-    pass
-
-@observe
-def llm_app(input: str):
-    nested_component()
-
-evaluate(goldens=[Golden(...)], observed_callback=[llm_app])
-```
-
 The [`evaluate()` function](/docs/evaluation-introduction#evaluating-without-pytest) or `deepeval test run` **is the best way to run evaluations**. They offer tons of features out of the box, including caching, parallelization, cost tracking, error handling, and integration with [Confident AI.](https://confident-ai.com)
 
 :::tip
 [`deepeval test run`](/docs/evaluation-introduction#evaluating-with-pytest) is `deepeval`'s native Pytest integration, which allows you to run evals in CI/CD pipelines.
 :::
+
+### For Component-Level Evals
+
+To run component-level evaluations of your LLM system using any metric of your choice, simply decorate your components with `@observe` and create [test cases](/docs/evaluation-test-cases) at runtime:
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import observe, update_current_span
+from deepeval.metrics import AnswerRelevancyMetric
+
+# 1. observe() decorator traces LLM components
+@observe()
+def llm_app(input: str):
+    # 2. Supply metric at any component
+    @observe(metrics=[AnswerRelevancyMetric()])
+    def nested_component():
+        # 3. Create test case at runtime
+        update_current_span(test_case=LLMTestCase(...))
+        pass
+
+    nested_component()
+
+# 4. Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="Test input")])
+
+# 5. Loop through dataset
+for goldens in dataset.evals_iterator():
+    # Call LLM app
+    llm_app(golden.input)
+```
 
 ### For One-Off Evals
 
