@@ -46,7 +46,7 @@
   box-shadow: 0 0 0px 0 #eae2ef;
 
   .icon { 
-    color: #6f1bd5;
+    color: #6f1bd5 !important;
   }
 }
 
