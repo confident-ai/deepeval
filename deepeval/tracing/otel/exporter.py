@@ -134,12 +134,17 @@ class ConfidentSpanExporter(SpanExporter):
                     
                     if base_span_wrapper.trace_attributes.tags:
                         current_trace.tags = base_span_wrapper.trace_attributes.tags
+                    
                     if base_span_wrapper.trace_attributes.thread_id:
                         current_trace.thread_id = (
                             base_span_wrapper.trace_attributes.thread_id
                         )
+                    
                     if base_span_wrapper.trace_attributes.user_id:
                         current_trace.user_id = base_span_wrapper.trace_attributes.user_id
+
+                    if base_span_wrapper.trace_attributes.metadata:
+                        current_trace.metadata = base_span_wrapper.trace_attributes.metadata
 
                 # set the trace attributes
                 if base_span_wrapper.trace_name and isinstance(
