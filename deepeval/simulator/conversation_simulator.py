@@ -169,7 +169,9 @@ class ConversationSimulator:
                 break
             if len(turns) == 0 or (len(turns) == 1 and self.opening_message):
                 # Generate first user input
-                prompt = self.template.simulate_first_user_turn(golden, self.language)
+                prompt = self.template.simulate_first_user_turn(
+                    golden, self.language
+                )
                 simulated_input: SimulatedInput = self.generate_schema(
                     prompt, SimulatedInput
                 )
@@ -266,7 +268,9 @@ class ConversationSimulator:
                 break
             if len(turns) == 0 or (len(turns) == 1 and self.opening_message):
                 # Generate first user input
-                prompt = self.template.simulate_first_user_turn(golden, self.language)
+                prompt = self.template.simulate_first_user_turn(
+                    golden, self.language
+                )
                 simulated_input: SimulatedInput = await self.a_generate_schema(
                     prompt, SimulatedInput
                 )

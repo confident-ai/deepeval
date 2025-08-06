@@ -16,7 +16,7 @@
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
   --ifm-code-font-size: 95%;
-  --ifm-font-weight-bold: 600 !important;
+  // --ifm-font-weight-bold: 600 !important;
   --ifm-menu-color: #747480 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
@@ -433,6 +433,15 @@ html[data-theme="dark"] .sidebar-item-icon-benchmarks > a::before,
 html[data-theme="dark"] .sidebar-item-icon-others > a::before {
   filter: invert(60%) sepia(75%) saturate(1000%) hue-rotate(240deg)
     brightness(95%) contrast(95%);
+}
+
+
+.theme-code-block-highlighted-line {
+  background-color: #233144 !important;
+}
+
+.theme-code-block-highlighted-line > span {
+  background-color: #233144 !important;
 }
 
 .menu {
