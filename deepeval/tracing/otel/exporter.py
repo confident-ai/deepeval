@@ -128,16 +128,18 @@ class ConfidentSpanExporter(SpanExporter):
 
                 # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
-                    if base_span_wrapper.trace_name:
-                        current_trace.name = base_span_wrapper.trace_name
-                    if base_span_wrapper.trace_tags:
-                        current_trace.tags = base_span_wrapper.trace_tags
-                    if base_span_wrapper.trace_thread_id:
+                    
+                    if base_span_wrapper.trace_attributes.name:
+                        current_trace.name = base_span_wrapper.trace_attributes.name
+                    
+                    if base_span_wrapper.trace_attributes.tags:
+                        current_trace.tags = base_span_wrapper.trace_attributes.tags
+                    if base_span_wrapper.trace_attributes.thread_id:
                         current_trace.thread_id = (
-                            base_span_wrapper.trace_thread_id
+                            base_span_wrapper.trace_attributes.thread_id
                         )
-                    if base_span_wrapper.trace_user_id:
-                        current_trace.user_id = base_span_wrapper.trace_user_id
+                    if base_span_wrapper.trace_attributes.user_id:
+                        current_trace.user_id = base_span_wrapper.trace_attributes.user_id
 
                 # set the trace attributes
                 if base_span_wrapper.trace_name and isinstance(
