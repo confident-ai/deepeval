@@ -87,6 +87,9 @@ def agent_span(input: str):
             "confident.agent.attributes.output", json.dumps({"output": input})
         )
 
+        # trace attributes
+        span.set_attribute("confident.trace.metadata", json.dumps({"test_key": "test_value"}))
+
         retriever_span(input)
 
 
@@ -108,6 +111,10 @@ def llm_agent(input: str):
         )
         span.set_attribute("confident.llm.attributes.output_token_count", 10)
         span.set_attribute("confident.llm.attributes.input_token_count", 10)
+
+        # trace attributes
+        span.set_attribute("confident.trace.thread_id", "123")
+        span.set_attribute("confident.trace.user_id", "456")
 
         agent_span(input)
 
@@ -131,17 +138,21 @@ def meta_agent(input: str):
         )
         span.set_attribute("confident.span.metric_collection", "My metrics")
 
-        span.set_attribute(
-            "confident.trace.attributes",
-            json.dumps(
-                {
-                    "name": "test_trace",
-                    "tags": ["tag1", "tag2"],
-                    "thread_id": "123",
-                    "user_id": "456",
-                }
-            ),
-        )
+        # span.set_attribute(
+        #     "confident.trace.attributes",
+        #     json.dumps(
+        #         {
+        #             "name": "test_trace",
+        #             "tags": ["tag1", "tag2"],
+        #             "thread_id": "123",
+        #             "user_id": "456",
+        #         }
+        #     ),
+        # )
+        
+        # trace attributes
+        span.set_attribute("confident.trace.name", "test_trace")
+        span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
 
         span.set_attribute("confident.trace.input", input)
         span.set_attribute("confident.trace.output", input)
