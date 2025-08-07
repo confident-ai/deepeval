@@ -109,7 +109,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 steps = []
                 if test_case.tools_called:
                     steps.append(f"Verdicts:\n{prettify_list(self.verdicts)}")
-                    steps.append(f"Score : {self.tools_score}\nReason: {self.tools_reason}")
+                    steps.append(f"Score: {self.tools_score}\nReason: {self.tools_reason}")
                 if test_case.mcp_data:
                     steps.append(f"MCP Tools Score: {self.mcp_score.score}")
                     steps.append(f"MCP Tools Reason: {self.mcp_score.reason}")
@@ -170,7 +170,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             steps = []
             if test_case.tools_called:
                 steps.append(f"Verdicts:\n{prettify_list(self.verdicts)}")
-                steps.append(f"Score: {self.score}\nReason: {self.reason}")
+                steps.append(f"Score: {self.tools_score}\nReason: {self.tools_reason}")
             if test_case.mcp_data:
                 steps.append(f"MCP Tools Score: {self.mcp_score.score}")
                 steps.append(f"MCP Tools Reason: {self.mcp_score.reason}")
