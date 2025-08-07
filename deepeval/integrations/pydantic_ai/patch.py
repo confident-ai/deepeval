@@ -47,11 +47,13 @@ def safe_patch_agent_run_method():
             name = "agent"
             if isinstance(args[0], PatchedAgent):
                 name = str(args[0].name)
-            
+
             input = ""
             if isinstance(args[1], str):
                 input = args[1]
-            elif isinstance(args[1], list) and all(isinstance(i, str) for i in args[1]):
+            elif isinstance(args[1], list) and all(
+                isinstance(i, str) for i in args[1]
+            ):
                 input = args[1]
 
             output = ""
@@ -61,16 +63,12 @@ def safe_patch_agent_run_method():
                 output = str(result.output)
             except Exception:
                 pass
-            
+
             # agent attributes
             run_span.set_attribute("confident.span.type", "agent")
             run_span.set_attribute("confident.agent.name", name)
-            run_span.set_attribute(
-                "confident.agent.attributes.input", input
-            )
-            run_span.set_attribute(
-                "confident.agent.attributes.output", output
-            )
+            run_span.set_attribute("confident.agent.attributes.input", input)
+            run_span.set_attribute("confident.agent.attributes.output", output)
 
             # llm test case attributes
             if isinstance(args[0], PatchedAgent):
@@ -87,9 +85,7 @@ def safe_patch_agent_run_method():
                             json.dumps(args[0].trace_attributes),
                         )
 
-            run_span.set_attribute(
-                "confident.span.llm_test_case.input", input
-            )
+            run_span.set_attribute("confident.span.llm_test_case.input", input)
             run_span.set_attribute(
                 "confident.span.llm_test_case.actual_output", output
             )
