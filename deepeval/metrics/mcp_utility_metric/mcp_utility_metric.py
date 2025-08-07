@@ -27,7 +27,7 @@ class MCPUtilityMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.MCP_DATA
+        LLMTestCaseParams.MCP_DATA,
     ]
 
     def __init__(
@@ -69,26 +69,35 @@ class MCPUtilityMetric(BaseMetric):
                     )
                 )
             else:
-                available_primitives, primitives_used = self._get_mcp_interaction_text(
-                    mcp_data=test_case.mcp_data, 
-                    mcp_tools_called=test_case.mcp_tools_called or [], 
-                    mcp_resources_called=test_case.mcp_resources_called or [], 
-                    mcp_prompts_called=test_case.mcp_prompts_called or []
+                available_primitives, primitives_used = (
+                    self._get_mcp_interaction_text(
+                        mcp_data=test_case.mcp_data,
+                        mcp_tools_called=test_case.mcp_tools_called or [],
+                        mcp_resources_called=test_case.mcp_resources_called
+                        or [],
+                        mcp_prompts_called=test_case.mcp_prompts_called or [],
+                    )
                 )
                 primitives_used_score = self._get_primitives_used_score(
                     test_case, available_primitives, primitives_used
                 )
-                argument_correctness_score = self._get_argument_correctness_score(
-                    test_case, available_primitives, primitives_used
+                argument_correctness_score = (
+                    self._get_argument_correctness_score(
+                        test_case, available_primitives, primitives_used
+                    )
                 )
-                self.score = self._calculate_score(primitives_used_score, argument_correctness_score)
-                self.reason = self._get_reason(primitives_used_score, argument_correctness_score)
+                self.score = self._calculate_score(
+                    primitives_used_score, argument_correctness_score
+                )
+                self.reason = self._get_reason(
+                    primitives_used_score, argument_correctness_score
+                )
                 self.success = self.score >= self.threshold
-                steps=[
+                steps = [
                     f"{available_primitives}",
                     f"{primitives_used}",
                     f"Score: {self.score}",
-                    f"Reason: {self.reason}"
+                    f"Reason: {self.reason}",
                 ]
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -96,7 +105,6 @@ class MCPUtilityMetric(BaseMetric):
                 )
 
                 return self.score
-
 
     async def a_measure(
         self,
@@ -110,26 +118,34 @@ class MCPUtilityMetric(BaseMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            available_primitives, primitives_used = self._get_mcp_interaction_text(
-                mcp_data=test_case.mcp_data, 
-                mcp_tools_called=test_case.mcp_tools_called or [], 
-                mcp_resources_called=test_case.mcp_resources_called or [], 
-                mcp_prompts_called=test_case.mcp_prompts_called or []
+            available_primitives, primitives_used = (
+                self._get_mcp_interaction_text(
+                    mcp_data=test_case.mcp_data,
+                    mcp_tools_called=test_case.mcp_tools_called or [],
+                    mcp_resources_called=test_case.mcp_resources_called or [],
+                    mcp_prompts_called=test_case.mcp_prompts_called or [],
+                )
             )
             primitives_used_score = await self._a_get_primitives_used_score(
                 test_case, available_primitives, primitives_used
             )
-            argument_correctness_score = await self._a_get_argument_correctness_score(
-                test_case, available_primitives, primitives_used
+            argument_correctness_score = (
+                await self._a_get_argument_correctness_score(
+                    test_case, available_primitives, primitives_used
+                )
             )
-            self.score = self._calculate_score(primitives_used_score, argument_correctness_score)
-            self.reason = self._get_reason(primitives_used_score, argument_correctness_score)
+            self.score = self._calculate_score(
+                primitives_used_score, argument_correctness_score
+            )
+            self.reason = self._get_reason(
+                primitives_used_score, argument_correctness_score
+            )
             self.success = self.score >= self.threshold
-            steps=[
+            steps = [
                 f"{available_primitives}",
                 f"{primitives_used}",
                 f"Score: {self.score}",
-                f"Reason: {self.reason}"
+                f"Reason: {self.reason}",
             ]
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -142,12 +158,10 @@ class MCPUtilityMetric(BaseMetric):
         self,
         test_case: LLMTestCase,
         available_primitives: str,
-        primitives_used: str
+        primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = (
-            MCPUtilityMetricTemplate.get_primitive_correctness_prompt(
-                test_case, available_primitives, primitives_used
-            )
+        prompt = MCPUtilityMetricTemplate.get_primitive_correctness_prompt(
+            test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=MCPPrimitivesScore)
@@ -163,20 +177,20 @@ class MCPUtilityMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return MCPPrimitivesScore(**data)
-            
+
     async def _a_get_primitives_used_score(
         self,
         test_case: LLMTestCase,
         available_primitives: str,
-        primitives_used: str
+        primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = (
-            MCPUtilityMetricTemplate.get_primitive_correctness_prompt(
-                test_case, available_primitives, primitives_used
-            )
+        prompt = MCPUtilityMetricTemplate.get_primitive_correctness_prompt(
+            test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=MCPPrimitivesScore)
+            res, cost = await self.model.a_generate(
+                prompt, schema=MCPPrimitivesScore
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -189,17 +203,15 @@ class MCPUtilityMetric(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return MCPPrimitivesScore(**data)
-            
+
     def _get_argument_correctness_score(
         self,
         test_case: LLMTestCase,
         available_primitives: str,
-        primitives_used: str
+        primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = (
-            MCPUtilityMetricTemplate.get_mcp_argument_correctness_prompt(
-                test_case, available_primitives, primitives_used
-            )
+        prompt = MCPUtilityMetricTemplate.get_mcp_argument_correctness_prompt(
+            test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=MCPArgsScore)
@@ -215,17 +227,15 @@ class MCPUtilityMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return MCPArgsScore(**data)
-        
+
     async def _a_get_argument_correctness_score(
         self,
         test_case: LLMTestCase,
         available_primitives: str,
-        primitives_used: str
+        primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = (
-            MCPUtilityMetricTemplate.get_mcp_argument_correctness_prompt(
-                test_case, available_primitives, primitives_used
-            )
+        prompt = MCPUtilityMetricTemplate.get_mcp_argument_correctness_prompt(
+            test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=MCPArgsScore)
@@ -241,18 +251,20 @@ class MCPUtilityMetric(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return MCPArgsScore(**data)
-        
+
     def _calculate_score(
         self,
         primitives_used_score: MCPPrimitivesScore,
-        argument_correctness_score: MCPArgsScore
+        argument_correctness_score: MCPArgsScore,
     ) -> float:
-        return (primitives_used_score.score + argument_correctness_score.score) / 2
-    
+        return (
+            primitives_used_score.score + argument_correctness_score.score
+        ) / 2
+
     def _get_reason(
         self,
         primitives_used_score: MCPPrimitivesScore,
-        argument_correctness_score: MCPArgsScore
+        argument_correctness_score: MCPArgsScore,
     ) -> str:
         return (
             f"[\n"
@@ -262,12 +274,12 @@ class MCPUtilityMetric(BaseMetric):
         )
 
     def _get_mcp_interaction_text(
-            self,
-            mcp_data,
-            mcp_tools_called,
-            mcp_resources_called,
-            mcp_prompts_called
-        ) -> tuple[str, str]:
+        self,
+        mcp_data,
+        mcp_tools_called,
+        mcp_resources_called,
+        mcp_prompts_called,
+    ) -> tuple[str, str]:
         for data in mcp_data:
             available_primitives = f"MCP Server {data.server_name}\n"
             available_primitives += (
@@ -355,7 +367,7 @@ class MCPUtilityMetric(BaseMetric):
         )
 
         return available_primitives, primitives_used
-    
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

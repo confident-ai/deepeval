@@ -59,7 +59,7 @@ class MCPUtilityMetricTemplate:
             JSON:
             """
         )
-    
+
     @staticmethod
     def get_primitive_correctness_prompt(
         test_case: LLMTestCase,
