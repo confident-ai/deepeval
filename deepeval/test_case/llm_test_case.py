@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 import uuid
+from .types import MCPMetaData, MCPPromptCall, MCPResourceCall, MCPToolCall
 
 
 class LLMTestCaseParams(Enum):
@@ -14,6 +15,10 @@ class LLMTestCaseParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
+    MCP_DATA = "mcp_data"
+    MCP_TOOLS_CALLED = "mcp_tools_called"
+    MCP_RESOURCES_CALLED = "mcp_resources_called"
+    MCP_PROMPTS_CALLED = "mcp_prompts_called"
 
 
 class ToolCallParams(Enum):
@@ -146,6 +151,10 @@ class LLMTestCase:
     completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)
     tags: Optional[List[str]] = field(default=None)
+    mcp_data: Optional[List[MCPMetaData]] = None
+    mcp_tools_called: Optional[List[MCPToolCall]] = None
+    mcp_resources_called: Optional[List[MCPResourceCall]] = None
+    mcp_prompts_called: Optional[List[MCPPromptCall]] = None
     _trace_dict: Optional[Dict] = field(default=None, repr=False)
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
@@ -186,3 +195,82 @@ class LLMTestCase:
                 raise TypeError(
                     "'expected_tools' must be None or a list of `ToolCall`"
                 )
+            
+        # Ensure `mcp_data` is None or a list of `MCPMetaData`
+        if self.mcp_data is not None:
+            if not isinstance(self.mcp_data, list) or not all(
+                isinstance(item, MCPMetaData) for item in self.mcp_data
+            ):
+                raise TypeError(
+                    "'mcp_data' must be None or a list of 'MCPMetaData'"
+                )
+            else:
+                self._validate_mcp_meta_data(self.mcp_data)
+            
+        # Ensure `mcp_tools_called` is None or a list of `MCPToolCall`
+        if self.mcp_tools_called is not None:
+            from mcp.types import CallToolResult
+            if not isinstance(self.mcp_tools_called, list) or not all(
+                isinstance(tool_called, MCPToolCall)
+                and isinstance(tool_called.result, CallToolResult)
+                for tool_called in self.mcp_tools_called
+            ):
+                raise TypeError(
+                    "The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types"
+                )
+            
+        # Ensure `mcp_resources_called` is None or a list of `MCPResourceCall`
+        if self.mcp_resources_called is not None:
+            from mcp.types import ReadResourceResult
+            if not isinstance(self.mcp_resources_called, list) or not all(
+                isinstance(resource_called, MCPResourceCall)
+                and isinstance(resource_called.result, ReadResourceResult)
+                for resource_called in self.mcp_resources_called
+            ):
+                raise TypeError(
+                    "The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types"
+                )
+            
+        # Ensure `mcp_prompts_called` is None or a list of `MCPPromptCall`
+        if self.mcp_prompts_called is not None:
+            from mcp.types import GetPromptResult
+            if not isinstance(self.mcp_prompts_called, list) or not all(
+                isinstance(prompt_called, MCPPromptCall)
+                and isinstance(prompt_called.result, GetPromptResult)
+                for prompt_called in self.mcp_prompts_called
+            ):
+                raise TypeError(
+                    "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
+                )
+
+    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
+        from mcp.types import Tool, Resource, Prompt
+
+        for mcp_data in mcp_data_list:
+            if mcp_data.available_tools is not None:
+                if not isinstance(mcp_data.available_tools, list) or not all(
+                    isinstance(tool, Tool) for tool in mcp_data.available_tools
+                ):
+                    raise TypeError(
+                        "'available_tools' in 'mcp_data' must be a list of 'Tool' from mcp.types"
+                    )
+
+            if mcp_data.available_resources is not None:
+                if not isinstance(
+                    mcp_data.available_resources, list
+                ) or not all(
+                    isinstance(resource, Resource)
+                    for resource in mcp_data.available_resources
+                ):
+                    raise TypeError(
+                        "'available_resources' in 'mcp_data' must be a list of 'Resource' from mcp.types"
+                    )
+
+            if mcp_data.available_prompts is not None:
+                if not isinstance(mcp_data.available_prompts, list) or not all(
+                    isinstance(prompt, Prompt)
+                    for prompt in mcp_data.available_prompts
+                ):
+                    raise TypeError(
+                        "'available_prompts' in 'mcp_data' must be a list of 'Prompt' from mcp.types"
+                    )
