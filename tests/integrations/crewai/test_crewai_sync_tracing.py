@@ -13,10 +13,12 @@ os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 instrument_crewai(api_key=os.getenv("CONFIDENT_API_KEY"))
 
+
 @tool
 def get_weather(city: str):
     """Get the weather"""
     return f"The weather is of {city} is sunny"
+
 
 # Define your agents with roles and goals
 coder = Agent(
@@ -34,11 +36,7 @@ task1 = Task(
 )
 
 # Instantiate your crew
-crew = Crew(
-    agents=[coder],
-    tasks=[task1],
-    memory=True
-)
+crew = Crew(agents=[coder], tasks=[task1], memory=True)
 
 # Kickoff your crew
 result = crew.kickoff()

@@ -37,6 +37,7 @@ class ConversationSimulator:
         opening_message: Optional[str] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
+        language: str = "English",
     ):
         self.model_callback = model_callback
         self.is_callback_async = inspect.iscoroutinefunction(
@@ -48,7 +49,7 @@ class ConversationSimulator:
         self.opening_message = opening_message
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.async_mode = async_mode
-        self.language = "English"
+        self.language = language
         self.simulated_conversations: List[ConversationalTestCase] = []
         self.template = ConversationSimulatorTemplate
 

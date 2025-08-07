@@ -53,7 +53,6 @@ async def joke_factory(ctx: RunContext[ClientAndKey], count: int) -> list[str]:
 
 
 @joke_generation_agent.tool
-@joke_generation_agent.tool
 async def get_jokes(ctx: RunContext[ClientAndKey], count: int) -> str:
     response = await ctx.deps.http_client.get(
         "https://jsonplaceholder.typicode.com/posts",

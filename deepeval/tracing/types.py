@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 
-from deepeval.feedback import Feedback
+from deepeval.feedback.feedback import Feedback
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.attributes import (
     AgentAttributes,
