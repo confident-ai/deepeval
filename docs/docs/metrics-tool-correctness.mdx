@@ -27,8 +27,6 @@ The tool correctness metric is an agentic LLM metric that assesses your LLM agen
 The `ToolCorrectnessMetric` allows you to define the **strictness** of correctness. By default, it considers matching tool names to be correct, but you can also require input parameters and output to match.
 :::
 
-The tool correctness metric can also be used to evaluate your LLM's ability to call the right MCP primitives. Learn more about [MCP evaluations here](https://www.deepeval.com/docs/evaluation-mcp).
-
 ## Required Arguments
 
 To use the `ToolCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
@@ -39,17 +37,6 @@ To use the `ToolCorrectnessMetric`, you'll have to provide the following argumen
 - `expected_tools`
 
 The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
-
-#### For MCP evaluations:
-
-- `input`
-- `actual_output`
-- `mcp_data`
-- [Optional] `mcp_tools_called`
-- [Optional] `mcp_resources_called`
-- [Optional] `mcp_prompts_called`
-
-Click here to learn more about [how to create a single-turn MCP test case](www.deepeval.com/docs/evaluation-mcp#single-turn).
 
 ## Usage
 
@@ -66,7 +53,6 @@ test_case = LLMTestCase(
     # Replace this with the tools that was actually used by your LLM agent
     tools_called=[ToolCall(name="WebSearch"), ToolCall(name="ToolQuery")],
     expected_tools=[ToolCall(name="WebSearch")],
-    # Your MCP related arguments here (if any)
 )
 metric = ToolCorrectnessMetric()
 
@@ -148,10 +134,5 @@ This metric assesses the accuracy of your agent's tool usage by comparing the `t
 
 :::info
 If `exact_match` is not specified and `ToolCall.INPUT_PARAMETERS` is included in `evaluation_params`, correctness may be a percentage score based on the proportion of correct input parameters (assuming the name and output are correct, if applicable).
+
 :::
-
-#### For MCP evals:
-
-<Equation formula="\text{Tool Correctness} = \text{AlignmentScore(Primitives Used, Primitives Available)}" />
-
-The **Alignment Score** measures whether the primitives used were the best options from all the available primitives, it is judged by an LLM.
