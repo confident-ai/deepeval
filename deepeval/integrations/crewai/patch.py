@@ -22,11 +22,16 @@ def patch_build_context_for_task():
             span_type="retriever",
             **observer_kwargs
         ) as observer:
-            
+            embedding_input = "No input"
             if isinstance(args[1], Task):
                 embedding_input = args[1].prompt()
+            
             result = original_build_context_for_task(*args, **kwargs)
-            retrieval_context = [result]
+            
+            retrieval_context = []
+            if isinstance(result, str):
+                retrieval_context = [result]
+            
             current_span = current_span_context.get()
             current_span.set_attributes(
                 RetrieverAttributes(

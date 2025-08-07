@@ -124,9 +124,5 @@ def instrument_crewai(api_key: Optional[str] = None):
     Agent.execute_task = observe(Agent.execute_task, type="agent")
     CrewAgentExecutor.invoke = observe(CrewAgentExecutor.invoke)
     ToolUsage.use = observe(ToolUsage.use, type="tool")
-
     patch_build_context_for_task()
-    
-    # retrievers
-    # ContextualMemory.build_context_for_task = observe(ContextualMemory.build_context_for_task, type="retriever", embedder="")
     CrewAIEventsListener()
