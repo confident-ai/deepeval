@@ -597,8 +597,8 @@ class TestRunManager:
                 else:
                     metric_score = None
 
-                standard_deviation = '± ' + str(round(metric_data.standard_deviation, 2)) + " " if get_repeat() > 1 else ""
-                repeat = 'repeat=' + str(metric_data.repeat) + ", " if get_repeat() > 1 else ""
+                standard_deviation = '± ' + str(round(metric_data.standard_deviation, 2)) + " " if get_repeat() > 1 and metric_data.standard_deviation is not None else ""
+                repeat = 'repeat=' + str(metric_data.repeat) + ", " if get_repeat() > 1 and metric_data.repeat is not None else ""
                 table.add_row(
                     "",
                     str(metric_data.name),
