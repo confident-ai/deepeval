@@ -128,30 +128,38 @@ class ConfidentSpanExporter(SpanExporter):
 
                 # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
-                    
+
                     if base_span_wrapper.trace_attributes.name:
-                        current_trace.name = base_span_wrapper.trace_attributes.name
-                    
+                        current_trace.name = (
+                            base_span_wrapper.trace_attributes.name
+                        )
+
                     if base_span_wrapper.trace_attributes.tags:
-                        current_trace.tags = base_span_wrapper.trace_attributes.tags
-                    
+                        current_trace.tags = (
+                            base_span_wrapper.trace_attributes.tags
+                        )
+
                     if base_span_wrapper.trace_attributes.thread_id:
                         current_trace.thread_id = (
                             base_span_wrapper.trace_attributes.thread_id
                         )
-                    
+
                     if base_span_wrapper.trace_attributes.user_id:
-                        current_trace.user_id = base_span_wrapper.trace_attributes.user_id
+                        current_trace.user_id = (
+                            base_span_wrapper.trace_attributes.user_id
+                        )
 
                     if base_span_wrapper.trace_attributes.metadata:
-                        current_trace.metadata = base_span_wrapper.trace_attributes.metadata
+                        current_trace.metadata = (
+                            base_span_wrapper.trace_attributes.metadata
+                        )
 
                 # set the trace attributes
                 if base_span_wrapper.trace_name and isinstance(
                     base_span_wrapper.trace_name, str
                 ):
                     current_trace.name = base_span_wrapper.trace_name
-                
+
                 if base_span_wrapper.trace_tags and isinstance(
                     base_span_wrapper.trace_tags, list
                 ):
@@ -161,7 +169,7 @@ class ConfidentSpanExporter(SpanExporter):
                         ]
                     except Exception as e:
                         print(f"Error converting trace tags: {e}")
-                
+
                 if base_span_wrapper.trace_metadata and isinstance(
                     base_span_wrapper.trace_metadata, str
                 ):
@@ -171,12 +179,12 @@ class ConfidentSpanExporter(SpanExporter):
                         )
                     except Exception as e:
                         print(f"Error converting trace metadata: {e}")
-                
+
                 if base_span_wrapper.trace_thread_id and isinstance(
                     base_span_wrapper.trace_thread_id, str
                 ):
                     current_trace.thread_id = base_span_wrapper.trace_thread_id
-                
+
                 if base_span_wrapper.trace_user_id and isinstance(
                     base_span_wrapper.trace_user_id, str
                 ):
