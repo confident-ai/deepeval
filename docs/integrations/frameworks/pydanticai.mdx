@@ -1,0 +1,108 @@
+---
+title: PydanticAI
+id: pydanticai
+sidebar_label: PydanticAI
+---
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# PydanticAI
+
+[Pydantic AI](https://ai.pydantic.dev/) is a platform for building and deploying AI agents. It provides a set of tools and libraries for building and deploying AI agents.
+
+## Quickstart
+Confident AI instruments PydanticAI to trace your agent's execution and achieve observability. 
+
+```bash
+pip install pydantic-ai sdk -U deepeval
+```
+
+With your Confident API key, setup the instrumentaion in your agent:
+```python filename="main.py" showLineNumbers {6, 10}
+import os
+import time
+from pydantic_ai.agent import Agent
+from deepeval.integrations.pydantic_ai import setup_instrumentation
+
+setup_instrumentation(api_key="<your-confident-api-key>")
+
+os.environ['OPENAI_API_KEY'] = '<your-openai-api-key>'
+
+Agent.instrument_all()
+
+agent = Agent(  
+    'openai:gpt-4o-mini',
+    system_prompt='Be concise, reply with one sentence.',  
+)
+
+result = agent.run_sync('Where does "hello world" come from?')  
+print(result.output)
+
+time.sleep(10)
+```
+
+Run your agent:
+
+```bash
+python main.py
+```
+
+After execution, you can see the traces on Confident AI's **Observability**.
+
+## Advanced Usage
+
+### Trace attributes
+
+You can set custom trace attributes in your agent by:
+1. Replacing your `Agent` with DeepEval's `Agent` wrapper
+2. Providing `trace_attributes` as an argument
+
+:::caution
+**Version Compatibility**: DeepEval's `Agent` wrapper requires PydanticAI version **0.4.2** to **0.5.0** (inclusive).
+:::
+
+Supported attributes:
+
+- [Name](/docs/llm-tracing/tracing-features/name)
+- [Tags](/docs/llm-tracing/tracing-features/tags)
+- [Metadata](/docs/llm-tracing/tracing-features/metadata)
+- [Thread](/docs/llm-tracing/tracing-features/threads)
+- [User](/docs/llm-tracing/tracing-features/users)
+
+Each of the attributes are **optional**, and works exactly the same way as you would expect for the native tracing features on Confident AI:
+
+```python filename="main.py" showLineNumbers {1, 7}
+from deepeval.integrations.pydantic_ai import Agent
+...
+
+agent = Agent(  
+    'openai:gpt-4o-mini',
+    system_prompt='Be concise, reply with one sentence.',  
+    trace_attributes={
+        "name": "test_name",
+        "tags": ["test_tag_1", "test_tag_2"],
+        "metadata": {"test_metadata_key": "test_metadata_value"},
+        "thread_id": "test_thread_id",
+        "user_id": "test_user_id",
+    }
+)
+```
+
+### Online evals
+
+To run online evaluation on your PydanticAI agent, simply provide `metric_collection` as an argument in DeepEval's `Agent` wrapper. This will allow you run [online evaluations](https://documentation.confident-ai.com/docs/llm-tracing/evaluations) in production.
+
+:::note
+The PydanticAI **Agent** wrapper auto-populates the `input` and `actual_output` fields of [LLMTestCase](https://deepeval.com/docs/evaluation-test-cases) for each `Agent`. Therefore, you can't include metrics that require other parameters (e.g. `retrieval_context`) when creating your [metric collection](https://deepeval.com/docs/metrics-task-completion).
+:::
+
+```python filename="main.py" showLineNumbers {1, 7}
+from deepeval.integrations.pydantic_ai import Agent
+...
+
+agent = Agent(  
+    'openai:gpt-4o-mini',
+    system_prompt='Be concise, reply with one sentence.',  
+    metric_collection='<your-metric-collection-name>',
+)
+```

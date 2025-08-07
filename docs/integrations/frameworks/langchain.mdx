@@ -1,0 +1,199 @@
+---
+id: langchain
+title: LangChain
+sidebar_label: LangChain
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# LangChain
+
+[LangChain](https://www.langchain.com/) is a framework for building LLM applications.
+
+## Tracing
+
+Confident AI provides a `CallbackHandler` that can be used to trace LangChain's execution.
+
+Install the following packages:
+
+```bash
+pip install -U deepeval langchain langchain-openai
+```
+
+Login with your API key and configure DeepEval's `CallbackHandler` as a callback for LangChain:
+
+```python filename="main.py" showLineNumbers {9, 20}
+import os
+import time
+from langchain.chat_models import init_chat_model
+
+from deepeval
+from deepeval.integrations.langchain import CallbackHandler
+
+os.environ["OPENAI_API_KEY"] = "<your-openai-api-key>"
+deepeval.login("<your-confident-api-key>")
+
+def multiply(a: int, b: int) -> int:
+    """Returns the product of two numbers"""
+    return a * b
+
+llm = init_chat_model("gpt-4o-mini", model_provider="openai")
+llm_with_tools = llm.bind_tools([multiply])
+
+llm_with_tools.invoke(
+    "What is 3 * 12?", 
+    config = {"callbacks": [CallbackHandler()]}
+)
+
+time.sleep(5) # Wait for the trace to be published
+```
+
+Run your script:
+
+```bash
+python main.py
+```
+
+You can directly view the traces in the **Observatory** by clicking on the link in the output printed in the console.
+
+:::tip
+DeepEval's `CallbackHandler` is an implementation of LangChain's [BaseCallbackHandler](https://python.langchain.com/api_reference/core/callbacks/langchain_core.callbacks.base.BaseCallbackHandler.html).
+:::
+
+## End-to-end evals
+
+To configure your LangChain agent for [end-to-end evaluations](/docs/llm-evaluation/end-to-end-evals) in development, simply supply `metrics` to the `CallbackHandler`. Then, use the `dataset` generator to invoke your LangChain agent for each golden. 
+
+:::note
+**[Task completion](https://deepeval.com/docs/metrics-task-completion)** metric is the only supported metric for end-to-end evaluations.
+:::
+
+
+<Tabs groupId="langgraph">
+<TabItem value="synchronous" label="Synchronous">
+
+```python filename="main.py" showLineNumbers {2, 21}
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+
+...
+
+# Create a metric
+task_completion = TaskCompletionMetric(
+    threshold=0.7,
+    model="gpt-4o-mini",
+    include_reason=True
+)
+
+# Create goldens
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+]
+
+# Run evaluation for each golden
+for golden in dataset(goldens=goldens):
+    agent.invoke(
+        input={"messages": [{"role": "user", "content": golden.input}]},
+        config={"callbacks": [CallbackHandler(metrics=[task_completion])]}
+    )
+```
+
+</TabItem>
+  <TabItem value="asynchronous" label="Asynchronous">
+
+```python filename="main.py" showLineNumbers {4, 23, 29}
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.evaluate import dataset
+from deepeval.dataset import Golden
+from deepeval.evaluate import test_run
+
+...
+ 
+# Create a metric
+task_completion = TaskCompletionMetric(
+    threshold=0.7,
+    model="gpt-4o-mini",
+    include_reason=True
+)
+ 
+# Create goldens
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+]
+
+# Run evaluation for each golden
+for golden in dataset(goldens=goldens):
+    task = asyncio.create_task(
+        agent.ainvoke(
+            input={"messages": [{"role": "user", "content": golden.input}]},
+            config={"callbacks": [CallbackHandler(metrics=[task_completion])]}
+        )
+    )
+    test_run.append(task)
+
+```
+
+</TabItem>
+</Tabs>
+
+This will automatically create a generate a test run and use the [task completion metric](https://deepeval.com/docs/metrics-task-completion) to evaluate your entire LangChain agent trace for each golden.
+
+## Online evals
+
+You can run [online evaluations](https://documentation.confident-ai.com/docs/llm-tracing/evaluations) in production on your Langchain agents by simply providing `metric_collection` as an argument to `CallbackHandler`.
+
+:::note
+Only **task completion** metric is supported for the LangChain integration. Therefore, you should only include the task completion metric when creating the [metric collection](https://documentation.confident-ai.com/docs/llm-evaluation/metrics/create-on-the-cloud) for your LangChain agent.
+:::
+
+```python filename="main.py" showLineNumbers {8}
+from deepeval.integrations.langchain import CallbackHandler
+...
+
+# Invoke your agent with the metric collection name
+llm_with_tools.invoke(
+    "What is 3 * 12?", 
+    config = {"callbacks": [
+        CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")
+    ]}
+)
+```
+
+This will evaluate the entire traced execution flow of your LangChain agent using the metric collection containing the [task completion](https://deepeval.com/docs/metrics-task-completion) metric.
+
+## Advanced Usage
+
+### Trace attributes
+
+You can set custom trace attributes in your `CallbackHandler` by providing it for each agent invocation, including:
+
+- [Name](/docs/llm-tracing/tracing-features/name)
+- [Tags](/docs/llm-tracing/tracing-features/tags)
+- [Metadata](/docs/llm-tracing/tracing-features/metadata)
+- [Thread](/docs/llm-tracing/tracing-features/threads)
+- [User](/docs/llm-tracing/tracing-features/users)
+
+Each of the attributes are **optional**, and works exactly the same way as you would expect for the native tracing features on Confident AI:
+
+```python filename="main.py" showLineNumbers
+...
+
+llm_with_tools.invoke(
+    input=input,
+    config={
+        "callbacks": [
+            CallbackHandler(
+                name="Name of Trace",
+                tags=["Tag 1", "Tag 2"],
+                metadata={"Key": "Value"},
+                thread_id="your-thread-id",
+                user_id="your-user-id",
+            )
+        ]
+    },
+)
+```
