@@ -157,9 +157,9 @@ class LLMTestCase:
         key_fields = [
             self.actual_output,
             self.retrieval_context,
-            self.tools_called
+            self.tools_called,
         ]
-        
+
         if all(field is None for field in key_fields):
             raise ValueError(
                 "At least one of the following fields must not be None: "
