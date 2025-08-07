@@ -55,40 +55,50 @@ from .multimodal_metrics import (
     MultimodalGEval,
 )
 
+
 __all__ = [
+    # Base classes
     "BaseMetric",
     "BaseConversationalMetric",
     "BaseMultimodalMetric",
     "BaseArenaMetric",
-    "DAGMetric",
-    "BiasMetric",
-    "ToxicityMetric",
-    "PIILeakageMetric",
-    "NonAdviceMetric",
-    "MisuseMetric",
-    "RoleViolationMetric",
-    "HallucinationMetric",
-    "AnswerRelevancyMetric",
-    "SummarizationMetric",
+    # Core metrics
     "GEval",
     "ArenaGEval",
+    "ConversationalGEval",
+    "DAGMetric",
+    # RAG metrics
+    "AnswerRelevancyMetric",
     "FaithfulnessMetric",
     "ContextualRecallMetric",
     "ContextualRelevancyMetric",
     "ContextualPrecisionMetric",
-    "KnowledgeRetentionMetric",
+    # MCP metrics
+    "MCPArgsCorrectnessMetric",
+    "MCPTaskCompletionMetric",
+    "MCPToolCorrectnessMetric",
+    # Content quality metrics
+    "HallucinationMetric",
+    "BiasMetric",
+    "ToxicityMetric",
+    "SummarizationMetric",
+    # Safety and compliance metrics
+    "PIILeakageMetric",
+    "NonAdviceMetric",
+    "MisuseMetric",
+    "RoleViolationMetric",
+    "RoleAdherenceMetric",
+    # Task-specific metrics
     "ToolCorrectnessMetric",
     "JsonCorrectnessMetric",
     "PromptAlignmentMetric",
     "TaskCompletionMetric",
     "ArgumentCorrectnessMetric",
-    "MCPArgsCorrectnessMetric",
-    "MCPTaskCompletionMetric",
-    "MCPToolCorrectnessMetric",
+    "KnowledgeRetentionMetric",
+    # Conversational metrics
     "TurnRelevancyMetric",
     "ConversationCompletenessMetric",
-    "RoleAdherenceMetric",
-    "ConversationalGEval",
+    # Multimodal metrics
     "TextToImageMetric",
     "ImageEditingMetric",
     "ImageCoherenceMetric",
