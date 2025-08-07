@@ -15,6 +15,7 @@ from deepeval.utils import (
     set_should_skip_on_missing_params,
     set_should_use_cache,
     set_verbose_mode,
+    set_identifier,
 )
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_run
@@ -123,6 +124,7 @@ def run(
     set_should_ignore_errors(ignore_errors)
     set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
+    set_identifier(identifier)
 
     global_test_run_manager.reset()
 
