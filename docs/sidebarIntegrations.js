@@ -5,6 +5,7 @@ module.exports = {
       label: "LLM Frameworks",
       items: [
         "frameworks/openai",
+        "frameworks/langchain",
         // "frameworks/llamaindex",
         // "frameworks/huggingface",
       ],
