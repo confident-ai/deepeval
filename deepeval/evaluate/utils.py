@@ -15,7 +15,6 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     MLLMTestCase,
-    MLLMImage,
 )
 from deepeval.test_run import (
     LLMApiTestCase,
@@ -264,7 +263,17 @@ def validate_evaluate_inputs(
             List[BaseMultimodalMetric],
         ]
     ] = None,
+    metric_collection: Optional[str] = None,
 ):
+    if metric_collection is None and metrics is None:
+        raise ValueError(
+            "You must provide either 'metric_collection' or 'metrics'."
+        )
+    if metric_collection is not None and metrics is not None:
+        raise ValueError(
+            "You cannot provide both 'metric_collection' and 'metrics'."
+        )
+
     if goldens and observed_callback:
         if not getattr(observed_callback, "_is_deepeval_observed", False):
             raise ValueError(

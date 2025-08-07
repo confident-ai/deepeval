@@ -15,3 +15,23 @@ from .lambada.lambada import LAMBADA
 from .winogrande.winogrande import Winogrande
 from .equity_med_qa.equity_med_qa import EquityMedQA
 from .ifeval.ifeval import IFEval
+
+__all__ = [
+    "BigBenchHard",
+    "MMLU",
+    "HellaSwag",
+    "DROP",
+    "TruthfulQA",
+    "HumanEval",
+    "SQuAD",
+    "GSM8K",
+    "MathQA",
+    "LogiQA",
+    "BoolQ",
+    "ARC",
+    "BBQ",
+    "LAMBADA",
+    "Winogrande",
+    "EquityMedQA",
+    "IFEval",
+]

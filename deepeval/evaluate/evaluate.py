@@ -183,11 +183,9 @@ def assert_test(
 
 
 def evaluate(
-    test_cases: Optional[
-        Union[
-            List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
-        ]
-    ] = None,
+    test_cases: Union[
+        List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
+    ],
     metrics: Optional[
         Union[
             List[BaseMetric],
@@ -195,6 +193,8 @@ def evaluate(
             List[BaseMultimodalMetric],
         ]
     ] = None,
+    # Evals on Confident AI
+    metric_collection: Optional[str] = None,
     hyperparameters: Optional[Dict[str, Union[str, int, float, Prompt]]] = None,
     # agnostic
     identifier: Optional[str] = None,
@@ -207,6 +207,7 @@ def evaluate(
     validate_evaluate_inputs(
         test_cases=test_cases,
         metrics=metrics,
+        metric_collection=metric_collection,
     )
     check_valid_test_cases_type(test_cases)
 

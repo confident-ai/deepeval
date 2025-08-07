@@ -56,6 +56,10 @@ valid_gpt_models = [
     "o3-mini-2025-01-31",
     "o4-mini",
     "gpt-4.5-preview-2025-02-27",
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5-chat-latest",
 ]
 
 unsupported_log_probs_gpt_models = [
@@ -68,6 +72,10 @@ unsupported_log_probs_gpt_models = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "gpt-4.5-preview-2025-02-27",
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5-chat-latest",
 ]
 
 structured_outputs_models = [
@@ -86,6 +94,7 @@ structured_outputs_models = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "gpt-4.5-preview-2025-02-27",
+    # TODO: add gpt-5-chat-latest
 ]
 
 json_mode_models = [
@@ -99,6 +108,7 @@ json_mode_models = [
     "gpt-4-turbo-preview",
     "gpt-4-32k",
     "gpt-4-32k-0613",
+    # TODO: add gpt-5-chat-latest
 ]
 
 model_pricing = {
@@ -136,6 +146,22 @@ model_pricing = {
     "gpt-4.5-preview": {
         "input": 75.00 / 1e6,
         "output": 150.00 / 1e6,
+    },
+    "gpt-5": {
+        "input": 1.25 / 1e6,
+        "output": 10.00 / 1e6,
+    },
+    "gpt-5-mini": {
+        "input": 0.25 / 1e6,
+        "output": 2.00 / 1e6,
+    },
+    "gpt-5-nano": {
+        "input": 0.05 / 1e6,
+        "output": 0.40 / 1e6,
+    },
+    "gpt-5-chat-latest": {
+        "input": 1.25 / 1e6,
+        "output": 10.00 / 1e6,
     },
 }
 

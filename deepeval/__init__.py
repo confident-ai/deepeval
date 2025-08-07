@@ -21,7 +21,6 @@ if os.getenv("DEEPEVAL_GRPC_LOGGING") != "YES":
 __all__ = [
     "login",
     "log_hyperparameters",
-    "track",
     "a_collect_feedback",
     "collect_feedback",
     "evaluate",

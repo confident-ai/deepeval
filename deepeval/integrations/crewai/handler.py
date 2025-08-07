@@ -20,6 +20,7 @@ try:
     from crewai.tools.tool_usage import ToolUsage
     from crewai.utilities.events import LLMCallCompletedEvent
     from crewai.memory.contextual.contextual_memory import ContextualMemory
+
     crewai_installed = True
 except:
     crewai_installed = False
@@ -53,12 +54,14 @@ class CrewAIEventsListener(BaseEventListener):
             source, event: AgentExecutionCompletedEvent
         ):
             current_span = current_span_context.get()
-            
+
             if isinstance(current_span, AgentSpan):
                 if isinstance(source, Agent):
                     current_span.name = source.role
-                    current_span.available_tools = [tool.name for tool in source.tools]
-            
+                    current_span.available_tools = [
+                        tool.name for tool in source.tools
+                    ]
+
             if current_span:
                 # set llm test case
                 input = None
@@ -88,7 +91,7 @@ class CrewAIEventsListener(BaseEventListener):
                         trace_manager.integration_traces_to_evaluate.append(
                             current_trace_context.get()
                         )
-        
+
         @crewai_event_bus.on(ToolUsageFinishedEvent)
         def on_tool_usage_finished(source, event: ToolUsageFinishedEvent):
             current_span = current_span_context.get()
@@ -99,18 +102,17 @@ class CrewAIEventsListener(BaseEventListener):
         @crewai_event_bus.on(LLMCallCompletedEvent)
         def on_llm_call_finished(source, event: LLMCallCompletedEvent):
             current_span = current_span_context.get()
-            
+
             if isinstance(current_span, LlmSpan):
                 if isinstance(source, LLM):
                     current_span.model = source.model
-                
+
                 current_span.set_attributes(
                     LlmAttributes(
                         input=event.messages,
                         output=event.response,
                     )
                 )
-            
 
 
 def instrument_crewai(api_key: Optional[str] = None):

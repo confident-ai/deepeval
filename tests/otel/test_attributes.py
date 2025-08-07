@@ -88,7 +88,9 @@ def agent_span(input: str):
         )
 
         # trace attributes
-        span.set_attribute("confident.trace.metadata", json.dumps({"test_key": "test_value"}))
+        span.set_attribute(
+            "confident.trace.metadata", json.dumps({"test_key": "test_value"})
+        )
 
         retriever_span(input)
 
@@ -149,7 +151,7 @@ def meta_agent(input: str):
         #         }
         #     ),
         # )
-        
+
         # trace attributes
         span.set_attribute("confident.trace.name", "test_trace")
         span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
