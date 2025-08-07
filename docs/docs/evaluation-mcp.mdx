@@ -166,7 +166,43 @@ mcp_tool_called = MCPPromptCall(
 
 The result provided by the `session.get_prompt()` is an object of `GetPromptResult` from `mcp.types` in the official MCP python-sdk. You just have to provide the same result in the result argument of `MCPPromptCall` object.
 
-## Creating a Test Case 
+## Creating a Test Case
+
+DeepEval supports both single turn and multi-turn test cases for MCP evaluation with our `LLMTestCase` and `ConversationalTestCase`.
+
+### Single-Turn
+
+The `LLMTestCase` accepts the following optional parameters to support MCP evaluations:
+
+- `mcp_data` — a list of `MCPMetaData` objects giving information that your LLM application has access to
+- `mcp_tools_called` — a list of `MCPToolCall` objects that your LLM application has used
+- `mcp_resources_called` — a list of `MCPResourceCall` objects that your LLM application has used
+- `mcp_prompts_called` — a list of `MCPPromptCall` objects that your LLM application has used
+
+Here's how you would create an MCP single-turn test case:
+
+```python {3-6,12-15}
+from deepeval.test_case import (
+    LLMTestCase, 
+    MCPMetaData, 
+    MCPToolCall, 
+    MCPResourceCall, 
+    MCPPromptCall
+)
+
+test_case = LLMTestCase(
+    input="...", # Your input
+    actual_output="...", # Your LLMs final output
+    mcp_data=[MCPMetaData(...)],
+    mcp_tools_called=[MCPToolCall(...)],
+    mcp_prompts_called=[MCPPromptCall(...)],
+    mcp_resources_called=[MCPResourceCall(...)]
+)
+```
+
+You can now use the [`ToolCorrectnessMetric`](https://deepeval.com/docs/metrics-tool-correctness) and [`ArgumentCorrectnessMetric`](https://deepeval.com/docs/metrics-argument-correctness) to run MCP evaluations on your single-turn test case.
+
+### Multi-Turn
 
 The `ConversationalTestCase` accepts an optional parameter called `mcp_data` to add your `MCPMetaData` objects in a list, here's an example implementation on how to add it:
 
