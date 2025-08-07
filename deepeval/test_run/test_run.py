@@ -27,6 +27,7 @@ from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
     is_in_ci_env,
+    get_repeat,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import HIDDEN_DIR
@@ -536,7 +537,7 @@ class TestRunManager:
         table = Table(title="Test Results")
         table.add_column("Test case", justify="left")
         table.add_column("Metric", justify="left")
-        table.add_column("Score", justify="left")
+        table.add_column("Score" + (" ± SD" if get_repeat() > 1 else ""), justify="left")
         table.add_column("Status", justify="left")
         table.add_column("Overall Success Rate", justify="left")
 
@@ -596,10 +597,12 @@ class TestRunManager:
                 else:
                     metric_score = None
 
+                standard_deviation = '± ' + str(round(metric_data.standard_deviation, 2)) + " " if get_repeat() > 1 else ""
+                repeat = 'repeat=' + str(metric_data.repeat) + ", " if get_repeat() > 1 else ""
                 table.add_row(
                     "",
                     str(metric_data.name),
-                    f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
+                    f"{metric_score} {standard_deviation}({repeat}threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
                     status,
                     "",
                 )

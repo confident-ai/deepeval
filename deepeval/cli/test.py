@@ -149,10 +149,10 @@ def run(
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
 
-    if repeat is not None:
-        pytest_args.extend(["--count", str(repeat)])
-        if repeat < 1:
-            raise ValueError("The repeat argument must be at least 1.")
+    # if repeat is not None:
+    #     pytest_args.extend(["--count", str(repeat)])
+    #     if repeat < 1:
+    #         raise ValueError("The repeat argument must be at least 1.")
 
     if mark:
         pytest_args.extend(["-m", mark])

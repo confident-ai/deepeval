@@ -20,10 +20,15 @@ metric_classes = [
     # ContextualRelevancyMetric,
 ]
 
+
 @pytest.mark.parametrize(
-    "metric_class,async_mode", 
+    "metric_class,async_mode",
     [(m, mode) for m in metric_classes for mode in [True, False]],
-    ids=[f'{m.__name__}_{"async" if mode else "sync"}' for m in metric_classes for mode in [True, False]]
+    ids=[
+        f'{m.__name__}_{"async" if mode else "sync"}'
+        for m in metric_classes
+        for mode in [True, False]
+    ],
 )
 def test_metric_no_repeat(metric_class, async_mode):
     test_case = LLMTestCase(
@@ -39,9 +44,13 @@ def test_metric_no_repeat(metric_class, async_mode):
 
 
 @pytest.mark.parametrize(
-    "metric_class,async_mode", 
+    "metric_class,async_mode",
     [(m, mode) for m in metric_classes for mode in [True, False]],
-    ids=[f'{m.__name__}_{"async" if mode else "sync"}' for m in metric_classes for mode in [True, False]]
+    ids=[
+        f'{m.__name__}_{"async" if mode else "sync"}'
+        for m in metric_classes
+        for mode in [True, False]
+    ],
 )
 def test_metric_repeat(metric_class, async_mode):
     test_case = LLMTestCase(

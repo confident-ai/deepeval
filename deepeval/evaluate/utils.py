@@ -41,6 +41,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             error=metric.error,
             evaluationCost=metric.evaluation_cost,
             verboseLogs=metric.verbose_logs,
+            repeat=metric.repeat,
+            standardDeviation=metric.standard_deviation,
         )
     else:
         return MetricData(
@@ -54,6 +56,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             error=None,
             evaluationCost=metric.evaluation_cost,
             verboseLogs=metric.verbose_logs,
+            repeat=metric.repeat,
+            standardDeviation=metric.standard_deviation,
         )
 
 
@@ -301,7 +305,6 @@ def validate_evaluate_inputs(
                 if isinstance(
                     test_case, ConversationalTestCase
                 ) and not isinstance(metric, BaseConversationalMetric):
-                    print(type(metric))
                     raise ValueError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
                     )

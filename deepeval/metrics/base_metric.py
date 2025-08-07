@@ -26,6 +26,8 @@ class BaseMetric:
     error: Optional[str] = None
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
+    repeat: Optional[int] = None
+    standard_deviation: Optional[float] = None
     skipped = False
     model = Optional[DeepEvalBaseLLM]
     using_native_model = Optional[bool]
