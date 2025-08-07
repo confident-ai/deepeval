@@ -34,7 +34,8 @@ class MetricData(BaseModel):
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
-
+    standard_deviation: Optional[float] = Field(None, alias="standardDeviation")
+    repeat: Optional[int] = Field(None)
 
 class TraceSpanTestCase(BaseModel):
     input: str

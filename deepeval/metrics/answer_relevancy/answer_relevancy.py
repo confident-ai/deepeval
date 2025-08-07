@@ -1,6 +1,12 @@
 from typing import Optional, List, Type, Union
+import statistics
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    prettify_list,
+    prettify_nested_list,
+    get_repeat,
+)
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -35,6 +41,7 @@ class AnswerRelevancyMetric(BaseMetric):
         evaluation_template: Type[
             AnswerRelevancyTemplate
         ] = AnswerRelevancyTemplate,
+        repeat: Optional[int] = None,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -44,6 +51,7 @@ class AnswerRelevancyMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
+        self.repeat = repeat or get_repeat()
 
     def measure(
         self,
@@ -67,7 +75,7 @@ class AnswerRelevancyMetric(BaseMetric):
                         _in_component=_in_component,
                     )
                 )
-            else:
+            elif self.repeat == 1:
                 self.statements: List[str] = self._generate_statements(
                     test_case.actual_output
                 )
@@ -80,10 +88,41 @@ class AnswerRelevancyMetric(BaseMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Statements:\n{prettify_list(self.statements)}",
-                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Statements:\n{prettify_nested_list(self.statements)}",
+                        f"Verdicts:\n{prettify_nested_list(self.verdicts)}",
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
+                )
+                return self.score
+            else:
+                statements, verdicts, scores = [], [], []
+                for _ in range(self.repeat):
+                    self.statements: List[str] = self._generate_statements(
+                        test_case.actual_output
+                    )
+                    self.verdicts: List[AnswerRelevancyVerdict] = (
+                        self._generate_verdicts(test_case.input)
+                    )
+                    self.score = self._calculate_score()
+                    self.success = self.score >= self.threshold
+
+                    # append to lists
+                    scores.append(self.score)
+                    statements.append(self.statements)
+                    verdicts.append(self.verdicts)
+
+                recent_statements = statements[-1]
+
+                self.statements = statements
+                self.verdicts = verdicts
+                self.score = sum(scores) / len(scores)
+                self.reason = self._generate_aggregate_reason(
+                    test_case.input, recent_statements
+                )
+                self.success = self.score >= self.threshold
+                self.standard_deviation = statistics.stdev(scores)
+                self.verbose_logs = self._construct_repeat_verbose_logs(
+                    scores=scores
                 )
 
             return self.score
@@ -104,25 +143,116 @@ class AnswerRelevancyMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.statements: List[str] = await self._a_generate_statements(
-                test_case.actual_output
-            )
-            self.verdicts: List[AnswerRelevancyVerdict] = (
-                await self._a_generate_verdicts(test_case.input)
-            )
-            self.score = self._calculate_score()
-            self.reason = await self._a_generate_reason(test_case.input)
-            self.success = self.score >= self.threshold
-            self.verbose_logs = construct_verbose_logs(
-                self,
-                steps=[
-                    f"Statements:\n{prettify_list(self.statements)}",
-                    f"Verdicts:\n{prettify_list(self.verdicts)}",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
-            )
+            if self.repeat == 1:
+                self.statements: List[str] = await self._a_generate_statements(
+                    test_case.actual_output
+                )
+                self.verdicts: List[AnswerRelevancyVerdict] = (
+                    await self._a_generate_verdicts(test_case.input)
+                )
+                self.score = self._calculate_score()
+                self.reason = await self._a_generate_reason(test_case.input)
+                self.success = self.score >= self.threshold
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Statements:\n{prettify_list(self.statements)}",
+                        f"Verdicts:\n{prettify_list(self.verdicts)}",
+                        f"Score: {self.score}\nReason: {self.reason}",
+                    ],
+                )
+            else:
+                statements, verdicts, scores = [], [], []
+                for _ in range(self.repeat):
+                    self.statements: List[str] = (
+                        await self._a_generate_statements(
+                            test_case.actual_output
+                        )
+                    )
+                    self.verdicts: List[AnswerRelevancyVerdict] = (
+                        await self._a_generate_verdicts(test_case.input)
+                    )
+                    self.score = self._calculate_score()
+                    self.success = self.score >= self.threshold
+
+                    # append to lists
+                    scores.append(self.score)
+                    statements.append(self.statements)
+                    verdicts.append(self.verdicts)
+
+                recent_statements = statements[-1]
+
+                self.statements = statements
+                self.verdicts = verdicts
+                self.score = sum(scores) / len(scores)
+                self.reason = await self._a_generate_aggregate_reason(
+                    test_case.input, recent_statements
+                )
+                self.success = self.score >= self.threshold
+                self.standard_deviation = statistics.stdev(scores)
+                self.verbose_logs = self._construct_repeat_verbose_logs(
+                    scores=scores
+                )
 
             return self.score
+
+    async def _a_generate_aggregate_reason(
+        self, input: str, statements: List[str]
+    ) -> str:
+        if self.include_reason is False:
+            return None
+
+        prompt = self.evaluation_template.generate_aggregate_reason(
+            statements=statements,
+            input=input,
+            score=format(self.score, ".2f"),
+        )
+
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(
+                prompt, schema=AnswerRelevancyScoreReason
+            )
+            self.evaluation_cost += cost
+            return res.reason
+        else:
+            try:
+                res: AnswerRelevancyScoreReason = await self.model.a_generate(
+                    prompt=prompt, schema=AnswerRelevancyScoreReason
+                )
+                return res.reason
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
+
+    def _generate_aggregate_reason(
+        self, input: str, statements: List[str]
+    ) -> str:
+        if self.include_reason is False:
+            return None
+
+        prompt = self.evaluation_template.generate_aggregate_reason(
+            statements=statements,
+            input=input,
+            score=format(self.score, ".2f"),
+        )
+
+        if self.using_native_model:
+            res, cost = self.model.generate(
+                prompt, schema=AnswerRelevancyScoreReason
+            )
+            self.evaluation_cost += cost
+            return res.reason
+        else:
+            try:
+                res: AnswerRelevancyScoreReason = self.model.generate(
+                    prompt=prompt, schema=AnswerRelevancyScoreReason
+                )
+                return res.reason
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return data["reason"]
 
     async def _a_generate_reason(self, input: str) -> str:
         if self.include_reason is False:
@@ -279,6 +409,36 @@ class AnswerRelevancyMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["statements"]
+
+    def _construct_repeat_verbose_logs(
+        self,
+        scores: List[float],
+    ):
+        repetition_details = []
+        for i in range(len(scores)):
+            ordinal = (
+                "1st"
+                if i == 0
+                else "2nd" if i == 1 else "3rd" if i == 2 else f"{i+1}th"
+            )
+            repetition_details.append(f"{'-'*20} {ordinal} Repetition {'-'*20}")
+            repetition_details.append(
+                f"Statements:\n{prettify_list(self.statements[i])}"
+            )
+            repetition_details.append(
+                f"Verdicts:\n{prettify_list(self.verdicts[i])}"
+            )
+            repetition_details.append(f"Score: {scores[i]:.2f}")
+
+        return construct_verbose_logs(
+            self,
+            steps=[
+                f"{'-'*20} Summary {'-'*20}",
+                f"Repetitions: {self.repeat}\nAverage Score: {self.score:.2f}\nStandard Deviation: {self.standard_deviation:.2f}\nReason: {self.reason}\n",
+                *repetition_details,
+            ],
+            repeat=True,
+        )
 
     def _calculate_score(self):
         number_of_verdicts = len(self.verdicts)

@@ -180,17 +180,29 @@ def print_verbose_logs(metric: str, logs: str):
     sys.stdout.flush()
 
 
-def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
-    verbose_logs = ""
-    for i in range(len(steps) - 1):
-        verbose_logs += steps[i]
+def construct_verbose_logs(
+    metric: BaseMetric, steps: List[str], repeat: bool = False
+) -> str:
+    if not repeat:
+        verbose_logs = ""
+        for i in range(len(steps) - 1):
+            verbose_logs += steps[i]
 
-        # don't add new line for penultimate step
-        if i < len(steps) - 2:
+            # don't add new line for penultimate step
+            if i < len(steps) - 2:
+                verbose_logs += " \n \n"
+        if metric.verbose_mode:
+            # only print reason and score for deepeval
+            print_verbose_logs(
+                metric.__name__, verbose_logs + f"\n \n{steps[-1]}"
+            )
+    else:
+        verbose_logs = ""
+        for i in range(len(steps)):
+            verbose_logs += steps[i]
             verbose_logs += " \n \n"
-    if metric.verbose_mode:
-        # only print reason and score for deepeval
-        print_verbose_logs(metric.__name__, verbose_logs + f"\n \n{steps[-1]}")
+        if metric.verbose_mode:
+            print_verbose_logs(metric.__name__, verbose_logs)
 
     return verbose_logs
 

@@ -15,6 +15,7 @@ from deepeval.utils import (
     set_should_skip_on_missing_params,
     set_should_use_cache,
     set_verbose_mode,
+    set_repeat,
 )
 from deepeval.test_run import invoke_test_run_end_hook
 from deepeval.telemetry import capture_evaluation_run
@@ -123,6 +124,7 @@ def run(
     set_should_ignore_errors(ignore_errors)
     set_should_skip_on_missing_params(skip_on_missing_params)
     set_verbose_mode(verbose)
+    set_repeat(repeat)
 
     global_test_run_manager.reset()
 
@@ -147,10 +149,10 @@ def run(
     if num_processes is not None:
         pytest_args.extend(["-n", str(num_processes)])
 
-    if repeat is not None:
-        pytest_args.extend(["--count", str(repeat)])
-        if repeat < 1:
-            raise ValueError("The repeat argument must be at least 1.")
+    # if repeat is not None:
+    #     pytest_args.extend(["--count", str(repeat)])
+    #     if repeat < 1:
+    #         raise ValueError("The repeat argument must be at least 1.")
 
     if mark:
         pytest_args.extend(["-m", mark])

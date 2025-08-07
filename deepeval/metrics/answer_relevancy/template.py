@@ -1,4 +1,5 @@
 from typing import List
+import textwrap
 
 
 class AnswerRelevancyTemplate:
@@ -128,3 +129,39 @@ Input:
 
 JSON:
 """
+
+    @staticmethod
+    def generate_aggregate_reason(
+        statements: List[str], input: str, score: float
+    ):
+        return textwrap.dedent(
+            f"""Given the answer relevancy score, the list of statements made in the actual output, and the input, provide a CONCISE reason for the score. Explain why it is not higher, but also why it is at its current score.
+            The answer relevancy score measures the relevance of the statements to the input.
+            The statements addresses whatever is asked/talked about in the input, and maybe relevant or irrelevant to the input.
+            If there is nothing irrelevant, just say something positive with an upbeat encouraging tone (but don't overdo it otherwise it gets annoying).
+
+
+            **
+            IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key providing the reason. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
+
+            Example:
+            Example JSON:
+            {{
+                "reason": "The score is <answer_relevancy_score> because <your_reason>."
+            }}
+            ===== END OF EXAMPLE ======
+            **
+
+
+            Answer Relevancy Score:
+            {score}
+
+            Reasons why the score can't be higher based on statements in the actual output:
+            {statements}
+
+            Input:
+            {input}
+
+            JSON:
+            """
+        )
