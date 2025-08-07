@@ -1,4 +1,5 @@
-from .evaluate import evaluate, assert_test, compare
+from .evaluate import evaluate, assert_test
+from .compare import compare
 from .configs import AsyncConfig, DisplayConfig, CacheConfig, ErrorConfig
 
 
