@@ -27,6 +27,8 @@ The argument correctness metric is an agentic LLM metric that assesses your LLM 
 The `ArgumentCorrectnessMetric` uses an LLM to determine argument correctness, and is also referenceless. If you're looking to determistically evaluate argument correctness, refer to the [tool correctness metric](/docs/metrics-tool-correctness) instead.
 :::
 
+The argument correctness metric can also be used to evaluate your LLM's ability to generate arguments for MCP primitives. Learn more about [MCP evaluations here](https://deepeval.com/docs/evaluation-mcp).
+
 ## Required Arguments
 
 To use the `ArgumentCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
@@ -36,6 +38,17 @@ To use the `ArgumentCorrectnessMetric`, you'll have to provide the following arg
 - `tools_called`
 
 The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
+#### For MCP evaluations:
+
+- `input`
+- `actual_output`
+- `mcp_data`
+- [Optional] `mcp_tools_called`
+- [Optional] `mcp_resources_called`
+- [Optional] `mcp_prompts_called`
+
+Click here to learn more about [how to create a single-turn MCP test case](www.deepeval.com/docs/evaluation-mcp#single-turn).
 
 ## Usage
 
@@ -66,6 +79,7 @@ test_case = LLMTestCase(
             input={"topic": "Trump tariffs"}
         )
     ]
+    # Your MCP related arguments here (if any)
 )
 
 # To run metric as a standalone
@@ -131,6 +145,12 @@ The `ArgumentCorrectnessMetric` score is calculated according to the following e
 <Equation formula="\text{Argument Correctness} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
 
 The `ArgumentCorrectnessMetric` assesses the correctness of the arguments (input parameters) for each tool call, based on the task outlined in the input.
+
+#### For MCP evals:
+
+<Equation formula="\text{Argument Correctness} = \text{AlignmentScore(PrimitiveCall, Args)}" />
+
+The **PrimitiveCall** here refers to a tool or resource or prompt called by the LLM app. The **AlignmentScore** is determined by the evaluation model. 
 
 :::note
 You can set the `verbose_mode` of **ANY** `deepeval` metric to `True` to debug the `measure()` method:

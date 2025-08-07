@@ -25,7 +25,7 @@ To use the `MCPArgsCorrectnessMetric`, you'll have to provide the following argu
 - `turns`
 - `mcp_data`
 
-You will also need to provide `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` inside the turns whenever there is an MCP interaction in your agent's workflow. You can learn more about [creating MCP test cases here](https://www.deepeval.com/docs/evaluation-mcp-test-cases).
+You will also need to provide `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` inside the turns whenever there is an MCP interaction in your agent's workflow. You can learn more about [creating MCP test cases here](https://www.deepeval.com/docs/evaluation-mcp).
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
@@ -79,7 +79,7 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 The `MCPArgsCorrectnessMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{MCP Args Correctness} = \frac{\text{AlignmentScore(ToolCall, Args)}}{\text{Total Number of ToolCalls}}" />
+<Equation formula="\text{MCP Args Correctness} = \frac{\text{AlignmentScore(PrimitiveCall, Args)}}{\text{Total Number of PrimitiveCalls}}" />
 
-- **ToolCall** are extracted from the unit interactions in turns.
+- **PrimitiveCalls** are extracted from the unit interactions in turns.
 - The **Alignment Score** measures whether the args used for this tool in this task is accurate and correct, it is judged by an LLM.
