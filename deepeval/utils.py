@@ -187,6 +187,16 @@ def set_verbose_mode(yes: Optional[bool]):
         os.environ["DEEPEVAL_VERBOSE_MODE"] = "YES"
 
 
+def set_identifier(identifier: Optional[str]):
+    if identifier:
+        os.environ["DEEPEVAL_IDENTIFIER"] = identifier
+
+def get_identifier() -> Optional[str]:
+    try:
+        return os.environ["DEEPEVAL_IDENTIFIER"]
+    except:
+        return None
+
 def should_use_cache():
     try:
         if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
