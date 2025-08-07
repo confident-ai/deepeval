@@ -13,8 +13,3 @@ class Verdicts(BaseModel):
 
 class ArgumentCorrectnessScoreReason(BaseModel):
     reason: str
-
-
-class MCPArgsScore(BaseModel):
-    score: float
-    reason: str

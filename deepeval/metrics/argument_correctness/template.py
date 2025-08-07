@@ -1,65 +1,9 @@
 from typing import List
-from deepeval.test_case import ToolCall, LLMTestCase
+from deepeval.test_case import ToolCall
 import textwrap
 
 
 class ArgumentCorrectnessTemplate:
-    @staticmethod
-    def get_mcp_argument_correctness_prompt(
-        test_case: LLMTestCase,
-        available_primitives: str,
-        primitives_used: str,
-    ):
-        return textwrap.dedent(
-            f"""Evaluate whether the arguments passed to each tool (primitive) used by the agent were appropriate and correct for the intended purpose. Focus on whether the input types, formats, and contents match the expectations of the tools and are suitable given the user's request.
-
-            You must return a JSON object with exactly two fields: 'score' and 'reason'.
-
-            Scoring:
-            - 'score' is a float between 0 and 1 inclusive.
-            - Use intermediate values (e.g., 0.25, 0.5, 0.75) to reflect partial correctness, such as when argument types were correct but content was misaligned with intent.
-            - 'reason' should clearly explain whether the arguments passed to tools were well-formed, appropriate, and aligned with the tool’s expected inputs and the user’s request.
-
-            IMPORTANT:
-            - Assume the selected tools themselves were appropriate (do NOT judge tool selection).
-            - Focus ONLY on:
-            - Whether the correct arguments were passed to each tool (e.g., types, structure, semantics).
-            - Whether any required arguments were missing or malformed.
-            - Whether extraneous, irrelevant, or incorrect values were included.
-            - Refer to 'available_primitives' to understand expected argument formats and semantics.
-
-            CHAIN OF THOUGHT:
-            1. Understand the user’s request from 'test_case.input'.
-            2. Review the arguments passed to each tool in 'primitives_used' (structure, content, type).
-            3. Compare the arguments with what each tool in 'available_primitives' expects.
-            4. Determine whether each tool was used with suitable and valid inputs, including values aligned with the task.
-            5. Do NOT evaluate tool choice or output quality — only input correctness for the tools used.
-
-            You must return only a valid JSON object. Do not include any explanation or text outside the JSON.
-
-            -----------------
-            User Input:
-            {test_case.input}
-
-            Agent Visible Output:
-            {test_case.actual_output}
-
-            Available Primitives (with expected arguments and signatures):
-            {available_primitives}
-
-            Primitives Used by Agent (with arguments passed):
-            {primitives_used}
-
-            Example Output:
-            {{
-                "score": 0.5,
-                "reason": "The agent passed arguments of the correct type to all tools, but one tool received an input that did not match the user's intent and another had a missing required field."
-            }}
-
-            JSON:
-            """
-        )
-
     @staticmethod
     def generate_verdicts(input: str, tools_called: List[ToolCall]):
 
