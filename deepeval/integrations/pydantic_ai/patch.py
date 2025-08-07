@@ -44,14 +44,32 @@ def safe_patch_agent_run_method():
         with tracer.start_as_current_span("agent") as run_span:
             result = await original_run(*args, **kwargs)
 
+            name = "agent"
+            if isinstance(args[0], PatchedAgent):
+                name = str(args[0].name)
+            
+            input = ""
+            if isinstance(args[1], str):
+                input = args[1]
+            elif isinstance(args[1], list) and all(isinstance(i, str) for i in args[1]):
+                input = args[1]
+
+            output = ""
+
+            # Check if result.output is convertible to string
+            try:
+                output = str(result.output)
+            except Exception:
+                pass
+            
             # agent attributes
             run_span.set_attribute("confident.span.type", "agent")
-            run_span.set_attribute("confident.agent.name", str(args[0].name))
+            run_span.set_attribute("confident.agent.name", name)
             run_span.set_attribute(
-                "confident.agent.attributes.input", str(args[1])
+                "confident.agent.attributes.input", input
             )
             run_span.set_attribute(
-                "confident.agent.attributes.output", str(result.output)
+                "confident.agent.attributes.output", output
             )
 
             # llm test case attributes
@@ -70,10 +88,10 @@ def safe_patch_agent_run_method():
                         )
 
             run_span.set_attribute(
-                "confident.span.llm_test_case.input", str(args[1])
+                "confident.span.llm_test_case.input", input
             )
             run_span.set_attribute(
-                "confident.span.llm_test_case.actual_output", (result.output)
+                "confident.span.llm_test_case.actual_output", output
             )
 
         return result
