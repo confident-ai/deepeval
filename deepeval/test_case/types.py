@@ -8,13 +8,16 @@ class MCPToolCall(BaseModel):
     args: Dict
     result: object
 
+
 class MCPPromptCall(BaseModel):
     name: str
     result: object
 
+
 class MCPResourceCall(BaseModel):
     uri: AnyUrl
     result: object
+
 
 @dataclass
 class MCPMetaData:

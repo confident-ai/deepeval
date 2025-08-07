@@ -195,7 +195,7 @@ class LLMTestCase:
                 raise TypeError(
                     "'expected_tools' must be None or a list of `ToolCall`"
                 )
-            
+
         # Ensure `mcp_data` is None or a list of `MCPMetaData`
         if self.mcp_data is not None:
             if not isinstance(self.mcp_data, list) or not all(
@@ -206,10 +206,11 @@ class LLMTestCase:
                 )
             else:
                 self._validate_mcp_meta_data(self.mcp_data)
-            
+
         # Ensure `mcp_tools_called` is None or a list of `MCPToolCall`
         if self.mcp_tools_called is not None:
             from mcp.types import CallToolResult
+
             if not isinstance(self.mcp_tools_called, list) or not all(
                 isinstance(tool_called, MCPToolCall)
                 and isinstance(tool_called.result, CallToolResult)
@@ -218,10 +219,11 @@ class LLMTestCase:
                 raise TypeError(
                     "The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types"
                 )
-            
+
         # Ensure `mcp_resources_called` is None or a list of `MCPResourceCall`
         if self.mcp_resources_called is not None:
             from mcp.types import ReadResourceResult
+
             if not isinstance(self.mcp_resources_called, list) or not all(
                 isinstance(resource_called, MCPResourceCall)
                 and isinstance(resource_called.result, ReadResourceResult)
@@ -230,10 +232,11 @@ class LLMTestCase:
                 raise TypeError(
                     "The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types"
                 )
-            
+
         # Ensure `mcp_prompts_called` is None or a list of `MCPPromptCall`
         if self.mcp_prompts_called is not None:
             from mcp.types import GetPromptResult
+
             if not isinstance(self.mcp_prompts_called, list) or not all(
                 isinstance(prompt_called, MCPPromptCall)
                 and isinstance(prompt_called.result, GetPromptResult)
