@@ -52,7 +52,7 @@ def _check_openai_agents_available():
         )
 
 
-def update_span_properties(span: BaseSpan, span_data: SpanData):
+def update_span_properties(span: BaseSpan, span_data: "SpanData"):
     _check_openai_agents_available()
     # LLM Span
     if isinstance(span_data, ResponseSpanData):
@@ -83,7 +83,7 @@ def update_span_properties(span: BaseSpan, span_data: SpanData):
 
 def update_span_properties_from_response_span_data(
     span: LlmSpan,
-    span_data: ResponseSpanData,
+    span_data: "ResponseSpanData",
 ):
     response = span_data.response
     if response is None:
@@ -127,7 +127,7 @@ def update_span_properties_from_response_span_data(
 
 def update_span_properties_from_generation_span_data(
     span: LlmSpan,
-    generation_span_data: GenerationSpanData,
+    generation_span_data: "GenerationSpanData",
 ):
     # Extract usage tokens
     usage = generation_span_data.usage
@@ -162,7 +162,7 @@ def update_span_properties_from_generation_span_data(
 
 def update_span_properties_from_function_span_data(
     span: ToolSpan,
-    function_span_data: FunctionSpanData,
+    function_span_data: "FunctionSpanData",
 ):
     # Update Span
     tool_attributes = ToolAttributes(
@@ -181,7 +181,7 @@ def update_span_properties_from_function_span_data(
 
 def update_span_properties_from_mcp_list_tool_span_data(
     span: ToolSpan,
-    mcp_list_tool_span_data: MCPListToolsSpanData,
+    mcp_list_tool_span_data: "MCPListToolsSpanData",
 ):
     # Update Span
     tool_attributes = ToolAttributes(
@@ -202,7 +202,7 @@ def update_span_properties_from_mcp_list_tool_span_data(
 
 
 def update_span_properties_from_agent_span_data(
-    span: AgentSpan, agent_span_data: AgentSpanData
+    span: AgentSpan, agent_span_data: "AgentSpanData"
 ):
     # Update Span
     metadata = {}
@@ -222,7 +222,7 @@ def update_span_properties_from_agent_span_data(
 
 
 def update_span_properties_from_handoff_span_data(
-    span: AgentSpan, handoff_span_data: HandoffSpanData
+    span: AgentSpan, handoff_span_data: "HandoffSpanData"
 ):
     # Update Span
     metadata = {
@@ -236,7 +236,7 @@ def update_span_properties_from_handoff_span_data(
 
 
 def update_span_properties_from_custom_span_data(
-    span: BaseSpan, custom_span_data: CustomSpanData
+    span: BaseSpan, custom_span_data: "CustomSpanData"
 ):
     # Update Span
     span.name = custom_span_data.name
@@ -244,7 +244,7 @@ def update_span_properties_from_custom_span_data(
 
 
 def update_span_properties_from_guardrail_span_data(
-    span: BaseSpan, guardrail_span_data: GuardrailSpanData
+    span: BaseSpan, guardrail_span_data: "GuardrailSpanData"
 ):
     # Update Span
     span.name = "Guardrail: " + guardrail_span_data.name

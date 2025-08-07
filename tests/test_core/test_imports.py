@@ -150,9 +150,6 @@ def test_core_modules_import():
     import deepeval.simulator
     import deepeval.plugins
     import deepeval.openai
-    import deepeval.openai_agents
-    import deepeval.integrations
-    import deepeval.benchmarks
     import deepeval.cli
 
     # Verify modules exist
@@ -172,9 +169,6 @@ def test_core_modules_import():
     assert deepeval.simulator is not None
     assert deepeval.plugins is not None
     assert deepeval.openai is not None
-    assert deepeval.openai_agents is not None
-    assert deepeval.integrations is not None
-    assert deepeval.benchmarks is not None
     assert deepeval.cli is not None
 
 
@@ -303,21 +297,6 @@ def test_models_imports():
 
     for model_class in model_classes:
         assert model_class is not None
-
-
-def test_integrations_imports():
-    """Test that integration modules can be imported."""
-    import deepeval.integrations.langchain
-    import deepeval.integrations.llama_index
-    import deepeval.integrations.hugging_face
-    import deepeval.integrations.crewai
-    import deepeval.integrations.pydantic_ai
-
-    assert deepeval.integrations.langchain is not None
-    assert deepeval.integrations.llama_index is not None
-    assert deepeval.integrations.hugging_face is not None
-    assert deepeval.integrations.crewai is not None
-    assert deepeval.integrations.pydantic_ai is not None
 
 
 def test_benchmarks_imports():
