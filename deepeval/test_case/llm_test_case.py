@@ -134,7 +134,7 @@ class ToolCall(BaseModel):
 @dataclass
 class LLMTestCase:
     input: str
-    actual_output: str
+    actual_output: Optional[str] = None
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
@@ -153,6 +153,27 @@ class LLMTestCase:
     _identifier: Optional[str] = field(default=str(uuid.uuid4()), repr=False)
 
     def __post_init__(self):
+        # Check that at least one of the key fields is not None
+        key_fields = [
+            self.actual_output,
+            self.retrieval_context,
+            self.tools_called
+        ]
+        
+        if all(field is None for field in key_fields):
+            raise ValueError(
+                "At least one of the following fields must not be None: "
+                "actual_output, retrieval_context, or tools_called"
+            )
+
+        if self.input is not None:
+            if not isinstance(self.input, str):
+                raise TypeError("'input' must be a string")
+
+        if self.actual_output is not None:
+            if not isinstance(self.actual_output, str):
+                raise TypeError("'actual_output' must be a string")
+
         # Ensure `context` is None or a list of strings
         if self.context is not None:
             if not isinstance(self.context, list) or not all(
