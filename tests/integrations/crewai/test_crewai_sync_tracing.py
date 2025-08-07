@@ -37,6 +37,7 @@ task1 = Task(
 crew = Crew(
     agents=[coder],
     tasks=[task1],
+    memory=True
 )
 
 # Kickoff your crew

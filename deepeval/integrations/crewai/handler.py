@@ -4,9 +4,9 @@ from deepeval.integrations.crewai.agent import (
     Agent as PatchedAgent,
     agent_registry,
 )
+from deepeval.integrations.crewai.patch import patch_build_context_for_task
 from deepeval.telemetry import capture_tracing_integration
-
-from deepeval.tracing.types import AgentSpan, LlmAttributes, LlmSpan, ToolSpan
+from deepeval.tracing.types import AgentSpan, LlmAttributes, LlmSpan
 
 try:
     from crewai.crew import Crew
@@ -16,11 +16,10 @@ try:
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.task import Task
     from crewai.agents.crew_agent_executor import CrewAgentExecutor
-    from crewai.tools.base_tool import BaseTool
-    from crewai.tools.structured_tool import CrewStructuredTool
-    from crewai.utilities.events import ToolUsageFinishedEvent, ToolUsageStartedEvent
+    from crewai.utilities.events import ToolUsageFinishedEvent
     from crewai.tools.tool_usage import ToolUsage
     from crewai.utilities.events import LLMCallCompletedEvent
+    from crewai.memory.contextual.contextual_memory import ContextualMemory
     crewai_installed = True
 except:
     crewai_installed = False
@@ -116,6 +115,7 @@ class CrewAIEventsListener(BaseEventListener):
 
 def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
+    capture_tracing_integration("crewai.instrument_crewai")
     if api_key:
         deepeval.login(api_key)
 
@@ -124,4 +124,9 @@ def instrument_crewai(api_key: Optional[str] = None):
     Agent.execute_task = observe(Agent.execute_task, type="agent")
     CrewAgentExecutor.invoke = observe(CrewAgentExecutor.invoke)
     ToolUsage.use = observe(ToolUsage.use, type="tool")
+
+    patch_build_context_for_task()
+    
+    # retrievers
+    # ContextualMemory.build_context_for_task = observe(ContextualMemory.build_context_for_task, type="retriever", embedder="")
     CrewAIEventsListener()
