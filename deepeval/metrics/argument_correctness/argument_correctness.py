@@ -95,13 +95,19 @@ class ArgumentCorrectnessMetric(BaseMetric):
                     self.tools_score = self._calculate_score()
                     self.tools_reason = self._generate_reason(test_case.input)
                 if test_case.mcp_data:
-                    self.mcp_data: List[MCPMetaData] = test_case.mcp_data
-                    self.mcp_tools_called: Optional[List[MCPToolCall]] = test_case.mcp_tools_called
-                    self.mcp_resources_called: Optional[List[MCPResourceCall]] = test_case.mcp_resources_called
-                    self.mcp_prompts_called: Optional[List[MCPPromptCall]] = test_case.mcp_prompts_called
-                    available_primitives, primitives_used = self._get_mcp_interaction_text()
-                    self.mcp_interaction = available_primitives + "\n" + primitives_used
-                    self.mcp_score: MCPArgsScore = self._get_mcp_args_used_score(test_case, available_primitives, primitives_used)
+                    if not (test_case.mcp_tools_called or test_case.mcp_prompts_called or test_case.mcp_resources_called):
+                        self.mcp_score = MCPArgsScore(
+                            score=1.0,
+                            reason="No primitives were called."
+                        )
+                    else:
+                        self.mcp_data: List[MCPMetaData] = test_case.mcp_data
+                        self.mcp_tools_called: Optional[List[MCPToolCall]] = test_case.mcp_tools_called
+                        self.mcp_resources_called: Optional[List[MCPResourceCall]] = test_case.mcp_resources_called
+                        self.mcp_prompts_called: Optional[List[MCPPromptCall]] = test_case.mcp_prompts_called
+                        available_primitives, primitives_used = self._get_mcp_interaction_text()
+                        self.mcp_interaction = available_primitives + "\n" + primitives_used
+                        self.mcp_score: MCPArgsScore = self._get_mcp_args_used_score(test_case, available_primitives, primitives_used)
 
                 self.score = self._calculate_final_score(test_case)
                 self.reason = self._get_final_reason(test_case)
@@ -156,13 +162,19 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 self.tools_score = self._calculate_score()
                 self.tools_reason = await self._a_generate_reason(test_case.input)
                 if test_case.mcp_data:
-                    self.mcp_data: List[MCPMetaData] = test_case.mcp_data
-                    self.mcp_tools_called: Optional[List[MCPToolCall]] = test_case.mcp_tools_called
-                    self.mcp_resources_called: Optional[List[MCPResourceCall]] = test_case.mcp_resources_called
-                    self.mcp_prompts_called: Optional[List[MCPPromptCall]] = test_case.mcp_prompts_called
-                    available_primitives, primitives_used = self._get_mcp_interaction_text()
-                    self.mcp_interaction = available_primitives + "\n" + primitives_used
-                    self.mcp_score: MCPArgsScore = self._get_mcp_args_used_score(test_case, available_primitives, primitives_used)
+                    if not (test_case.mcp_tools_called or test_case.mcp_prompts_called or test_case.mcp_resources_called):
+                        self.mcp_score = MCPArgsScore(
+                            score=1.0,
+                            reason="The score is 1.0 because no primitives were called to evaluate the arguments."
+                        )
+                    else:
+                        self.mcp_data: List[MCPMetaData] = test_case.mcp_data
+                        self.mcp_tools_called: Optional[List[MCPToolCall]] = test_case.mcp_tools_called
+                        self.mcp_resources_called: Optional[List[MCPResourceCall]] = test_case.mcp_resources_called
+                        self.mcp_prompts_called: Optional[List[MCPPromptCall]] = test_case.mcp_prompts_called
+                        available_primitives, primitives_used = self._get_mcp_interaction_text()
+                        self.mcp_interaction = available_primitives + "\n" + primitives_used
+                        self.mcp_score: MCPArgsScore = self._get_mcp_args_used_score(test_case, available_primitives, primitives_used)
 
             self.score = self._calculate_final_score(test_case)
             self.reason = self._get_final_reason(test_case)
