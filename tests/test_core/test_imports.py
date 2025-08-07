@@ -1,6 +1,3 @@
-import pytest
-
-
 def test_metrics_imports():
     """Test that all metrics can be imported."""
     from deepeval.metrics import (
@@ -109,7 +106,30 @@ def test_metrics_imports():
         MultimodalGEval,
     ]
 
-    assert True
+    for metric in all_metrics:
+        assert metric is not None
+
+
+def test_g_eval_imports():
+    from deepeval.metrics.g_eval import Rubric
+
+    assert Rubric is not None
+
+
+def test_dag_imports():
+    from deepeval.metrics.dag import (
+        DeepAcyclicGraph,
+        TaskNode,
+        BinaryJudgementNode,
+        NonBinaryJudgementNode,
+        VerdictNode,
+    )
+
+    assert DeepAcyclicGraph is not None
+    assert TaskNode is not None
+    assert BinaryJudgementNode is not None
+    assert NonBinaryJudgementNode is not None
+    assert VerdictNode is not None
 
 
 def test_core_modules_import():
@@ -158,27 +178,7 @@ def test_core_modules_import():
     assert deepeval.cli is not None
 
 
-# from .llm_test_case import (
-#     LLMTestCase,
-#     LLMTestCaseParams,
-#     ToolCall,
-#     ToolCallParams,
-# )
-# from .conversational_test_case import (
-#     ConversationalTestCase,
-#     Turn,
-#     TurnParams,
-#     MCPMetaData,
-#     MCPPromptCall,
-#     MCPResourceCall,
-#     MCPToolCall,
-# )
-# from .mllm_test_case import MLLMTestCase, MLLMTestCaseParams, MLLMImage
-# from .arena_test_case import ArenaTestCase
-
-
 def test_test_case_imports():
-    """Test that test case classes can be imported."""
     from deepeval.test_case import (
         LLMTestCase,
         ConversationalTestCase,
