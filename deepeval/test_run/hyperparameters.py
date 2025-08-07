@@ -1,7 +1,8 @@
 from typing import Union, Dict
 
 from deepeval.test_run import global_test_run_manager
-from deepeval.prompt import Prompt, PromptApi
+from deepeval.prompt import Prompt
+from deepeval.prompt.api import PromptApi
 from deepeval.test_run.test_run import TEMP_FILE_PATH
 
 

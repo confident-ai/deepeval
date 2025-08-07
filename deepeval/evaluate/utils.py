@@ -15,7 +15,6 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
     MLLMTestCase,
-    MLLMImage,
 )
 from deepeval.test_run import (
     LLMApiTestCase,
