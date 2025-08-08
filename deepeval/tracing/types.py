@@ -5,14 +5,9 @@ from rich.progress import Progress
 
 from deepeval.feedback.feedback import Feedback
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.tracing.attributes import (
-    AgentAttributes,
-    LlmAttributes,
-    RetrieverAttributes,
-    ToolAttributes,
-)
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
+from deepeval.prompt import Prompt
 
 
 class TraceWorkerStatus(Enum):
@@ -32,6 +27,16 @@ class TraceSpanStatus(Enum):
     SUCCESS = "SUCCESS"
     ERRORED = "ERRORED"
     IN_PROGRESS = "IN_PROGRESS"
+
+class LlmToolCall(BaseModel):
+    name: str
+    args: Dict[str, Any]
+    id: Optional[str] = None
+
+class LlmOutput(BaseModel):
+    role: str
+    content: str
+    tool_calls: Optional[List[LlmToolCall]] = None
 
 
 class BaseSpan(BaseModel):
@@ -56,6 +61,21 @@ class BaseSpan(BaseModel):
     progress: Optional[Progress] = Field(None, exclude=True)
     pbar_callback_id: Optional[int] = Field(None, exclude=True)
 
+    # additional test case parameters
+    retrieval_context: Optional[List[str]] = Field(
+        None, serialization_alias="retrievalContext"
+    )
+    context: Optional[List[str]] = Field(None, serialization_alias="context")
+    expected_output: Optional[str] = Field(
+        None, serialization_alias="expectedOutput"
+    )
+    tools_called: Optional[List[ToolCall]] = Field(
+        None, serialization_alias="toolsCalled"
+    )
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, serialization_alias="expectedTools"
+    )
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -64,15 +84,17 @@ class AgentSpan(BaseSpan):
     name: str
     available_tools: List[str] = []
     agent_handoffs: List[str] = []
-    attributes: Optional[AgentAttributes] = None
-
-    def set_attributes(self, attributes: AgentAttributes):
-        self.attributes = attributes
 
 
 class LlmSpan(BaseSpan):
     model: Optional[str] = None
-    attributes: Optional[LlmAttributes] = None
+    prompt: Optional[Prompt] = None
+    input_token_count: Optional[float] = Field(
+        None, serialization_alias="inputTokenCount"
+    )
+    output_token_count: Optional[float] = Field(
+        None, serialization_alias="outputTokenCount"
+    )
     cost_per_input_token: Optional[float] = Field(
         None, serialization_alias="costPerInputToken"
     )
@@ -80,34 +102,19 @@ class LlmSpan(BaseSpan):
         None, serialization_alias="costPerOutputToken"
     )
 
-    def set_attributes(self, attributes: LlmAttributes):
-        self.attributes = attributes
+    # for serializing `prompt`
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class RetrieverSpan(BaseSpan):
     embedder: str
-    attributes: Optional[RetrieverAttributes] = None
-
-    def set_attributes(self, attributes: RetrieverAttributes):
-        self.attributes = attributes
+    top_k: Optional[int] = Field(None, serialization_alias="topK")
+    chunk_size: Optional[int] = Field(None, serialization_alias="chunkSize")
 
 
 class ToolSpan(BaseSpan):
     name: str  # Required name for ToolSpan
-    attributes: Optional[ToolAttributes] = None
     description: Optional[str] = None
-
-    def set_attributes(self, attributes: ToolAttributes):
-        self.attributes = attributes
-
-
-class TurnContext(BaseModel):
-    retrieval_context: Optional[List[str]] = Field(
-        None, serialization_alias="retrievalContext"
-    )
-    tools_called: Optional[List[ToolCall]] = Field(
-        None, serialization_alias="toolsCalled"
-    )
 
 
 class Trace(BaseModel):
@@ -124,14 +131,26 @@ class Trace(BaseModel):
     input: Optional[Any] = None
     output: Optional[Any] = None
     feedback: Optional[Feedback] = None
-
-    llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
-    turn_context: Optional[TurnContext] = None
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
+
+    # additional test case parameters
+    retrieval_context: Optional[List[str]] = Field(
+        None, serialization_alias="retrievalContext"
+    )
+    context: Optional[List[str]] = Field(None, serialization_alias="context")
+    expected_output: Optional[str] = Field(
+        None, serialization_alias="expectedOutput"
+    )
+    tools_called: Optional[List[ToolCall]] = Field(
+        None, serialization_alias="toolsCalled"
+    )
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, serialization_alias="expectedTools"
+    )
 
     class Config:
         arbitrary_types_allowed = True

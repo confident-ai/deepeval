@@ -2,8 +2,8 @@ from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     update_current_span,
-    RetrieverAttributes,
-    LlmAttributes,
+    update_llm_span,
+    update_retriever_span,
     observe,
 )
 
@@ -31,23 +31,17 @@ def generate_text(prompt: str):
             temperature=0.7,
         )
         generated_text = response.choices[0].message.content
-        attributes = LlmAttributes(
-            input=prompt,
-            output=generated_text,
+        update_llm_span(
             input_token_count=response.usage.prompt_tokens,
             output_token_count=response.usage.completion_tokens,
         )
-        update_current_span(attributes=attributes)
         return generated_text
     except Exception as e:
         fallback_text = f"Generated text for: {prompt} (API error: {str(e)})"
-        attributes = LlmAttributes(
-            input=prompt,
-            output=fallback_text,
+        update_llm_span(
             input_token_count=len(prompt.split()),
             output_token_count=len(fallback_text.split()),
         )
-        update_current_span(attributes=attributes)
         return fallback_text
 
 
@@ -63,11 +57,9 @@ def retrieve_documents(query: str, top_k: int = 3):
             "Computer vision is a field of AI that trains computers to interpret and understand visual information from the world, such as images and videos. It enables machines to identify objects, faces, and scenes in visual data.",
         ]
         relevant_docs = sample_documents[:top_k]
-        update_current_span(
-            attributes=RetrieverAttributes(
-                embedding_input=query,
-                retrieval_context=relevant_docs,
-            )
+        update_retriever_span(
+            top_k=top_k,
+            chunk_size=5,
         )
         return relevant_docs
     except Exception:
@@ -76,11 +68,9 @@ def retrieve_documents(query: str, top_k: int = 3):
             f"Document 2 about {query}",
             f"Document 3 about {query}",
         ]
-        update_current_span(
-            attributes=RetrieverAttributes(
-                embedding_input=query,
-                retrieval_context=fallback_docs,
-            )
+        update_retriever_span(
+            top_k=top_k,
+            chunk_size=5,
         )
         return fallback_docs
 
@@ -113,6 +103,10 @@ def custom_retrieve(query: str):
             f"Custom doc 1 about {query}",
             f"Custom doc 2 about {query}",
         ]
+        update_retriever_span(
+            top_k=2,
+            chunk_size=5,
+        )
         return documents
 
 
@@ -132,10 +126,18 @@ def custom_generate(prompt: str, model: str = "gpt-3.5-turbo"):
             temperature=0.5,
         )
         custom_response = response.choices[0].message.content
+        update_llm_span(
+            input_token_count=response.usage.prompt_tokens,
+            output_token_count=response.usage.completion_tokens,
+        )
         return custom_response
     except Exception as e:
         fallback_response = (
             f"Custom response for: {prompt} (API error: {str(e)})"
+        )
+        update_llm_span(
+            input_token_count=len(prompt.split()),
+            output_token_count=len(fallback_response.split()),
         )
         return fallback_response
 
@@ -188,7 +190,8 @@ def weather_agent(query: str):
         weather_response = response.choices[0].message.content
 
         update_current_span(
-            test_case=LLMTestCase(input=query, actual_output=weather_response)
+            input=query,
+            output=weather_response,
         )
         return weather_response
     except:
@@ -196,7 +199,8 @@ def weather_agent(query: str):
             "Weather information unavailable due to service interruption."
         )
         update_current_span(
-            test_case=LLMTestCase(input=query, actual_output=fallback_response)
+            input=query,
+            output=fallback_response,
         )
         return fallback_response
 
@@ -210,10 +214,18 @@ def research_agent(query: str):
         {chr(10).join([f"{i+1}. {doc}" for i, doc in enumerate(docs)])}
         Please provide a well-structured analysis that synthesizes the information from these documents and addresses the user's query directly."""
         analysis = generate_text(research_prompt)
+        update_current_span(
+            input=query,
+            output=analysis,
+        )
         return analysis
     except Exception as e:
         fallback_analysis = (
             f"Research analysis unavailable due to processing error: {str(e)}"
+        )
+        update_current_span(
+            input=query,
+            output=fallback_analysis,
         )
         return fallback_analysis
 
@@ -250,7 +262,8 @@ def meta_agent(input: str):
         )
         final_response = response.choices[0].message.content
         update_current_span(
-            test_case=LLMTestCase(input=input, actual_output=final_response),
+            input=input,
+            output=final_response,
             metadata={"user_id": "11111", "date": "1/1/11"},
         )
         return final_response
@@ -264,7 +277,12 @@ def meta_agent(input: str):
             Custom Analysis: {custom_info}
         """
         update_current_span(
-            test_case=LLMTestCase(input=input, actual_output=final_response),
+            input=input,
+            output=final_response,
             metadata={"user_id": "11111", "date": "1/1/11"},
         )
         return final_response
+
+############################
+
+meta_agent("What's the weather like in SF?")   

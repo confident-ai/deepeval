@@ -1,7 +1,6 @@
 from typing import Callable, List, Optional
 from functools import wraps
 
-from deepeval.tracing.attributes import LlmAttributes
 from deepeval.openai.utils import (
     get_attr_path,
     set_attr_path,
@@ -14,10 +13,9 @@ from deepeval.openai.extractors import (
     InputParameters,
     ToolCall,
 )
-from deepeval.tracing.context import update_current_span
+from deepeval.tracing.context import update_current_span, update_llm_span
 from deepeval.tracing import trace_manager, observe
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.tracing.types import LlmAttributes
 from deepeval.test_case import LLMTestCase
 
 
@@ -94,23 +92,19 @@ def patch_async_openai_client_method(
                     is_completion_method, response, input_parameters
                 )
                 update_current_span(
-                    test_case=LLMTestCase(
-                        input=input_parameters.input,
-                        actual_output=output_parameters.output,
-                        expected_output=expected_output,
-                        retrieval_context=retrieval_context,
-                        context=context,
-                        tools_called=output_parameters.tools_called,
-                        expected_tools=expected_tools,
-                    ),
-                    attributes=LlmAttributes(
-                        input=input_parameters.input
-                        or input_parameters.messages
-                        or "NA",
-                        output=output_parameters.output or "NA",
-                        input_token_count=output_parameters.prompt_tokens,
-                        output_token_count=output_parameters.completion_tokens,
-                    ),
+                    input=input_parameters.input
+                    or input_parameters.messages
+                    or "NA",
+                    output=output_parameters.output or "NA",
+                    expected_output=expected_output,
+                    retrieval_context=retrieval_context,
+                    context=context,
+                    tools_called=output_parameters.tools_called,
+                    expected_tools=expected_tools,
+                )
+                update_llm_span(
+                    input_token_count=output_parameters.prompt_tokens,
+                    output_token_count=output_parameters.completion_tokens,
                 )
                 create_child_tool_spans(output_parameters)
                 return response
@@ -168,23 +162,19 @@ def patch_sync_openai_client_method(
                     is_completion_method, response, input_parameters
                 )
                 update_current_span(
-                    test_case=LLMTestCase(
-                        input=input_parameters.input,
-                        actual_output=output_parameters.output,
-                        expected_output=expected_output,
-                        retrieval_context=retrieval_context,
-                        context=context,
-                        tools_called=output_parameters.tools_called,
-                        expected_tools=expected_tools,
-                    ),
-                    attributes=LlmAttributes(
-                        input=input_parameters.input
+                    input=input_parameters.input
                         or input_parameters.messages
                         or "NA",
-                        output=output_parameters.output or "NA",
-                        input_token_count=output_parameters.prompt_tokens,
-                        output_token_count=output_parameters.completion_tokens,
-                    ),
+                    output=output_parameters.output or "NA",
+                    expected_output=expected_output,
+                    retrieval_context=retrieval_context,
+                    context=context,
+                    tools_called=output_parameters.tools_called,
+                    expected_tools=expected_tools,
+                )
+                update_llm_span(
+                    input_token_count=output_parameters.prompt_tokens,
+                    output_token_count=output_parameters.completion_tokens,
                 )
                 create_child_tool_spans(output_parameters)
                 return response
