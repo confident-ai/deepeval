@@ -55,6 +55,8 @@ class GEval(BaseMetric):
         self.evaluation_params = evaluation_params
         self.criteria = criteria
         self.rubric = validate_and_sort_rubrics(rubric)
+        self.score_range = get_score_range(self.rubric)
+        self.score_range_span = self.score_range[1] - self.score_range[0]
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.evaluation_steps = evaluation_steps
@@ -101,7 +103,7 @@ class GEval(BaseMetric):
                     g_score, reason = self._evaluate(
                         test_case, _additional_context=_additional_context
                     )
-                    self.score = float(g_score) / 10
+                    self.score = float(g_score) / self.score_range_span
                     self.score = (
                         0
                         if self.strict_mode and self.score < self.threshold
@@ -164,7 +166,7 @@ class GEval(BaseMetric):
                     test_case, _additional_context=_additional_context
                 )
                 self.score = (
-                    float(g_score) / 10
+                    float(g_score) / self.score_range_span
                     if not self.strict_mode
                     else int(g_score)
                 )
@@ -262,7 +264,7 @@ class GEval(BaseMetric):
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
-                score_range=get_score_range(self.rubric),
+                score_range=self.score_range,
                 _additional_context=_additional_context,
             )
         else:
@@ -336,7 +338,7 @@ class GEval(BaseMetric):
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
                 rubric=rubric_str,
-                score_range=get_score_range(self.rubric),
+                score_range=self.score_range,
                 _additional_context=_additional_context,
             )
         else:
