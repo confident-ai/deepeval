@@ -81,8 +81,8 @@ class GEvalTemplate:
             ---
             **Example JSON:**
             {{
-                "score": {score_range[0]},
-                "reason": "your concise and informative reason here"
+                "reason": "your concise and informative reason here",
+                "score": {score_range[0]}
             }}
 
             JSON:
@@ -114,8 +114,8 @@ class GEvalTemplate:
 
             Example JSON:
             {{
-                "score": 0,
-                "reason": "The text does not follow the evaluation steps provided."
+                "reason": "The text does not follow the evaluation steps provided.",
+                "score": 0
             }}
             **
 
@@ -183,9 +183,9 @@ class GEvalTemplate:
             ---
             **Example JSON:**
             {{
+                "reason": "your concise and informative reason here",
                 "best_test_case_index": 0,
-                "best_test_case_id": "946b72fa-7fba-46e8-9ac6-e8cb83b79b2b",
-                "reason": "your concise and informative reason here"
+                "best_test_case_id": "946b72fa-7fba-46e8-9ac6-e8cb83b79b2b"
             }}
 
             JSON:
