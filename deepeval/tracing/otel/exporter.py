@@ -168,8 +168,8 @@ class ConfidentSpanExporter(SpanExporter):
                         current_trace.tags = [
                             str(tag) for tag in base_span_wrapper.trace_tags
                         ]
-                    except Exception as e:
-                        print(f"Error converting trace tags: {e}")
+                    except Exception:
+                        pass
 
                 if base_span_wrapper.trace_metadata and isinstance(
                     base_span_wrapper.trace_metadata, str
@@ -178,8 +178,8 @@ class ConfidentSpanExporter(SpanExporter):
                         current_trace.metadata = json.loads(
                             base_span_wrapper.trace_metadata
                         )
-                    except Exception as e:
-                        print(f"Error converting trace metadata: {e}")
+                    except Exception:
+                        pass
 
                 if base_span_wrapper.trace_thread_id and isinstance(
                     base_span_wrapper.trace_thread_id, str
@@ -217,8 +217,8 @@ class ConfidentSpanExporter(SpanExporter):
         base_span = None
         try:
             base_span = self._prepare_boilerplate_base_span(span)
-        except Exception as e:
-            print(f"Error converting span: {e}")
+        except Exception:
+            pass
 
         # fallback to base span with default values
         parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
@@ -244,6 +244,7 @@ class ConfidentSpanExporter(SpanExporter):
         retrieval_context_attr = span.attributes.get("confident.span.retrieval_context")
         tools_called_attr = span.attributes.get("confident.span.tools_called")
         expected_tools_attr = span.attributes.get("confident.span.expected_tools")
+        metadata_json_str = span.attributes.get("confident.span.metadata")
 
         # Extract Trace Attributes
         trace_name = span.attributes.get("confident.trace.name")
@@ -260,11 +261,19 @@ class ConfidentSpanExporter(SpanExporter):
         tools_called : List[ToolCall] = self._parse_list_of_tools(tools_called_attr)
         expected_tools : List[ToolCall] = self._parse_list_of_tools(expected_tools_attr)
         feedback = None
+        metadata = None
+
+        if metadata_json_str and isinstance(metadata_json_str, str):
+            try:
+                metadata = json.loads(metadata_json_str)
+            except Exception:
+                pass
+
         if feedback_json_str:
             try:
                 feedback = Feedback.model_validate_json(feedback_json_str)
-            except ValidationError as err:
-                print(f"Error converting feedback: {err}")  
+            except ValidationError:
+                pass  
 
         if not isinstance(metric_collection, str):
             metric_collection = None
@@ -278,7 +287,6 @@ class ConfidentSpanExporter(SpanExporter):
             _name = base_span.name
         base_span.parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
         base_span.name = _name if _name else span.name
-        base_span.metadata = json.loads(span.to_json())
         base_span.error = error
         base_span.metric_collection = metric_collection
         base_span.feedback = feedback
@@ -286,6 +294,8 @@ class ConfidentSpanExporter(SpanExporter):
         base_span.context = context
         base_span.tools_called = tools_called
         base_span.expected_tools = expected_tools
+        base_span.metadata = metadata
+        
         if span_input:
             base_span.input = span_input
         if span_output:
@@ -347,6 +357,18 @@ class ConfidentSpanExporter(SpanExporter):
                 "confident.llm.cost_per_output_token"
             )
             input, output = check_llm_input_from_gen_ai_attributes(span)
+            if isinstance(input, tuple):
+                input = list(input)
+                try:
+                    input = [json.loads(i) for i in input]
+                except Exception:
+                    pass
+            if isinstance(output, tuple):
+                output = list(output)
+                try:
+                    output = [json.loads(o) for o in output]
+                except Exception:
+                    pass
             llm_span = LlmSpan(
                 uuid=uuid,
                 status=status,
@@ -385,15 +407,15 @@ class ConfidentSpanExporter(SpanExporter):
                 try:
                     for tool in available_tools_attr:
                         available_tools.append(str(tool))
-                except Exception as e:
-                    print(f"Error converting available tools: {e}")
+                except Exception:
+                    pass
             agent_handoffs: List[str] = []
             if agent_handoffs_attr:
                 try:
                     for handoff in agent_handoffs_attr:
                         agent_handoffs.append(str(handoff))
-                except Exception as e:
-                    print(f"Error converting agent handoffs: {e}")
+                except Exception:
+                    pass
             agent_span = AgentSpan(
                 uuid=uuid,
                 status=status,
@@ -477,8 +499,8 @@ class ConfidentSpanExporter(SpanExporter):
                         parsed_tools.append(
                             ToolCall.model_validate_json(tool_json_str)
                         )
-                    except ValidationError as err:
-                        print(f"Error converting tool call: {err}")
+                    except ValidationError:
+                        pass
         return parsed_tools
 
     def _parse_list_of_strings(self, context: List[str]) -> List[str]:
