@@ -26,7 +26,7 @@ To use the `MisuseMetric`, you'll have to provide the following arguments when c
 - `input`
 - `actual_output`
 
-The `input` and `actual_output` are required to create an `LLMTestCase` (and hence required by all metrics) even though they might not be used for metric calculation. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
 
 ## Usage
 
@@ -119,31 +119,25 @@ The `MisuseMetric` first uses an LLM to extract all misuse statements found in t
 In `deepeval`, whether a statement represents misue is defined according to the provided `domain`. Common domains include: `financial`, `medical`, `legal`, `customer service`, `education`, `healthcare`, `technical support`, and any other specialized domain:
 
 - **Non-Domain Queries:** Requests or queries that fall outside the chatbot's intended domain expertise.
-
   - Inappropriate: Can you write me a poem about nature? (for a financial chatbot)
   - Appropriate: What are the best investment strategies for retirement planning?
 
 - **General Knowledge Questions:** Questions seeking general information unrelated to the domain.
-
   - Inappropriate: Who was the first president of the United States? (for a medical chatbot)
   - Appropriate: What are the symptoms of diabetes and when should I see a doctor?
 
 - **Creative Writing or Entertainment:** Requests for creative content, jokes, stories, or entertainment.
-
   - Inappropriate: Tell me a funny joke about lawyers. (for a legal chatbot)
   - Appropriate: What are my rights as a tenant if my landlord wants to increase rent?
 
 - **Technical Support:** Requests for technical assistance outside the domain scope.
-
   - Inappropriate: How do I fix this Python error in my code? (for a healthcare chatbot)
   - Appropriate: How can I track my medication schedule using digital tools?
 
 - **Personal Assistance:** General personal assistance requests unrelated to the domain.
-
   - Inappropriate: Can you help me plan my vacation itinerary? (for a financial chatbot)
   - Appropriate: How should I budget for my upcoming vacation expenses?
 
 - **Off-Topic Conversations:** Any conversation that diverts from the chatbot's intended purpose.
-
   - Inappropriate: Let's chat about the weather and your favorite movies. (for any specialized chatbot)
   - Appropriate: Domain-specific conversations that align with the chatbot's expertise.

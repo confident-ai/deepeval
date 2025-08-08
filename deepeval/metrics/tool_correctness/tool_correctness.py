@@ -18,7 +18,6 @@ class ToolCorrectnessMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
         LLMTestCaseParams.TOOLS_CALLED,
         LLMTestCaseParams.EXPECTED_TOOLS,
     ]

@@ -24,7 +24,6 @@ from deepeval.metrics.contextual_relevancy.schema import *
 class ContextualRelevancyMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
         LLMTestCaseParams.RETRIEVAL_CONTEXT,
     ]
 
