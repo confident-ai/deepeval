@@ -4,7 +4,7 @@ from copy import deepcopy
 from enum import Enum
 from deepeval.test_case import ToolCall
 from pydantic import AnyUrl, BaseModel
-from .types import MCPMetaData, MCPPromptCall, MCPResourceCall, MCPToolCall
+from .types import MCPServer, MCPPromptCall, MCPResourceCall, MCPToolCall
 
 
 class TurnParams(Enum):
@@ -110,7 +110,7 @@ class ConversationalTestCase:
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     tags: Optional[List[str]] = field(default=None)
-    mcp_data: Optional[List[MCPMetaData]] = None
+    mcp_data: Optional[List[MCPServer]] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -138,7 +138,7 @@ class ConversationalTestCase:
 
         self.turns = copied_turns
 
-    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
+    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPServer]):
         from mcp.types import Tool, Resource, Prompt
 
         for mcp_data in mcp_data_list:

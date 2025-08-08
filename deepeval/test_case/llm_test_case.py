@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 import uuid
-from .types import MCPMetaData, MCPPromptCall, MCPResourceCall, MCPToolCall
+from .types import MCPServer, MCPPromptCall, MCPResourceCall, MCPToolCall
 
 
 class LLMTestCaseParams(Enum):
@@ -151,7 +151,7 @@ class LLMTestCase:
     completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)
     tags: Optional[List[str]] = field(default=None)
-    mcp_data: Optional[List[MCPMetaData]] = None
+    mcp_data: Optional[List[MCPServer]] = None
     mcp_tools_called: Optional[List[MCPToolCall]] = None
     mcp_resources_called: Optional[List[MCPResourceCall]] = None
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
@@ -204,13 +204,13 @@ class LLMTestCase:
                     "'expected_tools' must be None or a list of `ToolCall`"
                 )
 
-        # Ensure `mcp_data` is None or a list of `MCPMetaData`
+        # Ensure `mcp_data` is None or a list of `MCPServer`
         if self.mcp_data is not None:
             if not isinstance(self.mcp_data, list) or not all(
-                isinstance(item, MCPMetaData) for item in self.mcp_data
+                isinstance(item, MCPServer) for item in self.mcp_data
             ):
                 raise TypeError(
-                    "'mcp_data' must be None or a list of 'MCPMetaData'"
+                    "'mcp_data' must be None or a list of 'MCPServer'"
                 )
             else:
                 self._validate_mcp_meta_data(self.mcp_data)
@@ -254,7 +254,7 @@ class LLMTestCase:
                     "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
                 )
 
-    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
+    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPServer]):
         from mcp.types import Tool, Resource, Prompt
 
         for mcp_data in mcp_data_list:

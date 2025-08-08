@@ -20,7 +20,7 @@ class MCPResourceCall(BaseModel):
 
 
 @dataclass
-class MCPMetaData:
+class MCPServer:
     server_name: str
     transport: Optional[Literal["stdio", "sse", "streamable-http"]] = None
     available_tools: Optional[List] = None
