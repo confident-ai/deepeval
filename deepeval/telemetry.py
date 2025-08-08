@@ -560,6 +560,7 @@ def capture_send_trace():
 
 
 # tracing integration
+@contextmanager
 def capture_tracing_integration(integration_name: str):
     if telemetry_opt_out():
         yield

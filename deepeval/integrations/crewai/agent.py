@@ -81,11 +81,11 @@ class Agent(CrewAIAgent):
         metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
-        capture_tracing_integration("crewai.agent.Agent")
-        is_crewai_installed()
-        super().__init__(*args, **kwargs)
-        # Register this agent instance with its metric collection
-        agent_registry.register_agent(self, metric_collection, metrics)
+        with capture_tracing_integration("crewai.agent.Agent"):
+            is_crewai_installed()
+            super().__init__(*args, **kwargs)
+            # Register this agent instance with its metric collection
+            agent_registry.register_agent(self, metric_collection, metrics)
 
     @property
     def metric_collection(self) -> Optional[str]:

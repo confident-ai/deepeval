@@ -71,18 +71,18 @@ class CallbackHandler(BaseCallbackHandler):
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
     ):
-        capture_tracing_integration("langchain.callback.CallbackHandler")
-        is_langchain_installed()
-        self.metrics = metrics
-        self.metric_collection = metric_collection
-        self.trace_attributes = TraceAttributes(
-            name=name,
-            tags=tags,
-            metadata=metadata,
-            thread_id=thread_id,
-            user_id=user_id,
-        )
-        super().__init__()
+        with capture_tracing_integration("langchain.callback.CallbackHandler"):
+            is_langchain_installed()
+            self.metrics = metrics
+            self.metric_collection = metric_collection
+            self.trace_attributes = TraceAttributes(
+                name=name,
+                tags=tags,
+                metadata=metadata,
+                thread_id=thread_id,
+                user_id=user_id,
+            )
+            super().__init__()
 
     def check_active_trace_id(self):
         if self.active_trace_id is None:
