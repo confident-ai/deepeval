@@ -15,15 +15,13 @@ from deepeval.test_case import ConversationalTestCase, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
+from deepeval.errors import MissingTestCaseParamsError
 
 
 class MultiTurnMCPUseMetric(BaseConversationalMetric):
     _required_test_case_params = [
         TurnParams.ROLE,
         TurnParams.CONTENT,
-        TurnParams.MCP_TOOLS,
-        TurnParams.MCP_RESOURCES,
-        TurnParams.MCP_PROMPTS,
     ]
 
     def __init__(
@@ -67,20 +65,28 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if not test_case.mcp_data:
+                    error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
+                    self.error = error_str
+                    raise MissingTestCaseParamsError(error_str)
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
-                tool_accuracy_scores = [
+                primitives_accuracy_scores = [
                     self._get_tool_accuracy_score(task, test_case)
                     for task in self.tasks
                 ]
                 args_accuracy_scores = [
                     self._get_args_score(task, test_case) for task in self.tasks
                 ]
-                self.score = self._calculate_score(tool_accuracy_scores, args_accuracy_scores)
-                self.reason = self._generate_reason(tool_accuracy_scores, args_accuracy_scores)
+                self.score = self._calculate_score(
+                    primitives_accuracy_scores, args_accuracy_scores
+                )
+                self.reason = self._generate_reason(
+                    primitives_accuracy_scores, args_accuracy_scores
+                )
                 self.tools_scores_reasons_list = [
                     (tool_score.score, tool_score.reason)
-                    for tool_score in tool_accuracy_scores
+                    for tool_score in primitives_accuracy_scores
                 ]
                 self.args_scores_reasons_list = [
                     (args_score.score, args_score.reason)
@@ -112,9 +118,14 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
+            if not test_case.mcp_data:
+                error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
+                self.error = error_str
+                raise MissingTestCaseParamsError(error_str)
+            
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
-            tool_accuracy_scores = await asyncio.gather(
+            primitives_accuracy_scores = await asyncio.gather(
                 *[
                     self._a_get_tool_accuracy_score(task, test_case)
                     for task in self.tasks
@@ -126,11 +137,15 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     for task in self.tasks
                 ]
             )
-            self.score = self._calculate_score(tool_accuracy_scores, args_accuracy_scores)
-            self.reason = self._generate_reason(tool_accuracy_scores, args_accuracy_scores)
+            self.score = self._calculate_score(
+                primitives_accuracy_scores, args_accuracy_scores
+            )
+            self.reason = self._generate_reason(
+                primitives_accuracy_scores, args_accuracy_scores
+            )
             self.tools_scores_reasons_list = [
                 (tool_score.score, tool_score.reason)
-                for tool_score in tool_accuracy_scores
+                for tool_score in primitives_accuracy_scores
             ]
             self.args_scores_reasons_list = [
                 (args_score.score, args_score.reason)
@@ -147,7 +162,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 ],
             )
         return self.score
-    
+
     def _get_tool_accuracy_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
@@ -187,8 +202,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return ToolScore(**data)
-            
-        
+
     def _get_args_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
@@ -228,7 +242,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return ArgsScore(**data)
-            
+
     def _get_tasks(self, unit_interactions: List) -> List[Task]:
         tasks = []
         for unit_interaction in unit_interactions:
@@ -279,18 +293,22 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     )
             tasks.append(new_task)
         return tasks
-    
+
     def _calculate_score(
         self,
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
     ) -> float:
-        tool_score = sum(score.score for score in tool_accuracy_score) / len(tool_accuracy_score)
-        args_score = sum(score.score for score in args_accuracy_score) / len(args_accuracy_score)
-        return (tool_score + args_score) / 2
-    
+        tool_score = sum(score.score for score in tool_accuracy_score) / len(
+            tool_accuracy_score
+        )
+        args_score = sum(score.score for score in args_accuracy_score) / len(
+            args_accuracy_score
+        )
+        return min(tool_score, args_score)
+
     def _generate_reason(
-            self,
+        self,
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
     ) -> str:
@@ -311,7 +329,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 )
         reason += "]"
         return reason
-    
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

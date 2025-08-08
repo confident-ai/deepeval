@@ -1,6 +1,6 @@
-from typing import Optional, List, Type, Union
+from typing import Optional, List, Union
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -10,8 +10,7 @@ from deepeval.metrics.utils import (
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
-    ToolCall,
-    MCPMetaData,
+    MCPServer,
     MCPToolCall,
     MCPResourceCall,
     MCPPromptCall,
@@ -96,8 +95,10 @@ class MCPUseMetric(BaseMetric):
                 steps = [
                     f"{available_primitives}",
                     f"{primitives_used}",
-                    f"Score: {self.score}",
-                    f"Reason: {self.reason}",
+                    f"Primitive Usage Score: {primitives_used_score.score}",
+                    f"Primitive Usage Reason: {primitives_used_score.reason}",
+                    f"Argument Correctness Score: {argument_correctness_score.score}",
+                    f"Argument Correctness Reason: {argument_correctness_score.reason}",
                 ]
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -144,8 +145,10 @@ class MCPUseMetric(BaseMetric):
             steps = [
                 f"{available_primitives}",
                 f"{primitives_used}",
-                f"Score: {self.score}",
-                f"Reason: {self.reason}",
+                f"Primitive Usage Score: {primitives_used_score.score}",
+                f"Primitive Usage Reason: {primitives_used_score.reason}",
+                f"Argument Correctness Score: {argument_correctness_score.score}",
+                f"Argument Correctness Reason: {argument_correctness_score.reason}",
             ]
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -257,9 +260,7 @@ class MCPUseMetric(BaseMetric):
         primitives_used_score: MCPPrimitivesScore,
         argument_correctness_score: MCPArgsScore,
     ) -> float:
-        return (
-            primitives_used_score.score + argument_correctness_score.score
-        ) / 2
+        return min(primitives_used_score.score, argument_correctness_score.score)
 
     def _get_reason(
         self,
@@ -268,17 +269,17 @@ class MCPUseMetric(BaseMetric):
     ) -> str:
         return (
             f"[\n"
-            f"\t{primitives_used_score.reason},\n"
-            f"\t{argument_correctness_score.reason},\n"
+            f"\t{primitives_used_score.reason}\n"
+            f"\t{argument_correctness_score.reason}\n"
             f"]\n"
         )
 
     def _get_mcp_interaction_text(
         self,
-        mcp_data,
-        mcp_tools_called,
-        mcp_resources_called,
-        mcp_prompts_called,
+        mcp_data: List[MCPServer],
+        mcp_tools_called: List[MCPToolCall],
+        mcp_resources_called: List[MCPResourceCall],
+        mcp_prompts_called: List[MCPPromptCall],
     ) -> tuple[str, str]:
         for data in mcp_data:
             available_primitives = f"MCP Server {data.server_name}\n"

@@ -1,11 +1,11 @@
 from typing import List, Dict
 from deepeval.metrics.mcp.schema import Task
-from deepeval.test_case import MCPMetaData
+from deepeval.test_case import MCPServer
 
 
 class MCPTaskCompletionTemplate:
     @staticmethod
-    def get_args_correctness_score(task: Task, mcp_data: List[MCPMetaData]):
+    def get_args_correctness_score(task: Task, mcp_data: List[MCPServer]):
         available_tools = [data.available_tools for data in mcp_data]
         available_resources = [data.available_resources for data in mcp_data]
         available_prompts = [data.available_prompts for data in mcp_data]
@@ -50,7 +50,7 @@ JSON:
 """
 
     @staticmethod
-    def get_tool_correctness_score(task: Task, mcp_data: List[MCPMetaData]):
+    def get_tool_correctness_score(task: Task, mcp_data: List[MCPServer]):
         available_tools = [data.available_tools for data in mcp_data]
         steps_taken = "\n".join(task.steps_taken)
         return f"""Evaluate whether the tools, resources, and prompts used by the agent were appropriate and optimal, based strictly on the list of available tools and resources provided. Your job is to determine whether the agent selected the most suitable tools and prompts for the task at hand. Output a JSON object with exactly two fields: 'score' and 'reason'.

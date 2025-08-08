@@ -1,5 +1,4 @@
-from typing import List
-from deepeval.test_case import ToolCall, LLMTestCase
+from deepeval.test_case import LLMTestCase
 import textwrap
 
 
