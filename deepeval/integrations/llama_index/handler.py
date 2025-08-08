@@ -4,7 +4,6 @@ from time import perf_counter
 import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import LlmAttributes
 from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
 
 try:
@@ -82,7 +81,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 model=getattr(event, "model_dict", {}).get(
                     "model", "unknown"
                 ),  # check the model name not coming in this option
-                attributes=LlmAttributes(input=input_messages, output=""),
+                input=input_messages,
+                output="",
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
@@ -99,12 +99,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 if llm_span:
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
-                    llm_span.set_attributes(
-                        LlmAttributes(
-                            input=llm_span.attributes.input,
-                            output=event.response.message.blocks[0].text,
-                        )
-                    )  # only takes the message response ouput, but what if the response is a tool?
+                    llm_span.input = llm_span.input,
+                    llm_span.output = event.response.message.blocks[0].text,
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
