@@ -807,9 +807,9 @@ class Observer:
         if self.update_span_properties is not None:
             self.update_span_properties(current_span)
 
-        if current_span.input is not None:
+        if current_span.input is None:
             current_span.input = trace_manager.mask(self.function_kwargs)
-        if current_span.output is not None:
+        if current_span.output is None:
             current_span.output = trace_manager.mask(self.result)
 
         trace_manager.remove_span(self.uuid)

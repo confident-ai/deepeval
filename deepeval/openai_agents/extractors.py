@@ -17,7 +17,6 @@ from openai.types.responses import (
     ResponseOutputText,
 )
 
-from deepeval.tracing.attributes import ToolAttributes, LlmAttributes
 from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import (
     AgentSpan,
@@ -106,29 +105,30 @@ def update_span_properties_from_response_span_data(
         raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
     )
     # Update Span
-    llm_attributes = LlmAttributes(
-        prompt=prompt,
-        input_token_count=input_tokens,
-        output_token_count=output_tokens,
-        input=input,
-        output=output,
-    )
     metadata = {
         "cached_input_tokens": cached_input_tokens,
         "ouptut_reasoning_tokens": ouptut_reasoning_tokens,
     }
-    span.set_attributes(llm_attributes)
+    span.prompt = prompt
+    span.input_token_count = input_tokens
+    span.output_token_count = output_tokens
     span.metadata = metadata
     span.model = "NA" if response.model is None else str(response.model)
     span.input = input
     span.output = output
     span.name = "LLM Generation"
 
+    print(span)
+
 
 def update_span_properties_from_generation_span_data(
     span: LlmSpan,
     generation_span_data: "GenerationSpanData",
 ):
+    print("==========================")
+    print(generation_span_data.input)
+    print(generation_span_data.output)
+    print("==========================")
     # Extract usage tokens
     usage = generation_span_data.usage
     if usage:
@@ -141,14 +141,9 @@ def update_span_properties_from_generation_span_data(
         raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
     )
     # Update span
-    llm_attributes = LlmAttributes(
-        prompt=None,
-        input_token_count=input_tokens,
-        output_token_count=output_tokens,
-        input=input,
-        output=output,
-    )
-    span.set_attributes(llm_attributes)
+    span.prompt = None
+    span.input_token_count = input_tokens
+    span.output_token_count = output_tokens
     span.model = generation_span_data.model or "NA"
     span.input = input
     span.output = output
@@ -165,12 +160,8 @@ def update_span_properties_from_function_span_data(
     function_span_data: "FunctionSpanData",
 ):
     # Update Span
-    tool_attributes = ToolAttributes(
-        input_parameters=json.loads(function_span_data.input)
-        or {"input": function_span_data.input},
-        output=function_span_data.output,
-    )
-    span.set_attributes(tool_attributes)
+    span.input = json.loads(function_span_data.input) or {"input": function_span_data.input}
+    span.output = function_span_data.output
     span.name = (
         "Function tool: " + function_span_data.name
         if function_span_data.name
@@ -184,10 +175,8 @@ def update_span_properties_from_mcp_list_tool_span_data(
     mcp_list_tool_span_data: "MCPListToolsSpanData",
 ):
     # Update Span
-    tool_attributes = ToolAttributes(
-        input_parameters=None, output=mcp_list_tool_span_data.result
-    )
-    span.set_attributes(tool_attributes)
+    span.input = None
+    span.output = mcp_list_tool_span_data.result
     span.name = (
         "MCP tool: " + mcp_list_tool_span_data.server
         if mcp_list_tool_span_data.server
