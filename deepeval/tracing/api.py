@@ -73,8 +73,8 @@ class BaseApiSpan(BaseModel):
 
     # llm
     model: Optional[str] = None
-    input_token_count: Optional[int] = Field(None, alias="inputTokenCount")
-    output_token_count: Optional[int] = Field(None, alias="outputTokenCount")
+    input_token_count: Optional[float] = Field(None, alias="inputTokenCount")
+    output_token_count: Optional[float] = Field(None, alias="outputTokenCount")
     cost_per_input_token: Optional[float] = Field(
         None, alias="costPerInputToken"
     )

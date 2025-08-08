@@ -154,3 +154,10 @@ class Trace(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
+class TraceAttributes(BaseModel):
+    name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    metadata: Optional[Dict[str, Any]] = None
+    thread_id: Optional[str] = None
+    user_id: Optional[str] = None

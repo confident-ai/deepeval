@@ -1,13 +1,11 @@
 from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
-from deepeval.tracing.attributes import (
-    LlmAttributes,
-    RetrieverAttributes,
+from deepeval.tracing.types import (
     LlmOutput,
     LlmToolCall,
+    TraceAttributes,
 )
-from deepeval.tracing.attributes import LlmAttributes, RetrieverAttributes
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.test_run import global_test_run_manager
@@ -51,7 +49,6 @@ from deepeval.tracing.types import (
     ToolSpan,
 )
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.tracing.attributes import TraceAttributes
 
 
 class CallbackHandler(BaseCallbackHandler):
@@ -59,7 +56,6 @@ class CallbackHandler(BaseCallbackHandler):
     active_trace_id: Optional[str] = None
     metrics: List[BaseMetric] = []
     metric_collection: Optional[str] = None
-    trace_attributes: Optional[TraceAttributes] = None
 
     def __init__(
         self,
@@ -222,7 +218,8 @@ class CallbackHandler(BaseCallbackHandler):
             parent_uuid=str(parent_run_id) if parent_run_id else None,
             start_time=perf_counter(),
             name=extract_name(serialized, **kwargs),
-            attributes=LlmAttributes(input=input_messages, output=""),
+            input=input_messages,
+            output="",
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
@@ -238,7 +235,7 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        llm_span = trace_manager.get_span_by_uuid(str(run_id))
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(str(run_id))
         if llm_span is None:
             return
 
@@ -277,14 +274,10 @@ class CallbackHandler(BaseCallbackHandler):
                             tool_calls=tool_calls,
                         )
 
-        llm_span.set_attributes(
-            LlmAttributes(
-                input=llm_span.attributes.input,
-                output=output,
-                input_token_count=total_input_tokens,
-                output_token_count=total_output_tokens,
-            )
-        )
+        llm_span.input=llm_span.input
+        llm_span.output=output
+        llm_span.input_token_count=total_input_tokens
+        llm_span.output_token_count=total_output_tokens
 
         self.end_span(llm_span)
         if parent_run_id is None:
@@ -367,9 +360,8 @@ class CallbackHandler(BaseCallbackHandler):
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
         )
-        retriever_span.set_attributes(
-            RetrieverAttributes(embedding_input=query, retrieval_context=[])
-        )
+        retriever_span.input=query,
+        retriever_span.retrieval_context=[]
 
         self.add_span_to_trace(retriever_span)
 
@@ -395,12 +387,8 @@ class CallbackHandler(BaseCallbackHandler):
         else:
             output_list.append(str(output))
 
-        retriever_span.set_attributes(
-            RetrieverAttributes(
-                embedding_input=retriever_span.attributes.embedding_input,
-                retrieval_context=output_list,
-            )
-        )
+        retriever_span.input=retriever_span.input,
+        retriever_span.retrieval_context=output_list,
 
         self.end_span(retriever_span)
 

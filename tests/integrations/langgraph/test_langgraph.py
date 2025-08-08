@@ -1,6 +1,5 @@
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain.callback import CallbackHandler
-from deepeval.tracing import TraceAttributes
 import asyncio
 import time
 
