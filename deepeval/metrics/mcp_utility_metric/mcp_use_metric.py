@@ -19,11 +19,11 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from .template import MCPUtilityMetricTemplate
+from .template import MCPUseMetricTemplate
 from .schema import MCPPrimitivesScore, MCPArgsScore
 
 
-class MCPUtilityMetric(BaseMetric):
+class MCPUseMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -35,8 +35,8 @@ class MCPUtilityMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        async_mode: bool = True,
         strict_mode: bool = False,
+        async_mode: bool = True,
         verbose_mode: bool = False,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -160,7 +160,7 @@ class MCPUtilityMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = MCPUtilityMetricTemplate.get_primitive_correctness_prompt(
+        prompt = MCPUseMetricTemplate.get_primitive_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
@@ -184,7 +184,7 @@ class MCPUtilityMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPPrimitivesScore:
-        prompt = MCPUtilityMetricTemplate.get_primitive_correctness_prompt(
+        prompt = MCPUseMetricTemplate.get_primitive_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
@@ -210,7 +210,7 @@ class MCPUtilityMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = MCPUtilityMetricTemplate.get_mcp_argument_correctness_prompt(
+        prompt = MCPUseMetricTemplate.get_mcp_argument_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
@@ -234,7 +234,7 @@ class MCPUtilityMetric(BaseMetric):
         available_primitives: str,
         primitives_used: str,
     ) -> MCPArgsScore:
-        prompt = MCPUtilityMetricTemplate.get_mcp_argument_correctness_prompt(
+        prompt = MCPUseMetricTemplate.get_mcp_argument_correctness_prompt(
             test_case, available_primitives, primitives_used
         )
         if self.using_native_model:
@@ -380,7 +380,7 @@ class MCPUtilityMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "MCP Utility"
+        return "MCP Use"
 
     def indent_multiline_string(self, s, indent_level=4):
         indent = " " * indent_level

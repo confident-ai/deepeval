@@ -51,7 +51,7 @@ metric = MCPArgsCorrectnessMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `MCPArgsCorrectnessMetric`:
+There are **SIX** optional parameters when creating a `MCPArgsCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.

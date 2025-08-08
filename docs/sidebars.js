@@ -83,6 +83,7 @@ module.exports = {
             "metrics-task-completion",
             "metrics-tool-correctness",
             "metrics-argument-correctness",
+            "metrics-mcp-use",
           ],
           collapsed: true,
         },

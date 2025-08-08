@@ -3,7 +3,7 @@ from deepeval.test_case import ToolCall, LLMTestCase
 import textwrap
 
 
-class MCPUtilityMetricTemplate:
+class MCPUseMetricTemplate:
     @staticmethod
     def get_mcp_argument_correctness_prompt(
         test_case: LLMTestCase,
