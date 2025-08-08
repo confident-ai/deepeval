@@ -103,11 +103,10 @@ class GEval(BaseMetric):
                     g_score, reason = self._evaluate(
                         test_case, _additional_context=_additional_context
                     )
-                    self.score = float(g_score) / self.score_range_span
                     self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
+                        float(g_score) / self.score_range_span
+                        if not self.strict_mode
+                        else int(g_score)
                     )
                     self.success = self.score >= self.threshold
                 else:
