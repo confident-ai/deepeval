@@ -27,9 +27,8 @@ from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
-from .mcp.mcp_args_correctness import MCPArgsCorrectnessMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
-from .mcp.mcp_tool_correctness import MCPToolCorrectnessMetric
+from .mcp.mcp_use_metric import MultiTurnMCPUseMetric
 from .mcp_use_metric.mcp_use_metric import MCPUseMetric
 from .turn_relevancy.turn_relevancy import (
     TurnRelevancyMetric,
@@ -75,10 +74,9 @@ __all__ = [
     "ContextualRelevancyMetric",
     "ContextualPrecisionMetric",
     # MCP metrics
-    "MCPArgsCorrectnessMetric",
     "MCPTaskCompletionMetric",
-    "MCPToolCorrectnessMetric",
-    "MCPUseMetric"
+    "MultiTurnMCPUseMetric",
+    "MCPUseMetric",
     # Content quality metrics
     "HallucinationMetric",
     "BiasMetric",
