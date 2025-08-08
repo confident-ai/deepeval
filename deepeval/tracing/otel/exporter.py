@@ -11,10 +11,6 @@ from opentelemetry.sdk.trace.export import (
 )
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import (
-    LlmAttributes,
-    RetrieverAttributes,
-)
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
@@ -39,7 +35,7 @@ from deepeval.test_case import LLMTestCase, ToolCall
 from pydantic import ValidationError
 from deepeval.feedback.feedback import Feedback
 from collections import defaultdict
-from deepeval.tracing.attributes import TraceAttributes
+from deepeval.tracing.types import TraceAttributes
 
 
 @dataclass
@@ -75,6 +71,12 @@ class ConfidentSpanExporter(SpanExporter):
             trace_manager.configure(sampling_rate=sampling_rate)
 
         super().__init__()
+
+    def shutdown(self):
+        pass
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
 
     def export(
         self,
@@ -209,11 +211,6 @@ class ConfidentSpanExporter(SpanExporter):
 
         return SpanExportResult.SUCCESS
 
-    def shutdown(self):
-        pass
-
-    def force_flush(self, timeout_millis: int = 30000) -> bool:
-        return True
 
     def _convert_readable_span_to_base_span(
         self, span: ReadableSpan
@@ -225,168 +222,76 @@ class ConfidentSpanExporter(SpanExporter):
             print(f"Error converting span: {e}")
 
         # fallback to base span with default values
+        parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
+        status = TraceSpanStatus.ERRORED if span.status.status_code == StatusCode.ERROR else TraceSpanStatus.SUCCESS
         if not base_span:
-            input = span.attributes.get("confident.span.input")
-            output = span.attributes.get("confident.span.output")
-
             base_span = BaseSpan(
                 uuid=to_hex_string(span.context.span_id, 16),
-                status=(
-                    TraceSpanStatus.ERRORED
-                    if span.status.status_code == StatusCode.ERROR
-                    else TraceSpanStatus.SUCCESS
-                ),
+                status=status,
                 children=[],
                 trace_uuid=to_hex_string(span.context.trace_id, 32),
-                parent_uuid=(
-                    to_hex_string(span.parent.span_id, 16)
-                    if span.parent
-                    else None
-                ),
+                parent_uuid=parent_uuid,
                 start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
                 end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
-                input=input,
-                output=output,
             )
 
-        # extract error
+        # Extract Span Attributes
         error = span.attributes.get("confident.span.error")
-
-        # validate feedback
         feedback_json_str = span.attributes.get("confident.span.feedback")
-        feedback = None
-        if feedback_json_str:
-            try:
-                feedback = Feedback.model_validate_json(feedback_json_str)
-            except ValidationError as err:
-                print(f"Error converting feedback: {err}")
+        metric_collection = span.attributes.get("confident.span.metric_collection")
+        span_input = span.attributes.get("confident.span.input")
+        span_output = span.attributes.get("confident.span.output")
+        context_attr = span.attributes.get("confident.span.context")
+        retrieval_context_attr = span.attributes.get("confident.span.retrieval_context")
+        tools_called_attr = span.attributes.get("confident.span.tools_called")
+        expected_tools_attr = span.attributes.get("confident.span.expected_tools")
 
-        # extract metric collection
-        metric_collection = span.attributes.get(
-            "confident.span.metric_collection"
-        )
-        if not isinstance(metric_collection, str):
-            metric_collection = None
-
-        # extract llm test case attributes (except additional_metadata, tools_called, expected_tools)
-        test_case_input = span.attributes.get(
-            "confident.span.llm_test_case.input"
-        )
-        test_case_actual_output = span.attributes.get(
-            "confident.span.llm_test_case.actual_output"
-        )
-        test_case_expected_output = span.attributes.get(
-            "confident.span.llm_test_case.expected_output"
-        )
-        test_case_context = span.attributes.get(
-            "confident.span.llm_test_case.context"
-        )
-        test_case_retrieval_context = span.attributes.get(
-            "confident.span.llm_test_case.retrieval_context"
-        )
-
-        # validate list of strings for tool calls and expected tools
-        test_case_tools_called_attr = span.attributes.get(
-            "confident.span.llm_test_case.tools_called"
-        )
-        test_case_expected_tools_attr = span.attributes.get(
-            "confident.span.llm_test_case.expected_tools"
-        )
-
-        tools_called: List[ToolCall] = []
-        expected_tools: List[ToolCall] = []
-
-        if test_case_tools_called_attr and isinstance(
-            test_case_tools_called_attr, list
-        ):
-            for tool_call_json_str in test_case_tools_called_attr:
-                if isinstance(tool_call_json_str, str):
-                    try:
-                        tools_called.append(
-                            ToolCall.model_validate_json(tool_call_json_str)
-                        )
-                    except ValidationError as err:
-                        print(f"Error converting tool call: {err}")
-
-        if test_case_expected_tools_attr and isinstance(
-            test_case_expected_tools_attr, list
-        ):
-            for tool_call_json_str in test_case_expected_tools_attr:
-                if isinstance(tool_call_json_str, str):
-                    try:
-                        expected_tools.append(
-                            ToolCall.model_validate_json(tool_call_json_str)
-                        )
-                    except ValidationError as err:
-                        print(f"Error converting expected tool call: {err}")
-
-        llm_test_case = None
-        if test_case_input and test_case_actual_output:
-            try:
-                validate_llm_test_case_data(
-                    input=test_case_input,
-                    actual_output=test_case_actual_output,
-                    expected_output=test_case_expected_output,
-                    context=test_case_context,
-                    retrieval_context=test_case_retrieval_context,
-                )
-
-                llm_test_case = LLMTestCase(
-                    input=test_case_input,
-                    actual_output=test_case_actual_output,
-                    expected_output=test_case_expected_output,
-                    context=test_case_context,
-                    retrieval_context=test_case_retrieval_context,
-                    tools_called=tools_called,
-                    expected_tools=expected_tools,
-                )
-            except Exception as e:
-                print(f"Invalid LLMTestCase data: {e}")
-
-        base_span.parent_uuid = (
-            to_hex_string(span.parent.span_id, 16) if span.parent else None
-        )
-
-        # base span name takes precedence over span name
-        _name = None
-        if base_span.name is not None and base_span.name != "None":
-            _name = base_span.name
-
-        base_span.name = _name if _name else span.name
-        base_span.metadata = json.loads(span.to_json())
-        base_span.error = error
-        base_span.llm_test_case = llm_test_case
-        base_span.metric_collection = metric_collection
-        base_span.feedback = feedback
-
-        # extract trace attributes (to be deprecated)
-        trace_attributes = None
-        trace_attr_json_str = span.attributes.get("confident.trace.attributes")
-        if trace_attr_json_str:
-            try:
-                trace_attributes = TraceAttributes.model_validate_json(
-                    trace_attr_json_str
-                )
-            except ValidationError as err:
-                print(f"Error converting trace attributes: {err}")
-
-        # extract trace name, tags, metadata, thread_id, user_id
+        # Extract Trace Attributes
         trace_name = span.attributes.get("confident.trace.name")
         trace_tags = span.attributes.get("confident.trace.tags")
         trace_metadata = span.attributes.get("confident.trace.metadata")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
-
-        if trace_tags and isinstance(trace_tags, tuple):
-            trace_tags = list(trace_tags)
-
-        # extract trace input and output
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
 
-        base_span_wrapper = BaseSpanWrapper(
+        # Validate Span and Trace Attributes
+        retrieval_context : List[str] = self._parse_list_of_strings(retrieval_context_attr)
+        context : List[str] = self._parse_list_of_strings(context_attr)
+        tools_called : List[ToolCall] = self._parse_list_of_tools(tools_called_attr)
+        expected_tools : List[ToolCall] = self._parse_list_of_tools(expected_tools_attr)
+        feedback = None
+        if feedback_json_str:
+            try:
+                feedback = Feedback.model_validate_json(feedback_json_str)
+            except ValidationError as err:
+                print(f"Error converting feedback: {err}")  
+
+        if not isinstance(metric_collection, str):
+            metric_collection = None
+        
+        if trace_tags and isinstance(trace_tags, tuple):
+            trace_tags = list(trace_tags)
+        
+        # Set Span Attributes
+        _name = None
+        if base_span.name is not None and base_span.name != "None":
+            _name = base_span.name
+        base_span.parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
+        base_span.name = _name if _name else span.name
+        base_span.metadata = json.loads(span.to_json())
+        base_span.error = error
+        base_span.metric_collection = metric_collection
+        base_span.feedback = feedback
+        base_span.input = span_input
+        base_span.output = span_output
+        base_span.retrieval_context = retrieval_context
+        base_span.context = context
+        base_span.tools_called = tools_called
+        base_span.expected_tools = expected_tools
+
+        return BaseSpanWrapper(
             base_span=base_span,
-            trace_attributes=trace_attributes,
             trace_input=trace_input,
             trace_output=trace_output,
             trace_name=trace_name,
@@ -396,7 +301,6 @@ class ConfidentSpanExporter(SpanExporter):
             trace_user_id=trace_user_id,
         )
 
-        return base_span_wrapper
 
     def _prepare_boilerplate_base_span(
         self, span: ReadableSpan
@@ -420,18 +324,28 @@ class ConfidentSpanExporter(SpanExporter):
         start_time = peb.epoch_nanos_to_perf_seconds(span.start_time)
         end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
 
+        #######################################################
+        ### LLM Span 
+        #######################################################
+
         if span_type == "llm":
             model = span.attributes.get("confident.llm.model")
             if not model:
                 model = check_model_from_gen_ai_attributes(span)
-
+            prompt = span.attributes.get("confident.llm.prompt")
+            input_token_count = span.attributes.get(
+                "confident.llm.input_token_count"
+            )
+            output_token_count = span.attributes.get(
+                "confident.llm.output_token_count"
+            )
             cost_per_input_token = span.attributes.get(
                 "confident.llm.cost_per_input_token"
             )
             cost_per_output_token = span.attributes.get(
                 "confident.llm.cost_per_output_token"
             )
-
+            input, output = check_llm_input_from_gen_ai_attributes(span)
             llm_span = LlmSpan(
                 uuid=uuid,
                 status=status,
@@ -444,46 +358,26 @@ class ConfidentSpanExporter(SpanExporter):
                 model=model,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
-            )
-
-            # set attributes
-            input = span.attributes.get("confident.llm.attributes.input")
-            output = span.attributes.get("confident.llm.attributes.output")
-            prompt = span.attributes.get("confident.llm.attributes.prompt")
-            input_token_count = span.attributes.get(
-                "confident.llm.attributes.input_token_count"
-            )
-            output_token_count = span.attributes.get(
-                "confident.llm.attributes.output_token_count"
-            )
-
-            if not input and not output:
-                input, output = check_llm_input_from_gen_ai_attributes(span)
-
-            try:
-                llm_span.set_attributes(
-                    LlmAttributes(
-                        input=input,
-                        output=output,
-                        prompt=prompt,
-                        input_token_count=input_token_count,
-                        output_token_count=output_token_count,
-                    )
-                )
-            except Exception as e:
-                print(f"Error setting llm span attributes: {e}")
-
+                prompt=prompt,
+                input_token_count=input_token_count,
+                output_token_count=output_token_count,
+                input=input,
+                output=output,
+            )           
             return llm_span
 
+
+        #######################################################
+        ### Agent Span 
+        #######################################################
+
         elif span_type == "agent":
-            name = span.attributes.get("confident.agent.name")
             available_tools_attr = span.attributes.get(
                 "confident.agent.available_tools"
             )
             agent_handoffs_attr = span.attributes.get(
                 "confident.agent.agent_handoffs"
             )
-
             available_tools: List[str] = []
             if available_tools_attr:
                 try:
@@ -491,7 +385,6 @@ class ConfidentSpanExporter(SpanExporter):
                         available_tools.append(str(tool))
                 except Exception as e:
                     print(f"Error converting available tools: {e}")
-
             agent_handoffs: List[str] = []
             if agent_handoffs_attr:
                 try:
@@ -499,7 +392,6 @@ class ConfidentSpanExporter(SpanExporter):
                         agent_handoffs.append(str(handoff))
                 except Exception as e:
                     print(f"Error converting agent handoffs: {e}")
-
             agent_span = AgentSpan(
                 uuid=uuid,
                 status=status,
@@ -513,22 +405,19 @@ class ConfidentSpanExporter(SpanExporter):
                 available_tools=available_tools,
                 agent_handoffs=agent_handoffs,
             )
-
-            # set attributes
-            input = span.attributes.get("confident.agent.attributes.input")
-            output = span.attributes.get("confident.agent.attributes.output")
-
-            try:
-                agent_span.input = trace_manager.mask(input)
-                agent_span.output = trace_manager.mask(output)
-            except Exception as e:
-                print(f"Error setting agent span attributes: {e}")
-
             return agent_span
+
+
+        #######################################################
+        ### Retriever Span 
+        #######################################################
 
         elif span_type == "retriever":
             embedder = span.attributes.get("confident.retriever.embedder")
-
+            top_k = span.attributes.get("confident.retriever.attributes.top_k")
+            chunk_size = span.attributes.get(
+                "confident.retriever.attributes.chunk_size"
+            )
             retriever_span = RetrieverSpan(
                 uuid=uuid,
                 status=status,
@@ -539,39 +428,20 @@ class ConfidentSpanExporter(SpanExporter):
                 end_time=end_time,
                 # retriever span attributes
                 embedder=embedder if embedder else "",
+                top_k=top_k,
+                chunk_size=chunk_size,
             )
-
-            # set attributes
-            embedding_input = span.attributes.get(
-                "confident.retriever.attributes.embedding_input"
-            )
-            retrieval_context = span.attributes.get(
-                "confident.retriever.attributes.retrieval_context"
-            )
-            top_k = span.attributes.get("confident.retriever.attributes.top_k")
-            chunk_size = span.attributes.get(
-                "confident.retriever.attributes.chunk_size"
-            )
-
-            try:
-                retriever_span.set_attributes(
-                    RetrieverAttributes(
-                        embedding_input=embedding_input,
-                        retrieval_context=retrieval_context,
-                        top_k=top_k,
-                        chunk_size=chunk_size,
-                    )
-                )
-            except Exception as e:
-                print(f"Error setting retriever span attributes: {e}")
-
             return retriever_span
+
+
+        #######################################################
+        ### Tool Span 
+        #######################################################
 
         elif span_type == "tool":
             name = span.attributes.get("confident.tool.name")
             if not name:
                 name = check_tool_name_from_gen_ai_attributes(span)
-
             description = span.attributes.get("confident.tool.description")
 
             tool_span = ToolSpan(
@@ -586,36 +456,36 @@ class ConfidentSpanExporter(SpanExporter):
                 name=name if name else "",
                 description=description,
             )
-
-            # set attributes
-            input_parameters = span.attributes.get(
-                "confident.tool.attributes.input_parameters"
-            )
-            output = span.attributes.get("confident.tool.attributes.output")
-
-            try:
-                input_parameters = (
-                    json.loads(input_parameters) if input_parameters else None
-                )
-            except Exception as e:
-                input_parameters = None
-                print(f"Error converting input parameters: {e}")
-
-            if not input_parameters:
-                input_parameters = (
-                    check_tool_input_parameters_from_gen_ai_attributes(span)
-                )
-
-            try:
-                tool_span.input = trace_manager.mask(input_parameters)
-                tool_span.output = trace_manager.mask(output)
-            except Exception as e:
-                print(f"Error setting tool span attributes: {e}")
-
             return tool_span
 
-        # if span type is not supported, return None
         return None
+
+    #######################################################
+    ### Helper
+    #######################################################
+
+    def _parse_list_of_tools(self, tools: List[str]) -> List[str]:
+        parsed_tools: List[str] = []
+        if tools and isinstance(tools, list):
+            for tool_json_str in tools:
+                if isinstance(tool_json_str, str):
+                    try:
+                        parsed_tools.append(
+                            ToolCall.model_validate_json(tool_json_str)
+                        )
+                    except ValidationError as err:
+                        print(f"Error converting tool call: {err}")
+        return parsed_tools
+
+    def _parse_list_of_strings(self, context: List[str]) -> List[str]:
+        parsed_context: List[str] = []
+        if context and isinstance(context, list):
+            for context_str in context:
+                if not isinstance(context_str, str):
+                    raise ValidationError("Context must be a string")
+                else:
+                    parsed_context.append(context_str)
+        return parsed_context
 
     def _build_span_forest(
         self, spans: typing.Sequence[ReadableSpan]
