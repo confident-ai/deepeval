@@ -91,19 +91,6 @@ class ConfidentSpanExporter(SpanExporter):
             spans_wrappers_list: List[BaseSpanWrapper] = []
             for span in span_list:
 
-                # confugarion are attached to the resource attributes
-                resource_attributes = span.resource.attributes
-                environment = resource_attributes.get("confident.environment")
-
-                if environment and isinstance(environment, str):
-                    trace_manager.configure(environment=environment)
-
-                sampling_rate = resource_attributes.get(
-                    "confident.sampling_rate"
-                )
-                if sampling_rate and isinstance(sampling_rate, float):
-                    trace_manager.configure(sampling_rate=sampling_rate)
-
                 base_span_wrapper = self._convert_readable_span_to_base_span(
                     span
                 )
