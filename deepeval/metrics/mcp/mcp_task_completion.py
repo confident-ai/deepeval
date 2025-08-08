@@ -69,7 +69,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
-                
+
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
                 self.task_scores = [
@@ -110,7 +110,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
-            
+
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
             self.task_scores = await asyncio.gather(

@@ -260,7 +260,9 @@ class MCPUseMetric(BaseMetric):
         primitives_used_score: MCPPrimitivesScore,
         argument_correctness_score: MCPArgsScore,
     ) -> float:
-        return min(primitives_used_score.score, argument_correctness_score.score)
+        return min(
+            primitives_used_score.score, argument_correctness_score.score
+        )
 
     def _get_reason(
         self,
