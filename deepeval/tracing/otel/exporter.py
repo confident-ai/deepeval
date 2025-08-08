@@ -236,6 +236,14 @@ class ConfidentSpanExporter(SpanExporter):
                 output=output,
             )
 
+        metadata = None
+        metadata_json_str = span.attributes.get("confident.span.metadata")
+        if metadata_json_str and isinstance(metadata_json_str, str):
+            try:
+                metadata = json.loads(metadata_json_str)
+            except Exception as e:
+                print(f"Error converting metadata: {e}")
+
         # extract error
         error = span.attributes.get("confident.span.error")
 
@@ -340,7 +348,7 @@ class ConfidentSpanExporter(SpanExporter):
             _name = base_span.name
 
         base_span.name = _name if _name else span.name
-        base_span.metadata = json.loads(span.to_json())
+        base_span.metadata = metadata
         base_span.error = error
         base_span.llm_test_case = llm_test_case
         base_span.metric_collection = metric_collection
@@ -446,6 +454,21 @@ class ConfidentSpanExporter(SpanExporter):
 
             if not input and not output:
                 input, output = check_llm_input_from_gen_ai_attributes(span)
+
+            else:
+                if isinstance(input, tuple):
+                    input = list(input)
+                    try:
+                        input = [json.loads(i) for i in input]
+                    except Exception as e:
+                        print(f"Error converting llm input: {e}")
+                
+                if isinstance(output, tuple):
+                    output = list(output)
+                    try:
+                        output = [json.loads(o) for o in output]
+                    except Exception as e:
+                        print(f"Error converting llm output: {e}")
 
             try:
                 llm_span.set_attributes(

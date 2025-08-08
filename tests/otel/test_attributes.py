@@ -118,6 +118,8 @@ def llm_agent(input: str):
         span.set_attribute("confident.trace.thread_id", "123")
         span.set_attribute("confident.trace.user_id", "456")
 
+        span.set_attribute("confident.span.metadata", json.dumps({"test_key": "test_value"}))
+
         agent_span(input)
 
 
