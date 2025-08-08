@@ -200,7 +200,7 @@ test_case = LLMTestCase(
 )
 ```
 
-You can now use the [`ToolCorrectnessMetric`](https://deepeval.com/docs/metrics-tool-correctness) and [`ArgumentCorrectnessMetric`](https://deepeval.com/docs/metrics-argument-correctness) to run MCP evaluations on your single-turn test case.
+You can now use the [MCP Use Metric](/docs/metrics-mcp-use) to run MCP evaluations on your single-turn test case.
 
 ### Multi-Turn
 
@@ -261,4 +261,4 @@ test_case = ConversationalTestCase(
 Everytime you add a tool or resource or prompt called in MCP arguments, you need to set the `mcp_interaction` to True.
 :::
 
-✅ Done. You can now use the [MCP metrics](https://www.deepeval.com/docs/metrics-mcp-args-correctness) to run evaluations on your MCP based application.
+✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.
