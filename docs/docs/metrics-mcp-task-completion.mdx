@@ -35,11 +35,11 @@ The `MCPTaskCompletionMetric()` can be used for [end-to-end](/docs/evaluation-en
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MCPTaskCompletionMetric
-from deepeval.test_case import Turn, ConversationalTestCase, MCPMetaData
+from deepeval.test_case import Turn, ConversationalTestCase, MCPServer
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")],
-    mcp_data=[MCPMetaData(...)]
+    mcp_data=[MCPServer(...)]
 )
 metric = MCPTaskCompletionMetric(threshold=0.5)
 

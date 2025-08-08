@@ -20,7 +20,7 @@ The Multi-Turn MCP Use metric is a conversational metric that uses LLM-as-a-judg
 
 ## Required Arguments
 
-To use the `MultiTurnMCPUseMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+To use the `MultiTurnMCPUseMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 - `mcp_data`
@@ -36,11 +36,11 @@ The `MultiTurnMCPUseMetric()` can be used for [end-to-end](/docs/evaluation-end-
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MultiTurnMCPUseMetric
-from deepeval.test_case import Turn, ConversationalTestCase, MCPMetaData
+from deepeval.test_case import Turn, ConversationalTestCase, MCPServer
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")],
-    mcp_data=[MCPMetaData(...)]
+    mcp_data=[MCPServer(...)]
 )
 metric = MultiTurnMCPUseMetric(threshold=0.5)
 

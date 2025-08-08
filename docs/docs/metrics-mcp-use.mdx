@@ -33,12 +33,12 @@ The `MCPUseMetric` can be used on a single-turn `LLMTestCase` case with MCP para
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MCPUseMetric
-from deepeval.test_case import LLMTestCase, MCPMetaData
+from deepeval.test_case import LLMTestCase, MCPServer
 
 test_case = LLMTestCase(
     input="...", # Your input here
     actual_output="...", # Your LLM app's final output here
-    mcp_data=[MCPMetaData(...)] # Your MCP server's data
+    mcp_data=[MCPServer(...)] # Your MCP server's data
     # MCP primitives used (if any)
 )
 
