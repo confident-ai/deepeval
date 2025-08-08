@@ -6,7 +6,7 @@ from deepeval.integrations.crewai.agent import (
 )
 from deepeval.integrations.crewai.patch import patch_build_context_for_task
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.tracing.types import AgentSpan, LlmAttributes, LlmSpan
+from deepeval.tracing.types import AgentSpan, LlmSpan
 
 try:
     from crewai.crew import Crew
@@ -73,11 +73,9 @@ class CrewAIEventsListener(BaseEventListener):
                     actual_output = event.output
                     expected_output = event.task.expected_output
 
-                current_span.llm_test_case = LLMTestCase(
-                    input=input,
-                    actual_output=actual_output,
-                    expected_output=expected_output,
-                )
+                current_span.input = input
+                current_span.output = actual_output
+                current_span.expected_output = expected_output
 
                 # set metrics
                 if isinstance(source, PatchedAgent):
@@ -107,12 +105,8 @@ class CrewAIEventsListener(BaseEventListener):
                 if isinstance(source, LLM):
                     current_span.model = source.model
 
-                current_span.set_attributes(
-                    LlmAttributes(
-                        input=event.messages,
-                        output=event.response,
-                    )
-                )
+                current_span.input = event.messages
+                current_span.output = event.response
 
 
 def instrument_crewai(api_key: Optional[str] = None):

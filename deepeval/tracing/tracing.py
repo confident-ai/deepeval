@@ -806,13 +806,11 @@ class Observer:
 
         if self.update_span_properties is not None:
             self.update_span_properties(current_span)
-        else:
-            self.update_span_attributes(current_span)
 
-        if current_span.input is None:
-            current_span.input = self.function_kwargs
-        if current_span.output is None:
-            current_span.output = self.result
+        if current_span.input is not None:
+            current_span.input = trace_manager.mask(self.function_kwargs)
+        if current_span.output is not None:
+            current_span.output = trace_manager.mask(self.result)
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:
@@ -902,12 +900,6 @@ class Observer:
             return ToolSpan(**span_kwargs, **self.observe_kwargs)
         else:
             return BaseSpan(**span_kwargs)
-
-    def update_span_attributes(self, current_span: BaseSpan):
-        if current_span.input is not None:
-            current_span.input = trace_manager.mask(self.function_kwargs)
-        if current_span.output is not None:
-            current_span.output = trace_manager.mask(self.result)
 
 
 ########################################################
