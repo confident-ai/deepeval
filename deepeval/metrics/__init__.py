@@ -28,7 +28,7 @@ from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
-from .mcp.mcp_use_metric import MultiTurnMCPUseMetric
+from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
 from .mcp_use_metric.mcp_use_metric import MCPUseMetric
 from .turn_relevancy.turn_relevancy import (
     TurnRelevancyMetric,
