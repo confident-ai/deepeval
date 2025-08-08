@@ -30,7 +30,7 @@ from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .mcp.mcp_args_correctness import MCPArgsCorrectnessMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
 from .mcp.mcp_tool_correctness import MCPToolCorrectnessMetric
-from .mcp_utility_metric.mcp_use_metric import MCPUseMetric
+from .mcp_use_metric.mcp_use_metric import MCPUseMetric
 from .turn_relevancy.turn_relevancy import (
     TurnRelevancyMetric,
 )
