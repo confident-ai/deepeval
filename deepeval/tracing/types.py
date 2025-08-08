@@ -81,13 +81,13 @@ class BaseSpan(BaseModel):
 
 
 class AgentSpan(BaseSpan):
-    name: str
+    name: str   
     available_tools: List[str] = []
     agent_handoffs: List[str] = []
 
 
 class LlmSpan(BaseSpan):
-    model: Optional[str] = None
+    model: str
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"

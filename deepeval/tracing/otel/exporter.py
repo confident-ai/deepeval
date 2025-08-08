@@ -22,7 +22,6 @@ from deepeval.tracing.types import (
 from deepeval.tracing.otel.utils import (
     to_hex_string,
     set_trace_time,
-    validate_llm_test_case_data,
     check_llm_input_from_gen_ai_attributes,
     check_tool_name_from_gen_ai_attributes,
     check_tool_input_parameters_from_gen_ai_attributes,
@@ -283,12 +282,14 @@ class ConfidentSpanExporter(SpanExporter):
         base_span.error = error
         base_span.metric_collection = metric_collection
         base_span.feedback = feedback
-        base_span.input = span_input
-        base_span.output = span_output
         base_span.retrieval_context = retrieval_context
         base_span.context = context
         base_span.tools_called = tools_called
         base_span.expected_tools = expected_tools
+        if span_input:
+            base_span.input = span_input
+        if span_output:
+            base_span.output = span_output
 
         return BaseSpanWrapper(
             base_span=base_span,
@@ -372,6 +373,7 @@ class ConfidentSpanExporter(SpanExporter):
         #######################################################
 
         elif span_type == "agent":
+            name = span.attributes.get("confident.agent.name")
             available_tools_attr = span.attributes.get(
                 "confident.agent.available_tools"
             )
@@ -443,6 +445,7 @@ class ConfidentSpanExporter(SpanExporter):
             if not name:
                 name = check_tool_name_from_gen_ai_attributes(span)
             description = span.attributes.get("confident.tool.description")
+            input = check_tool_input_parameters_from_gen_ai_attributes(span)
 
             tool_span = ToolSpan(
                 uuid=uuid,
@@ -455,6 +458,7 @@ class ConfidentSpanExporter(SpanExporter):
                 # tool span attributes
                 name=name if name else "",
                 description=description,
+                input=input,
             )
             return tool_span
 

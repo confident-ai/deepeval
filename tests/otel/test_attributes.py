@@ -56,8 +56,8 @@ def retriever_span(input: str):
 def agent_span(input: str):
     time.sleep(2)
     with tracer.start_as_current_span("agent_span") as span:
-        span.set_attribute("confident.span.name", "agent name")
         span.set_attribute("confident.span.type", "agent")
+        span.set_attribute("confident.agent.name", "agent name")
         span.set_attribute(
             "confident.agent.available_tools",
             ["llm_agent", "retriever_span", "tool_span"],
