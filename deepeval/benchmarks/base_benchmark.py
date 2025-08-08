@@ -8,9 +8,9 @@ T = TypeVar("T")
 
 
 class DeepEvalBaseBenchmark(ABC, Generic[T]):
-    from datasets import Dataset
+    def __init__(self, dataset: Optional["Dataset"] = None):
+        from datasets import Dataset
 
-    def __init__(self, dataset: Optional[Dataset] = None):
         self.tasks: List[T] = []
         self.dataset = dataset
 

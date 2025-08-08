@@ -36,12 +36,12 @@ class DeepEvalTracingProcessor(TracingProcessor):
         self.root_span_observers: dict[str, Observer] = {}
         self.span_observers: dict[str, Observer] = {}
 
-    def on_trace_start(self, trace: Trace) -> None:
+    def on_trace_start(self, trace: "Trace") -> None:
         observer = Observer(span_type=SpanType.AGENT, func_name=trace.name)
         self.root_span_observers[trace.trace_id] = observer
         observer.__enter__()
 
-    def on_trace_end(self, trace: Trace) -> None:
+    def on_trace_end(self, trace: "Trace") -> None:
         # set thread id if exists
         current_trace = current_trace_context.get()
         thread_id = getattr(trace, "group_id", None)
@@ -51,7 +51,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if observer:
             observer.__exit__(None, None, None)
 
-    def on_span_start(self, span: Span) -> None:
+    def on_span_start(self, span: "Span") -> None:
         if not span.started_at:
             return
         span_type = self.get_span_kind(span.span_data)
@@ -64,7 +64,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         self.span_observers[span.span_id] = observer
         observer.__enter__()
 
-    def on_span_end(self, span: Span) -> None:
+    def on_span_end(self, span: "Span") -> None:
         observer = self.span_observers.pop(span.span_id, None)
         if observer:
             observer.__exit__(None, None, None)
@@ -75,7 +75,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
     def shutdown(self) -> None:
         pass
 
-    def get_span_kind(self, span_data: SpanData) -> str:
+    def get_span_kind(self, span_data: "SpanData") -> str:
         if isinstance(span_data, AgentSpanData):
             return "agent"
         if isinstance(span_data, FunctionSpanData):

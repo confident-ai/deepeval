@@ -245,8 +245,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
 
 def instrument_llama_index(dispatcher: Dispatcher):
-    capture_tracing_integration("llama_index.instrument_llama_index")
-    handler = LLamaIndexHandler()
-    dispatcher.add_event_handler(handler)
-    dispatcher.add_span_handler(handler)
-    return None
+    with capture_tracing_integration("llama_index"):
+        handler = LLamaIndexHandler()
+        dispatcher.add_event_handler(handler)
+        dispatcher.add_span_handler(handler)
+        return None

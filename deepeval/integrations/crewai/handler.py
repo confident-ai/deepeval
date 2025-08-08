@@ -117,14 +117,14 @@ class CrewAIEventsListener(BaseEventListener):
 
 def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
-    capture_tracing_integration("crewai.instrument_crewai")
-    if api_key:
-        deepeval.login(api_key)
+    with capture_tracing_integration("crewai"):
+        if api_key:
+            deepeval.login(api_key)
 
-    Crew.kickoff = observe(Crew.kickoff)
-    LLM.call = observe(LLM.call, type="llm", model="")
-    Agent.execute_task = observe(Agent.execute_task, type="agent")
-    CrewAgentExecutor.invoke = observe(CrewAgentExecutor.invoke)
-    ToolUsage.use = observe(ToolUsage.use, type="tool")
-    patch_build_context_for_task()
-    CrewAIEventsListener()
+        Crew.kickoff = observe(Crew.kickoff)
+        LLM.call = observe(LLM.call, type="llm", model="")
+        Agent.execute_task = observe(Agent.execute_task, type="agent")
+        CrewAgentExecutor.invoke = observe(CrewAgentExecutor.invoke)
+        ToolUsage.use = observe(ToolUsage.use, type="tool")
+        patch_build_context_for_task()
+        CrewAIEventsListener()

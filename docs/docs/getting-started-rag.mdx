@@ -272,7 +272,7 @@ contextual_relevancy = ContextualRelevancyMetric(threshold=0.6)
 def retriever(query):
     # Your retriever implemetation goes here
     update_current_span(
-        test_case=LLMTestCase(input=query, actual_output="...", retrieval_context=["..."])
+        test_case=LLMTestCase(input=query, retrieval_context=["..."])
     )
     pass
 ```
@@ -351,7 +351,7 @@ Create a generator focused metric. You'll then need to:
 
 For example, the `FaithfulnessMetric` requires `retrieval_context`, while `AnswerRelevancyMetric` doesn't.
 
-```python title=main.py showLineNumbers={true} {6,10}
+```python title=main.py showLineNumbers={true} {6,9}
 from deepeval.tracing import observe, update_current_span
 from deepeval.metrics import AnswerRelevancyMetric
 
@@ -360,9 +360,7 @@ answer_relevancy = AnswerRelevancyMetric(threshold=0.6)
 @observe(metrics=[answer_relevancy])
 def generator(query, text_chunks):
     # Your retriever implemetation goes here
-    update_current_span(
-        test_case=LLMTestCase(input=query, actual_output="...", retrieval_context=text_chunks)
-    )
+    update_current_span(test_case=LLMTestCase(input=query, actual_output="..."))
     pass
 ```
 
@@ -389,18 +387,18 @@ for golden in dataset.evals_iterator():
 :::info
 You can also combine retriever and generator evals:
 
-```python showLineNumbers {6,10,21}
+```python showLineNumbers {7,11,21}
 from deepeval.dataset import EvaluationDataset, Golden
 ...
 
 def rag_pipeline(query):
     @observe(metrics=[contextual_relevancy])
     def retriever(query) -> list[str]:
-        pass
+        update_current_span(test_case=LLMTestCase(input=query, retrieval_context=["..."]))
 
     @observe(metrics=[answer_relevancy])
     def generator(query, text_chunks):
-        pass
+        update_current_span(test_case=LLMTestCase(input=query, actual_output="..."))
 
     text_chunks = retriever(query)
     return generator(query, text_chunks)
