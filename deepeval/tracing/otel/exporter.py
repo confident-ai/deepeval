@@ -155,7 +155,8 @@ class ConfidentSpanExporter(SpanExporter):
                             str(tag) for tag in base_span_wrapper.trace_tags
                         ]
                     except Exception as e:
-                        print(f"Error converting trace tags: {e}")
+                        #print(f"Error converting trace tags: {e}")
+                        pass
 
                 if base_span_wrapper.trace_metadata and isinstance(
                     base_span_wrapper.trace_metadata, str
@@ -165,8 +166,8 @@ class ConfidentSpanExporter(SpanExporter):
                             base_span_wrapper.trace_metadata
                         )
                     except Exception as e:
-                        print(f"Error converting trace metadata: {e}")
-
+                        #print(f"Error converting trace metadata: {e}")
+                        pass
                 if base_span_wrapper.trace_thread_id and isinstance(
                     base_span_wrapper.trace_thread_id, str
                 ):
@@ -209,7 +210,8 @@ class ConfidentSpanExporter(SpanExporter):
         try:
             base_span = self._prepare_boilerplate_base_span(span)
         except Exception as e:
-            print(f"Error converting span: {e}")
+            #print(f"Error converting span: {e}")
+            pass
 
         # fallback to base span with default values
         if not base_span:
@@ -242,7 +244,8 @@ class ConfidentSpanExporter(SpanExporter):
             try:
                 metadata = json.loads(metadata_json_str)
             except Exception as e:
-                print(f"Error converting metadata: {e}")
+                #print(f"Error converting metadata: {e}")
+                pass
 
         # extract error
         error = span.attributes.get("confident.span.error")
@@ -254,7 +257,8 @@ class ConfidentSpanExporter(SpanExporter):
             try:
                 feedback = Feedback.model_validate_json(feedback_json_str)
             except ValidationError as err:
-                print(f"Error converting feedback: {err}")
+                #print(f"Error converting feedback: {err}")
+                pass
 
         # extract metric collection
         metric_collection = span.attributes.get(
@@ -301,7 +305,8 @@ class ConfidentSpanExporter(SpanExporter):
                             ToolCall.model_validate_json(tool_call_json_str)
                         )
                     except ValidationError as err:
-                        print(f"Error converting tool call: {err}")
+                        #print(f"Error converting tool call: {err}")
+                        pass
 
         if test_case_expected_tools_attr and isinstance(
             test_case_expected_tools_attr, list
@@ -313,7 +318,8 @@ class ConfidentSpanExporter(SpanExporter):
                             ToolCall.model_validate_json(tool_call_json_str)
                         )
                     except ValidationError as err:
-                        print(f"Error converting expected tool call: {err}")
+                        #print(f"Error converting expected tool call: {err}")
+                        pass
 
         llm_test_case = None
         if test_case_input and test_case_actual_output:
@@ -336,7 +342,8 @@ class ConfidentSpanExporter(SpanExporter):
                     expected_tools=expected_tools,
                 )
             except Exception as e:
-                print(f"Invalid LLMTestCase data: {e}")
+                #print(f"Invalid LLMTestCase data: {e}")
+                pass
 
         base_span.parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
@@ -363,7 +370,8 @@ class ConfidentSpanExporter(SpanExporter):
                     trace_attr_json_str
                 )
             except ValidationError as err:
-                print(f"Error converting trace attributes: {err}")
+                #print(f"Error converting trace attributes: {err}")
+                pass
 
         # extract trace name, tags, metadata, thread_id, user_id
         trace_name = span.attributes.get("confident.trace.name")
@@ -461,14 +469,16 @@ class ConfidentSpanExporter(SpanExporter):
                     try:
                         input = [json.loads(i) for i in input]
                     except Exception as e:
-                        print(f"Error converting llm input: {e}")
+                        #print(f"Error converting llm input: {e}")
+                        pass
                 
                 if isinstance(output, tuple):
                     output = list(output)
                     try:
                         output = [json.loads(o) for o in output]
                     except Exception as e:
-                        print(f"Error converting llm output: {e}")
+                        #print(f"Error converting llm output: {e}")
+                        pass
 
             try:
                 llm_span.set_attributes(
@@ -481,7 +491,8 @@ class ConfidentSpanExporter(SpanExporter):
                     )
                 )
             except Exception as e:
-                print(f"Error setting llm span attributes: {e}")
+                #print(f"Error setting llm span attributes: {e}")
+                pass
 
             return llm_span
 
@@ -500,7 +511,8 @@ class ConfidentSpanExporter(SpanExporter):
                     for tool in available_tools_attr:
                         available_tools.append(str(tool))
                 except Exception as e:
-                    print(f"Error converting available tools: {e}")
+                    #print(f"Error converting available tools: {e}")
+                    pass
 
             agent_handoffs: List[str] = []
             if agent_handoffs_attr:
@@ -508,7 +520,8 @@ class ConfidentSpanExporter(SpanExporter):
                     for handoff in agent_handoffs_attr:
                         agent_handoffs.append(str(handoff))
                 except Exception as e:
-                    print(f"Error converting agent handoffs: {e}")
+                    #print(f"Error converting agent handoffs: {e}")
+                    pass
 
             agent_span = AgentSpan(
                 uuid=uuid,
@@ -532,7 +545,8 @@ class ConfidentSpanExporter(SpanExporter):
                 agent_span.input = trace_manager.mask(input)
                 agent_span.output = trace_manager.mask(output)
             except Exception as e:
-                print(f"Error setting agent span attributes: {e}")
+                #print(f"Error setting agent span attributes: {e}")
+                pass
 
             return agent_span
 
@@ -573,7 +587,8 @@ class ConfidentSpanExporter(SpanExporter):
                     )
                 )
             except Exception as e:
-                print(f"Error setting retriever span attributes: {e}")
+                #print(f"Error setting retriever span attributes: {e}")
+                pass
 
             return retriever_span
 
@@ -609,7 +624,7 @@ class ConfidentSpanExporter(SpanExporter):
                 )
             except Exception as e:
                 input_parameters = None
-                print(f"Error converting input parameters: {e}")
+                #print(f"Error converting input parameters: {e}")
 
             if not input_parameters:
                 input_parameters = (
@@ -620,7 +635,8 @@ class ConfidentSpanExporter(SpanExporter):
                 tool_span.input = trace_manager.mask(input_parameters)
                 tool_span.output = trace_manager.mask(output)
             except Exception as e:
-                print(f"Error setting tool span attributes: {e}")
+                #print(f"Error setting tool span attributes: {e}")
+                pass
 
             return tool_span
 
