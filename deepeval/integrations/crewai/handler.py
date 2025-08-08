@@ -117,7 +117,7 @@ class CrewAIEventsListener(BaseEventListener):
 
 def instrument_crewai(api_key: Optional[str] = None):
     is_crewai_installed()
-    with capture_tracing_integration("crewai.instrument_crewai"):
+    with capture_tracing_integration("crewai"):
         if api_key:
             deepeval.login(api_key)
 

@@ -71,8 +71,8 @@ class CallbackHandler(BaseCallbackHandler):
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
     ):
+        is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
-            is_langchain_installed()
             self.metrics = metrics
             self.metric_collection = metric_collection
             self.trace_attributes = TraceAttributes(
