@@ -28,16 +28,16 @@ async def run_concurrent_invokes():
                 {"role": "user", "content": "what is the weather in sf"}
             ]
         },
-        {
-            "messages": [
-                {"role": "user", "content": "what is the weather in nyc"}
-            ]
-        },
-        {
-            "messages": [
-                {"role": "user", "content": "what is the weather in la"}
-            ]
-        },
+        # {
+        #     "messages": [
+        #         {"role": "user", "content": "what is the weather in nyc"}
+        #     ]
+        # },
+        # {
+        #     "messages": [
+        #         {"role": "user", "content": "what is the weather in la"}
+        #     ]
+        # },
     ]
 
     # Create tasks for concurrent execution

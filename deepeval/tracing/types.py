@@ -87,7 +87,7 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-    model: str
+    model: Optional[str] = None
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"
