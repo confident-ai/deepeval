@@ -289,7 +289,7 @@ When used inside `@observe` components, `deepeval`'s OpenAI client automatically
 
 - Generates an LLM span for every OpenAI API call, including nested Tool spans for any tool invocations.
 - Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
-- Records span-level attributes `LLMAttributes` such as the input prompt, generated output and token usage.
+- Records span-level llm attributes such as the input prompt, generated output and token usage.
 - Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
 
 <div style={{ margin: "2rem 0" }}>

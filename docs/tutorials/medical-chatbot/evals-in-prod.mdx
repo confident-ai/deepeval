@@ -19,7 +19,7 @@ To add metrics and spans to your traces, modify your `MedicalChatbot` class like
 from qdrant_client import models, QdrantClient
 from sentence_transformers import SentenceTransformer
 from langchain_openai import ChatOpenAI
-from deepeval.tracing import observe, update_current_span, RetrieverAttributes, update_current_trace
+from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.metrics import ContextualRelevancyMetric
 
 class MedicalChatbot:
@@ -59,10 +59,8 @@ class MedicalChatbot:
 
         # Here, update_current_span() will update the Retriever span
         update_current_span(
-            attributes=RetrieverAttributes(
-                embedding_input=query,
-                retrieval_context=contexts
-            )
+            input=query,
+            retrieval_context=contexts
         )
         return "\n".join(contexts)
 
