@@ -2,8 +2,15 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
+
 from deepeval.test_case import ToolCall
-from .types import MCPServer, MCPPromptCall, MCPResourceCall, MCPToolCall
+from deepeval.test_case.mcp import (
+    MCPServer,
+    MCPPromptCall,
+    MCPResourceCall,
+    MCPToolCall,
+    validate_mcp_servers,
+)
 
 
 class TurnParams(Enum):
@@ -126,7 +133,7 @@ class ConversationalTestCase:
                 raise TypeError("'context' must be None or a list of strings")
 
         if self.mcp_server is not None:
-            self._validate_mcp_meta_data(self.mcp_server)
+            validate_mcp_servers(self.mcp_server)
 
         copied_turns = []
         for turn in self.turns:
@@ -136,38 +143,3 @@ class ConversationalTestCase:
             copied_turns.append(deepcopy(turn))
 
         self.turns = copied_turns
-
-    def _validate_mcp_meta_data(self, mcp_server_list: List[MCPServer]):
-        from mcp.types import Tool, Resource, Prompt
-
-        for mcp_server in mcp_server_list:
-            if mcp_server.available_tools is not None:
-                if not isinstance(mcp_server.available_tools, list) or not all(
-                    isinstance(tool, Tool)
-                    for tool in mcp_server.available_tools
-                ):
-                    raise TypeError(
-                        "'available_tools' must be a list of 'Tool' from mcp.types"
-                    )
-
-            if mcp_server.available_resources is not None:
-                if not isinstance(
-                    mcp_server.available_resources, list
-                ) or not all(
-                    isinstance(resource, Resource)
-                    for resource in mcp_server.available_resources
-                ):
-                    raise TypeError(
-                        "'available_resources' must be a list of 'Resource' from mcp.types"
-                    )
-
-            if mcp_server.available_prompts is not None:
-                if not isinstance(
-                    mcp_server.available_prompts, list
-                ) or not all(
-                    isinstance(prompt, Prompt)
-                    for prompt in mcp_server.available_prompts
-                ):
-                    raise TypeError(
-                        "'available_prompts' must be a list of 'Prompt' from mcp.types"
-                    )
