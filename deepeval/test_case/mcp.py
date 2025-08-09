@@ -28,10 +28,10 @@ class MCPServer:
     available_prompts: Optional[List] = None
 
 
-def validate_mcp_servers(mcp_server_list: List[MCPServer]):
+def validate_mcp_servers(mcp_servers: List[MCPServer]):
     from mcp.types import Tool, Resource, Prompt
 
-    for mcp_server in mcp_server_list:
+    for mcp_server in mcp_servers:
         if mcp_server.available_tools is not None:
             if not isinstance(mcp_server.available_tools, list) or not all(
                 isinstance(tool, Tool) for tool in mcp_server.available_tools

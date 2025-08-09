@@ -32,11 +32,11 @@ class Turn:
     user_id: Optional[str] = None
     retrieval_context: Optional[List[str]] = None
     tools_called: Optional[List[ToolCall]] = None
-    mcp_interaction: Optional[bool] = False
     mcp_tools_called: Optional[List[MCPToolCall]] = None
     mcp_resources_called: Optional[List[MCPResourceCall]] = None
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
     additional_metadata: Optional[Dict] = None
+    _mcp_interaction: bool = False
 
     def __repr__(self):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
@@ -68,11 +68,7 @@ class Turn:
                 GetPromptResult,
             )
 
-            if not self.mcp_interaction:
-                raise TypeError(
-                    "You have to set 'mcp_interaction' to true if you want to add 'mcp_tools_called' or 'mcp_resources_called' or 'mcp_prompts_called'."
-                )
-
+            self._mcp_interaction = True
             if self.mcp_tools_called is not None:
                 if not isinstance(self.mcp_tools_called, list) or not all(
                     isinstance(tool_called, MCPToolCall)
@@ -116,7 +112,7 @@ class ConversationalTestCase:
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     tags: Optional[List[str]] = field(default=None)
-    mcp_server: Optional[List[MCPServer]] = None
+    mcp_servers: Optional[List[MCPServer]] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -132,8 +128,8 @@ class ConversationalTestCase:
             ):
                 raise TypeError("'context' must be None or a list of strings")
 
-        if self.mcp_server is not None:
-            validate_mcp_servers(self.mcp_server)
+        if self.mcp_servers is not None:
+            validate_mcp_servers(self.mcp_servers)
 
         copied_turns = []
         for turn in self.turns:

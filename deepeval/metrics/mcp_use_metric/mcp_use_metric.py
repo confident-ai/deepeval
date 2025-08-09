@@ -70,7 +70,7 @@ class MCPUseMetric(BaseMetric):
             else:
                 available_primitives, primitives_used = (
                     self._get_mcp_interaction_text(
-                        mcp_server=test_case.mcp_server,
+                        mcp_servers=test_case.mcp_servers,
                         mcp_tools_called=test_case.mcp_tools_called or [],
                         mcp_resources_called=test_case.mcp_resources_called
                         or [],
@@ -121,7 +121,7 @@ class MCPUseMetric(BaseMetric):
         ):
             available_primitives, primitives_used = (
                 self._get_mcp_interaction_text(
-                    mcp_server=test_case.mcp_server,
+                    mcp_servers=test_case.mcp_servers,
                     mcp_tools_called=test_case.mcp_tools_called or [],
                     mcp_resources_called=test_case.mcp_resources_called or [],
                     mcp_prompts_called=test_case.mcp_prompts_called or [],
@@ -278,23 +278,23 @@ class MCPUseMetric(BaseMetric):
 
     def _get_mcp_interaction_text(
         self,
-        mcp_server: List[MCPServer],
+        mcp_servers: List[MCPServer],
         mcp_tools_called: List[MCPToolCall],
         mcp_resources_called: List[MCPResourceCall],
         mcp_prompts_called: List[MCPPromptCall],
     ) -> tuple[str, str]:
-        for data in mcp_server:
-            available_primitives = f"MCP Server {data.server_name}\n"
+        for mcp_server in mcp_servers:
+            available_primitives = f"MCP Server {mcp_server.server_name}\n"
             available_primitives += (
                 (
                     "\nAvailable Tools:\n[\n"
                     + ",\n".join(
                         self.indent_multiline_string(repr(tool), indent_level=4)
-                        for tool in data.available_tools
+                        for tool in mcp_server.available_tools
                     )
                     + "\n]"
                 )
-                if data.available_tools
+                if mcp_server.available_tools
                 else ""
             )
             available_primitives += (
@@ -304,11 +304,11 @@ class MCPUseMetric(BaseMetric):
                         self.indent_multiline_string(
                             repr(resource), indent_level=4
                         )
-                        for resource in data.available_resources
+                        for resource in mcp_server.available_resources
                     )
                     + "\n]"
                 )
-                if data.available_resources
+                if mcp_server.available_resources
                 else ""
             )
             available_primitives += (
@@ -318,11 +318,11 @@ class MCPUseMetric(BaseMetric):
                         self.indent_multiline_string(
                             repr(prompt), indent_level=4
                         )
-                        for prompt in data.available_prompts
+                        for prompt in mcp_server.available_prompts
                     )
                     + "\n]"
                 )
-                if data.available_prompts
+                if mcp_server.available_prompts
                 else ""
             )
         primitives_used = "MCP Primitives Used: \n"

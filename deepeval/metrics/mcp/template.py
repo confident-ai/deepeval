@@ -5,10 +5,10 @@ from deepeval.test_case import MCPServer
 
 class MCPTaskCompletionTemplate:
     @staticmethod
-    def get_args_correctness_score(task: Task, mcp_server: List[MCPServer]):
-        available_tools = [data.available_tools for data in mcp_server]
-        available_resources = [data.available_resources for data in mcp_server]
-        available_prompts = [data.available_prompts for data in mcp_server]
+    def get_args_correctness_score(task: Task, mcp_servers: List[MCPServer]):
+        available_tools = [data.available_tools for data in mcp_servers]
+        available_resources = [data.available_resources for data in mcp_servers]
+        available_prompts = [data.available_prompts for data in mcp_servers]
         steps_taken = "\n".join(task.steps_taken)
         return f"""Evaluate whether the arguments (inputs) provided by the agent to the tools, resources, and prompts were correct and aligned with their respective input schemas. Your job is to determine if the agent supplied appropriate, complete, and well-formatted arguments for each invocation.
 
@@ -50,8 +50,8 @@ JSON:
 """
 
     @staticmethod
-    def get_tool_correctness_score(task: Task, mcp_server: List[MCPServer]):
-        available_tools = [data.available_tools for data in mcp_server]
+    def get_tool_correctness_score(task: Task, mcp_servers: List[MCPServer]):
+        available_tools = [data.available_tools for data in mcp_servers]
         steps_taken = "\n".join(task.steps_taken)
         return f"""Evaluate whether the tools, resources, and prompts used by the agent were appropriate and optimal, based strictly on the list of available tools and resources provided. Your job is to determine whether the agent selected the most suitable tools and prompts for the task at hand. Output a JSON object with exactly two fields: 'score' and 'reason'.
 

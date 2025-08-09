@@ -65,8 +65,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                if not test_case.mcp_server:
-                    error_str = "'mcp_server' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
+                if not test_case.mcp_servers:
+                    error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
 
@@ -106,8 +106,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            if not test_case.mcp_server:
-                error_str = "'mcp_server' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
+            if not test_case.mcp_servers:
+                error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
 
@@ -189,7 +189,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     break
             new_task = Task(task=user_messages, steps_taken=[])
             for turn in unit_interaction[1:]:
-                if turn.mcp_interaction:
+                if turn._mcp_interaction:
                     mcp_interaction = "Tools called by agent: \n"
                     if turn.mcp_tools_called is not None:
                         for tool in turn.mcp_tools_called:

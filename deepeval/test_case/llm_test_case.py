@@ -22,7 +22,7 @@ class LLMTestCaseParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
     EXPECTED_TOOLS = "expected_tools"
-    MCP_DATA = "mcp_server"
+    MCP_SERVERS = "mcp_servers"
     MCP_TOOLS_CALLED = "mcp_tools_called"
     MCP_RESOURCES_CALLED = "mcp_resources_called"
     MCP_PROMPTS_CALLED = "mcp_prompts_called"
@@ -158,7 +158,7 @@ class LLMTestCase:
     completion_time: Optional[float] = None
     name: Optional[str] = field(default=None)
     tags: Optional[List[str]] = field(default=None)
-    mcp_server: Optional[List[MCPServer]] = None
+    mcp_servers: Optional[List[MCPServer]] = None
     mcp_tools_called: Optional[List[MCPToolCall]] = None
     mcp_resources_called: Optional[List[MCPResourceCall]] = None
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
@@ -212,15 +212,15 @@ class LLMTestCase:
                 )
 
         # Ensure `mcp_server` is None or a list of `MCPServer`
-        if self.mcp_server is not None:
-            if not isinstance(self.mcp_server, list) or not all(
-                isinstance(item, MCPServer) for item in self.mcp_server
+        if self.mcp_servers is not None:
+            if not isinstance(self.mcp_servers, list) or not all(
+                isinstance(item, MCPServer) for item in self.mcp_servers
             ):
                 raise TypeError(
                     "'mcp_server' must be None or a list of 'MCPServer'"
                 )
             else:
-                validate_mcp_servers(self.mcp_server)
+                validate_mcp_servers(self.mcp_servers)
 
         # Ensure `mcp_tools_called` is None or a list of `MCPToolCall`
         if self.mcp_tools_called is not None:

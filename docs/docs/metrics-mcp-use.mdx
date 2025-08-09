@@ -1,7 +1,7 @@
 ---
 id: metrics-mcp-use
-title: MCP Use
-sidebar_label: MCP Use
+title: MCP-Use
+sidebar_label: MCP-Use
 ---
 
 <head>
@@ -19,12 +19,12 @@ The MCP Use is a metric that is used to evaluate how effectively an **MCP based 
 
 To use the `MCPUseMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://www.deepeval.com/docs/evaluation-test-cases):
 
-- `mcp_server`
+- `mcp_servers`
 - [Optional] `mcp_tools_called`
 - [Optional] `mcp_resources_called`
 - [Optional] `mcp_prompts_called`
 
-The `MCPUseMetric` evaluates if the right tools have been called with the right parameters i.e, if all the optional parameters above are not provided, the `MCPUseMetric` evaluates if calling any of the available primitives would have been better. Click here to see [how it is calculated](#how-is-it-calculated).
+You'll also need to supply any `mcp_tools_called`, `mcp_resources_called`, and `mcp_prompts_called` (if any). Click here to see [how it is calculated](#how-is-it-calculated).
 
 ## Usage
 
@@ -38,7 +38,7 @@ from deepeval.test_case import LLMTestCase, MCPServer
 test_case = LLMTestCase(
     input="...", # Your input here
     actual_output="...", # Your LLM app's final output here
-    mcp_server=[MCPServer(...)] # Your MCP server's data
+    mcp_servers=[MCPServer(...)] # Your MCP server's data
     # MCP primitives used (if any)
 )
 
@@ -82,3 +82,7 @@ The `MCPUseMetric` score is calculated according to the following equation:
 <Equation formula="\text{MCP Use Score} = \text{AlignmentScore(Primitives Used, Primitives Available)}" />
 
 The **AlignmentScore** is judged by an evaluation model based on which primitives were called and their generated arguments with respect to the user's input.
+
+:::info
+The `MCPUseMetric` evaluates if the right tools have been called with the right parameters i.e, if all the optional parameters above are not provided, the `MCPUseMetric` evaluates if calling any of the available primitives would have been better.
+:::
