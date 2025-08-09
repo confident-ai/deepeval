@@ -15,15 +15,13 @@ from deepeval.test_case import ConversationalTestCase, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.schema import Task, TaskScore
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
+from deepeval.errors import MissingTestCaseParamsError
 
 
 class MCPTaskCompletionMetric(BaseConversationalMetric):
     _required_test_case_params = [
         TurnParams.ROLE,
         TurnParams.CONTENT,
-        TurnParams.MCP_TOOLS,
-        TurnParams.MCP_RESOURCES,
-        TurnParams.MCP_PROMPTS,
     ]
 
     def __init__(
@@ -67,6 +65,11 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if not test_case.mcp_data:
+                    error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
+                    self.error = error_str
+                    raise MissingTestCaseParamsError(error_str)
+
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
                 self.task_scores = [
@@ -75,7 +78,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 self.score = self._calculate_score(self.task_scores)
                 self.reason = self._generate_reason(self.task_scores)
                 self.scores_reasons_list = [
-                    (score, reason) for score, reason in self.task_scores
+                    (task_score.score, task_score.reason)
+                    for task_score in self.task_scores
                 ]
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
@@ -102,13 +106,19 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
+            if not test_case.mcp_data:
+                error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
+                self.error = error_str
+                raise MissingTestCaseParamsError(error_str)
+
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
             self.task_scores = await asyncio.gather(
                 *[self._a_get_task_score(task) for task in self.tasks]
             )
             self.scores_reasons_list = [
-                (score, reason) for score, reason in self.task_scores
+                (task_score.score, task_score.reason)
+                for task_score in self.task_scores
             ]
             self.score = self._calculate_score(self.task_scores)
             self.reason = self._generate_reason(self.task_scores)

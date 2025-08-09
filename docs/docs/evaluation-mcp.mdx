@@ -47,16 +47,16 @@ resource_list = await session.list_resources()
 prompt_list = await session.list_prompts()
 ```
 
-`deepeval` expects you to provide the list of available primitives for reference based metrics that require them. You need to provide the direct list of the primitives from their respective `list` method results. Here's an example of how you need to create the `MCPMetaData` object in `deepeval`:
+`deepeval` expects you to provide the list of available primitives for reference based metrics that require them. You need to provide the direct list of the primitives from their respective `list` method results. Here's an example of how you need to create the `MCPServer` object in `deepeval`:
 
-## MCP Meta Data
+## MCP Server Data
 
-The `MCPMetaData` object is used to contain information about different MCP servers and the primitives they provide which can be used during evaluations. Here's an example implementation of how to create a `MCPMetaData` object:
+The `MCPServer` object is used to contain information about different MCP servers and the primitives they provide which can be used during evaluations. Here's an example implementation of how to create a `MCPServer` object:
 
 ```python
-from deepeval.test_case import MCPMetaData
+from deepeval.test_case import MCPServer
 
-meta_data = MCPMetaData(
+mcp_data = MCPServer(
     server_name="...", # Provide any server name here
     transport="stdio", # Provide your transport method here
     available_tools=tool_list.tools,
@@ -69,7 +69,7 @@ meta_data = MCPMetaData(
 You need to make sure to provide the `.tools`, `.resources` and `.prompts` from the `list` method's response. They are each of type `Tool`, `Resource` and `Prompt` respectively from `mcp.types` and they are standardized from the official [MCP python sdk](https://github.com/modelcontextprotocol/python-sdk).
 :::
 
-The `MCPMetaData` accepts **FIVE** parameters:
+The `MCPServer` accepts **FIVE** parameters:
 
 - [Optional] `server_name`: an optional string you can provide to store details about your MCP server.
 - [Optional] `transport`: an optional literal that stores on the type of transport your MCP server uses. This information does not affect the evaluation of your MCP test case.
@@ -166,23 +166,59 @@ mcp_tool_called = MCPPromptCall(
 
 The result provided by the `session.get_prompt()` is an object of `GetPromptResult` from `mcp.types` in the official MCP python-sdk. You just have to provide the same result in the result argument of `MCPPromptCall` object.
 
-## Creating a Test Case 
+## Creating a Test Case
 
-The `ConversationalTestCase` accepts an optional parameter called `mcp_data` to add your `MCPMetaData` objects in a list, here's an example implementation on how to add it:
+DeepEval supports both single turn and multi-turn test cases for MCP evaluation with our `LLMTestCase` and `ConversationalTestCase`.
+
+### Single-Turn
+
+The `LLMTestCase` accepts the following optional parameters to support MCP evaluations:
+
+- `mcp_data` — a list of `MCPServer` objects giving information on MCP servers that your MCP host can use
+- `mcp_tools_called` — a list of `MCPToolCall` objects that your LLM application has used
+- `mcp_resources_called` — a list of `MCPResourceCall` objects that your LLM application has used
+- `mcp_prompts_called` — a list of `MCPPromptCall` objects that your LLM application has used
+
+Here's how you would create an MCP single-turn test case:
+
+```python {3-6,12-15}
+from deepeval.test_case import (
+    LLMTestCase, 
+    MCPServer, 
+    MCPToolCall, 
+    MCPResourceCall, 
+    MCPPromptCall
+)
+
+test_case = LLMTestCase(
+    input="...", # Your input
+    actual_output="...", # Your LLMs final output
+    mcp_data=[MCPServer(...)],
+    mcp_tools_called=[MCPToolCall(...)],
+    mcp_prompts_called=[MCPPromptCall(...)],
+    mcp_resources_called=[MCPResourceCall(...)]
+)
+```
+
+You can now use the [MCP Use Metric](/docs/metrics-mcp-use) to run MCP evaluations on your single-turn test case.
+
+### Multi-Turn
+
+The `ConversationalTestCase` accepts an optional parameter called `mcp_data` to add your `MCPServer` objects in a list, here's an example implementation on how to add it:
 
 ```python
-from deepeval.test_case import ConversationalTestCase, MCPMetaData
+from deepeval.test_case import ConversationalTestCase, MCPServer
 
 test_case = ConversationalTestCase(
     turns=turns,
     mcp_data=[
-        MCPMetaData(...),
-        MCPMetaData(...)
+        MCPServer(...),
+        MCPServer(...)
     ]
 )
 ```
 
-You can add as many `MCPMetaData` objects as you have clients in your MCP host application.
+You can add as many `MCPServer` objects as you have clients in your MCP host application.
 
 The `Turn` accepts optional parameters like `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` to add a list of primitives your AI application makes use of during execution. They each accept a list of `MCPToolCall`, `MCPResourceCall` and `MCPPromptCall` objects. Here's an example implementation of how to add them in turns:
 
@@ -190,7 +226,7 @@ The `Turn` accepts optional parameters like `mcp_tools_called`, `mcp_resources_c
 from deepeval.test_case import (
     ConversationalTest, 
     Turn, 
-    MCPMetaData, 
+    MCPServer, 
     MCPToolCall, 
     MCPResourceCall, 
     MCPPromptCall
@@ -217,7 +253,7 @@ turns = [
 
 test_case = ConversationalTestCase(
     turns=turns,
-    mcp_data=[MCPMetaData(...)],
+    mcp_data=[MCPServer(...)],
 )
 ```
 
@@ -225,4 +261,4 @@ test_case = ConversationalTestCase(
 Everytime you add a tool or resource or prompt called in MCP arguments, you need to set the `mcp_interaction` to True.
 :::
 
-✅ Done. You can now use the [MCP metrics](https://www.deepeval.com/docs/metrics-mcp-args-correctness) to run evaluations on your MCP based application.
+✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.

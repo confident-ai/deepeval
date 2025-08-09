@@ -101,9 +101,9 @@ module.exports = {
           type: "category",
           label: "MCP",
           items: [
-            "metrics-mcp-args-correctness",
+            "metrics-mcp-use",
+            "metrics-multi-turn-mcp-use",
             "metrics-mcp-task-completion",
-            "metrics-mcp-tool-correctness",
           ],
           collapsed: true,
         },

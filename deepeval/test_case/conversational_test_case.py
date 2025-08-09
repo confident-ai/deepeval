@@ -4,6 +4,7 @@ from copy import deepcopy
 from enum import Enum
 from deepeval.test_case import ToolCall
 from pydantic import AnyUrl, BaseModel
+from .types import MCPServer, MCPPromptCall, MCPResourceCall, MCPToolCall
 
 
 class TurnParams(Enum):
@@ -16,57 +17,6 @@ class TurnParams(Enum):
     MCP_TOOLS = "mcp_tools_called"
     MCP_RESOURCES = "mcp_resources_called"
     MCP_PROMPTS = "mcp_prompts_called"
-
-
-# @dataclass
-# class MCPTool:
-#     name: str
-#     input_schema: Dict
-#     output_schema: Dict
-#     title: Optional[str] = None
-#     description: Optional[str] = None
-
-
-# @dataclass
-# class MCPResource:
-#     name: str
-#     mimeType: str
-#     uri: AnyUrl
-#     title: Optional[str] = None
-#     description: Optional[str] = None
-
-
-# @dataclass
-# class MCPPrompt:
-#     name: str
-#     arguments: List
-#     title: Optional[str] = None
-#     description: Optional[str] = None
-
-
-class MCPToolCall(BaseModel):
-    name: str
-    args: Dict
-    result: object
-
-
-class MCPPromptCall(BaseModel):
-    name: str
-    result: object
-
-
-class MCPResourceCall(BaseModel):
-    uri: AnyUrl
-    result: object
-
-
-@dataclass
-class MCPMetaData:
-    server_name: str
-    transport: Optional[Literal["stdio", "sse", "streamable-http"]] = None
-    available_tools: Optional[List] = None
-    available_resources: Optional[List] = None
-    available_prompts: Optional[List] = None
 
 
 @dataclass
@@ -160,7 +110,7 @@ class ConversationalTestCase:
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     tags: Optional[List[str]] = field(default=None)
-    mcp_data: Optional[List[MCPMetaData]] = None
+    mcp_data: Optional[List[MCPServer]] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -188,7 +138,7 @@ class ConversationalTestCase:
 
         self.turns = copied_turns
 
-    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
+    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPServer]):
         from mcp.types import Tool, Resource, Prompt
 
         for mcp_data in mcp_data_list:
