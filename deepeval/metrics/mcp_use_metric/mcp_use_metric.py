@@ -26,7 +26,7 @@ class MCPUseMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
-        LLMTestCaseParams.MCP_DATA,
+        LLMTestCaseParams.MCP_SERVERS,
     ]
 
     def __init__(
