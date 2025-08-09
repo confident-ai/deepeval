@@ -299,7 +299,11 @@ class GeminiModel(DeepEvalBaseLLM):
 
         # Build text content (prefer raw.text if available)
         text_content = getattr(raw, "text", None) or ""
-        if not text_content and candidate0 and getattr(candidate0, "content", None):
+        if (
+            not text_content
+            and candidate0
+            and getattr(candidate0, "content", None)
+        ):
             parts = getattr(candidate0.content, "parts", None) or []
             texts = []
             for part in parts:
@@ -314,7 +318,9 @@ class GeminiModel(DeepEvalBaseLLM):
                 self.logprob = logprob
 
         class _TokenLogprob:
-            def __init__(self, token: str, top_logprobs: list[_TokenTopLogprob]):
+            def __init__(
+                self, token: str, top_logprobs: list[_TokenTopLogprob]
+            ):
                 self.token = token
                 self.top_logprobs = top_logprobs
 
@@ -339,10 +345,14 @@ class GeminiModel(DeepEvalBaseLLM):
         converted_tokens: list[_TokenLogprob] = []
         try:
             logprobs_result = (
-                getattr(candidate0, "logprobs_result", None) if candidate0 else None
+                getattr(candidate0, "logprobs_result", None)
+                if candidate0
+                else None
             )
             if logprobs_result is not None:
-                chosen = getattr(logprobs_result, "chosen_candidates", None) or []
+                chosen = (
+                    getattr(logprobs_result, "chosen_candidates", None) or []
+                )
                 top = getattr(logprobs_result, "top_candidates", None) or []
                 length = min(len(chosen), len(top))
                 for i in range(length):
@@ -353,8 +363,12 @@ class GeminiModel(DeepEvalBaseLLM):
                         tok = getattr(cand, "token", "") or ""
                         lp = getattr(cand, "log_probability", None)
                         if tok != "" and isinstance(lp, (int, float)):
-                            per_token_top.append(_TokenTopLogprob(tok, float(lp)))
-                    converted_tokens.append(_TokenLogprob(chosen_token, per_token_top))
+                            per_token_top.append(
+                                _TokenTopLogprob(tok, float(lp))
+                            )
+                    converted_tokens.append(
+                        _TokenLogprob(chosen_token, per_token_top)
+                    )
         except Exception:
             converted_tokens = []
 
