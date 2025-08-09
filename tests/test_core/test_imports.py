@@ -342,15 +342,9 @@ def test_tracing_imports():
     from deepeval.tracing import (
         update_current_span,
         update_current_trace,
-        LlmAttributes,
-        RetrieverAttributes,
-        ToolAttributes,
-        AgentAttributes,
-        TraceAttributes,
         BaseSpan,
         Trace,
         Feedback,
-        TurnContext,
         observe,
         trace_manager,
         evaluate_thread,
@@ -360,15 +354,9 @@ def test_tracing_imports():
 
     assert update_current_span is not None
     assert update_current_trace is not None
-    assert LlmAttributes is not None
-    assert RetrieverAttributes is not None
-    assert ToolAttributes is not None
-    assert AgentAttributes is not None
-    assert TraceAttributes is not None
     assert BaseSpan is not None
     assert Trace is not None
     assert Feedback is not None
-    assert TurnContext is not None
     assert observe is not None
     assert trace_manager is not None
     assert evaluate_thread is not None

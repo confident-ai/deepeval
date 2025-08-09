@@ -1,24 +1,23 @@
 from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
-    RetrieverAttributes,
-    LlmAttributes,
     update_current_span,
+    update_llm_span,
+    update_retriever_span,
     observe,
 )
 import random
+import time
 
 
 @observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
-    attributes = LlmAttributes(
-        input=prompt,
-        output=generated_text,
+    time.sleep(1)
+    update_llm_span(
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span(attributes=attributes)
     return generated_text
 
 
@@ -29,11 +28,9 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 2 about {query}",
         f"Document 3 about {query}",
     ]
-    update_current_span(
-        attributes=RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=documents,
-        )
+    update_retriever_span(
+        top_k=top_k,
+        chunk_size=5,
     )
     return documents
 
@@ -62,12 +59,9 @@ async def custom_generate(prompt: str, model: str = "custom-model"):
 
 @observe(type="agent", available_tools=["custom_retrieve", "custom_generate"])
 async def custom_research_agent(query: str):
-    if random.random() < 0.5:
-        docs = await custom_retrieve(query)
-        analysis = await custom_generate(str(docs))
-        return analysis
-    else:
-        return "Research information unavailable"
+    docs = await custom_retrieve(query)
+    analysis = await custom_generate(str(docs))
+    return analysis
 
 
 @observe(
@@ -76,21 +70,17 @@ async def custom_research_agent(query: str):
 )
 async def weather_agent(query: str):
     update_current_span(
-        test_case=LLMTestCase(
-            input=query, actual_output="Weather information unavailable"
-        )
+        input=query,
+        output="Weather information unavailable",
     )
     return "Weather information unavailable"
 
 
 @observe(type="agent", available_tools=["retrieve_documents", "generate_text"])
 async def research_agent(query: str):
-    if random.random() < 0.5:
-        docs = await retrieve_documents(query)
-        analysis = await generate_text(str(docs))
-        return analysis
-    else:
-        return "Research information unavailable"
+    docs = await retrieve_documents(query)
+    analysis = await generate_text(str(docs))
+    return analysis
 
 
 @observe(
@@ -109,6 +99,14 @@ async def meta_agent(input: str):
     Custom Analysis: {custom_info}
     """
     update_current_span(
-        test_case=LLMTestCase(input=input, actual_output=final_response)
+        input=input,
+        output=final_response,
     )
     return final_response
+
+
+############################
+
+import asyncio
+
+asyncio.run(meta_agent("What's the weather like in SF?"))

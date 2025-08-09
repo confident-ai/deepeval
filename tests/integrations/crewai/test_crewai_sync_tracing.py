@@ -26,6 +26,7 @@ coder = Agent(
     goal="Get the weather",
     backstory="An agent that gets the weather",
     tools=[get_weather],
+    metric_collection="Task Completion Collection",
 )
 
 # Create tasks for your agents

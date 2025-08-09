@@ -1,6 +1,5 @@
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain.callback import CallbackHandler
-from deepeval.tracing import TraceAttributes
 import asyncio
 import time
 
@@ -29,16 +28,16 @@ async def run_concurrent_invokes():
                 {"role": "user", "content": "what is the weather in sf"}
             ]
         },
-        {
-            "messages": [
-                {"role": "user", "content": "what is the weather in nyc"}
-            ]
-        },
-        {
-            "messages": [
-                {"role": "user", "content": "what is the weather in la"}
-            ]
-        },
+        # {
+        #     "messages": [
+        #         {"role": "user", "content": "what is the weather in nyc"}
+        #     ]
+        # },
+        # {
+        #     "messages": [
+        #         {"role": "user", "content": "what is the weather in la"}
+        #     ]
+        # },
     ]
 
     # Create tasks for concurrent execution

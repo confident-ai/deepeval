@@ -24,7 +24,7 @@ result = agent.invoke(
     },
     config={
         "callbacks": [
-            CallbackHandler(metric_collection="Task Completion Metric")
+            CallbackHandler(metric_collection="Task Completion Collection")
         ]
     },
 )
