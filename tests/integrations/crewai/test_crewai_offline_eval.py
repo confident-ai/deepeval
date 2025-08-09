@@ -14,12 +14,10 @@ instrument_crewai(api_key=os.getenv("CONFIDENT_API_KEY"))
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 
-# Define your agents with roles and goals
 coder = Agent(
     role="Consultant",
     goal="Write clear, concise explanation.",
     backstory="An expert consultant with a keen eye for software trends.",
-    # metric_collection="test_collection_1",
     metrics=[answer_relavancy_metric],
 )
 
@@ -45,7 +43,4 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 
 for golden in dataset.evals_iterator():
-    # Kickoff your crew
     result = crew.kickoff(inputs={"input": golden.input})
-
-time.sleep(7) # Wait for traces to be posted to observatory

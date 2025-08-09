@@ -42,7 +42,6 @@ for golden in dataset.evals_iterator():
             "callbacks": [
                 CallbackHandler(
                     metrics=[task_completion],
-                    # metric_collection="task_completion",
                 )
             ]
         },
