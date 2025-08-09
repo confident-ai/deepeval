@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 from contextvars import ContextVar
 
 from deepeval.tracing.types import BaseSpan, Trace, Feedback
-from deepeval.test_case.llm_test_case import ToolCall
+from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.prompt import Prompt
 
 current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
@@ -25,10 +25,19 @@ def update_current_span(
     metadata: Optional[Dict[str, Any]] = None,
     feedback: Optional[Feedback] = None,
     name: Optional[str] = None,
+    test_case: Optional[LLMTestCase] = None,
 ):
     current_span = current_span_context.get()
     if not current_span:
         return
+    if test_case:
+        current_span.input = test_case.input
+        current_span.actual_output = test_case.actual_output
+        current_span.expected_output = test_case.expected_output
+        current_span.retrieval_context = test_case.retrieval_context
+        current_span.context = test_case.context
+        current_span.tools_called = test_case.tools_called
+        current_span.expected_tools = test_case.expected_tools
     if metadata:
         current_span.metadata = metadata
     if feedback:
@@ -50,7 +59,6 @@ def update_current_span(
     if name:
         current_span.name = name
 
-
 def update_current_trace(
     name: Optional[str] = None,
     tags: Optional[List[str]] = None,
@@ -65,10 +73,19 @@ def update_current_trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     feedback: Optional[Feedback] = None,
+    test_case: Optional[LLMTestCase] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
         return
+    if test_case:
+        current_trace.input = test_case.input
+        current_trace.actual_output = test_case.actual_output
+        current_trace.expected_output = test_case.expected_output
+        current_trace.retrieval_context = test_case.retrieval_context
+        current_trace.context = test_case.context
+        current_trace.tools_called = test_case.tools_called
+        current_trace.expected_tools = test_case.expected_tools
     if name:
         current_trace.name = name
     if tags:
