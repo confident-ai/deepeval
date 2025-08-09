@@ -39,7 +39,7 @@ from deepeval.test_case import Turn, ConversationalTestCase, MCPServer
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")],
-    mcp_data=[MCPServer(...)]
+    mcp_server=[MCPServer(...)]
 )
 metric = MCPTaskCompletionMetric(threshold=0.5)
 

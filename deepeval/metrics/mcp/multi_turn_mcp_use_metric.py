@@ -65,8 +65,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                if not test_case.mcp_data:
-                    error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
+                if not test_case.mcp_server:
+                    error_str = "'mcp_server' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
                 self.unit_interactions = get_unit_interactions(test_case.turns)
@@ -118,8 +118,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            if not test_case.mcp_data:
-                error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
+            if not test_case.mcp_server:
+                error_str = "'mcp_server' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
 
@@ -167,7 +167,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
         prompt = MCPTaskCompletionTemplate.get_tool_correctness_score(
-            task, test_case.mcp_data
+            task, test_case.mcp_server
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ToolScore)
@@ -186,7 +186,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
         prompt = MCPTaskCompletionTemplate.get_tool_correctness_score(
-            task, test_case.mcp_data
+            task, test_case.mcp_server
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ToolScore)
@@ -207,7 +207,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
         prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
-            task, test_case.mcp_data
+            task, test_case.mcp_server
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ArgsScore)
@@ -226,7 +226,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ArgsScore:
         prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
-            task, test_case.mcp_data
+            task, test_case.mcp_server
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ArgsScore)

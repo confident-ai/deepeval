@@ -3,7 +3,6 @@ from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
 from deepeval.test_case import ToolCall
-from pydantic import AnyUrl, BaseModel
 from .types import MCPServer, MCPPromptCall, MCPResourceCall, MCPToolCall
 
 
@@ -110,7 +109,7 @@ class ConversationalTestCase:
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     tags: Optional[List[str]] = field(default=None)
-    mcp_data: Optional[List[MCPServer]] = None
+    mcp_server: Optional[List[MCPServer]] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -126,8 +125,8 @@ class ConversationalTestCase:
             ):
                 raise TypeError("'context' must be None or a list of strings")
 
-        if self.mcp_data is not None:
-            self._validate_mcp_meta_data(self.mcp_data)
+        if self.mcp_server is not None:
+            self._validate_mcp_meta_data(self.mcp_server)
 
         copied_turns = []
         for turn in self.turns:
@@ -138,33 +137,36 @@ class ConversationalTestCase:
 
         self.turns = copied_turns
 
-    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPServer]):
+    def _validate_mcp_meta_data(self, mcp_server_list: List[MCPServer]):
         from mcp.types import Tool, Resource, Prompt
 
-        for mcp_data in mcp_data_list:
-            if mcp_data.available_tools is not None:
-                if not isinstance(mcp_data.available_tools, list) or not all(
-                    isinstance(tool, Tool) for tool in mcp_data.available_tools
+        for mcp_server in mcp_server_list:
+            if mcp_server.available_tools is not None:
+                if not isinstance(mcp_server.available_tools, list) or not all(
+                    isinstance(tool, Tool)
+                    for tool in mcp_server.available_tools
                 ):
                     raise TypeError(
                         "'available_tools' must be a list of 'Tool' from mcp.types"
                     )
 
-            if mcp_data.available_resources is not None:
+            if mcp_server.available_resources is not None:
                 if not isinstance(
-                    mcp_data.available_resources, list
+                    mcp_server.available_resources, list
                 ) or not all(
                     isinstance(resource, Resource)
-                    for resource in mcp_data.available_resources
+                    for resource in mcp_server.available_resources
                 ):
                     raise TypeError(
                         "'available_resources' must be a list of 'Resource' from mcp.types"
                     )
 
-            if mcp_data.available_prompts is not None:
-                if not isinstance(mcp_data.available_prompts, list) or not all(
+            if mcp_server.available_prompts is not None:
+                if not isinstance(
+                    mcp_server.available_prompts, list
+                ) or not all(
                     isinstance(prompt, Prompt)
-                    for prompt in mcp_data.available_prompts
+                    for prompt in mcp_server.available_prompts
                 ):
                     raise TypeError(
                         "'available_prompts' must be a list of 'Prompt' from mcp.types"

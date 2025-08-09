@@ -19,7 +19,7 @@ The MCP Use is a metric that is used to evaluate how effectively an **MCP based 
 
 To use the `MCPUseMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](https://www.deepeval.com/docs/evaluation-test-cases):
 
-- `mcp_data`
+- `mcp_server`
 - [Optional] `mcp_tools_called`
 - [Optional] `mcp_resources_called`
 - [Optional] `mcp_prompts_called`
@@ -38,7 +38,7 @@ from deepeval.test_case import LLMTestCase, MCPServer
 test_case = LLMTestCase(
     input="...", # Your input here
     actual_output="...", # Your LLM app's final output here
-    mcp_data=[MCPServer(...)] # Your MCP server's data
+    mcp_server=[MCPServer(...)] # Your MCP server's data
     # MCP primitives used (if any)
 )
 

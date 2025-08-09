@@ -70,7 +70,7 @@ class MCPUseMetric(BaseMetric):
             else:
                 available_primitives, primitives_used = (
                     self._get_mcp_interaction_text(
-                        mcp_data=test_case.mcp_data,
+                        mcp_server=test_case.mcp_server,
                         mcp_tools_called=test_case.mcp_tools_called or [],
                         mcp_resources_called=test_case.mcp_resources_called
                         or [],
@@ -121,7 +121,7 @@ class MCPUseMetric(BaseMetric):
         ):
             available_primitives, primitives_used = (
                 self._get_mcp_interaction_text(
-                    mcp_data=test_case.mcp_data,
+                    mcp_server=test_case.mcp_server,
                     mcp_tools_called=test_case.mcp_tools_called or [],
                     mcp_resources_called=test_case.mcp_resources_called or [],
                     mcp_prompts_called=test_case.mcp_prompts_called or [],
@@ -278,12 +278,12 @@ class MCPUseMetric(BaseMetric):
 
     def _get_mcp_interaction_text(
         self,
-        mcp_data: List[MCPServer],
+        mcp_server: List[MCPServer],
         mcp_tools_called: List[MCPToolCall],
         mcp_resources_called: List[MCPResourceCall],
         mcp_prompts_called: List[MCPPromptCall],
     ) -> tuple[str, str]:
-        for data in mcp_data:
+        for data in mcp_server:
             available_primitives = f"MCP Server {data.server_name}\n"
             available_primitives += (
                 (

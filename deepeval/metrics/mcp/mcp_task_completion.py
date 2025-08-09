@@ -65,8 +65,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                if not test_case.mcp_data:
-                    error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
+                if not test_case.mcp_server:
+                    error_str = "'mcp_server' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                     self.error = error_str
                     raise MissingTestCaseParamsError(error_str)
 
@@ -106,8 +106,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
-            if not test_case.mcp_data:
-                error_str = "'mcp_data' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
+            if not test_case.mcp_server:
+                error_str = "'mcp_server' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                 self.error = error_str
                 raise MissingTestCaseParamsError(error_str)
 

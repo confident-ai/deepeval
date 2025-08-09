@@ -18,9 +18,9 @@ def test_metrics_imports():
         ContextualRelevancyMetric,
         ContextualPrecisionMetric,
         # MCP metrics
-        MCPArgsCorrectnessMetric,
+        MCPUseMetric,
         MCPTaskCompletionMetric,
-        MCPToolCorrectnessMetric,
+        MultiTurnMCPUseMetric,
         # Other metrics
         HallucinationMetric,
         SummarizationMetric,
@@ -72,9 +72,9 @@ def test_metrics_imports():
         ContextualRecallMetric,
         ContextualRelevancyMetric,
         ContextualPrecisionMetric,
-        MCPArgsCorrectnessMetric,
         MCPTaskCompletionMetric,
-        MCPToolCorrectnessMetric,
+        MCPUseMetric,
+        MultiTurnMCPUseMetric,
         HallucinationMetric,
         BiasMetric,
         ToxicityMetric,
@@ -185,7 +185,7 @@ def test_test_case_imports():
         ToolCallParams,
         TurnParams,
         LLMTestCaseParams,
-        MCPMetaData,
+        MCPServer,
         MCPPromptCall,
         MCPResourceCall,
         MCPToolCall,
@@ -202,7 +202,7 @@ def test_test_case_imports():
     assert ToolCallParams is not None
     assert TurnParams is not None
     assert LLMTestCaseParams is not None
-    assert MCPMetaData is not None
+    assert MCPServer is not None
     assert MCPPromptCall is not None
     assert MCPResourceCall is not None
     assert MCPToolCall is not None

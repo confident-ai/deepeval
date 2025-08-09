@@ -4,7 +4,7 @@ title: MCP
 sidebar_label: MCP
 ---
 
-**MCP (Model Context Protocol)**  is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
+**MCP (Model Context Protocol)** is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
 
 ## Introduction to MCP
 
@@ -56,7 +56,7 @@ The `MCPServer` object is used to contain information about different MCP server
 ```python
 from deepeval.test_case import MCPServer
 
-mcp_data = MCPServer(
+mcp_server = MCPServer(
     server_name="...", # Provide any server name here
     transport="stdio", # Provide your transport method here
     available_tools=tool_list.tools,
@@ -174,7 +174,7 @@ DeepEval supports both single turn and multi-turn test cases for MCP evaluation 
 
 The `LLMTestCase` accepts the following optional parameters to support MCP evaluations:
 
-- `mcp_data` — a list of `MCPServer` objects giving information on MCP servers that your MCP host can use
+- `mcp_server` — a list of `MCPServer` objects giving information on MCP servers that your MCP host can use
 - `mcp_tools_called` — a list of `MCPToolCall` objects that your LLM application has used
 - `mcp_resources_called` — a list of `MCPResourceCall` objects that your LLM application has used
 - `mcp_prompts_called` — a list of `MCPPromptCall` objects that your LLM application has used
@@ -183,17 +183,17 @@ Here's how you would create an MCP single-turn test case:
 
 ```python {3-6,12-15}
 from deepeval.test_case import (
-    LLMTestCase, 
-    MCPServer, 
-    MCPToolCall, 
-    MCPResourceCall, 
+    LLMTestCase,
+    MCPServer,
+    MCPToolCall,
+    MCPResourceCall,
     MCPPromptCall
 )
 
 test_case = LLMTestCase(
     input="...", # Your input
     actual_output="...", # Your LLMs final output
-    mcp_data=[MCPServer(...)],
+    mcp_server=[MCPServer(...)],
     mcp_tools_called=[MCPToolCall(...)],
     mcp_prompts_called=[MCPPromptCall(...)],
     mcp_resources_called=[MCPResourceCall(...)]
@@ -204,14 +204,14 @@ You can now use the [MCP Use Metric](/docs/metrics-mcp-use) to run MCP evaluatio
 
 ### Multi-Turn
 
-The `ConversationalTestCase` accepts an optional parameter called `mcp_data` to add your `MCPServer` objects in a list, here's an example implementation on how to add it:
+The `ConversationalTestCase` accepts an optional parameter called `mcp_server` to add your `MCPServer` objects in a list, here's an example implementation on how to add it:
 
 ```python
 from deepeval.test_case import ConversationalTestCase, MCPServer
 
 test_case = ConversationalTestCase(
     turns=turns,
-    mcp_data=[
+    mcp_server=[
         MCPServer(...),
         MCPServer(...)
     ]
@@ -224,11 +224,11 @@ The `Turn` accepts optional parameters like `mcp_tools_called`, `mcp_resources_c
 
 ```python
 from deepeval.test_case import (
-    ConversationalTest, 
-    Turn, 
-    MCPServer, 
-    MCPToolCall, 
-    MCPResourceCall, 
+    ConversationalTest,
+    Turn,
+    MCPServer,
+    MCPToolCall,
+    MCPResourceCall,
     MCPPromptCall
 )
 
@@ -253,7 +253,7 @@ turns = [
 
 test_case = ConversationalTestCase(
     turns=turns,
-    mcp_data=[MCPServer(...)],
+    mcp_server=[MCPServer(...)],
 )
 ```
 
