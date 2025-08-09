@@ -38,7 +38,9 @@ def tool_span(input: str):
         span.set_attribute("confident.span.type", "tool")
         span.set_attribute("confident.tool.description", "tool description")
         span.set_attribute("confident.span.input", json.dumps({"input": input}))
-        span.set_attribute("confident.span.output", json.dumps({"output": input}))
+        span.set_attribute(
+            "confident.span.output", json.dumps({"output": input})
+        )
 
 
 def retriever_span(input: str):
@@ -67,7 +69,9 @@ def agent_span(input: str):
             ["llm_agent", "retriever_span", "tool_span"],
         )
         span.set_attribute("confident.span.input", json.dumps({"input": input}))
-        span.set_attribute("confident.span.output", json.dumps({"output": input}))
+        span.set_attribute(
+            "confident.span.output", json.dumps({"output": input})
+        )
 
         # trace attributes
         span.set_attribute(

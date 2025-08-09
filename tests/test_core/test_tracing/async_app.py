@@ -81,7 +81,6 @@ async def research_agent(query: str):
     docs = await retrieve_documents(query)
     analysis = await generate_text(str(docs))
     return analysis
- 
 
 
 @observe(
@@ -109,4 +108,5 @@ async def meta_agent(input: str):
 ############################
 
 import asyncio
-asyncio.run(meta_agent("What's the weather like in SF?"))   
+
+asyncio.run(meta_agent("What's the weather like in SF?"))

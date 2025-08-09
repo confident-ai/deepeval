@@ -99,8 +99,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 if llm_span:
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
-                    llm_span.input = llm_span.input,
-                    llm_span.output = event.response.message.blocks[0].text,
+                    llm_span.input = llm_span.input
+                    llm_span.output = event.response.message.blocks[0].text
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 

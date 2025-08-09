@@ -163,8 +163,8 @@ def patch_sync_openai_client_method(
                 )
                 update_current_span(
                     input=input_parameters.input
-                        or input_parameters.messages
-                        or "NA",
+                    or input_parameters.messages
+                    or "NA",
                     output=output_parameters.output or "NA",
                     expected_output=expected_output,
                     retrieval_context=retrieval_context,

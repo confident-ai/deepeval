@@ -28,10 +28,12 @@ class TraceSpanStatus(Enum):
     ERRORED = "ERRORED"
     IN_PROGRESS = "IN_PROGRESS"
 
+
 class LlmToolCall(BaseModel):
     name: str
     args: Dict[str, Any]
     id: Optional[str] = None
+
 
 class LlmOutput(BaseModel):
     role: str
@@ -81,7 +83,7 @@ class BaseSpan(BaseModel):
 
 
 class AgentSpan(BaseSpan):
-    name: str   
+    name: str
     available_tools: List[str] = []
     agent_handoffs: List[str] = []
 
@@ -154,6 +156,7 @@ class Trace(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+
 
 class TraceAttributes(BaseModel):
     name: Optional[str] = None

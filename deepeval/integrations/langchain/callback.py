@@ -274,10 +274,10 @@ class CallbackHandler(BaseCallbackHandler):
                             tool_calls=tool_calls,
                         )
 
-        llm_span.input=llm_span.input
-        llm_span.output=output
-        llm_span.input_token_count=total_input_tokens
-        llm_span.output_token_count=total_output_tokens
+        llm_span.input = llm_span.input
+        llm_span.output = output
+        llm_span.input_token_count = total_input_tokens
+        llm_span.output_token_count = total_output_tokens
 
         self.end_span(llm_span)
         if parent_run_id is None:
@@ -360,8 +360,8 @@ class CallbackHandler(BaseCallbackHandler):
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
         )
-        retriever_span.input=query,
-        retriever_span.retrieval_context=[]
+        retriever_span.input = query
+        retriever_span.retrieval_context = []
 
         self.add_span_to_trace(retriever_span)
 
@@ -387,8 +387,8 @@ class CallbackHandler(BaseCallbackHandler):
         else:
             output_list.append(str(output))
 
-        retriever_span.input=retriever_span.input,
-        retriever_span.retrieval_context=output_list,
+        retriever_span.input = retriever_span.input
+        retriever_span.retrieval_context = output_list
 
         self.end_span(retriever_span)
 

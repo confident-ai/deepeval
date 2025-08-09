@@ -1,40 +1,41 @@
-import json
-import os
-import typing
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
 from opentelemetry.trace.status import StatusCode
 from opentelemetry.sdk.trace.export import (
-    SpanExporter,
     SpanExportResult,
+    SpanExporter,
     ReadableSpan,
 )
+from pydantic import ValidationError, BaseModel
+from typing import Any, Dict, List, Optional
+from collections import defaultdict
+import typing
+import json
+import os
+
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
+    TraceSpanStatus,
+    RetrieverSpan,
     AgentSpan,
     BaseSpan,
     LlmSpan,
-    RetrieverSpan,
     ToolSpan,
-    TraceSpanStatus,
 )
 from deepeval.tracing.otel.utils import (
-    to_hex_string,
-    set_trace_time,
-    check_llm_input_from_gen_ai_attributes,
-    check_tool_name_from_gen_ai_attributes,
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
     check_model_from_gen_ai_attributes,
+    check_llm_input_from_gen_ai_attributes,
+    check_tool_name_from_gen_ai_attributes,
+    set_trace_time,
+    to_hex_string,
 )
-import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
-from deepeval.test_case import LLMTestCase, ToolCall
-from pydantic import ValidationError
-from deepeval.feedback.feedback import Feedback
-from collections import defaultdict
 from deepeval.tracing.types import TraceAttributes
+from deepeval.feedback.feedback import Feedback
+from deepeval.test_case import ToolCall
+from dataclasses import dataclass
+import deepeval
 
 
 @dataclass
@@ -50,6 +51,12 @@ class BaseSpanWrapper:
     trace_metadata: Optional[Dict[str, Any]] = None
     trace_thread_id: Optional[str] = None
     trace_user_id: Optional[str] = None
+    trace_retrieval_context: Optional[List[str]] = None
+    trace_context: Optional[List[str]] = None
+    trace_tools_called: Optional[List[ToolCall]] = None
+    trace_expected_tools: Optional[List[ToolCall]] = None
+    trace_metric_collection: Optional[str] = None
+    trace_feedback: Optional[Feedback] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -184,6 +191,24 @@ class ConfidentSpanExporter(SpanExporter):
                 if base_span_wrapper.trace_output:
                     current_trace.output = base_span_wrapper.trace_output
 
+
+                # set the trace test case parameters
+                if base_span_wrapper.trace_retrieval_context:
+                    current_trace.retrieval_context = base_span_wrapper.trace_retrieval_context
+                if base_span_wrapper.trace_context:
+                    current_trace.context = base_span_wrapper.trace_context
+                if base_span_wrapper.trace_tools_called:
+                    current_trace.tools_called = base_span_wrapper.trace_tools_called
+                if base_span_wrapper.trace_expected_tools:
+                    current_trace.expected_tools = base_span_wrapper.trace_expected_tools
+
+                # set the trace metric collection and feedback
+                if base_span_wrapper.trace_metric_collection:
+                    current_trace.metric_collection = base_span_wrapper.trace_metric_collection
+                if base_span_wrapper.trace_feedback:
+                    current_trace.feedback = base_span_wrapper.trace_feedback
+                    
+
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
                 # no removing span because it can be parent of other spans
@@ -197,19 +222,26 @@ class ConfidentSpanExporter(SpanExporter):
 
         return SpanExportResult.SUCCESS
 
-
     def _convert_readable_span_to_base_span(
         self, span: ReadableSpan
     ) -> BaseSpanWrapper:
+
+        # Create typed spans
         base_span = None
         try:
             base_span = self._prepare_boilerplate_base_span(span)
         except Exception:
             pass
 
-        # fallback to base span with default values
-        parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
-        status = TraceSpanStatus.ERRORED if span.status.status_code == StatusCode.ERROR else TraceSpanStatus.SUCCESS
+        # Creaete base span if no typed span
+        parent_uuid = (
+            to_hex_string(span.parent.span_id, 16) if span.parent else None
+        )
+        status = (
+            TraceSpanStatus.ERRORED
+            if span.status.status_code == StatusCode.ERROR
+            else TraceSpanStatus.SUCCESS
+        )
         if not base_span:
             base_span = BaseSpan(
                 uuid=to_hex_string(span.context.span_id, 16),
@@ -222,71 +254,95 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
         # Extract Span Attributes
-        error = span.attributes.get("confident.span.error")
-        feedback_json_str = span.attributes.get("confident.span.feedback")
-        metric_collection = span.attributes.get("confident.span.metric_collection")
+        span_error = span.attributes.get("confident.span.error")
         span_input = span.attributes.get("confident.span.input")
         span_output = span.attributes.get("confident.span.output")
-        context_attr = span.attributes.get("confident.span.context")
-        retrieval_context_attr = span.attributes.get("confident.span.retrieval_context")
-        tools_called_attr = span.attributes.get("confident.span.tools_called")
-        expected_tools_attr = span.attributes.get("confident.span.expected_tools")
-        metadata_json_str = span.attributes.get("confident.span.metadata")
+        span_name = span.attributes.get("confident.span.name")
+
+        raw_span_feedback = span.attributes.get("confident.span.feedback")
+        raw_span_metric_collection = span.attributes.get(
+            "confident.span.metric_collection"
+        )
+        raw_span_context = span.attributes.get("confident.span.context")
+        raw_span_retrieval_context = span.attributes.get(
+            "confident.span.retrieval_context"
+        )
+        raw_span_tools_called = span.attributes.get(
+            "confident.span.tools_called"
+        )
+        raw_span_expected_tools = span.attributes.get(
+            "confident.span.expected_tools"
+        )
+        raw_span_metadata = span.attributes.get("confident.span.metadata")
 
         # Extract Trace Attributes
         trace_name = span.attributes.get("confident.trace.name")
-        trace_tags = span.attributes.get("confident.trace.tags")
-        trace_metadata = span.attributes.get("confident.trace.metadata")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
 
-        # Validate Span and Trace Attributes
-        retrieval_context : List[str] = self._parse_list_of_strings(retrieval_context_attr)
-        context : List[str] = self._parse_list_of_strings(context_attr)
-        tools_called : List[ToolCall] = self._parse_list_of_tools(tools_called_attr)
-        expected_tools : List[ToolCall] = self._parse_list_of_tools(expected_tools_attr)
-        feedback = None
-        metadata = None
+        raw_trace_tags = span.attributes.get("confident.trace.tags")
+        raw_trace_metadata = span.attributes.get("confident.trace.metadata")
+        raw_trace_retrieval_context = span.attributes.get(
+            "confident.trace.retrieval_context"
+        )
+        raw_trace_context = span.attributes.get("confident.trace.context")
+        raw_trace_tools_called = span.attributes.get(
+            "confident.trace.tools_called"
+        )
+        raw_trace_expected_tools = span.attributes.get(
+            "confident.trace.expected_tools"
+        )
+        raw_trace_metric_collection = span.attributes.get(
+            "confident.trace.metric_collection"
+        )
+        raw_trace_feedback = span.attributes.get("confident.trace.feedback")
 
-        if metadata_json_str and isinstance(metadata_json_str, str):
-            try:
-                metadata = json.loads(metadata_json_str)
-            except Exception:
-                pass
+        # Validate Span Attributes
+        span_retrieval_context = self._parse_list_of_strings(
+            raw_span_retrieval_context
+        )
+        span_context = self._parse_list_of_strings(raw_span_context)
+        span_tools_called = self._parse_list_of_tools(raw_span_tools_called)
+        span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
+        span_feedback = self._parse_base_model(raw_span_feedback, Feedback)
+        span_metadata = self._parse_json_string(raw_span_metadata)
+        span_metric_collection = self._parse_string(raw_span_metric_collection)
 
-        if feedback_json_str:
-            try:
-                feedback = Feedback.model_validate_json(feedback_json_str)
-            except ValidationError:
-                pass  
+        # Validate Trace Attributes
+        trace_tags = self._parse_list_of_strings(raw_trace_tags)
+        trace_retrieval_context = self._parse_list_of_strings(
+            raw_trace_retrieval_context
+        )
+        trace_context = self._parse_list_of_strings(raw_trace_context)
+        trace_tools_called = self._parse_list_of_tools(raw_trace_tools_called)
+        trace_expected_tools = self._parse_list_of_tools(
+            raw_trace_expected_tools
+        )
+        trace_metadata = self._parse_json_string(raw_trace_metadata)
+        trace_metric_collection = self._parse_string(raw_trace_metric_collection)
+        trace_feedback = self._parse_base_model(raw_trace_feedback, Feedback)
 
-        if not isinstance(metric_collection, str):
-            metric_collection = None
-        
-        if trace_tags and isinstance(trace_tags, tuple):
-            trace_tags = list(trace_tags)
-        
         # Set Span Attributes
-        _name = None
-        if base_span.name is not None and base_span.name != "None":
-            _name = base_span.name
-        base_span.parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
-        base_span.name = _name if _name else span.name
-        base_span.error = error
-        base_span.metric_collection = metric_collection
-        base_span.feedback = feedback
-        base_span.retrieval_context = retrieval_context
-        base_span.context = context
-        base_span.tools_called = tools_called
-        base_span.expected_tools = expected_tools
-        base_span.metadata = metadata
-        
-        if span_input:
-            base_span.input = span_input
-        if span_output:
-            base_span.output = span_output
+        base_span.parent_uuid = (
+            to_hex_string(span.parent.span_id, 16) if span.parent else None
+        )
+
+        base_span.name = (
+            span_name or base_span.name if base_span.name != "None" and base_span.name else span.name
+        )
+        base_span.error = span_error
+        base_span.metric_collection = span_metric_collection
+        base_span.feedback = span_feedback
+        base_span.retrieval_context = span_retrieval_context
+        base_span.context = span_context
+        base_span.tools_called = span_tools_called
+        base_span.expected_tools = span_expected_tools
+        base_span.metadata = span_metadata
+
+        base_span.input = span_input
+        base_span.output = span_output
 
         return BaseSpanWrapper(
             base_span=base_span,
@@ -297,8 +353,13 @@ class ConfidentSpanExporter(SpanExporter):
             trace_metadata=trace_metadata,
             trace_thread_id=trace_thread_id,
             trace_user_id=trace_user_id,
+            trace_retrieval_context=trace_retrieval_context,
+            trace_context=trace_context,
+            trace_tools_called=trace_tools_called,
+            trace_expected_tools=trace_expected_tools,
+            trace_metric_collection=trace_metric_collection,
+            trace_feedback=trace_feedback,
         )
-
 
     def _prepare_boilerplate_base_span(
         self, span: ReadableSpan
@@ -323,7 +384,7 @@ class ConfidentSpanExporter(SpanExporter):
         end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
 
         #######################################################
-        ### LLM Span 
+        ### LLM Span
         #######################################################
 
         if span_type == "llm":
@@ -373,12 +434,11 @@ class ConfidentSpanExporter(SpanExporter):
                 output_token_count=output_token_count,
                 input=input,
                 output=output,
-            )           
+            )
             return llm_span
 
-
         #######################################################
-        ### Agent Span 
+        ### Agent Span
         #######################################################
 
         elif span_type == "agent":
@@ -418,9 +478,8 @@ class ConfidentSpanExporter(SpanExporter):
             )
             return agent_span
 
-
         #######################################################
-        ### Retriever Span 
+        ### Retriever Span
         #######################################################
 
         elif span_type == "retriever":
@@ -444,9 +503,8 @@ class ConfidentSpanExporter(SpanExporter):
             )
             return retriever_span
 
-
         #######################################################
-        ### Tool Span 
+        ### Tool Span
         #######################################################
 
         elif span_type == "tool":
@@ -474,8 +532,28 @@ class ConfidentSpanExporter(SpanExporter):
         return None
 
     #######################################################
-    ### Helper
+    ### validation and Parsing
     #######################################################
+
+    def _parse_base_model(
+        self,
+        base_model_json_str: str,
+        base_model_type: BaseModel,
+    ) -> Optional[BaseModel]:
+        if base_model_json_str:
+            try:
+                return base_model_type.model_validate_json(base_model_json_str)
+            except ValidationError:
+                pass
+        return None
+
+    def _parse_json_string(self, json_str: str) -> Optional[Dict]:
+        if json_str and isinstance(json_str, str):
+            try:
+                return json.loads(json_str)
+            except Exception:
+                pass
+        return None
 
     def _parse_list_of_tools(self, tools: List[str]) -> List[str]:
         parsed_tools: List[str] = []
@@ -492,13 +570,24 @@ class ConfidentSpanExporter(SpanExporter):
 
     def _parse_list_of_strings(self, context: List[str]) -> List[str]:
         parsed_context: List[str] = []
-        if context and isinstance(context, list):
+        if context and (
+            isinstance(context, list) or isinstance(context, tuple)
+        ):
             for context_str in context:
                 if not isinstance(context_str, str):
-                    raise ValidationError("Context must be a string")
+                    pass
                 else:
                     parsed_context.append(context_str)
         return parsed_context
+
+    def _parse_string(self, value: Any) -> Any:
+        if isinstance(value, str):
+            return value
+        return None
+
+    #######################################################
+    ### Span Forest
+    #######################################################
 
     def _build_span_forest(
         self, spans: typing.Sequence[ReadableSpan]

@@ -160,7 +160,9 @@ def update_span_properties_from_function_span_data(
     function_span_data: "FunctionSpanData",
 ):
     # Update Span
-    span.input = json.loads(function_span_data.input) or {"input": function_span_data.input}
+    span.input = json.loads(function_span_data.input) or {
+        "input": function_span_data.input
+    }
     span.output = function_span_data.output
     span.name = (
         "Function tool: " + function_span_data.name

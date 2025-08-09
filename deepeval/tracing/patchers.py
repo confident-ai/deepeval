@@ -72,10 +72,8 @@ def patch_openai_client(client: OpenAI):
                         pass
 
                     update_current_span(
-                        input=kwargs.get(
-                            "messages", "INPUT_MESSAGE_NOT_FOUND"
-                        ),
-                        output=output if output else "OUTPUT_MESSAGE_NOT_FOUND"
+                        input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
+                        output=output if output else "OUTPUT_MESSAGE_NOT_FOUND",
                     )
                     update_llm_span(
                         input_token_count=input_token_count,
