@@ -13,7 +13,10 @@ def _has_gemini_credentials():
     # Env-based
     env_ok = bool(
         os.getenv("GOOGLE_API_KEY")
-        or (os.getenv("GOOGLE_CLOUD_PROJECT") and os.getenv("GOOGLE_CLOUD_LOCATION"))
+        or (
+            os.getenv("GOOGLE_CLOUD_PROJECT")
+            and os.getenv("GOOGLE_CLOUD_LOCATION")
+        )
     )
     if env_ok:
         return True
@@ -82,11 +85,16 @@ def test_gemini_geval_live_custom_rubrics_0_to_5():
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
         rubric=[
-            Rubric(score_range=(0, 1), expected_outcome="Irrelevant or incorrect."),
             Rubric(
-                score_range=(2, 3), expected_outcome="Partially correct or incomplete."
+                score_range=(0, 1), expected_outcome="Irrelevant or incorrect."
             ),
-            Rubric(score_range=(4, 5), expected_outcome="Mostly or fully correct."),
+            Rubric(
+                score_range=(2, 3),
+                expected_outcome="Partially correct or incomplete.",
+            ),
+            Rubric(
+                score_range=(4, 5), expected_outcome="Mostly or fully correct."
+            ),
         ],
         model=model,
         threshold=0.8,

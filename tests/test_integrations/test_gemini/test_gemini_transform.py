@@ -108,13 +108,17 @@ def test_transform_maps_logprobs_structure():
     top_logprobs0 = getattr(token_entries[0], "top_logprobs")
     assert isinstance(top_logprobs0, list)
     # Ensure both alternatives are present and mapped
-    tokens0 = {getattr(t, "token"): getattr(t, "logprob") for t in top_logprobs0}
+    tokens0 = {
+        getattr(t, "token"): getattr(t, "logprob") for t in top_logprobs0
+    }
     assert tokens0 == {"A": -0.1, "X": -2.5}
 
     # Second token position
     assert getattr(token_entries[1], "token") == "B"
     top_logprobs1 = getattr(token_entries[1], "top_logprobs")
-    tokens1 = {getattr(t, "token"): getattr(t, "logprob") for t in top_logprobs1}
+    tokens1 = {
+        getattr(t, "token"): getattr(t, "logprob") for t in top_logprobs1
+    }
     assert tokens1 == {"B": -0.2, "Y": -3.0}
 
 

@@ -82,14 +82,18 @@ def _fake_generate_raw_response(self, prompt: str, top_logprobs: int = 20):
         content=json.dumps({"score": 8, "reason": "Weighted by logprobs"}),
         logprobs=logprobs,
     )
-    completion = _ChatCompletion(choices=[_Choice(message=message, logprobs=logprobs)])
+    completion = _ChatCompletion(
+        choices=[_Choice(message=message, logprobs=logprobs)]
+    )
     return completion, 0
 
 
 def test_stubbed_gemini_geval_generate():
     """Test that the stubbed gemini model can generate a sampled score when falling back to the generate function."""
     with (
-        mock.patch.object(GeminiModel, "load_model", lambda self, *a, **k: None),
+        mock.patch.object(
+            GeminiModel, "load_model", lambda self, *a, **k: None
+        ),
         mock.patch.object(GeminiModel, "generate", _fake_generate_steps),
     ):
         model = GeminiModel()
@@ -119,7 +123,9 @@ def test_stubbed_gemini_geval_generate():
 def test_stubbed_gemini_geval_generate_raw_response_weighted_sum():
     """Test that the stubbed gemini model can generate a weighted summed score when using the generate_raw_response function."""
     with (
-        mock.patch.object(GeminiModel, "load_model", lambda self, *a, **k: None),
+        mock.patch.object(
+            GeminiModel, "load_model", lambda self, *a, **k: None
+        ),
         mock.patch.object(GeminiModel, "generate", _fake_generate_steps),
         mock.patch.object(
             GeminiModel, "generate_raw_response", _fake_generate_raw_response
