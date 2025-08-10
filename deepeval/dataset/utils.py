@@ -59,7 +59,7 @@ def convert_convo_goldens_to_convo_test_cases(
     test_cases = []
     for index, golden in enumerate(goldens):
         test_case = ConversationalTestCase(
-            turns=[],
+            turns=golden.turns or [],
             scenario=golden.scenario,
             user_description=golden.user_description,
             context=golden.context,
