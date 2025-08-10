@@ -32,6 +32,7 @@ from deepeval.tracing.otel.utils import (
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
     check_model_from_gen_ai_attributes,
+    prepare_trace_llm_test_case,
 )
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
@@ -89,7 +90,6 @@ class ConfidentSpanExporter(SpanExporter):
                 base_span_wrapper = self._convert_readable_span_to_base_span(
                     span
                 )
-                print(f"Base span wrapper environment: {base_span_wrapper.trace_environment}")
 
                 spans_wrappers_list.append(base_span_wrapper)
             spans_wrappers_forest.append(spans_wrappers_list)
@@ -181,11 +181,13 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace.output = base_span_wrapper.trace_output
 
                 if base_span_wrapper.trace_environment:
-                    print(f"Setting trace environment: {base_span_wrapper.trace_environment}")
                     current_trace.environment = base_span_wrapper.trace_environment
 
                 if base_span_wrapper.trace_metric_collection:
                     current_trace.metric_collection = base_span_wrapper.trace_metric_collection
+                
+                if base_span_wrapper.trace_llm_test_case:
+                    current_trace.llm_test_case = base_span_wrapper.trace_llm_test_case
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -383,7 +385,6 @@ class ConfidentSpanExporter(SpanExporter):
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
         _trace_metric_collection = span.attributes.get("confident.trace.metric_collection")
-        
 
         trace_metric_collection = None
         if _trace_metric_collection and isinstance(_trace_metric_collection, str):
@@ -416,6 +417,7 @@ class ConfidentSpanExporter(SpanExporter):
             trace_user_id=trace_user_id,
             trace_environment=trace_environment,
             trace_metric_collection=trace_metric_collection,
+            trace_llm_test_case=prepare_trace_llm_test_case(span),
         )
 
         return base_span_wrapper

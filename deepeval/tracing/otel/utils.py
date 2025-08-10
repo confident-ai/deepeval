@@ -1,5 +1,5 @@
 from typing import List, Optional, Tuple
-from deepeval.tracing.types import Trace
+from deepeval.tracing.types import Trace, LLMTestCase, ToolCall
 from opentelemetry.sdk.trace.export import ReadableSpan
 import json
 
@@ -163,3 +163,60 @@ def check_model_from_gen_ai_attributes(span: ReadableSpan):
         pass
 
     return None
+
+
+
+def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
+
+    test_case = LLMTestCase(input="")
+    
+    _input = span.attributes.get("confident.trace.test_case.input")
+    if isinstance(_input, str):
+        test_case.input = _input
+        
+    _actual_output = span.attributes.get("confident.trace.test_case.actual_output")
+    if isinstance(_actual_output, str):
+        test_case.actual_output = _actual_output
+
+    _expected_output = span.attributes.get("confident.trace.test_case.expected_output")
+    if isinstance(_expected_output, str):
+        test_case.expected_output = _expected_output
+
+    _context = span.attributes.get("confident.trace.test_case.context")
+    if isinstance(_context, list):
+        if all(isinstance(item, str) for item in _context):
+            test_case.context = _context
+        
+    _retrieval_context = span.attributes.get("confident.trace.test_case.retrieval_context")
+    if isinstance(_retrieval_context, list):
+        if all(isinstance(item, str) for item in _retrieval_context):
+            test_case.retrieval_context = _retrieval_context
+    
+    tools_called: List[ToolCall] = []
+    expected_tools: List[ToolCall] = []
+
+    _tools_called = span.attributes.get("confident.trace.test_case.tools_called")
+    if isinstance(_tools_called, list):
+        for tool_call_json_str in _tools_called:
+            if isinstance(tool_call_json_str, str):
+                try:
+                    tools_called.append(ToolCall.model_validate_json(tool_call_json_str))
+                except Exception as e:
+                    pass
+
+    _expected_tools = span.attributes.get("confident.trace.test_case.expected_tools")
+    if isinstance(_expected_tools, list):
+        for tool_call_json_str in _expected_tools:
+            if isinstance(tool_call_json_str, str):
+                try:
+                    expected_tools.append(ToolCall.model_validate_json(tool_call_json_str))
+                except Exception as e:
+                    pass
+
+    test_case.tools_called = tools_called
+    test_case.expected_tools = expected_tools
+
+    if test_case.input == "":
+        return None
+
+    return test_case
