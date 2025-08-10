@@ -151,6 +151,11 @@ def meta_agent(input: str):
         span.set_attribute("confident.trace.input", input)
         span.set_attribute("confident.trace.output", input)
 
+        span.set_attribute("confident.trace.llm_test_case.input", "test_input")
+        span.set_attribute("confident.trace.llm_test_case.actual_output", "test_actual_output")
+        span.set_attribute("confident.trace.llm_test_case.expected_output", "test_expected_output")
+        span.set_attribute("confident.trace.metric_collection", "test_collection_1")
+
         llm_agent(input)
 
 
