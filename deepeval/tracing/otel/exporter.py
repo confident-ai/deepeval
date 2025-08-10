@@ -55,6 +55,9 @@ class BaseSpanWrapper:
     trace_metadata: Optional[Dict[str, Any]] = None
     trace_thread_id: Optional[str] = None
     trace_user_id: Optional[str] = None
+    trace_environment: Optional[str] = None
+    trace_metric_collection: Optional[str] = None
+    trace_llm_test_case: Optional[LLMTestCase] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -86,6 +89,7 @@ class ConfidentSpanExporter(SpanExporter):
                 base_span_wrapper = self._convert_readable_span_to_base_span(
                     span
                 )
+                print(f"Base span wrapper environment: {base_span_wrapper.trace_environment}")
 
                 spans_wrappers_list.append(base_span_wrapper)
             spans_wrappers_forest.append(spans_wrappers_list)
@@ -104,13 +108,6 @@ class ConfidentSpanExporter(SpanExporter):
 
                 if api_key:
                     current_trace.confident_api_key = api_key
-
-                # confugarion are attached to the resource attributes
-                resource_attributes = span.resource.attributes
-                if resource_attributes:
-                    environment = resource_attributes.get("confident.trace.environment")
-                    if environment and isinstance(environment, str):
-                        current_trace.environment = environment
 
                 # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
@@ -182,6 +179,13 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace.input = base_span_wrapper.trace_input
                 if base_span_wrapper.trace_output:
                     current_trace.output = base_span_wrapper.trace_output
+
+                if base_span_wrapper.trace_environment:
+                    print(f"Setting trace environment: {base_span_wrapper.trace_environment}")
+                    current_trace.environment = base_span_wrapper.trace_environment
+
+                if base_span_wrapper.trace_metric_collection:
+                    current_trace.metric_collection = base_span_wrapper.trace_metric_collection
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -378,6 +382,12 @@ class ConfidentSpanExporter(SpanExporter):
         trace_metadata = span.attributes.get("confident.trace.metadata")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
+        _trace_metric_collection = span.attributes.get("confident.trace.metric_collection")
+        
+
+        trace_metric_collection = None
+        if _trace_metric_collection and isinstance(_trace_metric_collection, str):
+            trace_metric_collection = _trace_metric_collection
 
         if trace_tags and isinstance(trace_tags, tuple):
             trace_tags = list(trace_tags)
@@ -385,6 +395,14 @@ class ConfidentSpanExporter(SpanExporter):
         # extract trace input and output
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
+
+        trace_environment = None
+
+        resource_attributes = span.resource.attributes
+        if resource_attributes:
+            environment = resource_attributes.get("confident.trace.environment")
+            if environment and isinstance(environment, str):
+                trace_environment = environment
 
         base_span_wrapper = BaseSpanWrapper(
             base_span=base_span,
@@ -396,6 +414,8 @@ class ConfidentSpanExporter(SpanExporter):
             trace_metadata=trace_metadata,
             trace_thread_id=trace_thread_id,
             trace_user_id=trace_user_id,
+            trace_environment=trace_environment,
+            trace_metric_collection=trace_metric_collection,
         )
 
         return base_span_wrapper
