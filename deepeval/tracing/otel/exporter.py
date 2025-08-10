@@ -66,14 +66,6 @@ class ConfidentSpanExporter(SpanExporter):
             if api_key:
                 deepeval.login(api_key)
 
-        environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
-        if environment:
-            trace_manager.configure(environment=environment)
-
-        sampling_rate = os.getenv("CONFIDENT_SAMPLE_RATE")
-        if sampling_rate:
-            trace_manager.configure(sampling_rate=sampling_rate)
-
         super().__init__()
 
     def export(
@@ -112,6 +104,13 @@ class ConfidentSpanExporter(SpanExporter):
 
                 if api_key:
                     current_trace.confident_api_key = api_key
+
+                # confugarion are attached to the resource attributes
+                resource_attributes = span.resource.attributes
+                if resource_attributes:
+                    environment = resource_attributes.get("confident.trace.environment")
+                    if environment and isinstance(environment, str):
+                        current_trace.environment = environment
 
                 # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
