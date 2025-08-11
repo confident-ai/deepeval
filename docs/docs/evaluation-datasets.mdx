@@ -572,11 +572,24 @@ class ConversationalGolden(BaseModel):
     scenario: str
     expected_outcome: Optional[str] = None
     user_description: Optional[str] = None
+    context: Optional[List[str]] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     custom_column_key_values: Optional[Dict[str, str]] = None
+
+    # Fields that you should ideally not populate
+    turns: Optional[Turn] = None
 ```
 
 You can easily add and edit custom columns on [Confident AI.](https://documentation.confident-ai.com/docs/dataset-editor/dataset-features/custom-columns)
+
+:::tip
+
+The `turns` parameter should **100%** be generated at evaluation time in your `ConversationalTestCase` instead. However, the `turns` parameter exists in case users want to either:
+
+- [Simulate turns](/docs/conversation-simulator) starting from a certain point of a prior conversation that was previously left off
+- Continue from a specific turn when test cases usually fail at the last turn where agents are calling multiple tools
+
+:::

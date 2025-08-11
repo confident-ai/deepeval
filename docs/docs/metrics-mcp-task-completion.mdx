@@ -1,7 +1,7 @@
 ---
 id: metrics-mcp-task-completion
 title: MCP Task Completion
-sidebar_label: Task Completion
+sidebar_label: MCP Task Completion
 ---
 
 <head>
@@ -20,11 +20,11 @@ The MCP task completion metric is a conversational metric that uses LLM-as-a-jud
 
 ## Required Arguments
 
-To use the `MCPTaskCompletionMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+To use the `MCPTaskCompletionMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
-You will also need to provide `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` inside the turns whenever there is an MCP interaction in your agent's workflow. You can learn more about [creating MCP test cases here](https://www.deepeval.com/docs/evaluation-mcp-test-cases).
+You will also need to provide `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` inside the turns whenever there is an MCP interaction in your agent's workflow. You can learn more about [creating MCP test cases here](https://www.deepeval.com/docs/evaluation-mcp).
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
@@ -35,11 +35,11 @@ The `MCPTaskCompletionMetric()` can be used for [end-to-end](/docs/evaluation-en
 ```python
 from deepeval import evaluate
 from deepeval.metrics import MCPTaskCompletionMetric
-from deepeval.test_case import Turn, ConversationalTestCase, MCPMetaData
+from deepeval.test_case import Turn, ConversationalTestCase, MCPServer
 
 convo_test_case = ConversationalTestCase(
     turns=[Turn(role="...", content="..."), Turn(role="...", content="...")],
-    mcp_data=[MCPMetaData(...)]
+    mcp_servers=[MCPServer(...)]
 )
 metric = MCPTaskCompletionMetric(threshold=0.5)
 
@@ -50,7 +50,7 @@ metric = MCPTaskCompletionMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `MCPTaskCompletionMetric`:
+There are **SIX** optional parameters when creating a `MCPTaskCompletionMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.

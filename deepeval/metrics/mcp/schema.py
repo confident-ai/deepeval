@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from deepeval.test_case import MCPToolCall, MCPResourceCall, MCPPromptCall
+from pydantic import BaseModel
+from typing import List
 
 
 class Task(BaseModel):
@@ -21,9 +20,3 @@ class ToolScore(BaseModel):
 class ArgsScore(BaseModel):
     score: float
     reason: str
-
-
-# class MCPArgs(BaseModel):
-#     tools_called: Optional[List[MCPToolCall]] = None
-#     resources_called: Optional[List[MCPResourceCall]] = None
-#     prompts_called: Optional[List[MCPPromptCall]] = None

@@ -6,24 +6,22 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
-    trimAndLoadJson,
     get_unit_interactions,
+    trimAndLoadJson,
     initialize_model,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
+from deepeval.test_case import ConversationalTestCase, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
-from deepeval.metrics.mcp.schema import Task, ToolScore
+from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
+from deepeval.errors import MissingTestCaseParamsError
 
 
-class MCPToolCorrectnessMetric(BaseConversationalMetric):
+class MultiTurnMCPUseMetric(BaseConversationalMetric):
     _required_test_case_params = [
         TurnParams.ROLE,
         TurnParams.CONTENT,
-        TurnParams.MCP_TOOLS,
-        TurnParams.MCP_RESOURCES,
-        TurnParams.MCP_PROMPTS,
     ]
 
     def __init__(
@@ -67,24 +65,40 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if not test_case.mcp_servers:
+                    error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
+                    self.error = error_str
+                    raise MissingTestCaseParamsError(error_str)
                 self.unit_interactions = get_unit_interactions(test_case.turns)
                 self.tasks = self._get_tasks(self.unit_interactions)
-                self.tool_accuracy_scores = [
+                primitives_accuracy_scores = [
                     self._get_tool_accuracy_score(task, test_case)
                     for task in self.tasks
                 ]
-                self.score = self._calculate_score(self.tool_accuracy_scores)
-                self.reason = self._generate_reason(self.tool_accuracy_scores)
-                self.scores_reasons_list = [
-                    (score, reason)
-                    for score, reason in self.tool_accuracy_scores
+                args_accuracy_scores = [
+                    self._get_args_score(task, test_case) for task in self.tasks
+                ]
+                self.score = self._calculate_score(
+                    primitives_accuracy_scores, args_accuracy_scores
+                )
+                self.reason = self._generate_reason(
+                    primitives_accuracy_scores, args_accuracy_scores
+                )
+                self.tools_scores_reasons_list = [
+                    (tool_score.score, tool_score.reason)
+                    for tool_score in primitives_accuracy_scores
+                ]
+                self.args_scores_reasons_list = [
+                    (args_score.score, args_score.reason)
+                    for args_score in args_accuracy_scores
                 ]
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
                         f"Tasks:\n{prettify_list(self.tasks)}",
-                        f"Individual Scores & Reasons:\n{self.scores_reasons_list}",
+                        f"Individual Scores & Reasons for Primitives:\n{prettify_list(self.tools_scores_reasons_list)}",
+                        f"Individual Scores & Reasons for Arguments:\n{prettify_list(self.args_scores_reasons_list)}",
                         f"Score: {self.score}",
                     ],
                 )
@@ -104,46 +118,56 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
         ):
+            if not test_case.mcp_servers:
+                error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
+                self.error = error_str
+                raise MissingTestCaseParamsError(error_str)
+
             self.unit_interactions = get_unit_interactions(test_case.turns)
             self.tasks = self._get_tasks(self.unit_interactions)
-            self.tool_accuracy_scores = await asyncio.gather(
+            primitives_accuracy_scores = await asyncio.gather(
                 *[
                     self._a_get_tool_accuracy_score(task, test_case)
                     for task in self.tasks
                 ]
             )
-            self.scores_reasons_list = [
-                (score, reason) for score, reason in self.tool_accuracy_scores
+            args_accuracy_scores = await asyncio.gather(
+                *[
+                    self._a_get_args_score(task, test_case)
+                    for task in self.tasks
+                ]
+            )
+            self.score = self._calculate_score(
+                primitives_accuracy_scores, args_accuracy_scores
+            )
+            self.reason = self._generate_reason(
+                primitives_accuracy_scores, args_accuracy_scores
+            )
+            self.tools_scores_reasons_list = [
+                (tool_score.score, tool_score.reason)
+                for tool_score in primitives_accuracy_scores
             ]
-            self.score = self._calculate_score(self.tool_accuracy_scores)
-            self.reason = self._generate_reason(self.tool_accuracy_scores)
+            self.args_scores_reasons_list = [
+                (args_score.score, args_score.reason)
+                for args_score in args_accuracy_scores
+            ]
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Tasks and Tools Called:\n{prettify_list(self.tasks)}",
-                    f"Individual Scores & Reasons:\n{prettify_list(self.scores_reasons_list)}",
+                    f"Tasks:\n{prettify_list(self.tasks)}",
+                    f"Individual Scores & Reasons for Primitives:\n{prettify_list(self.tools_scores_reasons_list)}",
+                    f"Individual Scores & Reasons for Arguments:\n{prettify_list(self.args_scores_reasons_list)}",
                     f"Score: {self.score}",
                 ],
             )
         return self.score
 
-    def _generate_reason(self, task_scores: List[ToolScore]) -> str:
-        reason = "["
-        for task_score in task_scores:
-            if task_score.score < self.threshold:
-                reason += (
-                    f"\nScore: {task_score.score}\n"
-                    f"Reason: {task_score.reason}\n"
-                )
-        reason += "]"
-        return reason
-
     def _get_tool_accuracy_score(
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
         prompt = MCPTaskCompletionTemplate.get_tool_correctness_score(
-            task, test_case.mcp_data
+            task, test_case.mcp_servers
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ToolScore)
@@ -162,7 +186,7 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
         self, task: Task, test_case: ConversationalTestCase
     ) -> ToolScore:
         prompt = MCPTaskCompletionTemplate.get_tool_correctness_score(
-            task, test_case.mcp_data
+            task, test_case.mcp_servers
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ToolScore)
@@ -179,6 +203,46 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
                 data = trimAndLoadJson(res, self)
                 return ToolScore(**data)
 
+    def _get_args_score(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> ArgsScore:
+        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
+            task, test_case.mcp_servers
+        )
+        if self.using_native_model:
+            res, cost = self.model.generate(prompt, schema=ArgsScore)
+            self.evaluation_cost += cost
+            return res
+        else:
+            try:
+                res: ArgsScore = self.model.generate(prompt, schema=ArgsScore)
+                return res
+            except TypeError:
+                res = self.model.generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return ArgsScore(**data)
+
+    async def _a_get_args_score(
+        self, task: Task, test_case: ConversationalTestCase
+    ) -> ArgsScore:
+        prompt = MCPTaskCompletionTemplate.get_args_correctness_score(
+            task, test_case.mcp_servers
+        )
+        if self.using_native_model:
+            res, cost = await self.model.a_generate(prompt, schema=ArgsScore)
+            self.evaluation_cost += cost
+            return res
+        else:
+            try:
+                res: ArgsScore = await self.model.a_generate(
+                    prompt, schema=ArgsScore
+                )
+                return res
+            except TypeError:
+                res = await self.model.a_generate(prompt)
+                data = trimAndLoadJson(res, self)
+                return ArgsScore(**data)
+
     def _get_tasks(self, unit_interactions: List) -> List[Task]:
         tasks = []
         for unit_interaction in unit_interactions:
@@ -192,7 +256,7 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
                     break
             new_task = Task(task=user_messages, steps_taken=[])
             for turn in unit_interaction[1:]:
-                if turn.mcp_interaction:
+                if turn._mcp_interaction:
                     mcp_interaction = "Tools called by agent: \n"
                     if turn.mcp_tools_called is not None:
                         for tool in turn.mcp_tools_called:
@@ -230,9 +294,41 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
             tasks.append(new_task)
         return tasks
 
-    def _calculate_score(self, scores: List[ToolScore]) -> float:
-        total_score = sum(score.score for score in scores)
-        return total_score / len(scores)
+    def _calculate_score(
+        self,
+        tool_accuracy_score: List[ToolScore],
+        args_accuracy_score: List[ArgsScore],
+    ) -> float:
+        tool_score = sum(score.score for score in tool_accuracy_score) / len(
+            tool_accuracy_score
+        )
+        args_score = sum(score.score for score in args_accuracy_score) / len(
+            args_accuracy_score
+        )
+        return min(tool_score, args_score)
+
+    def _generate_reason(
+        self,
+        tool_accuracy_score: List[ToolScore],
+        args_accuracy_score: List[ArgsScore],
+    ) -> str:
+        reason = "["
+        for task_score in tool_accuracy_score:
+            if task_score.score < self.threshold:
+                reason += "\nPrimitives Used\n"
+                reason += (
+                    f"Score: {task_score.score}\n"
+                    f"Reason: {task_score.reason}\n"
+                )
+        for task_score in args_accuracy_score:
+            if task_score.score < self.threshold:
+                reason += "\nArguments Generated\n"
+                reason += (
+                    f"Score: {task_score.score}\n"
+                    f"Reason: {task_score.reason}\n"
+                )
+        reason += "]"
+        return reason
 
     def is_successful(self) -> bool:
         if self.error is not None:
@@ -246,4 +342,4 @@ class MCPToolCorrectnessMetric(BaseConversationalMetric):
 
     @property
     def __name__(self):
-        return "MCP Tool Correctness"
+        return "Multi-Turn MCP Use"
