@@ -130,7 +130,7 @@ def complete(query: str):
   return response
 ```
 
-There are **ZERO** mandatory and **THREE** optional parameters when using the `@observe` decorator:
+There are **THREE** optional parameters when using the `@observe` decorator:
 
 - [Optional] `metrics`: A list of strings specifying the names of the `BaseMetric` you wish to run upon tracing in `deepeval`. Defaulted to `None`.
 - [Optional] `type`: The type of span. Anything other than `"llm"`, `"retriever"`, `"tool"`, and `"agent"` is a custom span type.

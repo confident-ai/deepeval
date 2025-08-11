@@ -136,10 +136,10 @@ flowchart LR
 
 You can run component-level LLM evaluations in either:
 
-- **CI/CD pipelines** using `deepeval test run`, or
-- **Python scripts** by looping through your dataset
+- **Python scripts** by looping through your dataset, or
+- **CI/CD pipelines** using `deepeval test run`
 
-All 3 methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
+both of these methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable test reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
 ### Use Python scripts
 
@@ -159,7 +159,8 @@ from deepeval.dataset import EvaluationDataset, Golden
 
 goldens=[
     Golden(input="What is your name?"),
-    Golden(input="Choose a number between 1 to 100")
+    Golden(input="Choose a number between 1 to 100"),
+    ...
 ]
 
 dataset = EvaluationDataset(goldens)
@@ -235,9 +236,11 @@ You can use this dataset to iterate over goldens.
 <TimelineItem title="Create your pytest file">
 
 ```python title="test_llm_app.py" {10}
-from somewhere import your_llm_app # Replace with your LLM app
 import pytest
+from somewhere import your_llm_app # Replace with your LLM app
+
 from deepeval import assert_test
+from deepeval.dataset import Golden
 
 # Loop through goldens in our dataset using pytest
 @pytest.mark.parametrize("golden", dataset.goldens)
