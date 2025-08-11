@@ -9,6 +9,7 @@ module.exports = {
         "getting-started-agents",
         "getting-started-chatbots",
         "getting-started-rag",
+        "getting-started-mcp",
         "getting-started-llm-arena",
       ],
       collapsed: false,
