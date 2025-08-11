@@ -595,7 +595,7 @@ class TraceManager:
             metadata=trace.metadata,
             name=trace.name,
             tags=trace.tags,
-            environment=self.environment,
+            environment=self.environment if not trace.environment else trace.environment,   
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,

@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 os.environ["CONFIDENT_TRACE_FLUSH"] = "YES"
+os.environ["CONFIDENT_TRACE_FLUSH"] = "YES"
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -33,7 +34,6 @@ tracer = trace.get_tracer("deepeval_tracer")
 
 
 def tool_span(input: str):
-    time.sleep(3)
     with tracer.start_as_current_span("tool_span") as span:
         span.set_attribute("confident.span.type", "tool")
         span.set_attribute("confident.tool.description", "tool description")
@@ -44,7 +44,6 @@ def tool_span(input: str):
 
 
 def retriever_span(input: str):
-    time.sleep(2.5)
     with tracer.start_as_current_span("retriever_span") as span:
         span.set_attribute("confident.span.type", "retriever")
         span.set_attribute("confident.retriever.embedder", "embedder")
@@ -56,7 +55,6 @@ def retriever_span(input: str):
 
 
 def agent_span(input: str):
-    time.sleep(2)
     with tracer.start_as_current_span("agent_span") as span:
         span.set_attribute("confident.span.type", "agent")
         span.set_attribute("confident.agent.name", "agent name")
@@ -81,7 +79,6 @@ def agent_span(input: str):
 
 
 def llm_agent(input: str):
-    time.sleep(1.5)
     with tracer.start_as_current_span("llm_span") as span:
         span.set_attribute("confident.span.type", "llm")
         span.set_attribute(
@@ -106,8 +103,6 @@ def llm_agent(input: str):
 
 def meta_agent(input: str):
     with tracer.start_as_current_span("custom_span") as span:
-        time.sleep(1)
-
         span.set_attribute("confident.span.input", input)
         span.set_attribute("confident.span.output", input)
         span.set_attribute("confident.span.error", "Error")
@@ -138,7 +133,6 @@ def meta_agent(input: str):
         # trace attributes
         span.set_attribute("confident.trace.name", "test_trace")
         span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
-
         span.set_attribute("confident.trace.input", input)
         span.set_attribute("confident.trace.output", input)
 

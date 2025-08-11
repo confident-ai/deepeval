@@ -57,6 +57,7 @@ class BaseSpanWrapper:
     trace_expected_tools: Optional[List[ToolCall]] = None
     trace_metric_collection: Optional[str] = None
     trace_feedback: Optional[Feedback] = None
+    trace_environment: Optional[str] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -191,6 +192,10 @@ class ConfidentSpanExporter(SpanExporter):
                 if base_span_wrapper.trace_output:
                     current_trace.output = base_span_wrapper.trace_output
 
+                # set the trace environment
+                if base_span_wrapper.trace_environment:
+                    current_trace.environment = base_span_wrapper.trace_environment
+
 
                 # set the trace test case parameters
                 if base_span_wrapper.trace_retrieval_context:
@@ -279,9 +284,9 @@ class ConfidentSpanExporter(SpanExporter):
         trace_name = span.attributes.get("confident.trace.name")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
+        trace_environment = span.attributes.get("confident.trace.environment", "production")
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
-
         raw_trace_tags = span.attributes.get("confident.trace.tags")
         raw_trace_metadata = span.attributes.get("confident.trace.metadata")
         raw_trace_retrieval_context = span.attributes.get(
@@ -328,21 +333,35 @@ class ConfidentSpanExporter(SpanExporter):
         base_span.parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
         )
-
-        base_span.name = (
-            span_name or base_span.name if base_span.name != "None" and base_span.name else span.name
-        )
-        base_span.error = span_error
-        base_span.metric_collection = span_metric_collection
-        base_span.feedback = span_feedback
-        base_span.retrieval_context = span_retrieval_context
-        base_span.context = span_context
-        base_span.tools_called = span_tools_called
-        base_span.expected_tools = span_expected_tools
-        base_span.metadata = span_metadata
-
-        base_span.input = span_input
-        base_span.output = span_output
+        base_span.name = None if base_span.name == "None" else base_span.name
+        base_span.name = span_name or base_span.name or span.name
+        if span_error:
+            base_span.error = span_error
+        if span_metric_collection:
+            base_span.metric_collection = span_metric_collection
+        if span_feedback:
+            base_span.feedback = span_feedback
+        if span_retrieval_context:
+            base_span.retrieval_context = span_retrieval_context
+        if span_context:
+            base_span.context = span_context
+        if span_tools_called:
+            base_span.tools_called = span_tools_called
+        if span_expected_tools:
+            base_span.expected_tools = span_expected_tools
+        if span_metadata:
+            base_span.metadata = span_metadata
+        if span_input:
+            base_span.input = span_input
+        if span_output:
+            base_span.output = span_output
+        
+        # Resource attributes
+        resource_attributes = span.resource.attributes
+        if resource_attributes:
+            environment = resource_attributes.get("confident.trace.environment")
+            if environment and isinstance(environment, str):
+                trace_environment = environment
 
         return BaseSpanWrapper(
             base_span=base_span,
@@ -359,6 +378,7 @@ class ConfidentSpanExporter(SpanExporter):
             trace_expected_tools=trace_expected_tools,
             trace_metric_collection=trace_metric_collection,
             trace_feedback=trace_feedback,
+            trace_environment=trace_environment,
         )
 
     def _prepare_boilerplate_base_span(
