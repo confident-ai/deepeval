@@ -1,0 +1,252 @@
+---
+id: getting-started-mcp
+title: MCP Evaluation
+sidebar_label: MCP
+---
+
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+Learn to evaluate model-context-protocal (MCP) based applications using `deepeval`, for both single-turn and multi-turn use cases.
+
+## Overview
+
+MCP evaluation is different from other evaluations because you can choose to create single-turn test cases or multi-turn test cases based on your application design and architecture.
+
+**In this 5 min quickstart, you'll learn how to:**
+
+- Track your MCP interactions
+- Create test cases for your application
+- Evaluate your MCP based application using MCP metrics
+
+## Prerequisites
+
+- Install `deepeval`
+- A Confident AI API key (recommended). Sign up for one [here.](https://app.confident-ai.com)
+
+:::info
+Confident AI allows you to view and share your testing reports. Set your API key in the CLI:
+
+```bash
+CONFIDENT_API_KEY="confident_us..."
+```
+
+:::
+
+## Run Your First MCP Eval
+
+In `deepeval`, MCP evaluations can be done using either single-turn or multi-turn test cases. In code, you'll have to track all MCP interactions and finally create a test case after the execution of your application.
+
+<Timeline>
+<TimelineItem title="Track Your MCP Interactions">
+
+In your MCP application's main file, you need to track all the MCP interactions during run time. This includes adding `tools_called`, `resources_called` and `prompts_called` whenever your host uses them.
+
+```python title="main.py" {3-5,12-14,20-24,28-31,35-38}
+from mcp import ClientSession
+from deepeval.test_case.mcp import (
+    MCPToolCall, 
+    MCPResourceCall, 
+    MCPPromptCall
+)
+...
+
+session = ClientSession(...)
+session.initialize()
+
+tools_called = []
+resources_called = []
+prompts_called = []
+
+def interact_with_mcp_app(input):
+    ...
+    # For all tool calls, create a MCPToolCall object and add it to list
+    tool_result = await session.call_tool(tool_name, tool_args)
+    tools_called.append(MCPToolCall(
+        name=tool_name,
+        args=tool_args,
+        result=tool_result
+    ))
+    ...
+    # For all resource calls, create a MCPResourceCall object and add it to list
+    resource_result = await session.read_resource(resource_uri)
+    resources_called.append(MCPResourceCall(
+        uri=resource_uri,
+        result=resource_result
+    ))
+    ...
+    # For all prompt calls, create a MCPPromptCall object and add it to list
+    prompt_result = await session.get_prompt(prompt_name)
+    prompts_called.append(MCPPromptCall(
+        name=prompt_name,
+        result=prompt_result
+    ))
+    ...
+```
+
+You are now tracking all the MCP interactions during run time of your application.
+
+</TimelineItem>
+<TimelineItem title="Create a test case">
+
+You can now create either a single-turn or multi-turn test case for your MCP application using the above interactions.
+
+<Tabs groupId="single-multi-turns">
+<TabItem value="single-turn" label="Single Turn">
+
+```python {1-2,9-11,15-22}
+from deepeval.test_case import MCPServer
+from deepeval.test_case import LLMTestCase
+
+mcp_servers = []
+# For all MCP servers create an MCPServer object and add it to list
+mcp_servers.append(MCPServer(
+    server_name="GitHub",
+    transport="stdio",
+    available_tools=await session.list_tools().tools,
+    available_resources=await session.list_resources().resources,
+    available_prompts=await session.list_prompts().prompts
+))
+
+# Create test case
+test_case = LLMTestCase(
+    input="...", # Your input
+    actual_output="..." # Your LLM's final output
+    mcp_servers=mcp_servers,
+    mcp_tools_called=tools_called, # From the previous step
+    mcp_resources_called=resources_called # From the previous step
+    mcp_prompts_called=prompts_called, # From the previous step
+)
+```
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi Turn">
+
+```python {1,13-19,26-28,31-34}
+from deepeval.test_case import Turn, ConversationalTestCase, MCPServer
+
+turns = []
+
+def interact_with_mcp_app(input):
+    ...
+    # Reset the lists for each new turn
+    tools_called = []
+    resources_called = []
+    prompts_called = []
+    ...
+    # Add the MCP interaction turn at last
+    turns.append(Turn(
+        role="assistant",
+        content="...", # Relevant content
+        mcp_tools_called=[tools_called],
+        mcp_resources_called=[resources_called]
+        mcp_prompts_called=[prompts_called],
+    ))
+
+mcp_servers = []
+# For all MCP servers create an MCPServer object and add it to list
+mcp_servers.append(MCPServer(
+    server_name="GitHub",
+    transport="stdio",
+    available_tools=await session.list_tools().tools,
+    available_resources=await session.list_resources().resources,
+    available_prompts=await session.list_prompts().prompts
+))
+
+convo_test_case = ConversationalTestCase(
+    turns=turns,
+    mcp_servers=mcp_servers
+)
+```
+
+</TabItem>
+</Tabs>
+
+The test cases must created after the execution of apllication.
+
+:::tip
+You can make your `interact_with_mcp_app()` function return `mcp_servers`, `tools_called`, `resources_called` and `prompts_called`. This helps you import your MCP application anywhere and create test cases easily.
+:::
+
+</TimelineItem>
+<TimelineItem title="Define metrics">
+
+You can now use the [MCP metrics](/docs/metrics-mcp-use) to run evals on your test cases. There's one metric for single-turn test case and two metrics for multi-turn test cases that support MCP evals.
+
+<Tabs groupId="single-multi-turns">
+<TabItem value="single-turn" label="Single Turn">
+
+```python
+from deepeval.metrics import MCPUseMetric
+
+mcp_use_metric = MCPUseMetric()
+```
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi Turn">
+
+```python
+from deepeval.metrics import MultiTurnMCPUseMetric, MCPTaskCompletionMetric
+
+mcp_use_metric = MultiTurnMCPUseMetric()
+mcp_task_completion = MCPTaskCompletionMetric()
+```
+
+</TabItem>
+</Tabs>
+
+</TimelineItem>
+<TimelineItem title="Run an evaluation">
+
+<Tabs groupId="single-multi-turns">
+<TabItem value="single-turn" label="Single Turn">
+
+```python
+from deepeval import evaluate
+...
+evaluate([test_case], [mcp_use_metric])
+```
+
+</TabItem>
+<TabItem value="multi-turn" label="Multi Turn">
+
+```python
+from deepeval import evaluate
+...
+evaluate([convo_test_case], [mcp_use_metric, mcp_task_completion])
+```
+
+</TabItem>
+</Tabs>
+</TimelineItem>
+
+<TimelineItem title="View on Confident AI (recommended)">
+
+If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
+
+:::tip
+If you haven't logged in, you can still upload the test run to Confident AI from local cache:
+
+```bash
+deepeval view
+```
+
+:::
+
+</TimelineItem>
+
+</Timeline>
+
+🎉🥳 **Congratulations!** You just ran your first MCP evaluation. Here's what happened:
+
+- When you call `evaluate()`, `deepeval` runs all your `metrics` against all `test_cases`
+- All `metrics` outputs a score between `0-1`, with a `threshold` defaulted to `0.5`
+- The `MCPUseMetric` is used to evaluate single-turn test cases, while `MultiTurnMCPUseMetric`, `MCPTaskCompletionMetric` is used for multi-turn test cases.
+
+## Next Steps
+
+Now that you have run your first MCP eval, you should:
+
+1. **Customize your metrics**: You can change the threshold of your metric to be more strict to your use-case.
+2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
