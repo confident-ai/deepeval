@@ -43,13 +43,9 @@ In `deepeval`, MCP evaluations can be done using either single-turn or multi-tur
 
 In your MCP application's main file, you need to track all the MCP interactions during run time. This includes adding `tools_called`, `resources_called` and `prompts_called` whenever your host uses them.
 
-```python title="main.py" {3-5,12-14,20-24,28-31,35-38}
+```python title="main.py" {2,8-10,16,20,24}
 from mcp import ClientSession
-from deepeval.test_case.mcp import (
-    MCPToolCall, 
-    MCPResourceCall, 
-    MCPPromptCall
-)
+from deepeval.test_case.mcp import MCPToolCall,  MCPResourceCall,  MCPPromptCall
 ...
 
 session = ClientSession(...)
@@ -63,25 +59,15 @@ def interact_with_mcp_app(input):
     ...
     # For all tool calls, create a MCPToolCall object and add it to list
     tool_result = await session.call_tool(tool_name, tool_args)
-    tools_called.append(MCPToolCall(
-        name=tool_name,
-        args=tool_args,
-        result=tool_result
-    ))
+    tools_called.append(MCPToolCall(name=tool_name, args=tool_args, result=tool_result))
     ...
     # For all resource calls, create a MCPResourceCall object and add it to list
     resource_result = await session.read_resource(resource_uri)
-    resources_called.append(MCPResourceCall(
-        uri=resource_uri,
-        result=resource_result
-    ))
+    resources_called.append(MCPResourceCall( uri=resource_uri, result=resource_result))
     ...
     # For all prompt calls, create a MCPPromptCall object and add it to list
     prompt_result = await session.get_prompt(prompt_name)
-    prompts_called.append(MCPPromptCall(
-        name=prompt_name,
-        result=prompt_result
-    ))
+    prompts_called.append(MCPPromptCall( name=prompt_name, result=prompt_result))
     ...
 ```
 
@@ -256,3 +242,5 @@ Now that you have run your first MCP eval, you should:
 
 1. **Customize your metrics**: You can change the threshold of your metric to be more strict to your use-case.
 2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
+
+You can [learn more about MCP here](/docs/evaluation-mcp).
