@@ -6,16 +6,19 @@ sidebar_label: Component-Level Evals
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
 
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
+![ok](./images/docs:component-level-llm-llm-evals.png)
 
-Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, run:
+:::tip
+Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, login [here](https://app.confident-ai.com) or run:
 
 ```
 deepeval login
 ```
+:::
 
 <details>
 <summary><strong>When should you run Component-Level evaluations?</strong></summary>
@@ -38,7 +41,11 @@ The trend you'll notice is use cases that are more complex in architecture are m
 
 ## Prerequisites
 
-### Select metrics
+- Select metrics
+- Setup LLM apllication
+
+<Timeline>
+<TimelineItem title="Select metrics">
 
 You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for which components, but alternatively you can also [join our discord to ask us directly.](https://discord.com/invite/a3K9c8GRGt)
 
@@ -50,8 +57,8 @@ Similar to end-to-end evaluation, you would still be creating `LLMTestCase`s, bu
 In component-level evaluation, there are more metrics to select as there are more individual components to evaluate.
 
 </details>
-
-### Setup LLM application
+</TimelineItem>
+<TimelineItem title="Setup LLM application">
 
 Unlike end-to-end evaluation, where setting up your LLM application requires rewriting some parts of your code to return certain variables for testing, component-level testing is as simple as adding an `@observe` decorator to apply different metrics at different component scopes, a process known as tracing.
 
@@ -68,7 +75,7 @@ As you'll see in the example below, tracing with `deepeval`'s `@observe` means w
 
 We'll trace this example LLM application to demonstrate how to run component-level evaluations in two lines of code:
 
-```python title="somewhere.py" showLineNumbers {14,25}
+```python title="somewhere.py" {4,14,25}
 from typing import List
 from openai import OpenAI
 
@@ -103,11 +110,14 @@ def your_llm_app(input: str):
 print(your_llm_app("How are you?"))
 ```
 
+</TimelineItem>
+</Timeline>
+
 At this point, you can either pause and [learn how to setup LLM tracing in the next section](/docs/evaluation-llm-tracing) before continuing, or finish this section before moving onto tracing.
 
 ## Run Component-Level Evals
 
-Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoked it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoke it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
 
 <div style={{ textAlign: "center", margin: "2rem 0" }}>
 
@@ -134,6 +144,30 @@ All 3 methods give you exactly the same functionality, and integrates 100% with 
 ### Use Python scripts
 
 To use a dataset for component-level testing, initialize a dataset with a list of `Golden`s, then invoke your `@observe` decorated LLM application within the loop of `evals_iterator()`.
+
+<Timeline>
+<TimelineItem title="Create dataset">
+
+A dataset can only be created with a list of goldens. `Golden`s represent a more flexible alternative to test cases in the `deepeval`, and **it is the preferred way to initialize a dataset using goldens**. Unlike test cases, `Golden`s:
+
+- Don't require an `actual_output` when created
+- Store expected results like `expected_output` and `expected_tools`
+- Serve as templates before becoming fully-formed test cases
+
+```python
+from deepeval.dataset import EvaluationDataset, Golden
+
+goldens=[
+    Golden(input="What is your name?"),
+    Golden(input="Choose a number between 1 to 100")
+]
+
+dataset = EvaluationDataset(goldens)
+dataset.push(alias="Your Dataset Name")
+```
+
+</TimelineItem>
+<TimelineItem title="Run evals using evals iterator">
 
 <Tabs>
 
@@ -170,7 +204,7 @@ for golden in dataset.evals_iterator():
 
 </Tabs>
 
-There are **five** optional parameters when using the `evals_iterator()` for **COMPONENT-LEVEL** evaluation:
+There are **FIVE** optional parameters when using the `evals_iterator()` for **COMPONENT-LEVEL** evaluation:
 
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
@@ -178,24 +212,54 @@ There are **five** optional parameters when using the `evals_iterator()` for **C
 - [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
 - [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
+</TimelineItem>
+</Timeline>
+
 ### Use `deepeval test run` in CI/CD pipelines
 
-`deepeval` allows you to run evaluations as if you're using Pytest via our Pytest integration.
+`deepeval` allows you to run evaluations if you're using `pytest` via our _pytest integration_. You can pull datasets and use the goldens as `input`s in CI/CD workflows.
 
-```python title="test_llm_app.py" showLineNumbers {10}
+<Timeline>
+<TimelineItem title="Pull your dataset">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="Your Dataset Name") # replace with your alias
+```
+
+You can use this dataset to iterate over goldens.
+
+</TimelineItem>
+<TimelineItem title="Create your pytest file">
+
+```python title="test_llm_app.py" {10}
 from somewhere import your_llm_app # Replace with your LLM app
 import pytest
-from deepeval.dataset import Golden
 from deepeval import assert_test
 
-# Goldens from your dataset
-goldens = [Golden(input="...")]
-
-# Loop through goldens using pytest
-@pytest.mark.parametrize("golden", goldens)
+# Loop through goldens in our dataset using pytest
+@pytest.mark.parametrize("golden", dataset.goldens)
 def test_llm_app(golden: Golden):
     assert_test(golden=golden, observed_callback=your_llm_app)
 ```
+
+Finally, don't forget to run the test file in the CLI:
+
+```bash
+deepeval test run test_llm_app.py
+```
+
+</TimelineItem>
+
+</Timeline>
+
+There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
+
+- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
+- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
 :::info
 Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
@@ -204,17 +268,5 @@ Similar to the `evaluate()` function, `assert_test()` for component-level evalua
 - Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
 
 :::
-
-Finally, don't forget to run the test file in the CLI:
-
-```bash
-deepeval test run test_llm_app.py
-```
-
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
-
-- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
-- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.

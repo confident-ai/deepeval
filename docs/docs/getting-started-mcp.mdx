@@ -179,6 +179,7 @@ You can now use the [MCP metrics](/docs/metrics-mcp-use) to run evals on your te
 
 ```python
 from deepeval.metrics import MCPUseMetric
+...
 
 mcp_use_metric = MCPUseMetric()
 ```
@@ -188,6 +189,7 @@ mcp_use_metric = MCPUseMetric()
 
 ```python
 from deepeval.metrics import MultiTurnMCPUseMetric, MCPTaskCompletionMetric
+...
 
 mcp_use_metric = MultiTurnMCPUseMetric()
 mcp_task_completion = MCPTaskCompletionMetric()
@@ -199,12 +201,15 @@ mcp_task_completion = MCPTaskCompletionMetric()
 </TimelineItem>
 <TimelineItem title="Run an evaluation">
 
+Run an evaluation on the test cases you previously created using the metrics defined above.
+
 <Tabs groupId="single-multi-turns">
 <TabItem value="single-turn" label="Single Turn">
 
 ```python
 from deepeval import evaluate
 ...
+
 evaluate([test_case], [mcp_use_metric])
 ```
 
@@ -214,6 +219,7 @@ evaluate([test_case], [mcp_use_metric])
 ```python
 from deepeval import evaluate
 ...
+
 evaluate([convo_test_case], [mcp_use_metric, mcp_task_completion])
 ```
 
