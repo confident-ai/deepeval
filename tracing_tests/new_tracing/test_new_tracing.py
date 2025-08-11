@@ -2,11 +2,9 @@ from deepeval.tracing import (
     observe,
     update_current_span,
     update_current_trace,
-    LlmAttributes,
-    RetrieverAttributes,
-    ToolAttributes,
-    AgentAttributes,
     trace_manager,
+    update_llm_span,
+    update_retriever_span,
 )
 import random
 from deepeval.metrics import AnswerRelevancyMetric
@@ -23,13 +21,14 @@ from deepeval.tracing.types import Feedback
 @observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
-    attributes = LlmAttributes(
+    update_current_span(
         input=prompt,
         output=generated_text,
+    )
+    update_llm_span(
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span(attributes=attributes)
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
     return generated_text
@@ -52,10 +51,12 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 3 about {query}",
     ]
     update_current_span(
-        attributes=RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=documents,
-        )
+        input=query,
+        retrieval_context=documents,
+    )
+    update_retriever_span(
+        embedding_input=query,
+        retrieval_context=documents,
     )
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -70,12 +71,9 @@ async def get_weather(city: str):
     weather = f"Sunny in {city}"
 
     # Create attributes
-    attributes = ToolAttributes(
-        input_parameters={"asdfsaf": city}, output=weather
+    update_current_span(
+        input={"asdfsaf": city}, output=weather
     )
-
-    # Set attributes using the helper function
-    update_current_span(attributes=attributes)
 
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -100,12 +98,10 @@ async def get_location(query: str):
 async def random_research_agent(user_query: str, testing: bool = False):
     documents = await retrieve_documents(user_query, top_k=3)
     analysis = await generate_text(user_query)
-    # set_current_span_attributes(
-    #     AgentAttributes(
-    #         input=user_query,
-    #         output=analysis,
-    #     )
-    # )
+    update_current_span(
+        input=user_query,
+        output=analysis,
+    )
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
     return analysis
@@ -123,10 +119,8 @@ async def weather_research_agent(user_query: str):
     documents = await retrieve_documents(f"{weather} in {location}", top_k=2)
     response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
     update_current_span(
-        attributes=AgentAttributes(
-            input=user_query,
-            output=response,
-        )
+        input=user_query,
+        output=response,
     )
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -141,10 +135,8 @@ async def supervisor_agent(user_query: str):
     research = await random_research_agent(user_query)
     weather_research = await weather_research_agent(user_query)
     update_current_span(
-        attributes=AgentAttributes(
-            input=user_query,
-            output=research + weather_research,
-        )
+        input=user_query,
+        output=research + weather_research,
     )
 
     # Add sleep of 1-3 seconds

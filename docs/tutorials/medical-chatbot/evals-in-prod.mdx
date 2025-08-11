@@ -100,7 +100,7 @@ From the previous tracing code we've seen how to setup trace spans, here's how y
 
 ```python {2,5,19-23}
 ...
-from deepeval.tracing import observe, update_current_span, RetrieverAttributes, update_current_trace
+from deepeval.tracing import observe, update_current_span, update_current_trace
 ...
 
 @observe(type="agent")
