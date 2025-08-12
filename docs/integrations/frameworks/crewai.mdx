@@ -98,14 +98,15 @@ for golden in dataset.evals_iterator():
 from deepeval.dataset import EvaluationDataset, Golden
 import asyncio
 ...
-
+ 
 dataset = EvaluationDataset(goldens=[
-    Golden(input="What's 7 * 8?"),
-    Golden(input="What's 7 * 6?")
+    Golden(input="What are Transformers in AI?"),
+    Golden(input="What is the biggest open source database?"),
+    Golden(input="What are LLMs?"),
 ])
 
 for golden in dataset.evals_iterator():
-    task = asyncio.create_task(llm_app(golden.input))
+    task = asyncio.create_task(crew.kickoff_async(inputs={"input": golden.input}))
     dataset.evaluate(task)
 ```
 
