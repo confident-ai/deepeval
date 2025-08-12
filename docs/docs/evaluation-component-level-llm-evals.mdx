@@ -7,6 +7,7 @@ sidebar_label: Component-Level Evals
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
 
@@ -19,6 +20,32 @@ Component-level evaluations generates LLM traces, which are only visible on Conf
 deepeval login
 ```
 :::
+
+## What Are Component-Level Evals
+
+Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoke it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+
+<div style={{ textAlign: "center", margin: "2rem 0" }}>
+
+```mermaid
+flowchart LR
+  A[Invoke LLM app with Golden Inputs] --> B
+
+  subgraph B[For Each Observed Component]
+    C[Set LLMTestCase at Runtime] --> D[Run Component-Specific Metrics]
+  end
+
+  B -->|All components evaluated| E[Test Run Created]
+```
+
+</div>
+
+You can run component-level LLM evaluations in either:
+
+- **Python scripts** by looping through your dataset, or
+- **CI/CD pipelines** using `deepeval test run`
+
+both of these methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable test reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
 
 <details>
 <summary><strong>When should you run Component-Level evaluations?</strong></summary>
@@ -39,10 +66,7 @@ The trend you'll notice is use cases that are more complex in architecture are m
 
 </details>
 
-## Prerequisites
-
-- Select metrics
-- Setup LLM apllication
+## Setup Your Testing Environment
 
 <Timeline>
 <TimelineItem title="Select metrics">
@@ -115,33 +139,7 @@ print(your_llm_app("How are you?"))
 
 At this point, you can either pause and [learn how to setup LLM tracing in the next section](/docs/evaluation-llm-tracing) before continuing, or finish this section before moving onto tracing.
 
-## Run Component-Level Evals
-
-Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoke it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
-
-<div style={{ textAlign: "center", margin: "2rem 0" }}>
-
-```mermaid
-flowchart LR
-  A[Invoke LLM app with Golden Inputs] --> B
-
-  subgraph B[For Each Observed Component]
-    C[Set LLMTestCase at Runtime] --> D[Run Component-Specific Metrics]
-  end
-
-  B -->|All components evaluated| E[Test Run Created]
-```
-
-</div>
-
-You can run component-level LLM evaluations in either:
-
-- **Python scripts** by looping through your dataset, or
-- **CI/CD pipelines** using `deepeval test run`
-
-both of these methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable test reports on the cloud.](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
-
-### Use Python scripts
+## Use Python scripts
 
 To use a dataset for component-level testing, initialize a dataset with a list of `Golden`s, then invoke your `@observe` decorated LLM application within the loop of `evals_iterator()`.
 
@@ -216,7 +214,7 @@ There are **FIVE** optional parameters when using the `evals_iterator()` for **C
 </TimelineItem>
 </Timeline>
 
-### Use `deepeval test run` in CI/CD pipelines
+## Use `deepeval test run` in CI/CD pipelines
 
 `deepeval` allows you to run evaluations if you're using `pytest` via our _pytest integration_. You can pull datasets and use the goldens as `input`s in CI/CD workflows.
 
@@ -255,7 +253,46 @@ deepeval test run test_llm_app.py
 ```
 
 </TimelineItem>
+<TimelineItem title="Create a YAML file to test on every push">
 
+You just need to create a YAML file now to test your LLM app on every change you make.
+
+```yaml {32-33}
+name: LLM App DeepEval Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: poetry install --no-root
+
+      - name: Run DeepEval Unit Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: poetry run deepeval test run test_llm_app.py
+```
+</TimelineItem>
 </Timeline>
 
 There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
@@ -273,3 +310,21 @@ Similar to the `evaluate()` function, `assert_test()` for component-level evalua
 :::
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
+
+:::tip
+We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance overtime like this:
+
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Span-Level Evals in Production"
+/>
+
+You can [login to Confident AI here](https://app.confident-ai.com) or run:
+
+```bash
+deepeval login
+```
+
+**It's free to get started.** (_No credit card required!_)
+:::
