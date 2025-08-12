@@ -7,12 +7,15 @@ import asyncio
 import time
 
 import deepeval
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Don't forget to setup tracing
-deepeval.login("<CONFIDENT_API_KEY>")
+deepeval.login(os.getenv("CONFIDENT_API_KEY"))
 instrument_llama_index(instrument.get_dispatcher())
 
-os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
 
 def multiply(a: float, b: float) -> float:
@@ -48,4 +51,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    time.sleep(7)
+    time.sleep(10)
