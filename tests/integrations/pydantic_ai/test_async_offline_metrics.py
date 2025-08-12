@@ -32,13 +32,10 @@ agent = Agent(
 
 goldens = [Golden(input="What's 7 * 8?"), Golden(input="What's 7 * 6?")]
 
-async def llm_app(input: str):
-    return await agent.run(input)
-
 def main():
     dataset = EvaluationDataset(goldens=goldens)
     for golden in dataset.evals_iterator():
-        task = asyncio.create_task(llm_app(golden.input))
+        task = asyncio.create_task(agent.run(golden.input))
         dataset.evaluate(task)
 
 
