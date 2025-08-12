@@ -33,11 +33,20 @@ DeepEval allows you to evaluate LlamaIndex applications end-to-end in **under a 
 Create a `FunctionAgent` with a list of [task completion metrics](/docs/metrics-task-completion) you wish to use, and pass it to your LlamaIndex application's `run` method.
 
 ```python title="main.py" showLineNumbers {2,15}
+import asyncio
+
 from llama_index.llms.openai import OpenAI
 import llama_index.core.instrumentation as instrument
 
 from deepeval.integrations.llama_index import instrument_llama_index
 from deepeval.integrations.llama_index import FunctionAgent
+from deepeval.metrics import AnswerRelevancyMetric
+
+instrument_llama_index(instrument.get_dispatcher())
+
+def multiply(a: float, b: float) -> float:
+    """Useful for multiplying two numbers."""
+    return a * b
 
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
@@ -51,7 +60,8 @@ agent = FunctionAgent(
     metrics=[answer_relevancy_metric],
 )
 
-agent.run("What is 3 * 12?")
+async def llm_app(input: str):
+    return await agent.run(input)
 ```
 
 :::info
@@ -70,9 +80,10 @@ Create an `EvaluationDataset` and invoke your LlamaIndex application for each go
 from deepeval.dataset import EvaluationDataset, Golden
 ...
 
-dataset = EvaluationDataset(goldens=[Golden(input="What is 3 * 12?")])
+dataset = EvaluationDataset(goldens=[Golden(input="What is 3 * 12?"), Golden(input="What is 4 * 13?")])
 for golden in dataset.evals_iterator():
-    agent.run_sync(golden.input)
+    task = asyncio.create_task(llm_app(golden.input))
+    dataset.evaluate(task)
 ```
 
 </TabItem>
