@@ -29,11 +29,11 @@ crew = Crew(
     tasks=[task1],
 )
  
-# Kickoff your crew
-result = crew.kickoff(
-    inputs={"input": "What are the LLMs?"}
-) 
-time.sleep(7) # Wait for traces to be posted to observatory
+# # Kickoff your crew
+# result = crew.kickoff(
+#     inputs={"input": "What are the LLMs?"}
+# ) 
+# time.sleep(7) # Wait for traces to be posted to observatory
 
 #################################
 
@@ -57,4 +57,4 @@ dataset = EvaluationDataset(goldens=goldens)
 for golden in dataset.evals_iterator():
     result = crew.kickoff(inputs={"input": golden.input})
 
-time.sleep(7)
+time.sleep(15)
