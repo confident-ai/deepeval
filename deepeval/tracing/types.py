@@ -1,4 +1,5 @@
 from enum import Enum
+from dataclasses import dataclass
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
@@ -165,3 +166,8 @@ class TraceAttributes(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
     user_id: Optional[str] = None
+
+@dataclass
+class TestCaseMetric:
+    test_case: LLMTestCase
+    metrics: List[BaseMetric]
