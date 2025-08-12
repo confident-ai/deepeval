@@ -6,13 +6,14 @@ from deepeval.integrations.llama_index import CodeActAgent
 import asyncio
 import time
 
-os.environ["OPENAI_API_KEY"] = "<OPENAI_API_KEY>"
-
 from llama_index.llms.openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import deepeval
 
-deepeval.login("<CONFIDENT_API_KEY>")
+deepeval.login(os.getenv("CONFIDENT_API_KEY"))
 instrument_llama_index(instrument.get_dispatcher())
 
 

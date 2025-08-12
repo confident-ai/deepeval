@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 from deepeval.integrations.pydantic_ai import Agent as PatchedAgent
 from opentelemetry import trace
 from opentelemetry.trace import NoOpTracer
+from deepeval.tracing.tracing import trace_manager
+from deepeval.test_case import LLMTestCase
+from deepeval.tracing.types import TestCaseMetric
 
 try:
     from pydantic_ai import Agent
@@ -87,6 +90,17 @@ def safe_patch_agent_run_method():
 
             run_span.set_attribute("confident.span.input", input)
             run_span.set_attribute("confident.span.output", output)
+
+            if args[0].metrics:
+                trace_manager.test_case_metrics.append(
+                    TestCaseMetric(
+                        test_case= LLMTestCase(
+                            input=input,
+                            actual_output=output
+                        ),
+                        metrics=args[0].metrics
+                    )
+                )
 
         return result
 

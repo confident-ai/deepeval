@@ -143,7 +143,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         )
 
         # conditions to qualify as agent start run span
-        if class_name == "Workflow" and method_name == "run":
+        if method_name == "run":
             span = AgentSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,

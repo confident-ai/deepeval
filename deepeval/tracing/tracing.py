@@ -39,6 +39,7 @@ from deepeval.tracing.types import (
     Trace,
     TraceSpanStatus,
     TraceWorkerStatus,
+    TestCaseMetric,
 )
 from deepeval.tracing.utils import (
     Environment,
@@ -92,6 +93,7 @@ class TraceManager:
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
         self.integration_traces_to_evaluate: List[Trace] = []
+        self.test_case_metrics: List[TestCaseMetric] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -184,6 +186,8 @@ class TraceManager:
             else:
                 if self.evaluation_loop:
                     if self.integration_traces_to_evaluate:
+                        pass
+                    elif self.test_case_metrics:
                         pass
                     elif trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
