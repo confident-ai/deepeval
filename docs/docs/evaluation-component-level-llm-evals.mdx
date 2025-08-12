@@ -252,6 +252,12 @@ Finally, don't forget to run the test file in the CLI:
 deepeval test run test_llm_app.py
 ```
 
+There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
+
+- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
+- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
+
 </TimelineItem>
 <TimelineItem title="Create a YAML file to test on every push">
 
@@ -294,12 +300,6 @@ jobs:
 ```
 </TimelineItem>
 </Timeline>
-
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
-
-- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
-- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
 :::info
 Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
