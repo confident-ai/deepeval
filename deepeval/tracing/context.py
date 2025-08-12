@@ -32,7 +32,7 @@ def update_current_span(
         return
     if test_case:
         current_span.input = test_case.input
-        current_span.actual_output = test_case.actual_output
+        current_span.output = test_case.actual_output
         current_span.expected_output = test_case.expected_output
         current_span.retrieval_context = test_case.retrieval_context
         current_span.context = test_case.context
@@ -80,7 +80,7 @@ def update_current_trace(
         return
     if test_case:
         current_trace.input = test_case.input
-        current_trace.actual_output = test_case.actual_output
+        current_trace.output = test_case.actual_output
         current_trace.expected_output = test_case.expected_output
         current_trace.retrieval_context = test_case.retrieval_context
         current_trace.context = test_case.context
