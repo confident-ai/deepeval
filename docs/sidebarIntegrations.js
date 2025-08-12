@@ -6,7 +6,7 @@ module.exports = {
       items: [
         "frameworks/openai",
         "frameworks/langchain",
-        // "frameworks/llamaindex",
+        "frameworks/llamaindex",
         // "frameworks/huggingface",
       ],
       collapsed: false,
