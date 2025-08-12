@@ -7,7 +7,7 @@ module.exports = {
         "frameworks/openai",
         "frameworks/langchain",
         "frameworks/llamaindex",
-        // "frameworks/huggingface",
+        "frameworks/crewai",
       ],
       collapsed: false,
     },

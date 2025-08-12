@@ -1,0 +1,144 @@
+---
+id: crewai
+title: CrewAI
+sidebar_label: CrewAI
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+
+# CrewAI
+
+DeepEval makes it easy to evaluate [CrewAI](https://www.crewai.com/) applications in both development and production environments.
+
+:::tip
+We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your CrewAI evaluation traces.
+
+```bash
+deepeval login
+```
+
+:::
+
+## End-to-End Evals
+
+DeepEval allows you to evaluate CrewAI applications end-to-end in **under a minute**.
+
+<Timeline>
+
+<TimelineItem title="Configure CrewAI">
+
+Create a `Crew` and pass `metrics` to the DeepEval's `Agent` wrapper.
+
+```python title="main.py" showLineNumbers {4,5,7,15}
+from crewai import Task, Crew
+
+from deepeval.integrations.crewai import Agent
+from deepeval.integrations.crewai import instrument_crewai
+from deepeval.metrics import AnswerRelevancyMetric
+ 
+instrument_crewai()
+ 
+answer_relavancy_metric = AnswerRelevancyMetric()
+ 
+agent = Agent(
+    role="Consultant",
+    goal="Write clear, concise explanation.",
+    backstory="An expert consultant with a keen eye for software trends.",
+    metrics=[answer_relavancy_metric],
+)
+ 
+task = Task(
+    description="Explain the given topic",
+    expected_output="A clear and concise explanation.",
+    agent=agent
+)
+ 
+crew = Crew(
+    agents=[agent],
+    tasks=[task],
+)
+
+result = crew.kickoff(
+    "input": "What are the LLMs?"
+)
+```
+
+:::info
+Offline evaluation is supported for CrewAI `Agent`. And only metrics with parameters `input`, `output`, `expected_output` and `tools_called` are supported for evaluation.
+:::
+
+</TimelineItem>
+<TimelineItem title="Run evaluations">
+
+Create an `EvaluationDataset` and invoke your CrewAI application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
+
+<Tabs groupId="langgraph">
+<TabItem value="synchronous" label="Synchronous">
+
+```python title="main.py" showLineNumbers
+from deepeval.dataset import EvaluationDataset, Golden
+...
+ 
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What are Transformers in AI?"),
+    Golden(input="What is the biggest open source database?"),
+    Golden(input="What are LLMs?"),
+])
+
+for golden in dataset.evals_iterator():
+    result = crew.kickoff(inputs={"input": golden.input})
+```
+
+</TabItem>
+  <TabItem value="asynchronous" label="Asynchronous">
+
+```python title="main.py" showLineNumbers
+from deepeval.dataset import EvaluationDataset, Golden
+import asyncio
+...
+
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What's 7 * 8?"),
+    Golden(input="What's 7 * 6?")
+])
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(llm_app(golden.input))
+    dataset.evaluate(task)
+```
+
+</TabItem>
+</Tabs>
+
+✅ Done. The `evals_iterator` will automatically generate a test run with individual evaluation traces for each golden.
+
+</TimelineItem>
+
+</Timeline>
+
+:::note
+If you need to evaluate individual components of your CrewAI application, [set up tracing](/docs/evaluation-llm-tracing) instead.
+:::
+
+## Evals in Production
+
+To run online evaluations in production, replace `metrics` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your CrewAI agent to production.
+
+```python filename="main.py" showLineNumbers
+...
+
+agent = Agent(
+    role='Consultant',
+    goal='Write clear, concise explanation.',
+    backstory='An expert consultant with a keen eye for software trends.',
+    metric_collection="<your-metric-collection-name>"
+)
+
+...
+
+result = crew.kickoff(
+    "input": "What are the LLMs?"
+)
+```
