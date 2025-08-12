@@ -67,8 +67,8 @@ def safe_patch_agent_run_method():
             # agent attributes
             run_span.set_attribute("confident.span.type", "agent")
             run_span.set_attribute("confident.agent.name", name)
-            run_span.set_attribute("confident.agent.attributes.input", input)
-            run_span.set_attribute("confident.agent.attributes.output", output)
+            run_span.set_attribute("confident.agent.input", input)
+            run_span.set_attribute("confident.agent.output", output)
 
             # llm test case attributes
             if isinstance(args[0], PatchedAgent):
@@ -85,10 +85,8 @@ def safe_patch_agent_run_method():
                             json.dumps(args[0].trace_attributes),
                         )
 
-            run_span.set_attribute("confident.span.llm_test_case.input", input)
-            run_span.set_attribute(
-                "confident.span.llm_test_case.actual_output", output
-            )
+            run_span.set_attribute("confident.span.input", input)
+            run_span.set_attribute("confident.span.output", output)
 
         return result
 

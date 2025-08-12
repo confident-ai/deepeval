@@ -961,7 +961,6 @@ def execute_agentic_test_cases(
                 ):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
-                    test_case: Optional[LLMTestCase] = span.llm_test_case
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
@@ -985,18 +984,30 @@ def execute_agentic_test_cases(
                         isinstance(metric, TaskCompletionMetric)
                         for metric in span.metrics
                     )
-                    if span.llm_test_case is None and not has_task_completion:
+
+                    llm_test_case = None
+                    if span.input is None:
+                        llm_test_case = LLMTestCase(
+                            input=str(span.input),
+                            actual_output=str(span.output),
+                            expected_output=span.expected_output,
+                            context=span.context,
+                            retrieval_context=span.retrieval_context,
+                            tools_called=span.tools_called,
+                            expected_tools=span.expected_tools,
+                        )
+                    if llm_test_case is None and not has_task_completion:
                         raise ValueError(
                             "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
                         )
 
                     # add trace if task completion
                     if has_task_completion:
-                        if test_case is None:
-                            test_case = LLMTestCase(
+                        if llm_test_case is None:
+                            llm_test_case = LLMTestCase(
                                 input="None", actual_output="None"
                             )
-                        test_case._trace_dict = (
+                        llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(span)
                         )
 
@@ -1013,7 +1024,7 @@ def execute_agentic_test_cases(
                         metric_data = None
                         try:
                             metric.measure(
-                                test_case,
+                                llm_test_case,
                                 _show_indicator=show_metric_indicator,
                                 _in_component=True,
                             )
@@ -1028,7 +1039,7 @@ def execute_agentic_test_cases(
                                     raise
                         except TypeError:
                             try:
-                                metric.measure(test_case, _in_component=True)
+                                metric.measure(llm_test_case, _in_component=True)
                             except MissingTestCaseParamsError as e:
                                 if skip_on_missing_params:
                                     continue
@@ -1343,14 +1354,26 @@ async def a_execute_span_test_case(
     has_task_completion = any(
         isinstance(metric, TaskCompletionMetric) for metric in span.metrics
     )
-    if span.llm_test_case is None and not has_task_completion:
+
+    llm_test_case = None
+    if span.input:
+        llm_test_case = LLMTestCase(
+            input=str(span.input),
+            actual_output=str(span.output),
+            expected_output=span.expected_output,
+            context=span.context,
+            retrieval_context=span.retrieval_context,
+            tools_called=span.tools_called,
+            expected_tools=span.expected_tools,
+        )
+    if llm_test_case is None and not has_task_completion:
         raise ValueError(
             "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
         )
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     metrics: List[BaseMetric] = span.metrics
-    test_case: Optional[LLMTestCase] = span.llm_test_case
+    test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
     if has_task_completion:
@@ -1507,7 +1530,6 @@ def execute_agentic_test_cases_from_loop(
                 ):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
-                    test_case: LLMTestCase = span.llm_test_case
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
@@ -1525,7 +1547,18 @@ def execute_agentic_test_cases_from_loop(
                     for child in span.children:
                         dfs(child, progress, pbar_eval_id)
 
-                    if span.metrics == None or span.llm_test_case == None:
+                    llm_test_case = None
+                    if span.input is None:
+                        llm_test_case = LLMTestCase(
+                            input=str(span.input),
+                            actual_output=str(span.output),
+                            expected_output=span.expected_output,
+                            context=span.context,
+                            retrieval_context=span.retrieval_context,
+                            tools_called=span.tools_called,
+                            expected_tools=span.expected_tools,
+                        )
+                    if span.metrics == None or llm_test_case == None:
                         return
 
                     # Preparing metric calculation
@@ -1541,7 +1574,7 @@ def execute_agentic_test_cases_from_loop(
                         metric_data = None
                         try:
                             metric.measure(
-                                test_case,
+                                llm_test_case,
                                 _show_indicator=show_metric_indicator,
                                 _in_component=True,
                             )
@@ -1556,7 +1589,7 @@ def execute_agentic_test_cases_from_loop(
                                     raise
                         except TypeError:
                             try:
-                                metric.measure(test_case, _in_component=True)
+                                metric.measure(llm_test_case, _in_component=True)
                             except MissingTestCaseParamsError as e:
                                 if skip_on_missing_params:
                                     continue
