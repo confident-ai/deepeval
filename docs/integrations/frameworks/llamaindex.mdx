@@ -80,7 +80,11 @@ Create an `EvaluationDataset` and invoke your LlamaIndex application for each go
 from deepeval.dataset import EvaluationDataset, Golden
 ...
 
-dataset = EvaluationDataset(goldens=[Golden(input="What is 3 * 12?"), Golden(input="What is 4 * 13?")])
+dataset = EvaluationDataset(goldens=[
+    Golden(input="What is 3 * 12?"),
+    Golden(input="What is 4 * 13?")
+])
+
 for golden in dataset.evals_iterator():
     task = asyncio.create_task(llm_app(golden.input))
     dataset.evaluate(task)
