@@ -118,17 +118,11 @@ def update_span_properties_from_response_span_data(
     span.output = output
     span.name = "LLM Generation"
 
-    print(span)
-
 
 def update_span_properties_from_generation_span_data(
     span: LlmSpan,
     generation_span_data: "GenerationSpanData",
 ):
-    print("==========================")
-    print(generation_span_data.input)
-    print(generation_span_data.output)
-    print("==========================")
     # Extract usage tokens
     usage = generation_span_data.usage
     if usage:
