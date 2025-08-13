@@ -38,8 +38,7 @@ import asyncio
 from llama_index.llms.openai import OpenAI
 import llama_index.core.instrumentation as instrument
 
-from deepeval.integrations.llama_index import instrument_llama_index
-from deepeval.integrations.llama_index import FunctionAgent
+from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent
 from deepeval.metrics import AnswerRelevancyMetric
 
 instrument_llama_index(instrument.get_dispatcher())
@@ -70,7 +69,7 @@ Evaluations are supported for LlamaIndex `FunctionAgent`, `ReActAgent` and `Code
 
 Create an `EvaluationDataset` and invoke your LlamaIndex application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
 
-<Tabs groupId="langgraph">
+<Tabs groupId="llamaindex">
 <TabItem value="synchronous" label="Synchronous">
 
 ```python title="main.py" showLineNumbers
