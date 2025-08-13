@@ -10,7 +10,7 @@ import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 
 # CrewAI
 
-DeepEval makes it easy to evaluate [CrewAI](https://www.crewai.com/) applications in both development and production environments.
+`deepeval` makes it easy to evaluate [CrewAI](https://www.crewai.com/) applications in both development and production environments.
 
 :::tip
 We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your CrewAI evaluation traces.
@@ -23,13 +23,13 @@ deepeval login
 
 ## End-to-End Evals
 
-DeepEval allows you to evaluate CrewAI applications end-to-end in **under a minute**.
+`deepeval` allows you to evaluate CrewAI applications end-to-end in **under a minute**.
 
 <Timeline>
 
 <TimelineItem title="Configure CrewAI">
 
-Create a `Crew` and pass `metrics` to the DeepEval's `Agent` wrapper.
+Create a `Crew` and pass `metrics` to the `deepeval`'s `Agent` wrapper.
 
 ```python title="main.py" showLineNumbers {4,5,7,15}
 from crewai import Task, Crew
