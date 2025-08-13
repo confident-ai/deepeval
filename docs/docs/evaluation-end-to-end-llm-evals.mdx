@@ -130,6 +130,8 @@ print(your_llm_app("How are you?"))
 
 ## Use `evaluate()` in Python scripts
 
+### Single-Turn End-to-End Evals
+
 <Timeline>
 <TimelineItem title="Create a dataset">
 
@@ -177,7 +179,7 @@ for golden in dataset.goldens:
 
 # Evaluate end-to-end
 evaluate(
-    test_cases=dataset.test_case, 
+    test_cases=dataset,
     metrics=[AnswerRelevancyMetric()],
     hyperparameters={
         model="gpt-4.1",
@@ -230,8 +232,237 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 </TimelineItem>
 </Timeline>
 
+### Multi-Turn End-to-End Evals
+
+
+<Timeline>
+<TimelineItem title="Create dataset of goldens">
+
+Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
+
+```python title="main.py"
+from deepeval.dataset import EvaluationDataset, ConversationalGolden
+
+golden = ConversationalGolden(
+    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    user_description="Andy Byron is the CEO of Astronomer.",
+)
+
+dataset = EvaluationDataset(goldens=[golden])
+dataset.push("Multi-Turn Dataset")
+```
+
+</TimelineItem>
+<TimelineItem title="Wrap chatbot in callback">
+
+Define a callback function to generate the **next chatbot response** in a conversation, given the conversation history.
+
+<Tabs groupId="techstack">
+<TabItem value="python" label="Python">
+
+```python title="main.py" showLineNumbers={true}  "
+from deepeval.test_case import Turn
+
+async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
+    # Replace with your chatbot
+    response = await your_chatbot(input, turns, thread_id)
+    return Turn(role="assistant", content=response)
+```
+
+</TabItem>
+<TabItem value="openai" label="OpenAI">
+
+```python title=main.py showLineNumbers={true} {6}
+from deepeval.test_case import Turn
+from openai import OpenAI
+
+client = OpenAI()
+
+async def model_callback(input: str, turns: List[Turn]) -> str:
+    messages = [
+        {"role": "system", "content": "You are a ticket purchasing assistant"},
+        *[{"role": t.role, "content": t.content} for t in turns],
+        {"role": "user", "content": input},
+    ]
+    response = await client.chat.completions.create(model="gpt-4.1", messages=messages)
+    return Turn(role="assistant", content=response.choices[0].message.content)
+```
+
+</TabItem>
+<TabItem value="langchain" label="LangChain">
+
+```python title=main.py showLineNumbers={true} {11}
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
+
+store = {}
+llm = ChatOpenAI(model="gpt-4")
+prompt = ChatPromptTemplate.from_messages([("system", "You are a ticket purchasing assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
+chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
+
+async def model_callback(input: str, thread_id: str) -> Turn:
+    response = chain_with_history.invoke(
+        {"input": input},
+        config={"configurable": {"session_id": thread_id}}
+    )
+    return Turn(role="assistant", content=response.content)
+```
+
+</TabItem>
+<TabItem value="llama_index" label="LlamaIndex">
+
+```python title="main.py"  showLineNumbers={true} {9}
+from llama_index.core.storage.chat_store import SimpleChatStore
+from llama_index.llms.openai import OpenAI
+from llama_index.core.chat_engine import SimpleChatEngine
+from llama_index.core.memory import ChatMemoryBuffer
+
+chat_store = SimpleChatStore()
+llm = OpenAI(model="gpt-4")
+
+async def model_callback(input: str, thread_id: str) -> Turn:
+    memory = ChatMemoryBuffer.from_defaults(chat_store=chat_store, chat_store_key=thread_id)
+    chat_engine = SimpleChatEngine.from_defaults(llm=llm, memory=memory)
+    response = chat_engine.chat(input)
+    return Turn(role="assistant", content=response.response)
+```
+
+</TabItem>
+<TabItem value="openai-agents" label="OpenAI Agents">
+
+```python title="main.py" showLineNumbers={true} {6}
+from agents import Agent, Runner, SQLiteSession
+
+sessions = {}
+agent = Agent(name="Test Assistant", instructions="You are a helpful assistant that answers questions concisely.")
+
+async def model_callback(input: str, thread_id: str) -> Turn:
+    if thread_id not in sessions:
+        sessions[thread_id] = SQLiteSession(thread_id)
+    session = sessions[thread_id]
+    result = await Runner.run(agent, input, session=session)
+    return Turn(role="assistant", content=result.final_output)
+```
+
+</TabItem>
+<TabItem value="pydantic" label="Pydantic">
+
+```python title="main.py" showLineNumbers={true} {9}
+from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
+from deepeval.test_case import Turn
+from datetime import datetime
+from pydantic_ai import Agent
+from typing import List
+
+agent = Agent('openai:gpt-4', system_prompt="You are a helpful assistant that answers questions concisely.")
+
+async def model_callback(input: str, turns: List[Turn]) -> Turn:
+    message_history = []
+    for turn in turns:
+        if turn.role == "user":
+            message_history.append(ModelRequest(parts=[UserPromptPart(content=turn.content, timestamp=datetime.now())], kind='request'))
+        elif turn.role == "assistant":
+            message_history.append(ModelResponse(parts=[TextPart(content=turn.content)], model_name='gpt-4', timestamp=datetime.now(), kind='response'))
+    result = await agent.run(input, message_history=message_history)
+    return Turn(role="assistant", content=result.output)
+```
+
+</TabItem>
+</Tabs>
+
+:::info
+Your model callback should accept an `input`, and optionally `turns` and `thread_id`. It should return a `Turn` object.
+:::
+
+</TimelineItem>
+<TimelineItem title="Simulate turns">
+
+Use `deepeval`'s `ConversationSimulator` to simulate turns using goldens in your dataset:
+
+```python title="main.py"
+from deepeval.conversation_simulator import ConversationSimulator
+
+simulator = ConversationSimulator(model_callback=chatbot_callback)
+conversational_test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
+```
+
+Here, we only have 1 test case, but in reality you'll want to simulate from at least 20 goldens.
+
+<details>
+<summary>Click to view an example simulated test case</summary>
+
+Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, `expected_outcome`, and `user_description` from the conversation golden.
+
+```python
+ConversationalTestCase(
+    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+    expected_outcome="Successful purchase of a ticket.",
+    user_description="Andy Byron is the CEO of Astronomer.",
+    turns=[
+        Turn(role="user", content="Hello, how are you?"),
+        Turn(role="assistant", content="I'm doing well, thank you!"),
+        Turn(role="user", content="How can I help you today?"),
+        Turn(role="assistant", content="I'd like to buy a ticket to a Coldplay concert."),
+    ]
+)
+```
+
+</details>
+
+</TimelineItem>
+
+<TimelineItem title="Run an evaluation">
+
+Run an evaluation like how you learnt in the previous section:
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval import evaluate
+...
+
+evaluate(
+  conversational_test_cases, 
+  metrics=[TurnRelevancyMetric()],
+  hyperparameters={
+      model="gpt-4.1",
+      system_prompt="..."
+  }
+)
+```
+
+There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function for **END-TO-END** evaluation:
+
+- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
+- `metrics`: a list of metrics of type `BaseConversationalMetric`.
+- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
+- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
+- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree of concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
+- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
+- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
+- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
+
+This is exactly the same as `assert_test()` in `deepeval test run`, but in a difference interface.
+
+</TimelineItem>
+</Timeline>
+
+:::tip
+We recommend logging your `hyperparameters` during your evauations as they allow you find the best model configuration for your application. Here's an example of how to do that:
+
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:parameter-insights.mp4"
+  confidentUrl="https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/parameter-insights"
+  label="Parameter Insights To Find Best Model"
+/>
+
+:::
+
 ## Use `deepeval test run` in CI/CD pipelines
 
+### Single-Turn Evals in CI/CD
 
 <Timeline>
 <TimelineItem title="Pull your dataset">
@@ -249,7 +480,7 @@ You can use this dataset to iterate over goldens.
 <TimelineItem title="Create your pytest file">
 
 ```python title="test_llm_app.py" showLineNumbers {14}
-from somewhere import your_llm_app # Replace with your LLM app
+from rag_agent import your_llm_app # Replace with your LLM app
 import pytest
 
 from deepeval.dataset import Golden
@@ -263,6 +494,107 @@ def test_llm_app(golden: Golden):
     res, text_chunks = your_llm_app(golden.input)
     test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
+def hyperparameters():
+    return {"model": "gpt-4.1", "system prompt": "..."}
+```
+
+Then, run the following command in your CLI:
+
+```bash
+deepeval test run test_llm_app.py
+```
+
+There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **END-TO-END** evaluation:
+
+- `test_case`: an `LLMTestCase`.
+- `metrics`: a list of metrics of type `BaseMetric`.
+- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
+
+
+</TimelineItem>
+<TimelineItem title="Create a YAML file to test on every push">
+
+You just need to create a YAML file now to test your LLM app on every change you make.
+
+```yaml {32-33}
+name: LLM App DeepEval Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: poetry install --no-root
+
+      - name: Run DeepEval Unit Tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+        run: poetry run deepeval test run test_llm_app.py
+```
+</TimelineItem>
+</Timeline>
+
+
+### Multi-Turn Evals in CI/CD
+
+<Timeline>
+<TimelineItem title="Pull your dataset">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="Multi-Turn Dataset") # replace with your alias
+```
+
+You can use this dataset to iterate over goldens.
+
+</TimelineItem>
+<TimelineItem title="Create your pytest file">
+
+```python title="test_llm_app.py" showLineNumbers {14}
+from main import chatbot_callback # Replace with your LLM callback
+import pytest
+
+from deepeval.dataset import Golden
+from deepeval.test_case import ConversationalTestCase
+from deepeval import assert_test
+from deepeval.conversation_simulator import ConversationSimulator
+
+# Loop through goldens using pytest
+
+simulator = ConversationSimulator(model_callback=chatbot_callback)
+conversational_test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
+
+@pytest.mark.parametrize("test_case", conversational_test_cases)
+def test_llm_app(test_case: ConversationalTestCase):
+    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+
+@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
+def hyperparameters():
+    return {"model": "gpt-4.1", "system prompt": "..."}
 ```
 
 Then, run the following command in your CLI:
@@ -341,6 +673,4 @@ You can [login to Confident AI here](https://app.confident-ai.com) or run:
 ```bash
 deepeval login
 ```
-
-**It's free to get started.** (_No credit card required!_)
 :::
