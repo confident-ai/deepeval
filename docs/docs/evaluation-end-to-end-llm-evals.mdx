@@ -80,40 +80,113 @@ When it comes to selecting metrics for your application, we recommend choosing n
 You can read our [metrics section](/docs/metrics-introduction) to learn about the 40+ metrics we offer.  Or come to [our discord](https://discord.com/invite/a3K9c8GRGt) and get some tailored recommendations from our team.
 
 </TimelineItem>
-<TimelineItem title="Setup LLM application">
+<TimelineItem title="Create test cases after execution">
 
-You'll need to setup your LLM application to return the test case parameters required by the metrics you've chosen. Alternatively, [setup LLM tracing](/docs/evaluation-llm-tracing) to avoid making changes to your LLM app.
+You need to create your test cases with `input`, `actual_output`, `retrieval_context` and `tools_called` as per your application's use case after the complete excution.
 
-<details>
-  <summary>Guidelines to set up your LLM application</summary>
+<Tabs>
+<TabItem value="openai" label="OpenAI">
 
-You'll need to make sure your application returns all fields required by your selected metrics, in order to create a valid end-to-end `LLMTestCase`. For example, if you’re using `AnswerRelevancyMetric` and `FaithfulnessMetric`, your application must return:
+```python {2,20-21}
+from openai import OpenAI
+from deepeval.test_case import LLMTestCase
 
-- `input`
-- `actual_output`
-- `retrieval_context`
+client = OpenAI()
 
-because both metrics require `input` and `actual_output`, and `FaithfulnessMetric` also requires `retrieval_context`.
+def llm_app(input_text: str) -> str:
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a cat. Your name is Neko."},
+            {"role": "user", "content": input_text}
+        ]
+    )
+    return response.choices[0].message.content
 
-If you cannot make changes to your LLM app, you should <a href="/docs/evaluation-llm-tracing">set up tracing</a>, which also allows you to run and debug end-to-end evaluations on Confident AI.
+input_text = input("Enter your input here: ")
+output = llm_app(input_text)
 
-</details>
+test_case = LLMTestCase(
+  input=input_text,
+  actual_output=output
+)
+```
 
-We'll be using this LLM application in this example which has a simple, "flat" RAG architecture to demonstrate how to run end-to-end evaluations on it using `deepeval`:
+</TabItem>
+<TabItem value="anthropic" label="Anthropic">
 
-```python title="rag_agent.py" {18}
+```python {2,20-21}
+from anthropic import Anthropic
+from deepeval.test_case import LLMTestCase
+
+anthropic = Anthropic()
+
+def llm_app(input_text: str) -> str:
+    response = anthropic.messages.create(
+        model="claude-opus-4-1",
+        system="You are a cat. Your name is Neko.",
+        messages=[
+          {"role": "user", "content": input_text}
+        ],
+    )
+    return response.content.text
+
+input_text = input("Enter your input here: ")
+output = llm_app(input_text)
+
+test_case = LLMTestCase(
+  input=input_text,
+  actual_output=output
+)
+```
+
+</TabItem>
+<TabItem value="gemini" label="Gemini">
+
+```python {3,21-22}
+from google import genai
+from google.genai import types
+from deepeval.test_case import LLMTestCase
+
+client = genai.Client()
+
+def llm_app(input_text: str) -> str:
+    response = client.models.generate_content(
+      model="gemini-2.5-flash",
+      config=types.GenerateContentConfig(
+        system_instruction="You are a cat. Your name is Neko."
+      ),
+      contents=input_text,
+    )
+    return response.text
+
+input_text = input("Enter your input here: ")
+output = llm_app(input_text)
+
+test_case = LLMTestCase(
+  input=input_text,
+  actual_output=output
+)
+```
+
+</TabItem>
+
+<TabItem value="rag" label="RAG">
+
+```python {2,25-28}
 from typing import List
+from deepeval.test_case import LLMTestCase, ToolCall
 
-def your_llm_app(input: str):
+def lm_app(input_text: str):
     tools = []
 
-    def retriever(input: str):
+    def retriever(input_text: str):
         # Your retriever logic
         return ["Your top k retrieved texts in a list"]
 
-    def generator(input: str, retrieved_chunks: List[str]):
+    def generator(input_text: str, retrieved_chunks: List[str]):
         # Your generator logic
-        # Add tools (if any)
+        # Add tools in ToolCall object format (if any)
         return "The final answer from your generator in a string"
 
     retrieved_context = retriever(input)
@@ -121,8 +194,21 @@ def your_llm_app(input: str):
 
     return answer, retrieved_context, tools
 
-print(your_llm_app("How are you?"))
+input_text = input("Enter your input here: ")
+output, retrieved_context, tools = llm_app(input_text)
+
+test_case = LLMTestCase(
+  input=input_text,
+  actual_output=output,
+  retrieval_context=retrieved_context,
+  tools_called=tools
+)
 ```
+
+</TabItem>
+</Tabs>
+
+You can now use these test cases to run end-to-end evals.
 
 </TimelineItem>
 
