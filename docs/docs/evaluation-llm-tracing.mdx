@@ -10,6 +10,10 @@ import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 `deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be.
 
+Each component in an LLM application can be grouped into its own **span**, which is an arbitrary scope that you can define anywhere to suit your evaluation and debugging needs. A complete execution of your LLM application creates a **trace**, which contains one or more spans.
+
+![LLM Trace](https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png)
+
 :::tip
 Tracing is required for component-level evaluation, but we recommend everyone to set it up even if you're running end-to-end evaluations, as it provides full visibility for debugging internal components.
 :::
@@ -41,8 +45,6 @@ Spans make up a trace and evals on spans represents [component-level evaluations
 </TabItem>
 
 </Tabs>
-
-Each component above can be grouped into its own **span**, which is an arbitrary scope that you can define anywhere to suit your evaluation and debugging needs. A complete execution of your LLM application creates a **trace**, which contains one or more spans.
 
 <details>
 
@@ -99,7 +101,7 @@ Apart from tracing being mandatory for component-level evaluation, tracing solve
 Each metric in `metrics` is evaluated using exactly the same algorithm, require the same `LLMTestCase` parameters, and with the same configurations, as you would expect when running evaluations without tracing.
 :::
 
-## Decorate A Component
+## Setup Tracing with a Decorator
 
 Here are two terminologies you need to know when setting up tracing:
 
@@ -108,7 +110,7 @@ Here are two terminologies you need to know when setting up tracing:
 
 A span can contain many child spans, forming a tree structure—just like how different components of your LLM application interact. You apply metrics at the span level to evaluate specific components, because each span represents a component of your application.
 
-### Using `@observe` decorator
+### The `@observe` decorator
 
 The `@observe` decorator creates spans, and a call to your LLM application decorated by one or more `@observe` decorators create a trace with many spans. This is how you would use `@observe`:
 
@@ -242,31 +244,8 @@ for golden in dataset.evals_iterator():
 
 Notice that without tracing, creating evaluation-ready `LLMTestCase`s is complicated because you have to bubble the input and returned output values for your `"RAG Pipeline"` component up to the surface for evaluation.
 
-## Disclaimers
-
-:::note
-LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI, it enables more advanced features like end-to-end debugging.
-:::
-
-Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/docs/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
-
-<VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/observability:llm-tracing.mp4"
-  confidentUrl="/docs/llm-tracing/introduction"
-  label="Learn how to setup LLM tracing for Confident AI"
-/>
-
-### Span `type`s
-
-For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
-
-- Specifying a span `span` (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
-- This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
-- Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
-
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/docs/llm-tracing/introduction)
-
-### Verbose logs
+<details>
+<summary><strong>Verbose Logs Outside of <code>evaluate()</code> or <code>assert_test()</code> </strong></summary>
 
 If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you will see logs appearing in your console. These logs are intended for debugging and help users using Confident AI alongside `deepeval` verify that their LLM application is correctly set up for monitoring during development.
 
@@ -278,3 +257,30 @@ CONFIDENT_TRACE_FLUSH="NO"
 ```
 
 If you're using Confident AI, you may still want to set these environment variables in production once you've verified LLM tracing is working correctly for you.
+
+</details>
+
+
+## Disclaimers
+
+:::note
+LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI, it enables more advanced features like end-to-end debugging.
+:::
+
+Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/docs/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
+
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Learn how to setup LLM tracing for Confident AI"
+/>
+
+## Span types
+
+For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
+
+- Specifying a span `span` (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
+- This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
+- Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
+
+To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/docs/llm-tracing/introduction)
