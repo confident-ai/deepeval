@@ -1,7 +1,6 @@
-from dataclasses import dataclass
 from typing import Optional, List, Union, Dict
+from dataclasses import dataclass
 from pydantic import BaseModel
-
 from deepeval.test_run import MetricData
 from deepeval.test_case import MLLMImage
 
@@ -26,3 +25,4 @@ class TestResult:
 class EvaluationResult(BaseModel):
     test_results: List[TestResult]
     confident_link: Optional[str]
+

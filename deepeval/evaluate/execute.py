@@ -41,7 +41,6 @@ from deepeval.dataset import Golden
 from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
-from deepeval.tracing.types import TestCaseMetric
 from deepeval.utils import (
     get_or_create_event_loop,
 )
@@ -82,9 +81,9 @@ from deepeval.evaluate.utils import (
     extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
-from deepeval.openai.utils import TestCaseMetricPair, openai_test_case_pairs
+from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.test_run.hyperparameters import process_hyperparameters
-
+from deepeval.tracing.types import TestCaseMetricPair
 
 def execute_test_cases(
     test_cases: Union[
@@ -1882,7 +1881,7 @@ async def evaluate_traces(
 
 
 async def evaluate_test_case_pairs(
-    test_case_pairs: Union[List[TestCaseMetricPair], List[TestCaseMetric]],
+    test_case_pairs: List[TestCaseMetricPair],
     test_run: TestRun,
     test_run_manager: TestRunManager,
     test_results: List[TestResult],
