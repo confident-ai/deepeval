@@ -10,7 +10,7 @@ import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 
 # CrewAI
 
-`deepeval` makes it easy to evaluate [CrewAI](https://www.crewai.com/) applications in both development and production environments.
+[CrewAI](https://www.crewai.com/) is a lean, independent Python framework designed for creating and orchestrating autonomous multi-agent AI systems, offering high flexibility, speed, and precision control for complex automation tasks.
 
 :::tip
 We recommend logging in to [Confident AI](https://app.confident-ai.com) to view your CrewAI evaluation traces.
@@ -74,7 +74,7 @@ Evaluations are supported for CrewAI `Agent`. Only metrics with parameters `inpu
 
 Create an `EvaluationDataset` and invoke your CrewAI application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
 
-<Tabs groupId="langgraph">
+<Tabs groupId="crewai">
 <TabItem value="synchronous" label="Synchronous">
 
 ```python title="main.py" showLineNumbers
@@ -128,8 +128,6 @@ If you need to evaluate individual components of your CrewAI application, [set u
 To run online evaluations in production, replace `metrics` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your CrewAI agent to production.
 
 ```python filename="main.py" showLineNumbers
-...
-
 agent = Agent(
     role='Consultant',
     goal='Write clear, concise explanation.',
