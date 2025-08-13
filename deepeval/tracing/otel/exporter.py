@@ -32,6 +32,7 @@ from deepeval.tracing.otel.utils import (
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
     check_model_from_gen_ai_attributes,
+    prepare_trace_llm_test_case,
 )
 import deepeval
 from deepeval.tracing import perf_epoch_bridge as peb
@@ -55,6 +56,9 @@ class BaseSpanWrapper:
     trace_metadata: Optional[Dict[str, Any]] = None
     trace_thread_id: Optional[str] = None
     trace_user_id: Optional[str] = None
+    trace_environment: Optional[str] = None
+    trace_metric_collection: Optional[str] = None
+    trace_llm_test_case: Optional[LLMTestCase] = None
 
 
 class ConfidentSpanExporter(SpanExporter):
@@ -65,14 +69,6 @@ class ConfidentSpanExporter(SpanExporter):
 
             if api_key:
                 deepeval.login(api_key)
-
-        environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
-        if environment:
-            trace_manager.configure(environment=environment)
-
-        sampling_rate = os.getenv("CONFIDENT_SAMPLE_RATE")
-        if sampling_rate:
-            trace_manager.configure(sampling_rate=sampling_rate)
 
         super().__init__()
 
@@ -183,6 +179,15 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace.input = base_span_wrapper.trace_input
                 if base_span_wrapper.trace_output:
                     current_trace.output = base_span_wrapper.trace_output
+
+                if base_span_wrapper.trace_environment:
+                    current_trace.environment = base_span_wrapper.trace_environment
+
+                if base_span_wrapper.trace_metric_collection:
+                    current_trace.metric_collection = base_span_wrapper.trace_metric_collection
+                
+                if base_span_wrapper.trace_llm_test_case:
+                    current_trace.llm_test_case = base_span_wrapper.trace_llm_test_case
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -379,6 +384,11 @@ class ConfidentSpanExporter(SpanExporter):
         trace_metadata = span.attributes.get("confident.trace.metadata")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
+        _trace_metric_collection = span.attributes.get("confident.trace.metric_collection")
+
+        trace_metric_collection = None
+        if _trace_metric_collection and isinstance(_trace_metric_collection, str):
+            trace_metric_collection = _trace_metric_collection
 
         if trace_tags and isinstance(trace_tags, tuple):
             trace_tags = list(trace_tags)
@@ -386,6 +396,14 @@ class ConfidentSpanExporter(SpanExporter):
         # extract trace input and output
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
+
+        trace_environment = None
+
+        resource_attributes = span.resource.attributes
+        if resource_attributes:
+            environment = resource_attributes.get("confident.trace.environment")
+            if environment and isinstance(environment, str):
+                trace_environment = environment
 
         base_span_wrapper = BaseSpanWrapper(
             base_span=base_span,
@@ -397,6 +415,9 @@ class ConfidentSpanExporter(SpanExporter):
             trace_metadata=trace_metadata,
             trace_thread_id=trace_thread_id,
             trace_user_id=trace_user_id,
+            trace_environment=trace_environment,
+            trace_metric_collection=trace_metric_collection,
+            trace_llm_test_case=prepare_trace_llm_test_case(span),
         )
 
         return base_span_wrapper
