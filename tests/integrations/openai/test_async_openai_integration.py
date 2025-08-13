@@ -3,10 +3,14 @@ from deepeval.openai import AsyncOpenAI
 from deepeval.dataset import EvaluationDataset, Golden
 import asyncio
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from tests.integrations.openai.resources import (
     async_llm_app,
     CHAT_TOOLS,
 )
+
 
 goldens = [
     Golden(input="What is the weather in Bogotá, Colombia?"),
@@ -37,13 +41,13 @@ def test_end_to_end_evaluation():
 
 def test_component_level_loop():
     dataset = EvaluationDataset(goldens=goldens)
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         task = asyncio.create_task(
             async_llm_app(golden.input, completion_mode="chat")
         )
         dataset.evaluate(task)
 
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         task = asyncio.create_task(
             async_llm_app(golden.input, completion_mode="response")
         )
