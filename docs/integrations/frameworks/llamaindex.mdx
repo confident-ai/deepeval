@@ -32,14 +32,16 @@ deepeval login
 
 Create a `FunctionAgent` with a list of metrics you wish to use, and pass it to your LlamaIndex application's `run` method.
 
-```python title="main.py" showLineNumbers {10,16,22}
+```python title="main.py" showLineNumbers {8,9,21}
 import asyncio
 
 from llama_index.llms.openai import OpenAI
 import llama_index.core.instrumentation as instrument
 
 from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent
+
 from deepeval.metrics import AnswerRelevancyMetric
+answer_relevance_metric = AnswerRelevancyMetric()
 
 instrument_llama_index(instrument.get_dispatcher())
 
@@ -47,17 +49,17 @@ def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
 
-answer_relevancy_metric = AnswerRelevancyMetric()
-
 agent = FunctionAgent(
     tools=[multiply],
     llm=OpenAI(model="gpt-4o-mini"),
     system_prompt="You are a helpful assistant that can perform calculations.",
-    metrics=[answer_relevancy_metric],
+    metrics=[answer_relevance_metric]
 )
 
 async def llm_app(input: str):
     return await agent.run(input)
+
+# asyncio.run(llm_app("What is 3 * 12?"))
 ```
 
 :::info
@@ -70,33 +72,14 @@ Evaluations are supported for LlamaIndex `FunctionAgent`, `ReActAgent` and `Code
 Create an `EvaluationDataset` and invoke your LlamaIndex application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
 
 <Tabs groupId="llamaindex">
-<TabItem value="synchronous" label="Synchronous">
+<TabItem value="asynchronous" label="Asynchronous">
 
-```python title="main.py" showLineNumbers
+```python title="main.py" showLineNumbers {8,10}
 from deepeval.dataset import EvaluationDataset, Golden
-...
 
 dataset = EvaluationDataset(goldens=[
     Golden(input="What is 3 * 12?"),
     Golden(input="What is 4 * 13?")
-])
-
-for golden in dataset.evals_iterator():
-    task = asyncio.create_task(llm_app(golden.input))
-    dataset.evaluate(task)
-```
-
-</TabItem>
-  <TabItem value="asynchronous" label="Asynchronous">
-
-```python title="main.py" showLineNumbers
-from deepeval.dataset import EvaluationDataset, Golden
-import asyncio
-...
-
-dataset = EvaluationDataset(goldens=[
-    Golden(input="What's 7 * 8?"),
-    Golden(input="What's 7 * 6?")
 ])
 
 for golden in dataset.evals_iterator():
@@ -122,7 +105,6 @@ If you need to evaluate individual components of your LlamaIndex application, [s
 To run online evaluations in production, simply replace `metrics` in `FunctionAgent` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LlamaIndex agent to production.
 
 ```python filename="main.py" showLineNumbers {9}
-from deepeval.integrations.llama_index import FunctionAgent
 ...
 
 # Invoke your agent with the metric collection name
@@ -130,7 +112,8 @@ agent = FunctionAgent(
     tools=[multiply],
     llm=OpenAI(model="gpt-4o-mini"),
     system_prompt="You are a helpful assistant that can perform calculations.",
-    metric_collection="test_collection_1",
+    # metrics=[answer_relevance_metric],
+    metric_collection="test_collection_1"
 )
 
 agent.run("What is 3 * 12?")
