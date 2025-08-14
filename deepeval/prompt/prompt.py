@@ -196,17 +196,17 @@ class Prompt:
             )
             start_time = time.perf_counter()
             try:
-                result = api.send_request(
+                data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.PROMPT_ENDPOINT,
                     params={"alias": self.alias, "version": version},
                 )
                 response = PromptHttpResponse(
-                    promptVersionId=result["promptVersionId"],
-                    template=result["value"],
-                    messages=result["messages"],
-                    type=result["type"],
-                    interpolation_type=result["interpolationType"],
+                    promptVersionId=data["promptVersionId"],
+                    template=data["value"],
+                    messages=data["messages"],
+                    type=data["type"],
+                    interpolation_type=data["interpolationType"],
                 )
             except:
                 try:

@@ -20,12 +20,12 @@ def get_next_question(question_index: int):
     )
     body = recommend_metrics_request_data.model_dump(exclude_none=True)
     api = Api(api_key="NA")
-    response = api.send_request(
+    data, _ = api.send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.RECOMMEND_ENDPOINT,
         body=body,
     )
-    return RecommendMetricsResponseData(**response)
+    return RecommendMetricsResponseData(**data)
 
 
 def get_recommended_metrics(question_index: int, user_answers: List[bool]):
@@ -35,12 +35,12 @@ def get_recommended_metrics(question_index: int, user_answers: List[bool]):
     )
     body = recommend_metrics_request_data.model_dump(exclude_none=True)
     api = Api(api_key="NA")
-    response = api.send_request(
+    data, _ = api.send_request(
         method=HttpMethods.POST,
         endpoint=Endpoints.RECOMMEND_ENDPOINT,
         body=body,
     )
-    return RecommendMetricsResponseData(**response)
+    return RecommendMetricsResponseData(**data)
 
 
 def ask_yes_no(question: str) -> bool:

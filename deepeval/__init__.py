@@ -11,8 +11,6 @@ from deepeval.evaluate.compare import compare
 from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login
 from deepeval.telemetry import *
-from deepeval.confident import confident_evaluate
-
 
 if os.getenv("DEEPEVAL_GRPC_LOGGING") != "YES":
     os.environ["GRPC_VERBOSITY"] = "ERROR"
@@ -26,7 +24,6 @@ __all__ = [
     "evaluate",
     "assert_test",
     "on_test_run_end",
-    "confident_evaluate",
     "compare",
 ]
 
