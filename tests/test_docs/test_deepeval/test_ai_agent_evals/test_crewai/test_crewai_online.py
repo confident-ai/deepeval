@@ -1,10 +1,10 @@
+# this is not working
 from crewai import Task, Crew
 
 from deepeval.integrations.crewai import Agent
 from deepeval.integrations.crewai import instrument_crewai
 from deepeval.metrics import AnswerRelevancyMetric
  
-# this is not working
 instrument_crewai()
  
 answer_relavancy_metric = AnswerRelevancyMetric()
