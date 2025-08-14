@@ -193,6 +193,22 @@ model_pricing = {
 
 default_gpt_model = "gpt-4.1"
 
+models_requiring_temperature_1 = [
+    "o1",
+    "o1-preview",
+    "o1-2024-12-17",
+    "o1-preview-2024-09-12",
+    "o1-mini",
+    "o1-mini-2024-09-12",
+    "o3-mini",
+    "o3-mini-2025-01-31",
+    "o4-mini",
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5-chat-latest",
+]
+
 retryable_exceptions = (
     openai.RateLimitError,
     openai.APIConnectionError,
@@ -260,6 +276,11 @@ class GPTModel(DeepEvalBaseLLM):
         self._openai_api_key = _openai_api_key
         self.base_url = base_url
         # args and kwargs will be passed to the underlying model, in load_model function
+
+        # Auto-adjust temperature for models that require it
+        if model_name in models_requiring_temperature_1:
+            temperature = 1
+
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
