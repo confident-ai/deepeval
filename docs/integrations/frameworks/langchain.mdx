@@ -139,6 +139,6 @@ This will automatically evaluate all incoming traces in production with the task
 ```python filename="main.py" showLineNumbers {3}
 result = agent_executor.invoke(
     {"input": "What is 8 multiplied by 6?"},
-    config={"callbacks": [CallbackHandler(metric_collection="task_completion")]}
+    config={"callbacks": [CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")]}
 )
 ```

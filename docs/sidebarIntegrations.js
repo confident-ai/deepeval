@@ -6,6 +6,7 @@ module.exports = {
       items: [
         "frameworks/openai",
         "frameworks/langchain",
+        "frameworks/langgraph",
         "frameworks/llamaindex",
         "frameworks/crewai",
         "frameworks/pydanticai",
