@@ -181,13 +181,19 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace.output = base_span_wrapper.trace_output
 
                 if base_span_wrapper.trace_environment:
-                    current_trace.environment = base_span_wrapper.trace_environment
+                    current_trace.environment = (
+                        base_span_wrapper.trace_environment
+                    )
 
                 if base_span_wrapper.trace_metric_collection:
-                    current_trace.metric_collection = base_span_wrapper.trace_metric_collection
-                
+                    current_trace.metric_collection = (
+                        base_span_wrapper.trace_metric_collection
+                    )
+
                 if base_span_wrapper.trace_llm_test_case:
-                    current_trace.llm_test_case = base_span_wrapper.trace_llm_test_case
+                    current_trace.llm_test_case = (
+                        base_span_wrapper.trace_llm_test_case
+                    )
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -384,10 +390,14 @@ class ConfidentSpanExporter(SpanExporter):
         trace_metadata = span.attributes.get("confident.trace.metadata")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
-        _trace_metric_collection = span.attributes.get("confident.trace.metric_collection")
+        _trace_metric_collection = span.attributes.get(
+            "confident.trace.metric_collection"
+        )
 
         trace_metric_collection = None
-        if _trace_metric_collection and isinstance(_trace_metric_collection, str):
+        if _trace_metric_collection and isinstance(
+            _trace_metric_collection, str
+        ):
             trace_metric_collection = _trace_metric_collection
 
         if trace_tags and isinstance(trace_tags, tuple):

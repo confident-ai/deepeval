@@ -605,7 +605,6 @@ class TraceManager:
             else None
         )
 
-
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -618,7 +617,9 @@ class TraceManager:
             metadata=trace.metadata,
             name=trace.name,
             tags=trace.tags,
-            environment=self.environment if not trace.environment else trace.environment,
+            environment=(
+                self.environment if not trace.environment else trace.environment
+            ),
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,
