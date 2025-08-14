@@ -74,7 +74,7 @@ Create an `EvaluationDataset` and invoke your LlamaIndex application for each go
 <Tabs groupId="llamaindex">
 <TabItem value="asynchronous" label="Asynchronous">
 
-```python title="main.py" showLineNumbers {8,10}
+```python title="main.py" showLineNumbers
 from deepeval.dataset import EvaluationDataset, Golden
 
 dataset = EvaluationDataset(goldens=[
@@ -104,7 +104,7 @@ If you need to evaluate individual components of your LlamaIndex application, [s
 
 To run online evaluations in production, simply replace `metrics` in `FunctionAgent` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LlamaIndex agent to production.
 
-```python filename="main.py" showLineNumbers {9}
+```python filename="main.py" showLineNumbers
 ...
 
 # Invoke your agent with the metric collection name
