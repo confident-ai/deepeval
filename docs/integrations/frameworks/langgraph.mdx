@@ -69,7 +69,7 @@ Create an `EvaluationDataset` and invoke your LangGraph application for each gol
 <Tabs groupId="langgraph">
 <TabItem value="synchronous" label="Synchronous">
 
-```python title="main.py" showLineNumbers {10,13}
+```python title="main.py" showLineNumbers
 from deepeval.dataset import Golden, EvaluationDataset
 
 goldens = [
@@ -89,7 +89,7 @@ for golden in dataset.evals_iterator():
 </TabItem>
   <TabItem value="asynchronous" label="Asynchronous">
 
-```python title="main.py" showLineNumbers {9,13,16}
+```python title="main.py" showLineNumbers
 import asyncio
 from deepeval.dataset import Golden, EvaluationDataset
 
@@ -129,7 +129,7 @@ To run online evaluations in production, simply replace `metrics` in `CallbackHa
 This will automatically evaluate all incoming traces in production with the task completion metrics defined in your [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations).
 :::
 
-```python filename="main.py" showLineNumbers {3}
+```python filename="main.py" showLineNumbers
 result = agent.invoke(
     input = {"messages": [{"role": "user", "content": "what is the weather in sf"}]}, 
     config = {"callbacks": [CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")]}
