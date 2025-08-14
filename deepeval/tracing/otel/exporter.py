@@ -94,6 +94,10 @@ class ConfidentSpanExporter(SpanExporter):
         # build forest of spans
         forest = self._build_span_forest(spans)
 
+        for span in spans:
+            print("--------------------------------")
+            print(span.to_json())
+
         # convert forest of spans to forest of base span wrappers
         spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
         for span_list in forest:

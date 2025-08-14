@@ -1,10 +1,11 @@
+import time
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
 
 from deepeval.metrics import AnswerRelevancyMetric
 
 instrument_pydantic_ai()
 
-Agent.instrument_all()
+# Agent.instrument_all()
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
@@ -16,3 +17,5 @@ agent = Agent(
 # run for testing (not needed for docs)
 result = agent.run_sync("What are the LLMs?")
 print(result)
+
+time.sleep(10)
