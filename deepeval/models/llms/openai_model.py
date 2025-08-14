@@ -58,8 +58,11 @@ valid_gpt_models = [
     "o4-mini-2025-04-16",
     "gpt-4.5-preview-2025-02-27",
     "gpt-5",
+    "gpt-5-2025-08-07",
     "gpt-5-mini",
+    "gpt-5-mini-2025-08-07",
     "gpt-5-nano",
+    "gpt-5-nano-2025-08-07",
     "gpt-5-chat-latest",
 ]
 
@@ -74,8 +77,11 @@ unsupported_log_probs_gpt_models = [
     "o3-mini-2025-01-31",
     "gpt-4.5-preview-2025-02-27",
     "gpt-5",
+    "gpt-5-2025-08-07",
     "gpt-5-mini",
+    "gpt-5-mini-2025-08-07",
     "gpt-5-nano",
+    "gpt-5-nano-2025-08-07",
     "gpt-5-chat-latest",
 ]
 
@@ -98,8 +104,11 @@ structured_outputs_models = [
     "o4-mini-2025-04-16",
     "gpt-4.5-preview-2025-02-27",
     "gpt-5",
+    "gpt-5-2025-08-07",
     "gpt-5-mini",
+    "gpt-5-mini-2025-08-07",
     "gpt-5-nano"
+    "gpt-5-nano-2025-08-07"
 ]
 
 json_mode_models = [
@@ -156,11 +165,23 @@ model_pricing = {
         "input": 1.25 / 1e6,
         "output": 10.00 / 1e6,
     },
+    "gpt-5-2025-08-07": {
+        "input": 1.25 / 1e6,
+        "output": 10.00 / 1e6,
+    },
     "gpt-5-mini": {
         "input": 0.25 / 1e6,
         "output": 2.00 / 1e6,
     },
+    "gpt-5-mini-2025-08-07": {
+        "input": 0.25 / 1e6,
+        "output": 2.00 / 1e6,
+    },
     "gpt-5-nano": {
+        "input": 0.05 / 1e6,
+        "output": 0.40 / 1e6,
+    },
+    "gpt-5-nano-2025-08-07": {
         "input": 0.05 / 1e6,
         "output": 0.40 / 1e6,
     },
