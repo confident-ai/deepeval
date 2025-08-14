@@ -193,19 +193,22 @@ model_pricing = {
 
 default_gpt_model = "gpt-4.1"
 
+# Thinking models that require temperature=1
 models_requiring_temperature_1 = [
     "o1",
-    "o1-preview",
     "o1-2024-12-17",
-    "o1-preview-2024-09-12",
     "o1-mini",
     "o1-mini-2024-09-12",
     "o3-mini",
     "o3-mini-2025-01-31",
     "o4-mini",
+    "o4-mini-2025-04-16",
     "gpt-5",
+    "gpt-5-2025-08-07",
     "gpt-5-mini",
-    "gpt-5-nano",
+    "gpt-5-mini-2025-08-07",
+    "gpt-5-nano"
+    "gpt-5-nano-2025-08-07",
     "gpt-5-chat-latest",
 ]
 
