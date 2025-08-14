@@ -8,7 +8,6 @@ from deepeval.feedback.feedback import Feedback
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-from deepeval.prompt import Prompt
 
 
 class TraceWorkerStatus(Enum):
@@ -91,7 +90,6 @@ class AgentSpan(BaseSpan):
 
 class LlmSpan(BaseSpan):
     model: Optional[str] = None
-    prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"
     )
@@ -110,7 +108,7 @@ class LlmSpan(BaseSpan):
 
 
 class RetrieverSpan(BaseSpan):
-    embedder: str
+    embedder: Optional[str] = None
     top_k: Optional[int] = Field(None, serialization_alias="topK")
     chunk_size: Optional[int] = Field(None, serialization_alias="chunkSize")
 

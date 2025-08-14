@@ -17,7 +17,6 @@ from openai.types.responses import (
     ResponseOutputText,
 )
 
-from deepeval.prompt.prompt import Prompt
 from deepeval.tracing.types import (
     AgentSpan,
     ToolSpan,
@@ -88,9 +87,6 @@ def update_span_properties_from_response_span_data(
     if response is None:
         span.model = "NA"
         return
-    # Extract prompt template
-    prompt_template = response.instructions or None
-    prompt = Prompt(template=prompt_template) if prompt_template else None
     # Extract usage tokens
     usage = response.usage
     if usage:
@@ -109,7 +105,6 @@ def update_span_properties_from_response_span_data(
         "cached_input_tokens": cached_input_tokens,
         "ouptut_reasoning_tokens": ouptut_reasoning_tokens,
     }
-    span.prompt = prompt
     span.input_token_count = input_tokens
     span.output_token_count = output_tokens
     span.metadata = metadata
@@ -135,7 +130,6 @@ def update_span_properties_from_generation_span_data(
         raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
     )
     # Update span
-    span.prompt = None
     span.input_token_count = input_tokens
     span.output_token_count = output_tokens
     span.model = generation_span_data.model or "NA"

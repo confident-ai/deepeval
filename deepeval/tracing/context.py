@@ -3,7 +3,6 @@ from contextvars import ContextVar
 
 from deepeval.tracing.types import BaseSpan, Trace, Feedback
 from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
-from deepeval.prompt import Prompt
 
 current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
     "current_span", default=None
@@ -18,7 +17,7 @@ def update_current_span(
     input: Optional[Any] = None,
     output: Optional[Any] = None,
     retrieval_context: Optional[List[str]] = None,
-    context: Optional[str] = None,
+    context: Optional[List[str]] = None,
     expected_output: Optional[str] = None,
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
@@ -68,7 +67,7 @@ def update_current_trace(
     input: Optional[Any] = None,
     output: Optional[Any] = None,
     retrieval_context: Optional[List[str]] = None,
-    context: Optional[str] = None,
+    context: Optional[List[str]] = None,
     expected_output: Optional[str] = None,
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
@@ -116,7 +115,6 @@ def update_current_trace(
 
 def update_llm_span(
     model: Optional[str] = None,
-    prompt: Optional[Prompt] = None,
     input_token_count: Optional[float] = None,
     output_token_count: Optional[float] = None,
     cost_per_input_token: Optional[float] = None,
@@ -127,8 +125,6 @@ def update_llm_span(
         return
     if model:
         current_span.model = model
-    if prompt:
-        current_span.prompt = prompt
     if input_token_count:
         current_span.input_token_count = input_token_count
     if output_token_count:

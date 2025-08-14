@@ -882,10 +882,6 @@ class Observer:
             cost_per_output_token = self.observe_kwargs.get(
                 "cost_per_output_token", None
             )
-            if model is None and not trace_manager.openai_client:
-                raise ValueError(
-                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/docs/llm-tracing/integrations/openai"
-                )
             return LlmSpan(
                 **span_kwargs,
                 model=model,
@@ -894,9 +890,6 @@ class Observer:
             )
         elif self.span_type == SpanType.RETRIEVER.value:
             embedder = self.observe_kwargs.get("embedder", None)
-            if embedder is None:
-                raise ValueError("embedder is required for RetrieverSpan")
-
             return RetrieverSpan(**span_kwargs, embedder=embedder)
 
         elif self.span_type == SpanType.TOOL.value:
