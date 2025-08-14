@@ -55,6 +55,7 @@ valid_gpt_models = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "o4-mini",
+    "o4-mini-2025-04-16",
     "gpt-4.5-preview-2025-02-27",
     "gpt-5",
     "gpt-5-mini",
@@ -93,11 +94,12 @@ structured_outputs_models = [
     "o1-2024-12-17",
     "o3-mini",
     "o3-mini-2025-01-31",
+    "o4-mini",
+    "o4-mini-2025-04-16",
     "gpt-4.5-preview-2025-02-27",
     "gpt-5",
     "gpt-5-mini",
-    "gpt-5-nano",
-    "gpt-5-chat-latest",
+    "gpt-5-nano"
 ]
 
 json_mode_models = [
@@ -111,7 +113,6 @@ json_mode_models = [
     "gpt-4-turbo-preview",
     "gpt-4-32k",
     "gpt-4-32k-0613",
-    # TODO: add gpt-5-chat-latest
 ]
 
 model_pricing = {
@@ -134,6 +135,7 @@ model_pricing = {
     "o3-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
     "o3-mini-2025-01-31": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
     "o4-mini": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
+    "o4-mini-2025-04-16": {"input": 1.10 / 1e6, "output": 4.40 / 1e6},
     "gpt-4.1": {
         "input": 2.00 / 1e6,
         "output": 8.00 / 1e6,
