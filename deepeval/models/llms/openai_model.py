@@ -94,7 +94,10 @@ structured_outputs_models = [
     "o3-mini",
     "o3-mini-2025-01-31",
     "gpt-4.5-preview-2025-02-27",
-    # TODO: add gpt-5-chat-latest
+    "gpt-5",
+    "gpt-5-mini",
+    "gpt-5-nano",
+    "gpt-5-chat-latest",
 ]
 
 json_mode_models = [
