@@ -71,9 +71,7 @@ async def get_weather(city: str):
     weather = f"Sunny in {city}"
 
     # Create attributes
-    update_current_span(
-        input={"asdfsaf": city}, output=weather
-    )
+    update_current_span(input={"asdfsaf": city}, output=weather)
 
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))

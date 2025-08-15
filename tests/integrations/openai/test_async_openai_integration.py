@@ -4,6 +4,7 @@ from deepeval.dataset import EvaluationDataset, Golden
 import asyncio
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from tests.integrations.openai.resources import (

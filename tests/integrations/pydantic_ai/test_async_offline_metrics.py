@@ -3,6 +3,7 @@ import asyncio
 import time
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
@@ -21,10 +22,11 @@ answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    metrics=[answer_relavancy_metric]
+    metrics=[answer_relavancy_metric],
 )
 
 goldens = [Golden(input="What's 7 * 8?"), Golden(input="What's 7 * 6?")]
+
 
 def main():
     dataset = EvaluationDataset(goldens=goldens)

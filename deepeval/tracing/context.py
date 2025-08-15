@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
 from contextvars import ContextVar
 
-from deepeval.tracing.types import BaseSpan, Trace, Feedback
+from deepeval.tracing.types import BaseSpan, Trace
 from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
+from deepeval.tracing.types import LlmSpan, RetrieverSpan
 
 current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
     "current_span", default=None
@@ -22,7 +23,6 @@ def update_current_span(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     metadata: Optional[Dict[str, Any]] = None,
-    feedback: Optional[Feedback] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
 ):
@@ -39,8 +39,6 @@ def update_current_span(
         current_span.expected_tools = test_case.expected_tools
     if metadata:
         current_span.metadata = metadata
-    if feedback:
-        current_span.feedback = feedback
     if input:
         current_span.input = input
     if output:
@@ -58,6 +56,7 @@ def update_current_span(
     if name:
         current_span.name = name
 
+
 def update_current_trace(
     name: Optional[str] = None,
     tags: Optional[List[str]] = None,
@@ -71,7 +70,6 @@ def update_current_trace(
     expected_output: Optional[str] = None,
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
-    feedback: Optional[Feedback] = None,
     test_case: Optional[LLMTestCase] = None,
 ):
     current_trace = current_trace_context.get()
@@ -109,8 +107,6 @@ def update_current_trace(
         current_trace.tools_called = tools_called
     if expected_tools:
         current_trace.expected_tools = expected_tools
-    if feedback:
-        current_trace.feedback = feedback
 
 
 def update_llm_span(
@@ -121,7 +117,7 @@ def update_llm_span(
     cost_per_output_token: Optional[float] = None,
 ):
     current_span = current_span_context.get()
-    if not current_span:
+    if not current_span or not isinstance(current_span, LlmSpan):
         return
     if model:
         current_span.model = model
@@ -141,7 +137,7 @@ def update_retriever_span(
     chunk_size: Optional[int] = None,
 ):
     current_span = current_span_context.get()
-    if not current_span:
+    if not current_span or not isinstance(current_span, RetrieverSpan):
         return
     if embedder:
         current_span.embedder = embedder

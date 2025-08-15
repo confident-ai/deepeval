@@ -50,10 +50,10 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
 )
-from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
+
 
 class TraceManager:
     def __init__(self):
@@ -154,9 +154,9 @@ class TraceManager:
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=perf_counter(),
             end_time=None,
-            confident_api_key=self.confident_api_key,
             metric_collection=metric_collection,
             metrics=metrics,
+            _confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -324,7 +324,7 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not trace_api.confident_api_key:
+        if not trace_api._confident_api_key:
             if not is_confident() and self.confident_api_key is None:
                 self._print_trace_status(
                     message="No Confident AI API key found. Skipping trace posting.",
@@ -344,7 +344,7 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not trace.confident_api_key:
+        if not trace._confident_api_key:
             if not is_confident() and self.confident_api_key is None:
                 self._print_trace_status(
                     message="No Confident AI API key found. Skipping trace posting.",
@@ -397,8 +397,8 @@ class TraceManager:
                 body = make_json_serializable(body)
 
                 if main_thr.is_alive():
-                    if trace_api.confident_api_key:
-                        api = Api(api_key=trace_api.confident_api_key)
+                    if trace_api._confident_api_key:
+                        api = Api(api_key=trace_api._confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
@@ -586,7 +586,6 @@ class TraceManager:
             else None
         )
 
-
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -599,23 +598,22 @@ class TraceManager:
             metadata=trace.metadata,
             name=trace.name,
             tags=trace.tags,
-            environment=(
-                self.environment if not trace.environment else trace.environment
-            ),
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
-            feedback=convert_feedback_to_api_feedback(
-                trace.feedback, trace_uuid=trace.uuid
-            ),
             metricCollection=trace.metric_collection,
-            confident_api_key=trace.confident_api_key,
             retrievalContext=trace.retrieval_context,
             context=trace.context,
             expectedOutput=trace.expected_output,
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
+            _confident_api_key=trace._confident_api_key,
+            _environment=(
+                self.environment
+                if not trace._environment
+                else trace._environment
+            ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -663,9 +661,6 @@ class TraceManager:
             metadata=span.metadata,
             error=span.error,
             metricCollection=span.metric_collection,
-            feedback=convert_feedback_to_api_feedback(
-                span.feedback, span_uuid=span.uuid
-            ),
             metricsData=(
                 [create_metric_data(metric) for metric in span.metrics]
                 if span.metrics

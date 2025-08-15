@@ -10,7 +10,7 @@ answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    metrics=[answer_relavancy_metric]
+    metrics=[answer_relavancy_metric],
 )
 
 # run for testing (not needed for docs)

@@ -25,4 +25,3 @@ class TestResult:
 class EvaluationResult(BaseModel):
     test_results: List[TestResult]
     confident_link: Optional[str]
-

@@ -10,6 +10,7 @@ from deepeval.tracing.types import TestCaseMetricPair
 
 openai_test_case_pairs: List[TestCaseMetricPair] = []
 
+
 def set_attr_path(obj, attr_path: str, value):
     *pre_path, final_attr = attr_path.split(".")
     for attr in pre_path:

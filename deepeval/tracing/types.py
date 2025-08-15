@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 
-from deepeval.feedback.feedback import Feedback
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -57,7 +56,6 @@ class BaseSpan(BaseModel):
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
-    feedback: Optional[Feedback] = None
 
     # Don't serialize these
     progress: Optional[Progress] = Field(None, exclude=True)
@@ -77,7 +75,7 @@ class BaseSpan(BaseModel):
     expected_tools: Optional[List[ToolCall]] = Field(
         None, serialization_alias="expectedTools"
     )
-    
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -131,13 +129,12 @@ class Trace(BaseModel):
     user_id: Optional[str] = None
     input: Optional[Any] = None
     output: Optional[Any] = None
-    feedback: Optional[Feedback] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
 
     # Don't serialize these
-    confident_api_key: Optional[str] = Field(None, exclude=True)
-    environment: str = Field(None, exclude=True)
+    _confident_api_key: Optional[str] = Field(None, exclude=True)
+    _environment: str = Field(None, exclude=True)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -164,6 +161,7 @@ class TraceAttributes(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
     user_id: Optional[str] = None
+
 
 @dataclass
 class TestCaseMetricPair:

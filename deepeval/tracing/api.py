@@ -2,7 +2,6 @@ from enum import Enum
 from typing import Dict, List, Optional, Union, Literal, Any
 from pydantic import BaseModel, Field
 
-from deepeval.feedback.api import APIFeedback
 from deepeval.test_case import ToolCall
 
 
@@ -86,9 +85,6 @@ class BaseApiSpan(BaseModel):
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
-    ## human feedback
-    feedback: Optional[APIFeedback] = Field(None)
-
     class Config:
         use_enum_values = True
         validate_assignment = True
@@ -113,7 +109,6 @@ class TraceApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
-    feedback: Optional[APIFeedback] = Field(None)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -131,4 +126,4 @@ class TraceApi(BaseModel):
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
     # Don't serialize these
-    confident_api_key: Optional[str] = Field(None, exclude=True)
+    _confident_api_key: Optional[str] = Field(None, exclude=True)

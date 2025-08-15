@@ -85,6 +85,7 @@ from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.tracing.types import TestCaseMetricPair
 
+
 def execute_test_cases(
     test_cases: Union[
         List[LLMTestCase], List[ConversationalTestCase], List[MLLMTestCase]
@@ -1039,7 +1040,9 @@ def execute_agentic_test_cases(
                                     raise
                         except TypeError:
                             try:
-                                metric.measure(llm_test_case, _in_component=True)
+                                metric.measure(
+                                    llm_test_case, _in_component=True
+                                )
                             except MissingTestCaseParamsError as e:
                                 if skip_on_missing_params:
                                     continue
@@ -1589,7 +1592,9 @@ def execute_agentic_test_cases_from_loop(
                                     raise
                         except TypeError:
                             try:
-                                metric.measure(llm_test_case, _in_component=True)
+                                metric.measure(
+                                    llm_test_case, _in_component=True
+                                )
                             except MissingTestCaseParamsError as e:
                                 if skip_on_missing_params:
                                     continue

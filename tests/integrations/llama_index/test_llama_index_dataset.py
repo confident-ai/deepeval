@@ -18,6 +18,7 @@ load_dotenv()
 deepeval.login(os.getenv("CONFIDENT_API_KEY"))
 instrument_llama_index(instrument.get_dispatcher())
 
+
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b

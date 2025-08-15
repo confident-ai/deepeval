@@ -5,14 +5,20 @@ from openai import OpenAI
 
 client = OpenAI()
 
+
 @observe(metrics=[AnswerRelevancyMetric()])
 def complete(query: str):
-  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
+    response = (
+        client.chat.completions.create(
+            model="gpt-4o", messages=[{"role": "user", "content": query}]
+        )
+        .choices[0]
+        .message.content
+    )
 
-  update_current_span(
-    test_case=LLMTestCase(input=query, output=response)
-  )
-  return response
+    update_current_span(test_case=LLMTestCase(input=query, output=response))
+    return response
+
 
 ################################
 
@@ -25,6 +31,7 @@ from deepeval.tracing import (
 )
 from deepeval.metrics import ContextualRelevancyMetric, AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
+
 
 def web_search(query: str) -> str:
     return "Fake search results for: " + query
@@ -52,7 +59,9 @@ def rag_pipeline(query: str) -> str:
     response = generate_response(f"Context: {context}\nQuery: {query}")
 
     update_current_span(
-        test_case=LLMTestCase(input=query, actual_output=response, retrieval_context=docs)
+        test_case=LLMTestCase(
+            input=query, actual_output=response, retrieval_context=docs
+        )
     )
     return response
 
@@ -72,6 +81,7 @@ def research_agent(query: str) -> str:
         f"Query: {query}"
     )
     return final_response
+
 
 from deepeval.dataset import Golden
 from deepeval import evaluate

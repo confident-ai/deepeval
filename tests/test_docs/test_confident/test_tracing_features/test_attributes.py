@@ -1,5 +1,6 @@
 from deepeval.tracing import observe, update_llm_span
- 
+
+
 @observe(type="llm", model="gpt-4.1")
 def generate_response(prompt):
     output = "Generated response to: " + prompt
@@ -11,12 +12,14 @@ def generate_response(prompt):
     )
     return output
 
+
 generate_response("What is the capital of France?")
 
 ############################################
 
 from deepeval.tracing import observe, update_retriever_span
- 
+
+
 @observe(type="retriever", embedder="text-embedding-ada-002")
 def retrieve_documents(query):
     fetched_documents = ["doc1", "doc2"]
@@ -26,5 +29,6 @@ def retrieve_documents(query):
         top_k=5,
     )
     return fetched_documents
+
 
 retrieve_documents("What is the capital of France?")

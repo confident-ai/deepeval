@@ -1,28 +1,15 @@
-from openai import OpenAI
-from deepeval.test_case import LLMTestCase, ToolCall
-from deepeval.tracing import observe, update_current_span
-from deepeval.metrics import ArgumentCorrectnessMetric, TaskCompletionMetric
-import json
-
-...
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
 
 arg_correctness_metric = ArgumentCorrectnessMetric()
 task_completion_metric = TaskCompletionMetric()
+
+from openai import OpenAI
+import json
+from deepeval.test_case import LLMTestCase, ToolCall
+from deepeval.tracing import observe, update_current_span
+
 client = OpenAI()
-tools = [
-    {
-        "type": "function",
-        "name": "web_search_tool",
-        "description": "Search the web for information.",
-        "parameters": {
-            "type": "object",
-            "properties": {"web_query": {"type": "string"}},
-            "required": ["web_query"],
-            "additionalProperties": False,
-        },
-        "strict": True,
-    }
-]
+tools = [...]
 
 
 @observe()
@@ -67,6 +54,3 @@ def your_ai_agent(query: str) -> str:
         ]
     )
     return "The answer to your question is: " + search_results
-
-
-your_ai_agent("What are LLMs?")

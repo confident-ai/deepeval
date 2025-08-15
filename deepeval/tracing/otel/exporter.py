@@ -111,7 +111,7 @@ class ConfidentSpanExporter(SpanExporter):
                     )
 
                 if api_key:
-                    current_trace.confident_api_key = api_key
+                    current_trace._confident_api_key = api_key
 
                 # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
@@ -185,21 +185,31 @@ class ConfidentSpanExporter(SpanExporter):
 
                 # set the trace environment
                 if base_span_wrapper.trace_environment:
-                    current_trace.environment = base_span_wrapper.trace_environment
+                    current_trace._environment = (
+                        base_span_wrapper.trace_environment
+                    )
 
                 # set the trace test case parameters
                 if base_span_wrapper.trace_retrieval_context:
-                    current_trace.retrieval_context = base_span_wrapper.trace_retrieval_context
+                    current_trace.retrieval_context = (
+                        base_span_wrapper.trace_retrieval_context
+                    )
                 if base_span_wrapper.trace_context:
                     current_trace.context = base_span_wrapper.trace_context
                 if base_span_wrapper.trace_tools_called:
-                    current_trace.tools_called = base_span_wrapper.trace_tools_called
+                    current_trace.tools_called = (
+                        base_span_wrapper.trace_tools_called
+                    )
                 if base_span_wrapper.trace_expected_tools:
-                    current_trace.expected_tools = base_span_wrapper.trace_expected_tools
+                    current_trace.expected_tools = (
+                        base_span_wrapper.trace_expected_tools
+                    )
 
                 # set the trace metric collection
                 if base_span_wrapper.trace_metric_collection:
-                    current_trace.metric_collection = base_span_wrapper.trace_metric_collection
+                    current_trace.metric_collection = (
+                        base_span_wrapper.trace_metric_collection
+                    )
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
@@ -271,7 +281,9 @@ class ConfidentSpanExporter(SpanExporter):
         trace_name = span.attributes.get("confident.trace.name")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
         trace_user_id = span.attributes.get("confident.trace.user_id")
-        trace_environment = span.attributes.get("confident.trace.environment", "production")
+        trace_environment = span.attributes.get(
+            "confident.trace.environment", "production"
+        )
         trace_input = span.attributes.get("confident.trace.input")
         trace_output = span.attributes.get("confident.trace.output")
         raw_trace_tags = span.attributes.get("confident.trace.tags")
@@ -312,7 +324,9 @@ class ConfidentSpanExporter(SpanExporter):
             raw_trace_expected_tools
         )
         trace_metadata = self._parse_json_string(raw_trace_metadata)
-        trace_metric_collection = self._parse_string(raw_trace_metric_collection)
+        trace_metric_collection = self._parse_string(
+            raw_trace_metric_collection
+        )
 
         # Set Span Attributes
         base_span.parent_uuid = (
@@ -340,7 +354,7 @@ class ConfidentSpanExporter(SpanExporter):
             base_span.input = span_input
         if span_output:
             base_span.output = span_output
-        
+
         # Resource attributes
         resource_attributes = span.resource.attributes
         if resource_attributes:
