@@ -126,4 +126,4 @@ class TraceApi(BaseModel):
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
     # Don't serialize these
-    _confident_api_key: Optional[str] = Field(None, exclude=True)
+    confident_api_key: Optional[str] = Field(None, exclude=True)

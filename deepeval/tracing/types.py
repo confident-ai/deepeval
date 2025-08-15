@@ -133,8 +133,8 @@ class Trace(BaseModel):
     metric_collection: Optional[str] = None
 
     # Don't serialize these
-    _confident_api_key: Optional[str] = Field(None, exclude=True)
-    _environment: str = Field(None, exclude=True)
+    confident_api_key: Optional[str] = Field(None, exclude=True)
+    environment: str = Field(None, exclude=True)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(

@@ -111,7 +111,7 @@ class ConfidentSpanExporter(SpanExporter):
                     )
 
                 if api_key:
-                    current_trace._confident_api_key = api_key
+                    current_trace.confident_api_key = api_key
 
                 # set the trace attributes (to be deprecated)
                 if base_span_wrapper.trace_attributes:
@@ -185,7 +185,7 @@ class ConfidentSpanExporter(SpanExporter):
 
                 # set the trace environment
                 if base_span_wrapper.trace_environment:
-                    current_trace._environment = (
+                    current_trace.environment = (
                         base_span_wrapper.trace_environment
                     )
 

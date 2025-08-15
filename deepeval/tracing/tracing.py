@@ -156,7 +156,7 @@ class TraceManager:
             end_time=None,
             metric_collection=metric_collection,
             metrics=metrics,
-            _confident_api_key=self.confident_api_key,
+            confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -324,7 +324,7 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not trace_api._confident_api_key:
+        if not trace_api.confident_api_key:
             if not is_confident() and self.confident_api_key is None:
                 self._print_trace_status(
                     message="No Confident AI API key found. Skipping trace posting.",
@@ -344,7 +344,7 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        if not trace._confident_api_key:
+        if not trace.confident_api_key:
             if not is_confident() and self.confident_api_key is None:
                 self._print_trace_status(
                     message="No Confident AI API key found. Skipping trace posting.",
@@ -397,8 +397,8 @@ class TraceManager:
                 body = make_json_serializable(body)
 
                 if main_thr.is_alive():
-                    if trace_api._confident_api_key:
-                        api = Api(api_key=trace_api._confident_api_key)
+                    if trace_api.confident_api_key:
+                        api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
                     response = await api.a_send_request(
@@ -608,11 +608,11 @@ class TraceManager:
             expectedOutput=trace.expected_output,
             toolsCalled=trace.tools_called,
             expectedTools=trace.expected_tools,
-            _confident_api_key=trace._confident_api_key,
-            _environment=(
+            confident_api_key=trace.confident_api_key,
+            environment=(
                 self.environment
-                if not trace._environment
-                else trace._environment
+                if not trace.environment
+                else trace.environment
             ),
         )
 
