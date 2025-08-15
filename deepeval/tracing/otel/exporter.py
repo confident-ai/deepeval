@@ -514,9 +514,9 @@ class ConfidentSpanExporter(SpanExporter):
 
         elif span_type == "retriever":
             embedder = span.attributes.get("confident.retriever.embedder")
-            top_k = span.attributes.get("confident.retriever.attributes.top_k")
+            top_k = span.attributes.get("confident.retriever.top_k")
             chunk_size = span.attributes.get(
-                "confident.retriever.attributes.chunk_size"
+                "confident.retriever.chunk_size"
             )
             retriever_span = RetrieverSpan(
                 uuid=uuid,
