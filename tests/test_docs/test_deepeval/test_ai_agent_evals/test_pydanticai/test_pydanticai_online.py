@@ -6,13 +6,18 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 instrument_pydantic_ai()
 
-Agent.instrument_all()
+# Agent.instrument_all()
 
-answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    metric_collection="test_collection_1",
+    trace_attributes={
+        "name": "test_trace",
+        "tags": ["tag1", "tag2"],
+        "metadata": {"key": "value"},
+        "thread_id": "123",
+        # "user_id": "456",
+    }
 )
 
 # run for testing (not needed for docs)
