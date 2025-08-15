@@ -7,6 +7,7 @@ except Exception:
     load_dotenv = None
     find_dotenv = None
 
+
 def autoload_dotenv() -> None:
     """
     Autoload environment variables for DeepEval at import time.
