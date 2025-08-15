@@ -4,9 +4,8 @@ from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     update_current_span,
     observe,
-    RetrieverAttributes,
-    LlmAttributes,
     trace_manager,
+    update_llm_span,
 )
 
 import openai
@@ -43,24 +42,26 @@ def generate_text(prompt: str):
         )
         generated_text = response.choices[0].message.content
 
-        attributes = LlmAttributes(
+        update_current_span(
             input=prompt,
             output=generated_text,
+        )
+        update_llm_span(
             input_token_count=response.usage.prompt_tokens,
             output_token_count=response.usage.completion_tokens,
         )
-        update_current_span(attributes=attributes)
         sleep(random.uniform(0.5, 1.5))
         return generated_text
     except Exception as e:
         fallback_text = f"Generated text for: {prompt} (API error: {str(e)})"
-        attributes = LlmAttributes(
+        update_current_span(
             input=prompt,
             output=fallback_text,
+        )
+        update_llm_span(
             input_token_count=len(prompt.split()),
             output_token_count=len(fallback_text.split()),
         )
-        update_current_span(attributes=attributes)
         return fallback_text
 
 
@@ -87,10 +88,8 @@ def retrieve_documents(query: str, top_k: int = 3):
         relevant_docs = sample_documents[:top_k]
 
         update_current_span(
-            attributes=RetrieverAttributes(
-                embedding_input=query,
-                retrieval_context=relevant_docs,
-            )
+            input=query,
+            retrieval_context=relevant_docs,
         )
         sleep(random.uniform(0.5, 1.5))
         return relevant_docs
@@ -101,10 +100,8 @@ def retrieve_documents(query: str, top_k: int = 3):
             f"Document 3 about {query}",
         ]
         update_current_span(
-            attributes=RetrieverAttributes(
-                embedding_input=query,
-                retrieval_context=fallback_docs,
-            )
+            input=query,
+            retrieval_context=fallback_docs,
         )
         return fallback_docs
 

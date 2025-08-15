@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 os.environ["CONFIDENT_TRACE_FLUSH"] = "YES"
+os.environ["CONFIDENT_TRACE_FLUSH"] = "YES"
 
 # Initialize OpenAI client
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -33,45 +34,30 @@ tracer = trace.get_tracer("deepeval_tracer")
 
 
 def tool_span(input: str):
-    time.sleep(3)
     with tracer.start_as_current_span("tool_span") as span:
         span.set_attribute("confident.span.type", "tool")
-        span.set_attribute("confident.tool.name", "tool name")
         span.set_attribute("confident.tool.description", "tool description")
-
+        span.set_attribute("confident.span.input", json.dumps({"input": input}))
         span.set_attribute(
-            "confident.tool.attributes.input_parameters",
-            json.dumps({"input": input}),
-        )
-        span.set_attribute(
-            "confident.tool.attributes.output", json.dumps({"output": input})
+            "confident.span.output", json.dumps({"output": input})
         )
 
 
 def retriever_span(input: str):
-    time.sleep(2.5)
     with tracer.start_as_current_span("retriever_span") as span:
         span.set_attribute("confident.span.type", "retriever")
         span.set_attribute("confident.retriever.embedder", "embedder")
-
-        span.set_attribute(
-            "confident.retriever.attributes.embedding_input", input
-        )
-        span.set_attribute(
-            "confident.retriever.attributes.retrieval_context", ["asd", "asd"]
-        )
-
-        span.set_attribute("confident.retriever.attributes.top_k", 10)
-        span.set_attribute("confident.retriever.attributes.chunk_size", 10)
-
+        span.set_attribute("confident.retriever.top_k", 10)
+        span.set_attribute("confident.retriever.chunk_size", 10)
+        span.set_attribute("confident.span.input", input)
+        span.set_attribute("confident.span.retrieval_context", ["asd", "asd"])
         tool_span(input)
 
 
 def agent_span(input: str):
-    time.sleep(2)
     with tracer.start_as_current_span("agent_span") as span:
         span.set_attribute("confident.span.type", "agent")
-        span.set_attribute("confident.agent.name", "agent_span")
+        span.set_attribute("confident.agent.name", "agent name")
         span.set_attribute(
             "confident.agent.available_tools",
             ["llm_agent", "retriever_span", "tool_span"],
@@ -80,55 +66,43 @@ def agent_span(input: str):
             "confident.agent.agent_handoffs",
             ["llm_agent", "retriever_span", "tool_span"],
         )
+        span.set_attribute("confident.span.input", json.dumps({"input": input}))
         span.set_attribute(
-            "confident.agent.attributes.input", json.dumps({"input": input})
-        )
-        span.set_attribute(
-            "confident.agent.attributes.output", json.dumps({"output": input})
+            "confident.span.output", json.dumps({"output": input})
         )
 
         # trace attributes
         span.set_attribute(
             "confident.trace.metadata", json.dumps({"test_key": "test_value"})
         )
-
         retriever_span(input)
 
 
 def llm_agent(input: str):
-    time.sleep(1.5)
     with tracer.start_as_current_span("llm_span") as span:
         span.set_attribute("confident.span.type", "llm")
-        span.set_attribute("confident.llm.model", "gpt-3.5-turbo")
-        span.set_attribute("confident.llm.cost_per_input_token", 0.01)
-        span.set_attribute("confident.llm.cost_per_output_token", 0.02)
-
         span.set_attribute(
-            "confident.llm.attributes.input",
+            "confident.span.input",
             [json.dumps({"role": "user", "content": input})],
         )
         span.set_attribute(
-            "confident.llm.attributes.output",
+            "confident.span.output",
             json.dumps({"role": "assistant", "content": input}),
         )
-        span.set_attribute("confident.llm.attributes.output_token_count", 10)
-        span.set_attribute("confident.llm.attributes.input_token_count", 10)
+        span.set_attribute("confident.llm.model", "gpt-3.5-turbo")
+        span.set_attribute("confident.llm.cost_per_input_token", 0.01)
+        span.set_attribute("confident.llm.cost_per_output_token", 0.02)
+        span.set_attribute("confident.llm.output_token_count", 10)
+        span.set_attribute("confident.llm.input_token_count", 10)
 
         # trace attributes
         span.set_attribute("confident.trace.thread_id", "123")
         span.set_attribute("confident.trace.user_id", "456")
-
-        span.set_attribute(
-            "confident.span.metadata", json.dumps({"test_key": "test_value"})
-        )
-
         agent_span(input)
 
 
 def meta_agent(input: str):
     with tracer.start_as_current_span("custom_span") as span:
-        time.sleep(1)
-
         span.set_attribute("confident.span.input", input)
         span.set_attribute("confident.span.output", input)
         span.set_attribute("confident.span.error", "Error")
@@ -147,7 +121,6 @@ def meta_agent(input: str):
         # trace attributes
         span.set_attribute("confident.trace.name", "test_trace")
         span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
-
         span.set_attribute("confident.trace.input", input)
         span.set_attribute("confident.trace.output", input)
 

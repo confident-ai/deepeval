@@ -6,9 +6,9 @@ sidebar_label: Deploy And Run Evals in Prod
 
 In this section we'll set up CI/CD workflows for our RAG QA agent. We'll also see how to add metrics and create spans in our RAG agent's `@observe` decorators to do online evals and get full visibilty for debugging internal components.
 
-## Setup Tracing 
+## Setup Tracing
 
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction),
 this provides full visibility for debugging internal components of your LLM application. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
 During our development phase, we've added these `@observe` decorators to our RAG agent for different components, we will now add metrics and create spans. Here's how you can do that:
@@ -31,10 +31,10 @@ import tempfile
 class RAGAgent:
     def __init__(...):
         ...
-    
+
     def _load_vector_store(self):
-        ... 
-        
+        ...
+
     @observe(metrics=[ContextualRelevancyMetric(), ContextualRecallMetric(), ContextualPrecisionMetric()], name="Retriever")
     def retrieve(self, query: str):
         docs = self.vector_store.similarity_search(query, k=self.k)
@@ -52,9 +52,9 @@ class RAGAgent:
     @observe(metrics=[GEval(...), GEval(...)], name="Generator") # Use same metrics as before
     def generate(
         self,
-        query: str, 
-        retrieved_docs: list, 
-        llm_model=None, 
+        query: str,
+        retrieved_docs: list,
+        llm_model=None,
         prompt_template: str = None
     ): # Changed prompt template, model used
         context = "\n".join(retrieved_docs)
@@ -72,12 +72,12 @@ class RAGAgent:
             )
         )
         return answer
-    
+
     @observe(type="agent")
     def answer(
-        self, 
+        self,
         query: str,
-        llm_model=None, 
+        llm_model=None,
         prompt_template: str = None
     ):
         retrieved_docs = self.retrieve(query)

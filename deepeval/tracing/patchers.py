@@ -1,8 +1,7 @@
 from openai import OpenAI
 import functools
 
-from deepeval.tracing.attributes import LlmAttributes
-from deepeval.tracing.context import update_current_span
+from deepeval.tracing.context import update_current_span, update_llm_span
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import LlmSpan
 
@@ -73,16 +72,12 @@ def patch_openai_client(client: OpenAI):
                         pass
 
                     update_current_span(
-                        attributes=LlmAttributes(
-                            input=kwargs.get(
-                                "messages", "INPUT_MESSAGE_NOT_FOUND"
-                            ),
-                            output=(
-                                output if output else "OUTPUT_MESSAGE_NOT_FOUND"
-                            ),
-                            input_token_count=input_token_count,
-                            output_token_count=output_token_count,
-                        )
+                        input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
+                        output=output if output else "OUTPUT_MESSAGE_NOT_FOUND",
+                    )
+                    update_llm_span(
+                        input_token_count=input_token_count,
+                        output_token_count=output_token_count,
                     )
                 return response
 

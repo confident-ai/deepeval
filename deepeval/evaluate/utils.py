@@ -527,18 +527,18 @@ def count_metrics_in_trace(trace: Trace) -> int:
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
     # extract trace result
-    if trace_api.metrics_data and trace_api.llm_test_case:
+    if trace_api.metrics_data:
         test_results.append(
             TestResult(
                 name=trace_api.name,
                 success=True,
                 metrics_data=trace_api.metrics_data,
                 conversational=False,
-                input=trace_api.llm_test_case.input,
-                actual_output=trace_api.llm_test_case.actual_output,
-                expected_output=trace_api.llm_test_case.expected_output,
-                context=trace_api.llm_test_case.context,
-                retrieval_context=trace_api.llm_test_case.retrieval_context,
+                input=trace_api.input,
+                actual_output=trace_api.output,
+                expected_output=trace_api.expected_output,
+                context=trace_api.context,
+                retrieval_context=trace_api.retrieval_context,
             )
         )
     # extract base span results
@@ -562,17 +562,17 @@ def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
 
 def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
     test_results: List[TestResult] = []
-    if span_api.metrics_data and span_api.llm_test_case:
+    if span_api.metrics_data:
         test_results.append(
             TestResult(
                 name=span_api.name,
                 success=span_api.status == "SUCCESS",
                 metrics_data=span_api.metrics_data,
-                input=span_api.llm_test_case.input,
-                actual_output=span_api.llm_test_case.actual_output,
-                expected_output=span_api.llm_test_case.expected_output,
-                context=span_api.llm_test_case.context,
-                retrieval_context=span_api.llm_test_case.retrieval_context,
+                input=span_api.input,
+                actual_output=span_api.output,
+                expected_output=span_api.expected_output,
+                context=span_api.context,
+                retrieval_context=span_api.retrieval_context,
                 conversational=False,
             )
         )
