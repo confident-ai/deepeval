@@ -6,6 +6,7 @@ import re
 from ._version import __version__
 
 from .env import autoload_dotenv as _autoload_dotenv
+
 _autoload_dotenv()
 
 from deepeval.evaluate import evaluate, assert_test
