@@ -8,7 +8,7 @@ In this section, we'll set up CI/CD workflows for your summarization agent, and 
 
 ## Setup Tracing
 
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction), 
+`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](https://deepeval.com/docs/evaluation-test-cases#what-is-an-llm-interaction),
 this provides full visibility for debugging internal components of your LLM application. We have added these decorators during development of our agent, we will now add metrics and spans for running online evals. [Learn more about tracing here](https://deepeval.com/docs/evaluation-llm-tracing).
 
 Here's how we can add metrics and create spans for our `@observe` decorators in the `MeetingSummarizer` class:
@@ -65,7 +65,7 @@ class MeetingSummarizer:
 
             summary = response.choices[0].message.content.strip()
             update_current_span(
-                test_case=LLMTestCase(input=transcript, actual_output=summary)
+                input=transcript, output=summary
             )
             return summary
         except Exception as e:
@@ -87,7 +87,7 @@ class MeetingSummarizer:
             try:
                 action_items = json.loads(action_items)
                 update_current_span(
-                    test_case=LLMTestCase(input=transcript, actual_output=str(action_items))
+                    input=transcript, actual_output=str(action_items)
                 )
                 return action_items
             except json.JSONDecodeError:

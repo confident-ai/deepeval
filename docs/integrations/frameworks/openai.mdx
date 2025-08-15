@@ -39,7 +39,7 @@ for golden in dataset.evals_iterator():
 ```
 
 </TabItem>
-<TabItem value="response" label="Responses">
+<TabItem value="responses" label="Responses">
 
 ```python title="main.py" showLineNumbers {1,15}
 from deepeval.openai import OpenAI
@@ -63,10 +63,11 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python title="main.py" showLineNumbers {1,18}
-from deepeval.openai import OpenAI
+```python title="main.py" showLineNumbers {1,19}
+from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
+import asyncio
 
 dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
@@ -88,12 +89,13 @@ for golden in dataset.evals_iterator():
 ```
 
 </TabItem>
-<TabItem value="async-response" label="Async Responses">
+<TabItem value="async-responses" label="Async Responses">
 
-```python title="main.py" showLineNumbers {2,17}
-from deepeval.openai import OpenAI
+```python title="main.py" showLineNumbers {1,17}
+from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
+import asyncio
 
 dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
@@ -155,7 +157,7 @@ def llm_app(input):
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": retrieve_docs(input) + "\n\nQuestion: " + input}
+            {"role": "user", "content": '\n'.join(retrieve_docs(input)) + "\n\nQuestion: " + input}
         ],
         metrics=[AnswerRelevancyMetric(), BiasMetric()]
     )
@@ -209,11 +211,12 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python title="main.py" showLineNumbers {4,22}
+```python title="main.py" showLineNumbers {4,23}
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import AsyncOpenAI
+import asyncio
 
 @observe()
 async def retrieve_docs(query):
@@ -229,7 +232,7 @@ async def llm_app(input):
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": retrieve_docs(input) + "\n\nQuestion: " + input}
+            {"role": "user", "content": '\n'.join(await retrieve_docs(input)) + "\n\nQuestion: " + input}
         ],
         metrics=[AnswerRelevancyMetric(), BiasMetric()]
     )
@@ -248,11 +251,12 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-responses" label="Async Responses">
 
-```python title="main.py" showLineNumbers {4,20}
+```python title="main.py" showLineNumbers {4,21}
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import AsyncOpenAI
+import asyncio
 
 @observe()
 async def retrieve_docs(query):
@@ -289,7 +293,7 @@ When used inside `@observe` components, `deepeval`'s OpenAI client automatically
 
 - Generates an LLM span for every OpenAI API call, including nested Tool spans for any tool invocations.
 - Attaches an `LLMTestCase` to each generated LLM span, capturing inputs, outputs, and tools called.
-- Records span-level attributes `LLMAttributes` such as the input prompt, generated output and token usage.
+- Records span-level llm attributes such as the input prompt, generated output and token usage.
 - Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
 
 <div style={{ margin: "2rem 0" }}>

@@ -1,4 +1,6 @@
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.metrics import BaseMetric
+from typing import List
 
 try:
     from pydantic_ai.agent import Agent
@@ -20,6 +22,7 @@ class PydanticAIAgent(Agent):
         self,
         *args,
         metric_collection: str = None,
+        metrics: List[BaseMetric] = None,
         trace_attributes: dict = None,
         **kwargs
     ):
@@ -28,3 +31,4 @@ class PydanticAIAgent(Agent):
             super().__init__(*args, **kwargs)
             self.metric_collection = metric_collection
             self.trace_attributes = trace_attributes
+            self.metrics = metrics

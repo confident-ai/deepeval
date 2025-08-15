@@ -4,14 +4,13 @@ import os
 from deepeval.integrations.crewai import instrument_crewai
 import time
 
-os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
-instrument_crewai(api_key="<YOUR_CONFIDENT_API_KEY>")
+
 # Define your agents with roles and goals
 coder = Agent(
     role="Consultant",
     goal="Write clear, concise explanation.",
     backstory="An expert consultant with a keen eye for software trends.",
-    metric_collection="test_collection_1",
+    metric_collection="Task Completion Collection",
 )
 
 # Create tasks for your agents
@@ -29,5 +28,3 @@ crew = Crew(
 
 # Kickoff your crew
 result = crew.kickoff()
-
-time.sleep(7)  # Wait for traces to be posted to observatory

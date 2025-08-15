@@ -91,13 +91,11 @@ async def customer_balance(
 if __name__ == "__main__":
     deps = SupportDependencies(customer_id=123, db=DatabaseConn())
     result = support_agent.run_sync("What is my balance?", deps=deps)
-    print(result.output)
     """
     support_advice='Hello John, your current account balance, including pending transactions, is $123.45.' block_card=False risk=1
     """
 
     result = support_agent.run_sync("I just lost my card!", deps=deps)
-    print(result.output)
     """
     support_advice="I'm sorry to hear that, John. We are temporarily blocking your card to prevent unauthorized transactions." block_card=True risk=8
     """

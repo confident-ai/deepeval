@@ -5,7 +5,13 @@ import time
 from deepeval.integrations.llama_index import instrument_llama_index
 from deepeval.integrations.llama_index import ReActAgent
 from llama_index.llms.openai import OpenAI
+from dotenv import load_dotenv
+import os
+import deepeval
 
+load_dotenv()
+
+deepeval.login(os.getenv("CONFIDENT_API_KEY"))
 
 instrument_llama_index(instrument.get_dispatcher())
 

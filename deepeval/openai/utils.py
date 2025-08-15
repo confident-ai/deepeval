@@ -1,20 +1,12 @@
-from typing import List, Dict, Any
-from dataclasses import dataclass
+from typing import List
 import uuid
 
-from deepeval.tracing.types import ToolSpan, ToolAttributes, TraceSpanStatus
+from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.openai.extractors import InputParameters, OutputParameters
 from deepeval.tracing.context import current_span_context
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
-
-
-@dataclass
-class TestCaseMetricPair:
-    test_case: LLMTestCase
-    metrics: List[BaseMetric]
-    hyperparameters: Dict[str, Any]
-
+from deepeval.tracing.types import TestCaseMetricPair
 
 openai_test_case_pairs: List[TestCaseMetricPair] = []
 
@@ -88,9 +80,6 @@ def create_child_tool_spans(output_parameters: OutputParameters):
                 "input": tool_called.input_parameters,
                 "output": None,
                 "metrics": None,
-                "attributes": ToolAttributes(
-                    input=tool_called.input_parameters, output=None
-                ),
                 "description": tool_called.description,
             }
         )

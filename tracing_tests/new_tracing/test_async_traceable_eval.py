@@ -10,8 +10,7 @@ from deepeval.metrics import (
 from deepeval.tracing import (
     update_current_span,
     observe,
-    RetrieverAttributes,
-    LlmAttributes,
+    update_llm_span,
 )
 from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics.dag import (
@@ -49,13 +48,14 @@ metric = DAGMetric(dag=dag, name="DAG")
 @observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
-    attributes = LlmAttributes(
+    update_current_span(
         input=prompt,
         output=generated_text,
+    )
+    update_llm_span(
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span(attributes=attributes)
     await sleep(random.uniform(1, 3))
     return generated_text
 
@@ -69,10 +69,8 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 3 about {query}",
     ]
     update_current_span(
-        attributes=RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=documents,
-        )
+        input=query,
+        retrieval_context=documents,
     )
     return documents
 
