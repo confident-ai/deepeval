@@ -9,7 +9,7 @@ class DeepEvalBaseModel(ABC):
         self.model = self.load_model(*args, **kwargs)
 
     @abstractmethod
-    def load_model(self, *args, **kwargs):
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseModel":
         """Loads a model, that will be responsible for scoring.
 
         Returns:
@@ -36,7 +36,7 @@ class DeepEvalBaseLLM(ABC):
         self.model = self.load_model(*args, **kwargs)
 
     @abstractmethod
-    def load_model(self, *args, **kwargs):
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseLLM":
         """Loads a model, that will be responsible for scoring.
 
         Returns:
@@ -109,7 +109,7 @@ class DeepEvalBaseEmbeddingModel(ABC):
         self.model = self.load_model(*args, **kwargs)
 
     @abstractmethod
-    def load_model(self, *args, **kwargs):
+    def load_model(self, *args, **kwargs) -> "DeepEvalBaseEmbeddingModel":
         """Loads a model, that will be responsible for generating text embeddings.
 
         Returns:
