@@ -272,9 +272,15 @@ class ConfidentSpanExporter(SpanExporter):
         raw_span_tools_called = span.attributes.get(
             "confident.span.tools_called"
         )
+        if raw_span_tools_called and isinstance(raw_span_tools_called, tuple):
+            raw_span_tools_called = list(raw_span_tools_called)
+        
         raw_span_expected_tools = span.attributes.get(
             "confident.span.expected_tools"
         )
+        if raw_span_expected_tools and isinstance(raw_span_expected_tools, tuple):
+            raw_span_expected_tools = list(raw_span_expected_tools)
+        
         raw_span_metadata = span.attributes.get("confident.span.metadata")
 
         # Extract Trace Attributes
@@ -295,9 +301,15 @@ class ConfidentSpanExporter(SpanExporter):
         raw_trace_tools_called = span.attributes.get(
             "confident.trace.tools_called"
         )
+        if raw_trace_tools_called and isinstance(raw_trace_tools_called, tuple):
+            raw_trace_tools_called = list(raw_trace_tools_called)
+        
         raw_trace_expected_tools = span.attributes.get(
             "confident.trace.expected_tools"
         )
+        if raw_trace_expected_tools and isinstance(raw_trace_expected_tools, tuple):
+            raw_trace_expected_tools = list(raw_trace_expected_tools)
+
         raw_trace_metric_collection = span.attributes.get(
             "confident.trace.metric_collection"
         )
@@ -573,8 +585,8 @@ class ConfidentSpanExporter(SpanExporter):
                 pass
         return None
 
-    def _parse_list_of_tools(self, tools: List[str]) -> List[str]:
-        parsed_tools: List[str] = []
+    def _parse_list_of_tools(self, tools: List[str]) -> List[ToolCall]:
+        parsed_tools: List[ToolCall] = []
         if tools and isinstance(tools, list):
             for tool_json_str in tools:
                 if isinstance(tool_json_str, str):
