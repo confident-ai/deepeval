@@ -68,14 +68,6 @@ class ConfidentSpanExporter(SpanExporter):
         if api_key:
             deepeval.login(api_key)
 
-        environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT")
-        if environment:
-            trace_manager.configure(environment=environment)
-
-        sampling_rate = os.getenv("CONFIDENT_SAMPLE_RATE")
-        if sampling_rate:
-            trace_manager.configure(sampling_rate=sampling_rate)
-
         super().__init__()
 
     def shutdown(self):
@@ -195,7 +187,6 @@ class ConfidentSpanExporter(SpanExporter):
                 if base_span_wrapper.trace_environment:
                     current_trace.environment = base_span_wrapper.trace_environment
 
-
                 # set the trace test case parameters
                 if base_span_wrapper.trace_retrieval_context:
                     current_trace.retrieval_context = base_span_wrapper.trace_retrieval_context
@@ -209,7 +200,6 @@ class ConfidentSpanExporter(SpanExporter):
                 # set the trace metric collection
                 if base_span_wrapper.trace_metric_collection:
                     current_trace.metric_collection = base_span_wrapper.trace_metric_collection
-                    
 
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)

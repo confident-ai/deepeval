@@ -59,6 +59,8 @@ def your_ai_agent_tool():
 def your_ai_agent(input):
     tool_call_result = your_ai_agent_tool()
     return 'Tool Call Result: ' + tool_call_result
+
+your_ai_agent("Greetings, AI Agent.")
 ```
 
 </TabItem>
@@ -425,9 +427,9 @@ Component-level evaluation integrations are **not available** on `deepeval` at t
 Any [single-turn metric](/docs/metrics-introduction) can be used to evaluate agentic components.
 
 ```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgCorrectnessMetric
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
 
-tool_correctness_metric = ArgCorrectnessMetric()
+arg_correctness_metric = ArgumentCorrectnessMetric()
 task_completion_metric = TaskCompletionMetric()
 ```
 
@@ -438,8 +440,9 @@ Supply the metrics to the `@observe` decorator of each function, then define a t
 
 ```python title=main.py showLineNumbers={true} {3,15}
 from openai import OpenAI
+import json
 from deepeval.test_case import LLMTestCase, ToolCall
-from deepeval.tracing import observe, update_span
+from deepeval.tracing import observe, update_current_span
 ...
 
 client = OpenAI()
@@ -451,23 +454,23 @@ def web_search_tool(web_query):
 
 # Supply metric
 @observe(metrics=[arg_correctness_metric])
-def llm(query):
+def llm_component(query):
     response = client.responses.create(model="gpt-4.1", input=[{"role": "user", "content": query}], tools=tools)
 
     # Format tools
     tools_called = [ToolCall(name=tool_call.name, arguments=tool_call.arguments) for tool_call in response.output if tool_call.type == "function_call"]
 
     # Create test cases on the component-level
-    update_span(
-        test_case=LLMTestCase(input=query, actual_output=str(response.output), tools_called=tool_called)
+    update_current_span(
+        test_case=LLMTestCase(input=query, actual_output=response.output_text, tools_called=tools_called)
     )
     return response.output
 
 # Supply metric
 @observe(metrics=[task_completion_metric])
 def your_ai_agent(query: str) -> str:
-    llm_output = llm(query)
-    search_results = "".join([web_search_tool(**json.loads(tool_call.arguments)) for tool_call in llm_output if tool_call.type == "function_call"])
+    llm_output = llm_component(query)
+    search_results = "".join([web_search_tool(**json.loads(tool_call.arguments)) for tool_call in llm_output if tool_call == "function_call"])
     return "The answer to your question is: " + search_results
 ```
 

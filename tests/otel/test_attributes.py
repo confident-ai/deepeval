@@ -118,23 +118,16 @@ def meta_agent(input: str):
         )
         span.set_attribute("confident.span.metric_collection", "My metrics")
 
-        # span.set_attribute(
-        #     "confident.trace.attributes",
-        #     json.dumps(
-        #         {
-        #             "name": "test_trace",
-        #             "tags": ["tag1", "tag2"],
-        #             "thread_id": "123",
-        #             "user_id": "456",
-        #         }
-        #     ),
-        # )
-
         # trace attributes
         span.set_attribute("confident.trace.name", "test_trace")
         span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
         span.set_attribute("confident.trace.input", input)
         span.set_attribute("confident.trace.output", input)
+
+        span.set_attribute("confident.trace.llm_test_case.input", "test_input")
+        span.set_attribute("confident.trace.llm_test_case.actual_output", "test_actual_output")
+        span.set_attribute("confident.trace.llm_test_case.expected_output", "test_expected_output")
+        span.set_attribute("confident.trace.metric_collection", "test_collection_1")
 
         llm_agent(input)
 
