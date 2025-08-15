@@ -6,6 +6,8 @@ testset = LLMTestCase(
     input="What is the capital of France?",
     expected_output="Paris",
 )
+
+
 class FakeMetric1(BaseMetric):
     def __init__(self, threshold: float = 0.5, _success: bool = True):
         self.threshold = threshold
@@ -27,8 +29,9 @@ class FakeMetric1(BaseMetric):
     def __name__(self):
         return "Fake"
 
+
 evaluate(
-    test_cases=[testset]*80,
+    test_cases=[testset] * 80,
     metrics=[
         FakeMetric1(),
     ],

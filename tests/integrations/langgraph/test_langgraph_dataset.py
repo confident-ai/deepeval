@@ -8,6 +8,7 @@ from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.evaluate.configs import AsyncConfig
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 task_completion = TaskCompletionMetric(
