@@ -56,7 +56,6 @@ class BaseSpanWrapper:
     trace_tools_called: Optional[List[ToolCall]] = None
     trace_expected_tools: Optional[List[ToolCall]] = None
     trace_metric_collection: Optional[str] = None
-    trace_feedback: Optional[Feedback] = None
     trace_environment: Optional[str] = None
 
 
@@ -207,11 +206,9 @@ class ConfidentSpanExporter(SpanExporter):
                 if base_span_wrapper.trace_expected_tools:
                     current_trace.expected_tools = base_span_wrapper.trace_expected_tools
 
-                # set the trace metric collection and feedback
+                # set the trace metric collection
                 if base_span_wrapper.trace_metric_collection:
                     current_trace.metric_collection = base_span_wrapper.trace_metric_collection
-                if base_span_wrapper.trace_feedback:
-                    current_trace.feedback = base_span_wrapper.trace_feedback
                     
 
                 trace_manager.add_span(base_span_wrapper.base_span)
@@ -302,7 +299,6 @@ class ConfidentSpanExporter(SpanExporter):
         raw_trace_metric_collection = span.attributes.get(
             "confident.trace.metric_collection"
         )
-        raw_trace_feedback = span.attributes.get("confident.trace.feedback")
 
         # Validate Span Attributes
         span_retrieval_context = self._parse_list_of_strings(
@@ -327,7 +323,6 @@ class ConfidentSpanExporter(SpanExporter):
         )
         trace_metadata = self._parse_json_string(raw_trace_metadata)
         trace_metric_collection = self._parse_string(raw_trace_metric_collection)
-        trace_feedback = self._parse_base_model(raw_trace_feedback, Feedback)
 
         # Set Span Attributes
         base_span.parent_uuid = (
@@ -377,7 +372,6 @@ class ConfidentSpanExporter(SpanExporter):
             trace_tools_called=trace_tools_called,
             trace_expected_tools=trace_expected_tools,
             trace_metric_collection=trace_metric_collection,
-            trace_feedback=trace_feedback,
             trace_environment=trace_environment,
         )
 
