@@ -63,10 +63,11 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python title="main.py" showLineNumbers {1,18}
-from deepeval.openai import OpenAI
+```python title="main.py" showLineNumbers {1,19}
+from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
+import asyncio
 
 dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
@@ -90,10 +91,11 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-response" label="Async Responses">
 
-```python title="main.py" showLineNumbers {2,17}
-from deepeval.openai import OpenAI
+```python title="main.py" showLineNumbers {1,17}
+from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
+import asyncio
 
 dataset = EvaluationDataset(goldens=[Golden(input="Test")])
 
@@ -155,7 +157,7 @@ def llm_app(input):
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": retrieve_docs(input) + "\n\nQuestion: " + input}
+            {"role": "user", "content": '\n'.join(retrieve_docs(input)) + "\n\nQuestion: " + input}
         ],
         metrics=[AnswerRelevancyMetric(), BiasMetric()]
     )
@@ -209,11 +211,12 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python title="main.py" showLineNumbers {4,22}
+```python title="main.py" showLineNumbers {4,23}
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import AsyncOpenAI
+import asyncio
 
 @observe()
 async def retrieve_docs(query):
@@ -229,7 +232,7 @@ async def llm_app(input):
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": retrieve_docs(input) + "\n\nQuestion: " + input}
+            {"role": "user", "content": '\n'.join(await retrieve_docs(input)) + "\n\nQuestion: " + input}
         ],
         metrics=[AnswerRelevancyMetric(), BiasMetric()]
     )
@@ -248,11 +251,12 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-responses" label="Async Responses">
 
-```python title="main.py" showLineNumbers {4,20}
+```python title="main.py" showLineNumbers {4,21}
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import AsyncOpenAI
+import asyncio
 
 @observe()
 async def retrieve_docs(query):
