@@ -263,13 +263,14 @@ async def meta_agent(query: str):
     # print(final_response)
     update_current_span(
         # metadata={"user_id": "11111", "date": "1/1/11"},
-        test_case=LLMTestCase(
-            input="What is this again?",
-            actual_output="this is a latte",
-            expected_output="this is a mocha",
-            retrieval_context=["I love coffee"],
-            context=["I love coffee"],
-        ),
+        # test_case=LLMTestCase(
+        #     input="What is this again?",
+        #     actual_output="this is a latte",
+        #     expected_output="this is a mocha",
+        #     retrieval_context=["I love coffee"],
+        #     context=["I love coffee"],
+        # ),
+        input=query,
         # feedback=Feedback(
         #     rating=1,
         #     expected_output="this is a mocha",

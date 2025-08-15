@@ -396,6 +396,9 @@ class TraceManager:
                 # If the main thread is still alive, send now
                 body = make_json_serializable(body)
 
+                print(body, "body")
+                return
+
                 if main_thr.is_alive():
                     if trace_api.confident_api_key:
                         api = Api(api_key=trace_api.confident_api_key)
