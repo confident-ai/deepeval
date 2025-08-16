@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Optional, List
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
+from rich.console import Console
 import time
 import json
 import os
@@ -11,6 +12,7 @@ from deepeval.prompt.api import (
     PromptMessage,
     PromptType,
     PromptInterpolationType,
+    PromptPushRequest,
 )
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -198,13 +200,13 @@ class Prompt:
             try:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
-                    endpoint=Endpoints.PROMPT_ENDPOINT,
+                    endpoint=Endpoints.PROMPTS_ENDPOINT,
                     params={"alias": self.alias, "version": version},
                 )
                 response = PromptHttpResponse(
                     promptVersionId=data["promptVersionId"],
-                    template=data["value"],
-                    messages=data["messages"],
+                    text=data.get("text", None),
+                    messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
                 )
@@ -239,7 +241,7 @@ class Prompt:
                     raise
 
             self.version = version or "latest"
-            self._text_template = response.template
+            self._text_template = response.text
             self._messages_template = response.messages
             self._prompt_version_id = response.promptVersionId
             self._type = response.type
@@ -253,3 +255,48 @@ class Prompt:
             )
             if write_to_cache:
                 self._write_to_cache()
+
+    def push(
+        self,
+        text: Optional[str] = None,
+        messages: Optional[List[PromptMessage]] = None,
+        interpolation_type: Optional[
+            PromptInterpolationType
+        ] = PromptInterpolationType.FSTRING,
+    ):
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        if text is None and messages is None:
+            raise ValueError("Either text or messages must be provided")
+
+        if text is not None and messages is not None:
+            raise ValueError("Only one of text or messages can be provided")
+
+        body = PromptPushRequest(
+            alias=self.alias,
+            text=text,
+            messages=messages,
+            interpolation_type=interpolation_type,
+        )
+        try:
+            body = body.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = body.dict(by_alias=True, exclude_none=True)
+
+        api = Api()
+        _, link = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.PROMPTS_ENDPOINT,
+            body=body,
+        )
+
+        if link:
+            console = Console()
+            console.print(
+                "✅ Prompt successfully pushed to Confident AI! View at "
+                f"[link={link}]{link}[/link]"
+            )
