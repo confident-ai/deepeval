@@ -15,7 +15,6 @@ class Golden(BaseModel):
     retrieval_context: Optional[List[str]] = Field(
         default=None, serialization_alias="retrievalContext"
     )
-    turns: Optional[List[Turn]] = Field(default=None)
     additional_metadata: Optional[Dict] = Field(
         default=None, serialization_alias="additionalMetadata"
     )

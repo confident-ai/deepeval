@@ -610,9 +610,7 @@ class TraceManager:
             expectedTools=trace.expected_tools,
             confident_api_key=trace.confident_api_key,
             environment=(
-                self.environment
-                if not trace.environment
-                else trace.environment
+                self.environment if not trace.environment else trace.environment
             ),
         )
 
