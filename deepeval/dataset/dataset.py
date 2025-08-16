@@ -658,17 +658,17 @@ class EvaluationDataset:
                 )
 
                 response = DatasetHttpResponse(
+                    id=data["id"],
                     goldens=convert_keys_to_snake_case(
                         data.get("goldens", None)
                     ),
                     conversationalGoldens=convert_keys_to_snake_case(
                         data.get("conversationalGoldens", None)
                     ),
-                    datasetId=data["datasetId"],
                 )
 
                 self._alias = alias
-                self._id = response.datasetId
+                self._id = response.id
                 self._multi_turn = response.goldens is None
                 self.goldens = []
                 self.test_cases = []
@@ -676,7 +676,7 @@ class EvaluationDataset:
                 if auto_convert_goldens_to_test_cases:
                     if not self._multi_turn:
                         llm_test_cases = convert_goldens_to_test_cases(
-                            response.goldens, alias, response.datasetId
+                            response.goldens, alias, response.id
                         )
                         self._llm_test_cases.extend(llm_test_cases)
                     else:
@@ -684,7 +684,7 @@ class EvaluationDataset:
                             convert_convo_goldens_to_convo_test_cases(
                                 response.conversational_goldens,
                                 alias,
-                                response.datasetId,
+                                response.id,
                             )
                         )
                         self._conversational_test_cases.extend(
@@ -698,7 +698,7 @@ class EvaluationDataset:
 
                     for golden in self.goldens:
                         golden._dataset_alias = alias
-                        golden._dataset_id = response.datasetId
+                        golden._dataset_id = response.id
 
                 end_time = time.perf_counter()
                 time_taken = format(end_time - start_time, ".2f")

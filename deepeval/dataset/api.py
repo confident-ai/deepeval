@@ -22,8 +22,8 @@ class APIQueueDataset(BaseModel):
 
 
 class DatasetHttpResponse(BaseModel):
+    id: str
     goldens: Optional[List[Golden]] = Field(None, alias="goldens")
     conversational_goldens: Optional[List[ConversationalGolden]] = Field(
         None, alias="conversationalGoldens"
     )
-    datasetId: str
