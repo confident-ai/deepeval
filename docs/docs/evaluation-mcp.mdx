@@ -183,6 +183,7 @@ from deepeval import evaluate
 # Create test case
 test_case = LLMTestCase(
     input="...", # Your input
+    actual_output="..." # Your LLM app's output
     mcp_servers=[MCPServer(...)],
     mcp_tools_called=[MCPToolCall(...)],
     mcp_prompts_called=[MCPPromptCall(...)],
