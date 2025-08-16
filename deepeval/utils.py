@@ -514,6 +514,64 @@ def remove_pbars(
         progress.remove_task(pbar_id)
 
 
+def read_env_int(
+    name: str, default: int, *, min_value: int | None = None
+) -> int:
+    """Read an integer from an environment variable with safe fallback.
+
+    Attempts to read os.environ[name] and parse it as an int. If the variable
+    is unset, cannot be parsed, or is less than `min_value` (when provided),
+    the function returns `default`.
+
+    Args:
+        name: Environment variable name to read.
+        default: Value to return when the env var is missing/invalid/out of range.
+        min_value: Optional inclusive lower bound; values < min_value are rejected.
+
+    Returns:
+        The parsed integer, or `default` on any failure.
+    """
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        v = int(raw)
+        if min_value is not None and v < min_value:
+            return default
+        return v
+    except Exception:
+        return default
+
+
+def read_env_float(
+    name: str, default: float, *, min_value: float | None = None
+) -> float:
+    """Read a float from an environment variable with safe fallback.
+
+    Attempts to read os.environ[name] and parse it as a float. If the variable
+    is unset, cannot be parsed, or is less than `min_value` (when provided),
+    the function returns `default`.
+
+    Args:
+        name: Environment variable name to read.
+        default: Value to return when the env var is missing/invalid/out of range.
+        min_value: Optional inclusive lower bound; values < min_value are rejected.
+
+    Returns:
+        The parsed float, or `default` on any failure.
+    """
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        v = float(raw)
+        if min_value is not None and v < min_value:
+            return default
+        return v
+    except Exception:
+        return default
+
+
 my_theme = Theme(
     {
         "bar.complete": "#11ff00",
