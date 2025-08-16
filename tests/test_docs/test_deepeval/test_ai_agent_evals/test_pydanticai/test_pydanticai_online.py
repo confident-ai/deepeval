@@ -1,26 +1,14 @@
 import time
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
 
-
-from deepeval.metrics import AnswerRelevancyMetric
-
 instrument_pydantic_ai()
-
-# Agent.instrument_all()
 
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    trace_attributes={
-        "name": "test_trace",
-        "tags": ["tag1", "tag2"],
-        "metadata": {"key": "value"},
-        "thread_id": "123",
-        # "user_id": "456",
-    }
+    metric_collection="test_collection_1"
 )
 
-# run for testing (not needed for docs)
 result = agent.run_sync('Where does "hello world" come from?')
 
 time.sleep(10)

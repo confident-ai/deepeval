@@ -5,8 +5,6 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 instrument_pydantic_ai()
 
-Agent.instrument_all()
-
 answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",

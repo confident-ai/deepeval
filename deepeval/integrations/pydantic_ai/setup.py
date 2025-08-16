@@ -3,12 +3,14 @@ from .patch import safe_patch_agent_iter_method, safe_patch_agent_run_method
 import deepeval
 from deepeval.tracing.otel import ConfidentSpanExporter
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.confident.api import get_confident_api_key
 
 try:
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
     from opentelemetry.trace import set_tracer_provider
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
     opentelemetry_installed = True
 except:
@@ -22,6 +24,7 @@ def is_opentelemetry_available():
         )
     return True
 
+OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
 def instrument_pydantic_ai(api_key: Optional[str] = None):
     with capture_tracing_integration("pydantic_ai"):
@@ -31,11 +34,21 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
 
         if api_key:
             deepeval.login(api_key)
+        
+        api_key = get_confident_api_key()
+
+        if not api_key:
+            raise ValueError("No api key provided.")
 
         # create a new tracer provider
         tracer_provider = TracerProvider()
         tracer_provider.add_span_processor(BatchSpanProcessor(
-            ConfidentSpanExporter(api_key=api_key)
+            OTLPSpanExporter(
+                endpoint=OTLP_ENDPOINT,
+                headers={
+                    "x-confident-api-key": api_key
+                }
+            )
         ))
         trace.set_tracer_provider(tracer_provider)
 
