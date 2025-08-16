@@ -5,6 +5,9 @@ import re
 # Optionally add telemetry
 from ._version import __version__
 
+from .env import autoload_dotenv as _autoload_dotenv
+_autoload_dotenv()
+
 from deepeval.feedback import collect_feedback, a_collect_feedback
 from deepeval.evaluate import evaluate, assert_test
 from deepeval.evaluate.compare import compare
