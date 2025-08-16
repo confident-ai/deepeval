@@ -4,7 +4,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 
 instrument_pydantic_ai()
 
-Agent.instrument_all()
+# Agent.instrument_all()
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
@@ -16,7 +16,7 @@ agent = Agent(
         "tags": ["tag1", "tag2"],
         "metadata": {"key": "value"},
         "thread_id": "123",
-        # "user_id": "456",
+        "user_id": "456",
     }
 )
 
