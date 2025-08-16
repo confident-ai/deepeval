@@ -274,13 +274,15 @@ class ConfidentSpanExporter(SpanExporter):
         )
         if raw_span_tools_called and isinstance(raw_span_tools_called, tuple):
             raw_span_tools_called = list(raw_span_tools_called)
-        
+
         raw_span_expected_tools = span.attributes.get(
             "confident.span.expected_tools"
         )
-        if raw_span_expected_tools and isinstance(raw_span_expected_tools, tuple):
+        if raw_span_expected_tools and isinstance(
+            raw_span_expected_tools, tuple
+        ):
             raw_span_expected_tools = list(raw_span_expected_tools)
-        
+
         raw_span_metadata = span.attributes.get("confident.span.metadata")
 
         # Extract Trace Attributes
@@ -303,11 +305,13 @@ class ConfidentSpanExporter(SpanExporter):
         )
         if raw_trace_tools_called and isinstance(raw_trace_tools_called, tuple):
             raw_trace_tools_called = list(raw_trace_tools_called)
-        
+
         raw_trace_expected_tools = span.attributes.get(
             "confident.trace.expected_tools"
         )
-        if raw_trace_expected_tools and isinstance(raw_trace_expected_tools, tuple):
+        if raw_trace_expected_tools and isinstance(
+            raw_trace_expected_tools, tuple
+        ):
             raw_trace_expected_tools = list(raw_trace_expected_tools)
 
         raw_trace_metric_collection = span.attributes.get(
@@ -515,9 +519,7 @@ class ConfidentSpanExporter(SpanExporter):
         elif span_type == "retriever":
             embedder = span.attributes.get("confident.retriever.embedder")
             top_k = span.attributes.get("confident.retriever.top_k")
-            chunk_size = span.attributes.get(
-                "confident.retriever.chunk_size"
-            )
+            chunk_size = span.attributes.get("confident.retriever.chunk_size")
             retriever_span = RetrieverSpan(
                 uuid=uuid,
                 status=status,

@@ -17,7 +17,7 @@ agent = Agent(
         "metadata": {"key": "value"},
         "thread_id": "123",
         "user_id": "456",
-    }
+    },
 )
 
 # run for testing (not needed for docs)

@@ -84,17 +84,37 @@ def safe_patch_agent_run_method():
                 if args[0].trace_attributes:
                     if isinstance(args[0].trace_attributes, dict):
                         if args[0].trace_attributes.get("name"):
-                            run_span.set_attribute("confident.trace.name", args[0].trace_attributes.get("name"))
+                            run_span.set_attribute(
+                                "confident.trace.name",
+                                args[0].trace_attributes.get("name"),
+                            )
                         if args[0].trace_attributes.get("tags"):
-                            run_span.set_attribute("confident.trace.tags", args[0].trace_attributes.get("tags"))
+                            run_span.set_attribute(
+                                "confident.trace.tags",
+                                args[0].trace_attributes.get("tags"),
+                            )
                         if args[0].trace_attributes.get("thread_id"):
-                            run_span.set_attribute("confident.trace.thread_id", args[0].trace_attributes.get("thread_id"))
+                            run_span.set_attribute(
+                                "confident.trace.thread_id",
+                                args[0].trace_attributes.get("thread_id"),
+                            )
                         if args[0].trace_attributes.get("user_id"):
-                            run_span.set_attribute("confident.trace.user_id", args[0].trace_attributes.get("user_id"))
+                            run_span.set_attribute(
+                                "confident.trace.user_id",
+                                args[0].trace_attributes.get("user_id"),
+                            )
                         if args[0].trace_attributes.get("metadata"):
-                            run_span.set_attribute("confident.trace.metadata", json.dumps(args[0].trace_attributes.get("metadata")))
+                            run_span.set_attribute(
+                                "confident.trace.metadata",
+                                json.dumps(
+                                    args[0].trace_attributes.get("metadata")
+                                ),
+                            )
                         if args[0].trace_attributes.get("environment"):
-                            run_span.set_attribute("confident.trace.environment", args[0].trace_attributes.get("environment"))
+                            run_span.set_attribute(
+                                "confident.trace.environment",
+                                args[0].trace_attributes.get("environment"),
+                            )
 
             run_span.set_attribute("confident.span.input", input)
             run_span.set_attribute("confident.span.output", output)
