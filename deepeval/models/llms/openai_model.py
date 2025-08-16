@@ -107,8 +107,8 @@ structured_outputs_models = [
     "gpt-5-2025-08-07",
     "gpt-5-mini",
     "gpt-5-mini-2025-08-07",
-    "gpt-5-nano"
-    "gpt-5-nano-2025-08-07"
+    "gpt-5-nano",
+    "gpt-5-nano-2025-08-07",
 ]
 
 json_mode_models = [
@@ -207,7 +207,7 @@ models_requiring_temperature_1 = [
     "gpt-5-2025-08-07",
     "gpt-5-mini",
     "gpt-5-mini-2025-08-07",
-    "gpt-5-nano"
+    "gpt-5-nano",
     "gpt-5-nano-2025-08-07",
     "gpt-5-chat-latest",
 ]
