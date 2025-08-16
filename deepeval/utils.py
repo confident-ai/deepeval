@@ -499,7 +499,10 @@ def update_pbar(
 ):
     if progress is None or pbar_id is None:
         return
-    advance = progress.tasks[pbar_id].remaining if advance_to_end else advance
+    task_obj = next((t for t in progress.tasks if t.id == pbar_id), None)
+    if task_obj is None:
+        return
+    advance = task_obj.remaining if advance_to_end else advance
     progress.update(pbar_id, advance=advance, total=total)
     task_obj = next(t for t in progress.tasks if t.id == pbar_id)
     if task_obj.finished and remove:
