@@ -10,7 +10,10 @@ conversation_golden_1 = ConversationalGolden(
     expected_outcome="Successful purchase of a ticket.",
     user_description="Andy Byron is the CEO of Astronomer.",
     turns=[
-        Turn(role="assistant", content="Hi, I'm here to help you purchase a ticket."),
+        Turn(
+            role="assistant",
+            content="Hi, I'm here to help you purchase a ticket.",
+        ),
         # Turn(role="user", content="I want to purchase a VIP ticket to a cold play concert."),
     ],
 )
@@ -20,7 +23,10 @@ conversation_golden_2 = ConversationalGolden(
     expected_outcome="Donald Trump knows that the ticket is available or not available.",
     user_description="Donald Trump is the President of the United States.",
     turns=[
-        Turn(role="assistant", content="Hi, I'm here to help you purchase a ticket."),
+        Turn(
+            role="assistant",
+            content="Hi, I'm here to help you purchase a ticket.",
+        ),
         # Turn(role="user", content="I want to ask about ticket availability for a world cup final match."),
     ],
 )
@@ -35,10 +41,12 @@ goldens = [
     conversation_golden_1,
     conversation_golden_2,
     conversation_golden_3,
-] 
+]
 
 # Define chatbot callback
 client = AsyncOpenAI()
+
+
 async def chatbot_callback(input, turns: List[Turn]):
     messages = []
     for turn in turns:
@@ -50,9 +58,15 @@ async def chatbot_callback(input, turns: List[Turn]):
     )
     return Turn(role="assistant", content=response.choices[0].message.content)
 
+
 # Run Simulation
-simulator = ConversationSimulator(model_callback=chatbot_callback, opening_message="Hi, I'm here to help you purchase a ticket.")
-conversational_test_cases = simulator.simulate(conversational_goldens=goldens, max_user_simulations=3)
+simulator = ConversationSimulator(
+    model_callback=chatbot_callback,
+    opening_message="Hi, I'm here to help you purchase a ticket.",
+)
+conversational_test_cases = simulator.simulate(
+    conversational_goldens=goldens, max_user_simulations=3
+)
 
 for conversational_test_case in conversational_test_cases:
     print(len(conversational_test_case.turns))

@@ -6,12 +6,12 @@ from deepeval.simulator import ConversationSimulator
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.dataset.golden import ConversationalGolden
 
-def sync_callback(input: str, turns: List[Turn], thread_id: Optional[str] = None) -> Turn:
+
+def sync_callback(
+    input: str, turns: List[Turn], thread_id: Optional[str] = None
+) -> Turn:
     client = OpenAI()
-    messages = [
-        {"role": turn.role, "content": turn.content}
-        for turn in turns
-    ]
+    messages = [{"role": turn.role, "content": turn.content} for turn in turns]
     messages.append({"role": "user", "content": input})
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -25,10 +25,7 @@ async def async_callback_complete(
     input: str, turns: List[Turn], thread_id: Optional[str] = None
 ) -> Turn:
     client = AsyncOpenAI()
-    messages = [
-        {"role": turn.role, "content": turn.content}
-        for turn in turns
-    ]
+    messages = [{"role": turn.role, "content": turn.content} for turn in turns]
     messages.append({"role": "user", "content": input})
     response = await client.chat.completions.create(
         model="gpt-4o",
@@ -36,6 +33,7 @@ async def async_callback_complete(
     )
     print(thread_id)
     return Turn(role="assistant", content=response.choices[0].message.content)
+
 
 def test_no_existing_turns():
     golden = ConversationalGolden(
@@ -79,7 +77,10 @@ def test_existing_turns():
     cases = simulator.simulate([golden], max_user_simulations=1)
     tc = cases[0]
     assert len(tc.turns) == 3
-    assert tc.turns[0].role == "assistant" and tc.turns[0].content == "How can I help?"
+    assert (
+        tc.turns[0].role == "assistant"
+        and tc.turns[0].content == "How can I help?"
+    )
     assert tc.turns[1].role == "user" and isinstance(tc.turns[1].content, str)
     assert tc.turns[2].role == "assistant"
     assert isinstance(tc.turns[2].content, str)

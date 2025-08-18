@@ -160,7 +160,10 @@ class ConversationSimulator:
         while True:
             # Stop conversation if needed
             stop_conversation = self.stop_conversation(
-                turns, golden.expected_outcome, progress, pbar_max_user_simluations_id
+                turns,
+                golden.expected_outcome,
+                progress,
+                pbar_max_user_simluations_id,
             )
             if stop_conversation:
                 break
@@ -169,7 +172,11 @@ class ConversationSimulator:
             if simulation_counter >= max_user_simulations:
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            if len(turns) == 0 or (len(turns) == 1 and self.opening_message and golden.turns is None):
+            if len(turns) == 0 or (
+                len(turns) == 1
+                and self.opening_message
+                and golden.turns is None
+            ):
                 # Generate first user input
                 prompt = self.template.simulate_first_user_turn(
                     golden, self.language
@@ -192,7 +199,7 @@ class ConversationSimulator:
                 turns.append(Turn(role="user", content=user_input))
                 update_pbar(progress, pbar_max_user_simluations_id)
                 simulation_counter += 1
-            else: 
+            else:
                 user_input = turns[-1].content
 
             # Generate turn from assistant
@@ -264,7 +271,10 @@ class ConversationSimulator:
         while True:
             # Stop conversation if needed
             stop_conversation = await self.a_stop_conversation(
-                turns, golden.expected_outcome, progress, pbar_max_user_simluations_id
+                turns,
+                golden.expected_outcome,
+                progress,
+                pbar_max_user_simluations_id,
             )
             if stop_conversation:
                 break
@@ -273,7 +283,11 @@ class ConversationSimulator:
             if simulation_counter >= max_user_simulations:
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            if len(turns) == 0 or (len(turns) == 1 and self.opening_message and golden.turns is None):
+            if len(turns) == 0 or (
+                len(turns) == 1
+                and self.opening_message
+                and golden.turns is None
+            ):
                 # Generate first user input
                 prompt = self.template.simulate_first_user_turn(
                     golden, self.language
@@ -296,7 +310,7 @@ class ConversationSimulator:
                 turns.append(Turn(role="user", content=user_input))
                 update_pbar(progress, pbar_max_user_simluations_id)
                 simulation_counter += 1
-            else: 
+            else:
                 user_input = turns[-1].content
 
             # Generate turn from assistant
