@@ -6,6 +6,7 @@ import json
 import time
 from typing import Any, Optional, Dict, List, Union
 from collections.abc import Iterable
+import webbrowser
 import tqdm
 import re
 import string
@@ -18,6 +19,7 @@ from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
+from deepeval.constants import CONFIDENT_OPEN_BROWSER
 from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
@@ -265,6 +267,12 @@ def is_in_ci_env() -> bool:
             return True
 
     return False
+
+
+def open_browser(url: str):
+    if os.getenv(CONFIDENT_OPEN_BROWSER) != "NO":
+        if is_in_ci_env() == False:
+            webbrowser.open(url)
 
 
 def capture_contextvars(single_obj):

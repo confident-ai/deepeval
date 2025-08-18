@@ -14,11 +14,10 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
 )
-from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
-from deepeval.utils import delete_file_if_exists
+from deepeval.utils import delete_file_if_exists, open_browser
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
@@ -34,7 +33,6 @@ from deepeval.confident.api import is_confident
 
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
-app.add_typer(recommend_app, name="recommend")
 
 
 class Regions(Enum):
@@ -157,7 +155,7 @@ def view():
             )
             if last_test_run_link:
                 print(f"🔗 View test run: {last_test_run_link}")
-                webbrowser.open(last_test_run_link)
+                open_browser(last_test_run_link)
             else:
                 upload_and_open_link(_span=span)
         else:

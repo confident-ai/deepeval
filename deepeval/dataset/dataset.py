@@ -32,7 +32,11 @@ from deepeval.test_case import (
 )
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TEMP_FILE_PATH
-from deepeval.utils import convert_keys_to_snake_case, get_or_create_event_loop
+from deepeval.utils import (
+    convert_keys_to_snake_case,
+    get_or_create_event_loop,
+    open_browser,
+)
 from deepeval.test_run import (
     global_test_run_manager,
 )
@@ -627,7 +631,7 @@ class EvaluationDataset:
                 "✅ Dataset successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"
             )
-            webbrowser.open(link)
+            open_browser(link)
 
     def pull(
         self,
