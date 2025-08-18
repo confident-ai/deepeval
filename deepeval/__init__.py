@@ -5,7 +5,6 @@ import re
 # Optionally add telemetry
 from ._version import __version__
 
-from deepeval.feedback import collect_feedback, a_collect_feedback
 from deepeval.evaluate import evaluate, assert_test
 from deepeval.evaluate.compare import compare
 from deepeval.test_run import on_test_run_end, log_hyperparameters
@@ -19,8 +18,6 @@ if os.getenv("DEEPEVAL_GRPC_LOGGING") != "YES":
 __all__ = [
     "login",
     "log_hyperparameters",
-    "a_collect_feedback",
-    "collect_feedback",
     "evaluate",
     "assert_test",
     "on_test_run_end",
