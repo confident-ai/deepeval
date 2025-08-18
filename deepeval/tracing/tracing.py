@@ -401,7 +401,7 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
-                    response = await api.a_send_request(
+                    api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
                         body=body,
@@ -412,7 +412,7 @@ class TraceManager:
                     self._print_trace_status(
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace {status}",
-                        description=response["link"],
+                        description=link,
                         environment=self.environment,
                     )
                 elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":

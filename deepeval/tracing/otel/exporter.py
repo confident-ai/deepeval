@@ -157,6 +157,10 @@ class ConfidentSpanExporter(SpanExporter):
                         pass
 
                 if base_span_wrapper.trace_metadata and isinstance(
+                    base_span_wrapper.trace_metadata, dict
+                ):
+                    current_trace.metadata = base_span_wrapper.trace_metadata
+                elif base_span_wrapper.trace_metadata and isinstance(
                     base_span_wrapper.trace_metadata, str
                 ):
                     try:
