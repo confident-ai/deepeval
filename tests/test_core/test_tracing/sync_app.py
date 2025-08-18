@@ -282,8 +282,3 @@ def meta_agent(input: str):
             metadata={"user_id": "11111", "date": "1/1/11"},
         )
         return final_response
-
-
-############################
-
-meta_agent("What's the weather like in SF?")

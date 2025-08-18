@@ -7,10 +7,7 @@ from deepeval.tracing import (
     update_retriever_span,
 )
 import random
-from deepeval.metrics import AnswerRelevancyMetric
 from asyncio import sleep
-
-from deepeval.tracing.types import Feedback
 
 #######################################################
 ## Example ############################################
@@ -242,9 +239,9 @@ async def research_agent(query: str):
 
 
 @observe(
-    type="agent",
-    agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metric_collection="My Metrics",
+    type="llm",
+    # agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+    # metric_collection="My Metrics",
 )
 async def meta_agent(query: str):
     # print(query)
@@ -269,22 +266,14 @@ async def meta_agent(query: str):
         #     context=["I love coffee"],
         # ),
         input=query,
-        # feedback=Feedback(
-        #     rating=1,
-        #     expected_output="this is a mocha",
-        #     explanation="The actual output is not the expected output",
-        # ),
     )
+    update_llm_span(model="test")
     update_current_trace(
         name="ok",
-        # metadata={"input": "input"},
-        # thread_id="131324ljihfsadiuyip",
-        # user_id="111",
-        # feedback=Feedback(
-        #     rating=5,te
-        #     expected_output="Testing again",
-        #     explanation="The actual output is not the expected output",
-        # ),
+        metadata={"input": "input"},
+        thread_id="131324ljihfsadiuyip",
+        user_id="111",
+        tags=["test", "test2"],
     )
 
     # return LLMTestCase(input="..", actual_output=final_response)

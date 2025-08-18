@@ -103,10 +103,3 @@ async def meta_agent(input: str):
         output=final_response,
     )
     return final_response
-
-
-############################
-
-import asyncio
-
-asyncio.run(meta_agent("What's the weather like in SF?"))
