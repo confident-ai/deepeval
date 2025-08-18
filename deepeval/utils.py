@@ -19,8 +19,8 @@ from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
+from deepeval.confident.api import set_confident_api_key
 from deepeval.constants import CONFIDENT_OPEN_BROWSER
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
 
 
 def get_lcs(seq1, seq2):
@@ -226,7 +226,7 @@ def login(api_key: str):
 
     from rich import print
 
-    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+    set_confident_api_key(api_key)
     print(
         "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
     )

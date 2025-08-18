@@ -32,9 +32,19 @@ def get_base_api_url():
 
 
 def get_confident_api_key():
-    return KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY) or os.getenv(
-        CONFIDENT_API_KEY_ENV_VAR
+    return os.getenv(CONFIDENT_API_KEY_ENV_VAR) or KEY_FILE_HANDLER.fetch_data(
+        KeyValues.API_KEY
     )
+
+
+def set_confident_api_key(api_key: Union[str, None]):
+    if api_key is None:
+        KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
+        os.environ.pop(CONFIDENT_API_KEY_ENV_VAR, None)
+        return
+
+    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+    os.environ[CONFIDENT_API_KEY_ENV_VAR] = api_key
 
 
 def is_confident():
@@ -73,10 +83,7 @@ class Endpoints(Enum):
 class Api:
     def __init__(self, api_key: Optional[str] = None):
         if api_key is None:
-            api_key = (
-                KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
-                or get_confident_api_key()
-            )
+            api_key = get_confident_api_key()
 
         if not api_key:
             raise ValueError(

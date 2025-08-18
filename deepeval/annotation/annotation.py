@@ -1,5 +1,4 @@
 from typing import Optional
-from pydantic import BaseModel
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.annotation.api import APIAnnotation, AnnotationType

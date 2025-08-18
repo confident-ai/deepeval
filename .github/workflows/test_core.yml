@@ -60,10 +60,10 @@ jobs:
           poetry run pytest tests/test_core/ --ignore=tests/test_core/test_synthesizer/
 
       #----------------------------------------------
-      #    install chromadb and run synthesizer tests
+      #    install dev dependencies (including chromadb) and run synthesizer tests
       #----------------------------------------------
-      - name: Install chromadb
-        run: poetry install --no-interaction --extras "synthesizer"
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
 
       - name: Run synthesizer tests
         env:
