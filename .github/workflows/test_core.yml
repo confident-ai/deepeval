@@ -57,4 +57,16 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest tests/test_core/
+          poetry run pytest tests/test_core/ --ignore=tests/test_core/test_synthesizer/
+
+      #----------------------------------------------
+      #    install chromadb and run synthesizer tests
+      #----------------------------------------------
+      - name: Install chromadb
+        run: poetry install --no-interaction --extras "synthesizer"
+
+      - name: Run synthesizer tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          poetry run pytest tests/test_core/test_synthesizer/
