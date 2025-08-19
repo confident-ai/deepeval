@@ -116,10 +116,10 @@ class ToolCorrectnessMetric(BaseMetric):
             lcs, weighted_length = self._compute_weighted_lcs()
             if (
                 len(self.tools_called) == len(self.expected_tools)
-                and len(self.tools_called) == 0
+                and len(self.expected_tools) == 0
             ):
                 score = 1.0
-            elif len(self.tools_called) != len(self.expected_tools):
+            elif len(self.expected_tools) == 0:
                 score = 0.0
             else:
                 score = weighted_length / len(self.expected_tools)
@@ -158,10 +158,10 @@ class ToolCorrectnessMetric(BaseMetric):
             _, weighted_length = self._compute_weighted_lcs()
             if (
                 len(self.tools_called) == len(self.expected_tools)
-                and len(self.tools_called) == 0
+                and len(self.expected_tools) == 0
             ):
                 score = 1.0
-            elif len(self.tools_called) != len(self.expected_tools):
+            elif len(self.expected_tools) == 0:
                 score = 0.0
             else:
                 score = weighted_length / len(self.expected_tools)
@@ -175,7 +175,7 @@ class ToolCorrectnessMetric(BaseMetric):
             return 0.0
         if (
             len(self.tools_called) == len(self.expected_tools)
-            and len(self.tools_called) == 0
+            and len(self.expected_tools) == 0
         ):
             return 1.0
         for i in range(len(self.tools_called)):
