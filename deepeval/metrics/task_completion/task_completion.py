@@ -104,7 +104,7 @@ class TaskCompletionMetric(BaseMetric):
             task, self.outcome = await self._a_extract_task_and_outcome(
                 test_case
             )
-            self.task = task if self.task is None else self.task
+            self.task = task
             self.verdict, self.reason = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.success = self.score >= self.threshold
