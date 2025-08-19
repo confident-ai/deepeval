@@ -936,13 +936,13 @@ def execute_agentic_test_cases(
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=golden.actual_output or "TODO",
-                    expected_output=golden.expected_output,
-                    context=golden.context,
-                    retrieval_context=golden.retrieval_context,
+                    actual_output=str(current_trace.output),
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
                     additional_metadata=golden.additional_metadata,
-                    tools_called=golden.tools_called,
-                    expected_tools=golden.expected_tools,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
                     comments=golden.comments,
                     name=golden.name,
                     _dataset_alias=golden._dataset_alias,
@@ -1069,13 +1069,110 @@ def execute_agentic_test_cases(
                         api_test_case.update_status(metric_data.success)
                         update_pbar(progress, pbar_eval_id)
 
+                trace_level_metrics_count = (
+                    len(current_trace.metrics) if current_trace.metrics else 0
+                )
                 pbar_eval_id = add_pbar(
                     progress,
                     f"     🎯 Evaluating component(s) (#{count})",
-                    total=count_metrics_in_trace(trace=current_trace),
+                    total=count_metrics_in_trace(trace=current_trace)
+                    + trace_level_metrics_count,
                 )
 
                 start_time = time.perf_counter()
+
+                # Handle trace-level metrics
+                if current_trace.metrics:
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in current_trace.metrics
+                    )
+
+                    llm_test_case = None
+                    if current_trace.input:
+                        llm_test_case = LLMTestCase(
+                            input=str(current_trace.input),
+                            actual_output=str(current_trace.output),
+                            expected_output=current_trace.expected_output,
+                            context=current_trace.context,
+                            retrieval_context=current_trace.retrieval_context,
+                            tools_called=current_trace.tools_called,
+                            expected_tools=current_trace.expected_tools,
+                        )
+                    if llm_test_case is None and not has_task_completion:
+                        raise ValueError(
+                            "Unable to run metrics on trace without LLMTestCase. Are you sure you called `update_current_trace()`?"
+                        )
+
+                    if has_task_completion:
+                        if llm_test_case is None:
+                            llm_test_case = LLMTestCase(
+                                input="None", actual_output="None"
+                            )
+                        llm_test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(
+                                current_trace.root_spans[0]
+                            )
+                        )
+
+                    for metric in current_trace.metrics:
+                        metric.skipped = False
+                        metric.error = None
+                        if verbose_mode is not None:
+                            metric.verbose_mode = verbose_mode
+
+                    trace_api.metrics_data = []
+                    for metric in current_trace.metrics:
+                        try:
+                            metric.measure(
+                                llm_test_case,
+                                _show_indicator=show_metric_indicator,
+                                _in_component=True,
+                            )
+                        except MissingTestCaseParamsError as e:
+                            if skip_on_missing_params:
+                                continue
+                            else:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                        except TypeError:
+                            try:
+                                metric.measure(
+                                    llm_test_case, _in_component=True
+                                )
+                            except MissingTestCaseParamsError as e:
+                                if skip_on_missing_params:
+                                    continue
+                                else:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
+                            except Exception as e:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                        except Exception as e:
+                            if ignore_errors:
+                                metric.error = str(e)
+                                metric.success = False
+                            else:
+                                raise
+
+                        if not metric.skipped:
+                            metric_data = create_metric_data(metric)
+                            trace_api.metrics_data.append(metric_data)
+                            api_test_case.update_metric_data(metric_data)
+                            api_test_case.update_status(metric_data.success)
+                            update_pbar(progress, pbar_eval_id)
+
+                # Then handle span-level metrics
                 dfs(current_trace.root_spans[0], progress, pbar_eval_id)
                 end_time = time.perf_counter()
                 run_duration = end_time - start_time
@@ -1271,21 +1368,25 @@ async def a_execute_agentic_test_case(
         ),
     )
 
+    trace_level_metrics_count = (
+        len(current_trace.metrics) if current_trace.metrics else 0
+    )
     pbar_eval_id = add_pbar(
         progress,
         f"     🎯 Evaluating component(s) (#{count})",
-        total=count_metrics_in_trace(trace=current_trace),
+        total=count_metrics_in_trace(trace=current_trace)
+        + trace_level_metrics_count,
     )
 
     test_case = LLMTestCase(
         input=golden.input,
-        actual_output=golden.actual_output,
-        expected_output=golden.expected_output,
-        context=golden.context,
-        retrieval_context=golden.retrieval_context,
+        actual_output=str(trace.output),
+        expected_output=trace.expected_output,
+        context=trace.context,
+        retrieval_context=trace.retrieval_context,
+        tools_called=trace.tools_called,
+        expected_tools=trace.expected_tools,
         additional_metadata=golden.additional_metadata,
-        tools_called=golden.tools_called,
-        expected_tools=golden.expected_tools,
         comments=golden.comments,
         name=golden.name,
         _dataset_alias=golden._dataset_alias,
@@ -1295,6 +1396,19 @@ async def a_execute_agentic_test_case(
         test_case=test_case,
         trace=trace_api,
         index=count if not _is_assert_test else None,
+    )
+
+    await a_execute_trace_test_case(
+        trace=trace,
+        trace_api=trace_api,
+        api_test_case=api_test_case,
+        ignore_errors=ignore_errors,
+        skip_on_missing_params=skip_on_missing_params,
+        show_indicator=show_indicator,
+        verbose_mode=verbose_mode,
+        progress=progress,
+        pbar_eval_id=pbar_eval_id,
+        _use_bar_indicator=_use_bar_indicator,
     )
 
     async def dfs(span: BaseSpan):
@@ -1411,6 +1525,82 @@ async def a_execute_span_test_case(
         api_test_case.update_status(metric_data.success)
 
 
+async def a_execute_trace_test_case(
+    trace: Trace,
+    trace_api: TraceApi,
+    api_test_case: LLMApiTestCase,
+    ignore_errors: bool,
+    skip_on_missing_params: bool,
+    show_indicator: bool,
+    verbose_mode: Optional[bool],
+    progress: Optional[Progress],
+    pbar_eval_id: Optional[int],
+    _use_bar_indicator: bool,
+):
+    if trace.metrics is None:
+        return
+
+    has_task_completion = any(
+        isinstance(metric, TaskCompletionMetric) for metric in trace.metrics
+    )
+
+    llm_test_case = None
+    if trace.input:
+        llm_test_case = LLMTestCase(
+            input=str(trace.input),
+            actual_output=str(trace.output),
+            expected_output=trace.expected_output,
+            context=trace.context,
+            retrieval_context=trace.retrieval_context,
+            tools_called=trace.tools_called,
+            expected_tools=trace.expected_tools,
+        )
+    if llm_test_case is None and not has_task_completion:
+        raise ValueError(
+            "Unable to run metrics on trace without LLMTestCase. Are you sure you called `update_current_trace()`?"
+        )
+
+    show_metrics_indicator = show_indicator and not _use_bar_indicator
+    metrics: List[BaseMetric] = trace.metrics
+    test_case: Optional[LLMTestCase] = llm_test_case
+
+    # add trace if task completion
+    if has_task_completion:
+        if test_case is None:
+            test_case = LLMTestCase(input="None", actual_output="None")
+        test_case._trace_dict = trace_manager.create_nested_spans_dict(
+            trace.root_spans[0]
+        )
+
+    for metric in metrics:
+        metric.skipped = False
+        metric.error = None  # Reset metric error
+        if verbose_mode is not None:
+            metric.verbose_mode = verbose_mode
+
+    await measure_metrics_with_indicator(
+        metrics=metrics,
+        test_case=test_case,
+        cached_test_case=None,
+        skip_on_missing_params=skip_on_missing_params,
+        ignore_errors=ignore_errors,
+        show_indicator=show_metrics_indicator,
+        progress=progress,
+        pbar_eval_id=pbar_eval_id,
+        _in_component=True,
+    )
+
+    trace_api.metrics_data = []
+    for metric in metrics:
+        if metric.skipped:
+            continue
+
+        metric_data = create_metric_data(metric)
+        trace_api.metrics_data.append(metric_data)
+        api_test_case.update_metric_data(metric_data)
+        api_test_case.update_status(metric_data.success)
+
+
 def count_observe_decorators_in_module(func: Callable) -> int:
     mod = inspect.getmodule(func)
     if mod is None or not hasattr(mod, "__file__"):
@@ -1507,13 +1697,13 @@ def execute_agentic_test_cases_from_loop(
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=golden.actual_output or "TODO",
-                    expected_output=golden.expected_output,
-                    context=golden.context,
-                    retrieval_context=golden.retrieval_context,
+                    actual_output=str(current_trace.output),
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
                     additional_metadata=golden.additional_metadata,
-                    tools_called=golden.tools_called,
-                    expected_tools=golden.expected_tools,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
                     comments=golden.comments,
                     name=golden.name,
                     _dataset_alias=golden._dataset_alias,
@@ -1621,13 +1811,110 @@ def execute_agentic_test_cases_from_loop(
                         api_test_case.update_status(metric_data.success)
                         update_pbar(progress, pbar_eval_id)
 
+                trace_level_metrics_count = (
+                    len(current_trace.metrics) if current_trace.metrics else 0
+                )
                 pbar_eval_id = add_pbar(
                     progress,
                     f"     🎯 Evaluating component(s) (#{count})",
-                    total=count_metrics_in_trace(trace=current_trace),
+                    total=count_metrics_in_trace(trace=current_trace)
+                    + trace_level_metrics_count,
                 )
 
                 start_time = time.perf_counter()
+
+                # Handle trace-level metrics
+                if current_trace.metrics:
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in current_trace.metrics
+                    )
+
+                    llm_test_case = None
+                    if current_trace.input:
+                        llm_test_case = LLMTestCase(
+                            input=str(current_trace.input),
+                            actual_output=str(current_trace.output),
+                            expected_output=current_trace.expected_output,
+                            context=current_trace.context,
+                            retrieval_context=current_trace.retrieval_context,
+                            tools_called=current_trace.tools_called,
+                            expected_tools=current_trace.expected_tools,
+                        )
+                    if llm_test_case is None and not has_task_completion:
+                        raise ValueError(
+                            "Unable to run metrics on trace without LLMTestCase. Are you sure you called `update_current_trace()`?"
+                        )
+
+                    if has_task_completion:
+                        if llm_test_case is None:
+                            llm_test_case = LLMTestCase(
+                                input="None", actual_output="None"
+                            )
+                        llm_test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(
+                                current_trace.root_spans[0]
+                            )
+                        )
+
+                    for metric in current_trace.metrics:
+                        metric.skipped = False
+                        metric.error = None
+                        if verbose_mode is not None:
+                            metric.verbose_mode = verbose_mode
+
+                    trace_api.metrics_data = []
+                    for metric in current_trace.metrics:
+                        try:
+                            metric.measure(
+                                llm_test_case,
+                                _show_indicator=show_metric_indicator,
+                                _in_component=True,
+                            )
+                        except MissingTestCaseParamsError as e:
+                            if skip_on_missing_params:
+                                continue
+                            else:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                        except TypeError:
+                            try:
+                                metric.measure(
+                                    llm_test_case, _in_component=True
+                                )
+                            except MissingTestCaseParamsError as e:
+                                if skip_on_missing_params:
+                                    continue
+                                else:
+                                    if ignore_errors:
+                                        metric.error = str(e)
+                                        metric.success = False
+                                    else:
+                                        raise
+                            except Exception as e:
+                                if ignore_errors:
+                                    metric.error = str(e)
+                                    metric.success = False
+                                else:
+                                    raise
+                        except Exception as e:
+                            if ignore_errors:
+                                metric.error = str(e)
+                                metric.success = False
+                            else:
+                                raise
+
+                        if not metric.skipped:
+                            metric_data = create_metric_data(metric)
+                            trace_api.metrics_data.append(metric_data)
+                            api_test_case.update_metric_data(metric_data)
+                            api_test_case.update_status(metric_data.success)
+                            update_pbar(progress, pbar_eval_id)
+
+                # Then handle span-level metrics
                 dfs(current_trace.root_spans[0], progress, pbar_eval_id)
                 end_time = time.perf_counter()
                 run_duration = end_time - start_time
