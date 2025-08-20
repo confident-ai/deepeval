@@ -166,7 +166,8 @@ def enable_grpc_logging():
 def set_openai_env(
     model: str = typer.Option(..., "--model", help="OpenAI model name"),
     cost_per_input_token: Optional[float] = typer.Option(
-        None, "--cost_per_input_token",
+        None,
+        "--cost_per_input_token",
         help=(
             "USD per input token. Optional for known OpenAI models (pricing is preconfigured); "
             "REQUIRED if you use a custom/unsupported model."
