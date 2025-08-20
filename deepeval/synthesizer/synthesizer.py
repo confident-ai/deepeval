@@ -204,7 +204,6 @@ class Synthesizer:
                     _send_data=False,
                     _reset_cost=False,
                 )
-                self.synthetic_goldens.extend(goldens)
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
                 if _send_data == True:
@@ -297,7 +296,6 @@ class Synthesizer:
                 _pbar_id=pbar_id,
                 _reset_cost=False,
             )
-            self.synthetic_goldens.extend(goldens)
             if _reset_cost and self.cost_tracking and self.using_native_model:
                 print(f"💰 API cost: {self.synthesis_cost:.6f}")
             remove_pbars(
@@ -716,7 +714,6 @@ class Synthesizer:
             + [pbar_generate_inputs_id, pbar_generate_goldens_id],
         )
         goldens.extend(results)
-        self.synthetic_goldens.extend(goldens)
 
     async def _a_generate_text_to_sql_from_context(
         self,
@@ -913,7 +910,6 @@ class Synthesizer:
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
             pass
-        self.synthetic_goldens.extend(goldens)
         return goldens
 
     def transform_distribution(
