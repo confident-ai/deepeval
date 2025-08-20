@@ -4,6 +4,7 @@ from contextvars import ContextVar
 from deepeval.tracing.types import BaseSpan, Trace
 from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
+from deepeval.metrics import BaseMetric
 
 current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
     "current_span", default=None
@@ -71,6 +72,7 @@ def update_current_trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
+    metrics: Optional[List[BaseMetric]] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -107,6 +109,8 @@ def update_current_trace(
         current_trace.tools_called = tools_called
     if expected_tools:
         current_trace.expected_tools = expected_tools
+    if metrics:
+        current_trace.metrics = metrics
 
 
 def update_llm_span(
