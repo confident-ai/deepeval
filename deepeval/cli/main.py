@@ -176,10 +176,10 @@ def set_openai_env(
     KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_OPENAI_MODEL, "YES")
     KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_MODEL_NAME, model)
     KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_output_token)
+        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_input_token)
     )
     KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_input_token)
+        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_output_token)
     )
     print(
         f":raising_hands: Congratulations! You're now using OpenAI's `{model}` for all evals that require an LLM."
