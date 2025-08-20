@@ -123,5 +123,13 @@
         }
       }
     ]
+  },
+  {
+    "input": "Explain the concept of photosynthesis and its importance in the ecosystem.",
+    "actual_output": "Photosynthesis is the process by which plants convert sunlight, carbon dioxide, and water into glucose and oxygen. The chemical equation is 6CO2 + 6H2O + light energy → C6H12O6 + 6O2. This process is crucial for ecosystems because it produces oxygen for other organisms to breathe, removes carbon dioxide from the atmosphere, and forms the base of most food chains by converting solar energy into chemical energy that can be consumed by other organisms.",
+    "custom_column_key_values": {
+      "topic": "biology",
+      "difficulty": "medium"
+    }
   }
 ]

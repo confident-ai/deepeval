@@ -109,6 +109,7 @@ class TestSingleTurnDataset:
             expected_tools=create_tool_calls_from_data(
                 data.get("expected_tools", None)
             ),
+            custom_column_key_values=data.get("custom_column_key_values", None),
         )
 
     def test_dataset_push_pull(self):
@@ -144,6 +145,7 @@ class TestMultiTurnDataset:
             additional_metadata=data.get("additional_metadata", None),
             comments=data.get("comments", None),
             turns=data.get("turns", None),
+            custom_column_key_values=data.get("custom_column_key_values", None),
         )
 
     def test_dataset_push_pull(self):
