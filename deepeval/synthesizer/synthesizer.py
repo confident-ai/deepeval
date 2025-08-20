@@ -124,6 +124,7 @@ class Synthesizer:
         context_construction_config: Optional[ContextConstructionConfig] = None,
         _send_data=True,
     ):
+        self.synthetic_goldens = []
         self.synthesis_cost = 0 if self.using_native_model else None
         if context_construction_config is None:
             context_construction_config = ContextConstructionConfig(
@@ -204,7 +205,6 @@ class Synthesizer:
                     _send_data=False,
                     _reset_cost=False,
                 )
-                self.synthetic_goldens.extend(goldens)
                 if self.cost_tracking and self.using_native_model:
                     print(f"💰 API cost: {self.synthesis_cost:.6f}")
                 if _send_data == True:
@@ -297,7 +297,6 @@ class Synthesizer:
                 _pbar_id=pbar_id,
                 _reset_cost=False,
             )
-            self.synthetic_goldens.extend(goldens)
             if _reset_cost and self.cost_tracking and self.using_native_model:
                 print(f"💰 API cost: {self.synthesis_cost:.6f}")
             remove_pbars(
@@ -328,6 +327,7 @@ class Synthesizer:
         _reset_cost: bool = True,
     ) -> List[Golden]:
         if _reset_cost:
+            self.synthetic_goldens = []
             self.synthesis_cost = 0 if self.using_native_model else None
         goldens: List[Golden] = []
 
@@ -516,6 +516,7 @@ class Synthesizer:
         _reset_cost: bool = True,
     ) -> List[Golden]:
         if _reset_cost:
+            self.synthetic_goldens = []
             self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
         goldens: List[Golden] = []
@@ -716,7 +717,6 @@ class Synthesizer:
             + [pbar_generate_inputs_id, pbar_generate_goldens_id],
         )
         goldens.extend(results)
-        self.synthetic_goldens.extend(goldens)
 
     async def _a_generate_text_to_sql_from_context(
         self,
@@ -849,6 +849,7 @@ class Synthesizer:
             raise TypeError(
                 "`scenario`, `task`, and `input_format` in `styling_config` must not be None when generation goldens from scratch."
             )
+        self.synthetic_goldens = []
         self.synthesis_cost = 0 if self.using_native_model else None
 
         transformed_evolutions = self.transform_distribution(
@@ -913,7 +914,6 @@ class Synthesizer:
         self.synthetic_goldens.extend(goldens)
         if _send_data == True:
             pass
-        self.synthetic_goldens.extend(goldens)
         return goldens
 
     def transform_distribution(
@@ -947,6 +947,7 @@ class Synthesizer:
         max_goldens_per_golden: int = 2,
         include_expected_output: bool = True,
     ) -> List[Golden]:
+        self.synthetic_goldens = []
         if self.async_mode:
             loop = get_or_create_event_loop()
             return loop.run_until_complete(
