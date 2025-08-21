@@ -936,7 +936,11 @@ def execute_agentic_test_cases(
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                    actual_output=(
+                        str(current_trace.output)
+                        if current_trace.output is not None
+                        else None
+                    ),
                     expected_output=current_trace.expected_output,
                     context=current_trace.context,
                     retrieval_context=current_trace.retrieval_context,
@@ -1092,7 +1096,11 @@ def execute_agentic_test_cases(
                     if current_trace.input:
                         llm_test_case = LLMTestCase(
                             input=str(current_trace.input),
-                            actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                            actual_output=(
+                                str(current_trace.output)
+                                if current_trace.output is not None
+                                else None
+                            ),
                             expected_output=current_trace.expected_output,
                             context=current_trace.context,
                             retrieval_context=current_trace.retrieval_context,
@@ -1548,7 +1556,9 @@ async def a_execute_trace_test_case(
     if trace.input:
         llm_test_case = LLMTestCase(
             input=str(trace.input),
-            actual_output=str(trace.output) if trace.output is not None else None,
+            actual_output=(
+                str(trace.output) if trace.output is not None else None
+            ),
             expected_output=trace.expected_output,
             context=trace.context,
             retrieval_context=trace.retrieval_context,
@@ -1697,7 +1707,11 @@ def execute_agentic_test_cases_from_loop(
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                    actual_output=(
+                        str(current_trace.output)
+                        if current_trace.output is not None
+                        else None
+                    ),
                     expected_output=current_trace.expected_output,
                     context=current_trace.context,
                     retrieval_context=current_trace.retrieval_context,
@@ -1834,7 +1848,11 @@ def execute_agentic_test_cases_from_loop(
                     if current_trace.input:
                         llm_test_case = LLMTestCase(
                             input=str(current_trace.input),
-                            actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                            actual_output=(
+                                str(current_trace.output)
+                                if current_trace.output is not None
+                                else None
+                            ),
                             expected_output=current_trace.expected_output,
                             context=current_trace.context,
                             retrieval_context=current_trace.retrieval_context,

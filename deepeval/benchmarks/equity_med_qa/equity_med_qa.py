@@ -34,7 +34,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             initialize_model(model)
         )
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> Dict:
         import pandas as pd
 
         with capture_benchmark_run("EquityMedQA", len(self.tasks)):
