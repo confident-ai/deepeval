@@ -110,7 +110,7 @@ Run `touch test_example.py` in your terminal and paste in the following code:
 ```python title="test_example.py"
 from deepeval import assert_test
 from deepeval.test_case import Turn, ConversationalTestCase
-from deepeval.metrics import GEval
+from deepeval.metrics import ConversationalGEval
 
 def test_professionalism():
     professionalism_metric = ConversationalGEval(
