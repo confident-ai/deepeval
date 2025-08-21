@@ -557,7 +557,6 @@ class Synthesizer:
 
         if _reset_cost and self.cost_tracking and self.using_native_model:
             print(f"💰 API cost: {self.synthesis_cost:.6f}")
-        self.synthetic_goldens.extend(goldens)
         return goldens
 
     async def _a_generate_from_context(
@@ -833,7 +832,6 @@ class Synthesizer:
                 for evolved_prompt, evolutions in evolved_prompts_list
             ]
 
-        self.synthetic_goldens.extend(goldens)
         return goldens
 
     def generate_goldens_from_scratch(
@@ -950,13 +948,15 @@ class Synthesizer:
         self.synthetic_goldens = []
         if self.async_mode:
             loop = get_or_create_event_loop()
-            return loop.run_until_complete(
+            result = loop.run_until_complete(
                 self.a_generate_goldens_from_goldens(
                     goldens=goldens,
                     max_goldens_per_golden=max_goldens_per_golden,
                     include_expected_output=include_expected_output,
                 )
             )
+            self.synthetic_goldens.extend(result)
+            return result
         else:
             # Extract contexts and source files from goldens
             contexts = []
