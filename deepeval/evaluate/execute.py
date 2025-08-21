@@ -2033,7 +2033,7 @@ def a_execute_agentic_test_cases_from_loop(
         asyncio.create_task = loop.create_task
         if trace_manager.traces_to_evaluate:
             loop.run_until_complete(
-                evaluate_traces(
+                a_evaluate_traces(
                     traces_to_evaluate=trace_manager.traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
@@ -2071,7 +2071,7 @@ def a_execute_agentic_test_cases_from_loop(
             )
         elif trace_manager.integration_traces_to_evaluate:
             loop.run_until_complete(
-                evaluate_traces(
+                a_evaluate_traces(
                     traces_to_evaluate=trace_manager.integration_traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
@@ -2143,7 +2143,7 @@ def a_execute_agentic_test_cases_from_loop(
     asyncio.create_task = original_create_task
 
 
-async def evaluate_traces(
+async def a_evaluate_traces(
     traces_to_evaluate: List[Trace],
     goldens: List[Golden],
     test_run_manager: TestRunManager,
