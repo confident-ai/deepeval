@@ -108,10 +108,10 @@ If you need to evaluate individual components of your LangChain application, [se
 
 ## Evals in Production
 
-To run online evaluations in production, simply replace `metrics` in `CallbackHandler` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LangChain agent to production.
+To run online evaluations in production, simply replace `metrics` in `CallbackHandler` with a [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections) string from Confident AI, and push your LangChain agent to production.
 
 :::info
-This will automatically evaluate all incoming traces in production with the task completion metrics defined in your [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations).
+This will automatically evaluate all incoming traces in production with the task completion metrics defined in your [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections).
 :::
 
 ```python filename="main.py" showLineNumbers {8}

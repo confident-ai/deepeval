@@ -12,7 +12,7 @@ const VideoDisplayer = ({ src, confidentUrl, label }) => {
       </video>
       {confidentUrl &&       
         <div className={styles.overlay}>
-          <div className={styles.playButton} onClick={() => window.open("https://documentation.confident-ai.com" + confidentUrl, '_blank')}>
+          <div className={styles.playButton} onClick={() => window.open("https://www.confident-ai.com" + confidentUrl, '_blank')}>
             {label}
             <svg 
               xmlns="http://www.w3.org/2000/svg" 

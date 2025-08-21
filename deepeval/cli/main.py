@@ -123,7 +123,7 @@ def login(
                 "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
             )
             print(
-                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://documentation.confident-ai.com/docs/getting-started/setup]https://documentation.confident-ai.com/docs/getting-started/setup[/link][/bold]"
+                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://www.confident-ai.com/docs/llm-evaluation/quickstart]https://www.confident-ai.com/docs/llm-evaluation/quickstart[/link][/bold]"
             )
         except:
             span.set_attribute("completed", False)

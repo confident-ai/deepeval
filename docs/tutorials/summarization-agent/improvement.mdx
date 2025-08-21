@@ -52,7 +52,7 @@ print(len(summary_test_cases))
 print(len(action_item_test_cases))
 ```
 
-You can use these test cases to evaluate your summarizer anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work. [Click here](https://deepeval.com/docs/evaluation-datasets) to learn more about datasets.
+You can use these test cases to evaluate your summarizer anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for this to work. [Click here](/docs/evaluation-datasets) to learn more about datasets.
 
 ## Iterating On Hyperparameters
 
@@ -63,17 +63,19 @@ In the previous stages, we have evaluated our summarization agent separately for
 These are the system prompts we've previously used:
 
 For summary generation:
+
 ```text
-You are an AI assistant summarizing meeting transcripts. Provide a clear and 
-concise summary of the following conversation, avoiding interpretation and 
-unnecessary details. Focus on the main discussion points only. Do not include 
-any action items. Respond with only the summary as plain text — no headings, 
+You are an AI assistant summarizing meeting transcripts. Provide a clear and
+concise summary of the following conversation, avoiding interpretation and
+unnecessary details. Focus on the main discussion points only. Do not include
+any action items. Respond with only the summary as plain text — no headings,
 formatting, or explanations.
 ```
 
 For action items generation:
+
 ```text
-Extract all action items from the following meeting transcript. Identify individual 
+Extract all action items from the following meeting transcript. Identify individual
 and team-wide action items in the following format:
 
 {
@@ -85,28 +87,30 @@ and team-wide action items in the following format:
   "entities": ["Alice", "Bob"]
 }
 
-Only include what is explicitly mentioned. Do not infer. You must respond strictly in 
+Only include what is explicitly mentioned. Do not infer. You must respond strictly in
 valid JSON format — no extra text or commentary.
 ```
 
 We will now use the following updated system prompts:
 
 For summary generation:
+
 ```text
 You are an expert meeting summarization assistant. Generate a tightly written,
-executive-style summary of the meeting transcript, focusing only on high-value 
-information: key technical insights, decisions made, problems discussed, model/tool 
-comparisons, and rationale behind proposals. Exclude all action items and any 
-content that is not core to the purpose of the discussion. Prioritize clarity, 
-brevity, and factual precision. The final summary should read like a high-quality 
-meeting brief that allows a stakeholder to fully grasp the discussion in under 60 
+executive-style summary of the meeting transcript, focusing only on high-value
+information: key technical insights, decisions made, problems discussed, model/tool
+comparisons, and rationale behind proposals. Exclude all action items and any
+content that is not core to the purpose of the discussion. Prioritize clarity,
+brevity, and factual precision. The final summary should read like a high-quality
+meeting brief that allows a stakeholder to fully grasp the discussion in under 60
 seconds.
 ```
 
 For action items generation:
+
 ```text
-Parse the following meeting transcript and extract only the action items that are explicitly 
-stated. Organize the output into individual responsibilities, team-wide tasks, and named entities. 
+Parse the following meeting transcript and extract only the action items that are explicitly
+stated. Organize the output into individual responsibilities, team-wide tasks, and named entities.
 You must respond with a valid JSON object that follows this exact format:
 
 {
@@ -118,8 +122,8 @@ You must respond with a valid JSON object that follows this exact format:
   "entities": ["Alice", "Bob"]
 }
 
-Do not invent or infer any tasks. Only include tasks that are clearly and explicitly assigned 
-or discussed. Do not output anything except valid JSON in the structure above. No natural 
+Do not invent or infer any tasks. Only include tasks that are clearly and explicitly assigned
+or discussed. Do not output anything except valid JSON in the structure above. No natural
 language, notes, or extra formatting allowed.
 ```
 
@@ -185,6 +189,7 @@ for model in models:
 By logging hyperparameters in the evaluate function, you can easily compare performance across runs in [Confident AI](https://www.confident-ai.com) and trace score changes back to specific hyperparameter adjustments. Learn more about [the evaluate function here](https://deepeval.com/docs/evaluation-introduction#evaluating-without-pytest).
 
 Here's an example of how you can set up [**Confident AI**](https://deepeval.com/tutorials/tutorial-setup) to check the results in a report format that also provides details on hyperparameters used for test runs:
+
 <div
   style={{
     display: "flex",
@@ -202,27 +207,29 @@ Here's an example of how you can set up [**Confident AI**](https://deepeval.com/
 </div>
 
 To get started, run the following command:
+
 ```bash
 deepeval login
 ```
+
 :::
 
 The average results of the evaluation iterations are shown below:
 
-| Model          | Summary Concision | Action Item Accuracy |
-|----------------|-------------------|----------------------|
-| gpt-3.5-turbo  | 0.7               | 0.6                  |
-| gpt-4o         | 0.9               | 0.7                  |
-| gpt-4-turbo    | 0.8               | 0.9                  |
+| Model         | Summary Concision | Action Item Accuracy |
+| ------------- | ----------------- | -------------------- |
+| gpt-3.5-turbo | 0.7               | 0.6                  |
+| gpt-4o        | 0.9               | 0.7                  |
+| gpt-4-turbo   | 0.8               | 0.9                  |
 
 ## Improving From Eval Results
 
-From these results, we can see that `gpt-4o` and `gpt-4-turbo` perform well but for different tasks. 
+From these results, we can see that `gpt-4o` and `gpt-4-turbo` perform well but for different tasks.
 
-- `gpt-4o` performed better for summary generation. 
-- `gpt-4-turbo` performed best for action item generation. 
+- `gpt-4o` performed better for summary generation.
+- `gpt-4-turbo` performed best for action item generation.
 
-This raises an issue of which model to choose among the both as they each excel at their own tasks. 
+This raises an issue of which model to choose among the both as they each excel at their own tasks.
 
 In this situation, you can either use more test cases to run evaluations to get more data or use `deepeval`'s latest `ArenaGEval` to test which model is better among them by evaluating arena test cases. You can learn more about it [here](http://localhost:3000/docs/metrics-arena-g-eval).
 
@@ -234,7 +241,7 @@ class MeetingSummarizer:
       ...
     @observe()
     def summarize(
-      self, 
+      self,
       transcript: str,
       summary_model: str = "gpt-4o",
       action_item_model: str = "gpt-4-turbo",
@@ -243,7 +250,7 @@ class MeetingSummarizer:
         action_items = self.get_action_items(transcript, action_item_model)
 
         return summary, action_items
-    
+
     @observe()
     def get_summary(self, transcript: str, model: str = None) -> str:
       ...

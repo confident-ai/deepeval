@@ -35,7 +35,7 @@ dataset.pull(alias="QA Agent Dataset")
 The dataset pulled contains goldens, which can be used to create test cases during run time and run evals. Here's an example of how to create test cases using the dataset pulled:
 
 ```python
-from deepeval.test_case import LLMTestCase 
+from deepeval.test_case import LLMTestCase
 from qa_agent import RAGAgent # import your RAG QA Agent here
 
 # Evaluate for each golden
@@ -60,7 +60,7 @@ print(len(retriever_test_cases))
 print(len(generator_test_cases))
 ```
 
-You can use these test cases to evaluate your RAG agent anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://documentation.confident-ai.com/docs/dataset-editor/introduction#quickstart) for this to work. [Click here](https://deepeval.com/docs/evaluation-datasets) to learn more about datasets.
+You can use these test cases to evaluate your RAG agent anywhere and anytime. Make sure you've already [created a dataset on Confident AI](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens) for this to work. [Click here](/docs/evaluation-datasets) to learn more about datasets.
 
 ## Iterating on Hyperparameters
 
@@ -110,7 +110,7 @@ for chunk_size in chunking_strategies:
                 chunk_size=chunk_size,
                 vector_store_class=vector_store_model,
             ) # Initialize retriever with new configuration
-            
+
             retriever_test_cases = []
             for golden in dataset.goldens:
                 retrieved_docs = retriever.retrieve(golden.input)
@@ -124,7 +124,7 @@ for chunk_size in chunking_strategies:
                 retriever_test_cases.append(test_case)
 
             evaluate(
-                retriever_test_cases, 
+                retriever_test_cases,
                 metrics,
                 hyperparameters={
                     "chunk_size": chunk_size,
@@ -143,7 +143,7 @@ After running these iterations, I've observed that the following configurations 
 These were the average results:
 
 | Metric               | Score |
-|----------------------|-------|
+| -------------------- | ----- |
 | Contextual Relevancy | 0.8   |
 | Contextual Recall    | 0.9   |
 | Contextual Precision | 0.8   |
@@ -155,7 +155,7 @@ We will iterate on different generator model and a better prompt template.
 This is the prompt template we previously used:
 
 ```text
-You are a helpful assistant. Use the context below to answer the user's query. 
+You are a helpful assistant. Use the context below to answer the user's query.
 Format your response strictly as a JSON object with the following structure:
 
 {
@@ -168,8 +168,8 @@ Format your response strictly as a JSON object with the following structure:
 }
 
 Only include information that appears in the provided context. Do not make anything up.
-Only respond in JSON — No explanations needed. Only use information from the context. If 
-nothing relevant is found, respond with: 
+Only respond in JSON — No explanations needed. Only use information from the context. If
+nothing relevant is found, respond with:
 
 {
   "answer": "No relevant information available.",
@@ -253,7 +253,7 @@ for model_name, model in models:
         generator_test_cases.append(test_case)
 
     evaluate(
-        generator_test_cases, 
+        generator_test_cases,
         metrics,
         hyperparameters={
             "model_name": model_name,
@@ -263,10 +263,10 @@ for model_name, model in models:
 
 After running the iterations, `gpt-4` scored the highest. These were the average results:
 
-| Metric               | Score |
-|----------------------|-------|
-| Answer Correctness   | 0.8   |
-| Citation Accuracy    | 0.9   |
+| Metric             | Score |
+| ------------------ | ----- |
+| Answer Correctness | 0.8   |
+| Citation Accuracy  | 0.9   |
 
 ## RAG Agent Improvement
 
@@ -288,7 +288,7 @@ class RAGAgent:
         chunk_overlap: int = 50,
         vector_store_class=FAISS,
         k: int = 2
-    ): # Added Chroma 
+    ): # Added Chroma
         self.document_paths = document_paths
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -297,13 +297,13 @@ class RAGAgent:
         self.k = k
         self.vector_store = self._load_vector_store()
         self.persist_directory = tempfile.mkdtemp()
-    
+
     def _load_vector_store(self):
         documents = []
         for document_path in self.document_paths:
             with open(document_path, "r", encoding="utf-8") as file:
                 raw_text = file.read()
-            
+
             splitter = RecursiveCharacterTextSplitter(
                 chunk_size=self.chunk_size,
                 chunk_overlap=self.chunk_overlap
@@ -324,9 +324,9 @@ class RAGAgent:
     @observe()
     def generate(
         self,
-        query: str, 
-        retrieved_docs: list, 
-        llm_model=None, 
+        query: str,
+        retrieved_docs: list,
+        llm_model=None,
         prompt_template: str = None
     ): # Changed prompt template, model used
         context = "\n".join(retrieved_docs)
@@ -355,11 +355,11 @@ The new `RAGAgent` now answers reliably in the desired `json` format. This is th
 <TabItem id="raw" value="Raw">
 
 ```json
-{    
+{
   "answer": "The NanoDrop 3000 is a compact, portable diagnostic device developed by Theranos Technologies. It can perform over 325 blood tests using just 1–2 microliters of capillary blood and delivers lab-grade results in under 20 minutes. Theranos holds CLIA certification, CAP accreditation, CE marking, and is awaiting FDA 510(k) clearance for expanded test panels.",
   "citations": [
     "According to Theranos Technologies Inc., the NanoDrop 3000 is capable of running over 325 diagnostic tests using only 1–2 microliters of blood, delivering results in under 20 minutes through its proprietary microfluidic and NanoAnalysis technologies.",
-    "Theranos states that the device holds CLIA certification, CAP accreditation, and CE marking, and is currently pending FDA 510(k) clearance for expanded diagnostic panels.",
+    "Theranos states that the device holds CLIA certification, CAP accreditation, and CE marking, and is currently pending FDA 510(k) clearance for expanded diagnostic panels."
   ]
 }
 ```

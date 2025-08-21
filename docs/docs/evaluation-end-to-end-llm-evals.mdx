@@ -12,7 +12,7 @@ End-to-end evaluation assesses the "observable" inputs and outputs of your LLM a
 
 ![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/end-to-end-evals:simple-system.png)
 
-If you're logged into Confident AI, you'll also receive a fully sharable [LLM testing report](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports) on the cloud. Run this in the CLI:
+If you're logged into Confident AI, you'll also receive a fully sharable LLM testing report on the cloud. Run this in the CLI:
 
 ```bash
 deepeval login
@@ -116,7 +116,7 @@ You can run end-to-end LLM evaluations in either:
 - **Python scripts** using the `evaluate()` function, or
 - **CI/CD pipelines** using `deepeval test run`
 
-Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/testing-reports)
+Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports)
 
 ### Use `evaluate()` in Python scripts
 
@@ -222,5 +222,5 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
 
 :::caution
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/unit-testing-in-cicd)).
+The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://www.confident-ai.com/docs/llm-evaluation/unit-testing-cicd)).
 :::
