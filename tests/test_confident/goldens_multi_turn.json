@@ -217,5 +217,19 @@
         "content": "You're absolutely right - fresh pasta cooks much faster than dried! Bring a large pot of well-salted water to a rolling boil (it should taste like seawater). Fresh fettuccine typically cooks in just 2-3 minutes - it's done when it floats to the surface and has a tender but still slightly firm bite. Start testing after 90 seconds. The most important tip: save a cup of pasta cooking water before draining! That starchy water is liquid gold for binding your sauce to the pasta. Toss the hot, drained pasta immediately with your sauce and a splash of pasta water if needed. Fresh pasta is more delicate than dried, so be gentle when mixing. Your guests are going to be so impressed with your homemade fettuccine!"
       }
     ]
+  },
+  {
+    "scenario": "A cooking consultation where someone wants to learn how to make homemade pasta from scratch, including the dough preparation, rolling technique, and cooking process.",
+    "expected_outcome": "User should successfully learn the complete process of making fresh pasta, understand the key techniques for kneading and rolling, and be able to cook it properly for the best texture and taste.",
+    "turns": [
+      {
+        "role": "user",
+        "content": "I want to make fresh pasta from scratch for a dinner party, but I've never done it before. I have 00 flour and fresh eggs, and I want to do it all by hand without a pasta machine. Can you walk me through the whole process? I'm thinking of making fettuccine."
+      }
+    ],
+    "custom_column_key_values": {
+      "topic": "biology",
+      "difficulty": "medium"
+    }
   }
 ]

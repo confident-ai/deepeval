@@ -143,7 +143,33 @@ print(your_llm_app("How are you?"))
 
 At this point, you can either pause and [learn how to setup LLM tracing in the next section](/docs/evaluation-llm-tracing) before continuing, or finish this section before moving onto tracing.
 
-## Use Python scripts
+## Run Component-Level Evals
+
+Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoked it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+
+<div style={{ textAlign: "center", margin: "2rem 0" }}>
+
+```mermaid
+flowchart LR
+  A[Invoke LLM app with Golden Inputs] --> B
+
+  subgraph B[For Each Observed Component]
+    C[Set LLMTestCase at Runtime] --> D[Run Component-Specific Metrics]
+  end
+
+  B -->|All components evaluated| E[Test Run Created]
+```
+
+</div>
+
+You can run component-level LLM evaluations in either:
+
+- **CI/CD pipelines** using `deepeval test run`, or
+- **Python scripts** by looping through your dataset
+
+All 3 methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports)
+
+### Use Python scripts
 
 To use a dataset for component-level testing, initialize a dataset with a list of `Golden`s, then invoke your `@observe` decorated LLM application within the loop of `evals_iterator()`.
 

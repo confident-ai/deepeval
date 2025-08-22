@@ -1,9 +1,26 @@
-from deepeval.metrics.bias.bias import BiasMetric
+from deepeval.metrics import GEval
 from deepeval.tracing import observe, update_current_trace
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.test_case import LLMTestCaseParams
 from deepeval.test_case import ToolCall
-from deepeval.evaluate.configs import AsyncConfig
+from deepeval.dataset import EvaluationDataset
+
+
+relevnacy = GEval(
+    name="Relevancy",
+    criteria="For the given input, the output should be relevant to the input.",
+    evaluation_params=[
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
+correctness = GEval(
+    name="Correctness",
+    criteria="Given the expected output, determine whether the output is correct or not.",
+    evaluation_params=[
+        LLMTestCaseParams.EXPECTED_OUTPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+    ],
+)
 
 
 @observe()
@@ -16,11 +33,13 @@ def llm_app(input):
         context=["Hi"],
         tools_called=[ToolCall(name="Hi")],
         expected_tools=[ToolCall(name="Hi")],
-        metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        metrics=[relevnacy, correctness],
     )
     return "Hi"
 
 
-dataset = EvaluationDataset(goldens=[Golden(input="Hello"), Golden(input="Hi")])
-for golden in dataset.evals_iterator(async_config=AsyncConfig(run_async=True)):
+dataset = EvaluationDataset()
+dataset.pull(alias="New Dataset")
+
+for golden in dataset.evals_iterator():
     llm_app(golden.input)

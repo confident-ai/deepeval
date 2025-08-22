@@ -44,7 +44,11 @@ class DROP(DeepEvalBaseBenchmark):
         self.verbose_mode: bool = verbose_mode
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: int | None = None,
+        **kwargs,
     ) -> Dict:
         import pandas as pd
 

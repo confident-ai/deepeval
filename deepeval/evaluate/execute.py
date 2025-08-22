@@ -931,12 +931,24 @@ def execute_agentic_test_cases(
                         if current_trace.end_time
                         else None
                     ),
+                    input=current_trace.input,
+                    output=current_trace.output,
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
+                    metadata=golden.additional_metadata,
                 )
 
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                    actual_output=(
+                        str(current_trace.output)
+                        if current_trace.output is not None
+                        else None
+                    ),
                     expected_output=current_trace.expected_output,
                     context=current_trace.context,
                     retrieval_context=current_trace.retrieval_context,
@@ -1092,7 +1104,11 @@ def execute_agentic_test_cases(
                     if current_trace.input:
                         llm_test_case = LLMTestCase(
                             input=str(current_trace.input),
-                            actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                            actual_output=(
+                                str(current_trace.output)
+                                if current_trace.output is not None
+                                else None
+                            ),
                             expected_output=current_trace.expected_output,
                             context=current_trace.context,
                             retrieval_context=current_trace.retrieval_context,
@@ -1341,6 +1357,7 @@ async def a_execute_agentic_test_case(
 
         update_pbar(progress, pbar_tags_id, advance=total_tags)
         update_pbar(progress, pbar_id)
+        
     elif trace:
         current_trace = trace
 
@@ -1366,6 +1383,14 @@ async def a_execute_agentic_test_case(
             if current_trace.end_time
             else None
         ),
+        input=current_trace.input,
+        output=current_trace.output,
+        expected_output=current_trace.expected_output,
+        context=current_trace.context,
+        retrieval_context=current_trace.retrieval_context,
+        tools_called=current_trace.tools_called,
+        expected_tools=current_trace.expected_tools,
+        metadata=golden.additional_metadata,
     )
 
     trace_level_metrics_count = (
@@ -1548,7 +1573,9 @@ async def a_execute_trace_test_case(
     if trace.input:
         llm_test_case = LLMTestCase(
             input=str(trace.input),
-            actual_output=str(trace.output) if trace.output is not None else None,
+            actual_output=(
+                str(trace.output) if trace.output is not None else None
+            ),
             expected_output=trace.expected_output,
             context=trace.context,
             retrieval_context=trace.retrieval_context,
@@ -1692,12 +1719,24 @@ def execute_agentic_test_cases_from_loop(
                         if current_trace.end_time
                         else None
                     ),
+                    input=current_trace.input,
+                    output=current_trace.output,
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
+                    metadata=golden.additional_metadata,
                 )
 
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
                     input=golden.input,
-                    actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                    actual_output=(
+                        str(current_trace.output)
+                        if current_trace.output is not None
+                        else None
+                    ),
                     expected_output=current_trace.expected_output,
                     context=current_trace.context,
                     retrieval_context=current_trace.retrieval_context,
@@ -1834,7 +1873,11 @@ def execute_agentic_test_cases_from_loop(
                     if current_trace.input:
                         llm_test_case = LLMTestCase(
                             input=str(current_trace.input),
-                            actual_output=str(current_trace.output) if current_trace.output is not None else None,
+                            actual_output=(
+                                str(current_trace.output)
+                                if current_trace.output is not None
+                                else None
+                            ),
                             expected_output=current_trace.expected_output,
                             context=current_trace.context,
                             retrieval_context=current_trace.retrieval_context,
@@ -2015,7 +2058,7 @@ def a_execute_agentic_test_cases_from_loop(
         asyncio.create_task = loop.create_task
         if trace_manager.traces_to_evaluate:
             loop.run_until_complete(
-                evaluate_traces(
+                a_evaluate_traces(
                     traces_to_evaluate=trace_manager.traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
@@ -2053,7 +2096,7 @@ def a_execute_agentic_test_cases_from_loop(
             )
         elif trace_manager.integration_traces_to_evaluate:
             loop.run_until_complete(
-                evaluate_traces(
+                a_evaluate_traces(
                     traces_to_evaluate=trace_manager.integration_traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
@@ -2125,7 +2168,7 @@ def a_execute_agentic_test_cases_from_loop(
     asyncio.create_task = original_create_task
 
 
-async def evaluate_traces(
+async def a_evaluate_traces(
     traces_to_evaluate: List[Trace],
     goldens: List[Golden],
     test_run_manager: TestRunManager,

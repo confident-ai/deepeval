@@ -45,7 +45,11 @@ class HellaSwag(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: int | None = None,
+        **kwargs,
     ) -> Dict:
         import pandas as pd
 

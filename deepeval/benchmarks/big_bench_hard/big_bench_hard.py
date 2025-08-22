@@ -76,7 +76,11 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             self.confinement_instructions_dict = confinement_instructions_dict
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: Optional[int] = None,
+        **kwargs,
     ) -> Dict:
         import pandas as pd
 
