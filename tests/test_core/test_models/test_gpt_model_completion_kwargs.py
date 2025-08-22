@@ -30,11 +30,10 @@ class TestGPTModelCompletionKwargs:
             completion_kwargs = {
                 "reasoning_effort": "high",
                 "max_tokens": 2000,
-                "seed": 42
+                "seed": 42,
             }
             model = GPTModel(
-                model="gpt-5-mini",
-                completion_kwargs=completion_kwargs
+                model="gpt-5-mini", completion_kwargs=completion_kwargs
             )
             assert model.completion_kwargs == completion_kwargs
             assert model.model_name == "gpt-5-mini"
@@ -165,7 +164,7 @@ class TestGPTModelCompletionKwargs:
 
         # Create a mock that tracks the call arguments
         call_args = {}
-        
+
         async def async_create(*args, **kwargs):
             call_args.update(kwargs)
             return mock_completion
@@ -175,7 +174,10 @@ class TestGPTModelCompletionKwargs:
         with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
             model = GPTModel(
                 model="gpt-5-nano",
-                completion_kwargs={"reasoning_effort": "medium", "max_tokens": 1500},
+                completion_kwargs={
+                    "reasoning_effort": "medium",
+                    "max_tokens": 1500,
+                },
             )
 
             # Call async generate
@@ -183,10 +185,12 @@ class TestGPTModelCompletionKwargs:
 
             # Verify the output
             assert output == "async test response"
-            
+
             # Verify the completion was called with the correct parameters
             assert call_args["model"] == "gpt-5-nano"
-            assert call_args["messages"] == [{"role": "user", "content": "async test prompt"}]
+            assert call_args["messages"] == [
+                {"role": "user", "content": "async test prompt"}
+            ]
             assert call_args["temperature"] == 1  # GPT-5-nano auto-sets to 1
             assert call_args["reasoning_effort"] == "medium"
             assert call_args["max_tokens"] == 1500
@@ -201,21 +205,21 @@ class TestGPTModelCompletionKwargs:
         mock_async_openai_class.return_value = mock_client
         mock_beta = MagicMock()
         mock_client.beta = mock_beta
-        
+
         # Create a mock parsed response
         mock_parsed = SampleSchema(field1="async test", field2=99)
         mock_completion = Mock()
         mock_completion.choices = [Mock(message=Mock(parsed=mock_parsed))]
         mock_completion.usage.prompt_tokens = 20
         mock_completion.usage.completion_tokens = 30
-        
+
         # Track call arguments
         call_args = {}
-        
+
         async def async_parse(*args, **kwargs):
             call_args.update(kwargs)
             return mock_completion
-        
+
         mock_beta.chat.completions.parse = async_parse
 
         with patch.dict("os.environ", {"OPENAI_API_KEY": "test-key"}):
@@ -225,14 +229,18 @@ class TestGPTModelCompletionKwargs:
             )
 
             # Call async generate with schema
-            output, cost = await model.a_generate("async test prompt", SampleSchema)
+            output, cost = await model.a_generate(
+                "async test prompt", SampleSchema
+            )
 
             # Verify the output
             assert output == mock_parsed
-            
+
             # Verify the parse method was called with correct parameters
             assert call_args["model"] == "gpt-4o"
-            assert call_args["messages"] == [{"role": "user", "content": "async test prompt"}]
+            assert call_args["messages"] == [
+                {"role": "user", "content": "async test prompt"}
+            ]
             assert call_args["response_format"] == SampleSchema
             assert call_args["temperature"] == 0
             assert call_args["reasoning_effort"] == "high"
