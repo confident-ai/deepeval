@@ -486,6 +486,9 @@ def write_test_result_to_file(
 
 
 def aggregate_metric_pass_rates(test_results: List[TestResult]) -> dict:
+    if not test_results:
+        return {}
+
     metric_counts = {}
     metric_successes = {}
 
