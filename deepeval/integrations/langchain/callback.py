@@ -236,7 +236,10 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
         llm_span: LlmSpan = trace_manager.get_span_by_uuid(str(run_id))
-        if llm_span is None:
+        if llm_span is None :
+            return
+
+        if not isinstance(llm_span, LlmSpan):
             return
 
         output = ""
@@ -246,17 +249,18 @@ class CallbackHandler(BaseCallbackHandler):
         for generation in response.generations:
             for gen in generation:
                 if isinstance(gen, ChatGeneration):
-                    input_tokens, output_tokens = extract_token_usage(
-                        gen.message.response_metadata
-                    )
-                    total_input_tokens += input_tokens
-                    total_output_tokens += output_tokens
-
-                    # set model for any generation
-                    if llm_span.model is None or llm_span.model == "unknown":
-                        llm_span.model = gen.message.response_metadata.get(
-                            "model_name", "unknown"
+                    if gen.message.response_metadata is not None:
+                        input_tokens, output_tokens = extract_token_usage(
+                            gen.message.response_metadata
                         )
+                        total_input_tokens += input_tokens
+                        total_output_tokens += output_tokens
+
+                        # set model for any generation
+                        if llm_span.model is None or llm_span.model == "unknown":
+                            llm_span.model = gen.message.response_metadata.get(
+                                "model_name", "unknown"
+                            )
                     if isinstance(gen.message, AIMessage):
                         ai_message = gen.message
                         tool_calls = []

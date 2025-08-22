@@ -73,11 +73,12 @@ def prepare_dict(**kwargs: Any) -> dict[str, Any]:
 
 
 def extract_token_usage(response_metadata: dict[str, Any]) -> tuple[int, int]:
-    if "token_usage" in response_metadata:
-        return response_metadata["token_usage"].get(
-            "prompt_tokens", 0
-        ), response_metadata["token_usage"].get("completion_tokens", 0)
-    return 0, 0
+
+    token_usage = response_metadata.get("token_usage", {})
+    prompt_tokens = token_usage.get("prompt_tokens", 0)
+    completion_tokens = token_usage.get("completion_tokens", 0)
+    
+    return prompt_tokens, completion_tokens
 
 
 def extract_name(serialized: dict[str, Any], **kwargs: Any) -> str:
