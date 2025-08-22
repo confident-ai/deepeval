@@ -761,10 +761,7 @@ class TestRunManager:
         )
         test_run.identifier = res.id
         test_run.confident_ai_link = link
-        self.save_test_run(
-            LATEST_TEST_RUN_FILE_PATH,
-            save_under_key=LATEST_TEST_RUN_DATA_KEY,
-        )
+        self.save_test_run(self.temp_file_path)
 
         ################################################
         ### Send the remaining test cases in batches ###
