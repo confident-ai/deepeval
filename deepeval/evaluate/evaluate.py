@@ -275,5 +275,7 @@ def evaluate(
         run_duration, display_table=False
     )
     return EvaluationResult(
-        test_results=test_results, confident_link=confident_link, test_run_id=global_test_run_manager.get_test_run().identifier
+        test_results=test_results,
+        confident_link=confident_link,
+        test_run_id=global_test_run_manager.get_test_run().identifier,
     )
