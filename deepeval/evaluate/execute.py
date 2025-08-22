@@ -931,6 +931,14 @@ def execute_agentic_test_cases(
                         if current_trace.end_time
                         else None
                     ),
+                    input=current_trace.input,
+                    output=current_trace.output,
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
+                    metadata=golden.additional_metadata,
                 )
 
                 # Format golden as test case to create llm api test case
@@ -1349,6 +1357,7 @@ async def a_execute_agentic_test_case(
 
         update_pbar(progress, pbar_tags_id, advance=total_tags)
         update_pbar(progress, pbar_id)
+        
     elif trace:
         current_trace = trace
 
@@ -1374,6 +1383,14 @@ async def a_execute_agentic_test_case(
             if current_trace.end_time
             else None
         ),
+        input=current_trace.input,
+        output=current_trace.output,
+        expected_output=current_trace.expected_output,
+        context=current_trace.context,
+        retrieval_context=current_trace.retrieval_context,
+        tools_called=current_trace.tools_called,
+        expected_tools=current_trace.expected_tools,
+        metadata=golden.additional_metadata,
     )
 
     trace_level_metrics_count = (
@@ -1702,6 +1719,14 @@ def execute_agentic_test_cases_from_loop(
                         if current_trace.end_time
                         else None
                     ),
+                    input=current_trace.input,
+                    output=current_trace.output,
+                    expected_output=current_trace.expected_output,
+                    context=current_trace.context,
+                    retrieval_context=current_trace.retrieval_context,
+                    tools_called=current_trace.tools_called,
+                    expected_tools=current_trace.expected_tools,
+                    metadata=golden.additional_metadata,
                 )
 
                 # Format golden as test case to create llm api test case
