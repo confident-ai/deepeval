@@ -120,6 +120,7 @@ class TestRun(BaseModel):
         None, alias="traceMetricsScores"
     )
     identifier: Optional[str] = None
+    confident_ai_link: Optional[str] = None
     hyperparameters: Optional[Dict[str, Any]] = Field(None)
     test_passed: Optional[int] = Field(None, alias="testPassed")
     test_failed: Optional[int] = Field(None, alias="testFailed")
@@ -732,16 +733,19 @@ class TestRunManager:
         ####################
         ### POST REQUEST ###
         ####################
+        # Create a copy of test_run to avoid modifying the original as we batch cases
+        test_run_copy = test_run.model_copy(deep=True)
+
         if is_conversational_run:
-            test_run.conversational_test_cases = initial_batch
+            test_run_copy.conversational_test_cases = initial_batch
         else:
-            test_run.test_cases = initial_batch
+            test_run_copy.test_cases = initial_batch
 
         try:
-            body = test_run.model_dump(by_alias=True, exclude_none=True)
+            body = test_run_copy.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
             # Pydantic version below 2.0
-            body = test_run.dict(by_alias=True, exclude_none=True)
+            body = test_run_copy.dict(by_alias=True, exclude_none=True)
 
         json_str = json.dumps(body, cls=TestRunEncoder)
         body = json.loads(json_str)
@@ -754,6 +758,12 @@ class TestRunManager:
 
         res = TestRunHttpResponse(
             id=data["id"],
+        )
+        test_run.identifier = res.id
+        test_run.confident_ai_link = link
+        self.save_test_run(
+            LATEST_TEST_RUN_FILE_PATH,
+            save_under_key=LATEST_TEST_RUN_DATA_KEY,
         )
 
         ################################################
