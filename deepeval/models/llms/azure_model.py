@@ -181,6 +181,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
+            **self.kwargs
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -215,6 +216,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
+            **self.kwargs
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -241,6 +243,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
+            **self.kwargs
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
