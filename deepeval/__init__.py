@@ -4,6 +4,7 @@ import re
 
 # load environment variables before other imports
 from .env import autoload_dotenv as _autoload_dotenv
+
 _autoload_dotenv()
 
 # Optionally add telemetry
