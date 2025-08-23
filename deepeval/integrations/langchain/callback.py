@@ -161,7 +161,7 @@ class CallbackHandler(BaseCallbackHandler):
         self.check_active_trace_id()
         base_span = BaseSpan(
             uuid=str(run_id),
-            status=TraceSpanStatus.IN_PROGRESS,
+            status=TraceSpanStatus.ERRORED,
             children=[],
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
@@ -171,6 +171,9 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
+
+            # fallback for on_end callback
+            end_time=perf_counter(),
         )
         self.add_span_to_trace(base_span)
 
@@ -212,7 +215,7 @@ class CallbackHandler(BaseCallbackHandler):
 
         llm_span = LlmSpan(
             uuid=str(run_id),
-            status=TraceSpanStatus.IN_PROGRESS,
+            status=TraceSpanStatus.ERRORED,
             children=[],
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
@@ -223,6 +226,9 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
+
+            # fallback for on_end callback
+            end_time=perf_counter(),
         )
 
         self.add_span_to_trace(llm_span)
@@ -249,10 +255,16 @@ class CallbackHandler(BaseCallbackHandler):
         for generation in response.generations:
             for gen in generation:
                 if isinstance(gen, ChatGeneration):
-                    if gen.message.response_metadata is not None:
-                        input_tokens, output_tokens = extract_token_usage(
-                            gen.message.response_metadata
-                        )
+                    if gen.message.response_metadata and isinstance(
+                        gen.message.response_metadata, dict
+                    ):
+                        try:
+                            input_tokens, output_tokens = extract_token_usage(
+                                gen.message.response_metadata
+                            )
+                        except Exception as e:
+                            input_tokens, output_tokens = 0, 0
+                        
                         total_input_tokens += input_tokens
                         total_output_tokens += output_tokens
 
@@ -304,7 +316,7 @@ class CallbackHandler(BaseCallbackHandler):
 
         tool_span = ToolSpan(
             uuid=str(run_id),
-            status=TraceSpanStatus.IN_PROGRESS,
+            status=TraceSpanStatus.ERRORED,
             children=[],
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
@@ -314,6 +326,9 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
+
+            # fallback for on_end callback
+            end_time=perf_counter(),
         )
         self.add_span_to_trace(tool_span)
 
@@ -353,7 +368,7 @@ class CallbackHandler(BaseCallbackHandler):
 
         retriever_span = RetrieverSpan(
             uuid=str(run_id),
-            status=TraceSpanStatus.IN_PROGRESS,
+            status=TraceSpanStatus.ERRORED,
             children=[],
             trace_uuid=self.active_trace_id,
             parent_uuid=str(parent_run_id) if parent_run_id else None,
@@ -363,6 +378,9 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
+
+            # fallback for on_end callback
+            end_time=perf_counter(),
         )
         retriever_span.input = query
         retriever_span.retrieval_context = []

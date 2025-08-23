@@ -73,11 +73,12 @@ def prepare_dict(**kwargs: Any) -> dict[str, Any]:
 
 
 def extract_token_usage(response_metadata: dict[str, Any]) -> tuple[int, int]:
-
+    prompt_tokens, completion_tokens = 0, 0
     token_usage = response_metadata.get("token_usage", {})
-    prompt_tokens = token_usage.get("prompt_tokens", 0)
-    completion_tokens = token_usage.get("completion_tokens", 0)
-    
+    if token_usage and isinstance(token_usage, dict):
+        prompt_tokens = token_usage.get("prompt_tokens", 0)
+        completion_tokens = token_usage.get("completion_tokens", 0)
+
     return prompt_tokens, completion_tokens
 
 
