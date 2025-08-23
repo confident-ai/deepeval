@@ -609,8 +609,6 @@ class EvaluationDataset:
 
         api = Api()
         api_dataset = APIDataset(
-            alias=alias,
-            overwrite=overwrite,
             goldens=self.goldens if not self._multi_turn else None,
             conversationalGoldens=(self.goldens if self._multi_turn else None),
         )
@@ -624,6 +622,7 @@ class EvaluationDataset:
             method=HttpMethods.POST,
             endpoint=Endpoints.DATASET_ENDPOINT,
             body=body,
+            url_params={"alias": alias},
         )
         if link:
             console = Console()
@@ -655,10 +654,7 @@ class EvaluationDataset:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.DATASET_ENDPOINT,
-                    params={
-                        "alias": alias,
-                        "finalized": str(finalized).lower(),
-                    },
+                    url_params={"alias": alias},
                 )
 
                 response = DatasetHttpResponse(
