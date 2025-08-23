@@ -121,8 +121,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
-            completion.usage.completion_tokens,
-            **self.kwargs
+            completion.usage.completion_tokens
         )
         if schema:
             json_output = trim_and_load_json(output)
