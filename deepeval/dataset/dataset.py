@@ -601,6 +601,7 @@ class EvaluationDataset:
         self,
         alias: str,
         overwrite: bool = False,
+        finalized: bool = True,
     ):
         if len(self.goldens) == 0:
             raise ValueError(
@@ -611,6 +612,7 @@ class EvaluationDataset:
         api_dataset = APIDataset(
             goldens=self.goldens if not self._multi_turn else None,
             conversationalGoldens=(self.goldens if self._multi_turn else None),
+            finalized=finalized,
         )
         try:
             body = api_dataset.model_dump(by_alias=True, exclude_none=True)
