@@ -116,11 +116,13 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
+            **self.kwargs
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
             completion.usage.completion_tokens,
+            **self.kwargs
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -163,6 +165,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    **self.kwargs
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
