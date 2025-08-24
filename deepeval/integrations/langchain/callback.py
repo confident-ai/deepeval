@@ -418,3 +418,62 @@ class CallbackHandler(BaseCallbackHandler):
 
         if parent_run_id is None:
             self.end_trace(retriever_span)
+    
+    ################## on_error callbacks ###############
+
+    def on_chain_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> None:
+        base_span = trace_manager.get_span_by_uuid(str(run_id))
+        if base_span is None:
+            return
+        
+        base_span.end_time = perf_counter()
+
+    def on_llm_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        
+        llm_span = trace_manager.get_span_by_uuid(str(run_id))
+        if llm_span is None:
+            return
+        
+        llm_span.end_time = perf_counter()
+
+    def on_tool_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        tool_span = trace_manager.get_span_by_uuid(str(run_id))
+        if tool_span is None:
+            return
+        
+        tool_span.end_time = perf_counter()
+
+    def on_retriever_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        retriever_span = trace_manager.get_span_by_uuid(str(run_id))
+        if retriever_span is None:
+            return
+        
+        retriever_span.end_time = perf_counter()
