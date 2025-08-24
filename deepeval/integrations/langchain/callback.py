@@ -20,8 +20,9 @@ try:
     from deepeval.integrations.langchain.utils import (
         parse_prompts_to_messages,
         prepare_dict,
-        extract_token_usage,
         extract_name,
+        safe_extract_model_name,
+        safe_extract_token_usage,
     )
 
     langchain_installed = True
@@ -213,6 +214,9 @@ class CallbackHandler(BaseCallbackHandler):
         # extract input
         input_messages = parse_prompts_to_messages(prompts, **kwargs)
 
+        # extract model name
+        model = safe_extract_model_name(metadata, **kwargs)
+
         llm_span = LlmSpan(
             uuid=str(run_id),
             status=TraceSpanStatus.ERRORED,
@@ -226,7 +230,7 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
-
+            model=model,
             # fallback for on_end callback
             end_time=perf_counter(),
         )
@@ -251,6 +255,7 @@ class CallbackHandler(BaseCallbackHandler):
         output = ""
         total_input_tokens = 0
         total_output_tokens = 0
+        model = None
 
         for generation in response.generations:
             for gen in generation:
@@ -258,21 +263,17 @@ class CallbackHandler(BaseCallbackHandler):
                     if gen.message.response_metadata and isinstance(
                         gen.message.response_metadata, dict
                     ):
-                        try:
-                            input_tokens, output_tokens = extract_token_usage(
-                                gen.message.response_metadata
-                            )
-                        except Exception as e:
-                            input_tokens, output_tokens = 0, 0
+                        # extract model name from response_metadata
+                        model = gen.message.response_metadata.get("model_name")
                         
+                        # extract input and output token
+                        input_tokens, output_tokens = safe_extract_token_usage(
+                            gen.message.response_metadata
+                        )
                         total_input_tokens += input_tokens
                         total_output_tokens += output_tokens
-
-                        # set model for any generation
-                        if llm_span.model is None or llm_span.model == "unknown":
-                            llm_span.model = gen.message.response_metadata.get(
-                                "model_name", "unknown"
-                            )
+                                                
+                    
                     if isinstance(gen.message, AIMessage):
                         ai_message = gen.message
                         tool_calls = []
@@ -290,10 +291,11 @@ class CallbackHandler(BaseCallbackHandler):
                             tool_calls=tool_calls,
                         )
 
+        llm_span.model = model if model else llm_span.model
         llm_span.input = llm_span.input
         llm_span.output = output
-        llm_span.input_token_count = total_input_tokens
-        llm_span.output_token_count = total_output_tokens
+        llm_span.input_token_count = total_input_tokens if total_input_tokens > 0 else None
+        llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
 
         self.end_span(llm_span)
         if parent_run_id is None:
