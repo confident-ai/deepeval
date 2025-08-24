@@ -92,11 +92,12 @@ def extract_name(serialized: dict[str, Any], **kwargs: Any) -> str:
     return "unknown"
 
 def safe_extract_model_name(metadata: dict[str, Any], **kwargs: Any) -> Optional[str]:
-    invocation_params = kwargs.get("invocation_params")
-    if invocation_params:
-        model = invocation_params.get("model")
-        if model:
-            return model
+    if kwargs and isinstance(kwargs, dict):
+        invocation_params = kwargs.get("invocation_params")
+        if invocation_params:
+            model = invocation_params.get("model")
+            if model:
+                return model
 
     if metadata:
         ls_model_name = metadata.get("ls_model_name")
