@@ -1357,7 +1357,7 @@ async def a_execute_agentic_test_case(
 
         update_pbar(progress, pbar_tags_id, advance=total_tags)
         update_pbar(progress, pbar_id)
-        
+
     elif trace:
         current_trace = trace
 

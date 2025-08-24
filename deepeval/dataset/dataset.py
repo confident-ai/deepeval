@@ -1009,7 +1009,7 @@ class EvaluationDataset:
                     print_test_result(
                         test_result, display_config.display_option
                     )
-                    aggregate_metric_pass_rates(test_results)
+                aggregate_metric_pass_rates(test_results)
             if display_config.file_output_dir is not None:
                 for test_result in test_results:
                     write_test_result_to_file(
