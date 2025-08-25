@@ -1518,11 +1518,6 @@ def execute_agentic_test_cases_from_loop(
                 ):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
-                    print(metrics, "span metrics")
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in metrics
-                    )
 
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
@@ -1558,6 +1553,11 @@ def execute_agentic_test_cases_from_loop(
                         )
                     if span.metrics == None or llm_test_case == None:
                         return
+
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in metrics
+                    )
 
                     if has_task_completion:
                         if llm_test_case is None:
