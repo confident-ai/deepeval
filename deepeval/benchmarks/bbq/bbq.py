@@ -165,7 +165,7 @@ class BBQ(DeepEvalBaseBenchmark):
         if dataset_attr:
             if not hasattr(self, dataset_attr):
                 dataset = load_dataset(
-                    "heegyu/bbq", task.value, trust_remote_code=True
+                    "heegyu/bbq", task.value
                 )
                 setattr(self, dataset_attr, dataset)
             else:

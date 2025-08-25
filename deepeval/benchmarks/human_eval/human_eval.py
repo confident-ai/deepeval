@@ -201,7 +201,7 @@ class HumanEval(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("openai_humaneval", trust_remote_code=True)
+            dataset = load_dataset("openai_humaneval")
             self.dataset = dataset
 
         # Filter tasks

@@ -235,7 +235,7 @@ class MathQA(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("allenai/math_qa", trust_remote_code=True)
+            dataset = load_dataset("allenai/math_qa")
             self.dataset = dataset
 
         # Construct test set

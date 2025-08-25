@@ -113,7 +113,7 @@ class BoolQ(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("boolq", "default", trust_remote_code=True)
+            dataset = load_dataset("boolq", "default")
             self.dataset = dataset
 
         # Construct test set

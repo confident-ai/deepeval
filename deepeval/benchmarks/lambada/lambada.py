@@ -114,7 +114,7 @@ class LAMBADA(DeepEvalBaseBenchmark):
             dataset = self.dataset
         else:
             dataset = load_dataset(
-                "EleutherAI/lambada_openai", "default", trust_remote_code=True
+                "EleutherAI/lambada_openai", "default"
             )
             self.dataset = dataset
 

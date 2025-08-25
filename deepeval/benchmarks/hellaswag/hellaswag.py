@@ -253,7 +253,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("Rowan/hellaswag", trust_remote_code=True)
+            dataset = load_dataset("Rowan/hellaswag")
             self.dataset = dataset
 
         # If dataset has not been previously loaded, construct
