@@ -44,7 +44,8 @@ JSON:
 You should first extract statements found in the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement.
 The 'verdict' key should STRICTLY be either 'yes' or 'no', and states whether the statement is relevant to the input.
 Provide a 'reason' ONLY IF verdict is no. You MUST quote the irrelevant parts of the statement to back up your reason.
-
+If provided context contains no actual content or statements then: give \"no\" as a \"verdict\",
+put context into \"statement\", and \"No statements found in provided context.\" into \"reason\".
 **
 IMPORTANT: Please make sure to only return in JSON format.
 Example Context: "Einstein won the Nobel Prize for his discovery of the photoelectric effect. He won the Nobel Prize in 1968. There was a cat."
