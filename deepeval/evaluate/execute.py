@@ -1699,6 +1699,8 @@ def execute_agentic_test_cases_from_loop(
         yield from evaluate_test_cases()
 
     local_trace_manager.evaluating = False
+    local_trace_manager.traces_to_evaluate_order = []
+    local_trace_manager.traces_to_evaluate = []
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -1811,7 +1813,7 @@ def a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
-                    trace_metrics=metrics,
+                    trace_metrics=trace_metrics,
                     verbose_mode=display_config.verbose_mode,
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,

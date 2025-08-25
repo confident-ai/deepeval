@@ -1,17 +1,25 @@
 import pytest
+import asyncio
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate.configs import AsyncConfig, ErrorConfig
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric
 from deepeval.evaluate import evaluate
-from deepeval.tracing import observe, update_current_trace
+from deepeval.tracing import observe, update_current_trace, trace_manager
 
 
 @observe()
 def llm_app(input: str) -> str:
     mock_output = f"I can't answer that question: {input}"
 
+    update_current_trace(input=input, output=mock_output)
+    return mock_output
+
+
+@observe()
+async def a_llm_app(input: str) -> str:
+    mock_output = f"I can't answer that question: {input}"
     update_current_trace(input=input, output=mock_output)
     return mock_output
 
@@ -68,6 +76,25 @@ class TestEvaluate:
 
 class TestEvalsIterator:
 
+    def test_async_evals_iterator(self):
+        goldens = [
+            Golden(
+                input="What is the capital of France?",
+                retrieval_context=["France is the capital of France"],
+            ),
+            Golden(
+                input="What is the capital of Germany?",
+            ),
+        ]
+        dataset = EvaluationDataset(goldens=goldens)
+        for golden in dataset.evals_iterator(
+            metrics=[AnswerRelevancyMetric()],
+            async_config=AsyncConfig(run_async=True),
+        ):
+            task = asyncio.create_task(a_llm_app(golden.input))
+            dataset.evaluate(task)
+        assert True
+
     def test_evals_iterator(self):
         goldens = [
             Golden(
@@ -80,23 +107,9 @@ class TestEvalsIterator:
         ]
 
         dataset = EvaluationDataset(goldens=goldens)
-        for golden in dataset.evals_iterator():
-            llm_app(golden.input)
-
-        assert True
-        goldens = [
-            Golden(
-                input="What is the capital of France?",
-                retrieval_context=["France is the capital of France"],
-            ),
-            Golden(
-                input="What is the capital of Germany?",
-            ),
-        ]
-
-        dataset = EvaluationDataset(goldens=goldens)
         for golden in dataset.evals_iterator(
-            async_config=AsyncConfig(run_async=False)
+            metrics=[AnswerRelevancyMetric()],
+            async_config=AsyncConfig(run_async=False),
         ):
             llm_app(golden.input)
 
@@ -115,7 +128,8 @@ class TestEvalsIterator:
 
         dataset = EvaluationDataset(goldens=goldens)
         for golden in dataset.evals_iterator(
-            error_config=ErrorConfig(skip_on_missing_params=True)
+            metrics=[FaithfulnessMetric()],
+            error_config=ErrorConfig(skip_on_missing_params=True),
         ):
             llm_app(golden.input)
 
@@ -136,6 +150,7 @@ class TestEvalsIterator:
 
         with pytest.raises(MissingTestCaseParamsError):
             for golden in dataset.evals_iterator(
-                error_config=ErrorConfig(skip_on_missing_params=False)
+                metrics=[FaithfulnessMetric()],
+                error_config=ErrorConfig(skip_on_missing_params=False),
             ):
                 llm_app(golden.input)
