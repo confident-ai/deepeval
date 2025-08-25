@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional
 from collections import defaultdict
 import typing
 import json
-import os
 
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
@@ -157,10 +156,6 @@ class ConfidentSpanExporter(SpanExporter):
                         pass
 
                 if base_span_wrapper.trace_metadata and isinstance(
-                    base_span_wrapper.trace_metadata, dict
-                ):
-                    current_trace.metadata = base_span_wrapper.trace_metadata
-                elif base_span_wrapper.trace_metadata and isinstance(
                     base_span_wrapper.trace_metadata, str
                 ):
                     try:
@@ -264,6 +259,7 @@ class ConfidentSpanExporter(SpanExporter):
         span_output = span.attributes.get("confident.span.output")
         span_name = span.attributes.get("confident.span.name")
 
+        raw_span_feedback = span.attributes.get("confident.span.feedback")
         raw_span_metric_collection = span.attributes.get(
             "confident.span.metric_collection"
         )
@@ -327,6 +323,7 @@ class ConfidentSpanExporter(SpanExporter):
         span_context = self._parse_list_of_strings(raw_span_context)
         span_tools_called = self._parse_list_of_tools(raw_span_tools_called)
         span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
+        span_feedback = self._parse_base_model(raw_span_feedback, Feedback)
         span_metadata = self._parse_json_string(raw_span_metadata)
         span_metric_collection = self._parse_string(raw_span_metric_collection)
 
@@ -355,6 +352,8 @@ class ConfidentSpanExporter(SpanExporter):
             base_span.error = span_error
         if span_metric_collection:
             base_span.metric_collection = span_metric_collection
+        if span_feedback:
+            base_span.feedback = span_feedback
         if span_retrieval_context:
             base_span.retrieval_context = span_retrieval_context
         if span_context:
