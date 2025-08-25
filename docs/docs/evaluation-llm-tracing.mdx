@@ -279,21 +279,8 @@ Throughout this documentation, you may notice references to features we didn't c
 
 For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
 
-- Specifying a span `span` (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
+- Specifying a span type (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
 - This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
 - Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
 To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
-
-### Verbose logs
-
-If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you will see logs appearing in your console. These logs are intended for debugging and help users using Confident AI alongside `deepeval` verify that their LLM application is correctly set up for monitoring during development.
-
-If you're not using Confident AI, you can safely ignore these logs — they won't affect anything, introduce any latency, block any process, etc. To disable them entirely, set the following environment variables:
-
-```bash
-CONFIDENT_TRACE_VERBOSE="NO"
-CONFIDENT_TRACE_FLUSH="NO"
-```
-
-If you're using Confident AI, you may still want to set these environment variables in production once you've verified LLM tracing is working correctly for you.

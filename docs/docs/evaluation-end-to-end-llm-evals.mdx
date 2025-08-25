@@ -18,9 +18,81 @@ If you're logged into Confident AI, you'll also receive a fully sharable LLM tes
 ```bash
 deepeval login
 ```
-:::
+<details>
+<summary><strong>When should you run End-to-End evaluations?</strong></summary>
 
-## What Are End-to-End Evals
+For simple LLM applications like basic RAG pipelines with "flat" architectures
+that can be represented by a single <code>LLMTestCase</code>, end-to-end
+evaluation is ideal. Common use cases that are suitable for end-to-end
+evaluation include (not inclusive):
+
+- RAG QA
+- PDF extraction
+- Writing assitants
+- Summarization
+- etc.
+
+You'll notice that use cases with simplier architectures are more suited for end-to-end evaluation. However, if your system is an extremely complex agentic workflow, you might also find end-to-end evaluation more suitable as you'll might conclude that that component-level evaluation gives you too much noise in its evaluation results.
+
+Most of what you saw in DeepEval's <a href="/docs/getting-started">quickstart</a> is end-to-end evaluation!
+
+</details>
+
+## Prerequisites
+
+### Select metrics
+
+You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for your use case, but the general rule of thumb is to include no more than 5 metrics, with 2-3 system specific, generic metrics and 1-2 use case specific, custom metrics. If you're unsure, feel free to ask the team and get some recommendations [in discord.](https://discord.com/invite/a3K9c8GRGt)
+
+### Setup LLM application
+
+You'll need to setup your LLM application to return the test case parameters required by the metrics you've chosen. Alternatively, [setup LLM tracing](/docs/evaluation-llm-tracing) to avoid making changes to your LLM app.
+
+<details>
+  <summary>Guidelines to set up your LLM application</summary>
+
+You'll need to make sure your application returns all fields required by your selected metrics, in order to create a valid end-to-end `LLMTestCase`. For example, if you’re using `AnswerRelevancyMetric` and `FaithfulnessMetric`, your application must return:
+
+- `input`
+- `actual_output`
+- `retrieval_context`
+
+because both metrics require `input` and `actual_output`, and `FaithfulnessMetric` also requires `retrieval_context`.
+
+If you cannot make changes to your LLM app, you should <a href="/docs/evaluation-llm-tracing">set up tracing</a>, which also allows you to run and debug end-to-end evaluations on Confident AI.
+
+</details>
+
+We'll be using this LLM application in this example which has a simple, "flat" RAG architecture to demonstrate how to run end-to-end evaluations on it using `deepeval`:
+
+```python title="somewhere.py" showLineNumbers {21}
+from typing import List
+from openai import OpenAI
+
+client = OpenAI()
+
+def your_llm_app(input: str):
+    def retriever(input: str):
+        return ["Hardcoded text chunks from your vector database"]
+
+    def generator(input: str, retrieved_chunks: List[str]):
+        res = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Use the provided context to answer the question."},
+                {"role": "user", "content": "\n\n".join(retrieved_chunks) + "\n\nQuestion: " + input}
+            ]
+        ).choices[0].message.content
+        return res
+
+    retrieval_context = retriever(input)
+    return generator(input, retrieval_context), retrieval_context
+
+
+print(your_llm_app("How are you?"))
+```
+
+## Run End-to-End Evals
 
 Running an end-to-end LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. You would typically:
 
@@ -46,209 +118,15 @@ You can run end-to-end LLM evaluations in either:
 
 Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](http://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports)
 
-<details>
-<summary><strong>When should you run End-to-End evaluations?</strong></summary>
-
-For simple LLM applications like basic RAG pipelines with "flat" architectures
-that can be represented by a single <code>LLMTestCase</code>, end-to-end
-evaluation is ideal. Common use cases that are suitable for end-to-end
-evaluation include (not inclusive):
-
-- RAG QA
-- PDF extraction
-- Writing assitants
-- Summarization
-- etc.
-
-You'll notice that use cases with simplier architectures are more suited for end-to-end evaluation. However, if your system is an extremely complex agentic workflow, you might also find end-to-end evaluation more suitable as you'll might conclude that that component-level evaluation gives you too much noise in its evaluation results.
-
-Most of what you saw in DeepEval's <a href="/docs/getting-started">quickstart</a> is end-to-end evaluation!
-
-</details>
-
-## Setup Your Testing Environment
-
-<Timeline>
-<TimelineItem title="Select metrics">
-
-When it comes to selecting metrics for your application, we recommend choosing no more than 5 metrics, comprising of:
-
-- (2 - 3) **Generic metrics** for your application type. (_e.g. Agents, RAG, Chabot_)
-- (1 - 2) **Custom metrics** for your specific use case.
-
-You can read our [metrics section](/docs/metrics-introduction) to learn about the 40+ metrics we offer.  Or come to [our discord](https://discord.com/invite/a3K9c8GRGt) and get some tailored recommendations from our team.
-
-</TimelineItem>
-<TimelineItem title="Create test cases after execution">
-
-You need to create your test cases with `input`, `actual_output`, `retrieval_context` and `tools_called` as per your application's use case after the complete excution.
-
-<Tabs>
-<TabItem value="openai" label="OpenAI">
-
-```python {2,20-21}
-from openai import OpenAI
-from deepeval.test_case import LLMTestCase
-
-client = OpenAI()
-
-def llm_app(input_text: str) -> str:
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a cat. Your name is Neko."},
-            {"role": "user", "content": input_text}
-        ]
-    )
-    return response.choices[0].message.content
-
-input_text = input("Enter your input here: ")
-output = llm_app(input_text)
-
-test_case = LLMTestCase(
-  input=input_text,
-  actual_output=output
-)
-```
-
-</TabItem>
-<TabItem value="anthropic" label="Anthropic">
-
-```python {2,20-21}
-from anthropic import Anthropic
-from deepeval.test_case import LLMTestCase
-
-anthropic = Anthropic()
-
-def llm_app(input_text: str) -> str:
-    response = anthropic.messages.create(
-        model="claude-opus-4-1",
-        system="You are a cat. Your name is Neko.",
-        messages=[
-          {"role": "user", "content": input_text}
-        ],
-    )
-    return response.content.text
-
-input_text = input("Enter your input here: ")
-output = llm_app(input_text)
-
-test_case = LLMTestCase(
-  input=input_text,
-  actual_output=output
-)
-```
-
-</TabItem>
-<TabItem value="gemini" label="Gemini">
-
-```python {3,21-22}
-from google import genai
-from google.genai import types
-from deepeval.test_case import LLMTestCase
-
-client = genai.Client()
-
-def llm_app(input_text: str) -> str:
-    response = client.models.generate_content(
-      model="gemini-2.5-flash",
-      config=types.GenerateContentConfig(
-        system_instruction="You are a cat. Your name is Neko."
-      ),
-      contents=input_text,
-    )
-    return response.text
-
-input_text = input("Enter your input here: ")
-output = llm_app(input_text)
-
-test_case = LLMTestCase(
-  input=input_text,
-  actual_output=output
-)
-```
-
-</TabItem>
-
-<TabItem value="rag" label="RAG">
-
-```python {2,25-28}
-from typing import List
-from deepeval.test_case import LLMTestCase, ToolCall
-
-def lm_app(input_text: str):
-    tools = []
-
-    def retriever(input_text: str):
-        # Your retriever logic
-        return ["Your top k retrieved texts in a list"]
-
-    def generator(input_text: str, retrieved_chunks: List[str]):
-        # Your generator logic
-        # Add tools in ToolCall object format (if any)
-        return "The final answer from your generator in a string"
-
-    retrieved_context = retriever(input)
-    answer = generator(input, retrieved_context)
-
-    return answer, retrieved_context, tools
-
-input_text = input("Enter your input here: ")
-output, retrieved_context, tools = llm_app(input_text)
-
-test_case = LLMTestCase(
-  input=input_text,
-  actual_output=output,
-  retrieval_context=retrieved_context,
-  tools_called=tools
-)
-```
-
-</TabItem>
-</Tabs>
-
-</TimelineItem>
-</Timeline>
-
-You can now use these test cases and metrics to run end-to-end evals.
-
-## Use `evaluate()` in Python scripts
-
-You can do end-to-end evals for both single-turn and multi-turn test cases.
-
-### Single-Turn End-to-End Evals
-
-<Timeline>
-<TimelineItem title="Create a dataset">
-
-A dataset can only be created with a list of goldens. `Golden`s represent a more flexible alternative to test cases in the `deepeval`, and **it is the preferred way to initialize a dataset using goldens**. Unlike test cases, `Golden`s:
-
-- Don't require an `actual_output` when created
-- Store expected results like `expected_output` and `expected_tools`
-- Serve as templates before becoming fully-formed test cases
-
-```python
-from deepeval.dataset import EvaluationDataset, Golden
-
-goldens=[
-    Golden(input="What is your name?"),
-    Golden(input="Choose a number between 1 to 100"),
-    ...
-]
-
-dataset = EvaluationDataset(goldens)
-dataset.push(alias="Your Dataset Name")
-```
-</TimelineItem>
-<TimelineItem title="Run evals using dataset's goldens">
+### Use `evaluate()` in Python scripts
 
 `deepeval` offers an `evaluate()` function that allows you to evaluate end-to-end LLM interactions through a list of test cases and metrics. Each test case will be evaluated by each and every metric you define in `metrics`, and a test case passes only if all `metrics` passes.
 
 <Tabs>
 <TabItem value="python" label="Python">
 
-```python title="main.py" {14}
-from rag_agent import your_llm_app # Replace with your LLM app
+```python title="main.py" showLineNumbers {14}
+from somewhere import your_llm_app # Replace with your LLM app
 
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.test_case import LLMTestCase
@@ -264,15 +142,9 @@ for golden in dataset.goldens:
     dataset.add_test_case(test_case)
 
 # Evaluate end-to-end
-evaluate(
-    test_cases=dataset,
-    metrics=[AnswerRelevancyMetric()],
-    hyperparameters={
-        model="gpt-4.1",
-        system_prompt="..."
-    }
-)
+evaluate(test_cases=dataset.test_case, metrics=[AnswerRelevancyMetric()])
 ```
+
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
@@ -315,277 +187,25 @@ There are **TWO** mandatory and **SIX** optional parameters when calling the `ev
 
 This is exactly the same as `assert_test()` in `deepeval test run`, but in a difference interface.
 
-</TimelineItem>
-</Timeline>
-
-### Multi-Turn End-to-End Evals
-
-
-<Timeline>
-<TimelineItem title="Create dataset of goldens">
-
-Create a `ConversationalGolden` by providing your user description, scenario, and expected outcome, for the conversation you wish to simulate.
-
-```python title="main.py"
-from deepeval.dataset import EvaluationDataset, ConversationalGolden
-
-golden = ConversationalGolden(
-    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
-    expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
-)
-
-dataset = EvaluationDataset(goldens=[golden])
-dataset.push("Multi-Turn Dataset")
-```
-
-</TimelineItem>
-<TimelineItem title="Wrap chatbot in callback">
-
-Define a callback function to generate the **next chatbot response** in a conversation, given the conversation history.
-
-<Tabs groupId="techstack">
-<TabItem value="python" label="Python">
-
-```python title="main.py" showLineNumbers={true}  "
-from deepeval.test_case import Turn
-
-async def model_callback(input: str, turns: List[Turn], thread_id: str) -> Turn:
-    # Replace with your chatbot
-    response = await your_chatbot(input, turns, thread_id)
-    return Turn(role="assistant", content=response)
-```
-
-</TabItem>
-<TabItem value="openai" label="OpenAI">
-
-```python title=main.py showLineNumbers={true} {6}
-from deepeval.test_case import Turn
-from openai import OpenAI
-
-client = OpenAI()
-
-async def model_callback(input: str, turns: List[Turn]) -> str:
-    messages = [
-        {"role": "system", "content": "You are a ticket purchasing assistant"},
-        *[{"role": t.role, "content": t.content} for t in turns],
-        {"role": "user", "content": input},
-    ]
-    response = await client.chat.completions.create(model="gpt-4.1", messages=messages)
-    return Turn(role="assistant", content=response.choices[0].message.content)
-```
-
-</TabItem>
-<TabItem value="langchain" label="LangChain">
-
-```python title=main.py showLineNumbers={true} {11}
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_community.chat_message_histories import ChatMessageHistory
-
-store = {}
-llm = ChatOpenAI(model="gpt-4")
-prompt = ChatPromptTemplate.from_messages([("system", "You are a ticket purchasing assistant."), MessagesPlaceholder(variable_name="history"), ("human", "{input}")])
-chain_with_history = RunnableWithMessageHistory(prompt | llm, lambda session_id: store.setdefault(session_id, ChatMessageHistory()), input_messages_key="input", history_messages_key="history")
-
-async def model_callback(input: str, thread_id: str) -> Turn:
-    response = chain_with_history.invoke(
-        {"input": input},
-        config={"configurable": {"session_id": thread_id}}
-    )
-    return Turn(role="assistant", content=response.content)
-```
-
-</TabItem>
-<TabItem value="llama_index" label="LlamaIndex">
-
-```python title="main.py"  showLineNumbers={true} {9}
-from llama_index.core.storage.chat_store import SimpleChatStore
-from llama_index.llms.openai import OpenAI
-from llama_index.core.chat_engine import SimpleChatEngine
-from llama_index.core.memory import ChatMemoryBuffer
-
-chat_store = SimpleChatStore()
-llm = OpenAI(model="gpt-4")
-
-async def model_callback(input: str, thread_id: str) -> Turn:
-    memory = ChatMemoryBuffer.from_defaults(chat_store=chat_store, chat_store_key=thread_id)
-    chat_engine = SimpleChatEngine.from_defaults(llm=llm, memory=memory)
-    response = chat_engine.chat(input)
-    return Turn(role="assistant", content=response.response)
-```
-
-</TabItem>
-<TabItem value="openai-agents" label="OpenAI Agents">
-
-```python title="main.py" showLineNumbers={true} {6}
-from agents import Agent, Runner, SQLiteSession
-
-sessions = {}
-agent = Agent(name="Test Assistant", instructions="You are a helpful assistant that answers questions concisely.")
-
-async def model_callback(input: str, thread_id: str) -> Turn:
-    if thread_id not in sessions:
-        sessions[thread_id] = SQLiteSession(thread_id)
-    session = sessions[thread_id]
-    result = await Runner.run(agent, input, session=session)
-    return Turn(role="assistant", content=result.final_output)
-```
-
-</TabItem>
-<TabItem value="pydantic" label="Pydantic">
-
-```python title="main.py" showLineNumbers={true} {9}
-from pydantic_ai.messages import ModelRequest, ModelResponse, UserPromptPart, TextPart
-from deepeval.test_case import Turn
-from datetime import datetime
-from pydantic_ai import Agent
-from typing import List
-
-agent = Agent('openai:gpt-4', system_prompt="You are a helpful assistant that answers questions concisely.")
-
-async def model_callback(input: str, turns: List[Turn]) -> Turn:
-    message_history = []
-    for turn in turns:
-        if turn.role == "user":
-            message_history.append(ModelRequest(parts=[UserPromptPart(content=turn.content, timestamp=datetime.now())], kind='request'))
-        elif turn.role == "assistant":
-            message_history.append(ModelResponse(parts=[TextPart(content=turn.content)], model_name='gpt-4', timestamp=datetime.now(), kind='response'))
-    result = await agent.run(input, message_history=message_history)
-    return Turn(role="assistant", content=result.output)
-```
-
-</TabItem>
-</Tabs>
-
-:::info
-Your model callback should accept an `input`, and optionally `turns` and `thread_id`. It should return a `Turn` object.
-:::
-
-</TimelineItem>
-<TimelineItem title="Simulate turns">
-
-Use `deepeval`'s `ConversationSimulator` to simulate turns using goldens in your dataset:
-
-```python title="main.py"
-from deepeval.conversation_simulator import ConversationSimulator
-
-simulator = ConversationSimulator(model_callback=chatbot_callback)
-conversational_test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
-```
-
-Here, we only have 1 test case, but in reality you'll want to simulate from at least 20 goldens.
-
-<details>
-<summary>Click to view an example simulated test case</summary>
-
-Your generated test cases should be populated with simulated `Turn`s, along with the `scenario`, `expected_outcome`, and `user_description` from the conversation golden.
-
-```python
-ConversationalTestCase(
-    scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
-    expected_outcome="Successful purchase of a ticket.",
-    user_description="Andy Byron is the CEO of Astronomer.",
-    turns=[
-        Turn(role="user", content="Hello, how are you?"),
-        Turn(role="assistant", content="I'm doing well, thank you!"),
-        Turn(role="user", content="How can I help you today?"),
-        Turn(role="assistant", content="I'd like to buy a ticket to a Coldplay concert."),
-    ]
-)
-```
-
-</details>
-
-</TimelineItem>
-
-<TimelineItem title="Run an evaluation">
-
-Run an evaluation like how you learnt in the previous section:
-
-```python title="main.py"
-from deepeval.metrics import TurnRelevancyMetric
-from deepeval import evaluate
-...
-
-evaluate(
-  conversational_test_cases, 
-  metrics=[TurnRelevancyMetric()],
-  hyperparameters={
-      model="gpt-4.1",
-      system_prompt="..."
-  }
-)
-```
-
-There are **TWO** mandatory and **SIX** optional parameters when calling the `evaluate()` function for **END-TO-END** evaluation:
-
-- `test_cases`: a list of `LLMTestCase`s **OR** `ConversationalTestCase`s, or an `EvaluationDataset`. You cannot evaluate `LLMTestCase`/`MLLMTestCase`s and `ConversationalTestCase`s in the same test run.
-- `metrics`: a list of metrics of type `BaseConversationalMetric`.
-- [Optional] `hyperparameters`: a dict of type `dict[str, Union[str, int, float]]`. You can log any arbitrary hyperparameter associated with this test run to pick the best hyperparameters for your LLM application on Confident AI.
-- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
-- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree of concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
-- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
-- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
-- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
-
-This is exactly the same as `assert_test()` in `deepeval test run`, but in a difference interface.
-
-</TimelineItem>
-</Timeline>
-
-:::tip
-We recommend logging your `hyperparameters` during your evauations as they allow you find the best model configuration for your application. Here's an example of how to do that:
-
-<VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/evaluation:parameter-insights.mp4"
-  confidentUrl="https://documentation.confident-ai.com/docs/llm-evaluation/evaluation-features/parameter-insights"
-  label="Parameter Insights To Find Best Model"
-/>
-
-:::
-
-## Use `deepeval test run` in CI/CD pipelines
-
-You can do end-to-end evals for both single-turn and multi-turn test cases.
-
-### Single-Turn Evals in CI/CD
-
-<Timeline>
-<TimelineItem title="Pull your dataset">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="Your Dataset Name") # replace with your alias
-```
-
-You can use this dataset to iterate over goldens.
-
-</TimelineItem>
-<TimelineItem title="Create your pytest file">
+### Use `deepeval test run` in CI/CD pipelines
 
 ```python title="test_llm_app.py" showLineNumbers {14}
-from rag_agent import your_llm_app # Replace with your LLM app
+from somewhere import your_llm_app # Replace with your LLM app
 import pytest
 
 from deepeval.dataset import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval import assert_test
 
+goldens = [Golden(input="...")]
+
 # Loop through goldens using pytest
 
-@pytest.mark.parametrize("golden",dataset.goldens)
+@pytest.mark.parametrize("golden", goldens)
 def test_llm_app(golden: Golden):
     res, text_chunks = your_llm_app(golden.input)
     test_case = LLMTestCase(input=golden.input, actual_output=res, retrieval_context=text_chunks)
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
-
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
-def hyperparameters():
-    return {"model": "gpt-4.1", "system prompt": "..."}
 ```
 
 Then, run the following command in your CLI:
@@ -599,214 +219,9 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `test_case`: an `LLMTestCase`.
 - `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
-
-
-</TimelineItem>
-<TimelineItem title="Create a YAML file to test on every push">
-
-You just need to create a YAML file now to test your LLM app on every change you make.
-
-```yaml {32-33}
-name: LLM App DeepEval Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install Dependencies
-        run: poetry install --no-root
-
-      - name: Run DeepEval Unit Tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
-        run: poetry run deepeval test run test_llm_app.py
-```
-</TimelineItem>
-</Timeline>
-
-
-### Multi-Turn Evals in CI/CD
-
-<Timeline>
-<TimelineItem title="Pull your dataset">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-dataset.pull(alias="Multi-Turn Dataset") # replace with your alias
-```
-
-You can use this dataset to iterate over goldens.
-
-</TimelineItem>
-<TimelineItem title="Create your pytest file">
-
-```python title="test_llm_app.py" showLineNumbers {14}
-from main import chatbot_callback # Replace with your LLM callback
-import pytest
-
-from deepeval.dataset import Golden
-from deepeval.test_case import ConversationalTestCase
-from deepeval import assert_test
-from deepeval.conversation_simulator import ConversationSimulator
-
-# Loop through goldens using pytest
-
-simulator = ConversationSimulator(model_callback=chatbot_callback)
-conversational_test_cases = simulator.simulate(goldens=dataset.goldens, max_turns=10)
-
-@pytest.mark.parametrize("test_case", conversational_test_cases)
-def test_llm_app(test_case: ConversationalTestCase):
-    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
-
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
-def hyperparameters():
-    return {"model": "gpt-4.1", "system prompt": "..."}
-```
-
-Then, run the following command in your CLI:
-
-```bash
-deepeval test run test_llm_app.py
-```
-
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **END-TO-END** evaluation:
-
-- `test_case`: an `LLMTestCase`.
-- `metrics`: a list of metrics of type `BaseMetric`.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
-
-
-</TimelineItem>
-<TimelineItem title="Create a YAML file to test on every push">
-
-You just need to create a YAML file now to test your LLM app on every change you make.
-
-```yaml {32-33}
-name: LLM App DeepEval Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install Dependencies
-        run: poetry install --no-root
-
-      - name: Run DeepEval Unit Tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
-        run: poetry run deepeval test run test_llm_app.py
-```
-</TimelineItem>
-</Timeline>
-
-:::caution
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://www.confident-ai.com/docs/llm-evaluation/unit-testing-cicd)).
-:::
-
-
-<Timeline>
-<TimelineItem title="Create a YAML file to test on every push">
-
-You just need to create a YAML file now to test your LLM app on every change you make.
-
-```yaml {32-33}
-name: LLM App DeepEval Tests
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install Dependencies
-        run: poetry install --no-root
-
-      - name: Run DeepEval Unit Tests
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
-        run: poetry run deepeval test run test_llm_app.py
-```
-</TimelineItem>
-</Timeline>
-
-:::caution
-The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://www.confident-ai.com/docs/llm-evaluation/unit-testing-cicd)).
-:::
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
 
-:::tip
-We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance overtime like this:
-
-<VideoDisplayer
-  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
-  confidentUrl="/docs/llm-tracing/introduction"
-  label="Trace-Level Evals in Production"
-/>
-
-You can [login to Confident AI here](https://app.confident-ai.com) or run:
-
-```bash
-deepeval login
-```
+:::caution
+The usual `pytest` command would still work but is highly not recommended. `deepeval test run` adds a range of functionalities on top of Pytest for unit-testing LLMs, which is enabled by [8+ optional flags](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run). Users typically include `deepeval test run` as a command in their `.yaml` files for pre-deployment checks in CI/CD pipelines ([example here](https://www.confident-ai.com/docs/llm-evaluation/unit-testing-cicd)).
 :::

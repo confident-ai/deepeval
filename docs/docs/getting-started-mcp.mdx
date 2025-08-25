@@ -9,7 +9,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
-Learn to evaluate model-context-protocal (MCP) based applications using `deepeval`, for both single-turn and multi-turn use cases.
+Learn to evaluate model-context-protocol (MCP) based applications using `deepeval`, for both single-turn and multi-turn use cases.
 
 ## Overview
 
@@ -24,7 +24,7 @@ MCP evaluation is different from other evaluations because you can choose to cre
 ## Prerequisites
 
 - Install `deepeval`
-- A Confident AI API key (recommended). Sign up for one [here.](https://app.confident-ai.com)
+- A Confident AI API key (recommended). Sign up for one [here](https://app.confident-ai.com)
 
 :::info
 Confident AI allows you to view and share your testing reports. Set your API key in the CLI:
@@ -37,7 +37,11 @@ CONFIDENT_API_KEY="confident_us..."
 ## Understanding MCP Evals
 
 **Model Context Protocol (MCP)** is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
-The MCP architecture is composed of three main components — **Client, Host, Server.**
+The MCP architecture is composed of three main components:
+
+- **Host** — The AI application that coordinates and manages one or more MCP clients
+- **Client** — Maintains a one-to-one connection with a server and retrieves context from it for the host to use
+- **Server** — Paired with a single client, providing the context the client passes to the host
 
 ![MCP Architecture Image](https://deepeval-docs.s3.amazonaws.com/mcp-architecture.png)
 
@@ -109,10 +113,9 @@ You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#
 
 You can now create a test case for your MCP application using the above interactions.
 
-```python {1,7-8}
+```python
 from deepeval.test_case import LLMTestCase
 
-# Create test case
 test_case = LLMTestCase(
     input="...", # Your input
     actual_output="..." # Your LLM's final output
@@ -122,7 +125,7 @@ test_case = LLMTestCase(
 )
 ```
 
-The test cases must created after the execution of apllication.
+The test cases must be created after the execution of your application.
 
 :::tip
 You can make your `main()` function return `mcp_servers`, `tools_called`, `resources_called` and `prompts_called`. This helps you import your MCP application anywhere and create test cases easily in different test files.
@@ -154,7 +157,7 @@ evaluate([test_case], [mcp_use_metric])
 
 - When you call `evaluate()`, `deepeval` runs all your `metrics` against all `test_cases`
 - All `metrics` outputs a score between `0-1`, with a `threshold` defaulted to `0.5`
-- You used the `MCPUseMetric` to evaluate your MCP application on its primitive usage and argument correctness.
+- You used the `MCPUseMetric` to evaluate your MCP application on its primitive usage and argument correctness
 
 </TimelineItem>
 
@@ -238,7 +241,7 @@ convo_test_case = ConversationalTestCase(
 )
 ```
 
-The test cases must created after the execution of apllication.
+The test cases must be created after the execution of the application.
 
 :::tip
 You can make your `main()` function return `turns` and `mcp_servers`. This helps you import your MCP application anywhere and create test cases easily in different test files.
@@ -271,7 +274,7 @@ evaluate([convo_test_case], [mcp_use_metric, mcp_task_completion])
 
 - When you call `evaluate()`, `deepeval` runs all your `metrics` against all `test_cases`
 - All `metrics` outputs a score between `0-1`, with a `threshold` defaulted to `0.5`
-- You used the `MultiTurnMCPUseMetric` and `MCPTaskCompletionMetric` for testing your MCP application.
+- You used the `MultiTurnMCPUseMetric` and `MCPTaskCompletionMetric` for testing your MCP application
 
 </TimelineItem>
 
@@ -297,9 +300,9 @@ deepeval view
 
 Now that you have run your first MCP eval, you should:
 
-1. **Customize your metrics**: You can change the threshold of your metric to be more strict to your use-case.
-2. **Setup Tracing**: If you created your own custom MCP server, you can [setup tracing](https://documentation.confident-ai.com/docs/llm-tracing/tracing-features/span-types) on your tool definitons.
-3. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
+1. **Customize your metrics**: You can change the threshold of your metrics to be more strict to your use-case.
+2. **Prepare a dataset**: If you don't have one, [generate one](/docs/synthesizer-introduction) as a starting point to store your inputs as goldens.
+3. **Setup Tracing**: If you created your own custom MCP server, you can [setup tracing](https://documentation.confident-ai.com/docs/llm-tracing/tracing-features/span-types) on your tool definitons.
 
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
