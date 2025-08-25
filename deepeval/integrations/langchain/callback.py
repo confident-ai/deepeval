@@ -140,7 +140,9 @@ class CallbackHandler(BaseCallbackHandler):
         trace_manager.end_trace(self.active_trace_id)
         self.active_trace_id = None
 
-    def prepare_span_metric_test_case(self, metric: TaskCompletionMetric, span: BaseSpan):
+    def prepare_span_metric_test_case(
+        self, metric: TaskCompletionMetric, span: BaseSpan
+    ):
         task_completion_metric = TaskCompletionMetric(
             threshold=metric.threshold,
             model=metric.model,
@@ -151,8 +153,12 @@ class CallbackHandler(BaseCallbackHandler):
         )
         task_completion_metric.evaluation_cost = 0
         _llm_test_case = LLMTestCase(input="None", actual_output="None")
-        _llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
-        task, _ = task_completion_metric._extract_task_and_outcome(_llm_test_case)
+        _llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(
+            span
+        )
+        task, _ = task_completion_metric._extract_task_and_outcome(
+            _llm_test_case
+        )
         task_completion_metric.task = task
         span.metrics = [task_completion_metric]
 

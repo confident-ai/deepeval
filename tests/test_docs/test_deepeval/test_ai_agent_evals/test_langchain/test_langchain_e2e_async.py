@@ -38,7 +38,11 @@ agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 from deepeval.dataset import EvaluationDataset, Golden
 
 dataset = EvaluationDataset(
-    goldens=[Golden(input="What is 3 * 12?"), Golden(input="What is 8 * 6?"), Golden(input="What is 10 * 10?")]
+    goldens=[
+        Golden(input="What is 3 * 12?"),
+        Golden(input="What is 8 * 6?"),
+        Golden(input="What is 10 * 10?"),
+    ]
 )
 for golden in dataset.evals_iterator():
     task = asyncio.create_task(
