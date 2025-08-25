@@ -6,18 +6,16 @@ sidebar_label: End-to-End Evals
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import Admonition from "@theme/Admonition";
 
 End-to-end evaluation assesses the "observable" inputs and outputs of your LLM application - it is what users see, and treats your LLM application as a black-box.
 
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/end-to-end-evals:simple-system.png)
+![ok](./images/docs:end-to-end-llm-evals.png)
 
 If you're logged into Confident AI, you'll also receive a fully sharable LLM testing report on the cloud. Run this in the CLI:
 
 ```bash
 deepeval login
 ```
-
 <details>
 <summary><strong>When should you run End-to-End evaluations?</strong></summary>
 
@@ -144,6 +142,7 @@ for golden in dataset.goldens:
 # Evaluate end-to-end
 evaluate(test_cases=dataset.test_case, metrics=[AnswerRelevancyMetric()])
 ```
+
 
 </TabItem>
 <TabItem value="openai" label="OpenAI">
