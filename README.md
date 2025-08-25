@@ -375,6 +375,20 @@ You should see a link displayed in the CLI once the test has finished running. P
 
 <br />
 
+## Configuration
+
+### Environment variables via .env files
+
+Using `.env.local` or `.env` is optional. If they are missing, DeepEval uses your existing environment variables. When present, dotenv environment variables are auto-loaded at import time (unless you set `DEEPEVAL_DISABLE_DOTENV=1`).
+
+**Precedence:** process env -> `.env.local` -> `.env`
+
+```bash
+cp .env.example .env.local
+# then edit .env.local (ignored by git)
+
+<br />
+
 # Contributing
 
 Please read [CONTRIBUTING.md](https://github.com/confident-ai/deepeval/blob/main/CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
