@@ -15,11 +15,15 @@ from typing import (
     Iterator,
 )
 from copy import deepcopy
-import inspect
 import asyncio
 import time
-import ast
 
+from deepeval.evaluate.configs import (
+    ErrorConfig,
+    DisplayConfig,
+    CacheConfig,
+    AsyncConfig,
+)
 from deepeval.tracing.tracing import (
     Observer,
     trace_manager,
@@ -29,8 +33,6 @@ from deepeval.tracing.tracing import (
     LlmSpan,
     RetrieverSpan,
     ToolSpan,
-    perf_counter_to_datetime,
-    to_zod_compatible_iso,
 )
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.api import (
@@ -74,6 +76,8 @@ from deepeval.test_run.cache import (
 )
 from deepeval.evaluate.types import TestResult
 from deepeval.evaluate.utils import (
+    count_observe_decorators_in_module,
+    create_api_trace,
     create_metric_data,
     create_test_result,
     create_api_test_case,
@@ -82,8 +86,12 @@ from deepeval.evaluate.utils import (
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import openai_test_case_pairs
-from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.tracing.types import TestCaseMetricPair
+
+
+###########################################
+### E2E Evals #############################
+###########################################
 
 
 def execute_test_cases(
@@ -95,28 +103,27 @@ def execute_test_cases(
         List[BaseConversationalMetric],
         List[BaseMultimodalMetric],
     ],
-    skip_on_missing_params: bool,
-    ignore_errors: bool,
-    use_cache: bool,
-    show_indicator: bool,
-    save_to_disk: bool = False,
-    verbose_mode: Optional[bool] = None,
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
     identifier: Optional[str] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
 ) -> List[TestResult]:
-    global_test_run_cache_manager.disable_write_cache = save_to_disk == False
+    global_test_run_cache_manager.disable_write_cache = (
+        cache_config.write_cache == False
+    )
 
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
 
-    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.save_to_disk = cache_config.write_cache
     test_run = test_run_manager.get_test_run(identifier=identifier)
 
-    if verbose_mode is not None:
+    if display_config.verbose_mode is not None:
         for metric in metrics:
-            metric.verbose_mode = verbose_mode
+            metric.verbose_mode = display_config.verbose_mode
 
     conversational_metrics: List[BaseConversationalMetric] = []
     llm_metrics: List[BaseMetric] = []
@@ -137,7 +144,9 @@ def execute_test_cases(
     ):
         llm_test_case_count = -1
         conversational_test_case_count = -1
-        show_metric_indicator = show_indicator and not _use_bar_indicator
+        show_metric_indicator = (
+            display_config.show_indicator and not _use_bar_indicator
+        )
         for i, test_case in enumerate(test_cases):
             pbar_test_case_id = add_pbar(
                 progress,
@@ -154,7 +163,7 @@ def execute_test_cases(
 
                     llm_test_case_count += 1
                     cached_test_case = None
-                    if use_cache:
+                    if cache_config.use_cache:
                         cached_test_case = (
                             global_test_run_cache_manager.get_cached_test_case(
                                 test_case, test_run.hyperparameters
@@ -180,44 +189,15 @@ def execute_test_cases(
 
                         if metric_data is None:
                             read_all_metrics_from_cache = False
-                            try:
-                                metric.measure(
-                                    test_case,
-                                    _show_indicator=show_metric_indicator,
-                                )
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except TypeError:
-                                try:
-                                    metric.measure(test_case)
-                                except MissingTestCaseParamsError as e:
-                                    if skip_on_missing_params:
-                                        continue
-                                    else:
-                                        if ignore_errors:
-                                            metric.error = str(e)
-                                            metric.success = False
-                                        else:
-                                            raise
-                                except Exception as e:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
+                            res = _execute_metric(
+                                metric=metric,
+                                test_case=test_case,
+                                show_metric_indicator=show_metric_indicator,
+                                in_component=False,
+                                error_config=error_config,
+                            )
+                            if res == "skip":
+                                continue
                             metric_data = create_metric_data(metric)
 
                         # here, we will check for an additional property on the flattened test cases to see if updating is necessary
@@ -269,44 +249,16 @@ def execute_test_cases(
                     )
                     test_start_time = time.perf_counter()
                     for metric in mllm_metrics:
-                        try:
-                            metric.measure(
-                                test_case,
-                                _show_indicator=show_metric_indicator,
-                            )
-                        except MissingTestCaseParamsError as e:
-                            if skip_on_missing_params:
-                                continue
-                            else:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except TypeError:
-                            try:
-                                metric.measure(test_case)
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)
-                                metric.success = False
-                            else:
-                                raise
+                        res = _execute_metric(
+                            metric=metric,
+                            test_case=test_case,
+                            show_metric_indicator=show_metric_indicator,
+                            in_component=False,
+                            error_config=error_config,
+                        )
+                        if res == "skip":
+                            continue
+
                         metric_data = create_metric_data(metric)
                         api_test_case.update_metric_data(metric_data)
                         update_pbar(progress, pbar_test_case_id)
@@ -334,44 +286,16 @@ def execute_test_cases(
 
                     test_start_time = time.perf_counter()
                     for metric in metrics:
-                        try:
-                            metric.measure(
-                                test_case,
-                                _show_indicator=show_metric_indicator,
-                            )
-                        except MissingTestCaseParamsError as e:
-                            if skip_on_missing_params:
-                                continue
-                            else:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except TypeError:
-                            try:
-                                metric.measure(test_case)
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)
-                                metric.success = False
-                            else:
-                                raise
+                        res = _execute_metric(
+                            metric=metric,
+                            test_case=test_case,
+                            show_metric_indicator=show_metric_indicator,
+                            in_component=False,
+                            error_config=error_config,
+                        )
+                        if res == "skip":
+                            continue
+
                         metric_data = create_metric_data(metric)
                         api_test_case.update_metric_data(metric_data)
                         update_pbar(progress, pbar_test_case_id)
@@ -387,7 +311,7 @@ def execute_test_cases(
                 test_results.append(test_result)
                 update_pbar(progress, pbar_id)
 
-    if show_indicator and _use_bar_indicator:
+    if display_config.show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
             BarColumn(bar_width=60),
@@ -417,35 +341,33 @@ async def a_execute_test_cases(
         List[BaseConversationalMetric],
         List[BaseMultimodalMetric],
     ],
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    use_cache: bool,
-    show_indicator: bool,
-    throttle_value: int,
-    max_concurrent: int,
-    save_to_disk: bool = False,
-    verbose_mode: Optional[bool] = None,
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    async_config: Optional[AsyncConfig] = AsyncConfig(),
     identifier: Optional[str] = None,
     test_run_manager: Optional[TestRunManager] = None,
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
 ) -> List[TestResult]:
-    semaphore = asyncio.Semaphore(max_concurrent)
+    semaphore = asyncio.Semaphore(async_config.max_concurrent)
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
             return await func(*args, **kwargs)
 
-    global_test_run_cache_manager.disable_write_cache = save_to_disk == False
+    global_test_run_cache_manager.disable_write_cache = (
+        cache_config.write_cache == False
+    )
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
 
-    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.save_to_disk = cache_config.write_cache
     test_run = test_run_manager.get_test_run(identifier=identifier)
 
-    if verbose_mode is not None:
+    if display_config.verbose_mode is not None:
         for metric in metrics:
-            metric.verbose_mode = verbose_mode
+            metric.verbose_mode = display_config.verbose_mode
 
     llm_metrics: List[BaseMetric] = []
     mllm_metrics: List[BaseMultimodalMetric] = []
@@ -464,7 +386,7 @@ async def a_execute_test_cases(
     test_results: List[Union[TestResult, MLLMTestCase]] = []
     tasks = []
 
-    if show_indicator and _use_bar_indicator:
+    if display_config.show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
             BarColumn(bar_width=60),
@@ -490,17 +412,17 @@ async def a_execute_test_cases(
                             llm_metrics
                         )
                         task = execute_with_semaphore(
-                            func=a_execute_llm_test_cases,
+                            func=_a_execute_llm_test_cases,
                             metrics=copied_llm_metrics,
                             test_case=test_case,
                             test_run_manager=test_run_manager,
                             test_results=test_results,
                             count=llm_test_case_counter,
                             test_run=test_run,
-                            ignore_errors=ignore_errors,
-                            skip_on_missing_params=skip_on_missing_params,
-                            use_cache=use_cache,
-                            show_indicator=show_indicator,
+                            ignore_errors=error_config.ignore_errors,
+                            skip_on_missing_params=error_config.skip_on_missing_params,
+                            use_cache=cache_config.use_cache,
+                            show_indicator=display_config.show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
                             progress=progress,
@@ -514,15 +436,15 @@ async def a_execute_test_cases(
                             BaseMultimodalMetric
                         ] = copy_metrics(mllm_metrics)
                         task = execute_with_semaphore(
-                            func=a_execute_mllm_test_cases,
+                            func=_a_execute_mllm_test_cases,
                             metrics=copied_multimodal_metrics,
                             test_case=test_case,
                             test_run_manager=test_run_manager,
                             test_results=test_results,
                             count=mllm_test_case_counter,
-                            ignore_errors=ignore_errors,
-                            skip_on_missing_params=skip_on_missing_params,
-                            show_indicator=show_indicator,
+                            ignore_errors=error_config.ignore_errors,
+                            skip_on_missing_params=error_config.skip_on_missing_params,
+                            show_indicator=display_config.show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
                             progress=progress,
@@ -534,15 +456,15 @@ async def a_execute_test_cases(
                         conversational_test_case_counter += 1
 
                         task = execute_with_semaphore(
-                            func=a_execute_conversational_test_cases,
+                            func=_a_execute_conversational_test_cases,
                             metrics=copy_metrics(metrics),
                             test_case=test_case,
                             test_run_manager=test_run_manager,
                             test_results=test_results,
                             count=conversational_test_case_counter,
-                            ignore_errors=ignore_errors,
-                            skip_on_missing_params=skip_on_missing_params,
-                            show_indicator=show_indicator,
+                            ignore_errors=error_config.ignore_errors,
+                            skip_on_missing_params=error_config.skip_on_missing_params,
+                            show_indicator=display_config.show_indicator,
                             _use_bar_indicator=_use_bar_indicator,
                             _is_assert_test=_is_assert_test,
                             progress=progress,
@@ -550,7 +472,7 @@ async def a_execute_test_cases(
                         )
                         tasks.append(asyncio.create_task(task))
 
-                    await asyncio.sleep(throttle_value)
+                    await asyncio.sleep(async_config.throttle_value)
             await asyncio.gather(*tasks)
     else:
         for test_case in test_cases:
@@ -564,19 +486,19 @@ async def a_execute_test_cases(
                         llm_metrics
                     )
                     task = execute_with_semaphore(
-                        func=a_execute_llm_test_cases,
+                        func=_a_execute_llm_test_cases,
                         metrics=copied_llm_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
                         test_results=test_results,
                         count=llm_test_case_counter,
                         test_run=test_run,
-                        ignore_errors=ignore_errors,
-                        skip_on_missing_params=skip_on_missing_params,
-                        use_cache=use_cache,
+                        ignore_errors=error_config.ignore_errors,
+                        skip_on_missing_params=error_config.skip_on_missing_params,
+                        use_cache=cache_config.use_cache,
                         _use_bar_indicator=_use_bar_indicator,
                         _is_assert_test=_is_assert_test,
-                        show_indicator=show_indicator,
+                        show_indicator=display_config.show_indicator,
                     )
                     tasks.append(asyncio.create_task((task)))
 
@@ -589,17 +511,17 @@ async def a_execute_test_cases(
                         conversational_metrics
                     )
                     task = execute_with_semaphore(
-                        func=a_execute_conversational_test_cases,
+                        func=_a_execute_conversational_test_cases,
                         metrics=copied_conversational_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
                         test_results=test_results,
                         count=conversational_test_case_counter,
-                        ignore_errors=ignore_errors,
-                        skip_on_missing_params=skip_on_missing_params,
+                        ignore_errors=error_config.ignore_errors,
+                        skip_on_missing_params=error_config.skip_on_missing_params,
                         _use_bar_indicator=_use_bar_indicator,
                         _is_assert_test=_is_assert_test,
-                        show_indicator=show_indicator,
+                        show_indicator=display_config.show_indicator,
                     )
                     tasks.append(asyncio.create_task((task)))
 
@@ -609,27 +531,27 @@ async def a_execute_test_cases(
                         copy_metrics(mllm_metrics)
                     )
                     task = execute_with_semaphore(
-                        func=a_execute_mllm_test_cases,
+                        func=_a_execute_mllm_test_cases,
                         metrics=copied_multimodal_metrics,
                         test_case=test_case,
                         test_run_manager=test_run_manager,
                         test_results=test_results,
                         count=mllm_test_case_counter,
-                        ignore_errors=ignore_errors,
-                        skip_on_missing_params=skip_on_missing_params,
+                        ignore_errors=error_config.ignore_errors,
+                        skip_on_missing_params=error_config.skip_on_missing_params,
                         _use_bar_indicator=_use_bar_indicator,
                         _is_assert_test=_is_assert_test,
-                        show_indicator=show_indicator,
+                        show_indicator=display_config.show_indicator,
                     )
                     tasks.append(asyncio.create_task(task))
 
-                await asyncio.sleep(throttle_value)
+                await asyncio.sleep(async_config.throttle_value)
         await asyncio.gather(*tasks)
 
     return test_results
 
 
-async def a_execute_llm_test_cases(
+async def _a_execute_llm_test_cases(
     metrics: List[BaseMetric],
     test_case: LLMTestCase,
     test_run_manager: TestRunManager,
@@ -728,7 +650,7 @@ async def a_execute_llm_test_cases(
     update_pbar(progress, pbar_id)
 
 
-async def a_execute_mllm_test_cases(
+async def _a_execute_mllm_test_cases(
     metrics: List[BaseMultimodalMetric],
     test_case: MLLMTestCase,
     test_run_manager: TestRunManager,
@@ -784,7 +706,7 @@ async def a_execute_mllm_test_cases(
     update_pbar(progress, pbar_id)
 
 
-async def a_execute_conversational_test_cases(
+async def _a_execute_conversational_test_cases(
     metrics: List[
         Union[BaseMetric, BaseMultimodalMetric, BaseConversationalMetric]
     ],
@@ -846,7 +768,7 @@ async def a_execute_conversational_test_cases(
 
 
 ###########################################
-### Component-Level Evals
+### Component-Level Evals #################
 ###########################################
 
 
@@ -855,11 +777,9 @@ def execute_agentic_test_cases(
     observed_callback: Union[
         Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
-    verbose_mode: Optional[bool],
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    show_indicator: bool,
-    save_to_disk: bool = False,
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
@@ -867,7 +787,7 @@ def execute_agentic_test_cases(
 
     test_run_manager = global_test_run_manager
 
-    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.save_to_disk = cache_config.write_cache
     test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
@@ -879,7 +799,9 @@ def execute_agentic_test_cases(
         pbar_id: Optional[int] = None,
     ):
         count = 0
-        show_metric_indicator = show_indicator and not _use_bar_indicator
+        show_metric_indicator = (
+            display_config.show_indicator and not _use_bar_indicator
+        )
 
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -910,36 +832,7 @@ def execute_agentic_test_cases(
                 update_pbar(progress, pbar_id)
 
                 # Create empty trace api for llm api test case
-                trace_api = TraceApi(
-                    uuid=current_trace.uuid,
-                    baseSpans=[],
-                    agentSpans=[],
-                    llmSpans=[],
-                    retrieverSpans=[],
-                    toolSpans=[],
-                    startTime=(
-                        to_zod_compatible_iso(
-                            perf_counter_to_datetime(current_trace.start_time)
-                        )
-                        if current_trace.start_time
-                        else None
-                    ),
-                    endTime=(
-                        to_zod_compatible_iso(
-                            perf_counter_to_datetime(current_trace.end_time)
-                        )
-                        if current_trace.end_time
-                        else None
-                    ),
-                    input=current_trace.input,
-                    output=current_trace.output,
-                    expected_output=current_trace.expected_output,
-                    context=current_trace.context,
-                    retrieval_context=current_trace.retrieval_context,
-                    tools_called=current_trace.tools_called,
-                    expected_tools=current_trace.expected_tools,
-                    metadata=golden.additional_metadata,
-                )
+                trace_api = create_api_trace(current_trace, golden)
 
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
@@ -1017,9 +910,7 @@ def execute_agentic_test_cases(
                     # add trace if task completion
                     if has_task_completion:
                         if llm_test_case is None:
-                            llm_test_case = LLMTestCase(
-                                input="None", actual_output="None"
-                            )
+                            llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(span)
                         )
@@ -1029,53 +920,21 @@ def execute_agentic_test_cases(
                     for metric in metrics:
                         metric.skipped = False
                         metric.error = None
-                        if verbose_mode is not None:
-                            metric.verbose_mode = verbose_mode
+                        if display_config.verbose_mode is not None:
+                            metric.verbose_mode = display_config.verbose_mode
 
                     # Metric calculation
                     for metric in metrics:
                         metric_data = None
-                        try:
-                            metric.measure(
-                                llm_test_case,
-                                _show_indicator=show_metric_indicator,
-                                _in_component=True,
-                            )
-                        except MissingTestCaseParamsError as e:
-                            if skip_on_missing_params:
-                                continue
-                            else:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except TypeError:
-                            try:
-                                metric.measure(
-                                    llm_test_case, _in_component=True
-                                )
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)
-                                metric.success = False
-                            else:
-                                raise
+                        res = _execute_metric(
+                            metric=metric,
+                            test_case=llm_test_case,
+                            show_metric_indicator=show_metric_indicator,
+                            in_component=True,
+                            error_config=error_config,
+                        )
+                        if res == "skip":
+                            continue
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_status(metric_data.success)
@@ -1122,9 +981,7 @@ def execute_agentic_test_cases(
 
                     if has_task_completion:
                         if llm_test_case is None:
-                            llm_test_case = LLMTestCase(
-                                input="None", actual_output="None"
-                            )
+                            llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(
                                 current_trace.root_spans[0]
@@ -1134,52 +991,20 @@ def execute_agentic_test_cases(
                     for metric in current_trace.metrics:
                         metric.skipped = False
                         metric.error = None
-                        if verbose_mode is not None:
-                            metric.verbose_mode = verbose_mode
+                        if display_config.verbose_mode is not None:
+                            metric.verbose_mode = display_config.verbose_mode
 
                     trace_api.metrics_data = []
                     for metric in current_trace.metrics:
-                        try:
-                            metric.measure(
-                                llm_test_case,
-                                _show_indicator=show_metric_indicator,
-                                _in_component=True,
-                            )
-                        except MissingTestCaseParamsError as e:
-                            if skip_on_missing_params:
-                                continue
-                            else:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except TypeError:
-                            try:
-                                metric.measure(
-                                    llm_test_case, _in_component=True
-                                )
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)
-                                metric.success = False
-                            else:
-                                raise
+                        res = _execute_metric(
+                            metric=metric,
+                            test_case=llm_test_case,
+                            show_metric_indicator=show_metric_indicator,
+                            in_component=True,
+                            error_config=error_config,
+                        )
+                        if res == "skip":
+                            continue
 
                         if not metric.skipped:
                             metric_data = create_metric_data(metric)
@@ -1201,7 +1026,7 @@ def execute_agentic_test_cases(
 
                 update_pbar(progress, pbar_id)
 
-    if show_indicator and _use_bar_indicator:
+    if display_config.show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
             BarColumn(bar_width=60),
@@ -1228,25 +1053,22 @@ async def a_execute_agentic_test_cases(
     observed_callback: Union[
         Callable[[str], Any], Callable[[str], Awaitable[Any]]
     ],
-    verbose_mode: Optional[bool],
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    show_indicator: bool,
-    throttle_value: int,
-    max_concurrent: int,
-    save_to_disk: bool = False,
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    async_config: Optional[AsyncConfig] = AsyncConfig(),
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
 ) -> List[TestResult]:
-    semaphore = asyncio.Semaphore(max_concurrent)
+    semaphore = asyncio.Semaphore(async_config.max_concurrent)
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
             return await func(*args, **kwargs)
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.save_to_disk = cache_config.write_cache
     test_run_manager.get_test_run(identifier=identifier)
     local_trace_manager = trace_manager
     local_trace_manager.evaluating = True
@@ -1254,7 +1076,7 @@ async def a_execute_agentic_test_cases(
     tasks = []
     count = 0
 
-    if show_indicator and _use_bar_indicator:
+    if display_config.show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
             BarColumn(bar_width=60),
@@ -1272,23 +1094,23 @@ async def a_execute_agentic_test_cases(
                 with capture_evaluation_run("golden"):
                     count += 1
                     task = execute_with_semaphore(
-                        func=a_execute_agentic_test_case,
+                        func=_a_execute_agentic_test_case,
                         golden=golden,
                         observed_callback=observed_callback,
                         test_run_manager=test_run_manager,
                         test_results=test_results,
                         count=count,
-                        verbose_mode=verbose_mode,
-                        ignore_errors=ignore_errors,
-                        skip_on_missing_params=skip_on_missing_params,
-                        show_indicator=show_indicator,
+                        verbose_mode=display_config.verbose_mode,
+                        ignore_errors=error_config.ignore_errors,
+                        skip_on_missing_params=error_config.skip_on_missing_params,
+                        show_indicator=display_config.show_indicator,
                         _use_bar_indicator=_use_bar_indicator,
                         _is_assert_test=_is_assert_test,
                         progress=progress,
                         pbar_id=pbar_id,
                     )
                     tasks.append(asyncio.create_task(task))
-                    await asyncio.sleep(throttle_value)
+                    await asyncio.sleep(async_config.throttle_value)
 
             await asyncio.gather(*tasks)
     else:
@@ -1296,27 +1118,27 @@ async def a_execute_agentic_test_cases(
             with capture_evaluation_run("golden"):
                 count += 1
                 task = execute_with_semaphore(
-                    func=a_execute_agentic_test_case,
+                    func=_a_execute_agentic_test_case,
                     golden=golden,
                     observed_callback=observed_callback,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
                     count=count,
-                    verbose_mode=verbose_mode,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    show_indicator=show_indicator,
+                    verbose_mode=display_config.verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                 )
                 tasks.append(asyncio.create_task(task))
-                await asyncio.sleep(throttle_value)
+                await asyncio.sleep(async_config.throttle_value)
         await asyncio.gather(*tasks)
     local_trace_manager.evaluating = False
     return test_results
 
 
-async def a_execute_agentic_test_case(
+async def _a_execute_agentic_test_case(
     golden: Golden,
     test_run_manager: TestRunManager,
     test_results: List[Union[TestResult, MLLMTestCase]],
@@ -1362,36 +1184,7 @@ async def a_execute_agentic_test_case(
         current_trace = trace
 
     # run evals through DFS
-    trace_api = TraceApi(
-        uuid=current_trace.uuid,
-        baseSpans=[],
-        agentSpans=[],
-        llmSpans=[],
-        retrieverSpans=[],
-        toolSpans=[],
-        startTime=(
-            to_zod_compatible_iso(
-                perf_counter_to_datetime(current_trace.start_time)
-            )
-            if current_trace.start_time
-            else None
-        ),
-        endTime=(
-            to_zod_compatible_iso(
-                perf_counter_to_datetime(current_trace.end_time)
-            )
-            if current_trace.end_time
-            else None
-        ),
-        input=current_trace.input,
-        output=current_trace.output,
-        expected_output=current_trace.expected_output,
-        context=current_trace.context,
-        retrieval_context=current_trace.retrieval_context,
-        tools_called=current_trace.tools_called,
-        expected_tools=current_trace.expected_tools,
-        metadata=golden.additional_metadata,
-    )
+    trace_api = create_api_trace(trace=current_trace, golden=golden)
 
     trace_level_metrics_count = (
         len(current_trace.metrics) if current_trace.metrics else 0
@@ -1423,7 +1216,7 @@ async def a_execute_agentic_test_case(
         index=count if not _is_assert_test else None,
     )
 
-    await a_execute_trace_test_case(
+    await _a_execute_trace_test_case(
         trace=trace,
         trace_api=trace_api,
         api_test_case=api_test_case,
@@ -1437,7 +1230,7 @@ async def a_execute_agentic_test_case(
     )
 
     async def dfs(span: BaseSpan):
-        await a_execute_span_test_case(
+        await _a_execute_span_test_case(
             span=span,
             trace_api=trace_api,
             api_test_case=api_test_case,
@@ -1466,7 +1259,7 @@ async def a_execute_agentic_test_case(
     update_pbar(progress, pbar_id)
 
 
-async def a_execute_span_test_case(
+async def _a_execute_span_test_case(
     span: BaseSpan,
     trace_api: TraceApi,
     api_test_case: LLMApiTestCase,
@@ -1520,7 +1313,7 @@ async def a_execute_span_test_case(
     # add trace if task completion
     if has_task_completion:
         if test_case is None:
-            test_case = LLMTestCase(input="None", actual_output="None")
+            test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
 
     for metric in metrics:
@@ -1550,7 +1343,7 @@ async def a_execute_span_test_case(
         api_test_case.update_status(metric_data.success)
 
 
-async def a_execute_trace_test_case(
+async def _a_execute_trace_test_case(
     trace: Trace,
     trace_api: TraceApi,
     api_test_case: LLMApiTestCase,
@@ -1594,7 +1387,7 @@ async def a_execute_trace_test_case(
     # add trace if task completion
     if has_task_completion:
         if test_case is None:
-            test_case = LLMTestCase(input="None", actual_output="None")
+            test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(
             trace.root_spans[0]
         )
@@ -1628,24 +1421,6 @@ async def a_execute_trace_test_case(
         api_test_case.update_status(metric_data.success)
 
 
-def count_observe_decorators_in_module(func: Callable) -> int:
-    mod = inspect.getmodule(func)
-    if mod is None or not hasattr(mod, "__file__"):
-        raise RuntimeError("Cannot locate @observe function.")
-    module_source = inspect.getsource(mod)
-    tree = ast.parse(module_source)
-    count = 0
-    for node in ast.walk(tree):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            for deco in node.decorator_list:
-                if (
-                    isinstance(deco, ast.Call)
-                    and getattr(deco.func, "id", "") == "observe"
-                ):
-                    count += 1
-    return count
-
-
 ###########################################
 ### Looped Evals
 ###########################################
@@ -1653,19 +1428,17 @@ def count_observe_decorators_in_module(func: Callable) -> int:
 
 def execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
-    verbose_mode: Optional[bool],
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    show_indicator: bool,
     test_results: List[TestResult],
-    save_to_disk: bool = False,
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
 ) -> Iterator[TestResult]:
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.save_to_disk = cache_config.write_cache
     test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
@@ -1676,7 +1449,9 @@ def execute_agentic_test_cases_from_loop(
         pbar_id: Optional[int] = None,
     ) -> Iterator[Golden]:
         count = 0
-        show_metric_indicator = show_indicator and not _use_bar_indicator
+        show_metric_indicator = (
+            display_config.show_indicator and not _use_bar_indicator
+        )
 
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -1698,36 +1473,7 @@ def execute_agentic_test_cases_from_loop(
                 update_pbar(progress, pbar_id)
 
                 # Create empty trace api for llm api test case
-                trace_api = TraceApi(
-                    uuid=current_trace.uuid,
-                    baseSpans=[],
-                    agentSpans=[],
-                    llmSpans=[],
-                    retrieverSpans=[],
-                    toolSpans=[],
-                    startTime=(
-                        to_zod_compatible_iso(
-                            perf_counter_to_datetime(current_trace.start_time)
-                        )
-                        if current_trace.start_time
-                        else None
-                    ),
-                    endTime=(
-                        to_zod_compatible_iso(
-                            perf_counter_to_datetime(current_trace.end_time)
-                        )
-                        if current_trace.end_time
-                        else None
-                    ),
-                    input=current_trace.input,
-                    output=current_trace.output,
-                    expected_output=current_trace.expected_output,
-                    context=current_trace.context,
-                    retrieval_context=current_trace.retrieval_context,
-                    tools_called=current_trace.tools_called,
-                    expected_tools=current_trace.expected_tools,
-                    metadata=golden.additional_metadata,
-                )
+                trace_api = create_api_trace(trace=current_trace, golden=golden)
 
                 # Format golden as test case to create llm api test case
                 test_case = LLMTestCase(
@@ -1798,53 +1544,22 @@ def execute_agentic_test_cases_from_loop(
                     for metric in metrics:
                         metric.skipped = False
                         metric.error = None
-                        if verbose_mode is not None:
-                            metric.verbose_mode = verbose_mode
+                        if display_config.verbose_mode is not None:
+                            metric.verbose_mode = display_config.verbose_mode
 
                     # Metric calculation
                     for metric in metrics:
                         metric_data = None
-                        try:
-                            metric.measure(
-                                llm_test_case,
-                                _show_indicator=show_metric_indicator,
-                                _in_component=True,
-                            )
-                        except MissingTestCaseParamsError as e:
-                            if skip_on_missing_params:
-                                continue
-                            else:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except TypeError:
-                            try:
-                                metric.measure(
-                                    llm_test_case, _in_component=True
-                                )
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)
-                                metric.success = False
-                            else:
-                                raise
+                        res = _execute_metric(
+                            metric=metric,
+                            test_case=llm_test_case,
+                            show_metric_indicator=show_metric_indicator,
+                            in_component=True,
+                            error_config=error_config,
+                        )
+                        if res == "skip":
+                            continue
+
                         metric_data = create_metric_data(metric)
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_status(metric_data.success)
@@ -1891,9 +1606,7 @@ def execute_agentic_test_cases_from_loop(
 
                     if has_task_completion:
                         if llm_test_case is None:
-                            llm_test_case = LLMTestCase(
-                                input="None", actual_output="None"
-                            )
+                            llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(
                                 current_trace.root_spans[0]
@@ -1903,52 +1616,20 @@ def execute_agentic_test_cases_from_loop(
                     for metric in current_trace.metrics:
                         metric.skipped = False
                         metric.error = None
-                        if verbose_mode is not None:
-                            metric.verbose_mode = verbose_mode
+                        if display_config.verbose_mode is not None:
+                            metric.verbose_mode = display_config.verbose_mode
 
                     trace_api.metrics_data = []
                     for metric in current_trace.metrics:
-                        try:
-                            metric.measure(
-                                llm_test_case,
-                                _show_indicator=show_metric_indicator,
-                                _in_component=True,
-                            )
-                        except MissingTestCaseParamsError as e:
-                            if skip_on_missing_params:
-                                continue
-                            else:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except TypeError:
-                            try:
-                                metric.measure(
-                                    llm_test_case, _in_component=True
-                                )
-                            except MissingTestCaseParamsError as e:
-                                if skip_on_missing_params:
-                                    continue
-                                else:
-                                    if ignore_errors:
-                                        metric.error = str(e)
-                                        metric.success = False
-                                    else:
-                                        raise
-                            except Exception as e:
-                                if ignore_errors:
-                                    metric.error = str(e)
-                                    metric.success = False
-                                else:
-                                    raise
-                        except Exception as e:
-                            if ignore_errors:
-                                metric.error = str(e)
-                                metric.success = False
-                            else:
-                                raise
+                        res = _execute_metric(
+                            metric=metric,
+                            test_case=llm_test_case,
+                            show_metric_indicator=show_metric_indicator,
+                            in_component=True,
+                            error_config=error_config,
+                        )
+                        if res == "skip":
+                            continue
 
                         if not metric.skipped:
                             metric_data = create_metric_data(metric)
@@ -1969,7 +1650,7 @@ def execute_agentic_test_cases_from_loop(
 
                 update_pbar(progress, pbar_id)
 
-    if show_indicator and _use_bar_indicator:
+    if display_config.show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
             BarColumn(bar_width=60),
@@ -1992,25 +1673,22 @@ def execute_agentic_test_cases_from_loop(
 
 def a_execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
-    verbose_mode: Optional[bool],
-    ignore_errors: bool,
-    skip_on_missing_params: bool,
-    show_indicator: bool,
     test_results: List[TestResult],
     loop: asyncio.AbstractEventLoop,
-    throttle_value: int,
-    max_concurrent: int,
-    save_to_disk: bool = False,
+    display_config: Optional[DisplayConfig] = DisplayConfig(),
+    cache_config: Optional[CacheConfig] = CacheConfig(),
+    error_config: Optional[ErrorConfig] = ErrorConfig(),
+    async_config: Optional[AsyncConfig] = AsyncConfig(),
     identifier: Optional[str] = None,
     _use_bar_indicator: bool = True,
     _is_assert_test: bool = False,
 ) -> Iterator[TestResult]:
 
-    semaphore = asyncio.Semaphore(max_concurrent)
+    semaphore = asyncio.Semaphore(async_config.max_concurrent)
     original_create_task = asyncio.create_task
 
     test_run_manager = global_test_run_manager
-    test_run_manager.save_to_disk = save_to_disk
+    test_run_manager.save_to_disk = cache_config.write_cache
     test_run = test_run_manager.get_test_run(identifier=identifier)
 
     local_trace_manager = trace_manager
@@ -2058,82 +1736,82 @@ def a_execute_agentic_test_cases_from_loop(
         asyncio.create_task = loop.create_task
         if trace_manager.traces_to_evaluate:
             loop.run_until_complete(
-                a_evaluate_traces(
+                _a_evaluate_traces(
                     traces_to_evaluate=trace_manager.traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
-                    verbose_mode=verbose_mode,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    show_indicator=show_indicator,
+                    verbose_mode=display_config.verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
+                    throttle_value=async_config.throttle_value,
+                    max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                     progress=progress,
                     pbar_id=pbar_id,
-                    throttle_value=throttle_value,
-                    max_concurrent=max_concurrent,
                 )
             )
         elif openai_test_case_pairs:
             loop.run_until_complete(
-                evaluate_test_case_pairs(
+                _evaluate_test_case_pairs(
                     test_case_pairs=openai_test_case_pairs,
                     test_run=test_run,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    show_indicator=show_indicator,
-                    verbose_mode=verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
+                    verbose_mode=display_config.verbose_mode,
+                    throttle_value=async_config.throttle_value,
+                    max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                     progress=progress,
                     pbar_id=pbar_id,
-                    throttle_value=throttle_value,
-                    max_concurrent=max_concurrent,
                 )
             )
         elif trace_manager.integration_traces_to_evaluate:
             loop.run_until_complete(
-                a_evaluate_traces(
+                _a_evaluate_traces(
                     traces_to_evaluate=trace_manager.integration_traces_to_evaluate,
                     goldens=goldens,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
-                    verbose_mode=verbose_mode,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    show_indicator=show_indicator,
+                    verbose_mode=display_config.verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
+                    throttle_value=async_config.throttle_value,
+                    max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                     progress=progress,
                     pbar_id=pbar_id,
-                    throttle_value=throttle_value,
-                    max_concurrent=max_concurrent,
                 )
             )
         elif trace_manager.test_case_metrics:
             loop.run_until_complete(
-                evaluate_test_case_pairs(
+                _evaluate_test_case_pairs(
                     test_case_pairs=trace_manager.test_case_metrics,
                     test_run=test_run,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
-                    ignore_errors=ignore_errors,
-                    skip_on_missing_params=skip_on_missing_params,
-                    show_indicator=show_indicator,
-                    verbose_mode=verbose_mode,
+                    ignore_errors=error_config.ignore_errors,
+                    skip_on_missing_params=error_config.skip_on_missing_params,
+                    show_indicator=display_config.show_indicator,
+                    verbose_mode=display_config.verbose_mode,
+                    throttle_value=async_config.throttle_value,
+                    max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                     progress=progress,
                     pbar_id=pbar_id,
-                    throttle_value=throttle_value,
-                    max_concurrent=max_concurrent,
                 )
             )
 
-    if show_indicator and _use_bar_indicator:
+    if display_config.show_indicator and _use_bar_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
             BarColumn(bar_width=60),
@@ -2144,7 +1822,7 @@ def a_execute_agentic_test_cases_from_loop(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Running Component-Level Evals (sync)",
+                f"Running Component-Level Evals (async)",
                 total=len(goldens) * 2,
             )
             pbar_callback_id = add_pbar(
@@ -2168,7 +1846,7 @@ def a_execute_agentic_test_cases_from_loop(
     asyncio.create_task = original_create_task
 
 
-async def a_evaluate_traces(
+async def _a_evaluate_traces(
     traces_to_evaluate: List[Trace],
     goldens: List[Golden],
     test_run_manager: TestRunManager,
@@ -2195,7 +1873,7 @@ async def a_evaluate_traces(
         golden = goldens[count]
         with capture_evaluation_run("golden"):
             task = execute_evals_with_semaphore(
-                func=a_execute_agentic_test_case,
+                func=_a_execute_agentic_test_case,
                 golden=golden,
                 trace=trace,
                 test_run_manager=test_run_manager,
@@ -2215,7 +1893,7 @@ async def a_evaluate_traces(
     await asyncio.gather(*eval_tasks)
 
 
-async def evaluate_test_case_pairs(
+async def _evaluate_test_case_pairs(
     test_case_pairs: List[TestCaseMetricPair],
     test_run: TestRun,
     test_run_manager: TestRunManager,
@@ -2250,7 +1928,7 @@ async def evaluate_test_case_pairs(
                 test_case_pair.metrics
             )
             task = execute_with_semaphore(
-                func=a_execute_llm_test_cases,
+                func=_a_execute_llm_test_cases,
                 metrics=copied_llm_metrics,
                 test_case=test_case_pair.test_case,
                 test_run_manager=test_run_manager,
@@ -2269,3 +1947,51 @@ async def evaluate_test_case_pairs(
             tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
+
+
+def _execute_metric(
+    metric: BaseMetric,
+    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
+    show_metric_indicator: bool,
+    in_component: bool,
+    error_config: ErrorConfig,
+) -> Optional[str]:
+    try:
+        metric.measure(
+            test_case,
+            _show_indicator=show_metric_indicator,
+            _in_component=in_component,
+        )
+    except MissingTestCaseParamsError as e:
+        if error_config.skip_on_missing_params:
+            return "skip"
+        else:
+            if error_config.ignore_errors:
+                metric.error = str(e)
+                metric.success = False
+            else:
+                raise
+    except TypeError:
+        try:
+            metric.measure(test_case)
+        except MissingTestCaseParamsError as e:
+            if error_config.skip_on_missing_params:
+                return "skip"
+            else:
+                if error_config.ignore_errors:
+                    metric.error = str(e)
+                    metric.success = False
+                else:
+                    raise
+        except Exception as e:
+            if error_config.ignore_errors:
+                metric.error = str(e)
+                metric.success = False
+            else:
+                raise
+    except Exception as e:
+        if error_config.ignore_errors:
+            metric.error = str(e)
+            metric.success = False
+        else:
+            raise
