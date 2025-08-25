@@ -10,6 +10,18 @@ Sometimes you might want to customize the behavior of different settings for `ev
 For example, if you're using a [custom LLM judge for evaluation](/guides/guides-using-custom-llms), you may wish to `ignore_errors`s to not interrupt evaluations whenever your model fails to produce a valid JSON, or avoid rate limit errors entirely by lowering the `max_concurrent` value.
 :::
 
+## Environment Flags
+
+| Variable                          | Type   | Default | Notes                                 |
+|-----------------------------------|--------|---------|----------------------------------------|
+| `DEEPEVAL_RETRY_MAX_ATTEMPTS`     | int    | `2`     | Total attempts (1 retry)               |
+| `DEEPEVAL_RETRY_INITIAL_SECONDS`  | float  | `1.0`   | Initial backoff                        |
+| `DEEPEVAL_RETRY_EXP_BASE`         | float  | `2.0`   | Exponential base (≥1)                  |
+| `DEEPEVAL_RETRY_JITTER`           | float  | `2.0`   | Random jitter added per retry          |
+| `DEEPEVAL_RETRY_CAP_SECONDS`      | float  | `5.0`   | Max sleep between retries              |
+
+> Non-finite floats (`NaN`, `inf`) and values below the documented minimums are ignored (defaults are used).
+
 ## Configs for `evaluate()`
 
 ### Async Configs
