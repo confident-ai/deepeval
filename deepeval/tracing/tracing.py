@@ -142,7 +142,6 @@ class TraceManager:
     def start_new_trace(
         self,
         metric_collection: Optional[str] = None,
-        metrics: Optional[List[BaseMetric]] = None,
         trace_uuid: Optional[str] = None,
     ) -> Trace:
         """Start a new trace and set it as the current trace."""
@@ -155,7 +154,6 @@ class TraceManager:
             start_time=perf_counter(),
             end_time=None,
             metric_collection=metric_collection,
-            metrics=metrics,
             confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
@@ -752,8 +750,7 @@ class Observer:
                 self.trace_uuid = current_trace.uuid
             else:
                 trace = trace_manager.start_new_trace(
-                    metric_collection=self.metric_collection,
-                    metrics=self.metrics,
+                    metric_collection=self.metric_collection
                 )
                 self.trace_uuid = trace.uuid
                 current_trace_context.set(trace)

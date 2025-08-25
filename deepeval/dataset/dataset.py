@@ -24,6 +24,7 @@ from deepeval.dataset.api import (
     APIQueueDataset,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.telemetry import capture_evaluation_run, capture_pull_dataset
 from deepeval.test_case import (
     LLMTestCase,
@@ -934,6 +935,7 @@ class EvaluationDataset:
 
     def evals_iterator(
         self,
+        metrics: Optional[List[BaseMetric]] = None,
         identifier: Optional[str] = None,
         display_config: Optional["DisplayConfig"] = None,
         cache_config: Optional["CacheConfig"] = None,
@@ -958,13 +960,13 @@ class EvaluationDataset:
         )
 
         if display_config is None:
-            display_config = DisplayConfig()
+            display_config: DisplayConfig = DisplayConfig()
         if cache_config is None:
-            cache_config = CacheConfig()
+            cache_config: CacheConfig = CacheConfig()
         if error_config is None:
-            error_config = ErrorConfig()
+            error_config: ErrorConfig = ErrorConfig()
         if async_config is None:
-            async_config = AsyncConfig()
+            async_config: AsyncConfig = AsyncConfig()
 
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
@@ -981,18 +983,17 @@ class EvaluationDataset:
                     goldens=goldens,
                     identifier=identifier,
                     loop=loop,
+                    trace_metrics=metrics,
                     test_results=test_results,
-                    verbose_mode=display_config.verbose_mode,
-                    show_indicator=display_config.show_indicator,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
-                    save_to_disk=cache_config.write_cache,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    error_config=error_config,
+                    async_config=async_config,
                 )
             else:
                 yield from execute_agentic_test_cases_from_loop(
                     goldens=goldens,
+                    trace_metrics=metrics,
                     display_config=display_config,
                     cache_config=cache_config,
                     error_config=error_config,

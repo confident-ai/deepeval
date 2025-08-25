@@ -96,7 +96,9 @@ def assert_test(
         ignore_errors=should_ignore_errors(),
         skip_on_missing_params=should_skip_on_missing_params(),
     )
-    cache_config = CacheConfig(write_cache=get_is_running_deepeval())
+    cache_config = CacheConfig(
+        write_cache=get_is_running_deepeval(), use_cache=should_use_cache()
+    )
 
     if golden and observed_callback:
         if run_async:
@@ -121,7 +123,6 @@ def assert_test(
                 error_config=error_config,
                 display_config=display_config,
                 cache_config=cache_config,
-                skip_on_missing_params=should_skip_on_missing_params(),
                 identifier=get_identifier(),
                 _use_bar_indicator=False,
                 _is_assert_test=True,
@@ -149,7 +150,6 @@ def assert_test(
                 metrics,
                 error_config=error_config,
                 display_config=display_config,
-                async_config=async_config,
                 cache_config=cache_config,
                 identifier=get_identifier(),
                 _use_bar_indicator=False,
@@ -244,7 +244,6 @@ def evaluate(
                 error_config=error_config,
                 display_config=display_config,
                 cache_config=cache_config,
-                async_config=async_config,
             )
 
     end_time = time.perf_counter()

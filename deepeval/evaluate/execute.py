@@ -892,10 +892,14 @@ def execute_agentic_test_cases(
                     )
 
                     llm_test_case = None
-                    if span.input is None:
+                    if span.input is not None:
                         llm_test_case = LLMTestCase(
                             input=str(span.input),
-                            actual_output=str(span.output),
+                            actual_output=(
+                                str(span.output)
+                                if span.output is not None
+                                else None
+                            ),
                             expected_output=span.expected_output,
                             context=span.context,
                             retrieval_context=span.retrieval_context,
@@ -1153,6 +1157,7 @@ async def _a_execute_agentic_test_case(
         Union[Callable[[str], Any], Callable[[str], Awaitable[Any]]]
     ] = None,
     trace: Optional[Trace] = None,
+    trace_metrics: Optional[List[BaseMetric]] = None,
     progress: Optional[Progress] = None,
     pbar_id: Optional[int] = None,
 ):
@@ -1183,12 +1188,16 @@ async def _a_execute_agentic_test_case(
     elif trace:
         current_trace = trace
 
+    if trace_metrics:
+        current_trace.metrics = trace_metrics
+
     # run evals through DFS
     trace_api = create_api_trace(trace=current_trace, golden=golden)
 
     trace_level_metrics_count = (
         len(current_trace.metrics) if current_trace.metrics else 0
     )
+
     pbar_eval_id = add_pbar(
         progress,
         f"     🎯 Evaluating component(s) (#{count})",
@@ -1294,7 +1303,7 @@ async def _a_execute_span_test_case(
     if span.input:
         llm_test_case = LLMTestCase(
             input=str(span.input),
-            actual_output=str(span.output),
+            actual_output=str(span.output) if span.output is not None else None,
             expected_output=span.expected_output,
             context=span.context,
             retrieval_context=span.retrieval_context,
@@ -1428,6 +1437,7 @@ async def _a_execute_trace_test_case(
 
 def execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
+    trace_metrics: Optional[List[BaseMetric]],
     test_results: List[TestResult],
     display_config: Optional[DisplayConfig] = DisplayConfig(),
     cache_config: Optional[CacheConfig] = CacheConfig(),
@@ -1508,6 +1518,12 @@ def execute_agentic_test_cases_from_loop(
                 ):
                     # Create API Span
                     metrics: List[BaseMetric] = span.metrics
+                    print(metrics, "span metrics")
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in metrics
+                    )
+
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
@@ -1526,10 +1542,14 @@ def execute_agentic_test_cases_from_loop(
                         dfs(child, progress, pbar_eval_id)
 
                     llm_test_case = None
-                    if span.input is None:
+                    if span.input is not None:
                         llm_test_case = LLMTestCase(
                             input=str(span.input),
-                            actual_output=str(span.output),
+                            actual_output=(
+                                str(span.output)
+                                if span.output is not None
+                                else None
+                            ),
                             expected_output=span.expected_output,
                             context=span.context,
                             retrieval_context=span.retrieval_context,
@@ -1538,6 +1558,13 @@ def execute_agentic_test_cases_from_loop(
                         )
                     if span.metrics == None or llm_test_case == None:
                         return
+
+                    if has_task_completion:
+                        if llm_test_case is None:
+                            llm_test_case = LLMTestCase(input="None")
+                        llm_test_case._trace_dict = (
+                            trace_manager.create_nested_spans_dict(span)
+                        )
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
@@ -1564,6 +1591,9 @@ def execute_agentic_test_cases_from_loop(
                         api_span.metrics_data.append(metric_data)
                         api_test_case.update_status(metric_data.success)
                         update_pbar(progress, pbar_eval_id)
+
+                if trace_metrics:
+                    current_trace.metrics = trace_metrics
 
                 trace_level_metrics_count = (
                     len(current_trace.metrics) if current_trace.metrics else 0
@@ -1673,6 +1703,7 @@ def execute_agentic_test_cases_from_loop(
 
 def a_execute_agentic_test_cases_from_loop(
     goldens: List[Golden],
+    trace_metrics: Optional[List[BaseMetric]],
     test_results: List[TestResult],
     loop: asyncio.AbstractEventLoop,
     display_config: Optional[DisplayConfig] = DisplayConfig(),
@@ -1741,6 +1772,7 @@ def a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
+                    trace_metrics=trace_metrics,
                     verbose_mode=display_config.verbose_mode,
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,
@@ -1779,6 +1811,7 @@ def a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     test_run_manager=test_run_manager,
                     test_results=test_results,
+                    trace_metrics=metrics,
                     verbose_mode=display_config.verbose_mode,
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,
@@ -1861,6 +1894,7 @@ async def _a_evaluate_traces(
     pbar_id: Optional[int],
     throttle_value: int,
     max_concurrent: int,
+    trace_metrics: Optional[List[BaseMetric]],
 ):
     semaphore = asyncio.Semaphore(max_concurrent)
 
@@ -1887,6 +1921,7 @@ async def _a_evaluate_traces(
                 _is_assert_test=_is_assert_test,
                 progress=progress,
                 pbar_id=pbar_id,
+                trace_metrics=trace_metrics,
             )
             eval_tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
