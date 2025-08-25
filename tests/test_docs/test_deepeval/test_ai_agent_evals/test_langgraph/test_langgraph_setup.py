@@ -22,7 +22,7 @@ result = agent.invoke(
     input={
         "messages": [{"role": "user", "content": "what is the weather in sf"}]
     },
-    config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]},
+    config={"callbacks": [CallbackHandler()]},
 )
 
 print(result)
