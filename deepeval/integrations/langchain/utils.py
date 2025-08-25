@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 from langchain_core.outputs import ChatGeneration
 
 
@@ -72,12 +72,16 @@ def prepare_dict(**kwargs: Any) -> dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not None}
 
 
-def extract_token_usage(response_metadata: dict[str, Any]) -> tuple[int, int]:
-    if "token_usage" in response_metadata:
-        return response_metadata["token_usage"].get(
-            "prompt_tokens", 0
-        ), response_metadata["token_usage"].get("completion_tokens", 0)
-    return 0, 0
+def safe_extract_token_usage(
+    response_metadata: dict[str, Any],
+) -> tuple[int, int]:
+    prompt_tokens, completion_tokens = 0, 0
+    token_usage = response_metadata.get("token_usage")
+    if token_usage and isinstance(token_usage, dict):
+        prompt_tokens = token_usage.get("prompt_tokens", 0)
+        completion_tokens = token_usage.get("completion_tokens", 0)
+
+    return prompt_tokens, completion_tokens
 
 
 def extract_name(serialized: dict[str, Any], **kwargs: Any) -> str:
@@ -88,3 +92,21 @@ def extract_name(serialized: dict[str, Any], **kwargs: Any) -> str:
         return serialized["name"]
 
     return "unknown"
+
+
+def safe_extract_model_name(
+    metadata: dict[str, Any], **kwargs: Any
+) -> Optional[str]:
+    if kwargs and isinstance(kwargs, dict):
+        invocation_params = kwargs.get("invocation_params")
+        if invocation_params:
+            model = invocation_params.get("model")
+            if model:
+                return model
+
+    if metadata:
+        ls_model_name = metadata.get("ls_model_name")
+        if ls_model_name:
+            return ls_model_name
+
+    return None
