@@ -33,7 +33,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
-        generation_kwargs: Optional[Dict] = None, 
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         # fetch Azure deployment parameters
@@ -118,12 +118,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
-            **self.generation_kwargs  
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens,
-            completion.usage.completion_tokens
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -166,7 +165,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
-                    **self.generation_kwargs  
+                    **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -183,7 +182,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
-            **self.generation_kwargs  
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -218,7 +217,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
-            **self.generation_kwargs  
+            **self.generation_kwargs,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -245,7 +244,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
-            **self.generation_kwargs 
+            **self.generation_kwargs,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
