@@ -188,7 +188,6 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
-
             # fallback for on_end callback
             end_time=perf_counter(),
         )
@@ -262,7 +261,7 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
         llm_span: LlmSpan = trace_manager.get_span_by_uuid(str(run_id))
-        if llm_span is None :
+        if llm_span is None:
             return
 
         if not isinstance(llm_span, LlmSpan):
@@ -281,15 +280,14 @@ class CallbackHandler(BaseCallbackHandler):
                     ):
                         # extract model name from response_metadata
                         model = gen.message.response_metadata.get("model_name")
-                        
+
                         # extract input and output token
                         input_tokens, output_tokens = safe_extract_token_usage(
                             gen.message.response_metadata
                         )
                         total_input_tokens += input_tokens
                         total_output_tokens += output_tokens
-                                                
-                    
+
                     if isinstance(gen.message, AIMessage):
                         ai_message = gen.message
                         tool_calls = []
@@ -310,8 +308,12 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.model = model if model else llm_span.model
         llm_span.input = llm_span.input
         llm_span.output = output
-        llm_span.input_token_count = total_input_tokens if total_input_tokens > 0 else None
-        llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
+        llm_span.input_token_count = (
+            total_input_tokens if total_input_tokens > 0 else None
+        )
+        llm_span.output_token_count = (
+            total_output_tokens if total_output_tokens > 0 else None
+        )
 
         self.end_span(llm_span)
         if parent_run_id is None:
@@ -344,7 +346,6 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
-
             # fallback for on_end callback
             end_time=perf_counter(),
         )
@@ -396,7 +397,6 @@ class CallbackHandler(BaseCallbackHandler):
             metadata=prepare_dict(
                 serialized=serialized, tags=tags, metadata=metadata, **kwargs
             ),
-
             # fallback for on_end callback
             end_time=perf_counter(),
         )
@@ -434,7 +434,7 @@ class CallbackHandler(BaseCallbackHandler):
 
         if parent_run_id is None:
             self.end_trace(retriever_span)
-    
+
     ################## on_error callbacks ###############
 
     def on_chain_error(
@@ -448,7 +448,7 @@ class CallbackHandler(BaseCallbackHandler):
         base_span = trace_manager.get_span_by_uuid(str(run_id))
         if base_span is None:
             return
-        
+
         base_span.end_time = perf_counter()
 
     def on_llm_error(
@@ -459,11 +459,11 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,
     ) -> Any:
-        
+
         llm_span = trace_manager.get_span_by_uuid(str(run_id))
         if llm_span is None:
             return
-        
+
         llm_span.end_time = perf_counter()
 
     def on_tool_error(
@@ -477,7 +477,7 @@ class CallbackHandler(BaseCallbackHandler):
         tool_span = trace_manager.get_span_by_uuid(str(run_id))
         if tool_span is None:
             return
-        
+
         tool_span.end_time = perf_counter()
 
     def on_retriever_error(
@@ -491,5 +491,5 @@ class CallbackHandler(BaseCallbackHandler):
         retriever_span = trace_manager.get_span_by_uuid(str(run_id))
         if retriever_span is None:
             return
-        
+
         retriever_span.end_time = perf_counter()

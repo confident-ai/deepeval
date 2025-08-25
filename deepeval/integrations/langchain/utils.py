@@ -72,7 +72,9 @@ def prepare_dict(**kwargs: Any) -> dict[str, Any]:
     return {k: v for k, v in kwargs.items() if v is not None}
 
 
-def safe_extract_token_usage(response_metadata: dict[str, Any]) -> tuple[int, int]:
+def safe_extract_token_usage(
+    response_metadata: dict[str, Any],
+) -> tuple[int, int]:
     prompt_tokens, completion_tokens = 0, 0
     token_usage = response_metadata.get("token_usage")
     if token_usage and isinstance(token_usage, dict):
@@ -91,7 +93,10 @@ def extract_name(serialized: dict[str, Any], **kwargs: Any) -> str:
 
     return "unknown"
 
-def safe_extract_model_name(metadata: dict[str, Any], **kwargs: Any) -> Optional[str]:
+
+def safe_extract_model_name(
+    metadata: dict[str, Any], **kwargs: Any
+) -> Optional[str]:
     if kwargs and isinstance(kwargs, dict):
         invocation_params = kwargs.get("invocation_params")
         if invocation_params:
@@ -105,4 +110,3 @@ def safe_extract_model_name(metadata: dict[str, Any], **kwargs: Any) -> Optional
             return ls_model_name
 
     return None
-    
