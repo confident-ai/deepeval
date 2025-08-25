@@ -133,7 +133,7 @@ if not telemetry_opt_out():
 if (
     os.getenv("ERROR_REPORTING") == "YES"
     and not blocked_by_firewall()
-    and not os.getenv("TELEMETRY_OPT_OUT")
+    and not telemetry_opt_out()
 ):
 
     def handle_exception(exc_type, exc_value, exc_traceback):
@@ -571,6 +571,12 @@ def read_telemetry_file() -> dict:
 
 def write_telemetry_file(data: dict):
     """Writes the given key-value pairs to the telemetry data file."""
+    # respect opt out
+    if telemetry_opt_out():
+        return
+
+    # ensure directory exists before write
+    os.makedirs(HIDDEN_DIR, exist_ok=True)
     with open(TELEMETRY_PATH, "w") as file:
         for key, value in data.items():
             file.write(f"{key}={value}\n")
@@ -584,6 +590,9 @@ def get_status() -> str:
 
 def get_unique_id() -> str:
     """Gets or generates a unique ID and updates the telemetry file."""
+    # respect opt out
+    if telemetry_opt_out():
+        return "telemetry-opted-out"
     data = read_telemetry_file()
     unique_id = data.get("DEEPEVAL_ID")
     if not unique_id:
