@@ -243,24 +243,30 @@ def set_openai_env(
         "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
 ):
-    """Configure OpenAI as the active model.
-
-    Notes:
-    - If `model` is a known OpenAI model, costs can be omitted (built-in pricing will be used).
-    - If `model` is custom/unsupported, you must pass both --cost_per_input_token and --cost_per_output_token.
     """
+    Configure OpenAI as the active LLM provider.
 
-    Behavior:
-    - Persists the selected model name and cost overrides to the JSON store.
-    - Switches the active provider flag to `USE_OPENAI_MODEL`.
-    - Secrets are not written to JSON; if `OPENAI_API_KEY` is required, set it in
-      `.env[.local]` manually or pass `--save` to persist it there.
+    What this does:
+    - Sets the active provider flag to `USE_OPENAI_MODEL`.
+    - Persists the selected model name and any cost overrides in the JSON store.
+    - secrets are ever written to `.deepeval/.deepeval` (JSON).
+
+    Pricing rules:
+    - If `model` is a known OpenAI model, you may omit costs (built‑in pricing is used).
+    - If `model` is custom/unsupported, you must provide both
+      `--cost_per_input_token` and `--cost_per_output_token`.
+
+    Secrets & saving:
+    - Set your `OPENAI_API_KEY` via environment or a dotenv file.
+    - Pass `--save=dotenv[:path]` to write configuration to a dotenv file
+      (default: `.env.local`). Supported secrets, such as `OPENAI_API_KEY`, are
+      persisted there if present in your environment.
 
     Args:
-        --model: OpenAI model name (e.g. `gpt-4o-mini`).
-        --cost_per_input_token: USD cost per input token (optional if known model).
-        --cost_per_output_token: USD cost per output token.
-        --save: Persist all values (including API key) to a dotenv file.
+        model: OpenAI model name, such as `gpt-4o-mini`.
+        cost_per_input_token: USD per input token (optional for known models).
+        cost_per_output_token: USD per output token (optional for known models).
+        save: Persist config (and supported secrets) to a dotenv file; format `dotenv[:path]`.
 
     Example:
         deepeval set-openai \\
