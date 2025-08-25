@@ -229,7 +229,7 @@ class GPTModel(DeepEvalBaseLLM):
         cost_per_input_token: Optional[float] = None,
         cost_per_output_token: Optional[float] = None,
         temperature: float = 0,
-        completion_kwargs: Optional[Dict] = None,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = None
@@ -289,7 +289,7 @@ class GPTModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         self.kwargs = kwargs
-        self.completion_kwargs = completion_kwargs or {}
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
     ###############################################
@@ -314,7 +314,7 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                     temperature=self.temperature,
-                    **self.completion_kwargs,
+                    **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -332,7 +332,7 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
-                    **self.completion_kwargs,
+                    **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -347,7 +347,7 @@ class GPTModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
-            **self.completion_kwargs,
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -377,7 +377,7 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                     temperature=self.temperature,
-                    **self.completion_kwargs,
+                    **self.generation_kwargs,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -395,7 +395,7 @@ class GPTModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
-                    **self.completion_kwargs,
+                    **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -411,7 +411,7 @@ class GPTModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
-            **self.completion_kwargs,
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -445,7 +445,7 @@ class GPTModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
-            **self.completion_kwargs,
+            **self.generation_kwargs,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -472,7 +472,7 @@ class GPTModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
-            **self.completion_kwargs,
+            **self.generation_kwargs,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -495,7 +495,7 @@ class GPTModel(DeepEvalBaseLLM):
             messages=[{"role": "user", "content": prompt}],
             n=n,
             temperature=temperature,
-            **self.completion_kwargs,
+            **self.generation_kwargs,
         )
         completions = [choice.message.content for choice in response.choices]
         return completions
