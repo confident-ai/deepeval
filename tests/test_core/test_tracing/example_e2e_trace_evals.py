@@ -33,7 +33,6 @@ def llm_app(input):
         context=["Hi"],
         tools_called=[ToolCall(name="Hi")],
         expected_tools=[ToolCall(name="Hi")],
-        metrics=[relevnacy, correctness],
     )
     return "Hi"
 
@@ -41,5 +40,5 @@ def llm_app(input):
 dataset = EvaluationDataset()
 dataset.pull(alias="New Dataset")
 
-for golden in dataset.evals_iterator():
+for golden in dataset.evals_iterator(metrics=[relevnacy, correctness]):
     llm_app(golden.input)

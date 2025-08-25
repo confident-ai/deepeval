@@ -72,7 +72,6 @@ def update_current_trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
-    metrics: Optional[List[BaseMetric]] = None,
 ):
     current_trace = current_trace_context.get()
     if not current_trace:
@@ -109,8 +108,6 @@ def update_current_trace(
         current_trace.tools_called = tools_called
     if expected_tools:
         current_trace.expected_tools = expected_tools
-    if metrics:
-        current_trace.metrics = metrics
 
 
 def update_llm_span(
