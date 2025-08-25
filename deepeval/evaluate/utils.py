@@ -324,14 +324,6 @@ def validate_evaluate_inputs(
         raise ValueError(
             "If using 'goldens', you must also provide a 'observed_callback'."
         )
-    if (test_cases and not metrics) or (metrics and not test_cases):
-        raise ValueError(
-            "If using 'test_cases', you must also provide 'metrics'."
-        )
-    if not ((goldens and observed_callback) or (test_cases and metrics)):
-        raise ValueError(
-            "You must provide either goldens with a 'observed_callback', or test_cases with 'metrics'."
-        )
 
     if test_cases and metrics:
         for test_case in test_cases:
