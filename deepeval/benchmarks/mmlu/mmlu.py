@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu.template import MMLUTemplate
@@ -48,7 +51,7 @@ class MMLU(DeepEvalBaseBenchmark):
         *args,
         batch_size: int | None = None,
         **kwargs,
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("MMLU", len(self.tasks)):
@@ -156,7 +159,9 @@ class MMLU(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden

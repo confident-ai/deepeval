@@ -51,7 +51,10 @@
 ## Import ##############################
 ########################################
 
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import GPTModel
 from deepeval.benchmarks.tasks import *
 from deepeval.benchmarks.modes import *

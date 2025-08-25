@@ -1,8 +1,13 @@
 from deepeval.models.base_model import DeepEvalBaseLLM
 from abc import ABC, abstractmethod
 from typing import List, TypeVar, Generic, List, Optional
+from pydantic import BaseModel
 
 from deepeval.dataset import Golden
+
+
+class DeepEvalBaseBenchmarkResult(BaseModel):
+    overall_accuracy: float
 
 
 T = TypeVar("T")
@@ -21,5 +26,7 @@ class DeepEvalBaseBenchmark(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, *args, **kwargs
+    ) -> DeepEvalBaseBenchmarkResult:
         raise NotImplementedError

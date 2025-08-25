@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.math_qa.task import MathQATask
 from deepeval.benchmarks.math_qa.template import MathQATemplate
@@ -49,7 +52,7 @@ class MathQA(DeepEvalBaseBenchmark):
         *args,
         batch_size: int | None = None,
         **kwargs,
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("MathQA", len(self.tasks)):
@@ -155,7 +158,9 @@ class MathQA(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template

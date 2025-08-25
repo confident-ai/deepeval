@@ -2,7 +2,10 @@ from typing import List, Dict, Optional
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.hellaswag.task import HellaSwagTask
 from deepeval.benchmarks.hellaswag.template import HellaSwagTemplate
@@ -50,7 +53,7 @@ class HellaSwag(DeepEvalBaseBenchmark):
         *args,
         batch_size: int | None = None,
         **kwargs,
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("HellaSwag", len(self.tasks)):
@@ -160,7 +163,9 @@ class HellaSwag(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, task: HellaSwagTask, golden: Golden
