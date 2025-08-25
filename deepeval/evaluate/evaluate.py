@@ -10,6 +10,8 @@ from typing import (
 from rich.console import Console
 import time
 
+from deepeval.confident.api import Api, Endpoints, HttpMethods
+from deepeval.evaluate.api import APIEvaluate
 from deepeval.evaluate.configs import (
     AsyncConfig,
     DisplayConfig,
@@ -30,6 +32,7 @@ from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TEMP_FILE_PATH
 from deepeval.utils import (
     get_or_create_event_loop,
+    open_browser,
     should_ignore_errors,
     should_skip_on_missing_params,
     should_use_cache,
@@ -210,62 +213,95 @@ def evaluate(
     )
     check_valid_test_cases_type(test_cases)
 
-    global_test_run_manager.reset()
-    start_time = time.perf_counter()
+    if metrics:
 
-    if display_config.show_indicator:
-        console = Console()
-        for metric in metrics:
-            console.print(
-                format_metric_description(
-                    metric, async_mode=async_config.run_async
+        global_test_run_manager.reset()
+        start_time = time.perf_counter()
+
+        if display_config.show_indicator:
+            console = Console()
+            for metric in metrics:
+                console.print(
+                    format_metric_description(
+                        metric, async_mode=async_config.run_async
+                    )
                 )
-            )
 
-    with capture_evaluation_run("evaluate()"):
-        if async_config.run_async:
-            loop = get_or_create_event_loop()
-            test_results = loop.run_until_complete(
-                a_execute_test_cases(
+        with capture_evaluation_run("evaluate()"):
+            if async_config.run_async:
+                loop = get_or_create_event_loop()
+                test_results = loop.run_until_complete(
+                    a_execute_test_cases(
+                        test_cases,
+                        metrics,
+                        identifier=identifier,
+                        error_config=error_config,
+                        display_config=display_config,
+                        cache_config=cache_config,
+                        async_config=async_config,
+                    )
+                )
+            else:
+                test_results = execute_test_cases(
                     test_cases,
                     metrics,
                     identifier=identifier,
                     error_config=error_config,
                     display_config=display_config,
                     cache_config=cache_config,
-                    async_config=async_config,
                 )
-            )
-        else:
-            test_results = execute_test_cases(
-                test_cases,
-                metrics,
-                identifier=identifier,
-                error_config=error_config,
-                display_config=display_config,
-                cache_config=cache_config,
-            )
 
-    end_time = time.perf_counter()
-    run_duration = end_time - start_time
-    if display_config.print_results:
-        for test_result in test_results:
-            print_test_result(test_result, display_config.display_option)
-        aggregate_metric_pass_rates(test_results)
-    if display_config.file_output_dir is not None:
-        for test_result in test_results:
-            write_test_result_to_file(
-                test_result,
-                display_config.display_option,
-                display_config.file_output_dir,
-            )
+        end_time = time.perf_counter()
+        run_duration = end_time - start_time
+        if display_config.print_results:
+            for test_result in test_results:
+                print_test_result(test_result, display_config.display_option)
+            aggregate_metric_pass_rates(test_results)
+        if display_config.file_output_dir is not None:
+            for test_result in test_results:
+                write_test_result_to_file(
+                    test_result,
+                    display_config.display_option,
+                    display_config.file_output_dir,
+                )
 
-    test_run = global_test_run_manager.get_test_run()
-    test_run.hyperparameters = process_hyperparameters(hyperparameters)
-    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
-    confident_link = global_test_run_manager.wrap_up_test_run(
-        run_duration, display_table=False
-    )
-    return EvaluationResult(
-        test_results=test_results, confident_link=confident_link
-    )
+        test_run = global_test_run_manager.get_test_run()
+        test_run.hyperparameters = process_hyperparameters(hyperparameters)
+        global_test_run_manager.save_test_run(TEMP_FILE_PATH)
+        confident_link = global_test_run_manager.wrap_up_test_run(
+            run_duration, display_table=False
+        )
+        return EvaluationResult(
+            test_results=test_results, confident_link=confident_link
+        )
+    elif metric_collection:
+        api = Api()
+        api_evaluate = APIEvaluate(
+            metricCollection=metric_collection,
+            llmTestCases=(
+                test_cases if isinstance(test_cases[0], LLMTestCase) else None
+            ),
+            conversationalTestCases=(
+                test_cases
+                if isinstance(test_cases[0], ConversationalTestCase)
+                else None
+            ),
+        )
+        try:
+            body = api_evaluate.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            # Pydantic version below 2.0
+            body = api_evaluate.dict(by_alias=True, exclude_none=True)
+
+        _, link = api.send_request(
+            method=HttpMethods.POST,
+            endpoint=Endpoints.EVALUATE_ENDPOINT,
+            body=body,
+        )
+        if link:
+            console = Console()
+            console.print(
+                "✅ Evaluation successfully pushed to Confident AI! View at "
+                f"[link={link}]{link}[/link]"
+            )
+            open_browser(link)
