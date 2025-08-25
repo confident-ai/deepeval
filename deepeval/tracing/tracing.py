@@ -25,17 +25,9 @@ from deepeval.metrics import BaseMetric
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
-    TraceSpanTestCase,
     TraceApi,
 )
 from deepeval.telemetry import capture_send_trace
-from deepeval.tracing.attributes import (
-    AgentAttributes,
-    Attributes,
-    LlmAttributes,
-    RetrieverAttributes,
-    ToolAttributes,
-)
 from deepeval.tracing.patchers import patch_openai_client
 from deepeval.tracing.types import (
     AgentSpan,
@@ -58,9 +50,9 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
 )
-from deepeval.feedback.utils import convert_feedback_to_api_feedback
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.types import TestCaseMetricPair
 
 
 class TraceManager:
@@ -100,6 +92,7 @@ class TraceManager:
         self.traces_to_evaluate_order: List[str] = []
         self.traces_to_evaluate: List[Trace] = []
         self.integration_traces_to_evaluate: List[Trace] = []
+        self.test_case_metrics: List[TestCaseMetricPair] = []
 
         # Register an exit handler to warn about unprocessed traces
         atexit.register(self._warn_on_exit)
@@ -161,9 +154,9 @@ class TraceManager:
             status=TraceSpanStatus.IN_PROGRESS,
             start_time=perf_counter(),
             end_time=None,
-            confident_api_key=self.confident_api_key,
             metric_collection=metric_collection,
             metrics=metrics,
+            confident_api_key=self.confident_api_key,
         )
         self.active_traces[trace_uuid] = new_trace
         self.traces.append(new_trace)
@@ -192,6 +185,8 @@ class TraceManager:
             else:
                 if self.evaluation_loop:
                     if self.integration_traces_to_evaluate:
+                        pass
+                    elif self.test_case_metrics:
                         pass
                     elif trace_uuid in self.traces_to_evaluate_order:
                         self.traces_to_evaluate.append(trace)
@@ -406,7 +401,7 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
-                    response = await api.a_send_request(
+                    api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
                         body=body,
@@ -417,7 +412,7 @@ class TraceManager:
                     self._print_trace_status(
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace {status}",
-                        description=response["link"],
+                        description=link,
                         environment=self.environment,
                     )
                 elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
@@ -497,7 +492,7 @@ class TraceManager:
             with capture_send_trace():
                 try:
                     api = Api(api_key=self.confident_api_key)
-                    resp = api.send_request(
+                    _, link = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
                         body=body,
@@ -506,7 +501,7 @@ class TraceManager:
                     self._print_trace_status(
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
                         message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                        description=resp["link"],
+                        description=link,
                         environment=self.environment,
                     )
                 except Exception as e:
@@ -591,20 +586,6 @@ class TraceManager:
             else None
         )
 
-        trace_test_case = (
-            TraceSpanTestCase(
-                input=trace.llm_test_case.input,
-                actualOutput=trace.llm_test_case.actual_output,
-                expectedOutput=trace.llm_test_case.expected_output,
-                retrievalContext=trace.llm_test_case.retrieval_context,
-                context=trace.llm_test_case.context,
-                toolsCalled=trace.llm_test_case.tools_called,
-                expectedTools=trace.llm_test_case.expected_tools,
-            )
-            if trace.llm_test_case
-            else None
-        )
-
         return TraceApi(
             uuid=trace.uuid,
             baseSpans=base_spans,
@@ -617,18 +598,20 @@ class TraceManager:
             metadata=trace.metadata,
             name=trace.name,
             tags=trace.tags,
-            environment=self.environment,
             threadId=trace.thread_id,
             userId=trace.user_id,
             input=trace.input,
             output=trace.output,
-            feedback=convert_feedback_to_api_feedback(
-                trace.feedback, trace_uuid=trace.uuid
-            ),
-            llmTestCase=trace_test_case,
             metricCollection=trace.metric_collection,
-            turnContext=trace.turn_context,
+            retrievalContext=trace.retrieval_context,
+            context=trace.context,
+            expectedOutput=trace.expected_output,
+            toolsCalled=trace.tools_called,
+            expectedTools=trace.expected_tools,
             confident_api_key=trace.confident_api_key,
+            environment=(
+                self.environment if not trace.environment else trace.environment
+            ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -645,24 +628,8 @@ class TraceManager:
             span_type = SpanApiType.BASE
 
         # Initialize input and output fields
-        input_data = None
-        output_data = None
-
-        if isinstance(span, RetrieverSpan):
-            # For RetrieverSpan, input is embeddingInput, output is retrievalContext
-            if span.attributes:
-                input_data = span.attributes.embedding_input
-                output_data = span.attributes.retrieval_context
-
-        elif isinstance(span, LlmSpan):
-            # For LlmSpan, input is attributes.input, output is attributes.output
-            if span.attributes:
-                input_data = span.attributes.input
-                output_data = make_json_serializable(span.attributes.output)
-        else:
-            # For BaseSpan, Agent, or Tool types, use the standard logic
-            input_data = span.input
-            output_data = span.output
+        input_data = span.input
+        output_data = span.output
 
         # Convert perf_counter values to ISO 8601 strings
         start_time = (
@@ -676,19 +643,6 @@ class TraceManager:
             else None
         )
 
-        span_test_case = (
-            TraceSpanTestCase(
-                input=span.llm_test_case.input,
-                actualOutput=span.llm_test_case.actual_output,
-                expectedOutput=span.llm_test_case.expected_output,
-                retrievalContext=span.llm_test_case.retrieval_context,
-                context=span.llm_test_case.context,
-                toolsCalled=span.llm_test_case.tools_called,
-                expectedTools=span.llm_test_case.expected_tools,
-            )
-            if span.llm_test_case
-            else None
-        )
         from deepeval.evaluate.utils import create_metric_data
 
         # Create the base API span
@@ -704,16 +658,17 @@ class TraceManager:
             output=output_data,
             metadata=span.metadata,
             error=span.error,
-            llmTestCase=span_test_case,
             metricCollection=span.metric_collection,
-            feedback=convert_feedback_to_api_feedback(
-                span.feedback, span_uuid=span.uuid
-            ),
             metricsData=(
                 [create_metric_data(metric) for metric in span.metrics]
                 if span.metrics
                 else None
             ),
+            retrievalContext=span.retrieval_context,
+            context=span.context,
+            expectedOutput=span.expected_output,
+            toolsCalled=span.tools_called,
+            expectedTools=span.expected_tools,
         )
 
         # Add type-specific attributes
@@ -724,16 +679,14 @@ class TraceManager:
             api_span.description = span.description
         elif isinstance(span, RetrieverSpan):
             api_span.embedder = span.embedder
-            if span.attributes:
-                api_span.top_k = span.attributes.top_k
-                api_span.chunk_size = span.attributes.chunk_size
+            api_span.top_k = span.top_k
+            api_span.chunk_size = span.chunk_size
         elif isinstance(span, LlmSpan):
             api_span.model = span.model
             api_span.cost_per_input_token = span.cost_per_input_token
             api_span.cost_per_output_token = span.cost_per_output_token
-            if span.attributes:
-                api_span.input_token_count = span.attributes.input_token_count
-                api_span.output_token_count = span.attributes.output_token_count
+            api_span.input_token_count = span.input_token_count
+            api_span.output_token_count = span.output_token_count
 
         return api_span
 
@@ -762,7 +715,6 @@ class Observer:
         self.end_time: float
         self.status: TraceSpanStatus
         self.error: Optional[str] = None
-        self.attributes: Optional[Attributes] = None
         self.uuid: str = str(uuid.uuid4())
         # Initialize trace_uuid and parent_uuid as None, they will be set in __enter__
         self.trace_uuid: Optional[str] = None
@@ -853,13 +805,11 @@ class Observer:
 
         if self.update_span_properties is not None:
             self.update_span_properties(current_span)
-        else:
-            self.update_span_attributes(current_span)
 
         if current_span.input is None:
-            current_span.input = self.function_kwargs
+            current_span.input = trace_manager.mask(self.function_kwargs)
         if current_span.output is None:
-            current_span.output = self.result
+            current_span.output = trace_manager.mask(self.result)
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:
@@ -917,7 +867,6 @@ class Observer:
 
             return AgentSpan(
                 **span_kwargs,
-                attributes=None,
                 available_tools=available_tools,
                 agent_handoffs=agent_handoffs,
             )
@@ -929,93 +878,20 @@ class Observer:
             cost_per_output_token = self.observe_kwargs.get(
                 "cost_per_output_token", None
             )
-            if model is None and not trace_manager.openai_client:
-                raise ValueError(
-                    "Either provide a model in observe or configure an openai_client in trace_manager. For more information on openai_client, see https://documentation.confident-ai.com/docs/llm-tracing/integrations/openai"
-                )
             return LlmSpan(
                 **span_kwargs,
-                attributes=None,
                 model=model,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
             )
         elif self.span_type == SpanType.RETRIEVER.value:
             embedder = self.observe_kwargs.get("embedder", None)
-            if embedder is None:
-                raise ValueError("embedder is required for RetrieverSpan")
-
-            return RetrieverSpan(
-                **span_kwargs, attributes=None, embedder=embedder
-            )
+            return RetrieverSpan(**span_kwargs, embedder=embedder)
 
         elif self.span_type == SpanType.TOOL.value:
-            return ToolSpan(
-                **span_kwargs, attributes=None, **self.observe_kwargs
-            )
+            return ToolSpan(**span_kwargs, **self.observe_kwargs)
         else:
             return BaseSpan(**span_kwargs)
-
-    def update_span_attributes(self, current_span: BaseSpan):
-        """Update the span instance with execution results."""
-        current_span_input = current_span.input
-        current_span_output = current_span.output
-        if isinstance(current_span, AgentSpan):
-            if current_span and isinstance(
-                current_span.attributes, AgentAttributes
-            ):
-                current_span.input = trace_manager.mask(
-                    current_span.attributes.input
-                )
-                current_span.output = trace_manager.mask(
-                    current_span.attributes.output
-                )
-            else:
-                current_span.input = trace_manager.mask(self.function_kwargs)
-                current_span.output = trace_manager.mask(self.result)
-
-        elif isinstance(current_span, LlmSpan):
-            if current_span and isinstance(
-                current_span.attributes, LlmAttributes
-            ):
-                current_span.input = trace_manager.mask(
-                    current_span.attributes.input
-                )
-                current_span.output = trace_manager.mask(
-                    current_span.attributes.output
-                )
-
-        elif isinstance(current_span, RetrieverSpan):
-            if current_span and isinstance(
-                current_span.attributes, RetrieverAttributes
-            ):
-                current_span.input = trace_manager.mask(
-                    current_span.attributes.embedding_input
-                )
-                current_span.output = trace_manager.mask(
-                    current_span.attributes.retrieval_context
-                )
-
-        elif isinstance(current_span, ToolSpan):
-            if current_span and isinstance(
-                current_span.attributes, ToolAttributes
-            ):
-                current_span.input = trace_manager.mask(
-                    current_span.attributes.input_parameters
-                )
-                current_span.output = trace_manager.mask(
-                    current_span.attributes.output
-                )
-            else:
-                current_span.input = trace_manager.mask(self.function_kwargs)
-                current_span.output = trace_manager.mask(self.result)
-        else:
-            current_span.input = trace_manager.mask(self.function_kwargs)
-            current_span.output = trace_manager.mask(self.result)
-        if current_span_input is not None:
-            current_span.input = trace_manager.mask(current_span_input)
-        if current_span_output is not None:
-            current_span.output = trace_manager.mask(current_span_output)
 
 
 ########################################################

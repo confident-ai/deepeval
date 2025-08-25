@@ -144,7 +144,7 @@ def test_core_modules_import():
     import deepeval.tracing
     import deepeval.models
     import deepeval.prompt
-    import deepeval.feedback
+    import deepeval.annotation
     import deepeval.confident
     import deepeval.scorer
     import deepeval.simulator
@@ -163,7 +163,7 @@ def test_core_modules_import():
     assert deepeval.tracing is not None
     assert deepeval.models is not None
     assert deepeval.prompt is not None
-    assert deepeval.feedback is not None
+    assert deepeval.annotation is not None
     assert deepeval.confident is not None
     assert deepeval.scorer is not None
     assert deepeval.simulator is not None
@@ -342,15 +342,8 @@ def test_tracing_imports():
     from deepeval.tracing import (
         update_current_span,
         update_current_trace,
-        LlmAttributes,
-        RetrieverAttributes,
-        ToolAttributes,
-        AgentAttributes,
-        TraceAttributes,
         BaseSpan,
         Trace,
-        Feedback,
-        TurnContext,
         observe,
         trace_manager,
         evaluate_thread,
@@ -360,15 +353,8 @@ def test_tracing_imports():
 
     assert update_current_span is not None
     assert update_current_trace is not None
-    assert LlmAttributes is not None
-    assert RetrieverAttributes is not None
-    assert ToolAttributes is not None
-    assert AgentAttributes is not None
-    assert TraceAttributes is not None
     assert BaseSpan is not None
     assert Trace is not None
-    assert Feedback is not None
-    assert TurnContext is not None
     assert observe is not None
     assert trace_manager is not None
     assert evaluate_thread is not None

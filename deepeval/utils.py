@@ -6,6 +6,7 @@ import json
 import time
 from typing import Any, Optional, Dict, List, Union
 from collections.abc import Iterable
+import webbrowser
 import tqdm
 import re
 import string
@@ -18,7 +19,8 @@ from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.confident.api import set_confident_api_key
+from deepeval.constants import CONFIDENT_OPEN_BROWSER
 
 
 def get_lcs(seq1, seq2):
@@ -224,7 +226,7 @@ def login(api_key: str):
 
     from rich import print
 
-    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+    set_confident_api_key(api_key)
     print(
         "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
     )
@@ -265,6 +267,12 @@ def is_in_ci_env() -> bool:
             return True
 
     return False
+
+
+def open_browser(url: str):
+    if os.getenv(CONFIDENT_OPEN_BROWSER) != "NO":
+        if is_in_ci_env() == False:
+            webbrowser.open(url)
 
 
 def capture_contextvars(single_obj):

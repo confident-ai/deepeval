@@ -1,7 +1,8 @@
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
+from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.openai import OpenAI
+
+from dotenv import load_dotenv
 
 from tests.integrations.openai.resources import (
     llm_app,
@@ -9,15 +10,18 @@ from tests.integrations.openai.resources import (
     RESPONSE_TOOLS,
 )
 
+load_dotenv()
+
 goldens = [
     Golden(input="What is the weather in Bogotá, Colombia?"),
     Golden(input="What is the weather in Paris, France?"),
 ]
+dataset = EvaluationDataset(goldens=goldens)
 
 
 def test_end_to_end_loop():
     openai_client = OpenAI()
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         openai_client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -30,7 +34,7 @@ def test_end_to_end_loop():
             tools=CHAT_TOOLS,
             metrics=[AnswerRelevancyMetric(), BiasMetric()],
         )
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         openai_client.responses.create(
             model="gpt-4o",
             instructions="You are a helpful chatbot. Always generate a string response.",
@@ -41,10 +45,10 @@ def test_end_to_end_loop():
 
 
 def test_component_level_loop():
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         llm_app(golden.input, completion_mode="chat")
 
-    for golden in dataset(goldens=goldens):
+    for golden in dataset.evals_iterator():
         llm_app(golden.input, completion_mode="response")
 
 
@@ -62,6 +66,6 @@ def test_tracing():
 ##############################################
 
 if __name__ == "__main__":
-    # test_end_to_end_loop()
-    # test_component_level_loop()
+    test_end_to_end_loop()
+    test_component_level_loop()
     test_tracing()

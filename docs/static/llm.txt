@@ -61,7 +61,7 @@
 - [Generate Synthetic Goldens](https://deepeval.com/docs/synthesizer-generate-from-goldens): Generate synthetic Goldens from existing Goldens easily.
 - [Improving QA Agent](https://deepeval.com/tutorials/qa-agent-improving-hyperparameters): Learn to enhance QA agent performance through hyperparameter tuning.
 - [Red Teaming Bias](https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-bias): Test LLMs for bias in responses across various categories.
-- [Confident AI Documentation](https://documentation.confident-ai.com/docs/): Cloud platform for evaluating LLM applications with DeepEval.
+- [Confident AI Documentation](https://www.confident-ai.com/docs/): Cloud platform for evaluating LLM applications with DeepEval.
 - [BIG-Bench Hard Evaluation](https://deepeval.com/docs/benchmarks-big-bench-hard): Evaluate language models with challenging BIG-Bench Hard tasks.
 - [LLM Tracing Guide](https://deepeval.com/docs/evaluation-llm-tracing): Learn to evaluate LLM interactions with tracing metrics.
 - [Document Summarization Datasets](https://deepeval.com/tutorials/doc-summarization-annotating-datasets): Learn to create and maintain datasets for document summarization.

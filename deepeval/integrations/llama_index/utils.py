@@ -46,7 +46,7 @@ def prepare_input_llm_test_case_params(
 ):
 
     # condition for parent agent span
-    if class_name == "Workflow" and method_name == "run":
+    if method_name == "run":
         start_event = args.get("start_event")
 
         is_llama_index_agent_installed()
