@@ -88,6 +88,16 @@ def assert_test(
         metrics=metrics,
     )
 
+    async_config = AsyncConfig(throttle_value=0, max_concurrent=100)
+    display_config = DisplayConfig(
+        verbose_mode=should_verbose_print(), show_indicator=True
+    )
+    error_config = ErrorConfig(
+        ignore_errors=should_ignore_errors(),
+        skip_on_missing_params=should_skip_on_missing_params(),
+    )
+    cache_config = CacheConfig(write_cache=get_is_running_deepeval())
+
     if golden and observed_callback:
         if run_async:
             loop = get_or_create_event_loop()
@@ -95,13 +105,10 @@ def assert_test(
                 a_execute_agentic_test_cases(
                     goldens=[golden],
                     observed_callback=observed_callback,
-                    ignore_errors=should_ignore_errors(),
-                    verbose_mode=should_verbose_print(),
-                    show_indicator=True,
-                    save_to_disk=get_is_running_deepeval(),
-                    skip_on_missing_params=should_skip_on_missing_params(),
-                    throttle_value=0,
-                    max_concurrent=100,
+                    error_config=error_config,
+                    display_config=display_config,
+                    async_config=async_config,
+                    cache_config=cache_config,
                     identifier=get_identifier(),
                     _use_bar_indicator=True,
                     _is_assert_test=True,
@@ -111,10 +118,9 @@ def assert_test(
             test_result = execute_agentic_test_cases(
                 goldens=[golden],
                 observed_callback=observed_callback,
-                ignore_errors=should_ignore_errors(),
-                verbose_mode=should_verbose_print(),
-                show_indicator=True,
-                save_to_disk=get_is_running_deepeval(),
+                error_config=error_config,
+                display_config=display_config,
+                cache_config=cache_config,
                 skip_on_missing_params=should_skip_on_missing_params(),
                 identifier=get_identifier(),
                 _use_bar_indicator=False,
@@ -128,15 +134,10 @@ def assert_test(
                 a_execute_test_cases(
                     [test_case],
                     metrics,
-                    skip_on_missing_params=should_skip_on_missing_params(),
-                    ignore_errors=should_ignore_errors(),
-                    use_cache=should_use_cache(),
-                    verbose_mode=should_verbose_print(),
-                    throttle_value=0,
-                    # this doesn't matter for pytest
-                    max_concurrent=100,
-                    save_to_disk=get_is_running_deepeval(),
-                    show_indicator=True,
+                    error_config=error_config,
+                    display_config=display_config,
+                    async_config=async_config,
+                    cache_config=cache_config,
                     identifier=get_identifier(),
                     _use_bar_indicator=True,
                     _is_assert_test=True,
@@ -146,12 +147,10 @@ def assert_test(
             test_result = execute_test_cases(
                 [test_case],
                 metrics,
-                skip_on_missing_params=should_skip_on_missing_params(),
-                ignore_errors=should_ignore_errors(),
-                use_cache=should_use_cache(),
-                verbose_mode=should_verbose_print(),
-                save_to_disk=get_is_running_deepeval(),
-                show_indicator=True,
+                error_config=error_config,
+                display_config=display_config,
+                async_config=async_config,
+                cache_config=cache_config,
                 identifier=get_identifier(),
                 _use_bar_indicator=False,
                 _is_assert_test=True,
@@ -231,14 +230,10 @@ def evaluate(
                     test_cases,
                     metrics,
                     identifier=identifier,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    use_cache=cache_config.use_cache,
-                    save_to_disk=cache_config.write_cache,
-                    verbose_mode=display_config.verbose_mode,
-                    show_indicator=display_config.show_indicator,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
+                    error_config=error_config,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    async_config=async_config,
                 )
             )
         else:
@@ -246,12 +241,10 @@ def evaluate(
                 test_cases,
                 metrics,
                 identifier=identifier,
-                ignore_errors=error_config.ignore_errors,
-                skip_on_missing_params=error_config.skip_on_missing_params,
-                use_cache=cache_config.use_cache,
-                save_to_disk=cache_config.write_cache,
-                show_indicator=display_config.show_indicator,
-                verbose_mode=display_config.verbose_mode,
+                error_config=error_config,
+                display_config=display_config,
+                cache_config=cache_config,
+                async_config=async_config,
             )
 
     end_time = time.perf_counter()
@@ -259,7 +252,7 @@ def evaluate(
     if display_config.print_results:
         for test_result in test_results:
             print_test_result(test_result, display_config.display_option)
-            aggregate_metric_pass_rates(test_results)
+        aggregate_metric_pass_rates(test_results)
     if display_config.file_output_dir is not None:
         for test_result in test_results:
             write_test_result_to_file(

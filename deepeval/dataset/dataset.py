@@ -979,26 +979,24 @@ class EvaluationDataset:
                 loop = get_or_create_event_loop()
                 yield from a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
+                    identifier=identifier,
+                    loop=loop,
+                    test_results=test_results,
                     verbose_mode=display_config.verbose_mode,
+                    show_indicator=display_config.show_indicator,
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
-                    loop=loop,
                     throttle_value=async_config.throttle_value,
                     max_concurrent=async_config.max_concurrent,
-                    test_results=test_results,
                     save_to_disk=cache_config.write_cache,
-                    identifier=identifier,
                 )
             else:
                 yield from execute_agentic_test_cases_from_loop(
                     goldens=goldens,
-                    verbose_mode=display_config.verbose_mode,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    error_config=error_config,
                     test_results=test_results,
-                    save_to_disk=cache_config.write_cache,
                     identifier=identifier,
                 )
 
@@ -1009,7 +1007,7 @@ class EvaluationDataset:
                     print_test_result(
                         test_result, display_config.display_option
                     )
-                    aggregate_metric_pass_rates(test_results)
+                aggregate_metric_pass_rates(test_results)
             if display_config.file_output_dir is not None:
                 for test_result in test_results:
                     write_test_result_to_file(
