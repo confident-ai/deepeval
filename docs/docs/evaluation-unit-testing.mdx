@@ -9,9 +9,11 @@ import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions and ensure reliable performance. You can use `deepeval` with your CI/CD pipelines to run both end-to-end and component level evaluations.
 
+`deepeval` allows you to run evaluations as if you're using `pytest` via our Pytest integration.
+
 ## End-to-End Evals in CI/CD
 
-You can run end-to-end evals for both single-turn and multi-turn test cases.
+Run tests against your LLM app using golden datasets for every push you make. End-to-end evaluations validate overall behavior across single-turn and multi-turn interactions. Perfect for catching regressions before deploying to production.
 
 ### Single-Turn Evals
 
@@ -215,7 +217,7 @@ The usual `pytest` command would still work but is highly not recommended. `deep
 
 ## Component-Level Evals in CI/CD
 
-`deepeval` allows you to run evaluations if you're using `pytest` via our _pytest integration_. You can pull datasets and use the goldens as `input`s in CI/CD workflows.
+Test individual parts of your LLM pipeline like prompt templates or retrieval logic in isolation. Component-level evals offer fast, targeted feedback and integrate seamlessly into your CI/CD workflows.
 
 <Timeline>
 <TimelineItem title="Pull your dataset">
