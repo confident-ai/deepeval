@@ -41,9 +41,9 @@ class PydanticAIAgent(Agent):
     def __init__(
         self,
         *args,
-        metric_collection: str = None,
-        metrics: List[BaseMetric] = None,
-        trace_attributes: dict = None,
+        metric_collection: str = None, # to be deprecated
+        metrics: List[BaseMetric] = None, # to be deprecated
+        trace_attributes: dict = None, # to be deprecated
         **kwargs
     ):
         with capture_tracing_integration("pydantic_ai.agent.PydanticAIAgent"):
@@ -52,10 +52,18 @@ class PydanticAIAgent(Agent):
             
             super().__init__(*args, **kwargs)
             
-            self.metric_collection = metric_collection
-            self.trace_attributes = trace_attributes
-            self.metrics = metrics
+            # attributes to be set if ran synchronously
+            self.metric_collection = metric_collection # to be deprecated
+            self.metrics = metrics # to be deprecated
+            self.trace_attributes = trace_attributes # to be deprecated 
             
+            # trace attributes to be set if ran asynchronously
+            self._trace_name = None
+            self._trace_tags: list[str] = []
+            self._trace_metadata: dict = {}
+            self._trace_thread_id: str = None
+            self._trace_user_id: str = None
+
             # Patch the run method only for this instance
             self._patch_run_method()
     
@@ -65,6 +73,44 @@ class PydanticAIAgent(Agent):
         
         @functools.wraps(original_run)
         async def patched_run(*args, **kwargs):
+            # extract and validate flattened arguments - use safe pop with defaults
+            metric_collection = kwargs.pop("metric_collection", None)
+            if metric_collection is not None and not isinstance(metric_collection, str):
+                raise TypeError("metric_collection must be a string")
+
+            metrics = kwargs.pop("metrics", None)
+            if metrics is not None and not (isinstance(metrics, list) and all(isinstance(m, BaseMetric) for m in metrics)):
+                raise TypeError("metrics must be a list of BaseMetric instances")
+            
+            trace_name = kwargs.pop("name", self._trace_name)
+            if trace_name is not None and not isinstance(trace_name, str):
+                raise TypeError("trace_name must be a string")
+
+            trace_tags = kwargs.pop("tags", self._trace_tags)
+            if trace_tags is not None and not (isinstance(trace_tags, list) and all(isinstance(t, str) for t in trace_tags)):
+                raise TypeError("trace_tags must be a list of strings")
+
+            trace_metadata = kwargs.pop("metadata", self._trace_metadata)
+            if trace_metadata is not None and not isinstance(trace_metadata, dict):
+                raise TypeError("trace_metadata must be a dictionary")
+
+            trace_thread_id = kwargs.pop("thread_id", self._trace_thread_id)
+            if trace_thread_id is not None and not isinstance(trace_thread_id, str):
+                raise TypeError("trace_thread_id must be a string")
+
+            trace_user_id = kwargs.pop("user_id", self._trace_user_id)
+            if trace_user_id is not None and not isinstance(trace_user_id, str):
+                raise TypeError("trace_user_id must be a string")
+            
+            # attributes to be set if ran synchronously
+            self.metric_collection = metric_collection
+            self.metrics = metrics
+            self._trace_name = trace_name
+            self._trace_tags = trace_tags
+            self._trace_metadata = trace_metadata
+            self._trace_thread_id = trace_thread_id
+            self._trace_user_id = trace_user_id
+
             model = kwargs.get("model", None)
             infer_name = kwargs.get("infer_name", True)
 
@@ -108,12 +154,13 @@ class PydanticAIAgent(Agent):
                 # fallback for input and output not being set
                 run_span.set_attribute("confident.span.input", input)
                 run_span.set_attribute("confident.span.output", output)
-
-                # set metric collection attribute
-                if self.metric_collection:
-                    run_span.set_attribute("confident.span.metric_collection", self.metric_collection)
                 
-                # set trace attributes
+                if metric_collection: # flattened argument to be replaced
+                    run_span.set_attribute("confident.span.metric_collection", metric_collection)
+                elif self.metric_collection: # to be deprecated
+                    run_span.set_attribute("confident.span.metric_collection", self.metric_collection)
+
+                # set trace attributes (to be deprecated)
                 if self.trace_attributes:
                     if isinstance(self.trace_attributes, dict):
                         if self.trace_attributes.get("name"):
@@ -127,8 +174,28 @@ class PydanticAIAgent(Agent):
                         if self.trace_attributes.get("user_id"):
                             run_span.set_attribute("confident.trace.user_id", self.trace_attributes.get("user_id"))
                 
-                # set metrics
-                if self.metrics:
+                # set the flattened trace attributes
+                if trace_name:
+                    run_span.set_attribute("confident.trace.name", trace_name)
+                if trace_tags:
+                    run_span.set_attribute("confident.trace.tags", trace_tags)
+                if trace_metadata:
+                    run_span.set_attribute("confident.trace.metadata", json.dumps(trace_metadata))
+                if trace_thread_id:
+                    run_span.set_attribute("confident.trace.thread_id", trace_thread_id)
+                if trace_user_id:
+                    run_span.set_attribute("confident.trace.user_id", trace_user_id)
+                
+                if metrics: # flattened argument to be replaced
+                    trace_manager.test_case_metrics.append(
+                        TestCaseMetricPair(
+                            test_case=LLMTestCase(
+                                input=input, actual_output=output
+                            ),
+                            metrics=metrics,
+                        )
+                    )
+                elif self.metrics: # to be deprecated
                     trace_manager.test_case_metrics.append(
                         TestCaseMetricPair(
                             test_case=LLMTestCase(
@@ -137,7 +204,6 @@ class PydanticAIAgent(Agent):
                             metrics=self.metrics,
                         )
                     )
-                
 
             return result
         
