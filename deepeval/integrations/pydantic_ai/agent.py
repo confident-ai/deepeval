@@ -66,6 +66,7 @@ class PydanticAIAgent(Agent):
 
             # Patch the run method only for this instance
             self._patch_run_method()
+            self._patch_run_method_sync()
     
     def _patch_run_method(self):
         """Patch the Agent.run method only for this PydanticAIAgent instance"""
@@ -244,6 +245,9 @@ class PydanticAIAgent(Agent):
             self._trace_thread_id = trace_thread_id
             self._trace_user_id = trace_user_id
 
+            result = original_run(*args, **kwargs)
+            
+            return result
         
         # Replace the method only for this instance
         self.run_sync = patched_run
