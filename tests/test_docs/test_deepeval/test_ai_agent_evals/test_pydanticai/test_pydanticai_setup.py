@@ -13,7 +13,8 @@ result = agent.run_sync("What are the LLMs?")
 print(result)
 time.sleep(10) # wait for the trace to be posted
 
-# running agent in async mode
+# Running agent in async mode
+
 # import asyncio
 # async def main():
 #     result = await agent.run("What are the LLMs?")

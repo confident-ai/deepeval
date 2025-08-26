@@ -69,33 +69,36 @@ class PydanticAIAgent(Agent):
         original_run = self.run
         
         @functools.wraps(original_run)
-        async def patched_run(*args, **kwargs):
+        async def patched_run(
+            *args,
+            metric_collection=None,
+            metrics=None,
+            trace_name=None,
+            trace_tags=None,
+            trace_metadata=None,
+            trace_thread_id=None,
+            trace_user_id=None,
+            **kwargs
+        ):
             # extract and validate flattened arguments - use safe pop with defaults
-            metric_collection = kwargs.pop("metric_collection", None)
             if metric_collection is not None and not isinstance(metric_collection, str):
                 raise TypeError("metric_collection must be a string")
 
-            metrics = kwargs.pop("metrics", None)
             if metrics is not None and not (isinstance(metrics, list) and all(isinstance(m, BaseMetric) for m in metrics)):
                 raise TypeError("metrics must be a list of BaseMetric instances")
             
-            trace_name = kwargs.pop("name", self._trace_name)
             if trace_name is not None and not isinstance(trace_name, str):
                 raise TypeError("trace_name must be a string")
 
-            trace_tags = kwargs.pop("tags", self._trace_tags)
             if trace_tags is not None and not (isinstance(trace_tags, list) and all(isinstance(t, str) for t in trace_tags)):
                 raise TypeError("trace_tags must be a list of strings")
 
-            trace_metadata = kwargs.pop("metadata", self._trace_metadata)
             if trace_metadata is not None and not isinstance(trace_metadata, dict):
                 raise TypeError("trace_metadata must be a dictionary")
 
-            trace_thread_id = kwargs.pop("thread_id", self._trace_thread_id)
             if trace_thread_id is not None and not isinstance(trace_thread_id, str):
                 raise TypeError("trace_thread_id must be a string")
 
-            trace_user_id = kwargs.pop("user_id", self._trace_user_id)
             if trace_user_id is not None and not isinstance(trace_user_id, str):
                 raise TypeError("trace_user_id must be a string")
 
@@ -201,32 +204,35 @@ class PydanticAIAgent(Agent):
         original_run = self.run_sync
         
         @functools.wraps(original_run)
-        def patched_run(*args, **kwargs):
-            metric_collection = kwargs.pop("metric_collection", None)
+        def patched_run(
+            *args,
+            metric_collection=None,
+            metrics=None,
+            trace_name=None,
+            trace_tags=None,
+            trace_metadata=None,
+            trace_thread_id=None,
+            trace_user_id=None,
+            **kwargs
+        ):
             if metric_collection is not None and not isinstance(metric_collection, str):
                 raise TypeError("metric_collection must be a string")
 
-            metrics = kwargs.pop("metrics", None)
             if metrics is not None and not (isinstance(metrics, list) and all(isinstance(m, BaseMetric) for m in metrics)):
                 raise TypeError("metrics must be a list of BaseMetric instances")
             
-            trace_name = kwargs.pop("name", self._trace_name)
             if trace_name is not None and not isinstance(trace_name, str):
                 raise TypeError("trace_name must be a string")
 
-            trace_tags = kwargs.pop("tags", self._trace_tags)
             if trace_tags is not None and not (isinstance(trace_tags, list) and all(isinstance(t, str) for t in trace_tags)):
                 raise TypeError("trace_tags must be a list of strings")
 
-            trace_metadata = kwargs.pop("metadata", self._trace_metadata)
             if trace_metadata is not None and not isinstance(trace_metadata, dict):
                 raise TypeError("trace_metadata must be a dictionary")
 
-            trace_thread_id = kwargs.pop("thread_id", self._trace_thread_id)
             if trace_thread_id is not None and not isinstance(trace_thread_id, str):
                 raise TypeError("trace_thread_id must be a string")
 
-            trace_user_id = kwargs.pop("user_id", self._trace_user_id)
             if trace_user_id is not None and not isinstance(trace_user_id, str):
                 raise TypeError("trace_user_id must be a string")
             
