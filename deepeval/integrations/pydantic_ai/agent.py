@@ -148,8 +148,10 @@ class PydanticAIAgent(Agent):
                 run_span.set_attribute("confident.span.output", output)
                 
                 if metric_collection: # flattened argument to be replaced
+                    print("setting metric_collection from metric_collection", metric_collection)
                     run_span.set_attribute("confident.span.metric_collection", metric_collection)
                 elif self.metric_collection: # to be deprecated
+                    print("setting metric_collection from self.metric_collection", self.metric_collection)
                     run_span.set_attribute("confident.span.metric_collection", self.metric_collection)
 
                 # set trace attributes (to be deprecated)
@@ -237,8 +239,11 @@ class PydanticAIAgent(Agent):
                 raise TypeError("trace_user_id must be a string")
             
             # attributes to be set if ran synchronously
-            self.metric_collection = metric_collection
-            self.metrics = metrics
+            if metric_collection:
+                self.metric_collection = metric_collection
+            if metrics:
+                self.metrics = metrics
+            
             self._trace_name = trace_name
             self._trace_tags = trace_tags
             self._trace_metadata = trace_metadata
