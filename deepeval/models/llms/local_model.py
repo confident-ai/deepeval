@@ -17,6 +17,7 @@ class LocalModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         temperature: float = 0,
         format: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
@@ -35,6 +36,7 @@ class LocalModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
     ###############################################
@@ -49,6 +51,7 @@ class LocalModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
+            **self.generation_kwargs,
         )
         res_content = response.choices[0].message.content
 
@@ -66,6 +69,7 @@ class LocalModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             temperature=self.temperature,
+            **self.generation_kwargs,
         )
         res_content = response.choices[0].message.content
 

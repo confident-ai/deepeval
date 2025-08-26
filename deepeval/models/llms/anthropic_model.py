@@ -27,6 +27,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         model: str = "claude-3-7-sonnet-latest",
         temperature: float = 0,
         _anthropic_api_key: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = parse_model_name(model)
@@ -37,6 +38,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         self.temperature = temperature
 
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
     ###############################################
@@ -57,6 +59,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             ],
             model=self.model_name,
             temperature=self.temperature,
+            **self.generation_kwargs,
         )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
@@ -81,6 +84,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             ],
             model=self.model_name,
             temperature=self.temperature,
+            **self.generation_kwargs,
         )
         cost = self.calculate_cost(
             message.usage.input_tokens, message.usage.output_tokens
