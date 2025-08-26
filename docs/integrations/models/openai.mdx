@@ -67,6 +67,17 @@ There are **ONE** mandatory and **ONE** optional parameters when creating a `GPT
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 - [Optional] `cost_per_input_token`: A float specifying the cost for each input token for the provided model.
 - [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by OpenAI models, such as:
+    - `top_p`: Controls nucleus sampling (probability mass for token selection).
+    - `max_tokens`: Maximum number of tokens in the generated response.
+    - `stop`: A string or list of strings where the generation will stop.
+    - `presence_penalty`: Penalizes new tokens based on whether they appear in the text so far (reduces repetition).
+    - `frequency_penalty`: Penalizes new tokens based on their existing frequency in the text (reduces frequent token usage).
+    - `logit_bias`: A dictionary mapping token IDs to bias values to increase or decrease likelihood.
+    - `n`: Number of completions to generate per prompt.
+    - `seed`: Seed for reproducibility (when supported).
+    - `tools` / `tool_choice`: Parameters related to tool usage for tool-using models.
+    - `logprobs`, `top_logprobs`: Return token-level log probabilities (if supported).
 
 ### Available OpenAI Models
 
