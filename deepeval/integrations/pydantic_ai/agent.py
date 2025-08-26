@@ -101,15 +101,6 @@ class PydanticAIAgent(Agent):
             trace_user_id = kwargs.pop("user_id", self._trace_user_id)
             if trace_user_id is not None and not isinstance(trace_user_id, str):
                 raise TypeError("trace_user_id must be a string")
-            
-            # attributes to be set if ran synchronously
-            self.metric_collection = metric_collection
-            self.metrics = metrics
-            self._trace_name = trace_name
-            self._trace_tags = trace_tags
-            self._trace_metadata = trace_metadata
-            self._trace_thread_id = trace_thread_id
-            self._trace_user_id = trace_user_id
 
             model = kwargs.get("model", None)
             infer_name = kwargs.get("infer_name", True)
@@ -209,3 +200,50 @@ class PydanticAIAgent(Agent):
         
         # Replace the method only for this instance
         self.run = patched_run
+
+    def _patch_run_method_sync(self):
+        """Patch the Agent.run method only for this PydanticAIAgent instance"""
+        original_run = self.run_sync
+        
+        @functools.wraps(original_run)
+        def patched_run(*args, **kwargs):
+            metric_collection = kwargs.pop("metric_collection", None)
+            if metric_collection is not None and not isinstance(metric_collection, str):
+                raise TypeError("metric_collection must be a string")
+
+            metrics = kwargs.pop("metrics", None)
+            if metrics is not None and not (isinstance(metrics, list) and all(isinstance(m, BaseMetric) for m in metrics)):
+                raise TypeError("metrics must be a list of BaseMetric instances")
+            
+            trace_name = kwargs.pop("name", self._trace_name)
+            if trace_name is not None and not isinstance(trace_name, str):
+                raise TypeError("trace_name must be a string")
+
+            trace_tags = kwargs.pop("tags", self._trace_tags)
+            if trace_tags is not None and not (isinstance(trace_tags, list) and all(isinstance(t, str) for t in trace_tags)):
+                raise TypeError("trace_tags must be a list of strings")
+
+            trace_metadata = kwargs.pop("metadata", self._trace_metadata)
+            if trace_metadata is not None and not isinstance(trace_metadata, dict):
+                raise TypeError("trace_metadata must be a dictionary")
+
+            trace_thread_id = kwargs.pop("thread_id", self._trace_thread_id)
+            if trace_thread_id is not None and not isinstance(trace_thread_id, str):
+                raise TypeError("trace_thread_id must be a string")
+
+            trace_user_id = kwargs.pop("user_id", self._trace_user_id)
+            if trace_user_id is not None and not isinstance(trace_user_id, str):
+                raise TypeError("trace_user_id must be a string")
+            
+            # attributes to be set if ran synchronously
+            self.metric_collection = metric_collection
+            self.metrics = metrics
+            self._trace_name = trace_name
+            self._trace_tags = trace_tags
+            self._trace_metadata = trace_metadata
+            self._trace_thread_id = trace_thread_id
+            self._trace_user_id = trace_user_id
+
+        
+        # Replace the method only for this instance
+        self.run_sync = patched_run
