@@ -46,10 +46,10 @@ There are **TWO** mandatory and **FIVE** optional parameters when creating an `A
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 - [Optional] `input_token_cost`: A float specifying the per-input-token cost in USD. Defaulted to 0.
 - [Optional] `output_token_cost`: A float specifying the per-output-token cost in USD. Defaulted to 0.
-- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by OpenAI models, such as:
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider, such as:
     - `top_p`: Controls nucleus sampling (probability mass for token selection).
     - `max_tokens`: Maximum number of tokens in the generated response.
-    - `stop`: A string or list of strings where the generation will stop.
+    - `stop_sequences`: A string or list of strings where the generation will stop.
     - `presence_penalty`: Penalizes new tokens based on whether they appear in the text so far (reduces repetition).
     - `frequency_penalty`: Penalizes new tokens based on their existing frequency in the text (reduces frequent token usage).
     - `logit_bias`: A dictionary mapping token IDs to bias values to increase or decrease likelihood.
@@ -57,6 +57,10 @@ There are **TWO** mandatory and **FIVE** optional parameters when creating an `A
     - `seed`: Seed for reproducibility (when supported).
     - `tools` / `tool_choice`: Parameters related to tool usage for tool-using models.
     - `logprobs`, `top_logprobs`: Return token-level log probabilities (if supported).
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+:::
 
 ### Available Amazon Bedrock Models
 
