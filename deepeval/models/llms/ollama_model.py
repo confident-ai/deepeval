@@ -42,7 +42,10 @@ class OllamaModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
-            options={**{"temperature": self.temperature}, **self.generation_kwargs},
+            options={
+                **{"temperature": self.temperature},
+                **self.generation_kwargs,
+            },
         )
         return (
             (
@@ -61,7 +64,10 @@ class OllamaModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
-            options={**{"temperature": self.temperature}, **self.generation_kwargs},
+            options={
+                **{"temperature": self.temperature},
+                **self.generation_kwargs,
+            },
         )
         return (
             (
