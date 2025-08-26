@@ -1,22 +1,19 @@
 ---
 id: evaluation-llm-tracing
-title: Setup LLM Tracing
-sidebar_label: Setup LLM Tracing
+title: LLM Tracing
+sidebar_label: Tracing
 ---
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 
-`deepeval` offers an `@observe` decorator for you to apply metrics at any point in your LLM app to evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction), no matter how complex they may be.
+Tracing your LLM application helps you monitor its full execution from start to finish. With `deepeval`'s `@observe` decorator, you can trace and evaluate any [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) at any point in your app no matter how complex they may be.
 
-Each component in an LLM application can be grouped into its own **span**, which is an arbitrary scope that you can define anywhere to suit your evaluation and debugging needs. A complete execution of your LLM application creates a **trace**, which contains one or more spans.
+## Quick Summary
 
-![LLM Trace](https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png)
-
-:::tip
-Tracing is required for component-level evaluation, but we recommend everyone to set it up even if you're running end-to-end evaluations, as it provides full visibility for debugging internal components.
-:::
+In an LLM app, each component can be grouped into a **span** — a flexible, user-defined scope for evaluation or debugging. A full run of your app forms a **trace**, which consists of one or more spans.
 
 <Tabs>
 
@@ -48,7 +45,7 @@ Spans make up a trace and evals on spans represents [component-level evaluations
 
 <details>
 
-<summary>Click here to learn how DeepEval's tracing is non-instrusive</summary>
+<summary>Learn how DeepEval's tracing is non-instrusive</summary>
 
 `deepeval`'s tracing is **non-intrusive**, requires **minimal code change** and **doesn't add latency** to your LLM application. It also:
 
@@ -81,157 +78,197 @@ def complete(query: str):
 
 </details>
 
-Tracing in `deepeval` has these benefits:
+### Why Tracing?
 
-- **Component-level metrics**: Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs to run targeted metrics like answer relevancy or context precision without refactoring.
+- **Run targeted metrics on specific components:** Attach `LLMTestCase`s to agents, tools, retrievers, or LLMs and apply metrics like answer relevancy or context precision—without needing to restructure your app.
 
-- **Create test cases at runtime**: Different components may depend on the outputs of other components, instead of a static dataset `LLMTestCase`s to be set dynamically at runtime as data flows through the system.
+- **Generate test cases dynamically:** Many components rely on upstream outputs. Tracing lets you define `LLMTestCase`s at runtime as data flows through the system.
 
-- **Component-level debugging**: Trace evaluation across spans to inspect failures at tool calls, intermediate LLM outputs, or retrieved contexts.nt components are interacting with one another for each evaluated test case.
+- **Debug with precision:** See exactly where and why things fail—whether it’s tool calls, intermediate outputs, or context retrieval steps.
 
-## Why Tracing?
+- **Run end-to-end evals with trace data:** Use the `evals_iterator` with `metrics` to perform comprehensive evaluations using your traces.
 
-Apart from tracing being mandatory for component-level evaluation, tracing solves these problems that you might have already experienced for end-to-end evaluation:
+## Setup Tracing
 
-- **Awkward code changes:** You often need to expose or return internal variables across many layers just to capture `LLMTestCase` parameters for evaluation.
+To set up tracing in your LLM app, you need to understand two key concepts:
 
-- **Limited visibility:** It's hard to debug individual components (e.g., retrieval, re-ranking, reasoning), and you might end up indexing evaluation results by the name of the component you wish to unit-test.
+* **Trace**: The full execution of your app, made up of one or more spans.
+* **Span**: A specific component or unit of work—like an LLM call, tool invocation, or document retrieval.
 
-:::tip
-Each metric in `metrics` is evaluated using exactly the same algorithm, require the same `LLMTestCase` parameters, and with the same configurations, as you would expect when running evaluations without tracing.
-:::
+Spans can be nested to reflect how your components interact, forming a tree-like structure. You attach metrics to spans to evaluate specific parts of your app.
 
-## Setup Tracing with a Decorator
 
-Here are two terminologies you need to know when setting up tracing:
+<Timeline>
+<TimelineItem title="Decorate Your Components">
 
-- **Trace:** The overall execution flow of your LLM application, contains multiple spans
-- **Span:** Individual components or units of work within your application (e.g., LLM calls, tool executions, retrievals)
+You need to first find all the different components of your LLM application that you can be grouped into individual spans. Then add an `@observe` decorator on top of those components.
 
-A span can contain many child spans, forming a tree structure—just like how different components of your LLM application interact. You apply metrics at the span level to evaluate specific components, because each span represents a component of your application.
-
-### The `@observe` decorator
-
-The `@observe` decorator creates spans, and a call to your LLM application decorated by one or more `@observe` decorators create a trace with many spans. This is how you would use `@observe`:
-
-```python showLineNumbers {8}
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.tracing import observe, update_current_span
+```python showLineNumbers {2,6}
 from openai import OpenAI
+from deepeval.tracing import observe
 
 client = OpenAI()
 
-@observe(metrics=[AnswerRelevancyMetric()])
+@observe()
 def complete(query: str):
-  response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]).choices[0].message.content
+    pass
+```
 
-  update_current_span(
-    test_case=LLMTestCase(input=query, output=response)
-  )
-  return response
+Learn more about the `@observe` decorator [here](#observe).
+
+</TimelineItem>
+
+<TimelineItem title="Add Test Cases Inside Components">
+
+When you're doing component-level evals, you need to create test cases at each component level for evaluations to take place. You can do this using the `update_current_span` method from `deepeval`.
+
+```python showLineNumbers {2-3,14-16}
+from openai import OpenAI
+from deepeval.tracing import observe, update_current_span
+from deepeval.test_case import LLMTestCase
+
+client = OpenAI()
+
+@observe()
+def complete(query: str):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": query}]
+    ).choices[0].message.content
+
+    update_current_span(
+        test_case=LLMTestCase(input=query, output=response)
+    )
+    return response
+```
+
+To run **component-level evaluations**, you **must**:
+
+- Supply the `metrics` parameter in `@observe`
+- Call `update_current_span()` at runtime with an `LLMTestCase`
+
+If you simply decorate your LLM application with `@observe` and don't supply any arguments, nothing will happen at all.
+
+</TimelineItem>
+<TimelineItem title="Add Metrics To Components">
+
+You can now add `metrics` and specify the `type`s of span for each decorator to enable component level evals and get better visibility of your LLM application.
+
+```python showLineNumbers {2,8}
+from openai import OpenAI
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.tracing import observe, update_current_span
+
+client = OpenAI()
+
+@observe(metrics=[AnswerRelevancyMetric()], type="llm")
+def complete(query: str):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": query}]
+    ).choices[0].message.content
+
+    update_current_span(
+        test_case=LLMTestCase(input=query, output=response)
+    )
+    return response
+```
+
+:::info
+The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://www.confident-ai.com/docs/llm-tracing/introduction), which is also possible when running end-to-end evaluations.
+:::
+
+</TimelineItem>
+</Timeline>
+
+### Observe
+
+The `@observe` decorator is a non-intrusive python decorator that you can use on top of any component as you wish. It tracks the usage of the component whenever it is evoked to create a span.
+
+```python showLineNumbers
+from deepeval.tracing import observe
+
+@observe()
+def component_one(query: str) -> str:
+    # Your implementation
+    return "You output for component one"
+
+@observe()
+def component_two(query: str) -> str:
+    # Your implementation
+    return "You output for component two"
 ```
 
 There are **THREE** optional parameters when using the `@observe` decorator:
 
-- [Optional] `metrics`: A list of strings specifying the names of the `BaseMetric` you wish to run upon tracing in `deepeval`. Defaulted to `None`.
-- [Optional] `type`: The type of span. Anything other than `"llm"`, `"retriever"`, `"tool"`, and `"agent"` is a custom span type.
-- [Optional] `name`: A string specifying how this custom span is displayed on Confident AI. Defaulted to the name of the decorated function.
+- [Optional] `metrics`: A list of metrics of type `BaseMetric` that will be used to evaluate your span. Defaulted to `None`.
+- [Optional] `metric_collection`: The name of the metric collection you stored in the Confident AI platform.
+- [Optional] `name`: A string specifying how this custom span is displayed on Confident AI. Defaults to function name.
+- [Optional] `type`: A string specifying the type of span. The value can be any one of `llm`, `retriever`, `tool`, and `agent`. Any other value is treated as a custom span type.
 
-Although the `metrics` parameter is optional, to run a component-level evaluation you **MUST**:
+<details>
+<summary><strong>Click here to learn more about span types</strong></summary>
 
-- Supply a list of `metrics`
-- Call `update_current_span` and pass in an `LLMTestCase` at runtime to evaluate the LLM interaction in the current span
+For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
 
-If you simply decorate your LLM application with `@observe` and don't supply any arguments, nothing will happen at all.
+- Specifying a span type (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
+- This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
+- Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
-:::info
-The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://www.confident-ai.com/docs/llm-tracing/introduction), which is also possibler when running end-to-end evaluations.
-:::
+To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
 
-## Full Example
+</details>
 
-In this example, going to evaluate the `"RAG Pipeline"` component in our `"Research Agent"` using the `ContextualRelevancyMetric` by setting up tracing in `deepeval` with the `@observe` decorator:
+### Update Current Span
 
-<div style={{textAlign: 'center', margin: "2rem 0"}}>
+To run component level evals, each component has to have a test case of its own. We can use the `update_current_span` method to create a test case and assign it to the current component.
 
-```mermaid
-graph TD
-    A[Research Agent] --> B[RAG Pipeline]
-    A --> C[Web Search Tool]
-    B --> D[Retriever]
-    B --> E[LLM]
-    A --> E
-```
-
-</div>
-
-:::note
-This is the same example we used in the [test cases section](/docs/evaluation-test-cases#what-is-an-llm-interaction)
-:::
-
-Assuming the code implementation of this LLM agent, the codeblock below shows it only took an additional **SEVEN LINES OF CODE** to setup tracing:
-
-```python title="tracing_example.py" showLineNumbers {15,19-21,25,32-34,38}
-from typing import List
-
-from deepeval.test_case import LLMTestCase
+```python showLineNumbers
 from deepeval.tracing import observe, update_current_span
-from deepeval.metrics import ContextualRelevancyMetric, AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
 
-def web_search(query: str) -> str:
-    return "Fake search results for: " + query
+@observe()
+def component_one(query: str) -> str:
+    # Your implementation
+    res = "You output for component one"
+    update_current_span(test_case=LLMTestCase(input=query, actual_output=res))
+    return res 
 
-
-def retrieve_documents(query: str) -> List[str]:
-    return ["Document 1: Hardcoded text chunks from your vector DB"]
-
-
-@observe(metrics=[AnswerRelevancyMetric()])
-def generate_response(input: str) -> str:
-    response = "Generated response based on the prompt: " + input
-
-    update_current_span(
-        test_case=LLMTestCase(input=input, actual_output=response)
-    )
-    return response
-
-
-@observe(name="RAG Pipeline", metrics=[ContextualRelevancyMetric()])
-def rag_pipeline(query: str) -> str:
-    # Calls retriever and llm
-    docs = retrieve_documents(query)
-    context = "\n".join(docs)
-    response = generate_response(f"Context: {context}\nQuery: {query}")
-
-    update_current_span(
-        test_case=LLMTestCase(input=query, actual_output=response, retrieval_context=docs)
-    )
-    return response
-
-
-@observe(type="agent")
-def research_agent(query: str) -> str:
-    # Calls RAG pipeline
-    initial_response = rag_pipeline(query)
-
-    # Use web search tool on the results
-    search_results = web_search(initial_response)
-
-    # Generate final response incorporating both RAG and search results
-    final_response = generate_response(
-        f"Initial response: {initial_response}\n"
-        f"Additional search results: {search_results}\n"
-        f"Query: {query}"
-    )
-    return final_response
+@observe()
+def component_two(query: str) -> str:
+    # Your implementation
+    res = "You output for component two"
+    update_current_span(test_case=LLMTestCase(input=query, actual_output=res))
+    return res
 ```
 
-Then, simply use the dataset's `evals_iterator` (or `assert_test()` with `deepeval test run`):
+There are **TEN** optional parameters when using the `update_current_span` function:
 
-```python
+- [Optional] `test_case`: You can create a test case for this span by giving an `LLMTestCase` here.
+
+- You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
+    - [Optional] `input`
+    - [Optional] `output`
+    - [Optional] `retrieval_context`
+    - [Optional] `context`
+    - [Optional] `expected_output`
+    - [Optional] `tools_called`
+    - [Optional] `expected_tools`
+    - [Optional] `metadata`
+    - [Optional] `name`
+
+### Running Evals
+
+You can now simply use the dataset's `evals_iterator` (or `assert_test()` with `deepeval test run`) to run evaluations:
+
+<Tabs>
+<TabItem value="component-level" label="Component Level">
+
+Call your LLM application with the correct parameters and `deepeval` automatically allows you to do component-level evals.
+
+```python {9}
 from deepeval.dataset import Golden, EvaluationDataset
-...
 
 # Create golden instead of test case
 golden = Golden(input="What's the weather like in SF?")
@@ -242,7 +279,26 @@ for golden in dataset.evals_iterator():
     research_agent(golden.input)
 ```
 
-Notice that without tracing, creating evaluation-ready `LLMTestCase`s is complicated because you have to bubble the input and returned output values for your `"RAG Pipeline"` component up to the surface for evaluation.
+</TabItem>
+<TabItem value="end-to-end" label="End-to-End">
+
+Add `metrics` in your `evals_iterator` method and run end-to-end evals for your application.
+
+```python {9}
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import AnswerRelevancyMetric
+
+# Create golden instead of test case
+golden = Golden(input="What's the weather like in SF?")
+dataset = EvaluationDataset(goldens=[golden])
+
+# Run evaluation
+for golden in dataset.evals_iterator(metrics=[AnswerRelevancyMetric()]):
+    research_agent(golden.input)
+```
+
+</TabItem>
+</Tabs>
 
 <details>
 <summary><strong>Verbose Logs Outside of <code>evaluate()</code> or <code>assert_test()</code> </strong></summary>
@@ -263,10 +319,6 @@ If you're using Confident AI, you may still want to set these environment variab
 
 ## Disclaimers
 
-:::note
-LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI, it enables more advanced features like end-to-end debugging.
-:::
-
 Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://www.confident-ai.com/docs/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
 
 <VideoDisplayer
@@ -275,12 +327,6 @@ Throughout this documentation, you may notice references to features we didn't c
   label="Learn how to setup LLM tracing for Confident AI"
 />
 
-## Span types
-
-For simplicity, we always recommend **custom spans** unless needed otherwise, since `metrics` only care about the scope of the span, and supplying a specified `type` is most **useful only when using Confident AI**. To summarize:
-
-- Specifying a span type (like `"llm"`) allows you to supply additional parameters in the `@observe` signature (e.g., the `model` used).
-- This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
-- Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
-
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
+:::note
+LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI as we recommend, it enables more advanced features like end-to-end debugging.
+:::
