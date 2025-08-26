@@ -1,16 +1,15 @@
 import asyncio
-
-from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
 from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
 
-instrument_pydantic_ai()
+instrument_pydantic_ai(api_key="<your-confident-api-key>")
 
-answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    metrics=[answer_relavancy_metric],
 )
+
+answer_relavancy_metric = AnswerRelevancyMetric()
 
 from deepeval.dataset import EvaluationDataset, Golden
 
@@ -22,5 +21,8 @@ dataset = EvaluationDataset(
 )
 
 for golden in dataset.evals_iterator():
-    task = asyncio.create_task(agent.run(golden.input))
+    task = asyncio.create_task(agent.run(
+        golden.input,
+        metrics=[answer_relavancy_metric],
+    ))
     dataset.evaluate(task)

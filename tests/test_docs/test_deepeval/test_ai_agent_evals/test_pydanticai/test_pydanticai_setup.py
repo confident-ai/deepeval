@@ -1,25 +1,24 @@
-from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
+import time
+from pydantic_ai import Agent
 
-from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
+instrument_pydantic_ai(api_key="<your-confident-api-key>")
 
-instrument_pydantic_ai()
-
-# Agent.instrument_all()
-
-answer_relavancy_metric = AnswerRelevancyMetric()
 agent = Agent(
     "openai:gpt-4o-mini",
     system_prompt="Be concise, reply with one sentence.",
-    # metrics=[answer_relavancy_metric],
-    trace_attributes={
-        "name": "test_trace",
-        "tags": ["tag1", "tag2"],
-        "metadata": {"key": "value"},
-        "thread_id": "123",
-        "user_id": "456",
-    },
 )
 
-# run for testing (not needed for docs)
 result = agent.run_sync("What are the LLMs?")
 print(result)
+time.sleep(10) # wait for the trace to be posted
+
+# running agent in async mode
+# import asyncio
+# async def main():
+#     result = await agent.run("What are the LLMs?")
+#     print(result)
+
+# if __name__ == "__main__":
+#     asyncio.run(main())
+#     time.sleep(10)
