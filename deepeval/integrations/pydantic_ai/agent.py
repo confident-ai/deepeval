@@ -1,7 +1,6 @@
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.metrics import BaseMetric
 from typing import List
-from .patch import safe_patch_agent_run_method
 
 try:
     from pydantic_ai.agent import Agent
@@ -29,7 +28,6 @@ class PydanticAIAgent(Agent):
     ):
         with capture_tracing_integration("pydantic_ai.agent.PydanticAIAgent"):
             is_pydantic_ai_installed()
-            safe_patch_agent_run_method()
             super().__init__(*args, **kwargs)
             self.metric_collection = metric_collection
             self.trace_attributes = trace_attributes
