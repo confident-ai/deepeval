@@ -41,9 +41,6 @@ class PydanticAIAgent(Agent):
     def __init__(
         self,
         *args,
-        metric_collection: str = None, # to be deprecated
-        metrics: List[BaseMetric] = None, # to be deprecated
-        trace_attributes: dict = None, # to be deprecated
         **kwargs
     ):
         with capture_tracing_integration("pydantic_ai.agent.PydanticAIAgent"):
@@ -53,15 +50,14 @@ class PydanticAIAgent(Agent):
             super().__init__(*args, **kwargs)
             
             # attributes to be set if ran synchronously
-            self.metric_collection = metric_collection # to be deprecated
-            self.metrics = metrics # to be deprecated
-            self.trace_attributes = trace_attributes # to be deprecated 
+            self.metric_collection: str = None 
+            self.metrics: list[BaseMetric] = None 
             
-            # trace attributes to be set if ran asynchronously
-            self._trace_name = None
-            self._trace_tags: list[str] = []
-            self._trace_metadata: dict = {}
-            self._trace_thread_id: str = None
+            # trace attributes to be set if ran synchronously
+            self._trace_name: str = None
+            self._trace_tags: list[str] = None
+            self._trace_metadata: dict = None
+            self._trace_thread_id: str = None 
             self._trace_user_id: str = None
 
             # Patch the run method only for this instance
@@ -148,25 +144,9 @@ class PydanticAIAgent(Agent):
                 run_span.set_attribute("confident.span.output", output)
                 
                 if metric_collection: # flattened argument to be replaced
-                    print("setting metric_collection from metric_collection", metric_collection)
                     run_span.set_attribute("confident.span.metric_collection", metric_collection)
-                elif self.metric_collection: # to be deprecated
-                    print("setting metric_collection from self.metric_collection", self.metric_collection)
+                elif self.metric_collection: # for run_sync
                     run_span.set_attribute("confident.span.metric_collection", self.metric_collection)
-
-                # set trace attributes (to be deprecated)
-                if self.trace_attributes:
-                    if isinstance(self.trace_attributes, dict):
-                        if self.trace_attributes.get("name"):
-                            run_span.set_attribute("confident.trace.name", self.trace_attributes.get("name"))
-                        if self.trace_attributes.get("tags"):
-                            run_span.set_attribute("confident.trace.tags", self.trace_attributes.get("tags"))
-                        if self.trace_attributes.get("metadata"):
-                            run_span.set_attribute("confident.trace.metadata", json.dumps(self.trace_attributes.get("metadata")))
-                        if self.trace_attributes.get("thread_id"):
-                            run_span.set_attribute("confident.trace.thread_id", self.trace_attributes.get("thread_id"))
-                        if self.trace_attributes.get("user_id"):
-                            run_span.set_attribute("confident.trace.user_id", self.trace_attributes.get("user_id"))
                 
                 # set the flattened trace attributes
                 if trace_name:
@@ -179,6 +159,18 @@ class PydanticAIAgent(Agent):
                     run_span.set_attribute("confident.trace.thread_id", trace_thread_id)
                 if trace_user_id:
                     run_span.set_attribute("confident.trace.user_id", trace_user_id)
+
+                # for run_sync
+                if self._trace_name:
+                    run_span.set_attribute("confident.trace.name", self._trace_name)
+                if self._trace_tags:
+                    run_span.set_attribute("confident.trace.tags", self._trace_tags)
+                if self._trace_metadata:
+                    run_span.set_attribute("confident.trace.metadata", json.dumps(self._trace_metadata))
+                if self._trace_thread_id:
+                    run_span.set_attribute("confident.trace.thread_id", self._trace_thread_id)
+                if self._trace_user_id:
+                    run_span.set_attribute("confident.trace.user_id", self._trace_user_id)
                 
                 if metrics: # flattened argument to be replaced
                     trace_manager.test_case_metrics.append(
@@ -189,7 +181,7 @@ class PydanticAIAgent(Agent):
                             metrics=metrics,
                         )
                     )
-                elif self.metrics: # to be deprecated
+                elif self.metrics: # for run_sync
                     trace_manager.test_case_metrics.append(
                         TestCaseMetricPair(
                             test_case=LLMTestCase(
