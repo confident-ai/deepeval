@@ -49,61 +49,72 @@ The MCP architecture is composed of three main components:
 
 ## Run Your First MCP Eval
 
-In `deepeval`, MCP evaluations can be done using either single-turn or multi-turn test cases. In code, you'll have to track all MCP interactions and finally create a test case after the execution of your application.
+In `deepeval` MCP evaluations can be done using either single-turn or multi-turn test cases. In code, you'll have to track all MCP interactions and finally create a test case after the execution of your application.
 
 <Timeline>
 <TimelineItem title="Create an MCP server">
 
-You can find an MCP server online from websites like [smithery.ai](https://smithery.ai) or create one yourself depending on your use case. You can learn more about it from the [official docs of MCP](https://modelcontextprotocol.io/quickstart/server).
+Connect your application to MCP servers and create the `MCPServer` object for all the MCP servers you're using.
 
-You can connect your host to the servers and create the `MCPServer` object for all the MCP servers you're using.
-
-```python title="main.py" {3,19-23}
+```python title="main.py" showLineNumbers {5,19-23}
 import mcp
+from contextlib import AsyncExitStack
+from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 from deepeval.test_case import MCPServer
 
-smithery_api_key = "YOUR_API_KEY"
-smithery_profile = "YOUR_PROFILE"
-url = f"https://server.smithery.ai/@smithery-ai/github/mcp?api_key={smithery_api_key}&profile={smithery_profile}"
+url = "https://example.com/mcp"
 
 mcp_servers = []
 tools_called = []
 
 async def main():
-    async with streamablehttp_client(url) as (read_stream, write_stream, _):
-        async with mcp.ClientSession(read_stream, write_stream) as session:
-            await session.initialize()
+    read, write, _  = await AsyncExitStack().enter_async_context(streamablehttp_client(url))
+    self.session = await AsyncExitStack().enter_async_context(ClientSession(read, write))
 
-            # Create an MCPServer object for all the primitives available in this server
-            tools_result = await session.list_tools()
-            mcp_servers.append(MCPServer(
-                name="GitHub",
-                transport="streamable-http",
-                available_tools=tools_result.tools,
-            ))
-            # You can add resources and prompts if your server supports them
+    tool_list = await session.list_tools()
+    tools = tool_list.tools
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(main())
+    mcp_servers.append(MCPServer(
+        name=url,
+        transport="streamable-http",
+        available_tools=tools
+    ))
 ```
 
 </TimelineItem>
-<TimelineItem title="Track Your MCP Interactions">
+<TimelineItem title="Track your MCP interactions">
 
 In your MCP application's main file, you need to track all the MCP interactions during run time. This includes adding `tools_called`, `resources_called` and `prompts_called` whenever your host uses them.
 
 ![MCP Interaction tracking](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-mcp-tools.png)
 
-```python title="main.py" {1,7}
+```python title="main.py" showLineNumbers {1,21-25}
 from deepeval.test_case import MCPToolCall
 
-async def main():
-    ...
-    # For all tool calls, create a MCPToolCall object and add it to list
-    tool_result = await session.call_tool(tool_name, tool_args)
-    tools_called.append(MCPToolCall(name=tool_name, args=tool_args, result=tool_result))
+available_tools = [
+    {"name": tool.name, "description": tool.description, "input_schema": tool.inputSchema} 
+    for tool in tool_list
+]
+
+response = self.anthropic.messages.create(
+    model="claude-3-5-sonnet-20241022",
+    max_tokens=1000,
+    messages=messages,
+    tools=available_tools,
+)
+
+for content in response.content:
+    if content.type == "tool_use":
+        tool_name = content.name
+        tool_args = content.input
+        tool_result = await session.call_tool(tool_name, tool_args)
+
+        tools_called.append(MCPToolCall(
+            name=tool_name, 
+            args=tool_args, 
+            result=tool_result
+        ))
 ```
 
 You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#resources) or [prompts](https://www.deepeval.com/docs/evaluation-mcp#prompts) if you use them. You are now tracking all the MCP interactions during run time of your application.
@@ -115,17 +126,17 @@ You can now create a test case for your MCP application using the above interact
 
 ```python
 from deepeval.test_case import LLMTestCase
+...
 
 test_case = LLMTestCase(
-    input="...", # Your input
-    actual_output="..." # Your LLM's final output
+    input=query,
+    actual_output=response,
     mcp_servers=mcp_servers,
     mcp_tools_called=tools_called,
-    # resources and prompts (if any)
 )
 ```
 
-The test cases must be created after the execution of your application.
+The test cases must be created after the execution of your application. Click here to see a [full example on how to create single-turn test cases](https://github.com/confident-ai/deepeval/blob/main/examples/mcp_evaluation/mcp_eval_single_turn.py) for MCP evaluations.
 
 :::tip
 You can make your `main()` function return `mcp_servers`, `tools_called`, `resources_called` and `prompts_called`. This helps you import your MCP application anywhere and create test cases easily in different test files.
@@ -157,7 +168,9 @@ evaluate([test_case], [mcp_use_metric])
 
 - When you call `evaluate()`, `deepeval` runs all your `metrics` against all `test_cases`
 - All `metrics` outputs a score between `0-1`, with a `threshold` defaulted to `0.5`
-- You used the `MCPUseMetric` to evaluate your MCP application on its primitive usage and argument correctness
+- The `MCPUseMetric` first evaluates your test case on its primitive usage to see how well your application has utilized the MCP capabilities given to it.
+- It then evaluates the argument correctness to see if the inputs generated for your primitive usage were correct and accurate for the task.
+- The `MCPUseMetric` then finally takes the minimum of the both scores to give a final score to your test case.
 
 </TimelineItem>
 
@@ -165,7 +178,11 @@ evaluate([test_case], [mcp_use_metric])
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-single-turn.mp4" />
+<VideoDisplayer 
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-single-turn.mp4" 
+    confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+    label="Evaluations Test Reports on Confident AI"
+/>
 
 :::tip
 If you haven't logged in, you can still upload the test run to Confident AI from local cache:
@@ -185,47 +202,31 @@ deepeval view
 For multi-turn MCP evals, you are required to add the `mcp_tools_called`, `mcp_resource_called` and `mcp_prompts_called` in the `Turn` object for each turn of the assistant. (if any)
 
 <Timeline>
-<TimelineItem title="Track Your MCP Interactions">
+<TimelineItem title="Track your MCP interactions">
 
 During the interactive session of your application, you need to track all the MCP interactions. This includes adding `tools_called`, `resources_called` and `prompts_called` whenever your host uses them.
 
 ![MCP Interaction tracking](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-mcp-tools.png)
 
-```python title="main.py" {1,10}
-from deepeval.test_case import MCPToolCall
+```python title="main.py" {7,13}
+from deepeval.test_case import MCPToolCall, Turn
 
 async def main():
     ...
-    # Reset the lists for each new turn
-    tools_called = []
 
-    # For all tool calls, create a MCPToolCall object and add it to list
-    tool_result = await session.call_tool(tool_name, tool_args)
-    tools_called.append(MCPToolCall(name=tool_name, args=tool_args, result=tool_result))
+    result = await self.session.call_tool(tool_name, tool_args)
+    tool_called = MCPToolCall(name=tool_name, args=tool_args, result=result)
+
+    turns.append(
+        Turn(
+            role="assistant",
+            content=f"Tool call: {tool_name} with args {tool_args}",
+            mcp_tools_called=[tool_called],
+        )
+    )
 ```
 
 You can also track any [resources](https://www.deepeval.com/docs/evaluation-mcp#resources) or [prompts](https://www.deepeval.com/docs/evaluation-mcp#prompts) if you use them. You are now tracking all the MCP interactions during run time of your application.
-
-</TimelineItem>
-<TimelineItem title="Create a turn">
-
-You need to create a `Turn` object for your assistant after all the MCP interactions take place in that turn.
-
-```python {1,11}
-from deepeval.test_case import Turn
-
-turns = []
-
-def main(input):
-    ...
-    # Add the MCP interaction turn at last
-    turns.append(Turn(
-        role="assistant",
-        content="...", # Relevant content
-        mcp_tools_called=tools_called,
-        # resources and prompts (if any)
-    ))
-```
 
 </TimelineItem>
 <TimelineItem title="Create a test case">
@@ -241,7 +242,7 @@ convo_test_case = ConversationalTestCase(
 )
 ```
 
-The test cases must be created after the execution of the application.
+The test cases must be created after the execution of the application. Click here to see a [full example on how to create multi-turn test cases](https://github.com/confident-ai/deepeval/blob/main/examples/mcp_evaluation/mcp_eval_multi_turn.py) for MCP evaluations.
 
 :::tip
 You can make your `main()` function return `turns` and `mcp_servers`. This helps you import your MCP application anywhere and create test cases easily in different test files.
@@ -275,14 +276,19 @@ evaluate([convo_test_case], [mcp_use_metric, mcp_task_completion])
 - When you call `evaluate()`, `deepeval` runs all your `metrics` against all `test_cases`
 - All `metrics` outputs a score between `0-1`, with a `threshold` defaulted to `0.5`
 - You used the `MultiTurnMCPUseMetric` and `MCPTaskCompletionMetric` for testing your MCP application
+- The `MultiTurnMCPUseMetric` evaluates your application's capability on primitive usage and argument generation to get the final score.
+- The `MCPTaskCompletionMetric` evaluates whether your application has satisfied the given task for all the interactions between user and assistant.
 
 </TimelineItem>
-
 <TimelineItem title="View on Confident AI (recommended)">
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
-<VideoDisplayer src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-multi-turn.mp4" />
+<VideoDisplayer 
+    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-multi-turn.mp4" 
+    confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/multi-turn/end-to-end"
+    label="Multi-Turn End-to-End Evals"
+/>
 
 :::tip
 If you haven't logged in, you can still upload the test run to Confident AI from local cache:
