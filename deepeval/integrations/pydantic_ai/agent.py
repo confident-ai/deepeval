@@ -7,6 +7,7 @@ import json
 from deepeval.test_case import LLMTestCase
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.otel.utils import parse_string, parse_list_of_strings
 
 try:
     from opentelemetry.trace import NoOpTracer
@@ -81,26 +82,18 @@ class PydanticAIAgent(Agent):
             **kwargs
         ):
             # extract and validate flattened arguments - use safe pop with defaults
-            if metric_collection is not None and not isinstance(metric_collection, str):
-                raise TypeError("metric_collection must be a string")
+            metric_collection = parse_string(metric_collection)
+            trace_name = parse_string(trace_name)
+            trace_tags = parse_list_of_strings(trace_tags)
+            trace_thread_id = parse_string(trace_thread_id)
+            trace_user_id = parse_string(trace_user_id)
 
             if metrics is not None and not (isinstance(metrics, list) and all(isinstance(m, BaseMetric) for m in metrics)):
                 raise TypeError("metrics must be a list of BaseMetric instances")
             
-            if trace_name is not None and not isinstance(trace_name, str):
-                raise TypeError("trace_name must be a string")
-
-            if trace_tags is not None and not (isinstance(trace_tags, list) and all(isinstance(t, str) for t in trace_tags)):
-                raise TypeError("trace_tags must be a list of strings")
 
             if trace_metadata is not None and not isinstance(trace_metadata, dict):
                 raise TypeError("trace_metadata must be a dictionary")
-
-            if trace_thread_id is not None and not isinstance(trace_thread_id, str):
-                raise TypeError("trace_thread_id must be a string")
-
-            if trace_user_id is not None and not isinstance(trace_user_id, str):
-                raise TypeError("trace_user_id must be a string")
 
             model = kwargs.get("model", None)
             infer_name = kwargs.get("infer_name", True)
@@ -215,26 +208,17 @@ class PydanticAIAgent(Agent):
             trace_user_id=None,
             **kwargs
         ):
-            if metric_collection is not None and not isinstance(metric_collection, str):
-                raise TypeError("metric_collection must be a string")
+            metric_collection = parse_string(metric_collection)
+            trace_name = parse_string(trace_name)
+            trace_tags = parse_list_of_strings(trace_tags)
+            trace_thread_id = parse_string(trace_thread_id)
+            trace_user_id = parse_string(trace_user_id)
 
             if metrics is not None and not (isinstance(metrics, list) and all(isinstance(m, BaseMetric) for m in metrics)):
                 raise TypeError("metrics must be a list of BaseMetric instances")
-            
-            if trace_name is not None and not isinstance(trace_name, str):
-                raise TypeError("trace_name must be a string")
-
-            if trace_tags is not None and not (isinstance(trace_tags, list) and all(isinstance(t, str) for t in trace_tags)):
-                raise TypeError("trace_tags must be a list of strings")
 
             if trace_metadata is not None and not isinstance(trace_metadata, dict):
                 raise TypeError("trace_metadata must be a dictionary")
-
-            if trace_thread_id is not None and not isinstance(trace_thread_id, str):
-                raise TypeError("trace_thread_id must be a string")
-
-            if trace_user_id is not None and not isinstance(trace_user_id, str):
-                raise TypeError("trace_user_id must be a string")
             
             # attributes to be set if ran synchronously
             if metric_collection:
