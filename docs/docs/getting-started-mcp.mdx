@@ -56,7 +56,7 @@ In `deepeval` MCP evaluations can be done using either single-turn or multi-turn
 
 Connect your application to MCP servers and create the `MCPServer` object for all the MCP servers you're using.
 
-```python title="main.py" showLineNumbers {5,19-23}
+```python title="main.py" showLineNumbers {5,18-22}
 import mcp
 from contextlib import AsyncExitStack
 from mcp import ClientSession
@@ -73,12 +73,11 @@ async def main():
     self.session = await AsyncExitStack().enter_async_context(ClientSession(read, write))
 
     tool_list = await session.list_tools()
-    tools = tool_list.tools
 
     mcp_servers.append(MCPServer(
         name=url,
         transport="streamable-http",
-        available_tools=tools
+        available_tools=tool_list.tools,
     ))
 ```
 
@@ -89,7 +88,7 @@ In your MCP application's main file, you need to track all the MCP interactions 
 
 ![MCP Interaction tracking](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-mcp-tools.png)
 
-```python title="main.py" showLineNumbers {1,21-25}
+```python title="main.py" showLineNumbers {1,20-24}
 from deepeval.test_case import MCPToolCall
 
 available_tools = [
@@ -99,7 +98,6 @@ available_tools = [
 
 response = self.anthropic.messages.create(
     model="claude-3-5-sonnet-20241022",
-    max_tokens=1000,
     messages=messages,
     tools=available_tools,
 )
@@ -108,12 +106,12 @@ for content in response.content:
     if content.type == "tool_use":
         tool_name = content.name
         tool_args = content.input
-        tool_result = await session.call_tool(tool_name, tool_args)
+        result = await session.call_tool(tool_name, tool_args)
 
         tools_called.append(MCPToolCall(
             name=tool_name, 
             args=tool_args, 
-            result=tool_result
+            result=result
         ))
 ```
 
