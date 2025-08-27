@@ -20,14 +20,14 @@ class MMLUTemplate:
 
     @staticmethod
     def format_question(data: dict, include_answer: bool = True):
-        prompt = data["input"]
+        prompt = data["question"]
         choices = ["A", "B", "C", "D"]
         for j in range(len(choices)):
             choice = choices[j]
-            prompt += "\n{}. {}".format(choice, data[choice])
+            prompt += "\n{}. {}".format(choice, data["choices"][j])
         prompt += "\nAnswer:"
         if include_answer:
-            prompt += " {}\n\n".format(data["target"])
+            prompt += " {}\n\n".format(choices[data["answer"]])
         return prompt
 
     @staticmethod

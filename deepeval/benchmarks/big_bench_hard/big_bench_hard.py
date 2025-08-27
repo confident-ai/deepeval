@@ -280,7 +280,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         if dataset_attr:
             if not hasattr(self, dataset_attr):
                 dataset = load_dataset(
-                    "lukaemon/bbh", task.value, trust_remote_code=True
+                    "lukaemon/bbh", task.value
                 )
                 setattr(self, dataset_attr, dataset)
             else:

@@ -1,7 +1,5 @@
 from typing import Optional
-from .patch import safe_patch_agent_iter_method, safe_patch_agent_run_method
 import deepeval
-from deepeval.tracing.otel import ConfidentSpanExporter
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.confident.api import get_confident_api_key
 
@@ -9,7 +7,6 @@ try:
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-    from opentelemetry.trace import set_tracer_provider
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
@@ -33,8 +30,6 @@ OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 def instrument_pydantic_ai(api_key: Optional[str] = None):
     with capture_tracing_integration("pydantic_ai"):
         is_opentelemetry_available()
-        # safe_patch_agent_iter_method()
-        safe_patch_agent_run_method()
 
         if api_key:
             deepeval.login(api_key)
