@@ -66,7 +66,8 @@ You can learn more about `LLMTestCase` [here](https://deepeval.com/docs/evaluati
 The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the only metric that is compatible with `ArenaTestCase`. It picks a winner among the contestants based on the criteria defined.
 
 ```python title="main.py"
-from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
+from deepeval.metrics import ArenaGEval
+from deepeval.test_case LLMTestCaseParams
 
 arena_geval = ArenaGEval(
     name="Friendly",
@@ -87,8 +88,8 @@ arena_geval = ArenaGEval(
 Now that you have created an arena with contestants and defined a metric, you can run evals by using the `compare()` method:
 
 ```python {3,11} title="main.py"
-from deepeval.test_case import ArenaTestCase, LLMTestCase
-from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
+from deepeval.test_case import ArenaTestCase, LLMTestCase, LLMTestCaseParams
+from deepeval.metrics import ArenaGEval
 from deepeval import compare
 
 test_case = ArenaTestCase(
