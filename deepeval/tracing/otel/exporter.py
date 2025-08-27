@@ -28,6 +28,8 @@ from deepeval.tracing.otel.utils import (
     check_tool_name_from_gen_ai_attributes,
     set_trace_time,
     to_hex_string,
+    parse_string,
+    parse_list_of_strings,
 )
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.tracing.types import TraceAttributes
@@ -316,27 +318,27 @@ class ConfidentSpanExporter(SpanExporter):
         )
 
         # Validate Span Attributes
-        span_retrieval_context = self._parse_list_of_strings(
+        span_retrieval_context = parse_list_of_strings(
             raw_span_retrieval_context
         )
-        span_context = self._parse_list_of_strings(raw_span_context)
+        span_context = parse_list_of_strings(raw_span_context)
         span_tools_called = self._parse_list_of_tools(raw_span_tools_called)
         span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
         span_metadata = self._parse_json_string(raw_span_metadata)
-        span_metric_collection = self._parse_string(raw_span_metric_collection)
+        span_metric_collection = parse_string(raw_span_metric_collection)
 
         # Validate Trace Attributes
-        trace_tags = self._parse_list_of_strings(raw_trace_tags)
-        trace_retrieval_context = self._parse_list_of_strings(
+        trace_tags = parse_list_of_strings(raw_trace_tags)
+        trace_retrieval_context = parse_list_of_strings(
             raw_trace_retrieval_context
         )
-        trace_context = self._parse_list_of_strings(raw_trace_context)
+        trace_context = parse_list_of_strings(raw_trace_context)
         trace_tools_called = self._parse_list_of_tools(raw_trace_tools_called)
         trace_expected_tools = self._parse_list_of_tools(
             raw_trace_expected_tools
         )
         trace_metadata = self._parse_json_string(raw_trace_metadata)
-        trace_metric_collection = self._parse_string(
+        trace_metric_collection = parse_string(
             raw_trace_metric_collection
         )
 
@@ -593,23 +595,6 @@ class ConfidentSpanExporter(SpanExporter):
                     except ValidationError:
                         pass
         return parsed_tools
-
-    def _parse_list_of_strings(self, context: List[str]) -> List[str]:
-        parsed_context: List[str] = []
-        if context and (
-            isinstance(context, list) or isinstance(context, tuple)
-        ):
-            for context_str in context:
-                if not isinstance(context_str, str):
-                    pass
-                else:
-                    parsed_context.append(context_str)
-        return parsed_context
-
-    def _parse_string(self, value: Any) -> Any:
-        if isinstance(value, str):
-            return value
-        return None
 
     #######################################################
     ### Span Forest
