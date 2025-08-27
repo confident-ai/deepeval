@@ -2,7 +2,7 @@ import asyncio
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
 
-instrument_pydantic_ai(api_key="<your-confident-api-key>")
+instrument_pydantic_ai()
 agent = Agent("openai:gpt-4o-mini", system_prompt="Be concise, reply with one sentence.")
 answer_relavancy_metric = AnswerRelevancyMetric()
 
