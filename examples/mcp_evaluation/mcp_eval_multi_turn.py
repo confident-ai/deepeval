@@ -139,7 +139,7 @@ class MCPClient:
         print("Type your queries or 'quit' to exit.")
 
         while True:
-            query = input("\nQuery: ").strip()
+            query = input("Query: ")
 
             if query.lower() == "quit":
                 convo_test_case = ConversationalTestCase(

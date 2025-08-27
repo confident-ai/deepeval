@@ -85,7 +85,7 @@ class MCPClient:
 
     async def chat_loop(self):
 
-        query = input("\nQuery: ").strip()
+        query = input("Query: ")
         response = await self.process_query(query)
 
         test_case = LLMTestCase(
@@ -108,7 +108,7 @@ async def main():
 
     base_url = "https://your-server-url.mcp/github/mcp"
     api_key = "Your-api-key"
-    profile = "Your-ptofile"
+    profile = "Your-profile"
 
     client = MCPClient()
     try:
