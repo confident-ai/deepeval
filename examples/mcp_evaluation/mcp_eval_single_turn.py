@@ -1,8 +1,8 @@
 import asyncio
 from typing import Optional
 from contextlib import AsyncExitStack
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -20,33 +20,21 @@ class MCPClient:
         self.exit_stack = AsyncExitStack()
         self.anthropic = Anthropic()
 
-    async def connect_to_server(self, server_script_path: str):
-        is_python = server_script_path.endswith(".py")
-        is_js = server_script_path.endswith(".js")
-        if not (is_python or is_js):
-            raise ValueError("Server script must be a .py or .js file")
+    async def connect_to_server(self, base_url: str, api_key: str, profile: str):
+        from urllib.parse import urlencode
+        params = {"api_key": api_key, "profile": profile}
+        url = f"{base_url}?{urlencode(params)}"
 
-        command = "python" if is_python else "node"
-        server_params = StdioServerParameters(
-            command=command, args=[server_script_path], env=None
-        )
+        transport = await self.exit_stack.enter_async_context(streamablehttp_client(url))
+        read, write, _ = transport
 
-        stdio_transport = await self.exit_stack.enter_async_context(
-            stdio_client(server_params)
-        )
-        self.stdio, self.write = stdio_transport
-        self.session = await self.exit_stack.enter_async_context(
-            ClientSession(self.stdio, self.write)
-        )
-
+        self.session = await self.exit_stack.enter_async_context(ClientSession(read, write))
         await self.session.initialize()
 
         tool_list = await self.session.list_tools()
-        # print("Connected to server with tools:", [tool.name for tool in tool_list.tools])
-
         mcp_servers.append(
             MCPServer(
-                server_name=server_script_path,
+                server_name=base_url,
                 available_tools=tool_list.tools,
             )
         )
@@ -110,18 +98,21 @@ class MCPClient:
         print(test_case)
 
     async def cleanup(self):
-        """Clean up resources"""
         await self.exit_stack.aclose()
 
 
 async def main():
-    if len(sys.argv) < 2:
-        print("Usage: python client.py <path_to_server_script>")
+    if len(sys.argv) < 3:
+        print("Usage: python client.py <api_key> <profile>")
         sys.exit(1)
+
+    base_url = "https://your-server-url.mcp/github/mcp"
+    api_key = "Your-api-key"
+    profile = "Your-ptofile"
 
     client = MCPClient()
     try:
-        await client.connect_to_server(sys.argv[1])
+        await client.connect_to_server(base_url, api_key, profile)
         await client.chat_loop()
     finally:
         await client.cleanup()
