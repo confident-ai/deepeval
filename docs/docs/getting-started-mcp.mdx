@@ -70,7 +70,7 @@ tools_called = []
 
 async def main():
     read, write, _  = await AsyncExitStack().enter_async_context(streamablehttp_client(url))
-    self.session = await AsyncExitStack().enter_async_context(ClientSession(read, write))
+    session = await AsyncExitStack().enter_async_context(ClientSession(read, write))
 
     tool_list = await session.list_tools()
 
@@ -212,7 +212,7 @@ from deepeval.test_case import MCPToolCall, Turn
 async def main():
     ...
 
-    result = await self.session.call_tool(tool_name, tool_args)
+    result = await session.call_tool(tool_name, tool_args)
     tool_called = MCPToolCall(name=tool_name, args=tool_args, result=result)
 
     turns.append(
