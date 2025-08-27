@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "3.3.8"
+version = "3.4.1"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -43,7 +43,7 @@ opentelemetry-exporter-otlp-proto-grpc = "^1.24.0"
 grpcio = "^1.67.1"
 anthropic = "*"
 google-genai = "^1.9.0"
-posthog = "^3.23.0"
+posthog = "^6.3.0"
 pyfiglet = "*"
 
 [tool.poetry.group.dev.dependencies]

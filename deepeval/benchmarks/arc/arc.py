@@ -48,7 +48,7 @@ class ARC(DeepEvalBaseBenchmark):
         else:
             self.confinement_instructions = confinement_instructions
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> Dict:
         import pandas as pd
 
         with capture_benchmark_run("ARC", self.n_problems):

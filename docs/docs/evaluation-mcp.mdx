@@ -1,42 +1,36 @@
 ---
 id: evaluation-mcp
-title: MCP
+title: Model Context Protocol (MCP)
 sidebar_label: MCP
 ---
 
-**MCP (Model Context Protocol)**  is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
+**Model Context Protocol (MCP)** is an open-source framework developed by **Anthropic** to standardize how AI systems, particularly large language models (LLMs), interact with external tools and data sources.
 
-## Introduction to MCP
+## Architecture
 
-MCP allows you to build a new generation of AI applications that are more powerful, versatile, and deeply integrated with the real world. By providing a standardized way for AI models to connect to external systems, MCP allows us to create versatile AI agents.
+The MCP architecture is composed of three main components:
 
-MCP enables you to be able to use standardized primitives like:
-
-- Tools
-- Resources
-- Prompts
-
-MCP provides official [SDKs](https://modelcontextprotocol.io/docs/sdk) in different languages that allows anyone to use a standardized protocol to build custom integrations for AI applications and use them anywhere.
-
-### MCP Architecture
-
-The MCP architecture consists of a client, server and a host. The host is the AI application that coordinates and manages one or multiple MCP clients. A host can have any number of clients. The client and server have a one-to-one relationship, the client maintains a connection to the server and obtains context from the server for the host to use.
+- **Host** – The AI application that coordinates and manages one or more MCP clients.
+- **Client** – Maintains a one-to-one connection with a server and retrieves context from it for the host to use.
+- **Server** – Paired with a single client, providing the context the client passes to the host.
 
 ![MCP Architecture Image](https://deepeval-docs.s3.amazonaws.com/mcp-architecture.png)
 
-### MCP Primitives
+For example, Claude acts as the MCP host. When Claude connects to an MCP server such as Google Sheets, the Claude runtime instantiates an MCP client that maintains a dedicated connection to that server. When Claude subsequently connects to another MCP server, such as Google Docs, it instantiates an additional MCP client to maintain that second connection. This preserves a one-to-one relationship between MCP clients and MCP servers, with the host (Claude) orchestrating multiple clients.
 
-MCP primitives define what clients and servers can offer to each other. These primitives specify the types of contextual information that can be shared with AI applications and the range of actions that can be performed.
+## Primitives
 
-There are three core primitives that servers can expose:
+`deepeval` adheres to MCP primitives. You'll need to use these primitives to create an `MCPServer` class in `deepeval` before evaluation.
 
-1. **Tools**: Executable functions that AI applications can invoke to perform actions
-2. **Resources**: Data sources that provide contextual information to AI applications
-3. **Prompts**: Reusable templates that help structure interactions with language models
+There are three core primitives that MCP servers can expose:
 
-Each primitive has a method associated with them for discoverablility called list. MCP clients will use the `list` methods to discover all the available primitives a server exposes. For example:
+- **Tools**: Executable functions that LLM apps can invoke to perform actions
+- **Resources**: Data sources that provide contextual information to LLM apps
+- **Prompts**: Reusable templates that help structure interactions with language models
 
-```python
+You can get all three primitives from `mcp`'s `ClientSession`:
+
+```python title="main.py"
 from mcp import ClientSession
 
 session = ClientSession(...)
@@ -47,182 +41,219 @@ resource_list = await session.list_resources()
 prompt_list = await session.list_prompts()
 ```
 
-`deepeval` expects you to provide the list of available primitives for reference based metrics that require them. You need to provide the direct list of the primitives from their respective `list` method results. Here's an example of how you need to create the `MCPMetaData` object in `deepeval`:
+:::info
+It is the MCP **server developer's** job to expose these primitives for you to leverage for evaluation. This means that you might not always have control over the MCP server you're interacting with.
+:::
 
-## MCP Meta Data
+## MCP Server
 
-The `MCPMetaData` object is used to contain information about different MCP servers and the primitives they provide which can be used during evaluations. Here's an example implementation of how to create a `MCPMetaData` object:
+The `MCPServer` class is an abstraction **provided by `deepeval`** to contain information about different MCP servers and the primitives they provide which can be used during evaluations.
 
-```python
-from deepeval.test_case import MCPMetaData
+Here's how how to create a `MCPServer` instance:
 
-meta_data = MCPMetaData(
-    server_name="...", # Provide any server name here
-    transport="stdio", # Provide your transport method here
-    available_tools=tool_list.tools,
-    available_resources=resource_list.resources,
-    available_prompts=prompt_list.prompts
+```python title="main.py"
+from deepeval.test_case import MCPServer
+
+mcp_server = MCPServer(
+    server_name="GitHub",
+    transport="stdio",
+    available_tools=tool_list.tools, # get from ClientSession
+    available_resources=resource_list.resources, # get from ClientSession
+    available_prompts=prompt_list.prompts # get from ClientSession
 )
 ```
 
-:::info
+The `MCPServer` accepts **FIVE** parameters:
+
+- `server_name`: an optional string you can provide to store details about your MCP server.
+- [Optional] `transport`: an optional literal that stores on the type of transport your MCP server uses. This information does not affect the evaluation of your MCP test case.
+- [Optional] `available_tools`: an optional list of tools that your MCP server enables you to use.
+- [Optional] `available_prompts`: an optional list of prompts that your MCP server enables you to use.
+- [Optional] `available_resources`: an optional list of resources that your MCP server enables you to use.
+
+:::tip
 You need to make sure to provide the `.tools`, `.resources` and `.prompts` from the `list` method's response. They are each of type `Tool`, `Resource` and `Prompt` respectively from `mcp.types` and they are standardized from the official [MCP python sdk](https://github.com/modelcontextprotocol/python-sdk).
 :::
 
-The `MCPMetaData` accepts **FIVE** parameters:
+## MCP At Runtime
 
-- [Optional] `server_name`: an optional string you can provide to store details about your MCP server.
-- [Optional] `transport`: an optional literal that stores on the type of transport your MCP server uses. This information does not affect the evaluation of your MCP test case.
-- [Optional] `available_tools`: an optional list of tools that your MCP server enables you to use, `deepeval` expects you to provide the `.tools` result from the `list_tools()` function from the official MCP python SDK which returns `Tool` objects from `mcp.types`.
-- [Optional] `available_prompts`: an optional list of prompts that your MCP server enables you to use, `deepeval` expects you to provide the `.prompts` result from the `list_prompts()` function from the official MCP python SDK which returns `Prompt` objects from `mcp.types`.
-- [Optional] `available_resources`: an optional list of resources that your MCP server enables you to use, `deepeval` expects you to provide the `.resources` result from the `list_resources()` function from the official MCP python SDK which returns `Resource` objects from `mcp.types`.
+During runtime, you'll inevitably be calling your MCP server which will then invoke tools, prompts, and resources. To run evaluation on MCP powered LLM apps, you'll need to format each of these primitives that were called for a given input.
 
-## MCP Primitives Used
+### Tools
 
-DeepEval currently supports evaluations with three primitives in its test cases. They are:
+Provide a list of `MCPToolCall` objects for every tool your agent invokes during the interaction. The example below shows invoking a tool and constructing the corresponding `MCPToolCall`:
 
-- Tools
-- Resources
-- Prompts
-
-You will have to create separate classes for each primitive used by your agent and add them in thier respective arguments. Here's a breakdown of all primitive onjects you need to create:
-
-### MCP Tools Called
-
-You need to supply a list of `MCPToolCall` objects for all the tools your agent uses in that interaction. Here's how a typical MCP tool is called by an agent:
-
-```python
+```python title="main.py"
 from mcp import ClientSession
+from deepeval.test_case import MCPToolCall
 
 session = ClientSession(...)
 
-# The tool_name and tool_args are given by your agent in a tool_use / tool_calls content
+# Replace with your values
+tool_name = "..."
+tool_args = "..."
+
+# Call tool
 result = await session.call_tool(tool_name, tool_args)
-```
 
-Here's how you can create a `MCPToolCall` object after the tool call has been made:
-
-```python
-from deepeval.test_case import MCPToolCall
-
+# Format into deepeval
 mcp_tool_called = MCPToolCall(
     name=tool_name,
     args=tool_args,
-    result=result # The same result you got above.
+    result=result,
 )
 ```
 
-The result provided by the `session.call_tool()` is an object of `CallToolResult` from `mcp.types` in the official MCP python-sdk. You just have to provide the same result in the result argument of `MCPToolCall` object.
+The `result` returned by `session.call_tool()` is a `CallToolResult` from `mcp.types`.
 
-### MCP Resources Called
+### Resources
 
-You need to supply a list of `MCPResourceCall` objects for all the resources your agent uses in that interaction. Here's how a typical MCP resource is called by an agent:
+Provide a list of `MCPResourceCall` objects for every resource your agent reads. The example below shows reading a resource and constructing the corresponding `MCPResourceCall`:
 
-```python
+```python title="main.py"
 from mcp import ClientSession
-
-session = ClientSession(...)
-
-# The uri is generated by your agent for a given resource
-result = await session.read_resource(uri)
-```
-
-Here's how you can create a `MCPResourceCall` object after the tool call has been made:
-
-```python
 from deepeval.test_case import MCPResourceCall
 
-mcp_tool_called = MCPResourceCall(
-    uri=uri
-    result=result # The same result you got above.
+session = ClientSession(...)
+
+# Replace with your values
+uri = "..."
+
+# Read resource
+result = await session.read_resource(uri)
+
+# Format into deepeval
+mcp_resource_called = MCPResourceCall(
+    uri=uri,
+    result=result,
 )
 ```
 
-The result provided by the `session.read_resource()` is an object of `ReadResourceResult` from `mcp.types` in the official MCP python-sdk. You just have to provide the same result in the result argument of `MCPResourceCall` object.
+The `result` returned by `session.read_resource()` is a `ReadResourceResult` from `mcp.types`.
 
-### MCP Prompts Called
+### Prompts
 
-You need to supply a list of `MCPPromptCall` objects for all the prompts your agent uses in that interaction. Here's how a typical MCP prompt is called by an agent:
+Provide a list of `MCPPromptCall` objects for every prompt your agent retrieves. The example below shows fetching a prompt and constructing the corresponding `MCPPromptCall`:
 
-```python
+```python title="main.py"
 from mcp import ClientSession
+from deepeval.test_case import MCPPromptCall
 
 session = ClientSession(...)
 
-# The prompt_name is generated by your agent from given prompts
+# Replace with your values
+prompt_name = "..."
+
+# Get prompt
 result = await session.get_prompt(prompt_name)
-```
 
-Here's how you can create a `MCPPromptCall` object after the tool call has been made:
-
-```python
-from deepeval.test_case import MCPPromptCall
-
-mcp_tool_called = MCPPromptCall(
+# Format into deepeval
+mcp_prompt_called = MCPPromptCall(
     name=prompt_name,
-    result=result # The same result you got above.
+    result=result,
 )
 ```
 
-The result provided by the `session.get_prompt()` is an object of `GetPromptResult` from `mcp.types` in the official MCP python-sdk. You just have to provide the same result in the result argument of `MCPPromptCall` object.
+The `result` returned by `session.get_prompt()` is a `GetPromptResult` from `mcp.types`.
 
-## Creating a Test Case 
+## Evaluating MCP
 
-The `ConversationalTestCase` accepts an optional parameter called `mcp_data` to add your `MCPMetaData` objects in a list, here's an example implementation on how to add it:
+You can evaluate MCPs for both **single and multi-turn** use cases. Evaluating MCP involves 4 steps:
 
-```python
-from deepeval.test_case import ConversationalTestCase, MCPMetaData
+- Defining an `MCPServer`, and
+- Piping runtime primitives data into `deepeval`
+- Creating a single-turn or multi-turn test case using these data
+- Running MCP metrics on the test cases you've defined
+
+### Single-Turn
+
+The [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case) is a single-turn test case and accepts the following optional parameters to support MCP evaluations:
+
+```python title="main.py"
+from deepeval.test_case.mcp import (
+    MCPServer,
+    MCPToolCall,
+    MCPResourceCall,
+    MCPPromptCall
+)
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics import MCPUseMetric
+from deepeval import evaluate
+
+# Create test case
+test_case = LLMTestCase(
+    input="...", # Your input
+    mcp_servers=[MCPServer(...)],
+    mcp_tools_called=[MCPToolCall(...)],
+    mcp_prompts_called=[MCPPromptCall(...)],
+    mcp_resources_called=[MCPResourceCall(...)]
+)
+
+# Run evaluations
+evaluate(test_cases=[test_case], metrics=[MCPUseMetric])
+```
+
+Typically all MCP parameters in a test case is optional. However if you wish to use MCP metrics such as the `MCPUseMetric`, you'll have to provide some of the following:
+
+- `mcp_servers` — a list of `MCPServer`s
+- `mcp_tools_called` — a list of `MCPToolCall` objects that your LLM app has used
+- `mcp_resources_called` — a list of `MCPResourceCall` objects that your LLM app has used
+- `mcp_prompts_called` — a list of `MCPPromptCall` objects that your LLM app has used
+
+You can learn more about the `MCPUseMetric` [here.](/docs/metrics-mcp-use)
+
+### Multi-Turn
+
+The [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases#conversational-test-case) accepts an optional parameter called `mcp_server` to add your `MCPServer` instances, which tells `deepeval` how your MCP interactions should be evaluated:
+
+```python title="main.py"
+from deepeval.test_case import ConversationalTestCase
+from deepeval.test_case.mcp import MCPServer
+from deepeval.metrics import MultiTurnMCPMetric
+from deepeval import evaluate
 
 test_case = ConversationalTestCase(
     turns=turns,
-    mcp_data=[
-        MCPMetaData(...),
-        MCPMetaData(...)
-    ]
+    mcp_servers=[MCPServer(...), MCPServer(...)]
 )
+
+evaluate(test_cases=[test_case], metrics=[MultiTurnMCPMetric()])
 ```
 
-You can add as many `MCPMetaData` objects as you have clients in your MCP host application.
+<details>
 
-The `Turn` accepts optional parameters like `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called` to add a list of primitives your AI application makes use of during execution. They each accept a list of `MCPToolCall`, `MCPResourceCall` and `MCPPromptCall` objects. Here's an example implementation of how to add them in turns:
+<summary>
+  Click here to see how to set MCP primitives for turns at runtime
+</summary>
+
+To set primitives at runtime, the `Turn` object accepts optional parameters like `mcp_tools_called`, `mcp_resources_called` and `mcp_prompts_called`, just like in an `LLMTestCase`:
 
 ```python
-from deepeval.test_case import (
-    ConversationalTest, 
-    Turn, 
-    MCPMetaData, 
-    MCPToolCall, 
-    MCPResourceCall, 
+from deepeval.test_case.mcp import MCPServer
+from deepeval.test_case.mcp import (
+    MCPServer,
+    MCPToolCall,
+    MCPResourceCall,
     MCPPromptCall
 )
 
 turns = [
-    Turn(role="user", content="..."),
+    Turn(role="user", content="Some example input"),
     Turn(
         role="assistant",
-        content="...", # Your content here for a tool / resource / prompt call
-        mcp_interaction=True,
-        mcp_tools_called=[
-            MCPToolCall(...),
-        ],
-        mcp_resources_called=[
-            MCPResourceCall(...),
-        ],
-        mcp_prompts_called=[
-            MCPPromptCall(...),
-        ],
+        content="Do this too", # Your content here for a tool / resource / prompt call
+        mcp_tools_called=[MCPToolCall(...)],
+        mcp_resources_called=[MCPResourceCall(...)],
+        mcp_prompts_called=[MCPPromptCall(...)],
     )
-    ...
 ]
 
 test_case = ConversationalTestCase(
     turns=turns,
-    mcp_data=[MCPMetaData(...)],
+    mcp_servers=[MCPServer(...)],
 )
 ```
 
-:::info
-Everytime you add a tool or resource or prompt called in MCP arguments, you need to set the `mcp_interaction` to True.
-:::
+</details>
 
-✅ Done. You can now use the [MCP metrics](https://www.deepeval.com/docs/metrics-mcp-args-correctness) to run evaluations on your MCP based application.
+✅ Done. You can now use the [MCP metrics](/docs/metrics-multi-turn-mcp-use) to run evaluations on your MCP based application.

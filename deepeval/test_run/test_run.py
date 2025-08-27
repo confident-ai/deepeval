@@ -26,10 +26,10 @@ from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
 from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
-    is_in_ci_env,
+    open_browser,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
-from deepeval.constants import HIDDEN_DIR
+from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
 
 TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
@@ -715,7 +715,12 @@ class TestRunManager:
             else test_run.test_cases
         )
 
-        BATCH_SIZE = 20 if is_conversational_run else 40
+        custom_batch_size = os.getenv(CONFIDENT_TEST_CASE_BATCH_SIZE)
+        if custom_batch_size and custom_batch_size.isdigit():
+            BATCH_SIZE = int(custom_batch_size)
+        else:
+            BATCH_SIZE = 20 if is_conversational_run else 40
+
         initial_batch = all_test_cases_to_process[:BATCH_SIZE]
         remaining_test_cases_to_process = all_test_cases_to_process[BATCH_SIZE:]
 
@@ -741,18 +746,15 @@ class TestRunManager:
         json_str = json.dumps(body, cls=TestRunEncoder)
         body = json.loads(json_str)
 
-        result = api.send_request(
+        data, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.TEST_RUN_ENDPOINT,
             body=body,
         )
 
-        response = TestRunHttpResponse(
-            testRunId=result["testRunId"],
-            projectId=result["projectId"],
-            link=result["link"],
+        res = TestRunHttpResponse(
+            id=data["id"],
         )
-        link = response.link
 
         ################################################
         ### Send the remaining test cases in batches ###
@@ -776,13 +778,13 @@ class TestRunManager:
             # Create RemainingTestRun with the correct list populated
             if is_conversational_run:
                 remaining_test_run = RemainingTestRun(
-                    testRunId=response.testRunId,
+                    testRunId=res.id,
                     testCases=[],  # This will be empty
                     conversationalTestCases=batch,
                 )
             else:
                 remaining_test_run = RemainingTestRun(
-                    testRunId=response.testRunId,
+                    testRunId=res.id,
                     testCases=batch,
                     conversationalTestCases=[],  # This will be empty
                 )
@@ -797,7 +799,7 @@ class TestRunManager:
                 body = remaining_test_run.dict(by_alias=True, exclude_none=True)
 
             try:
-                result = api.send_request(
+                _, _ = api.send_request(
                     method=HttpMethods.PUT,
                     endpoint=Endpoints.TEST_RUN_ENDPOINT,
                     body=body,
@@ -811,9 +813,7 @@ class TestRunManager:
             f"[link={link}]{link}[/link]"
         )
         self.save_final_test_run_link(link)
-
-        if is_in_ci_env() == False:
-            webbrowser.open(link)
+        open_browser(link)
         return link
 
     def save_test_run_locally(self):

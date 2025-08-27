@@ -20,11 +20,11 @@ from deepeval.dataset.utils import (
 )
 from deepeval.dataset.api import (
     APIDataset,
-    CreateDatasetHttpResponse,
     DatasetHttpResponse,
     APIQueueDataset,
 )
 from deepeval.dataset.golden import Golden, ConversationalGolden
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.telemetry import capture_evaluation_run, capture_pull_dataset
 from deepeval.test_case import (
     LLMTestCase,
@@ -33,7 +33,11 @@ from deepeval.test_case import (
 )
 from deepeval.test_run.hyperparameters import process_hyperparameters
 from deepeval.test_run.test_run import TEMP_FILE_PATH
-from deepeval.utils import convert_keys_to_snake_case, get_or_create_event_loop
+from deepeval.utils import (
+    convert_keys_to_snake_case,
+    get_or_create_event_loop,
+    open_browser,
+)
 from deepeval.test_run import (
     global_test_run_manager,
 )
@@ -617,22 +621,18 @@ class EvaluationDataset:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
 
-        result = api.send_request(
+        _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.DATASET_ENDPOINT,
             body=body,
         )
-        if result:
-            response = CreateDatasetHttpResponse(
-                link=result["link"],
-            )
-            link = response.link
+        if link:
             console = Console()
             console.print(
                 "✅ Dataset successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"
             )
-            webbrowser.open(link)
+            open_browser(link)
 
     def pull(
         self,
@@ -653,7 +653,7 @@ class EvaluationDataset:
                     total=100,
                 )
                 start_time = time.perf_counter()
-                result = api.send_request(
+                data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.DATASET_ENDPOINT,
                     params={
@@ -663,17 +663,17 @@ class EvaluationDataset:
                 )
 
                 response = DatasetHttpResponse(
+                    id=data["id"],
                     goldens=convert_keys_to_snake_case(
-                        result.get("goldens", None)
+                        data.get("goldens", None)
                     ),
                     conversationalGoldens=convert_keys_to_snake_case(
-                        result.get("conversationalGoldens", None)
+                        data.get("conversationalGoldens", None)
                     ),
-                    datasetId=result["datasetId"],
                 )
 
                 self._alias = alias
-                self._id = response.datasetId
+                self._id = response.id
                 self._multi_turn = response.goldens is None
                 self.goldens = []
                 self.test_cases = []
@@ -681,7 +681,7 @@ class EvaluationDataset:
                 if auto_convert_goldens_to_test_cases:
                     if not self._multi_turn:
                         llm_test_cases = convert_goldens_to_test_cases(
-                            response.goldens, alias, response.datasetId
+                            response.goldens, alias, response.id
                         )
                         self._llm_test_cases.extend(llm_test_cases)
                     else:
@@ -689,7 +689,7 @@ class EvaluationDataset:
                             convert_convo_goldens_to_convo_test_cases(
                                 response.conversational_goldens,
                                 alias,
-                                response.datasetId,
+                                response.id,
                             )
                         )
                         self._conversational_test_cases.extend(
@@ -703,7 +703,7 @@ class EvaluationDataset:
 
                     for golden in self.goldens:
                         golden._dataset_alias = alias
-                        golden._dataset_id = response.datasetId
+                        golden._dataset_id = response.id
 
                 end_time = time.perf_counter()
                 time_taken = format(end_time - start_time, ".2f")
@@ -738,17 +738,13 @@ class EvaluationDataset:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
 
-        result = api.send_request(
+        _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
             body=body,
             url_params={"alias": alias},
         )
-        if result and print_response:
-            response = CreateDatasetHttpResponse(
-                link=result["link"],
-            )
-            link = response.link
+        if link and print_response:
             console = Console()
             console.print(
                 "✅ Goldens successfully queued to Confident AI! Annotate & finalized them at "
@@ -939,6 +935,7 @@ class EvaluationDataset:
 
     def evals_iterator(
         self,
+        metrics: Optional[List[BaseMetric]] = None,
         identifier: Optional[str] = None,
         display_config: Optional["DisplayConfig"] = None,
         cache_config: Optional["CacheConfig"] = None,
@@ -963,13 +960,13 @@ class EvaluationDataset:
         )
 
         if display_config is None:
-            display_config = DisplayConfig()
+            display_config: DisplayConfig = DisplayConfig()
         if cache_config is None:
-            cache_config = CacheConfig()
+            cache_config: CacheConfig = CacheConfig()
         if error_config is None:
-            error_config = ErrorConfig()
+            error_config: ErrorConfig = ErrorConfig()
         if async_config is None:
-            async_config = AsyncConfig()
+            async_config: AsyncConfig = AsyncConfig()
 
         if not self.goldens or len(self.goldens) == 0:
             raise ValueError("Unable to evaluate dataset with no goldens.")
@@ -984,26 +981,23 @@ class EvaluationDataset:
                 loop = get_or_create_event_loop()
                 yield from a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
-                    verbose_mode=display_config.verbose_mode,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
-                    loop=loop,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
-                    test_results=test_results,
-                    save_to_disk=cache_config.write_cache,
                     identifier=identifier,
+                    loop=loop,
+                    trace_metrics=metrics,
+                    test_results=test_results,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    error_config=error_config,
+                    async_config=async_config,
                 )
             else:
                 yield from execute_agentic_test_cases_from_loop(
                     goldens=goldens,
-                    verbose_mode=display_config.verbose_mode,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
+                    trace_metrics=metrics,
+                    display_config=display_config,
+                    cache_config=cache_config,
+                    error_config=error_config,
                     test_results=test_results,
-                    save_to_disk=cache_config.write_cache,
                     identifier=identifier,
                 )
 
@@ -1014,7 +1008,7 @@ class EvaluationDataset:
                     print_test_result(
                         test_result, display_config.display_option
                     )
-                    aggregate_metric_pass_rates(test_results)
+                aggregate_metric_pass_rates(test_results)
             if display_config.file_output_dir is not None:
                 for test_result in test_results:
                     write_test_result_to_file(

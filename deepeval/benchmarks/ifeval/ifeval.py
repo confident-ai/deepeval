@@ -403,7 +403,7 @@ class IFEval(DeepEvalBaseBenchmark):
         self.overall_score = None
         self.instruction_breakdown = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> Dict:
         import pandas as pd
 
         with capture_benchmark_run("IFEval", self.n_problems or "all"):

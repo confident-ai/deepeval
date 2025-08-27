@@ -46,7 +46,7 @@ If you don't already have an `EvaluationDataset`, a great starting point is to s
 />
 
 Full documentation for datasets on [Confident AI
-here.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
+here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 :::
 
@@ -318,7 +318,7 @@ Lastly, you're unsure whether a golden is ready for evaluation, you should `queu
 dataset.queue(alias="My dataset")
 ```
 
-The `queue` method will similarly push goldens but will not mark it as "finalized" on Confident AI. This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://documentation.confident-ai.com/docs/dataset-editor/dataset-features/push-queue-goldens)
+The `queue` method will similarly push goldens but will not mark it as "finalized" on Confident AI. This means they won't be pulled until you've manually marked them as finalized on the platform. You can learn more on Confident AI's docs [here.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 :::tip
 You can also push multi-turn datasets.
@@ -370,7 +370,7 @@ dataset.pull(alias="My Evals Dataset")
 
 Non-technical domain experts can **create, annotate, and comment** on datasets on Confident AI. You can also upload datasets in CSV format, or push synthetic datasets created in `deepeval` to Confident AI in one line of code.
 
-For more information, visit the [Confident AI datasets section.](https://documentation.confident-ai.com/docs/dataset-editor/introduction)
+For more information, visit the [Confident AI datasets section.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens)
 
 </TabItem>
 
@@ -572,11 +572,24 @@ class ConversationalGolden(BaseModel):
     scenario: str
     expected_outcome: Optional[str] = None
     user_description: Optional[str] = None
+    context: Optional[List[str]] = None
 
     # Useful metadata for generating test cases
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     custom_column_key_values: Optional[Dict[str, str]] = None
+
+    # Fields that you should ideally not populate
+    turns: Optional[Turn] = None
 ```
 
-You can easily add and edit custom columns on [Confident AI.](https://documentation.confident-ai.com/docs/dataset-editor/dataset-features/custom-columns)
+You can easily add and edit custom columns on [Confident AI.](https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens#custom-dataset-columns)
+
+:::tip
+
+The `turns` parameter should **100%** be generated at evaluation time in your `ConversationalTestCase` instead. However, the `turns` parameter exists in case users want to either:
+
+- [Simulate turns](/docs/conversation-simulator) starting from a certain point of a prior conversation that was previously left off
+- Continue from a specific turn when test cases usually fail at the last turn where agents are calling multiple tools
+
+:::

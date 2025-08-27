@@ -91,7 +91,9 @@ class HumanEval(DeepEvalBaseBenchmark):
         self.overall_score: Optional[float] = None
         self.verbose_mode: bool = (False,)
 
-    def evaluate(self, model: DeepEvalBaseLLM, k: int) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, *args, k: int = 1, **kwargs
+    ) -> Dict:
         import pandas as pd
 
         with capture_benchmark_run("HumanEval", len(self.tasks)):

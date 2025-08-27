@@ -144,7 +144,7 @@ Although the `metrics` parameter is optional, to run a component-level evaluatio
 If you simply decorate your LLM application with `@observe` and don't supply any arguments, nothing will happen at all.
 
 :::info
-The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://documentation.confident-ai.com/docs/llm-tracing/introduction), which is also possibler when running end-to-end evaluations.
+The `metrics` parameter is optional because some users might want to use tracing only for the [debugging UI on Confident AI](https://www.confident-ai.com/docs/llm-tracing/introduction), which is also possibler when running end-to-end evaluations.
 :::
 
 ## Full Example
@@ -170,15 +170,12 @@ This is the same example we used in the [test cases section](/docs/evaluation-te
 
 Assuming the code implementation of this LLM agent, the codeblock below shows it only took an additional **SEVEN LINES OF CODE** to setup tracing:
 
-```python title="tracing_example.py" showLineNumbers {18,22-24,28,35-37,41}
+```python title="tracing_example.py" showLineNumbers {15,19-21,25,32-34,38}
 from typing import List
 
 from deepeval.test_case import LLMTestCase
-from deepeval.tracing import (
-    observe,
-    update_current_span,
-    ContextualRelevancyMetric,
-)
+from deepeval.tracing import observe, update_current_span
+from deepeval.metrics import ContextualRelevancyMetric, AnswerRelevancyMetric
 
 def web_search(query: str) -> str:
     return "Fake search results for: " + query
@@ -228,18 +225,19 @@ def research_agent(query: str) -> str:
     return final_response
 ```
 
-Then, simply use the `evaluate()` function (or `assert_test()` with `deepeval test run`):
+Then, simply use the dataset's `evals_iterator` (or `assert_test()` with `deepeval test run`):
 
 ```python
-from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval.dataset import Golden, EvaluationDataset
 ...
 
 # Create golden instead of test case
 golden = Golden(input="What's the weather like in SF?")
+dataset = EvaluationDataset(goldens=[golden])
 
 # Run evaluation
-evaluate(goldens=[golden], observed_callback=research_agent)
+for golden in dataset.evals_iterator():
+    research_agent(golden.input)
 ```
 
 Notice that without tracing, creating evaluation-ready `LLMTestCase`s is complicated because you have to bubble the input and returned output values for your `"RAG Pipeline"` component up to the surface for evaluation.
@@ -250,7 +248,7 @@ Notice that without tracing, creating evaluation-ready `LLMTestCase`s is complic
 LLM tracing in `deepeval` offers fully functionality for component-level evaluation, but when used alongside Confident AI, it enables more advanced features like end-to-end debugging.
 :::
 
-Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://documentation.confident-ai.com/docs/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
+Throughout this documentation, you may notice references to features we didn't cover in detail (such as span `type`s, `name`s, etc.). These additional features are fully addressed in [Confident AI's documentation on LLM tracing](https://www.confident-ai.com/docs/llm-tracing/introduction), which we recommend reading if you're interested in setting up an advanced LLM evaluation & observability suite.
 
 <VideoDisplayer
   src="https://confident-docs.s3.us-east-1.amazonaws.com/observability:llm-tracing.mp4"
@@ -266,7 +264,7 @@ For simplicity, we always recommend **custom spans** unless needed otherwise, si
 - This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
 - Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://documentation.confident-ai.com/docs/llm-tracing/introduction)
+To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
 
 ### Verbose logs
 

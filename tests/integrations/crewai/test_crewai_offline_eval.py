@@ -4,26 +4,27 @@ from deepeval.integrations.crewai.agent import Agent
 import os
 from deepeval.integrations.crewai import instrument_crewai
 import time
-from deepeval.dataset import Golden
-from deepeval.evaluate import dataset
+from deepeval.dataset import Golden, EvaluationDataset
 
-os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
-instrument_crewai(api_key="<YOUR_CONFIDENT_API_KEY>")
+from dotenv import load_dotenv
+
+load_dotenv()
+
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+instrument_crewai(api_key=os.getenv("CONFIDENT_API_KEY"))
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 
-# Define your agents with roles and goals
 coder = Agent(
     role="Consultant",
     goal="Write clear, concise explanation.",
     backstory="An expert consultant with a keen eye for software trends.",
-    # metric_collection="test_collection_1",
     metrics=[answer_relavancy_metric],
 )
 
 # Create tasks for your agents
 task1 = Task(
-    description="Explain the latest trends in AI.",
+    description="Explain the given topic",
     expected_output="A clear and concise explanation.",
     agent=coder,
 )
@@ -35,13 +36,12 @@ crew = Crew(
 )
 
 goldens = [
-    Golden(input="What is the weather in Bogotá, Colombia?"),
-    Golden(input="What is the weather in Paris, France?"),
-    Golden(input="What is the weather in Tokyo, Japan?"),
+    Golden(input="What are Transformers in AI?"),
+    Golden(input="What is the biggest open source database?"),
+    Golden(input="What are LLMs?"),
 ]
 
-for golden in dataset(goldens=goldens):
-    # Kickoff your crew
-    result = crew.kickoff()
+dataset = EvaluationDataset(goldens=goldens)
 
-# time.sleep(7) # Wait for traces to be posted to observatory
+for golden in dataset.evals_iterator():
+    result = crew.kickoff(inputs={"input": golden.input})
