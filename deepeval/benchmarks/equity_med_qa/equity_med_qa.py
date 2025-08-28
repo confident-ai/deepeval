@@ -144,7 +144,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         if dataset_attr:
             if not hasattr(self, dataset_attr):
                 dataset = load_dataset(
-                    "katielink/EquityMedQA", task.value, trust_remote_code=True
+                    "katielink/EquityMedQA", task.value
                 )
                 setattr(self, dataset_attr, dataset)
             else:

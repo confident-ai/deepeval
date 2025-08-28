@@ -150,7 +150,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("gsm8k", "main", trust_remote_code=True)
+            dataset = load_dataset("gsm8k", "main")
             self.dataset = dataset
 
         # Construct example dataset for n_shot inference
