@@ -15,7 +15,7 @@ Learn to evaluate model-context-protocol (MCP) based applications using `deepeva
 
 MCP evaluation is different from other evaluations because you can choose to create single-turn test cases or multi-turn test cases based on your application design and architecture.
 
-**In this 5 min quickstart, you'll learn how to:**
+**In this 10 min quickstart, you'll learn how to:**
 
 - Track your MCP interactions
 - Create test cases for your application
@@ -56,7 +56,7 @@ In `deepeval` MCP evaluations can be done using either single-turn or multi-turn
 
 Connect your application to MCP servers and create the `MCPServer` object for all the MCP servers you're using.
 
-```python title="main.py" showLineNumbers {5,18-22}
+```python title="main.py" showLineNumbers {5,19-23}
 import mcp
 from contextlib import AsyncExitStack
 from mcp import ClientSession
@@ -71,6 +71,7 @@ tools_called = []
 async def main():
     read, write, _  = await AsyncExitStack().enter_async_context(streamablehttp_client(url))
     session = await AsyncExitStack().enter_async_context(ClientSession(read, write))
+    await session.initialize()
 
     tool_list = await session.list_tools()
 
