@@ -1,6 +1,7 @@
 import time
 
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai, Agent
+
 instrument_pydantic_ai()
 
 agent = Agent(
@@ -18,4 +19,4 @@ result = agent.run_sync(
 )
 
 print(result)
-time.sleep(10) # wait for the trace to be posted
+time.sleep(10)  # wait for the trace to be posted

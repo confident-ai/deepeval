@@ -1695,7 +1695,9 @@ def execute_agentic_test_cases_from_loop(
                     f"Running Component-Level Evals (sync)",
                     total=len(goldens) * 2,
                 )
-                yield from evaluate_test_cases(progress=progress, pbar_id=pbar_id)
+                yield from evaluate_test_cases(
+                    progress=progress, pbar_id=pbar_id
+                )
         else:
             yield from evaluate_test_cases()
     except Exception:
@@ -1849,7 +1851,7 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             )
 
-    try: 
+    try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
                 TextColumn("{task.description}"),
@@ -1882,7 +1884,6 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
-
 
 
 async def _a_evaluate_traces(

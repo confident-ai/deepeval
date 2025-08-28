@@ -113,9 +113,7 @@ class Winogrande(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset(
-                "allenai/winogrande", "winogrande_xs"
-            )
+            dataset = load_dataset("allenai/winogrande", "winogrande_xs")
             self.dataset = dataset
 
         # Construct test set

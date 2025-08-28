@@ -338,9 +338,7 @@ class ConfidentSpanExporter(SpanExporter):
             raw_trace_expected_tools
         )
         trace_metadata = self._parse_json_string(raw_trace_metadata)
-        trace_metric_collection = parse_string(
-            raw_trace_metric_collection
-        )
+        trace_metric_collection = parse_string(raw_trace_metric_collection)
 
         # Set Span Attributes
         base_span.parent_uuid = (

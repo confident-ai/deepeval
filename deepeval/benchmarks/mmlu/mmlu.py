@@ -252,7 +252,8 @@ class MMLU(DeepEvalBaseBenchmark):
         from datasets import load_dataset
 
         dataset = load_dataset(
-            "cais/mmlu", task.value,
+            "cais/mmlu",
+            task.value,
         )
         self.dataset = dataset
 
@@ -270,7 +271,9 @@ class MMLU(DeepEvalBaseBenchmark):
         choices = ["A", "B", "C", "D"]
         for data in dataset["test"]:
             input = MMLUTemplate.format_question(data, include_answer=False)
-            golden = Golden(input=input, expected_output=choices[data["answer"]])
+            golden = Golden(
+                input=input, expected_output=choices[data["answer"]]
+            )
             goldens.append(golden)
         return goldens
 

@@ -279,9 +279,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         dataset_attr = dataset_mapping.get(task)
         if dataset_attr:
             if not hasattr(self, dataset_attr):
-                dataset = load_dataset(
-                    "lukaemon/bbh", task.value
-                )
+                dataset = load_dataset("lukaemon/bbh", task.value)
                 setattr(self, dataset_attr, dataset)
             else:
                 dataset = getattr(self, dataset_attr)

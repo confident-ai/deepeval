@@ -240,14 +240,13 @@ def parse_string(value: Any) -> Optional[str]:
         return value
     return None
 
+
 def parse_list_of_strings(context: List[str]) -> List[str]:
-        parsed_context: List[str] = []
-        if context and (
-            isinstance(context, list) or isinstance(context, tuple)
-        ):
-            for context_str in context:
-                if not isinstance(context_str, str):
-                    pass
-                else:
-                    parsed_context.append(context_str)
-        return parsed_context
+    parsed_context: List[str] = []
+    if context and (isinstance(context, list) or isinstance(context, tuple)):
+        for context_str in context:
+            if not isinstance(context_str, str):
+                pass
+            else:
+                parsed_context.append(context_str)
+    return parsed_context
