@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any
 from deepeval.tracing.types import Trace, LLMTestCase, ToolCall
 from opentelemetry.sdk.trace.export import ReadableSpan
 import json
@@ -233,3 +233,21 @@ def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
         return None
 
     return test_case
+
+
+def parse_string(value: Any) -> Optional[str]:
+    if isinstance(value, str):
+        return value
+    return None
+
+def parse_list_of_strings(context: List[str]) -> List[str]:
+        parsed_context: List[str] = []
+        if context and (
+            isinstance(context, list) or isinstance(context, tuple)
+        ):
+            for context_str in context:
+                if not isinstance(context_str, str):
+                    pass
+                else:
+                    parsed_context.append(context_str)
+        return parsed_context

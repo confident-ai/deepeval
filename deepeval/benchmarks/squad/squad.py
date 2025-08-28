@@ -159,7 +159,7 @@ class SQuAD(DeepEvalBaseBenchmark):
     def load_benchmark_dataset(self, task: SQuADTask) -> List[Golden]:
         from datasets import load_dataset
 
-        dataset = load_dataset("rajpurkar/squad", trust_remote_code=True)
+        dataset = load_dataset("rajpurkar/squad")
         self.dataset = dataset
 
         # Construct test set

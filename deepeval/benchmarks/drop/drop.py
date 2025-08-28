@@ -263,7 +263,7 @@ class DROP(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("ucinlp/drop", trust_remote_code=True)
+            dataset = load_dataset("ucinlp/drop")
             self.dataset = dataset
 
         # construct example dataset

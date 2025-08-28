@@ -169,7 +169,10 @@ class MathQA(DeepEvalBaseBenchmark):
             res: MultipleChoiceSchemaLower = model.generate(
                 prompt=prompt, schema=MultipleChoiceSchemaLower
             )
-            prediction = res.answer
+            if isinstance(res, (tuple, list)):
+                prediction = res[0].answer
+            else:
+                prediction = res.answer
         except TypeError:
             prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
@@ -235,7 +238,7 @@ class MathQA(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("allenai/math_qa", trust_remote_code=True)
+            dataset = load_dataset("regisss/math_qa")
             self.dataset = dataset
 
         # Construct test set
