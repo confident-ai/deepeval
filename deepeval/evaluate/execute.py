@@ -1680,27 +1680,30 @@ def execute_agentic_test_cases_from_loop(
 
                 update_pbar(progress, pbar_id)
 
-    if display_config.show_indicator and _use_bar_indicator:
-        progress = Progress(
-            TextColumn("{task.description}"),
-            BarColumn(bar_width=60),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            console=custom_console,
-        )
-        with progress:
-            pbar_id = add_pbar(
-                progress,
-                f"Running Component-Level Evals (sync)",
-                total=len(goldens) * 2,
+    try:
+        if display_config.show_indicator and _use_bar_indicator:
+            progress = Progress(
+                TextColumn("{task.description}"),
+                BarColumn(bar_width=60),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                console=custom_console,
             )
-            yield from evaluate_test_cases(progress=progress, pbar_id=pbar_id)
-    else:
-        yield from evaluate_test_cases()
-
-    local_trace_manager.evaluating = False
-    local_trace_manager.traces_to_evaluate_order = []
-    local_trace_manager.traces_to_evaluate = []
+            with progress:
+                pbar_id = add_pbar(
+                    progress,
+                    f"Running Component-Level Evals (sync)",
+                    total=len(goldens) * 2,
+                )
+                yield from evaluate_test_cases(progress=progress, pbar_id=pbar_id)
+        else:
+            yield from evaluate_test_cases()
+    except Exception:
+        raise
+    finally:
+        local_trace_manager.evaluating = False
+        local_trace_manager.traces_to_evaluate_order.clear()
+        local_trace_manager.traces_to_evaluate.clear()
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -1846,39 +1849,40 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             )
 
-    if display_config.show_indicator and _use_bar_indicator:
-        progress = Progress(
-            TextColumn("{task.description}"),
-            BarColumn(bar_width=60),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            console=custom_console,
-        )
-        with progress:
-            pbar_id = add_pbar(
-                progress,
-                f"Running Component-Level Evals (async)",
-                total=len(goldens) * 2,
+    try: 
+        if display_config.show_indicator and _use_bar_indicator:
+            progress = Progress(
+                TextColumn("{task.description}"),
+                BarColumn(bar_width=60),
+                TaskProgressColumn(),
+                TimeElapsedColumn(),
+                console=custom_console,
             )
-            pbar_callback_id = add_pbar(
-                progress,
-                f"\t⚡ Calling LLM app (with {len(goldens)} goldens)",
-                total=len(goldens),
-            )
-            yield from evaluate_test_cases(
-                progress=progress,
-                pbar_id=pbar_id,
-                pbar_callback_id=pbar_callback_id,
-            )
-    else:
-        yield from evaluate_test_cases()
+            with progress:
+                pbar_id = add_pbar(
+                    progress,
+                    f"Running Component-Level Evals (async)",
+                    total=len(goldens) * 2,
+                )
+                pbar_callback_id = add_pbar(
+                    progress,
+                    f"\t⚡ Calling LLM app (with {len(goldens)} goldens)",
+                    total=len(goldens),
+                )
+                yield from evaluate_test_cases(
+                    progress=progress,
+                    pbar_id=pbar_id,
+                    pbar_callback_id=pbar_callback_id,
+                )
+        else:
+            yield from evaluate_test_cases()
+    except Exception:
+        raise
+    finally:
+        local_trace_manager.evaluating = False
+        local_trace_manager.traces_to_evaluate_order.clear()
+        local_trace_manager.traces_to_evaluate.clear()
 
-    # Clean up
-    local_trace_manager.evaluating = False
-    local_trace_manager.traces_to_evaluate_order = []
-    local_trace_manager.traces_to_evaluate = []
-    global_evaluation_tasks.clear_tasks()
-    asyncio.create_task = original_create_task
 
 
 async def _a_evaluate_traces(
