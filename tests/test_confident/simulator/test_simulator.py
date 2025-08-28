@@ -130,3 +130,4 @@ def test_invalid_max_user_simulations():
 
     with pytest.raises(ValueError):
         simulator.simulate([golden], max_user_simulations=0)
+        
