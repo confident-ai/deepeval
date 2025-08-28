@@ -71,7 +71,9 @@ dataset.add_goldens_from_csv_file(
 You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
 
 </TimelineItem>
-<TimelineItem title="Create your pytest file">
+<TimelineItem title="Assert your tests">
+
+You can use `deepeval`'s `assert_test` function to write test files.
 
 ```python title="test_llm_app.py" showLineNumbers {14}
 from your_agent import your_llm_app # Replace with your LLM app
@@ -290,7 +292,9 @@ dataset.add_goldens_from_csv_file(
 You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
 
 </TimelineItem>
-<TimelineItem title="Create your pytest file">
+<TimelineItem title="Assert your tests">
+
+You can use `deepeval`'s `assert_test` function to write test files.
 
 ```python title="test_llm_app.py" showLineNumbers {14}
 from main import chatbot_callback # Replace with your LLM callback
@@ -356,7 +360,9 @@ dataset.pull(alias="Your Dataset Name") # replace with your alias
 You can use this dataset to iterate over goldens.
 
 </TimelineItem>
-<TimelineItem title="Create your pytest file">
+<TimelineItem title="Assert your tests">
+
+You can use `deepeval`'s `assert_test` function to write test files.
 
 ```python title="test_llm_app.py" {10}
 import pytest
