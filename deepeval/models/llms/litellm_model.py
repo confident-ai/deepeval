@@ -34,7 +34,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
     JITTER: int = 2
     MAX_RETRIES: int = 6
     MAX_WAIT: int = 10
-    
+
     def __init__(
         self,
         model: Optional[str] = None,
@@ -82,7 +82,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
         super().__init__(model_name)
 
     @retry(
-        wait=wait_exponential_jitter(initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
         stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
@@ -129,7 +131,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
             raise e
 
     @retry(
-        wait=wait_exponential_jitter(initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
         stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
@@ -176,7 +180,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
             raise e
 
     @retry(
-        wait=wait_exponential_jitter(initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
         stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
@@ -209,7 +215,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
             return None, 0.0  # Return 0.0 cost on error
 
     @retry(
-        wait=wait_exponential_jitter(initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
         stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
@@ -242,7 +250,9 @@ class LiteLLMModel(DeepEvalBaseLLM):
             return None, 0.0  # Return 0.0 cost on error
 
     @retry(
-        wait=wait_exponential_jitter(initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
         stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
