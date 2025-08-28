@@ -108,7 +108,7 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
-Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#run-unit-tests-for-every-push).
+Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
 
 </TimelineItem>
 </Timeline>
@@ -331,7 +331,7 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `metrics`: a list of metrics of type `BaseMetric`.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
-Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#run-unit-tests-for-every-push).
+Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
 
 </TimelineItem>
 </Timeline>
@@ -348,16 +348,55 @@ The usual `pytest` command would still work but is highly not recommended. `deep
 Test individual parts of your LLM pipeline like prompt templates or retrieval logic in isolation. Component-level evals offer fast, targeted feedback and integrate seamlessly into your CI/CD workflows.
 
 <Timeline>
-<TimelineItem title="Pull your dataset">
+<TimelineItem title="Load your dataset">
+
+`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
+
+<Tabs>
+<TabItem value="confident-ai" label="Confident AI">
 
 ```python
 from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
-dataset.pull(alias="Your Dataset Name") # replace with your alias
+dataset.pull(alias="My Evals Dataset")
 ```
 
-You can use this dataset to iterate over goldens.
+</TabItem>
+
+<TabItem value="from-json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to you .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
+</TabItem>
+
+<TabItem value="from-csv" label="From CSV">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_csv_file(
+    # file_path is the absolute path to you .csv file
+    file_path="example.csv",
+    input_col_name="query"
+)
+```
+
+</TabItem>
+</Tabs>
+
+You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
 
 </TimelineItem>
 <TimelineItem title="Assert your tests">
@@ -393,7 +432,7 @@ There are **TWO** mandatory and **ONE** optional parameter when calling the `ass
 - `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
 - [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
 
-Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#run-unit-tests-for-every-push).
+Create a YAML file to execute your test file automatically in CI/CD pipelines. [Click here for an example YAML file](#yaml-file-for-cicd-evals).
 
 </TimelineItem>
 </Timeline>
@@ -405,9 +444,9 @@ Similar to the `evaluate()` function, `assert_test()` for component-level evalua
 - Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
 :::
 
-## Run Unit Tests for Every Push
+## YAML File For CI/CD Evals
 
-To run your unit tests on all changes in prod, you can use the following `YAML` file in your github actions or any other similar CI/CD pipelines. This example uses `poetry` for installation, `OPENAI_API_KEY` as your LLM judge to run evals locally. You can also optionally add `CONFIDENT_API_KEY` to send results to Confident AI.
+To run your unit tests on all changes in prod, you can use the following `YAML` file in your **github actions** or any other similar CI/CD pipelines. This example uses `poetry` for installation, `OPENAI_API_KEY` as your LLM judge to run evals locally. You can also optionally add `CONFIDENT_API_KEY` to send results to Confident AI.
 
 ```yaml {32-33}
 name: LLM App DeepEval Tests

@@ -40,12 +40,9 @@ flowchart LR
 
 </div>
 
-You can run component-level LLM evaluations in either:
-
-- **Python scripts** by looping through your dataset, or
-- **CI/CD pipelines** using `deepeval test run`
-
-both of these methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable test reports on the cloud.](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports)
+:::note
+Component-level evaluation is currently not supported for multi-turn test cases.
+:::
 
 <Tabs>
 
@@ -94,7 +91,7 @@ The trend you'll notice is use cases that are more complex in architecture are m
 
 </details>
 
-## Setup Your Testing Environment
+## Setup Your Test Environment
 
 <Timeline>
 <TimelineItem title="Setup LLM Tracing">
@@ -154,14 +151,8 @@ print(your_llm_app("How are you?"))
 
 You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for which components, but alternatively you can also [join our discord to ask us directly.](https://discord.com/invite/a3K9c8GRGt)
 
-<details>
-  <summary><strong>Component-level vs End-to-End Metrics</strong></summary>
+You can just supply your selected metrics in the [`@observe`](/docs/evaluation-llm-tracing#observe) decorator to run component level evals.
 
-Similar to end-to-end evaluation, you would still be creating `LLMTestCase`s, but this time for individual components at runtime instead of the overall system, which means you will need to select a set of appropriate metrics **for each component you want to evaluate**, and ensure the `LLMTestCase`s that you create in that component contains all the necessary parameters.
-
-In component-level evaluation, there are more metrics to select as there are more individual components to evaluate.
-
-</details>
 </TimelineItem>
 <TimelineItem title="Create Goldens">
 
@@ -283,15 +274,19 @@ You can use the dataset's `evals_iterator` to run component-level evals by simpl
 
 ```python title="main.py"
 from somewhere import your_llm_app # Replace with your LLM app
-...
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Evals Dataset")
 
 for golden in dataset.evals_iterator():
     # Invoke your LLM app
     your_llm_app(golden.input)
 ```
 
-There are **FIVE** optional parameters when using the `evals_iterator()` for **COMPONENT-LEVEL** evaluation:
+There are **SIX** optional parameters when using the `evals_iterator()`:
 
+- [Optional] `metrics`: a list of `BaseMetric` that allows you to run end-to-end evals for your traces.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
 - [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.

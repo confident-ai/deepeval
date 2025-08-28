@@ -21,7 +21,7 @@ deepeval login
 ```
 :::
 
-## What Are End-to-End Evals
+## What Are E2E Evals
 
 Running an end-to-end LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. You would typically:
 
@@ -40,13 +40,6 @@ flowchart LR
 ```
 
 </div>
-
-You can run end-to-end LLM evaluations in either:
-
-- **Python scripts** using the `evaluate()` function, or
-- **CI/CD pipelines** using `deepeval test run`
-
-Both gives you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports)
 
 <details>
 <summary><strong>When should you run End-to-End evaluations?</strong></summary>
@@ -68,7 +61,7 @@ Most of what you saw in DeepEval's <a href="/docs/getting-started">quickstart</a
 
 </details>
 
-## Setup Your Testing Environment
+## Setup Your Test Environment
 
 <Timeline>
 <TimelineItem title="Create Goldens">
@@ -161,7 +154,7 @@ You can read our [metrics section](/docs/metrics-introduction) to learn about th
 
 You can now use these test cases and metrics to run [single-turn](#single-turn-end-to-end-evals) and [multi-turn](#multi-turn-end-to-end-evals) end-to-end evals. If you've setup [tracing](/docs/evaluation-llm-tracing) for your LLM application, you can automatically [run end-to-end evals for traces](#end-to-end-evals-for-tracing) using a single line of code.
 
-## Single-Turn End-to-End Evals
+## Single-Turn E2E Evals
 
 <Timeline>
 <TimelineItem title="Load your dataset">
@@ -285,7 +278,7 @@ We recommend logging your `hyperparameters` during your evauations as they allow
 />
 :::
 
-## Multi-Turn End-to-End Evals
+## Multi-Turn E2E Evals
 
 <Timeline>
 <TimelineItem title="Wrap chatbot in callback">
@@ -545,7 +538,7 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
 />
 :::
 
-## End-To-End Evals For Tracing
+## E2E Evals For Tracing
 
 If you've [setup tracing](/docs/evaluation-llm-tracing) for you LLM application, you can run end-to-end evals using the `evals_iterator()` function.
 
@@ -603,6 +596,52 @@ You can [learn more about loading datasets here](/docs/evaluation-datasets#load-
 
 
 </TimelineItem>
+
+<TimelineItem title="Update your test cases for trace">
+
+You can update your end-to-end test cases for trace by using the `update_current_trace` function provided by `deepeval`
+
+```python {2,10,17}
+from openai import OpenAI
+from deepeval.tracing import observe, update_current_trace
+
+@observe()
+def llm_app(query: str) -> str:
+
+    @observe()
+    def retriever(query: str) -> list[str]:
+        chunks = ["List", "of", "text", "chunks"]
+        update_current_trace(retrieval_context=chunks)
+        return chunks
+
+    @observe()
+    def generator(query: str, text_chunks: list[str]) -> str:
+        res = OpenAI().chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]
+        ).choices[0].message.content
+        update_current_trace(input=query, output=res)
+        return res
+
+    return generator(query, retriever(query))
+```
+
+There are **TWO** ways to create test cases when using the `update_current_trace` function:
+
+- [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
+
+- Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
+    - [Optional] `input`
+    - [Optional] `output`
+    - [Optional] `retrieval_context`
+    - [Optional] `context`
+    - [Optional] `expected_output`
+    - [Optional] `tools_called`
+    - [Optional] `expected_tools`
+
+:::note
+You can use the individual `LLMTestCase` params in the `update_current_trace` function to override the values of the `test_case` you passed.
+:::
+
+</TimelineItem>
 <TimelineItem title="Run end-to-end evals">
 
 You can run end-to-end evals for your traces by supplying your `metrics` in the `evals_iterator` function.
@@ -617,6 +656,15 @@ dataset.pull(alias="YOUR-DATASET-ALIAS")
 for golden in dataset.evals_iterator(metrics=[AnswerRelevancyMetric()]):
     llm_app(golden.input) # Replace with your LLM app
 ```
+
+There are **SIX** optional parameters when using the `evals_iterator()`:
+
+- [Optional] `metrics`: a list of `BaseMetric` that allows you to run end-to-end evals for your traces.
+- [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
+- [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
+- [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
+- [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
+- [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
 This is all it takes to run end-to-end evaluations, with the added benefit of a full testing report with tracing included on Confident AI.
 
