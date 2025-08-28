@@ -2,7 +2,10 @@ from typing import List, Dict, Optional
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.truthful_qa.task import TruthfulQATask
 from deepeval.benchmarks.truthful_qa.mode import TruthfulQAMode
@@ -58,7 +61,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         *args,
         batch_size: int | None = None,
         **kwargs,
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("TruthfulQA", len(self.tasks)):
@@ -166,7 +169,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, golden: Golden, mode: TruthfulQAMode

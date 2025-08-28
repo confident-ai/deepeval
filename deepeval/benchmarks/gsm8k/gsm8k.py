@@ -2,7 +2,10 @@ from typing import List, Optional, Dict, Union
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.gsm8k.template import GSM8KTemplate
 from deepeval.benchmarks.schema import NumberSchema
@@ -39,7 +42,9 @@ class GSM8K(DeepEvalBaseBenchmark):
         else:
             self.confinement_instructions = confinement_instructions
 
-    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, *args, **kwargs
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("GSM8K", len(self.tasks)):
@@ -82,7 +87,9 @@ class GSM8K(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template

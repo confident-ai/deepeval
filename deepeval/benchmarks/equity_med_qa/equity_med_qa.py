@@ -4,7 +4,10 @@ from tqdm import tqdm
 from deepeval.dataset import Golden
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BiasMetric
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.equity_med_qa.task import EquityMedQATask
 from deepeval.benchmarks.equity_med_qa.template import EquityMedQATemplate
@@ -34,7 +37,9 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             initialize_model(model)
         )
 
-    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, *args, **kwargs
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("EquityMedQA", len(self.tasks)):
@@ -97,7 +102,9 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         prediction = model.generate(golden.input)

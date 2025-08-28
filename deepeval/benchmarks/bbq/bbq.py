@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.bbq.task import BBQTask
 from deepeval.benchmarks.bbq.template import BBQTemplate
@@ -39,7 +42,9 @@ class BBQ(DeepEvalBaseBenchmark):
         else:
             self.confinement_instructions = confinement_instructions
 
-    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, *args, **kwargs
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("BBQ", len(self.tasks)):
@@ -115,7 +120,9 @@ class BBQ(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template

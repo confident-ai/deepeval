@@ -1,7 +1,10 @@
 from typing import List, Optional, Dict
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.benchmarks.human_eval.template import HumanEvalTemplate
@@ -93,7 +96,7 @@ class HumanEval(DeepEvalBaseBenchmark):
 
     def evaluate(
         self, model: DeepEvalBaseLLM, *args, k: int = 1, **kwargs
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("HumanEval", len(self.tasks)):
@@ -157,7 +160,9 @@ class HumanEval(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self,
