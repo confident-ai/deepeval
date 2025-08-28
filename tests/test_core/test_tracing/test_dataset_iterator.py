@@ -15,10 +15,6 @@ goldens = [
 ]
 
 
-from deepeval.tracing import trace_manager
-
-trace_manager.traces_to_evaluate = []
-
 def test_async_run_async():
     dataset = EvaluationDataset(goldens=goldens)
     for golden in dataset.evals_iterator(
