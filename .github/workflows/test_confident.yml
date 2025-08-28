@@ -58,4 +58,4 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
         run: |
-          poetry run pytest --forked tests/test_confident/
+          poetry run pytest tests/test_confident/
