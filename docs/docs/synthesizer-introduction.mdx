@@ -17,6 +17,12 @@ sidebar_label: Introduction
 
 The `Synthesizer` uses an LLM to first generate a series of inputs, before evolving them to become more complex and realistic. These evolved inputs are then used to create a list of synthetic `Golden`s, which makes up your synthetic `EvaluationDataset`.
 
+Install the following dependencies:
+
+```bash
+pip install langchain langchain-community langchain-text-splitters chromadb tiktoken
+```
+
 Download the example file and save it as `example.txt` and run the following code:
 
 ```bash
