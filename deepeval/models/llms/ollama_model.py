@@ -12,6 +12,7 @@ class OllamaModel(DeepEvalBaseLLM):
         model: Optional[str] = None,
         base_url: Optional[str] = None,
         temperature: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
@@ -26,6 +27,7 @@ class OllamaModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
     ###############################################
@@ -40,7 +42,10 @@ class OllamaModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
-            options={"temperature": self.temperature},
+            options={
+                **{"temperature": self.temperature},
+                **self.generation_kwargs,
+            },
         )
         return (
             (
@@ -59,7 +64,10 @@ class OllamaModel(DeepEvalBaseLLM):
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
             format=schema.model_json_schema() if schema else None,
-            options={"temperature": self.temperature},
+            options={
+                **{"temperature": self.temperature},
+                **self.generation_kwargs,
+            },
         )
         return (
             (

@@ -39,6 +39,11 @@ There are **TWO** optional parameters when creating an `AnthropicModel`:
 
 - [Optional] `model`: A string specifying which of Anthropic's Claude models to use. Defaulted to `'claude-3-7-sonnet-latest'`.
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.anthropic.com/en/docs/about-claude/models/overview).
+:::
 
 ### Available Anthropic Models
 

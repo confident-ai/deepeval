@@ -69,6 +69,7 @@ class KimiModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
@@ -92,6 +93,7 @@ class KimiModel(DeepEvalBaseLLM):
         )
         self.base_url = "https://api.moonshot.cn/v1"
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
     ###############################################
@@ -108,6 +110,7 @@ class KimiModel(DeepEvalBaseLLM):
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
+                **self.generation_kwargs,
             )
             json_output = trim_and_load_json(
                 completion.choices[0].message.content
@@ -121,6 +124,7 @@ class KimiModel(DeepEvalBaseLLM):
         completion = client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -143,6 +147,7 @@ class KimiModel(DeepEvalBaseLLM):
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
                 temperature=self.temperature,
+                **self.generation_kwargs,
             )
             json_output = trim_and_load_json(
                 completion.choices[0].message.content
@@ -156,6 +161,7 @@ class KimiModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(

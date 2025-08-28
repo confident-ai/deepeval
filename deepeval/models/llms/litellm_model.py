@@ -34,6 +34,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         temperature: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         from litellm import completion, acompletion, get_llm_provider
@@ -67,6 +68,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         self.evaluation_cost = 0.0  # Initialize cost to 0.0
         super().__init__(model_name)
 
@@ -97,6 +99,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add any additional parameters
         completion_params.update(self.kwargs)
+        completion_params.update(self.generation_kwargs)
 
         try:
             response = completion(**completion_params)
@@ -142,6 +145,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add any additional parameters
         completion_params.update(self.kwargs)
+        completion_params.update(self.generation_kwargs)
 
         try:
             response = await acompletion(**completion_params)

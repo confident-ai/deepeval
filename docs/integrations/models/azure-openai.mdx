@@ -60,6 +60,11 @@ There are **FIVE** mandatory and **ONE** optional parameters when creating an `A
 - `openai_api_version`: A string specifying the OpenAI API version used in your deployment.
 - `azure_endpoint`: A string specifying your Azure OpenAI endpoint URL.
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/reference#request-body).
+:::
 
 ### Available Azure OpenAI Models
 
