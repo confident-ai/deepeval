@@ -6,3 +6,4 @@ export { default as LinkCards } from "./LinkCards";
 export { default as TechStackCards } from "./TechStackCards";
 export { default as CopyMarkdownButton } from "./CopyMarkdownButton";
 export { default as NavigationCards } from "./NavigationCards";
+export { default as ColabButton } from "./ColabButton";
