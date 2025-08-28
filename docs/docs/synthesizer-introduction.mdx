@@ -17,13 +17,11 @@ sidebar_label: Introduction
 
 The `Synthesizer` uses an LLM to first generate a series of inputs, before evolving them to become more complex and realistic. These evolved inputs are then used to create a list of synthetic `Golden`s, which makes up your synthetic `EvaluationDataset`.
 
-Download the example file and save it as `example.txt`:
+Download the example file and save it as `example.txt` and run the following code:
 
 ```bash
 curl -o example.txt https://raw.githubusercontent.com/guangzhengli/ChatFiles/main/doc/example/paul_graham_essay.txt
 ```
-
-Generate goldens:
 
 ```python
 from deepeval.synthesizer import Synthesizer
@@ -36,7 +34,7 @@ synthesizer.generate_goldens_from_docs(
 print(synthesizer.synthetic_goldens)
 ```
 
-Congratulations! You've just generated your first synthetic dataset.
+Congratulations! You've just generated your first set of synthetic goldens.
 
 <details>
 <summary>Should you generate synthetic datasets?</summary>
