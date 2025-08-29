@@ -529,3 +529,11 @@ html[data-theme="dark"] .menu {
 html[data-theme="dark"] .prism-code {
   border: 1px solid #334155;
 }
+
+.header-colab-button {
+  float: right;
+  margin-top: -120px; /* Adjust this value to position it at the top */
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
+}
