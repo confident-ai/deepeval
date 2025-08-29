@@ -235,6 +235,7 @@ class Synthesizer:
             )
         if _reset_cost:
             self.synthesis_cost = 0 if self.using_native_model else None
+            self.synthetic_goldens = []
 
         context_generator = ContextGenerator(
             document_paths=document_paths,
@@ -308,6 +309,7 @@ class Synthesizer:
                     pbar_id,
                 ],
             )
+            self.synthetic_goldens.extend(goldens)
             return goldens
 
     #############################################################
@@ -771,6 +773,7 @@ class Synthesizer:
             raise TypeError(
                 "`scenario`, `task`, and `input_format` in `styling_config` must not be None when generation goldens from scratch."
             )
+        self.synthetic_goldens = []
         self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
 
@@ -832,6 +835,7 @@ class Synthesizer:
                 for evolved_prompt, evolutions in evolved_prompts_list
             ]
 
+        self.synthetic_goldens.extend(goldens)
         return goldens
 
     def generate_goldens_from_scratch(
