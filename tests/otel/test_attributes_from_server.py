@@ -1,9 +1,9 @@
-import json
 import time
+import json
+from deepeval.tracing.otel import TracerManager
 
-from deepeval.tracing.otel import get_tracer
-
-tracer = get_tracer()
+tracer_manager = TracerManager()
+tracer = tracer_manager.get_tracer()
 
 def tool_span(input: str):
     with tracer.start_as_current_span("tool_span") as span:
@@ -127,4 +127,4 @@ for golden in goldens:
     except Exception as e:
         print(e)
 
-time.sleep(10)
+tracer_manager.get_tracer_provider().force_flush()

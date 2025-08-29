@@ -1,7 +1,7 @@
 from .exporter import ConfidentSpanExporter
-from .tracer import get_tracer
+from .tracer import TracerManager
 
 __all__ = [
     "ConfidentSpanExporter",
-    "get_tracer",
+    "TracerManager",
 ]
