@@ -453,7 +453,6 @@ class EvaluationDataset:
     ):
         try:
             import pandas as pd
-            import ast
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 "Please install pandas to use this method. 'pip install pandas'"
@@ -531,8 +530,8 @@ class EvaluationDataset:
             expected_output,
             context,
             retrieval_context,
-            tools,
-            expected_tool,
+            tools_called,
+            expected_tools,
             source_file,
             additional_metadata,
             scenario,
@@ -575,13 +574,12 @@ class EvaluationDataset:
                         expected_output=expected_output,
                         context=context,
                         retrieval_context=retrieval_context,
-                        tools_called=tools,
-                        expected_tools=expected_tool,
+                        tools_called=tools_called,
+                        expected_tools=expected_tools,
                         additional_metadata=additional_metadata,
                         source_file=source_file,
                     )
                 )
-
 
     def add_goldens_from_json_file(
         self,
@@ -601,8 +599,6 @@ class EvaluationDataset:
         user_description_key_name: Optional[str] = "user_description",
         encoding_type: str = "utf-8",
     ):
-        import json
-
         try:
             with open(file_path, "r", encoding=encoding_type) as file:
                 json_list = json.load(file)
@@ -613,7 +609,6 @@ class EvaluationDataset:
 
         for json_obj in json_list:
             if scenario_key_name in json_obj and json_obj[scenario_key_name]:
-                # Multi-turn case
                 scenario = json_obj.get(scenario_key_name)
                 turns = json_obj.get(turns_key_name, [])
                 expected_outcome = json_obj.get(expected_outcome_key_name)
@@ -633,11 +628,7 @@ class EvaluationDataset:
                     )
                 )
             else:
-                # Single-turn case
-                input_val = json_obj.get(input_key_name)
-                if input_val is None:
-                    continue  # Skip row if input is missing
-
+                input = json_obj.get(input_key_name)
                 actual_output = json_obj.get(actual_output_key_name)
                 expected_output = json_obj.get(expected_output_key_name)
                 context = json_obj.get(context_key_name)
@@ -650,7 +641,7 @@ class EvaluationDataset:
                 self._multi_turn = False
                 self.goldens.append(
                     Golden(
-                        input=input_val,
+                        input=input,
                         actual_output=actual_output,
                         expected_output=expected_output,
                         context=context,
@@ -661,7 +652,6 @@ class EvaluationDataset:
                         source_file=source_file,
                     )
                 )
-
 
     def push(
         self,
