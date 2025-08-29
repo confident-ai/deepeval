@@ -4,7 +4,7 @@ import re
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, Turn
 
 
 def convert_test_cases_to_goldens(
@@ -51,6 +51,26 @@ def convert_goldens_to_test_cases(
     return test_cases
 
 
+def convert_convo_test_cases_to_convo_goldens(
+    test_cases: List[ConversationalTestCase],
+) -> List[ConversationalGolden]:
+    goldens = []
+    for test_case in test_cases:
+        if not test_case.scenario:
+            raise ValueError(
+                "Please provide a scenario in the test cases to convert them to goldens. Or toggle 'include_test_cases' to False"
+            )
+        golden = {
+            "scenario": test_case.scenario,
+            "turns": test_case.turns,
+            "expected_outcome": test_case.expected_outcome,
+            "user_description": test_case.user_description,
+            "context": test_case.context,
+        }
+        goldens.append(ConversationalGolden(**golden))
+    return goldens
+
+
 def convert_convo_goldens_to_convo_test_cases(
     goldens: List[ConversationalGolden],
     _alias: Optional[str] = None,
@@ -82,3 +102,46 @@ def trimAndLoadJson(input_string: str) -> Any:
         raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
+
+
+def format_turns(turns):
+    formatted_turns = []
+    for turn in turns:
+        turn_str = f"{turn.role}: {turn.content}"
+        if turn.retrieval_context:
+            formatted_retrieval_context = "≠".join(turn.retrieval_context)
+            turn_str += f" [retrieval_context: {formatted_retrieval_context}]"
+
+        formatted_turns.append(turn_str)
+
+    return "|".join(formatted_turns) if formatted_turns else None
+
+
+def parse_turns(turns_str):
+    turns = []
+    if turns_str:
+        turn_parts = turns_str.split("|")
+        for part in turn_parts:
+            role_content = part.split(": ", 1)
+            if len(role_content) == 2:
+                role, content = role_content
+                retrieval_context = None
+                if "[" in content:
+                    content, context_str = content.split(" [", 1)
+                    context_str = context_str.strip("[]").replace(
+                        "retrieval_context: ", ""
+                    )
+                    retrieval_context = context_str.split("≠")
+                    retrieval_context = [
+                        ctx.strip() for ctx in retrieval_context
+                    ]
+                turns.append(
+                    Turn(
+                        role=role,
+                        content=content,
+                        retrieval_context=retrieval_context,
+                    )
+                )
+            else:
+                continue
+    return turns
