@@ -3,7 +3,9 @@ import time
 import json
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter,
+)
 
 OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 CONFIDENT_API_KEY = os.getenv("CONFIDENT_API_KEY")
@@ -17,6 +19,7 @@ span_processor = BatchSpanProcessor(span_exporter=exporter)
 trace_provider.add_span_processor(span_processor)
 tracer = trace_provider.get_tracer("deepeval_tracer")
 
+
 def tool_span(input: str):
     with tracer.start_as_current_span("tool_span") as span:
         span.set_attribute("confident.span.type", "tool")
@@ -26,6 +29,7 @@ def tool_span(input: str):
             "confident.span.output", json.dumps({"output": input})
         )
         time.sleep(1)
+
 
 def retriever_span(input: str):
     with tracer.start_as_current_span("retriever_span") as span:
@@ -38,7 +42,6 @@ def retriever_span(input: str):
         time.sleep(1)
         tool_span(input)
         raise Exception("test error")
-        
 
 
 def agent_span(input: str):
@@ -95,35 +98,103 @@ def llm_agent(input: str):
 
 def meta_agent(input: str):
     with tracer.start_as_current_span("custom_span") as span:
-        
+
         # span attributes
         span.set_attribute("confident.span.name", "custom_span")
-        span.set_attribute("confident.span.metric_collection", "test_collection_1")
+        span.set_attribute(
+            "confident.span.metric_collection", "test_collection_1"
+        )
         span.set_attribute("confident.span.input", "test_input")
         span.set_attribute("confident.span.output", "test_actual_output")
-        span.set_attribute("confident.span.expected_output", "test_expected_output")
+        span.set_attribute(
+            "confident.span.expected_output", "test_expected_output"
+        )
         span.set_attribute("confident.span.context", ["context1", "context2"])
-        span.set_attribute("confident.span.retrieval_context", ["context1", "context2"])
-        span.set_attribute("confident.span.tools_called", [json.dumps({"name": "tool1", "description": "tool1 description", "reasoning": "tool1 reasoning", "output": "tool1 output", "input_parameters": {"input": "tool1 input"}})])
-        span.set_attribute("confident.span.expected_tools", [json.dumps({"name": "tool2", "description": "tool2 description", "reasoning": "tool2 reasoning", "output": "tool2 output", "input_parameters": {"input": "tool2 input"}})])
-        span.set_attribute("confident.span.metadata", json.dumps({"key": "value"}))
-        span.set_attribute("confident.span.metric_collection", "test_collection_1")
+        span.set_attribute(
+            "confident.span.retrieval_context", ["context1", "context2"]
+        )
+        span.set_attribute(
+            "confident.span.tools_called",
+            [
+                json.dumps(
+                    {
+                        "name": "tool1",
+                        "description": "tool1 description",
+                        "reasoning": "tool1 reasoning",
+                        "output": "tool1 output",
+                        "input_parameters": {"input": "tool1 input"},
+                    }
+                )
+            ],
+        )
+        span.set_attribute(
+            "confident.span.expected_tools",
+            [
+                json.dumps(
+                    {
+                        "name": "tool2",
+                        "description": "tool2 description",
+                        "reasoning": "tool2 reasoning",
+                        "output": "tool2 output",
+                        "input_parameters": {"input": "tool2 input"},
+                    }
+                )
+            ],
+        )
+        span.set_attribute(
+            "confident.span.metadata", json.dumps({"key": "value"})
+        )
+        span.set_attribute(
+            "confident.span.metric_collection", "test_collection_1"
+        )
 
         # trace attributes
         span.set_attribute("confident.trace.name", "test_trace")
         span.set_attribute("confident.trace.input", "test_input")
         span.set_attribute("confident.trace.output", "test_actual_output")
-        span.set_attribute("confident.trace.metric_collection", "test_collection_1")
-        span.set_attribute('confident.trace.expected_output', "Paris")
-        span.set_attribute('confident.trace.context', ["context1", "context2"])
-        span.set_attribute('confident.trace.retrieval_context', ["context1", "context2"])
-        span.set_attribute("confident.trace.tools_called", [json.dumps({"name": "tool1", "description": "tool1 description", "reasoning": "tool1 reasoning", "output": "tool1 output", "input_parameters": {"input": "tool1 input"}})])
-        span.set_attribute("confident.trace.expected_tools", [json.dumps({"name": "tool2", "description": "tool2 description", "reasoning": "tool2 reasoning", "output": "tool2 output", "input_parameters": {"input": "tool2 input"}})])
+        span.set_attribute(
+            "confident.trace.metric_collection", "test_collection_1"
+        )
+        span.set_attribute("confident.trace.expected_output", "Paris")
+        span.set_attribute("confident.trace.context", ["context1", "context2"])
+        span.set_attribute(
+            "confident.trace.retrieval_context", ["context1", "context2"]
+        )
+        span.set_attribute(
+            "confident.trace.tools_called",
+            [
+                json.dumps(
+                    {
+                        "name": "tool1",
+                        "description": "tool1 description",
+                        "reasoning": "tool1 reasoning",
+                        "output": "tool1 output",
+                        "input_parameters": {"input": "tool1 input"},
+                    }
+                )
+            ],
+        )
+        span.set_attribute(
+            "confident.trace.expected_tools",
+            [
+                json.dumps(
+                    {
+                        "name": "tool2",
+                        "description": "tool2 description",
+                        "reasoning": "tool2 reasoning",
+                        "output": "tool2 output",
+                        "input_parameters": {"input": "tool2 input"},
+                    }
+                )
+            ],
+        )
         span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
-        span.set_attribute("confident.trace.metadata", json.dumps({"key": "value"}))
+        span.set_attribute(
+            "confident.trace.metadata", json.dumps({"key": "value"})
+        )
         span.set_attribute("confident.trace.thread_id", "123")
         span.set_attribute("confident.trace.user_id", "456")
-        
+
         time.sleep(1)
 
         llm_agent(input)

@@ -112,10 +112,13 @@ class ConfidentSpanExporter(SpanExporter):
 
                 if api_key:
                     current_trace.confident_api_key = api_key
-                
+
                 # error trace if root span is errored
                 if base_span_wrapper.base_span.parent_uuid is None:
-                    if base_span_wrapper.base_span.status == TraceSpanStatus.ERRORED:
+                    if (
+                        base_span_wrapper.base_span.status
+                        == TraceSpanStatus.ERRORED
+                    ):
                         current_trace.status = TraceSpanStatus.ERRORED
 
                 # set the trace attributes (to be deprecated)
@@ -166,7 +169,9 @@ class ConfidentSpanExporter(SpanExporter):
                     base_span_wrapper.trace_metadata, dict
                 ):
                     try:
-                        current_trace.metadata = base_span_wrapper.trace_metadata
+                        current_trace.metadata = (
+                            base_span_wrapper.trace_metadata
+                        )
                     except Exception:
                         pass
 
