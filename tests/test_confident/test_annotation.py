@@ -11,6 +11,8 @@ INVALID_TRACE_UUID = "123"
 INVALID_SPAN_UUID = "123"
 INVALID_THREAD_ID = "123"
 
+TEST_USER_ID = "test_user_id"
+
 
 class TestTraceAnnotation:
     def test_annotate_trace_with_thumbs_rating_invalid_uuid(self):
@@ -62,6 +64,13 @@ class TestTraceAnnotation:
             expected_output="This is a test annotation",
             type=AnnotationType.FIVE_STAR_RATING,
             rating=5,
+        )
+
+    def test_annotate_trace_with_user_id(self):
+        send_annotation(
+            trace_uuid=VALID_TRACE_UUID,
+            rating=1,
+            user_id=TEST_USER_ID,
         )
 
 
@@ -132,6 +141,13 @@ class TestSpanAnnotation:
             rating=5,
         )
 
+    def test_annotate_span_with_user_id(self):
+        send_annotation(
+            span_uuid=VALID_SPAN_UUID,
+            rating=1,
+            user_id=TEST_USER_ID,
+        )
+
 
 class TestThreadAnnotation:
     def test_annotate_thread_valid(self):
@@ -199,4 +215,11 @@ class TestThreadAnnotation:
             expected_outcome="This is a test annotation",
             type=AnnotationType.FIVE_STAR_RATING,
             rating=5,
+        )
+
+    def test_annotate_thread_with_user_id(self):
+        send_annotation(
+            thread_id=VALID_THREAD_ID,
+            rating=1,
+            user_id=TEST_USER_ID,
         )
