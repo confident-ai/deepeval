@@ -1,26 +1,33 @@
+import logging
+
 from openai.types.chat.chat_completion import ChatCompletion
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from typing import Optional, Tuple, Union, Dict
-from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
-import logging
-import openai
 
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    wait_exponential_jitter,
-    RetryCallState,
+from openai import (
+    OpenAI,
+    AsyncOpenAI,
 )
+
+from tenacity import retry, RetryCallState, before_sleep_log
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
+from deepeval.models.retry_policy import (
+    OPENAI_ERROR_POLICY,
+    default_wait,
+    default_stop,
+    retry_predicate,
+)
+
+logger = logging.getLogger("deepeval.openai_model")
 
 
 def log_retry_error(retry_state: RetryCallState):
     exception = retry_state.outcome.exception()
-    logging.error(
+    logger.error(
         f"OpenAI Error: {exception} Retrying: {retry_state.attempt_number} time(s)..."
     )
 
@@ -212,12 +219,20 @@ models_requiring_temperature_1 = [
     "gpt-5-chat-latest",
 ]
 
-retryable_exceptions = (
-    openai.RateLimitError,
-    openai.APIConnectionError,
-    openai.APITimeoutError,
-    openai.LengthFinishReasonError,
+_base_retry_rules_kw = dict(
+    wait=default_wait(),
+    stop=default_stop(),
+    retry=retry_predicate(OPENAI_ERROR_POLICY),
+    before_sleep=before_sleep_log(
+        logger, logging.INFO
+    ),  # <- logs only on retries
+    after=log_retry_error,
 )
+
+
+def _openai_client_kwargs():
+    # Avoid double-retry at SDK layer by disabling the SDK's own retries so tenacity is the single source of truth for retry logic.
+    return {"max_retries": 0}
 
 
 class GPTModel(DeepEvalBaseLLM):
@@ -296,11 +311,7 @@ class GPTModel(DeepEvalBaseLLM):
     # Generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry(**_base_retry_rules_kw)
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -359,11 +370,7 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry(**_base_retry_rules_kw)
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
@@ -427,11 +434,7 @@ class GPTModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry(**_base_retry_rules_kw)
     def generate_raw_response(
         self,
         prompt: str,
@@ -454,11 +457,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry(**_base_retry_rules_kw)
     async def a_generate_raw_response(
         self,
         prompt: str,
@@ -481,11 +480,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry(**_base_retry_rules_kw)
     def generate_samples(
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[list[str], float]:
@@ -518,12 +513,13 @@ class GPTModel(DeepEvalBaseLLM):
         return self.model_name
 
     def load_model(self, async_mode: bool = False):
+        kwargs = {**self.kwargs, **_openai_client_kwargs()}
         if not async_mode:
             return OpenAI(
                 api_key=self._openai_api_key,
                 base_url=self.base_url,
-                **self.kwargs,
+                **kwargs,
             )
         return AsyncOpenAI(
-            api_key=self._openai_api_key, base_url=self.base_url, **self.kwargs
+            api_key=self._openai_api_key, base_url=self.base_url, **kwargs
         )
