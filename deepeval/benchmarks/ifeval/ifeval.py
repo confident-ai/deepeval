@@ -21,7 +21,7 @@ from deepeval.telemetry import capture_benchmark_run
 class IFEvalResult(DeepEvalBaseBenchmarkResult):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     instruction_breakdown: dict[str, Any]
-    predictions: pd.DataFrame
+    predictions: "pd.DataFrame"
 
 
 class IFEvalInstructionVerifier:
