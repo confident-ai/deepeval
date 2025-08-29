@@ -1,6 +1,5 @@
 import pytest
 import json
-import tempfile
 import os
 from time import sleep
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
@@ -201,12 +200,15 @@ class TestSaveAndLoad:
                         description="Fetches geographical data",
                         reasoning="To retrieve mountain heights",
                         output="Mount Everest data",
-                        input_parameters={"region": "Asia"}
+                        input_parameters={"region": "Asia"},
                     )
                 ],
                 additional_metadata={"difficulty": "medium", "verified": True},
                 comments="Basic geography question",
-                custom_column_key_values={"category": "geography", "priority": "high"},
+                custom_column_key_values={
+                    "category": "geography",
+                    "priority": "high",
+                },
                 actual_output="Mount Everest",
                 retrieval_context=["Mountain heights list"],
                 tools_called=[
@@ -215,7 +217,7 @@ class TestSaveAndLoad:
                         description="Fetches geographical data",
                         reasoning="To retrieve mountain heights",
                         output="Mount Everest data",
-                        input_parameters={"region": "Asia"}
+                        input_parameters={"region": "Asia"},
                     )
                 ],
             ),
@@ -229,12 +231,18 @@ class TestSaveAndLoad:
                         description="Performs arithmetic calculations",
                         reasoning="To calculate product of numbers",
                         output="35",
-                        input_parameters={"operation": "multiply", "operands": [5,7]}
+                        input_parameters={
+                            "operation": "multiply",
+                            "operands": [5, 7],
+                        },
                     )
                 ],
                 additional_metadata={"difficulty": "easy"},
                 comments="Simple multiplication",
-                custom_column_key_values={"category": "math", "priority": "medium"},
+                custom_column_key_values={
+                    "category": "math",
+                    "priority": "medium",
+                },
                 actual_output="35",
                 retrieval_context=["Basic arithmetic"],
                 tools_called=[
@@ -243,7 +251,10 @@ class TestSaveAndLoad:
                         description="Performs arithmetic calculations",
                         reasoning="To calculate product of numbers",
                         output="35",
-                        input_parameters={"operation": "multiply", "operands": [5,7]}
+                        input_parameters={
+                            "operation": "multiply",
+                            "operands": [5, 7],
+                        },
                     )
                 ],
             ),
@@ -257,12 +268,15 @@ class TestSaveAndLoad:
                         description="Provides definitions and explanations",
                         reasoning="To retrieve the definition of photosynthesis",
                         output="Process by which green plants convert light energy into chemical energy",
-                        input_parameters={"term": "photosynthesis"}
+                        input_parameters={"term": "photosynthesis"},
                     )
                 ],
                 additional_metadata={"difficulty": "hard"},
                 comments="Science definition",
-                custom_column_key_values={"category": "science", "priority": "medium"},
+                custom_column_key_values={
+                    "category": "science",
+                    "priority": "medium",
+                },
                 actual_output="Process by which green plants convert light energy into chemical energy",
                 retrieval_context=["Biology textbooks", "Science API"],
                 tools_called=[
@@ -271,7 +285,7 @@ class TestSaveAndLoad:
                         description="Provides definitions and explanations",
                         reasoning="To retrieve the definition of photosynthesis",
                         output="Process by which green plants convert light energy into chemical energy",
-                        input_parameters={"term": "photosynthesis"}
+                        input_parameters={"term": "photosynthesis"},
                     )
                 ],
             ),
@@ -286,8 +300,12 @@ class TestSaveAndLoad:
 
         try:
             dataset = EvaluationDataset(goldens)
-            dataset.save_as(file_type="json", file_name="test_goldens", directory=directory)
-            dataset.save_as(file_type="csv", file_name="test_goldens", directory=directory)
+            dataset.save_as(
+                file_type="json", file_name="test_goldens", directory=directory
+            )
+            dataset.save_as(
+                file_type="csv", file_name="test_goldens", directory=directory
+            )
 
             sleep(5)
 
@@ -296,10 +314,20 @@ class TestSaveAndLoad:
             dataset1.add_goldens_from_json_file(file_path=json_path)
             dataset2.add_goldens_from_csv_file(file_path=csv_path)
 
-            assert len(dataset1.goldens) == len(dataset2.goldens) == len(goldens)
+            assert (
+                len(dataset1.goldens) == len(dataset2.goldens) == len(goldens)
+            )
             for i in range(len(goldens)):
-                assert goldens[i].input == dataset1.goldens[i].input == dataset2.goldens[i].input
-                assert goldens[i].expected_output == dataset1.goldens[i].expected_output == dataset2.goldens[i].expected_output
+                assert (
+                    goldens[i].input
+                    == dataset1.goldens[i].input
+                    == dataset2.goldens[i].input
+                )
+                assert (
+                    goldens[i].expected_output
+                    == dataset1.goldens[i].expected_output
+                    == dataset2.goldens[i].expected_output
+                )
         finally:
             if os.path.exists(json_path):
                 os.remove(json_path)
@@ -314,9 +342,15 @@ class TestSaveAndLoad:
                 expected_outcome="User receives accurate weather forecast",
                 user_description="User is planning a trip to Paris and wants to check the weather",
                 context=["Weather", "Paris"],
-                additional_metadata={"difficulty": "easy", "intent": "information_retrieval"},
+                additional_metadata={
+                    "difficulty": "easy",
+                    "intent": "information_retrieval",
+                },
                 comments="Tests weather API integration",
-                custom_column_key_values={"category": "weather", "priority": "high"},
+                custom_column_key_values={
+                    "category": "weather",
+                    "priority": "high",
+                },
                 turns=[
                     Turn(
                         role="user",
@@ -329,17 +363,20 @@ class TestSaveAndLoad:
                                 description="Fetches weather data",
                                 reasoning="User asked for weather forecast",
                                 output="Rainy, 18°C",
-                                input_parameters={"location": "Paris", "date_range": "weekend"}
+                                input_parameters={
+                                    "location": "Paris",
+                                    "date_range": "weekend",
+                                },
                             )
-                        ]
+                        ],
                     ),
                     Turn(
                         role="assistant",
                         content="It's expected to be rainy with temperatures around 18°C.",
                         retrieval_context=["Weather API response"],
-                        tools_called=[]
+                        tools_called=[],
                     ),
-                ]
+                ],
             ),
             ConversationalGolden(
                 scenario="User translates a phrase from English to Japanese",
@@ -348,13 +385,16 @@ class TestSaveAndLoad:
                 context=["Translation", "English to Japanese"],
                 additional_metadata={"intent": "translation"},
                 comments="Tests translation capabilities",
-                custom_column_key_values={"category": "language", "priority": "medium"},
+                custom_column_key_values={
+                    "category": "language",
+                    "priority": "medium",
+                },
                 turns=[
                     Turn(
                         role="user",
                         content="How do you say 'thank you' in Japanese?",
                         retrieval_context=["Translation database"],
-                        tools_called=[]
+                        tools_called=[],
                     ),
                     Turn(
                         role="assistant",
@@ -366,27 +406,36 @@ class TestSaveAndLoad:
                                 description="Translates text between languages",
                                 reasoning="Translate 'thank you' to Japanese",
                                 output="ありがとう",
-                                input_parameters={"text": "thank you", "target_lang": "ja"}
+                                input_parameters={
+                                    "text": "thank you",
+                                    "target_lang": "ja",
+                                },
                             )
-                        ]
+                        ],
                     ),
-                ]
+                ],
             ),
             ConversationalGolden(
                 scenario="User books a restaurant reservation",
                 expected_outcome="Reservation is confirmed",
                 user_description="User wants to book a dinner reservation for 2",
                 context=["Restaurants", "Booking"],
-                additional_metadata={"channel": "voice_assistant", "intent": "booking"},
+                additional_metadata={
+                    "channel": "voice_assistant",
+                    "intent": "booking",
+                },
                 comments="Tests integration with reservation system",
-                custom_column_key_values={"category": "hospitality", "priority": "critical"},
+                custom_column_key_values={
+                    "category": "hospitality",
+                    "priority": "critical",
+                },
                 turns=[
                     Turn(
                         role="user",
                         content="Can you book a table for 2 at 7 PM tonight at Luigi's?",
                         user_id="user_999",
                         retrieval_context=["Reservation service API"],
-                        tools_called=[]
+                        tools_called=[],
                     ),
                     Turn(
                         role="assistant",
@@ -399,12 +448,14 @@ class TestSaveAndLoad:
                                 reasoning="User requested a dinner reservation",
                                 output="Confirmed reservation at Luigi's at 7 PM for 2 people",
                                 input_parameters={
-                                    "restaurant": "Luigi's", "time": "7 PM", "party_size": 2
-                                }
+                                    "restaurant": "Luigi's",
+                                    "time": "7 PM",
+                                    "party_size": 2,
+                                },
                             )
-                        ]
+                        ],
                     ),
-                ]
+                ],
             ),
         ]
 
@@ -417,8 +468,12 @@ class TestSaveAndLoad:
 
         try:
             dataset = EvaluationDataset(convo_goldens)
-            dataset.save_as(file_type="json", file_name="convo_goldens", directory=directory)
-            dataset.save_as(file_type="csv", file_name="convo_goldens", directory=directory)
+            dataset.save_as(
+                file_type="json", file_name="convo_goldens", directory=directory
+            )
+            dataset.save_as(
+                file_type="csv", file_name="convo_goldens", directory=directory
+            )
 
             sleep(2)
 
@@ -427,10 +482,22 @@ class TestSaveAndLoad:
             dataset1.add_goldens_from_json_file(file_path=json_path)
             dataset2.add_goldens_from_csv_file(file_path=csv_path)
 
-            assert len(dataset1.goldens) == len(dataset2.goldens) == len(convo_goldens)
+            assert (
+                len(dataset1.goldens)
+                == len(dataset2.goldens)
+                == len(convo_goldens)
+            )
             for i in range(len(convo_goldens)):
-                assert convo_goldens[i].scenario == dataset1.goldens[i].scenario == dataset2.goldens[i].scenario
-                assert convo_goldens[i].expected_outcome == dataset1.goldens[i].expected_outcome == dataset2.goldens[i].expected_outcome
+                assert (
+                    convo_goldens[i].scenario
+                    == dataset1.goldens[i].scenario
+                    == dataset2.goldens[i].scenario
+                )
+                assert (
+                    convo_goldens[i].expected_outcome
+                    == dataset1.goldens[i].expected_outcome
+                    == dataset2.goldens[i].expected_outcome
+                )
         finally:
             if os.path.exists(json_path):
                 os.remove(json_path)
