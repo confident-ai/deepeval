@@ -241,20 +241,62 @@ There are **TWO** ways to create test cases when using the `update_current_span`
     - [Optional] `expected_output`
     - [Optional] `tools_called`
     - [Optional] `expected_tools`
-    - [Optional] `metadata`
-    - [Optional] `name`
 
-### Verbose Logs
-If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. These are debug logs meant to help during development, especially if you're using Confident AI alongside `deepeval`, to confirm that your LLM tracing is set up correctly.
+:::note
+You can use the individual `LLMTestCase` params in the `update_current_span` function to override the values of the `test_case` you passed.
+:::
 
-If you're not using Confident AI, you can safely ignore these logs — they won't affect performance, introduce latency, or block any processes. To disable them completely, just set the following environment variables:
+### Update Current Trace
+
+You can update your end-to-end test cases for trace by using the `update_current_trace` function provided by `deepeval`
+
+```python {2,10,17}
+from openai import OpenAI
+from deepeval.tracing import observe, update_current_trace
+
+@observe()
+def llm_app(query: str) -> str:
+
+    @observe()
+    def retriever(query: str) -> list[str]:
+        chunks = ["List", "of", "text", "chunks"]
+        update_current_trace(retrieval_context=chunks)
+        return chunks
+
+    @observe()
+    def generator(query: str, text_chunks: list[str]) -> str:
+        res = OpenAI().chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": query}]
+        ).choices[0].message.content
+        update_current_trace(input=query, output=res)
+        return res
+
+    return generator(query, retriever(query))
+```
+
+There are **TWO** ways to create test cases when using the `update_current_trace` function:
+
+- [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
+
+- Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
+    - [Optional] `input`
+    - [Optional] `output`
+    - [Optional] `retrieval_context`
+    - [Optional] `context`
+    - [Optional] `expected_output`
+    - [Optional] `tools_called`
+    - [Optional] `expected_tools`
+
+:::note
+You can use the individual `LLMTestCase` params in the `update_current_trace` function to override the values of the `test_case` you passed.
+:::
+
+## Environment Variables
+If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. To disable them completely, just set the following environment variables:
 
 ```bash
 CONFIDENT_TRACE_VERBOSE="NO"
 CONFIDENT_TRACE_FLUSH="NO"
 ```
-
-If you are using Confident AI, it's still a good idea to keep these logs on during development, and then disable them in production once you've confirmed that tracing is working as expected.
 
 ## Next Steps
 
