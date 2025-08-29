@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.big_bench_hard.task import BigBenchHardTask
 from deepeval.benchmarks.big_bench_hard.template import BigBenchHardTemplate
@@ -81,7 +84,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         *args,
         batch_size: Optional[int] = None,
         **kwargs,
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("Big Bench Hard", len(self.tasks)):
@@ -189,7 +192,9 @@ class BigBenchHard(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, task: BigBenchHardTask, golden: Golden
@@ -279,9 +284,7 @@ class BigBenchHard(DeepEvalBaseBenchmark):
         dataset_attr = dataset_mapping.get(task)
         if dataset_attr:
             if not hasattr(self, dataset_attr):
-                dataset = load_dataset(
-                    "lukaemon/bbh", task.value
-                )
+                dataset = load_dataset("lukaemon/bbh", task.value)
                 setattr(self, dataset_attr, dataset)
             else:
                 dataset = getattr(self, dataset_attr)

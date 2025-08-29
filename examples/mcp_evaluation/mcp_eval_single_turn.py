@@ -20,15 +20,22 @@ class MCPClient:
         self.exit_stack = AsyncExitStack()
         self.anthropic = Anthropic()
 
-    async def connect_to_server(self, base_url: str, api_key: str, profile: str):
+    async def connect_to_server(
+        self, base_url: str, api_key: str, profile: str
+    ):
         from urllib.parse import urlencode
+
         params = {"api_key": api_key, "profile": profile}
         url = f"{base_url}?{urlencode(params)}"
 
-        transport = await self.exit_stack.enter_async_context(streamablehttp_client(url))
+        transport = await self.exit_stack.enter_async_context(
+            streamablehttp_client(url)
+        )
         read, write, _ = transport
 
-        self.session = await self.exit_stack.enter_async_context(ClientSession(read, write))
+        self.session = await self.exit_stack.enter_async_context(
+            ClientSession(read, write)
+        )
         await self.session.initialize()
 
         tool_list = await self.session.list_tools()

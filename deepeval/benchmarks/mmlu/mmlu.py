@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu.template import MMLUTemplate
@@ -48,7 +51,7 @@ class MMLU(DeepEvalBaseBenchmark):
         *args,
         batch_size: int | None = None,
         **kwargs,
-    ) -> Dict:
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("MMLU", len(self.tasks)):
@@ -156,7 +159,9 @@ class MMLU(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
@@ -252,7 +257,8 @@ class MMLU(DeepEvalBaseBenchmark):
         from datasets import load_dataset
 
         dataset = load_dataset(
-            "cais/mmlu", task.value,
+            "cais/mmlu",
+            task.value,
         )
         self.dataset = dataset
 
@@ -270,7 +276,9 @@ class MMLU(DeepEvalBaseBenchmark):
         choices = ["A", "B", "C", "D"]
         for data in dataset["test"]:
             input = MMLUTemplate.format_question(data, include_answer=False)
-            golden = Golden(input=input, expected_output=choices[data["answer"]])
+            golden = Golden(
+                input=input, expected_output=choices[data["answer"]]
+            )
             goldens.append(golden)
         return goldens
 
