@@ -1,30 +1,10 @@
-import os
 import json
 import time
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
-CONFIDENT_API_KEY = os.getenv("CONFIDENT_API_KEY")
+from deepeval.tracing.otel import get_tracer
 
-# Setup OpenTelemetry
-if not isinstance(trace.get_tracer_provider(), TracerProvider):
-    tracer_provider = TracerProvider()
-    trace.set_tracer_provider(tracer_provider)
-else:
-    tracer_provider = trace.get_tracer_provider()
+tracer = get_tracer()
 
-exporter = OTLPSpanExporter(
-    endpoint=OTLP_ENDPOINT + "/v1/traces",
-    headers={"x-confident-api-key": CONFIDENT_API_KEY}
-)
-span_processor = BatchSpanProcessor(span_exporter=exporter)
-tracer_provider.add_span_processor(span_processor)
-tracer = trace.get_tracer("deepeval_tracer")
-
-# Create a tracer
 def tool_span(input: str):
     with tracer.start_as_current_span("tool_span") as span:
         span.set_attribute("confident.span.type", "tool")
@@ -131,6 +111,8 @@ def meta_agent(input: str):
 
         llm_agent(input)
 
+        raise Exception("test error")
+
 
 from deepeval.dataset import Golden
 
@@ -140,6 +122,9 @@ goldens = [
 ]
 
 for golden in goldens:
-    meta_agent(golden.input)
+    try:
+        meta_agent(golden.input)
+    except Exception as e:
+        print(e)
 
 time.sleep(10)
