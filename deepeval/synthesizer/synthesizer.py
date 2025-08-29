@@ -764,7 +764,6 @@ class Synthesizer:
     async def a_generate_goldens_from_scratch(
         self,
         num_goldens: int,
-        _reset: bool = True,
     ) -> List[Golden]:
         if (
             self.styling_config.scenario is None
@@ -774,9 +773,8 @@ class Synthesizer:
             raise TypeError(
                 "`scenario`, `task`, and `input_format` in `styling_config` must not be None when generation goldens from scratch."
             )
-        if _reset:
-            self.synthetic_goldens = []
-            self.synthesis_cost = 0 if self.using_native_model else None
+        self.synthetic_goldens = []
+        self.synthesis_cost = 0 if self.using_native_model else None
         semaphore = asyncio.Semaphore(self.max_concurrent)
 
         transformed_evolutions = self.transform_distribution(
@@ -866,7 +864,6 @@ class Synthesizer:
                 loop.run_until_complete(
                     self.a_generate_goldens_from_scratch(
                         num_goldens=num_goldens,
-                        _reset=False,
                     )
                 )
             )
