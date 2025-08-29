@@ -1,4 +1,4 @@
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.sdk.trace.export import (
     SpanExportResult,
     SpanExporter,
@@ -158,12 +158,10 @@ class ConfidentSpanExporter(SpanExporter):
                         pass
 
                 if base_span_wrapper.trace_metadata and isinstance(
-                    base_span_wrapper.trace_metadata, str
+                    base_span_wrapper.trace_metadata, dict
                 ):
                     try:
-                        current_trace.metadata = json.loads(
-                            base_span_wrapper.trace_metadata
-                        )
+                        current_trace.metadata = base_span_wrapper.trace_metadata
                     except Exception:
                         pass
 
@@ -239,15 +237,19 @@ class ConfidentSpanExporter(SpanExporter):
         parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
         )
-        status = (
-            TraceSpanStatus.ERRORED
-            if span.status.status_code == StatusCode.ERROR
-            else TraceSpanStatus.SUCCESS
-        )
+
+        base_span_status = TraceSpanStatus.SUCCESS
+        base_span_error = None
+
+        if isinstance(span.status, Status):
+            if span.status.status_code == StatusCode.ERROR:
+                base_span_status = TraceSpanStatus.ERRORED
+                base_span_error = span.status.description
+
         if not base_span:
             base_span = BaseSpan(
                 uuid=to_hex_string(span.context.span_id, 16),
-                status=status,
+                status=base_span_status,
                 children=[],
                 trace_uuid=to_hex_string(span.context.trace_id, 32),
                 parent_uuid=parent_uuid,
@@ -256,7 +258,6 @@ class ConfidentSpanExporter(SpanExporter):
             )
 
         # Extract Span Attributes
-        span_error = span.attributes.get("confident.span.error")
         span_input = span.attributes.get("confident.span.input")
         span_output = span.attributes.get("confident.span.output")
         span_name = span.attributes.get("confident.span.name")
@@ -346,8 +347,8 @@ class ConfidentSpanExporter(SpanExporter):
         )
         base_span.name = None if base_span.name == "None" else base_span.name
         base_span.name = span_name or base_span.name or span.name
-        if span_error:
-            base_span.error = span_error
+        base_span.status = base_span_status  # setting for boilerplate spans
+        base_span.error = base_span_error
         if span_metric_collection:
             base_span.metric_collection = span_metric_collection
         if span_retrieval_context:
