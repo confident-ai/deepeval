@@ -158,12 +158,10 @@ class ConfidentSpanExporter(SpanExporter):
                         pass
 
                 if base_span_wrapper.trace_metadata and isinstance(
-                    base_span_wrapper.trace_metadata, str
+                    base_span_wrapper.trace_metadata, dict
                 ):
                     try:
-                        current_trace.metadata = json.loads(
-                            base_span_wrapper.trace_metadata
-                        )
+                        current_trace.metadata = base_span_wrapper.trace_metadata
                     except Exception:
                         pass
 
