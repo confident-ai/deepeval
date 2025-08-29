@@ -10,7 +10,7 @@ CONFIDENT_API_KEY = os.getenv("CONFIDENT_API_KEY")
 
 trace_provider = TracerProvider()
 exporter = OTLPSpanExporter(
-    endpoint=f"{OTLP_ENDPOINT}/v1/traces",
+    endpoint="http://127.0.0.1:4318/v1/traces",
     headers={"x-confident-api-key": CONFIDENT_API_KEY},
 )
 span_processor = BatchSpanProcessor(span_exporter=exporter)
@@ -37,6 +37,8 @@ def retriever_span(input: str):
         span.set_attribute("confident.span.retrieval_context", ["asd", "asd"])
         time.sleep(1)
         tool_span(input)
+        raise Exception("test error")
+        
 
 
 def agent_span(input: str):
@@ -85,7 +87,10 @@ def llm_agent(input: str):
         span.set_attribute("confident.trace.thread_id", "123")
         span.set_attribute("confident.trace.user_id", "456")
         time.sleep(1)
-        agent_span(input)
+        try:
+            agent_span(input)
+        except Exception as e:
+            print(e)
 
 
 def meta_agent(input: str):
@@ -122,8 +127,6 @@ def meta_agent(input: str):
         time.sleep(1)
 
         llm_agent(input)
-
-        raise Exception("test error")
 
 
 from deepeval.dataset import Golden
