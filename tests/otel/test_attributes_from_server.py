@@ -1,9 +1,21 @@
+import os
 import time
 import json
-from deepeval.tracing.otel import TracerManager
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
 
-tracer_manager = TracerManager()
-tracer = tracer_manager.get_tracer()
+OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+CONFIDENT_API_KEY = os.getenv("CONFIDENT_API_KEY")
+
+trace_provider = TracerProvider()
+exporter = OTLPSpanExporter(
+    endpoint=f"{OTLP_ENDPOINT}/v1/traces",
+    headers={"x-confident-api-key": CONFIDENT_API_KEY},
+)
+span_processor = BatchSpanProcessor(span_exporter=exporter)
+trace_provider.add_span_processor(span_processor)
+tracer = trace_provider.get_tracer("deepeval_tracer")
 
 def tool_span(input: str):
     with tracer.start_as_current_span("tool_span") as span:
@@ -127,4 +139,4 @@ for golden in goldens:
     except Exception as e:
         print(e)
 
-tracer_manager.get_tracer_provider().force_flush()
+trace_provider.force_flush()
