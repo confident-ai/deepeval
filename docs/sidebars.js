@@ -42,7 +42,6 @@ module.exports = {
         },
         "evaluation-end-to-end-llm-evals",
         "evaluation-component-level-llm-evals",
-        "evaluation-unit-testing-in-ci-cd",
         "evaluation-flags-and-configs",
       ],
       collapsed: false,
