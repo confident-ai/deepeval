@@ -5,7 +5,6 @@ from deepeval.benchmarks.base_benchmark import (
 )
 from typing import List, Optional, Dict, Any, Tuple
 from tqdm import tqdm
-import pandas as pd
 import re
 import json
 
@@ -22,7 +21,7 @@ from deepeval.telemetry import capture_benchmark_run
 class IFEvalResult(DeepEvalBaseBenchmarkResult):
     model_config = ConfigDict(arbitrary_types_allowed=True)
     instruction_breakdown: dict[str, Any]
-    predictions: pd.DataFrame
+    predictions: "pd.DataFrame"
 
 
 class IFEvalInstructionVerifier:
@@ -409,13 +408,14 @@ class IFEval(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.n_problems = n_problems
         self.verbose_mode = verbose_mode
-        self.predictions = None
-        self.overall_score = None
+        self.predictions: Optional[pd.DataFrame] = None
+        self.overall_score: Optional[float] = None
         self.instruction_breakdown = None
 
     def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> IFEvalResult:
