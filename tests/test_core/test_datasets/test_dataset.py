@@ -19,9 +19,7 @@ class TestSaveAndLoad:
         dataset1.add_goldens_from_json_file(file_path=json_path)
         dataset2.add_goldens_from_csv_file(file_path=csv_path)
 
-        assert (
-            len(dataset1.goldens) == len(dataset2.goldens) == 15
-        )
+        assert len(dataset1.goldens) == len(dataset2.goldens) == 15
 
     def test_dataset_save_load_conversational_goldens(self):
         """Loads ConversationalGoldens from csv and json files and asserts their length to be equal to 15 (the number of goldens in the files)"""
@@ -38,8 +36,4 @@ class TestSaveAndLoad:
         dataset1.add_goldens_from_json_file(file_path=json_path)
         dataset2.add_goldens_from_csv_file(file_path=csv_path)
 
-        assert (
-            len(dataset1.goldens)
-            == len(dataset2.goldens)
-            == 15
-        )
+        assert len(dataset1.goldens) == len(dataset2.goldens) == 15
