@@ -45,3 +45,13 @@ class PromptPushRequest(BaseModel):
 class PromptApi(BaseModel):
     id: str
     type: PromptType
+
+
+class PromptVersion(BaseModel):
+    id: str
+    version: str
+    commit_message: str = Field(validation_alias="commitMessage")
+
+
+class PromptVersionHttpRequest(BaseModel):
+    promptVersions: List[PromptVersion]
