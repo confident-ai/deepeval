@@ -5,7 +5,12 @@ import json
 import csv
 from time import sleep
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
-from deepeval.test_case import Turn, ToolCall, LLMTestCase, ConversationalTestCase
+from deepeval.test_case import (
+    Turn,
+    ToolCall,
+    LLMTestCase,
+    ConversationalTestCase,
+)
 
 
 class TestSaveAndLoad:
@@ -52,20 +57,24 @@ class TestSaveAndLoad:
                 actual_output="Test output",
                 retrieval_context=["context1"],
                 context=["test"],
-                source_file="source.txt"
+                source_file="source.txt",
             )
         ]
         dataset = EvaluationDataset(goldens)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            json_path = dataset.save_as("json", directory=tmpdir, file_name="goldens_test")
+            json_path = dataset.save_as(
+                "json", directory=tmpdir, file_name="goldens_test"
+            )
             assert os.path.exists(json_path)
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 assert isinstance(data, list)
                 assert data[0]["input"] == "Test input"
 
-            csv_path = dataset.save_as("csv", directory=tmpdir, file_name="goldens_test_csv")
+            csv_path = dataset.save_as(
+                "csv", directory=tmpdir, file_name="goldens_test_csv"
+            )
             assert os.path.exists(csv_path)
             with open(csv_path, "r", encoding="utf-8") as f:
                 reader = csv.reader(f)
@@ -74,7 +83,7 @@ class TestSaveAndLoad:
                 data_row = rows[1]
                 assert header[0] == "input"
                 assert data_row[0] == "Test input"
-            
+
     def test_save_as_conversational_goldens_creates_valid_json_and_csv(self):
         """Test saving ConversationalGoldens as JSON and CSV to temp files."""
         convo_goldens = [
@@ -85,24 +94,33 @@ class TestSaveAndLoad:
                 context=["Flights", "Travel"],
                 turns=[
                     Turn(role="user", content="Find me a flight to Tokyo"),
-                    Turn(role="assistant", content="Here are some flight options to Tokyo")
-                ]
+                    Turn(
+                        role="assistant",
+                        content="Here are some flight options to Tokyo",
+                    ),
+                ],
             )
         ]
 
         dataset = EvaluationDataset(convo_goldens)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            json_path = dataset.save_as("json", directory=tmpdir, file_name="test_convo_json")
+            json_path = dataset.save_as(
+                "json", directory=tmpdir, file_name="test_convo_json"
+            )
             assert os.path.exists(json_path)
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 assert isinstance(data, list)
                 assert data[0]["scenario"] == "Book a flight to Tokyo"
                 assert "turns" in data[0]
-                assert isinstance(data[0]["turns"], str) # Turns are formatted into | seperated values
+                assert isinstance(
+                    data[0]["turns"], str
+                )  # Turns are formatted into | seperated values
 
-            csv_path = dataset.save_as("csv", directory=tmpdir, file_name="test_convo_csv")
+            csv_path = dataset.save_as(
+                "csv", directory=tmpdir, file_name="test_convo_csv"
+            )
             assert os.path.exists(csv_path)
             with open(csv_path, "r", encoding="utf-8") as f:
                 rows = list(csv.reader(f))
@@ -122,32 +140,38 @@ class TestSaveAndLoad:
             input="input case",
             actual_output="actual",
             context=["test"],
-            retrieval_context=["ctx"]
+            retrieval_context=["ctx"],
         )
         dataset = EvaluationDataset()
         dataset.add_test_case(test_case)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = dataset.save_as("json", directory=tmpdir, include_test_cases=True)
+            path = dataset.save_as(
+                "json", directory=tmpdir, include_test_cases=True
+            )
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 assert any(item["input"] == "input case" for item in data)
-            
+
     def test_save_as_includes_convo_test_cases(self):
         """Check that convo test cases get included when include_test_cases=True."""
         test_case = ConversationalTestCase(
             scenario="test case scenario",
             turns=[
                 Turn(role="user", content="user content"),
-                Turn(role="assistant", content="assistant content")
-            ]
+                Turn(role="assistant", content="assistant content"),
+            ],
         )
         dataset = EvaluationDataset()
         dataset._multi_turn = True
         dataset.add_test_case(test_case)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            path = dataset.save_as("json", directory=tmpdir, include_test_cases=True)
+            path = dataset.save_as(
+                "json", directory=tmpdir, include_test_cases=True
+            )
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                assert any(item["scenario"] == "test case scenario" for item in data)
+                assert any(
+                    item["scenario"] == "test case scenario" for item in data
+                )
