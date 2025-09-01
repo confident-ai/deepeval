@@ -1,6 +1,6 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
@@ -45,6 +45,7 @@ class GEval(BaseMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[GEvalTemplate] = GEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
         validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
@@ -63,6 +64,7 @@ class GEval(BaseMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self._include_g_eval_suffix = _include_g_eval_suffix
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -164,7 +166,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_steps(
+        prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -188,7 +190,7 @@ class GEval(BaseMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = GEvalTemplate.generate_evaluation_steps(
+        prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -216,7 +218,7 @@ class GEval(BaseMetric):
         )
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = GEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
@@ -225,7 +227,7 @@ class GEval(BaseMetric):
                 _additional_context=_additional_context,
             )
         else:
-            prompt = GEvalTemplate.generate_strict_evaluation_results(
+            prompt = self.evaluation_template.generate_strict_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
@@ -290,7 +292,7 @@ class GEval(BaseMetric):
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = GEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,
@@ -299,7 +301,7 @@ class GEval(BaseMetric):
                 _additional_context=_additional_context,
             )
         else:
-            prompt = GEvalTemplate.generate_strict_evaluation_results(
+            prompt = self.evaluation_template.generate_strict_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_content=test_case_content,
                 parameters=g_eval_params_str,

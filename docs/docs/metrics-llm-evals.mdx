@@ -63,6 +63,7 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `evaluation_template`: a class of type `GEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `GEval` score. Defaulted to `deepeval`'s `GEvalTemplate`.
 
 :::danger
 For accurate and valid results, only the parameters that are mentioned in `criteria`/`evaluation_params` should be included as a member of `evaluation_params`.
@@ -345,3 +346,52 @@ medical_faithfulness = GEval(
 ```
 
 Full example and advice on best practices available [here.](/blog/top-5-geval-use-cases#custom-rag-metrics)
+
+
+## Customize Your Template
+
+Since `deepeval`'s `GEval` is evaluated by LLM-as-a-judge, you can likely improve your metric accuracy by [overriding `deepeval`'s default prompt templates](/docs/metrics-introduction#customize-metric-prompts). This is especially helpful if:
+
+- You're using a [custom evaluation LLM](/guides/guides-using-custom-llms), especially for smaller models that have weaker instruction following capabilities.
+- You want to customize the examples used in the default `GEvalTemplate` to better align with your expectations.
+
+:::tip
+You can learn what the default `GEvalTemplate` looks like [here on GitHub](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/g_eval/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section above to understand how you can tailor it to your needs.
+:::
+
+Here's a quick example of how you can override the process of extracting claims in the `GEval` algorithm:
+
+```python
+from deepeval.metrics import GEval
+from deepeval.metrics.g_eval import GEvalTemplate
+import textwrap
+
+# Define custom template
+class CustomGEvalTemplate(GEvalTemplate):
+    @staticmethod
+    def generate_evaluation_steps(parameters: str, criteria: str):
+        return textwrap.dedent(
+            f"""
+            You are given evaluation criteria for assessing {parameters}. Based on the criteria, 
+            produce 3-4 clear steps that explain how to evaluate the quality of {parameters}.
+
+            Criteria:
+            {criteria}
+
+            Return JSON only, in this format:
+            {{
+                "steps": [
+                    "Step 1",
+                    "Step 2",
+                    "Step 3"
+                ]
+            }}
+
+            JSON:
+            """
+        )
+
+# Inject custom template to metric
+metric = GEval(evaluation_template=CustomGEvalTemplate)
+metric.measure(...)
+```

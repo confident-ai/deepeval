@@ -1,4 +1,8 @@
 from .utils import Rubric
+from .template import GEvalTemplate
 
 
-__all__ = ["Rubric"]
+__all__ = [
+    "Rubric", 
+    "GEvalTemplate"
+]

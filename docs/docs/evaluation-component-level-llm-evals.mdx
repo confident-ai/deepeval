@@ -6,16 +6,71 @@ sidebar_label: Component-Level Evals
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 Component-level evaluation assess individual units of [LLM interaction](/docs/evaluation-test-cases#what-is-an-llm-interaction) between **internal components** such as retrievers, tool calls, LLM generations, or even agents interacting with other agents, rather than treating the LLM app as a black box.
 
-![ok](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-evals:complex-system.png)
+![component level evals](https://deepeval-docs.s3.us-east-1.amazonaws.com/component-level-evals.png)
 
-Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, run:
+:::tip
+Component-level evaluations generates LLM traces, which are only visible on Confident AI. To view them, login [here](https://app.confident-ai.com) or run:
 
 ```
 deepeval login
 ```
+:::
+
+## What Are Component-Level Evals
+
+Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoke it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+
+<div style={{ textAlign: "center", margin: "2rem 0" }}>
+
+```mermaid
+flowchart LR
+  A[Invoke LLM app with Golden Inputs] --> B
+
+  subgraph B[For Each Observed Component]
+    C[Set LLMTestCase at Runtime] --> D[Run Component-Specific Metrics]
+  end
+
+  B -->|All components evaluated| E[Test Run Created]
+```
+
+</div>
+
+:::note
+Component-level evaluation is currently not supported for multi-turn test cases.
+:::
+
+<Tabs>
+
+<TabItem value="traces" label="Evals on Traces">
+
+Evals on traces are [end-to-end evaluations](/docs/evaluation-end-to-end-llm-evals), where a single LLM interaction is being evaluated.
+
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:traces.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Learn how to setup LLM tracing for Confident AI"
+/>
+
+</TabItem>
+
+<TabItem value="spans" label="Evals on Spans">
+
+Spans make up a trace and evals on spans represents [component-level evaluations](/docs/evaluation-component-level-llm-evals), where individual components in your LLM app are being evaluated.
+
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Learn how to setup LLM tracing for Confident AI"
+/>
+
+</TabItem>
+
+</Tabs>
 
 <details>
 <summary><strong>When should you run Component-Level evaluations?</strong></summary>
@@ -36,39 +91,27 @@ The trend you'll notice is use cases that are more complex in architecture are m
 
 </details>
 
-## Prerequisites
+## Setup Your Test Environment
 
-### Select metrics
+<Timeline>
+<TimelineItem title="Setup LLM Tracing">
 
-You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for which components, but alternatively you can also [join our discord to ask us directly.](https://discord.com/invite/a3K9c8GRGt)
-
-<details>
-  <summary><strong>Component-level vs End-to-End Metrics</strong></summary>
-
-Similar to end-to-end evaluation, you would still be creating `LLMTestCase`s, but this time for individual components at runtime instead of the overall system, which means you will need to select a set of appropriate metrics **for each component you want to evaluate**, and ensure the `LLMTestCase`s that you create in that component contains all the necessary parameters.
-
-In component-level evaluation, there are more metrics to select as there are more individual components to evaluate.
-
-</details>
-
-### Setup LLM application
-
-Unlike end-to-end evaluation, where setting up your LLM application requires rewriting some parts of your code to return certain variables for testing, component-level testing is as simple as adding an `@observe` decorator to apply different metrics at different component scopes, a process known as tracing.
+For component-level testing you need to setup LLM tracing to you application. You can learn about [how to setup LLM tracing here](/docs/evaluation-llm-tracing).
 
 <details>
 <summary><strong>What is Tracing?</strong></summary>
 
-The process of adding the `@observe` decorating in your app is known as **tracing**, which we will learn how to setup fully in the [next section](/docs/evaluation-llm-tracing). If you're worried about how tracing via `@observe` can affect your application, [click here.](/docs/evaluation-llm-tracing#dont-be-worried-about-tracing)
+The process of adding the `@observe` decorating in your app is known as **tracing**, which you can learn about in the [tracing section](/docs/evaluation-llm-tracing).
 
 An `@observe` decorator creates a **span**, and the overall collection of spans is called a **trace**.
 
-As you'll see in the example below, tracing with `deepeval`'s `@observe` means we don't have to return variables such as the `retrieval_context` in awkward places just to create end-to-end `LLMTestCase`s, [as previously seen in end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals#setup-llm-application)
+As you'll see in the example below, tracing with `deepeval`'s `@observe` means we don't have to return variables such as the `retrieval_context` in awkward places just to create end-to-end `LLMTestCase`s, [as previously seen in end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals#setup-your-testing-environment)
 
 </details>
 
 We'll trace this example LLM application to demonstrate how to run component-level evaluations in two lines of code:
 
-```python title="somewhere.py" showLineNumbers {14,25}
+```python title="somewhere.py" {4,14,25}
 from typing import List
 from openai import OpenAI
 
@@ -103,118 +146,191 @@ def your_llm_app(input: str):
 print(your_llm_app("How are you?"))
 ```
 
-At this point, you can either pause and [learn how to setup LLM tracing in the next section](/docs/evaluation-llm-tracing) before continuing, or finish this section before moving onto tracing.
+</TimelineItem>
+<TimelineItem title="Select metrics">
 
-## Run Component-Level Evals
+You should first read the [metrics section](/docs/metrics-introduction) to understand which metrics are suitable for which components, but alternatively you can also [join our discord to ask us directly.](https://discord.com/invite/a3K9c8GRGt)
 
-Once your LLM application is decorated with `@observe`, you'll be able to provide it as an `observed_callback` and invoked it with `Golden`s to create a list of test cases within your `@observe` decorated spans. These test cases are then evaluated using the respective `metrics` to create a **test run**.
+You can just supply your selected metrics in the [`@observe`](/docs/evaluation-llm-tracing#observe) decorator to run component level evals.
 
-<div style={{ textAlign: "center", margin: "2rem 0" }}>
+</TimelineItem>
+<TimelineItem title="Create a dataset">
 
-```mermaid
-flowchart LR
-  A[Invoke LLM app with Golden Inputs] --> B
+[Datasets](/docs/evaluation-datasets) in `deepeval` allow you to store [`Golden`](/docs/evaluation-datasets#what-are-goldens)s, which are like a precursors to test cases. They allow you to create test case dynamically during evaluation time by calling your LLM application. Here's how you can create goldens:
 
-  subgraph B[For Each Observed Component]
-    C[Set LLMTestCase at Runtime] --> D[Run Component-Specific Metrics]
-  end
-
-  B -->|All components evaluated| E[Test Run Created]
-```
-
-</div>
-
-You can run component-level LLM evaluations in either:
-
-- **CI/CD pipelines** using `deepeval test run`, or
-- **Python scripts** by looping through your dataset
-
-All 3 methods give you exactly the same functionality, and integrates 100% with Confident AI for [sharable testing reports on the cloud.](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports)
-
-### Use Python scripts
-
-To use a dataset for component-level testing, initialize a dataset with a list of `Golden`s, then invoke your `@observe` decorated LLM application within the loop of `evals_iterator()`.
 
 <Tabs>
+<TabItem label="Single-Turn" value="single-turn">
 
-<TabItem value="async" label="dataset (Async)">
+```python
+from deepeval.dataset import Golden
 
-```python title="main.py"
-from somewhere import your_async_llm_app # Replace with your async LLM app
-from deepeval.dataset import EvaluationDataset, Golden
-
-dataset = EvaluationDataset(goldens=[Golden(input="...")])
-
-for golden in dataset.evals_iterator():
-    # Create task to invoke your async LLM app
-    task = asyncio.create_task(your_async_llm_app(golden.input))
-    dataset.evaluate(task)
+goldens=[
+    Golden(input="What is your name?"),
+    Golden(input="Choose a number between 1 to 100"),
+    ...
+]
 ```
 
 </TabItem>
+<TabItem label="Multi-Turn" value="multi-turn">
 
-<TabItem value="sync" label="dataset (Sync)">
+```python
+from deepeval.dataset import ConversationalGolden
+
+goldens = [
+    ConversationalGolden(
+        scenario="Andy Byron wants to purchase a VIP ticket to a Coldplay concert.",
+        expected_outcome="Successful purchase of a ticket.",
+        user_description="Andy Byron is the CEO of Astronomer.",
+    ),
+    ...
+]
+```
+
+</TabItem>
+</Tabs>
+
+You can also generate synthetic goldens automatically using the `Synthesizer`. Learn more [here](/docs/synthesizer-introduction). You can now use these goldens to create an evaluation dataset that can be stored and loaded them anytime.
+
+Here's an example showing how you can create and store datasets in `deepeval`:
+
+<Tabs>
+<TabItem value="confident-ai" label="Confident AI">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.push(alias="My dataset")
+```
+
+</TabItem>
+<TabItem value="csv" label="Locally as CSV">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="csv", 
+    directory="./example"
+)
+```
+
+</TabItem>
+<TabItem value="json" label="Locally as JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="json", 
+    directory="./example"
+)
+```
+
+</TabItem>
+</Tabs>
+
+✅ Done. You can now use this dataset anywhere to run your evaluations automatically by looping over them and generating test cases.
+
+</TimelineItem>
+</Timeline>
+
+You now have traces, metrics and datasets that you use to run component level evals. Here's how you can run component-level evals using this data:
+
+## Run Component-Level Evals
+
+You can use the dataset you just created and invoke your `@observe` decorated LLM application within the loop of `evals_iterator()` to run component-level evals.
+
+<Timeline>
+<TimelineItem title="Load your dataset">
+
+`deepeval` offers support for loading datasets stored in JSON files, CSV files, and hugging face datasets into an `EvaluationDataset` as either test cases or goldens.
+
+<Tabs>
+<TabItem value="confident-ai" label="Confident AI">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+dataset.pull(alias="My Evals Dataset")
+```
+
+</TabItem>
+<TabItem value="csv" label="From CSV">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_csv_file(
+    # file_path is the absolute path to your .csv file
+    file_path="example.csv",
+    input_col_name="query"
+)
+```
+
+</TabItem>
+<TabItem value="json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to your .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
+</TabItem>
+</Tabs>
+
+You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
+
+</TimelineItem>
+<TimelineItem title="Run evals using evals iterator">
+
+You can use the dataset's `evals_iterator` to run component-level evals by simply calling your LLM app within the loop for all goldens.
 
 ```python title="main.py"
 from somewhere import your_llm_app # Replace with your LLM app
-from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.dataset import EvaluationDataset
 
-dataset = EvaluationDataset(goldens=[Golden(input="...")])
+dataset = EvaluationDataset()
+dataset.pull(alias="My Evals Dataset")
 
 for golden in dataset.evals_iterator():
     # Invoke your LLM app
     your_llm_app(golden.input)
 ```
 
-</TabItem>
+There are **SIX** optional parameters when using the `evals_iterator()`:
 
-</Tabs>
-
-There are **five** optional parameters when using the `evals_iterator()` for **COMPONENT-LEVEL** evaluation:
-
+- [Optional] `metrics`: a list of `BaseMetric` that allows you to run end-to-end evals for your traces.
 - [Optional] `identifier`: a string that allows you to better identify your test run on Confident AI.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree concurrency](/docs/evaluation-flags-and-configs#async-configs) during evaluation. Defaulted to the default `AsyncConfig` values.
 - [Optional] `display_config`:an instance of type `DisplayConfig` that allows you to [customize what is displayed](/docs/evaluation-flags-and-configs#display-configs) to the console during evaluation. Defaulted to the default `DisplayConfig` values.
 - [Optional] `error_config`: an instance of type `ErrorConfig` that allows you to [customize how to handle errors](/docs/evaluation-flags-and-configs#error-configs) during evaluation. Defaulted to the default `ErrorConfig` values.
 - [Optional] `cache_config`: an instance of type `CacheConfig` that allows you to [customize the caching behavior](/docs/evaluation-flags-and-configs#cache-configs) during evaluation. Defaulted to the default `CacheConfig` values.
 
-### Use `deepeval test run` in CI/CD pipelines
+</TimelineItem>
+</Timeline>
 
-`deepeval` allows you to run evaluations as if you're using Pytest via our Pytest integration.
+:::tip
+We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to observe your spans and traces evals in a nice intuitive UI like this:
 
-```python title="test_llm_app.py" showLineNumbers {10}
-from somewhere import your_llm_app # Replace with your LLM app
-import pytest
-from deepeval.dataset import Golden
-from deepeval import assert_test
-
-# Goldens from your dataset
-goldens = [Golden(input="...")]
-
-# Loop through goldens using pytest
-@pytest.mark.parametrize("golden", goldens)
-def test_llm_app(golden: Golden):
-    assert_test(golden=golden, observed_callback=your_llm_app)
-```
-
-:::info
-Similar to the `evaluate()` function, `assert_test()` for component-level evaluation does not need:
-
-- Declaration of `metrics` because those are defined at the span level in the `metrics` parameter.
-- Creation of `LLMTestCase`s because it is handled at runtime by `update_current_span` in your LLM app.
-
+<VideoDisplayer
+  src="https://confident-docs.s3.us-east-1.amazonaws.com/llm-tracing:spans.mp4"
+  confidentUrl="/docs/llm-tracing/introduction"
+  label="Span-Level Evals in Production"
+/>
 :::
 
-Finally, don't forget to run the test file in the CLI:
-
-```bash
-deepeval test run test_llm_app.py
-```
-
-There are **TWO** mandatory and **ONE** optional parameter when calling the `assert_test()` function for **COMPONENT-LEVEL** evaluation:
-
-- `golden`: the `Golden` that you wish to invoke your `observed_callback` with.
-- `observed_callback`: a function callback that is your `@observe` decorated LLM application. There must be **AT LEAST ONE** metric within one of the `metrics` in your `@observe` decorated LLM application.
-- [Optional] `run_async`: a boolean which when set to `True`, enables concurrent evaluation of all metrics in `@observe`. Defaulted to `True`.
-
-[Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about different optional flags available to `deepeval test run` to customize asynchronous behaviors, error handling, etc.
+If you want to run component-level evaluations in CI/CD piplines, [click here](/docs/evaluation-unit-testing-in-ci-cd#component-level-evals-in-cicd).
