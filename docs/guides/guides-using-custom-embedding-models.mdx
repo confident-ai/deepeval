@@ -158,13 +158,19 @@ class CustomEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
 :::
 
-Lastly, provide the custom embedding model through the `embedder` parameter when creating a `Synthesizer`:
+Lastly, provide the custom embedding model through the `embedder` parameter  in the [`ContextConstructionConfig`](/docs/synthesizer-generate-from-docs#customize-context-construction) when calling any of the synthesis function:
 
 ```python
 from deepeval.synthesizer import Synthesizer
+from deepeval.synthesizer.config import ContextConstructionConfig
 ...
 
-synthesizer = Synthesizer(embedder=CustomEmbeddingModel())
+synthesizer = Synthesizer()
+synthesizer.generate_goldens_from_docs(
+    context_construction_config=ContextConstructionConfig(
+        embedder=CustomEmbeddingModel()
+    )
+)
 ```
 
 :::tip

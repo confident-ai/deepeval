@@ -17,6 +17,7 @@ class APIAnnotation(BaseModel):
     expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
     explanation: Optional[str] = Field(None)
     type: Optional[AnnotationType] = Field(None, alias="type")
+    user_id: Optional[str] = Field(None, alias="userId")
 
     @model_validator(mode="before")
     def validate_input(cls, data):
