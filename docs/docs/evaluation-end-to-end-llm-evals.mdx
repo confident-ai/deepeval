@@ -64,9 +64,10 @@ Most of what you saw in DeepEval's <a href="/docs/getting-started">quickstart</a
 ## Setup Your Test Environment
 
 <Timeline>
-<TimelineItem title="Create Goldens">
+<TimelineItem title="Create a dataset">
 
-A [`Golden`](/docs/evaluation-datasets#what-are-goldens) represents a more flexible alternative to test cases in `deepeval`. Unlike test cases, goldens only require an `input` and can be stored in datasets. You can use the goldens from datasets to generate test cases dynamically during run-time.
+[Datasets](/docs/evaluation-datasets) in `deepeval` allow you to store [`Golden`](/docs/evaluation-datasets#what-are-goldens)s, which are like a precursors to test cases. They allow you to create test case dynamically during evaluation time by calling your LLM application. Here's how you can create goldens:
+
 
 <Tabs>
 <TabItem label="Single-Turn" value="single-turn">
@@ -100,16 +101,9 @@ goldens = [
 </TabItem>
 </Tabs>
 
-Often times, manually creating these goldens can be a taxing task during evaluation process. You can use `deepeval`'s `Synthesizer` to automatically generate your goldens. Click here to [learn more about the `Synthesizer`]((/docs/synthesizer-introduction)).
+You can also generate synthetic goldens automatically using the `Synthesizer`. Learn more [here](/docs/synthesizer-introduction). You can now use these goldens to create an evaluation dataset that can be stored and loaded them anytime.
 
-</TimelineItem>
-<TimelineItem title="Create a dataset">
-
-You can use the above goldens to create an evaluation dataset. A dataset allows you to use your goldens to generate test cases and run evaluations at runtime.
-
-![Goldens to Test Cases](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:evaluation-dataset.png)
-
-Here's an example of how you can create and store your datasets using `deepeval`:
+Here's an example showing how you can create and store datasets in `deepeval`:
 
 <Tabs>
 <TabItem value="confident-ai" label="Confident AI">
@@ -122,7 +116,7 @@ dataset.push(alias="My dataset")
 ```
 
 </TabItem>
-<TabItem value="locally" label="Locally as CSV or JSON">
+<TabItem value="csv" label="Locally as CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -130,14 +124,27 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset(goldens)
 dataset.save_as(
     file_type="csv", 
-    directory="./deepeval-test-dataset"
+    directory="./example"
+)
+```
+
+</TabItem>
+<TabItem value="json" label="Locally as JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="json", 
+    directory="./example"
 )
 ```
 
 </TabItem>
 </Tabs>
 
-You can learn more about [datasets here](/docs/evaluation-datasets).
+✅ Done. You can now use this dataset anywhere to run your evaluations automatically by looping over them and generating test cases.
 
 </TimelineItem>
 <TimelineItem title="Select metrics">
@@ -172,23 +179,7 @@ dataset.pull(alias="My Evals Dataset")
 ```
 
 </TabItem>
-
-<TabItem value="from-json" label="From JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
-</TabItem>
-
-<TabItem value="from-csv" label="From CSV">
+<TabItem value="csv" label="From CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -196,12 +187,26 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 
 dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
+    # file_path is the absolute path to your .csv file
     file_path="example.csv",
     input_col_name="query"
 )
 ```
 
+</TabItem>
+<TabItem value="json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to your .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
 </TabItem>
 </Tabs>
 
@@ -429,7 +434,7 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 
 dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
+    # file_path is the absolute path to your .json file
     file_path="example.json",
     input_key_name="query"
 )
@@ -444,7 +449,7 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 
 dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
+    # file_path is the absolute path to your .csv file
     file_path="example.csv",
     input_col_name="query"
 )
@@ -559,23 +564,7 @@ dataset.pull(alias="My Evals Dataset")
 ```
 
 </TabItem>
-
-<TabItem value="from-json" label="From JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
-</TabItem>
-
-<TabItem value="from-csv" label="From CSV">
+<TabItem value="csv" label="From CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -583,12 +572,26 @@ from deepeval.dataset import EvaluationDataset
 dataset = EvaluationDataset()
 
 dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
+    # file_path is the absolute path to your .csv file
     file_path="example.csv",
     input_col_name="query"
 )
 ```
 
+</TabItem>
+<TabItem value="json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to your .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
 </TabItem>
 </Tabs>
 

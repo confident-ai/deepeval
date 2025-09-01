@@ -36,22 +36,7 @@ dataset.pull(alias="My Evals Dataset")
 ```
 
 </TabItem>
-<TabItem value="from-json" label="From JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
-</TabItem>
-
-<TabItem value="from-csv" label="From CSV">
+<TabItem value="csv" label="From CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -65,6 +50,20 @@ dataset.add_goldens_from_csv_file(
 )
 ```
 
+</TabItem>
+<TabItem value="json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to you .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
 </TabItem>
 </Tabs>
 
@@ -256,23 +255,7 @@ dataset.pull(alias="My Evals Dataset")
 ```
 
 </TabItem>
-
-<TabItem value="from-json" label="From JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
-</TabItem>
-
-<TabItem value="from-csv" label="From CSV">
+<TabItem value="csv" label="From CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -286,6 +269,20 @@ dataset.add_goldens_from_csv_file(
 )
 ```
 
+</TabItem>
+<TabItem value="json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to you .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
 </TabItem>
 </Tabs>
 
@@ -363,23 +360,7 @@ dataset.pull(alias="My Evals Dataset")
 ```
 
 </TabItem>
-
-<TabItem value="from-json" label="From JSON">
-
-```python
-from deepeval.dataset import EvaluationDataset
-
-dataset = EvaluationDataset()
-
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
-)
-```
-</TabItem>
-
-<TabItem value="from-csv" label="From CSV">
+<TabItem value="csv" label="From CSV">
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -393,6 +374,20 @@ dataset.add_goldens_from_csv_file(
 )
 ```
 
+</TabItem>
+<TabItem value="json" label="From JSON">
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+dataset.add_goldens_from_json_file(
+    # file_path is the absolute path to you .json file
+    file_path="example.json",
+    input_key_name="query"
+)
+```
 </TabItem>
 </Tabs>
 
