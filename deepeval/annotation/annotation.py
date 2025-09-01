@@ -12,6 +12,7 @@ def send_annotation(
     expected_output: Optional[str] = None,
     expected_outcome: Optional[str] = None,
     explanation: Optional[str] = None,
+    user_id: Optional[str] = None,
     type: Optional[AnnotationType] = AnnotationType.THUMBS_RATING,
 ) -> str:
     api_annotation = APIAnnotation(
@@ -23,6 +24,7 @@ def send_annotation(
         expectedOutcome=expected_outcome,
         explanation=explanation,
         type=type,
+        userId=user_id,
     )
     api = Api()
     try:
@@ -47,6 +49,7 @@ async def a_send_annotation(
     expected_outcome: Optional[str] = None,
     explanation: Optional[str] = None,
     type: Optional[AnnotationType] = AnnotationType.THUMBS_RATING,
+    user_id: Optional[str] = None,
 ) -> str:
     api_annotation = APIAnnotation(
         rating=rating,
@@ -57,6 +60,7 @@ async def a_send_annotation(
         expectedOutcome=expected_outcome,
         explanation=explanation,
         type=type,
+        userId=user_id,
     )
     api = Api()
     try:
