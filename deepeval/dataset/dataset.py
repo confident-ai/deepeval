@@ -639,6 +639,7 @@ class EvaluationDataset:
         alias: str,
         finalized: bool = True,
         auto_convert_goldens_to_test_cases: bool = False,
+        public: bool = False
     ):
         api = Api()
         with capture_pull_dataset():
@@ -659,6 +660,7 @@ class EvaluationDataset:
                     params={
                         "alias": alias,
                         "finalized": str(finalized).lower(),
+                        "isPublic": str(public).lower()
                     },
                 )
 
