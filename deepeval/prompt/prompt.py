@@ -168,7 +168,7 @@ class Prompt:
         data, _ = api.send_request(
             method=HttpMethods.GET,
             endpoint=Endpoints.PROMPT_VERSIONS_ENDPOINT,
-            params={"alias": self.alias},
+            url_params={"alias": self.alias},
         )
         try:
             prompt_versions = PromptVersionHttpRequest(**data)
