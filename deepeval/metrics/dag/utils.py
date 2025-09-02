@@ -1,4 +1,4 @@
-from typing import Set, Dict
+from typing import Set, Dict, Optional
 import inspect
 
 from deepeval.metrics.dag import (
@@ -47,7 +47,7 @@ def is_valid_dag(node: BaseNode, visited=None, stack=None) -> bool:
 
 
 def extract_required_params(
-    nodes: list[BaseNode], required_params: Set[LLMTestCaseParams] = None
+    nodes: list[BaseNode], required_params: Optional[Set[LLMTestCaseParams]] = None
 ) -> Set[LLMTestCaseParams]:
     if required_params is None:
         required_params = set()
