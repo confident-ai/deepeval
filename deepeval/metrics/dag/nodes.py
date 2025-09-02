@@ -287,9 +287,9 @@ class TaskNode(BaseNode):
         if self._indegree > 0:
             return
 
-        if not self.evaluation_params and not self._parents:
+        if self.evaluation_params is None and self._parents is None:
             raise ValueError(
-                "A TaskNode must either contain 'evaluation_params' or have a parent Node."
+                "A TaskNode must have either a 'evaluation_params' or parent node(s)."
             )
 
         text = """"""
@@ -298,7 +298,7 @@ class TaskNode(BaseNode):
                 if isinstance(parent, TaskNode):
                     text += f"{parent.output_label}:\n{parent._output}\n\n"
 
-        if self.evaluation_params:
+        if self.evaluation_params is not None:
             for param in self.evaluation_params:
                 value = getattr(test_case, param.value)
                 if isinstance(value, ToolCall):
@@ -340,9 +340,9 @@ class TaskNode(BaseNode):
         if self._indegree > 0:
             return
 
-        if not self.evaluation_params and not self._parents:
+        if self.evaluation_params is None and self._parents is None:
             raise ValueError(
-                "A TaskNode must either contain 'evaluation_params' or have a parent Node."
+                "A TaskNode must have either a 'evaluation_params' or parent node(s)."
             )
 
         text = """"""
@@ -351,7 +351,7 @@ class TaskNode(BaseNode):
                 if isinstance(parent, TaskNode):
                     text += f"{parent.output_label}:\n{parent._output}\n\n"
 
-        if self.evaluation_params:
+        if self.evaluation_params is not None:
             for param in self.evaluation_params:
                 value = getattr(test_case, param.value)
                 if isinstance(value, ToolCall):
