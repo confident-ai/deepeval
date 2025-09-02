@@ -924,6 +924,13 @@ def observe(
 
             @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
+                _metrics = metrics
+                if "metrics" in func_kwargs:
+                    _metrics = func_kwargs.pop("metrics")
+
+                _metric_collection = metric_collection
+                if "metric_collection" in func_kwargs:
+                    _metric_collection = func_kwargs.pop("metric_collection")
                 # func_name = func.__name__ # Removed from here
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
@@ -937,8 +944,8 @@ def observe(
                 }
                 with Observer(
                     type,
-                    metrics=metrics,
-                    metric_collection=metric_collection,
+                    metrics=_metrics,
+                    metric_collection=_metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:
@@ -955,6 +962,13 @@ def observe(
 
             @functools.wraps(func)
             def wrapper(*args, **func_kwargs):
+                _metrics = metrics
+                if "metrics" in func_kwargs:
+                    _metrics = func_kwargs.pop("metrics")
+
+                _metric_collection = metric_collection
+                if "metric_collection" in func_kwargs:
+                    _metric_collection = func_kwargs.pop("metric_collection")
                 # func_name = func.__name__ # Removed from here
                 sig = inspect.signature(func)
                 bound_args = sig.bind(*args, **func_kwargs)
@@ -974,8 +988,8 @@ def observe(
                 }
                 with Observer(
                     type,
-                    metrics=metrics,
-                    metric_collection=metric_collection,
+                    metrics=_metrics,
+                    metric_collection=_metric_collection,
                     func_name=func_name,
                     **observer_kwargs,
                 ) as observer:
