@@ -104,44 +104,50 @@ def trimAndLoadJson(input_string: str) -> Any:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
 
-def format_turns(turns):
-    formatted_turns = []
+def format_turns(turns: List[Turn]) -> str:
+    res = []
     for turn in turns:
-        turn_str = f"{turn.role}: {turn.content}"
-        if turn.retrieval_context:
-            formatted_retrieval_context = "≠".join(turn.retrieval_context)
-            turn_str += f" [retrieval_context: {formatted_retrieval_context}]"
+        cur_turn = {
+            "role": turn.role,
+            "content": turn.content,
+            "retrieval_context": (
+                turn.retrieval_context if turn.retrieval_context else None
+            ),
+        }
+        res.append(cur_turn)
+    try:
+        return json.dumps(res)
+    except Exception as e:
+        raise ValueError(f"Error serializing turns: {e}")
 
-        formatted_turns.append(turn_str)
 
-    return "|".join(formatted_turns) if formatted_turns else None
+def parse_turns(turns_str: str) -> List[Turn]:
+    try:
+        parsed = json.loads(turns_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
 
+    if not isinstance(parsed, list):
+        raise TypeError("Expected a list of turns.")
 
-def parse_turns(turns_str):
-    turns = []
-    if turns_str:
-        turn_parts = turns_str.split("|")
-        for part in turn_parts:
-            role_content = part.split(": ", 1)
-            if len(role_content) == 2:
-                role, content = role_content
-                retrieval_context = None
-                if "[" in content:
-                    content, context_str = content.split(" [", 1)
-                    context_str = context_str.strip("[]").replace(
-                        "retrieval_context: ", ""
-                    )
-                    retrieval_context = context_str.split("≠")
-                    retrieval_context = [
-                        ctx.strip() for ctx in retrieval_context
-                    ]
-                turns.append(
-                    Turn(
-                        role=role,
-                        content=content,
-                        retrieval_context=retrieval_context,
-                    )
-                )
-            else:
-                continue
-    return turns
+    res = []
+    for i, turn in enumerate(parsed):
+        if not isinstance(turn, dict):
+            raise TypeError(f"Turn at index {i} is not a dictionary.")
+
+        # Ensuring 'role' and 'content' are strings
+        if "role" not in turn or not isinstance(turn["role"], str):
+            raise ValueError(f"Turn at index {i} is missing a valid 'role'.")
+        if "content" not in turn or not isinstance(turn["content"], str):
+            raise ValueError(f"Turn at index {i} is missing a valid 'content'.")
+
+        retrieval_context = turn.get("retrieval_context")
+
+        res.append(
+            Turn(
+                role=turn["role"],
+                content=turn["content"],
+                retrieval_context=retrieval_context,
+            )
+        )
+    return res

@@ -227,11 +227,15 @@ class GEval(BaseMetric):
                 _additional_context=_additional_context,
             )
         else:
-            prompt = self.evaluation_template.generate_strict_evaluation_results(
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_content=test_case_content,
-                parameters=g_eval_params_str,
-                _additional_context=_additional_context,
+            prompt = (
+                self.evaluation_template.generate_strict_evaluation_results(
+                    evaluation_steps=number_evaluation_steps(
+                        self.evaluation_steps
+                    ),
+                    test_case_content=test_case_content,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                )
             )
         try:
             # don't use log probabilities for unsupported gpt models
@@ -301,11 +305,15 @@ class GEval(BaseMetric):
                 _additional_context=_additional_context,
             )
         else:
-            prompt = self.evaluation_template.generate_strict_evaluation_results(
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_content=test_case_content,
-                parameters=g_eval_params_str,
-                _additional_context=_additional_context,
+            prompt = (
+                self.evaluation_template.generate_strict_evaluation_results(
+                    evaluation_steps=number_evaluation_steps(
+                        self.evaluation_steps
+                    ),
+                    test_case_content=test_case_content,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                )
             )
 
         try:
