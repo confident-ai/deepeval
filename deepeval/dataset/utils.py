@@ -4,7 +4,7 @@ import re
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
-from deepeval.test_case import LLMTestCase, ConversationalTestCase
+from deepeval.test_case import LLMTestCase, ConversationalTestCase, Turn
 
 
 def convert_test_cases_to_goldens(
@@ -51,6 +51,26 @@ def convert_goldens_to_test_cases(
     return test_cases
 
 
+def convert_convo_test_cases_to_convo_goldens(
+    test_cases: List[ConversationalTestCase],
+) -> List[ConversationalGolden]:
+    goldens = []
+    for test_case in test_cases:
+        if not test_case.scenario:
+            raise ValueError(
+                "Please provide a scenario in your 'ConversationalTestCase' to convert it to a 'ConversationalGolden'."
+            )
+        golden = {
+            "scenario": test_case.scenario,
+            "turns": test_case.turns,
+            "expected_outcome": test_case.expected_outcome,
+            "user_description": test_case.user_description,
+            "context": test_case.context,
+        }
+        goldens.append(ConversationalGolden(**golden))
+    return goldens
+
+
 def convert_convo_goldens_to_convo_test_cases(
     goldens: List[ConversationalGolden],
     _alias: Optional[str] = None,
@@ -82,3 +102,52 @@ def trimAndLoadJson(input_string: str) -> Any:
         raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
+
+
+def format_turns(turns: List[Turn]) -> str:
+    res = []
+    for turn in turns:
+        cur_turn = {
+            "role": turn.role,
+            "content": turn.content,
+            "retrieval_context": (
+                turn.retrieval_context if turn.retrieval_context else None
+            ),
+        }
+        res.append(cur_turn)
+    try:
+        return json.dumps(res)
+    except Exception as e:
+        raise ValueError(f"Error serializing turns: {e}")
+
+
+def parse_turns(turns_str: str) -> List[Turn]:
+    try:
+        parsed = json.loads(turns_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+    if not isinstance(parsed, list):
+        raise TypeError("Expected a list of turns.")
+
+    res = []
+    for i, turn in enumerate(parsed):
+        if not isinstance(turn, dict):
+            raise TypeError(f"Turn at index {i} is not a dictionary.")
+
+        # Ensuring 'role' and 'content' are strings
+        if "role" not in turn or not isinstance(turn["role"], str):
+            raise ValueError(f"Turn at index {i} is missing a valid 'role'.")
+        if "content" not in turn or not isinstance(turn["content"], str):
+            raise ValueError(f"Turn at index {i} is missing a valid 'content'.")
+
+        retrieval_context = turn.get("retrieval_context")
+
+        res.append(
+            Turn(
+                role=turn["role"],
+                content=turn["content"],
+                retrieval_context=retrieval_context,
+            )
+        )
+    return res

@@ -290,6 +290,8 @@ Dataset management is an essential part of your evaluation lifecycle. We recomme
 
 ### Save Dataset
 
+You can store both single-turn and multi-turn datasets with `deepeval`. The single-turn datasets contains a list of `Golden`s and the multi-turn would contain `ConversationalGolden`s instead.
+
 <Tabs>
 
 <TabItem value="confident-ai" label="Confident AI">
@@ -297,9 +299,9 @@ Dataset management is an essential part of your evaluation lifecycle. We recomme
 You can save your dataset on the cloud by using the `push` method:
 
 ```python
-from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.dataset import EvaluationDataset
 
-dataset = EvaluationDataset(goldens=[Golden(input="First golden")])
+dataset = EvaluationDataset(goldens)
 dataset.push(alias="My dataset")
 ```
 
@@ -310,7 +312,7 @@ This pushes all goldens in your evaluation dataset to Confident AI. If you don't
 dataset.push(alias="My dataset", overwrite=True) # Very dangerous, this will delete all existing goldens in your dataset
 ```
 
-Lastly, you're unsure whether a golden is ready for evaluation, you should `queue` it instead:
+Lastly, if you're unsure whether your goldens are ready for evaluation, you should `queue` them instead:
 
 ```python
 ...
@@ -326,14 +328,44 @@ You can also push multi-turn datasets.
 
 </TabItem>
 
-<TabItem value="locally" label="Locally as CSV or JSON">
+<TabItem value="local-json" label="Locally as JSON">
 
-You can save your dataset locally to either a CSV or JSON file by using the `save_as()` method:
+You can save your dataset locally to a JSON file by using the `save_as()` method:
 
 ```python
-...
+from deepeval.dataset import EvaluationDataset
 
-dataset.save_as(file_type="csv", directory="./deepeval-test-dataset", include_test_cases=True)
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="json", 
+    directory="./deepeval-test-dataset", 
+)
+```
+
+There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
+
+- `file_type`: a string of either `"csv"` or `"json"` and specifies which file format to save `Golden`s in.
+- `directory`: a string specifying the path of the directory you wish to save `Golden`s at.
+- `file_name`: a string specifying the custom filename for the dataset file. Defaulted to the "YYYYMMDD_HHMMSS" format of time now.
+- `include_test_cases`: a boolean which when set to `True`, will also save any test cases within your dataset. Defaulted to `False`.
+
+:::note
+By default the `save_as()` method only saves the `Golden`s within your `EvaluationDataset` to file. If you wish to save test cases as well, set `include_test_cases` to `True`.
+:::
+
+</TabItem>
+<TabItem value="local-csv" label="Locally as CSV">
+
+You can save your dataset locally to a CSV file by using the `save_as()` method:
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset(goldens)
+dataset.save_as(
+    file_type="csv", 
+    directory="./deepeval-test-dataset", 
+)
 ```
 
 There are **TWO** mandatory and **TWO** optional parameter when calling the `save_as()` method:
@@ -383,6 +415,21 @@ from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset()
 
+# Add goldens from a JSON file
+dataset.add_goldens_from_json_file(
+    file_path="example.json",
+) # file_path is the absolute path to your .json file
+```
+
+If your JSON file has different keys from `deepeval`'s conventional `Golden` or `ConversationalGolden` parameters. You can supply your custom key names in the [function parameters](https://github.com/confident-ai/deepeval/blob/main/deepeval/dataset/dataset.py#L584).
+
+You can also add single-turn `LLMTestCase`s to your dataset from a JSON file.
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
 # Add as test cases
 dataset.add_test_cases_from_json_file(
     # file_path is the absolute path to you .json file
@@ -392,13 +439,6 @@ dataset.add_test_cases_from_json_file(
     expected_output_key_name="expected_output",
     context_key_name="context",
     retrieval_context_key_name="retrieval_context",
-)
-
-# Or, add as goldens
-dataset.add_goldens_from_json_file(
-    # file_path is the absolute path to you .json file
-    file_path="example.json",
-    input_key_name="query"
 )
 ```
 
@@ -410,9 +450,24 @@ Loading datasets as goldens are especially helpful if you're looking to generate
 
 <TabItem value="from-csv" label="From CSV">
 
-You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `LLMTestCase`s through their column names.
+You can add test cases or goldens into your `EvaluationDataset` by supplying a `file_path` to your `.csv` file. Your `.csv` file should contain rows that can be mapped into `Golden` or `ConversationalGolden` through their column names.
 
 Remember, parameters such as `context` should be a list of strings and in the context of CSV files, it means you have to supply a `context_col_delimiter` argument to tell `deepeval` how to split your context cells into a list of strings.
+
+```python
+from deepeval.dataset import EvaluationDataset
+
+dataset = EvaluationDataset()
+
+# Add goldens
+dataset.add_goldens_from_csv_file(
+    file_path="example.csv",
+) # file_path is the absolute path to you .csv file
+```
+
+If your CSV file has different column names from `deepeval`'s conventional `Golden` or `ConversationalGolden` parameters. You can supply your custom column names in the [function parameters](https://github.com/confident-ai/deepeval/blob/main/deepeval/dataset/dataset.py#L433).
+
+You can also add single-turn `LLMTestCase`s to your dataset from a CSV file.
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -430,13 +485,6 @@ dataset.add_test_cases_from_csv_file(
     context_col_delimiter= ";",
     retrieval_context_col_name="retrieval_context",
     retrieval_context_col_delimiter= ";"
-)
-
-# Or, add as goldens
-dataset.add_goldens_from_csv_file(
-    # file_path is the absolute path to you .csv file
-    file_path="example.csv",
-    input_col_name="query"
 )
 ```
 

@@ -16,6 +16,9 @@ from deepeval.dataset.utils import (
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
     convert_convo_goldens_to_convo_test_cases,
+    convert_convo_test_cases_to_convo_goldens,
+    format_turns,
+    parse_turns,
     trimAndLoadJson,
 )
 from deepeval.dataset.api import (
@@ -430,19 +433,23 @@ class EvaluationDataset:
     def add_goldens_from_csv_file(
         self,
         file_path: str,
-        input_col_name: str,
-        actual_output_col_name: Optional[str] = None,
-        expected_output_col_name: Optional[str] = None,
-        context_col_name: Optional[str] = None,
-        context_col_delimiter: str = ";",
-        retrieval_context_col_name: Optional[str] = None,
-        retrieval_context_col_delimiter: str = ";",
-        tools_called_col_name: Optional[str] = None,
+        input_col_name: Optional[str] = "input",
+        actual_output_col_name: Optional[str] = "actual_output",
+        expected_output_col_name: Optional[str] = "expected_output",
+        context_col_name: Optional[str] = "context",
+        context_col_delimiter: str = "|",
+        retrieval_context_col_name: Optional[str] = "retrieval_context",
+        retrieval_context_col_delimiter: str = "|",
+        tools_called_col_name: Optional[str] = "tools_called",
         tools_called_col_delimiter: str = ";",
-        expected_tools_col_name: Optional[str] = None,
+        expected_tools_col_name: Optional[str] = "expected_tools",
         expected_tools_col_delimiter: str = ";",
         source_file_col_name: Optional[str] = None,
         additional_metadata_col_name: Optional[str] = None,
+        scenario_col_name: Optional[str] = "scenario",
+        turns_col_name: Optional[str] = "turns",
+        expected_outcome_col_name: Optional[str] = "expected_outcome",
+        user_description_col_name: Optional[str] = "user_description",
     ):
         try:
             import pandas as pd
@@ -512,6 +519,10 @@ class EvaluationDataset:
                 df, additional_metadata_col_name, default=""
             )
         ]
+        scenarios = get_column_data(df, scenario_col_name)
+        turns_raw = get_column_data(df, turns_col_name)
+        expected_outcomes = get_column_data(df, expected_outcome_col_name)
+        user_descriptions = get_column_data(df, user_description_col_name)
 
         for (
             input,
@@ -523,6 +534,10 @@ class EvaluationDataset:
             expected_tools,
             source_file,
             additional_metadata,
+            scenario,
+            turns,
+            expected_outcome,
+            user_description,
         ) in zip(
             inputs,
             actual_outputs,
@@ -533,32 +548,55 @@ class EvaluationDataset:
             expected_tools,
             source_files,
             additional_metadatas,
+            scenarios,
+            turns_raw,
+            expected_outcomes,
+            user_descriptions,
         ):
-            self.goldens.append(
-                Golden(
-                    input=input,
-                    actual_output=actual_output,
-                    expected_output=expected_output,
-                    context=context,
-                    retrieval_context=retrieval_context,
-                    tools_called=tools_called,
-                    expected_tools=expected_tools,
-                    additional_metadata=additional_metadata,
-                    source_file=source_file,
+            if scenario:
+                self._multi_turn = True
+                parsed_turns = parse_turns(turns)
+                self.goldens.append(
+                    ConversationalGolden(
+                        scenario=scenario,
+                        turns=parsed_turns,
+                        expected_outcome=expected_outcome,
+                        user_description=user_description,
+                        context=context,
+                    )
                 )
-            )
+            else:
+                self._multi_turn = False
+                self.goldens.append(
+                    Golden(
+                        input=input,
+                        actual_output=actual_output,
+                        expected_output=expected_output,
+                        context=context,
+                        retrieval_context=retrieval_context,
+                        tools_called=tools_called,
+                        expected_tools=expected_tools,
+                        additional_metadata=additional_metadata,
+                        source_file=source_file,
+                    )
+                )
 
     def add_goldens_from_json_file(
         self,
         file_path: str,
-        input_key_name: str,
-        actual_output_key_name: Optional[str] = None,
-        expected_output_key_name: Optional[str] = None,
-        context_key_name: Optional[str] = None,
-        retrieval_context_key_name: Optional[str] = None,
-        tools_called_key_name: Optional[str] = None,
-        expected_tools_key_name: Optional[str] = None,
-        source_file_key_name: Optional[str] = None,
+        input_key_name: str = "input",
+        actual_output_key_name: Optional[str] = "actual_output",
+        expected_output_key_name: Optional[str] = "expected_output",
+        context_key_name: Optional[str] = "context",
+        retrieval_context_key_name: Optional[str] = "retrieval_context",
+        tools_called_key_name: Optional[str] = "tools_called",
+        expected_tools_key_name: Optional[str] = "expected_tools",
+        source_file_key_name: Optional[str] = "source_file",
+        additional_metadata_key_name: Optional[str] = "additional_metadata",
+        scenario_key_name: Optional[str] = "scenario",
+        turns_key_name: Optional[str] = "turns",
+        expected_outcome_key_name: Optional[str] = "expected_outcome",
+        user_description_key_name: Optional[str] = "user_description",
         encoding_type: str = "utf-8",
     ):
         try:
@@ -569,34 +607,51 @@ class EvaluationDataset:
         except json.JSONDecodeError:
             raise ValueError(f"The file {file_path} is not a valid JSON file.")
 
-        # Process each JSON object
         for json_obj in json_list:
-            if input_key_name not in json_obj:
-                raise ValueError(
-                    "Required fields are missing in one or more JSON objects"
-                )
+            if scenario_key_name in json_obj and json_obj[scenario_key_name]:
+                scenario = json_obj.get(scenario_key_name)
+                turns = json_obj.get(turns_key_name, [])
+                expected_outcome = json_obj.get(expected_outcome_key_name)
+                user_description = json_obj.get(user_description_key_name)
+                context = json_obj.get(context_key_name)
 
-            input = json_obj[input_key_name]
-            actual_output = json_obj.get(actual_output_key_name)
-            expected_output = json_obj.get(expected_output_key_name)
-            context = json_obj.get(context_key_name)
-            retrieval_context = json_obj.get(retrieval_context_key_name)
-            tools_called = json_obj.get(tools_called_key_name)
-            expected_tools = json_obj.get(expected_tools_key_name)
-            source_file = json_obj.get(source_file_key_name)
+                parsed_turns = parse_turns(turns) if turns else []
 
-            self.goldens.append(
-                Golden(
-                    input=input,
-                    actual_output=actual_output,
-                    expected_output=expected_output,
-                    context=context,
-                    retrieval_context=retrieval_context,
-                    tools_called=tools_called,
-                    expected_tools=expected_tools,
-                    source_file=source_file,
+                self._multi_turn = True
+                self.goldens.append(
+                    ConversationalGolden(
+                        scenario=scenario,
+                        turns=parsed_turns,
+                        expected_outcome=expected_outcome,
+                        user_description=user_description,
+                        context=context,
+                    )
                 )
-            )
+            else:
+                input = json_obj.get(input_key_name)
+                actual_output = json_obj.get(actual_output_key_name)
+                expected_output = json_obj.get(expected_output_key_name)
+                context = json_obj.get(context_key_name)
+                retrieval_context = json_obj.get(retrieval_context_key_name)
+                tools_called = json_obj.get(tools_called_key_name)
+                expected_tools = json_obj.get(expected_tools_key_name)
+                source_file = json_obj.get(source_file_key_name)
+                additional_metadata = json_obj.get(additional_metadata_key_name)
+
+                self._multi_turn = False
+                self.goldens.append(
+                    Golden(
+                        input=input,
+                        actual_output=actual_output,
+                        expected_output=expected_output,
+                        context=context,
+                        retrieval_context=retrieval_context,
+                        tools_called=tools_called,
+                        expected_tools=expected_tools,
+                        additional_metadata=additional_metadata,
+                        source_file=source_file,
+                    )
+                )
 
     def push(
         self,
@@ -838,19 +893,36 @@ class EvaluationDataset:
                 f"Invalid file type. Available file types to save as: {', '.join(type for type in valid_file_types)}"
             )
 
-        goldens = [
-            Golden(
-                input=golden.input,
-                expected_output=golden.expected_output,
-                actual_output=golden.actual_output,
-                retrieval_context=golden.retrieval_context,
-                context=golden.context,
-                source_file=golden.source_file,
-            )
-            for golden in self.goldens
-        ]
+        if self._multi_turn:
+            goldens = [
+                ConversationalGolden(
+                    scenario=golden.scenario,
+                    turns=golden.turns,
+                    expected_outcome=golden.expected_outcome,
+                    user_description=golden.user_description,
+                    context=golden.context,
+                )
+                for golden in self.goldens
+            ]
+        else:
+            goldens = [
+                Golden(
+                    input=golden.input,
+                    expected_output=golden.expected_output,
+                    actual_output=golden.actual_output,
+                    retrieval_context=golden.retrieval_context,
+                    context=golden.context,
+                    source_file=golden.source_file,
+                )
+                for golden in self.goldens
+            ]
         if include_test_cases:
-            goldens.extend(convert_test_cases_to_goldens(self.test_cases))
+            if self._multi_turn:
+                goldens.extend(
+                    convert_convo_test_cases_to_convo_goldens(self.test_cases)
+                )
+            else:
+                goldens.extend(convert_test_cases_to_goldens(self.test_cases))
 
         if len(goldens) == 0:
             raise ValueError(
@@ -870,66 +942,134 @@ class EvaluationDataset:
 
         if file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
-                json_data = [
-                    {
-                        "input": golden.input,
-                        "actual_output": golden.actual_output,
-                        "expected_output": golden.expected_output,
-                        "retrieval_context": golden.retrieval_context,
-                        "context": golden.context,
-                        "source_file": golden.source_file,
-                    }
-                    for golden in goldens
-                ]
+                if self._multi_turn:
+                    json_data = [
+                        {
+                            "scenario": golden.scenario,
+                            "turns": (
+                                format_turns(golden.turns)
+                                if golden.turns
+                                else None
+                            ),
+                            "expected_outcome": golden.expected_outcome,
+                            "user_description": golden.user_description,
+                            "context": golden.context,
+                        }
+                        for golden in goldens
+                    ]
+                else:
+                    json_data = [
+                        {
+                            "input": golden.input,
+                            "actual_output": golden.actual_output,
+                            "expected_output": golden.expected_output,
+                            "retrieval_context": golden.retrieval_context,
+                            "context": golden.context,
+                            "source_file": golden.source_file,
+                        }
+                        for golden in goldens
+                    ]
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
-
         elif file_type == "csv":
             with open(
                 full_file_path, "w", newline="", encoding="utf-8"
             ) as file:
                 writer = csv.writer(file)
-                writer.writerow(
-                    [
-                        "input",
-                        "actual_output",
-                        "expected_output",
-                        "retrieval_context",
-                        "context",
-                        "source_file",
-                    ]
-                )
-                for golden in goldens:
-                    retrieval_context = (
-                        "|".join(golden.retrieval_context)
-                        if golden.retrieval_context is not None
-                        else None
-                    )
-                    context = (
-                        "|".join(golden.context)
-                        if golden.context is not None
-                        else None
-                    )
+                if self._multi_turn:
                     writer.writerow(
                         [
-                            golden.input,
-                            golden.actual_output,
-                            golden.expected_output,
-                            retrieval_context,
-                            context,
-                            golden.source_file,
+                            "scenario",
+                            "turns",
+                            "expected_outcome",
+                            "user_description",
+                            "context",
                         ]
                     )
+                    for golden in goldens:
+                        context = (
+                            "|".join(golden.context)
+                            if golden.context is not None
+                            else None
+                        )
+                        turns = (
+                            format_turns(golden.turns)
+                            if golden.turns is not None
+                            else None
+                        )
+                        writer.writerow(
+                            [
+                                golden.scenario,
+                                turns,
+                                golden.expected_outcome,
+                                golden.user_description,
+                                context,
+                            ]
+                        )
+                else:
+                    writer.writerow(
+                        [
+                            "input",
+                            "actual_output",
+                            "expected_output",
+                            "retrieval_context",
+                            "context",
+                            "source_file",
+                        ]
+                    )
+                    for golden in goldens:
+                        retrieval_context = (
+                            "|".join(golden.retrieval_context)
+                            if golden.retrieval_context is not None
+                            else None
+                        )
+                        context = (
+                            "|".join(golden.context)
+                            if golden.context is not None
+                            else None
+                        )
+                        writer.writerow(
+                            [
+                                golden.input,
+                                golden.actual_output,
+                                golden.expected_output,
+                                retrieval_context,
+                                context,
+                                golden.source_file,
+                            ]
+                        )
         elif file_type == "jsonl":
             with open(full_file_path, "w", encoding="utf-8") as file:
                 for golden in goldens:
-                    record = {
-                        "input": golden.input,
-                        "actual_output": golden.actual_output,
-                        "expected_output": golden.expected_output,
-                        "retrieval_context": golden.retrieval_context,
-                        "context": golden.context,
-                        "source_file": golden.source_file,
-                    }
+                    if self._multi_turn:
+                        turns = (
+                            format_turns(golden.turns) if golden.turns else None
+                        )
+                        record = {
+                            "scenario": golden.scenario,
+                            "turns": turns,
+                            "expected_outcome": golden.expected_outcome,
+                            "user_description": golden.user_description,
+                            "context": golden.context,
+                        }
+                    else:
+                        retrieval_context = (
+                            "|".join(golden.retrieval_context)
+                            if golden.retrieval_context is not None
+                            else None
+                        )
+                        context = (
+                            "|".join(golden.context)
+                            if golden.context is not None
+                            else None
+                        )
+                        record = {
+                            "input": golden.input,
+                            "actual_output": golden.actual_output,
+                            "expected_output": golden.expected_output,
+                            "retrieval_context": retrieval_context,
+                            "context": context,
+                        }
+
                     file.write(json.dumps(record, ensure_ascii=False) + "\n")
 
         print(f"Evaluation dataset saved at {full_file_path}!")
