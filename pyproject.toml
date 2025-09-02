@@ -57,6 +57,7 @@ langchain_text_splitters = "*"
 tiktoken = "*"
 pypdf = "*"
 docx2txt = "*"
+pandas = "*"
 
 [tool.black]
 line-length = 80

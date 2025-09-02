@@ -3,11 +3,9 @@ import os
 import tempfile
 import json
 import csv
-from time import sleep
 from deepeval.dataset import EvaluationDataset, Golden, ConversationalGolden
 from deepeval.test_case import (
     Turn,
-    ToolCall,
     LLMTestCase,
     ConversationalTestCase,
 )
