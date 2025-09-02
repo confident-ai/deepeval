@@ -1,5 +1,9 @@
 from crewai import Task, Crew, Agent
 
+from deepeval.integrations.crewai import instrument_crewai
+
+instrument_crewai()
+
 agent = Agent(
     role="Consultant",
     goal="Write clear, concise explanation.",
@@ -14,6 +18,9 @@ task = Task(
 
 crew = Crew(agents=[agent],tasks=[task])
 
-result = crew.kickoff({"topic": "What are the LLMs?"})
+result = crew.kickoff(
+    {"topic": "What are the LLMs?"},
+    metric_collection="test_collection_1",
+)
 
 print(result)

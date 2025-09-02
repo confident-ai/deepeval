@@ -1,5 +1,9 @@
 from crewai import Task, Crew, Agent
 
+from deepeval.integrations.crewai import instrument_crewai
+
+instrument_crewai()
+
 agent = Agent(
     role="Consultant",
     goal="Write clear, concise explanation.",

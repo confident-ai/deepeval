@@ -114,7 +114,8 @@ def instrument_crewai(api_key: Optional[str] = None):
     with capture_tracing_integration("crewai"):
         if api_key:
             deepeval.login(api_key)
-
+            
+        # Crew.kickoff_async = observe(Crew.kickoff_async)
         Crew.kickoff = observe(Crew.kickoff)
         LLM.call = observe(LLM.call, type="llm", model="")
         Agent.execute_task = observe(Agent.execute_task, type="agent")

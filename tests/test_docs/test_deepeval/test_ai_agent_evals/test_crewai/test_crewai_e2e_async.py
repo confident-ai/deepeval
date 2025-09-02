@@ -1,24 +1,20 @@
+######## This needs to be fixed #########
 import asyncio
-from crewai import Task, Crew
-
-from deepeval.integrations.crewai import Agent
+from crewai import Task, Crew, Agent
 from deepeval.integrations.crewai import instrument_crewai
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
 
 instrument_crewai()
 
-answer_relavancy_metric = AnswerRelevancyMetric()
-
 agent = Agent(
     role="Consultant",
     goal="Write clear, concise explanation.",
     backstory="An expert consultant with a keen eye for software trends.",
-    metrics=[answer_relavancy_metric],
 )
 
 task = Task(
-    description="Explain the given topic",
+    description="Explain the given topic. {topic}",
     expected_output="A clear and concise explanation.",
     agent=agent,
 )
@@ -33,11 +29,14 @@ dataset = EvaluationDataset(
         Golden(input="What are Transformers in AI?"),
         Golden(input="What is the biggest open source database?"),
         Golden(input="What are LLMs?"),
+        Golden(input="Explain the differences between Red Pill and Blue Pill?"),
+        Golden(input="What is the capital of France?"),
+        Golden(input="How can I learn to code?"),
     ]
 )
 
 for golden in dataset.evals_iterator():
     task = asyncio.create_task(
-        crew.kickoff_async(inputs={"input": golden.input})
+        crew.kickoff_async(inputs={"topic": golden.input}, metrics=[AnswerRelevancyMetric()])
     )
     dataset.evaluate(task)
