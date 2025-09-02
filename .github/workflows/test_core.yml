@@ -57,7 +57,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest tests/test_core/ --ignore=tests/test_core/test_synthesizer/
+          poetry run pytest tests/test_core/ --ignore=tests/test_core/test_synthesizer/ --ignore=tests/test_core/test_datasets/
 
       #----------------------------------------------
       #    install dev dependencies (including chromadb) and run synthesizer tests
@@ -65,8 +65,8 @@ jobs:
       - name: Install dev dependencies
         run: poetry install --no-interaction --with dev
 
-      - name: Run synthesizer tests
+      - name: Run core tests with dev dependencies
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest tests/test_core/test_synthesizer/
+          poetry run pytest tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
