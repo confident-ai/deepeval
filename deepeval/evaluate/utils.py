@@ -24,8 +24,9 @@ from deepeval.test_run import (
     MetricData,
 )
 from deepeval.evaluate.types import TestResult
-from deepeval.tracing.api import TraceApi, BaseApiSpan
+from deepeval.tracing.api import TraceApi, BaseApiSpan, TraceSpanApiStatus
 from deepeval.tracing.tracing import BaseSpan, Trace
+from deepeval.tracing.types import TraceSpanStatus
 from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.tracing.utils import (
     perf_counter_to_datetime,
@@ -247,6 +248,7 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         tools_called=trace.tools_called,
         expected_tools=trace.expected_tools,
         metadata=golden.additional_metadata,
+        status=TraceSpanApiStatus.SUCCESS if trace.status == TraceSpanStatus.SUCCESS else TraceSpanApiStatus.ERRORED,
     )
 
 
