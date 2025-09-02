@@ -660,7 +660,7 @@ class EvaluationDataset:
                     params={
                         "alias": alias,
                         "finalized": str(finalized).lower(),
-                        "isPublic": str(public).lower()
+                        "public": str(public).lower()
                     },
                 )
 
