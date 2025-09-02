@@ -726,9 +726,7 @@ class Observer:
         self.name: str = self.observe_kwargs.get("name", func_name)
         self.metrics = metrics
         self.metric_collection = metric_collection
-        self.span_type: SpanType | str = (
-            self.name if span_type is None else span_type
-        )
+        self.span_type: Optional[SpanType] = span_type
         self._progress = _progress
         self._pbar_callback_id = _pbar_callback_id
         self.update_span_properties: Optional[Callable] = None
@@ -784,9 +782,7 @@ class Observer:
         end_time = perf_counter()
         # Get the current span from the context instead of looking it up by UUID
         current_span = current_span_context.get()
-        # print(self.uuid)
-        # print("Exit span: ", current_span)
-        # print("\n" * 10)
+
         if not current_span or current_span.uuid != self.uuid:
             print(
                 f"Error: Current span in context does not match the span being exited. Expected UUID: {self.uuid}, Got: {current_span.uuid if current_span else 'None'}"
