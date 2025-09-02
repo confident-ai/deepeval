@@ -58,7 +58,7 @@ def convert_convo_test_cases_to_convo_goldens(
     for test_case in test_cases:
         if not test_case.scenario:
             raise ValueError(
-                "Please provide a scenario in your ConversationalTestCase to convert it to a golden."
+                "Please provide a scenario in your 'ConversationalTestCase' to convert it to a 'ConversationalGolden'."
             )
         golden = {
             "scenario": test_case.scenario,
