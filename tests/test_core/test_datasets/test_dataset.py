@@ -13,8 +13,6 @@ from deepeval.test_case import (
 )
 
 
-
-
 class TestSaveAndLoad:
     def test_dataset_save_load_goldens(self):
         """Load Goldens from both CSV and JSON and check their count and a sample field."""
@@ -47,8 +45,12 @@ class TestSaveAndLoad:
 
         assert len(dataset_json.goldens) == 15
         assert len(dataset_csv.goldens) == 15
-        assert all(golden.scenario is not None for golden in dataset_json.goldens)
-        assert all(golden.scenario is not None for golden in dataset_csv.goldens)
+        assert all(
+            golden.scenario is not None for golden in dataset_json.goldens
+        )
+        assert all(
+            golden.scenario is not None for golden in dataset_csv.goldens
+        )
 
     def test_save_as_creates_valid_json_and_csv(self):
         """Test saving goldens as JSON and CSV to temp files."""
