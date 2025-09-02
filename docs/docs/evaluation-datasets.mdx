@@ -299,7 +299,7 @@ You can store both single-turn and multi-turn datasets with `deepeval`. The sing
 You can save your dataset on the cloud by using the `push` method:
 
 ```python
-from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(goldens)
 dataset.push(alias="My dataset")
@@ -333,8 +333,9 @@ You can also push multi-turn datasets.
 You can save your dataset locally to a JSON file by using the `save_as()` method:
 
 ```python
-...
+from deepeval.dataset import EvaluationDataset
 
+dataset = EvaluationDataset(goldens)
 dataset.save_as(
     file_type="json", 
     directory="./deepeval-test-dataset", 
@@ -358,8 +359,9 @@ By default the `save_as()` method only saves the `Golden`s within your `Evaluati
 You can save your dataset locally to a CSV file by using the `save_as()` method:
 
 ```python
-...
+from deepeval.dataset import EvaluationDataset
 
+dataset = EvaluationDataset(goldens)
 dataset.save_as(
     file_type="csv", 
     directory="./deepeval-test-dataset", 
