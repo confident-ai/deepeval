@@ -8,6 +8,7 @@ from deepeval.test_case import LLMTestCase
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.tracing import trace_manager
 from deepeval.tracing.otel.utils import parse_string, parse_list_of_strings
+from opentelemetry import trace
 
 try:
     from opentelemetry.trace import NoOpTracer
@@ -71,8 +72,7 @@ class PydanticAIAgent(Agent):
         
         @functools.wraps(original_tool)
         def patched_tool(*args, metric_collection: Optional[str] = None, metrics: Optional[List[BaseMetric]] = None, **kwargs):
-            print(f"[TOOL DECORATOR INPUT] args={args}, kwargs={kwargs}")
-            
+
             # Extract the function from args (first positional argument)
             if args and callable(args[0]):
                 original_func = args[0]
@@ -81,16 +81,29 @@ class PydanticAIAgent(Agent):
                 if inspect.iscoroutinefunction(original_func):
                     @functools.wraps(original_func)
                     async def patched_async_func(*func_args, **func_kwargs):
-                        
                         result = await original_func(*func_args, **func_kwargs)
-
+                        
+                        current_span = trace.get_current_span()
+                        if current_span.is_recording():
+                            try:
+                                result_str = str(result)
+                            except Exception:
+                                result_str = ""
+                            current_span.set_attribute("confident.span.output", result_str)
                         return result
                     patched_func = patched_async_func
                 else:
                     @functools.wraps(original_func)
                     def patched_sync_func(*func_args, **func_kwargs):
-                        
                         result = original_func(*func_args, **func_kwargs)
+                        
+                        current_span = trace.get_current_span()
+                        if current_span.is_recording():
+                            try:
+                                result_str = str(result)
+                            except Exception:
+                                result_str = ""
+                            current_span.set_attribute("confident.span.output", result_str)
     
                         return result
                     patched_func = patched_sync_func
@@ -102,8 +115,6 @@ class PydanticAIAgent(Agent):
             
             # Just call the original decorator with patched function
             result = original_tool(*new_args, **kwargs)
-            
-            print(f"[TOOL DECORATOR OUTPUT] result={result}")
             
             return result
         

@@ -49,7 +49,7 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
                 )
             )
         )
-
+                
         # create an instrumented exporter
         from pydantic_ai.models.instrumented import InstrumentationSettings
         from pydantic_ai import Agent
