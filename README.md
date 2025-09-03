@@ -140,6 +140,16 @@ Let's pretend your LLM application is a RAG based customer support chatbot; here
 ```
 pip install -U deepeval
 ```
+### Environment variables (.env / .env.local)
+
+DeepEval auto-loads `.env.local` then `.env` from the current working directory **at import time**.
+**Precedence:** process env -> `.env.local` -> `.env`.
+Opt out with `DEEPEVAL_DISABLE_DOTENV=1`.
+
+```bash
+cp .env.example .env.local
+# then edit .env.local (ignored by git)
+```
 
 ## Create an account (highly recommended)
 

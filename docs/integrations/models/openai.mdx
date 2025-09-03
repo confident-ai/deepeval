@@ -8,13 +8,22 @@ By default, DeepEval uses `gpt-4.1` to power all of its evaluation metrics. To e
 
 ### Setting Up Your API Key
 
-To use OpenAI for `deepeval`'s LLM-Evals (metrics evaluated using an LLM), supply your `OPENAI_API_KEY` in the CLI:
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
 
+**Recommended (local dev):**
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+Alternative (Shell/CI)
 ```bash
 export OPENAI_API_KEY=<your-openai-api-key>
 ```
 
-Alternatively, if you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+Alternative (notebook)
+
+If you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
 
 ```bash
 %env OPENAI_API_KEY=<your-openai-api-key>

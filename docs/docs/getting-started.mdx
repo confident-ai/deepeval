@@ -47,6 +47,19 @@ deepeval login
 Confident AI is free and allows you to keep all evaluation results on the cloud. Sign up [here.](https://app.confident-ai.com)
 :::
 
+## Configure Environment Variables
+
+DeepEval autoloads environment files (at import time):
+
+- **Precedence:** existing process env -> `.env.local` -> `.env`
+- **Opt-out:** set `DEEPEVAL_DISABLE_DOTENV=1`
+
+```bash
+# quickstart
+cp .env.example .env.local
+# then edit .env.local (ignored by git)
+```
+
 ## Create Your First Test Run
 
 Create a test file to run your first **end-to-end evaluation**.
