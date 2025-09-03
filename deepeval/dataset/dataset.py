@@ -657,7 +657,7 @@ class EvaluationDataset:
     def push(
         self,
         alias: str,
-        overwrite: bool = False,
+        finalized: bool = True,
     ):
         if len(self.goldens) == 0:
             raise ValueError(
@@ -666,10 +666,9 @@ class EvaluationDataset:
 
         api = Api()
         api_dataset = APIDataset(
-            alias=alias,
-            overwrite=overwrite,
             goldens=self.goldens if not self._multi_turn else None,
             conversationalGoldens=(self.goldens if self._multi_turn else None),
+            finalized=finalized,
         )
         try:
             body = api_dataset.model_dump(by_alias=True, exclude_none=True)
@@ -679,8 +678,9 @@ class EvaluationDataset:
 
         _, link = api.send_request(
             method=HttpMethods.POST,
-            endpoint=Endpoints.DATASET_ENDPOINT,
+            endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
             body=body,
+            url_params={"alias": alias},
         )
         if link:
             console = Console()
@@ -712,7 +712,7 @@ class EvaluationDataset:
                 start_time = time.perf_counter()
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
-                    endpoint=Endpoints.DATASET_ENDPOINT,
+                    endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
                     params={
                         "alias": alias,
                         "finalized": str(finalized).lower(),
@@ -798,7 +798,7 @@ class EvaluationDataset:
 
         _, link = api.send_request(
             method=HttpMethods.POST,
-            endpoint=Endpoints.DATASET_QUEUE_ENDPOINT,
+            endpoint=Endpoints.DATASET_ALIAS_QUEUE_ENDPOINT,
             body=body,
             url_params={"alias": alias},
         )
@@ -808,6 +808,19 @@ class EvaluationDataset:
                 "✅ Goldens successfully queued to Confident AI! Annotate & finalized them at "
                 f"[link={link}]{link}[/link]"
             )
+
+    def delete(
+        self,
+        alias: str,
+    ):
+        api = Api()
+        api.send_request(
+            method=HttpMethods.DELETE,
+            endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
+            url_params={"alias": alias},
+        )
+        console = Console()
+        console.print("✅ Dataset successfully deleted from Confident AI!")
 
     def generate_goldens_from_docs(
         self,

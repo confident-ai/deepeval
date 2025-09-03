@@ -121,7 +121,8 @@ class TestSingleTurnDataset:
             initial_goldens.append(golden)
 
         dataset = EvaluationDataset(goldens=initial_goldens)
-        dataset.push(alias=self.PUSH_ALIAS, overwrite=True)
+        dataset.delete(alias=self.PUSH_ALIAS)
+        dataset.push(alias=self.PUSH_ALIAS)
 
         dataset.goldens = []
         dataset.pull(alias=self.PUSH_ALIAS)
@@ -157,7 +158,8 @@ class TestMultiTurnDataset:
             initial_goldens.append(golden)
 
         dataset = EvaluationDataset(goldens=initial_goldens)
-        dataset.push(alias=self.PUSH_ALIAS, overwrite=True)
+        dataset.delete(alias=self.PUSH_ALIAS)
+        dataset.push(alias=self.PUSH_ALIAS)
 
         dataset.goldens = []
         dataset.pull(alias=self.PUSH_ALIAS)
