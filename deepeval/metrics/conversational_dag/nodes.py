@@ -1,4 +1,4 @@
-from typing import Optional, List, Union, Literal
+from typing import Optional, List, Union, Literal, Tuple
 from dataclasses import dataclass
 from pydantic import create_model
 import asyncio
@@ -9,7 +9,12 @@ from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
 )
 from deepeval.metrics.g_eval.utils import CONVERSATIONAL_G_EVAL_PARAMS
 from deepeval.metrics.utils import copy_metrics, trimAndLoadJson
-from deepeval.test_case import ConversationalTestCase, TurnParams, ToolCall
+from deepeval.test_case import (
+    ConversationalTestCase,
+    TurnParams,
+    ToolCall,
+    Turn,
+)
 from deepeval.utils import prettify_list
 
 from .templates import (
@@ -250,7 +255,6 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-        # print("CVN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=ConversationalMetricScoreReason
@@ -274,7 +278,6 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-        # print("CVN -> ", prompt)
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(
                 prompt, schema=ConversationalMetricScoreReason
@@ -301,6 +304,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
     output_label: str
     children: List[ConversationalBaseNode]
     evaluation_params: List[TurnParams] = None
+    turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _output: Optional[str] = None
@@ -336,7 +340,14 @@ class ConversationalTaskNode(ConversationalBaseNode):
                 "A ConversationalTaskNode must have either a 'evaluation_params' or parent node(s)."
             )
 
+        if self.turn_window is not None:
+            is_valid_turn_window(self.turn_window, test_case.turns)
+
+        if not self.turn_window:
+            self.turn_window = 0, len(test_case.turns) - 1
+
         text = """"""
+        start, end = self.turn_window
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, ConversationalTaskNode):
@@ -344,7 +355,8 @@ class ConversationalTaskNode(ConversationalBaseNode):
 
         if self.evaluation_params is not None:
             text += "Full Conversation: \n"
-            for turn in test_case.turns:
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
                 for param in self.evaluation_params:
                     value = getattr(turn, param.value)
                     if isinstance(value, ToolCall):
@@ -356,7 +368,6 @@ class ConversationalTaskNode(ConversationalBaseNode):
             instructions=self.instructions,
             text=text,
         )
-        # print("CTN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=ConversationalTaskNodeOutput
@@ -398,7 +409,14 @@ class ConversationalTaskNode(ConversationalBaseNode):
                 "A ConversationalTaskNode must have either a 'evaluation_params' or parent node(s)."
             )
 
+        if self.turn_window is not None:
+            is_valid_turn_window(self.turn_window, test_case.turns)
+
+        if not self.turn_window:
+            self.turn_window = 0, len(test_case.turns) - 1
+
         text = """"""
+        start, end = self.turn_window
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, ConversationalTaskNode):
@@ -406,7 +424,8 @@ class ConversationalTaskNode(ConversationalBaseNode):
 
         if self.evaluation_params is not None:
             text += "Full Conversation: \n"
-            for turn in test_case.turns:
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
                 for param in self.evaluation_params:
                     value = getattr(turn, param.value)
                     if isinstance(value, ToolCall):
@@ -418,7 +437,6 @@ class ConversationalTaskNode(ConversationalBaseNode):
             instructions=self.instructions,
             text=text,
         )
-        # print("CTN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
                 prompt, schema=ConversationalTaskNodeOutput
@@ -529,7 +547,6 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             criteria=self.criteria,
             text=text,
         )
-        # print("CBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=ConversationalBinaryJudgementVerdict
@@ -588,7 +605,6 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             criteria=self.criteria,
             text=text,
         )
-        # print("CBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
                 prompt, schema=ConversationalBinaryJudgementVerdict
@@ -709,7 +725,6 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
         )
-        # print("CNBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=self._verdict_schema
@@ -762,7 +777,6 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
         )
-        # print("CNBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
                 prompt, schema=self._verdict_schema
@@ -862,3 +876,24 @@ def construct_node_verbose_log(
             verbose_log += f"\n\n{node_metric.verbose_logs}"
 
         return verbose_log
+
+
+def is_valid_turn_window(
+    turn_window: Tuple[int, int], turns: List[Turn]
+) -> bool:
+    if len(turn_window) != 2:
+        raise ValueError(
+            "A 'turn_window' must have only 2 indices representing start and end"
+        )
+    start, end = turn_window
+    if (
+        start > end
+        or start == end
+        or (end - start) >= len(turns)
+        or start < 0
+        or end < 0
+    ):
+        raise ValueError(
+            "The 'turn_window' passed is invalid. Please recheck your 'turn_window' values."
+        )
+    return True
