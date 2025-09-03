@@ -13,8 +13,13 @@ load_dotenv()
 
 test_case = ConversationalTestCase(
     turns=[
-        Turn(role="user", content="Hi, what's the weather like in Paris today?"),
-        Turn(role="assistant", content="The weather in Paris today is sunny and 24°C."),
+        Turn(
+            role="user", content="Hi, what's the weather like in Paris today?"
+        ),
+        Turn(
+            role="assistant",
+            content="The weather in Paris today is sunny and 24°C.",
+        ),
     ],
     scenario="Ask about weather",
     expected_outcome="Assistant provides weather info",
@@ -24,7 +29,7 @@ task_node = ConversationalTaskNode(
     instructions="Summarize the assistant's reply in one sentence.",
     output_label="Summary",
     evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
-    children=[]
+    children=[],
 )
 
 # 2. Binary Judgement: Does mention 'sunny'?
@@ -32,7 +37,7 @@ binary_node = ConversationalBinaryJudgementNode(
     criteria="Does the assistant's reply mention that it is sunny?",
     children=[
         ConversationalVerdictNode(verdict=False, score=0),
-        ConversationalVerdictNode(verdict=True, score=10)
+        ConversationalVerdictNode(verdict=True, score=10),
     ],
 )
 
