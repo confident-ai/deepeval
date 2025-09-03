@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.mmlu.task import MMLUTask
 from deepeval.benchmarks.mmlu.template import MMLUTemplate
@@ -43,8 +46,12 @@ class MMLU(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
-    ) -> Dict:
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: int | None = None,
+        **kwargs,
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("MMLU", len(self.tasks)):
@@ -152,7 +159,9 @@ class MMLU(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, task: MMLUTask, golden: Golden
@@ -248,14 +257,15 @@ class MMLU(DeepEvalBaseBenchmark):
         from datasets import load_dataset
 
         dataset = load_dataset(
-            "lukaemon/mmlu", task.value, trust_remote_code=True
+            "cais/mmlu",
+            task.value,
         )
         self.dataset = dataset
 
         # If dataset has not been previously loaded, construct
         # dataset of examples and save as instance var (to save time)
         if not self.shots_dataset:
-            train_set = dataset["train"]
+            train_set = dataset["dev"]
             shots_set = []
             for data in train_set:
                 shots_set.append(data)
@@ -263,9 +273,12 @@ class MMLU(DeepEvalBaseBenchmark):
 
         # Construct test set
         goldens: List[Golden] = []
+        choices = ["A", "B", "C", "D"]
         for data in dataset["test"]:
             input = MMLUTemplate.format_question(data, include_answer=False)
-            golden = Golden(input=input, expected_output=data["target"])
+            golden = Golden(
+                input=input, expected_output=choices[data["answer"]]
+            )
             goldens.append(golden)
         return goldens
 

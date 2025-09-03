@@ -3,7 +3,10 @@ from tqdm import tqdm
 from typing import Union
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.drop.task import DROPTask
 from deepeval.benchmarks.drop.template import DROPTemplate
@@ -44,8 +47,12 @@ class DROP(DeepEvalBaseBenchmark):
         self.verbose_mode: bool = verbose_mode
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
-    ) -> Dict:
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: int | None = None,
+        **kwargs,
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("DROP", len(self.tasks)):
@@ -151,7 +158,9 @@ class DROP(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
@@ -259,7 +268,7 @@ class DROP(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("ucinlp/drop", trust_remote_code=True)
+            dataset = load_dataset("ucinlp/drop")
             self.dataset = dataset
 
         # construct example dataset

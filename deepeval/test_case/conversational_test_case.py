@@ -2,8 +2,15 @@ from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
+
 from deepeval.test_case import ToolCall
-from pydantic import AnyUrl, BaseModel
+from deepeval.test_case.mcp import (
+    MCPServer,
+    MCPPromptCall,
+    MCPResourceCall,
+    MCPToolCall,
+    validate_mcp_servers,
+)
 
 
 class TurnParams(Enum):
@@ -13,57 +20,9 @@ class TurnParams(Enum):
     EXPECTED_OUTCOME = "expected_outcome"
     RETRIEVAL_CONTEXT = "retrieval_context"
     TOOLS_CALLED = "tools_called"
-
-
-# @dataclass
-# class MCPTool:
-#     name: str
-#     input_schema: Dict
-#     output_schema: Dict
-#     title: Optional[str] = None
-#     description: Optional[str] = None
-
-
-# @dataclass
-# class MCPResource:
-#     name: str
-#     mimeType: str
-#     uri: AnyUrl
-#     title: Optional[str] = None
-#     description: Optional[str] = None
-
-
-# @dataclass
-# class MCPPrompt:
-#     name: str
-#     arguments: List
-#     title: Optional[str] = None
-#     description: Optional[str] = None
-
-
-class MCPToolCall(BaseModel):
-    name: str
-    args: Dict
-    result: object
-
-
-class MCPPromptCall(BaseModel):
-    name: str
-    result: object
-
-
-class MCPResourceCall(BaseModel):
-    uri: AnyUrl
-    result: object
-
-
-@dataclass
-class MCPMetaData:
-    server_name: str
-    transport: Optional[Literal["stdio", "sse", "streamable-http"]] = None
-    available_tools: Optional[List] = None
-    available_resources: Optional[List] = None
-    available_prompts: Optional[List] = None
+    MCP_TOOLS = "mcp_tools_called"
+    MCP_RESOURCES = "mcp_resources_called"
+    MCP_PROMPTS = "mcp_prompts_called"
 
 
 @dataclass
@@ -77,6 +36,7 @@ class Turn:
     mcp_resources_called: Optional[List[MCPResourceCall]] = None
     mcp_prompts_called: Optional[List[MCPPromptCall]] = None
     additional_metadata: Optional[Dict] = None
+    _mcp_interaction: bool = False
 
     def __repr__(self):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
@@ -108,6 +68,7 @@ class Turn:
                 GetPromptResult,
             )
 
+            self._mcp_interaction = True
             if self.mcp_tools_called is not None:
                 if not isinstance(self.mcp_tools_called, list) or not all(
                     isinstance(tool_called, MCPToolCall)
@@ -151,7 +112,7 @@ class ConversationalTestCase:
     additional_metadata: Optional[Dict] = None
     comments: Optional[str] = None
     tags: Optional[List[str]] = field(default=None)
-    mcp_data: Optional[List[MCPMetaData]] = None
+    mcp_servers: Optional[List[MCPServer]] = None
     _dataset_rank: Optional[int] = field(default=None, repr=False)
     _dataset_alias: Optional[str] = field(default=None, repr=False)
     _dataset_id: Optional[str] = field(default=None, repr=False)
@@ -167,8 +128,8 @@ class ConversationalTestCase:
             ):
                 raise TypeError("'context' must be None or a list of strings")
 
-        if self.mcp_data is not None:
-            self._validate_mcp_meta_data(self.mcp_data)
+        if self.mcp_servers is not None:
+            validate_mcp_servers(self.mcp_servers)
 
         copied_turns = []
         for turn in self.turns:
@@ -178,35 +139,3 @@ class ConversationalTestCase:
             copied_turns.append(deepcopy(turn))
 
         self.turns = copied_turns
-
-    def _validate_mcp_meta_data(self, mcp_data_list: List[MCPMetaData]):
-        from mcp.types import Tool, Resource, Prompt
-
-        for mcp_data in mcp_data_list:
-            if mcp_data.available_tools is not None:
-                if not isinstance(mcp_data.available_tools, list) or not all(
-                    isinstance(tool, Tool) for tool in mcp_data.available_tools
-                ):
-                    raise TypeError(
-                        "'available_tools' must be a list of 'Tool' from mcp.types"
-                    )
-
-            if mcp_data.available_resources is not None:
-                if not isinstance(
-                    mcp_data.available_resources, list
-                ) or not all(
-                    isinstance(resource, Resource)
-                    for resource in mcp_data.available_resources
-                ):
-                    raise TypeError(
-                        "'available_resources' must be a list of 'Resource' from mcp.types"
-                    )
-
-            if mcp_data.available_prompts is not None:
-                if not isinstance(mcp_data.available_prompts, list) or not all(
-                    isinstance(prompt, Prompt)
-                    for prompt in mcp_data.available_prompts
-                ):
-                    raise TypeError(
-                        "'available_prompts' must be a list of 'Prompt' from mcp.types"
-                    )

@@ -13,6 +13,7 @@ from deepeval.key_handler import (
 from deepeval.test_run.test_run import (
     global_test_run_manager,
 )
+from deepeval.confident.api import get_confident_api_key, set_confident_api_key
 
 PROD = "https://app.confident-ai.com"
 
@@ -28,7 +29,7 @@ def render_login_message():
 def upload_and_open_link(_span: Span):
     last_test_run_data = global_test_run_manager.get_latest_test_run_data()
     if last_test_run_data:
-        confident_api_key = KEY_FILE_HANDLER.fetch_data(KeyValues.API_KEY)
+        confident_api_key = get_confident_api_key()
         if confident_api_key == "" or confident_api_key is None:
             render_login_message()
 
@@ -39,9 +40,7 @@ def upload_and_open_link(_span: Span):
             while True:
                 confident_api_key = input("🔐 Enter your API Key: ").strip()
                 if confident_api_key:
-                    KEY_FILE_HANDLER.write_key(
-                        KeyValues.API_KEY, confident_api_key
-                    )
+                    set_confident_api_key(confident_api_key)
                     print(
                         "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
                     )

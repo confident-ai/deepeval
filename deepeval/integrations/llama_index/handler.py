@@ -4,7 +4,6 @@ from time import perf_counter
 import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.attributes import LlmAttributes
 from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
 
 try:
@@ -51,7 +50,6 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
     open_ai_astream_to_llm_span_map: Dict[str, str] = {}
 
     def __init__(self):
-        capture_tracing_integration("llama-index")
         is_llama_index_installed()
         super().__init__()
 
@@ -83,7 +81,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 model=getattr(event, "model_dict", {}).get(
                     "model", "unknown"
                 ),  # check the model name not coming in this option
-                attributes=LlmAttributes(input=input_messages, output=""),
+                input=input_messages,
+                output="",
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
@@ -100,12 +99,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 if llm_span:
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
-                    llm_span.set_attributes(
-                        LlmAttributes(
-                            input=llm_span.attributes.input,
-                            output=event.response.message.blocks[0].text,
-                        )
-                    )  # only takes the message response ouput, but what if the response is a tool?
+                    llm_span.input = llm_span.input
+                    llm_span.output = event.response.message.blocks[0].text
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
@@ -148,7 +143,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         )
 
         # conditions to qualify as agent start run span
-        if class_name == "Workflow" and method_name == "run":
+        if method_name == "run":
             span = AgentSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -246,7 +241,8 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
 
 def instrument_llama_index(dispatcher: Dispatcher):
-    handler = LLamaIndexHandler()
-    dispatcher.add_event_handler(handler)
-    dispatcher.add_span_handler(handler)
-    return None
+    with capture_tracing_integration("llama_index"):
+        handler = LLamaIndexHandler()
+        dispatcher.add_event_handler(handler)
+        dispatcher.add_span_handler(handler)
+        return None

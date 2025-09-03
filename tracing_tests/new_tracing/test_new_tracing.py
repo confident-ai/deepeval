@@ -2,17 +2,12 @@ from deepeval.tracing import (
     observe,
     update_current_span,
     update_current_trace,
-    LlmAttributes,
-    RetrieverAttributes,
-    ToolAttributes,
-    AgentAttributes,
     trace_manager,
+    update_llm_span,
+    update_retriever_span,
 )
 import random
-from deepeval.metrics import AnswerRelevancyMetric
 from asyncio import sleep
-
-from deepeval.tracing.types import Feedback
 
 #######################################################
 ## Example ############################################
@@ -23,13 +18,14 @@ from deepeval.tracing.types import Feedback
 @observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
-    attributes = LlmAttributes(
+    update_current_span(
         input=prompt,
         output=generated_text,
+    )
+    update_llm_span(
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
     )
-    update_current_span(attributes=attributes)
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
     return generated_text
@@ -52,10 +48,12 @@ async def retrieve_documents(query: str, top_k: int = 3):
         f"Document 3 about {query}",
     ]
     update_current_span(
-        attributes=RetrieverAttributes(
-            embedding_input=query,
-            retrieval_context=documents,
-        )
+        input=query,
+        retrieval_context=documents,
+    )
+    update_retriever_span(
+        embedding_input=query,
+        retrieval_context=documents,
     )
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -70,12 +68,7 @@ async def get_weather(city: str):
     weather = f"Sunny in {city}"
 
     # Create attributes
-    attributes = ToolAttributes(
-        input_parameters={"asdfsaf": city}, output=weather
-    )
-
-    # Set attributes using the helper function
-    update_current_span(attributes=attributes)
+    update_current_span(input={"asdfsaf": city}, output=weather)
 
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -100,12 +93,10 @@ async def get_location(query: str):
 async def random_research_agent(user_query: str, testing: bool = False):
     documents = await retrieve_documents(user_query, top_k=3)
     analysis = await generate_text(user_query)
-    # set_current_span_attributes(
-    #     AgentAttributes(
-    #         input=user_query,
-    #         output=analysis,
-    #     )
-    # )
+    update_current_span(
+        input=user_query,
+        output=analysis,
+    )
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
     return analysis
@@ -123,10 +114,8 @@ async def weather_research_agent(user_query: str):
     documents = await retrieve_documents(f"{weather} in {location}", top_k=2)
     response = f"In {location}, it's currently {weather}. Additional context: {documents[0]}"
     update_current_span(
-        attributes=AgentAttributes(
-            input=user_query,
-            output=response,
-        )
+        input=user_query,
+        output=response,
     )
     # Add sleep of 1-3 seconds
     await sleep(random.uniform(1, 3))
@@ -141,10 +130,8 @@ async def supervisor_agent(user_query: str):
     research = await random_research_agent(user_query)
     weather_research = await weather_research_agent(user_query)
     update_current_span(
-        attributes=AgentAttributes(
-            input=user_query,
-            output=research + weather_research,
-        )
+        input=user_query,
+        output=research + weather_research,
     )
 
     # Add sleep of 1-3 seconds
@@ -252,9 +239,9 @@ async def research_agent(query: str):
 
 
 @observe(
-    type="agent",
-    agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
-    metric_collection="My Metrics",
+    type="llm",
+    # agent_handoffs=["weather_agent", "research_agent", "custom_research_agent"],
+    # metric_collection="My Metrics",
 )
 async def meta_agent(query: str):
     # print(query)
@@ -271,29 +258,22 @@ async def meta_agent(query: str):
     # print(final_response)
     update_current_span(
         # metadata={"user_id": "11111", "date": "1/1/11"},
-        test_case=LLMTestCase(
-            input="What is this again?",
-            actual_output="this is a latte",
-            expected_output="this is a mocha",
-            retrieval_context=["I love coffee"],
-            context=["I love coffee"],
-        ),
-        # feedback=Feedback(
-        #     rating=1,
+        # test_case=LLMTestCase(
+        #     input="What is this again?",
+        #     actual_output="this is a latte",
         #     expected_output="this is a mocha",
-        #     explanation="The actual output is not the expected output",
+        #     retrieval_context=["I love coffee"],
+        #     context=["I love coffee"],
         # ),
+        input=query,
     )
+    update_llm_span(model="test")
     update_current_trace(
         name="ok",
-        # metadata={"input": "input"},
-        # thread_id="131324ljihfsadiuyip",
-        # user_id="111",
-        # feedback=Feedback(
-        #     rating=5,te
-        #     expected_output="Testing again",
-        #     explanation="The actual output is not the expected output",
-        # ),
+        metadata={"input": "input"},
+        thread_id="131324ljihfsadiuyip",
+        user_id="111",
+        tags=["test", "test2"],
     )
 
     # return LLMTestCase(input="..", actual_output=final_response)

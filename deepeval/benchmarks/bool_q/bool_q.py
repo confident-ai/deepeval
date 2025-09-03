@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.bool_q.template import BoolQTemplate
 from deepeval.benchmarks.schema import AffirmationSchema
@@ -37,7 +40,9 @@ class BoolQ(DeepEvalBaseBenchmark):
         else:
             self.confinement_instructions = confinement_instructions
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(
+        self, model: DeepEvalBaseLLM, *args, **kwargs
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("BoolQ", self.n_problems):
@@ -77,7 +82,9 @@ class BoolQ(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
@@ -113,7 +120,7 @@ class BoolQ(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("boolq", "default", trust_remote_code=True)
+            dataset = load_dataset("boolq", "default")
             self.dataset = dataset
 
         # Construct test set

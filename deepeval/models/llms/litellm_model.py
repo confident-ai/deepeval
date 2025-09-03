@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import logging
 from tenacity import (
     retry,
+    stop_after_attempt,
     retry_if_exception_type,
     wait_exponential_jitter,
     RetryCallState,
@@ -28,12 +29,19 @@ retryable_exceptions = (
 
 
 class LiteLLMModel(DeepEvalBaseLLM):
+    EXP_BASE: int = 2
+    INITIAL_WAIT: int = 1
+    JITTER: int = 2
+    MAX_RETRIES: int = 6
+    MAX_WAIT: int = 10
+
     def __init__(
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         temperature: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         from litellm import completion, acompletion, get_llm_provider
@@ -51,6 +59,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         self.api_key = (
             api_key
             or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_KEY)
+            or os.getenv("LITELLM_PROXY_API_KEY")
             or os.getenv("OPENAI_API_KEY")
             or os.getenv("ANTHROPIC_API_KEY")
             or os.getenv("GOOGLE_API_KEY")
@@ -61,17 +70,22 @@ class LiteLLMModel(DeepEvalBaseLLM):
             api_base
             or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_BASE)
             or os.getenv("LITELLM_API_BASE")
+            or os.getenv("LITELLM_PROXY_API_BASE")
         )
 
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         self.evaluation_cost = 0.0  # Initialize cost to 0.0
         super().__init__(model_name)
 
     @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
@@ -97,6 +111,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add any additional parameters
         completion_params.update(self.kwargs)
+        completion_params.update(self.generation_kwargs)
 
         try:
             response = completion(**completion_params)
@@ -116,7 +131,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
             raise e
 
     @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
@@ -142,6 +160,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
 
         # Add any additional parameters
         completion_params.update(self.kwargs)
+        completion_params.update(self.generation_kwargs)
 
         try:
             response = await acompletion(**completion_params)
@@ -161,7 +180,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
             raise e
 
     @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
@@ -193,7 +215,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
             return None, 0.0  # Return 0.0 cost on error
 
     @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )
@@ -225,7 +250,10 @@ class LiteLLMModel(DeepEvalBaseLLM):
             return None, 0.0  # Return 0.0 cost on error
 
     @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
         retry=retry_if_exception_type(retryable_exceptions),
         after=log_retry_error,
     )

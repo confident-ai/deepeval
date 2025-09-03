@@ -1,13 +1,27 @@
+from pydantic.config import ConfigDict
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from typing import List, Optional, Dict, Any, Tuple
 from tqdm import tqdm
 import re
 import json
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.schema import StringSchema
 from deepeval.telemetry import capture_benchmark_run
+
+
+class IFEvalResult(DeepEvalBaseBenchmarkResult):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    instruction_breakdown: dict[str, Any]
+    predictions: "pd.DataFrame"
 
 
 class IFEvalInstructionVerifier:
@@ -394,16 +408,17 @@ class IFEval(DeepEvalBaseBenchmark):
         **kwargs,
     ):
         from deepeval.scorer import Scorer
+        import pandas as pd
 
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.n_problems = n_problems
         self.verbose_mode = verbose_mode
-        self.predictions = None
-        self.overall_score = None
+        self.predictions: Optional[pd.DataFrame] = None
+        self.overall_score: Optional[float] = None
         self.instruction_breakdown = None
 
-    def evaluate(self, model: DeepEvalBaseLLM) -> Dict:
+    def evaluate(self, model: DeepEvalBaseLLM, *args, **kwargs) -> IFEvalResult:
         import pandas as pd
 
         with capture_benchmark_run("IFEval", self.n_problems or "all"):
@@ -459,8 +474,7 @@ class IFEval(DeepEvalBaseBenchmark):
                 print(
                     f"Instruction '{instruction_id}' Accuracy: {accuracy:.4f}"
                 )
-
-            self.predictions = pd.DataFrame(
+            predictions: pd.DataFrame = pd.DataFrame(
                 predictions_row,
                 columns=[
                     "Input",
@@ -468,14 +482,15 @@ class IFEval(DeepEvalBaseBenchmark):
                     "All_Instructions_Correct",
                 ],
             )
+            self.predictions = predictions
             self.overall_score = overall_accuracy
             self.instruction_breakdown = instruction_accuracies
 
-            return {
-                "overall_accuracy": overall_accuracy,
-                "instruction_breakdown": instruction_accuracies,
-                "predictions": self.predictions,
-            }
+            return IFEvalResult(
+                overall_accuracy=overall_accuracy,
+                instruction_breakdown=instruction_accuracies,
+                predictions=predictions,
+            )
 
     def predict(
         self, model: DeepEvalBaseLLM, golden: Golden
@@ -531,7 +546,7 @@ class IFEval(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("google/IFEval", trust_remote_code=True)
+            dataset = load_dataset("google/IFEval")
             self.dataset = dataset
 
         goldens: List[Golden] = []

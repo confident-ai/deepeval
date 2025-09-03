@@ -82,7 +82,7 @@ from deepeval.metrics import ArenaTestCase, LLMTestCaseParams
 
 arena_geval = ArenaGEval(
     name="Friendly",
-    criteria="Choose the winter of the more friendly contestant based on the input and actual output",
+    criteria="Choose the winner of the more friendly contestant based on the input and actual output",
     evaluation_params=[
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
@@ -90,7 +90,7 @@ arena_geval = ArenaGEval(
 )
 
 arena_geval.measure(test_case)
-print(arena.winner, arena.reason)
+print(arena_geval.winner, arena_geval.reason)
 ```
 
 The `ArenaTestCase` streamlines the evaluation by automatically masking contestant names (to ensure unbiased judging) and randomizing their order.

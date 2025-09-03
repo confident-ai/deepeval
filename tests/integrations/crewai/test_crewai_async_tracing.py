@@ -3,11 +3,15 @@ import time
 import asyncio
 from crewai import Task, Crew, Agent
 
-from deepeval.integrations.crewai import instrumentator
+from deepeval.integrations.crewai import instrument_crewai
 
-os.environ["OPENAI_API_KEY"] = "<YOUR_OPENAI_API_KEY>"
+from dotenv import load_dotenv
 
-instrumentator(api_key="<YOUR_CONFIDENT_API_KEY>")
+load_dotenv()
+
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+
+instrument_crewai(api_key=os.getenv("CONFIDENT_API_KEY"))
 
 
 async def create_and_run_crew(crew_id, topic):

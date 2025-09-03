@@ -1,7 +1,7 @@
 from deepeval.tracing import (
     observe,
     update_current_span,
-    LlmAttributes,
+    update_llm_span,
 )
 import asyncio
 
@@ -14,12 +14,12 @@ import asyncio
 )
 async def meta_agent(query: str):
     update_current_span(
-        attributes=LlmAttributes(
-            input=query,
-            output=query,
-            input_token_count=10,
-            output_token_count=10,
-        )
+        input=query,
+        output=query,
+    )
+    update_llm_span(
+        input_token_count=10,
+        output_token_count=10,
     )
     return query
 

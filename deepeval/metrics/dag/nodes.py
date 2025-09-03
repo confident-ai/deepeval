@@ -287,17 +287,23 @@ class TaskNode(BaseNode):
         if self._indegree > 0:
             return
 
+        if self.evaluation_params is None and self._parents is None:
+            raise ValueError(
+                "A TaskNode must have either a 'evaluation_params' or parent node(s)."
+            )
+
         text = """"""
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, TaskNode):
                     text += f"{parent.output_label}:\n{parent._output}\n\n"
 
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
+        if self.evaluation_params is not None:
+            for param in self.evaluation_params:
+                value = getattr(test_case, param.value)
+                if isinstance(value, ToolCall):
+                    value = repr(value)
+                text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
         prompt = TaskNodeTemplate.generate_task_output(
             instructions=self.instructions,
@@ -334,17 +340,23 @@ class TaskNode(BaseNode):
         if self._indegree > 0:
             return
 
+        if self.evaluation_params is None and self._parents is None:
+            raise ValueError(
+                "A TaskNode must have either a 'evaluation_params' or parent node(s)."
+            )
+
         text = """"""
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, TaskNode):
                     text += f"{parent.output_label}:\n{parent._output}\n\n"
 
-        for param in self.evaluation_params:
-            value = getattr(test_case, param.value)
-            if isinstance(value, ToolCall):
-                value = repr(value)
-            text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
+        if self.evaluation_params is not None:
+            for param in self.evaluation_params:
+                value = getattr(test_case, param.value)
+                if isinstance(value, ToolCall):
+                    value = repr(value)
+                text += f"{G_EVAL_PARAMS[param]}:\n{value}\n"
 
         prompt = TaskNodeTemplate.generate_task_output(
             instructions=self.instructions,

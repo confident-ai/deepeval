@@ -1,0 +1,135 @@
+[
+  {
+    "input": "What is the capital of France and what is its population?",
+    "actual_output": "The capital of France is Paris. Paris has a population of approximately 2.1 million people in the city proper, and about 12.3 million in the metropolitan area.",
+    "expected_output": "The capital of France is Paris, which has a population of approximately 2.1 million people within the city limits and around 12.3 million in the greater metropolitan area.",
+    "context": [
+      "France is a country in Western Europe with Paris as its capital city.",
+      "Paris is located in the north-central part of France along the Seine River.",
+      "The city proper has about 2.1 million inhabitants, while the metropolitan area houses over 12 million people."
+    ],
+    "retrieval_context": [
+      "Paris population statistics from INSEE (French National Institute of Statistics)",
+      "Geographic information about Paris location and administrative boundaries"
+    ],
+    "additional_metadata": {
+      "topic": "geography",
+      "difficulty": "easy",
+      "language": "english"
+    },
+    "comments": "Basic geography question testing factual recall",
+    "tools_called": [
+      {
+        "name": "search_population_data",
+        "input": {
+          "query": "Paris France population 2024"
+        }
+      }
+    ],
+    "expected_tools": [
+      {
+        "name": "search_population_data",
+        "input": {
+          "query": "Paris France population statistics"
+        }
+      }
+    ]
+  },
+  {
+    "input": "How do I calculate compound interest for a $10,000 investment at 5% annual rate for 3 years?",
+    "actual_output": "To calculate compound interest, use the formula A = P(1 + r)^t. For your example: A = 10,000(1 + 0.05)^3 = 10,000(1.157625) = $11,576.25. The compound interest earned is $11,576.25 - $10,000 = $1,576.25.",
+    "expected_output": "Use the compound interest formula A = P(1 + r)^t where A is final amount, P is principal ($10,000), r is annual rate (0.05), and t is time (3 years). A = 10,000(1.05)^3 = $11,576.25. The interest earned is $1,576.25.",
+    "context": [
+      "Compound interest formula: A = P(1 + r)^t",
+      "P = principal amount ($10,000)",
+      "r = annual interest rate (5% = 0.05)",
+      "t = time period in years (3)",
+      "Compound interest means interest is calculated on both principal and previously earned interest"
+    ],
+    "retrieval_context": [
+      "Financial mathematics textbook chapter on compound interest calculations",
+      "Investment calculator formulas and examples"
+    ],
+    "additional_metadata": {
+      "topic": "finance",
+      "difficulty": "medium",
+      "calculation_type": "compound_interest"
+    },
+    "comments": "Mathematical calculation with step-by-step explanation",
+    "tools_called": [
+      {
+        "name": "calculate",
+        "input": {
+          "query": "10000 * (1.05 ** 3)"
+        }
+      }
+    ],
+    "expected_tools": [
+      {
+        "name": "calculate",
+        "input": {
+          "query": "compound_interest_formula(10000, 0.05, 3)"
+        }
+      }
+    ]
+  },
+  {
+    "input": "Explain the concept of photosynthesis and its importance in the ecosystem.",
+    "actual_output": "Photosynthesis is the process by which plants convert sunlight, carbon dioxide, and water into glucose and oxygen. The chemical equation is 6CO2 + 6H2O + light energy → C6H12O6 + 6O2. This process is crucial for ecosystems because it produces oxygen for other organisms to breathe, removes carbon dioxide from the atmosphere, and forms the base of most food chains by converting solar energy into chemical energy that can be consumed by other organisms.",
+    "expected_output": "Photosynthesis is a biological process where plants use sunlight, water, and carbon dioxide to produce glucose and oxygen (6CO2 + 6H2O + light → C6H12O6 + 6O2). It's vital for ecosystems as it: 1) produces oxygen for respiration, 2) removes CO2 from atmosphere, 3) provides energy foundation for food webs, and 4) converts solar energy into usable chemical energy.",
+    "context": [
+      "Photosynthesis occurs in chloroplasts of plant cells using chlorophyll",
+      "The process has two stages: light-dependent reactions and Calvin cycle",
+      "Plants are primary producers in most ecosystems",
+      "Oxygen production from photosynthesis supports aerobic life on Earth",
+      "Carbon fixation helps regulate atmospheric CO2 levels"
+    ],
+    "retrieval_context": [
+      "Biology textbook chapter on photosynthesis mechanisms",
+      "Ecological studies on primary productivity and energy flow",
+      "Environmental science research on carbon cycle"
+    ],
+    "additional_metadata": {
+      "topic": "biology",
+      "difficulty": "medium",
+      "subtopics": ["ecology", "biochemistry"]
+    },
+    "comments": "Complex biological concept requiring explanation of process and ecological significance",
+    "tools_called": [
+      {
+        "name": "search_biology_database",
+        "input": {
+          "query": "photosynthesis process mechanism"
+        }
+      },
+      {
+        "name": "search_ecology_database",
+        "input": {
+          "query": "photosynthesis ecosystem importance"
+        }
+      }
+    ],
+    "expected_tools": [
+      {
+        "name": "search_biology_database",
+        "input": {
+          "query": "photosynthesis chloroplast process"
+        }
+      },
+      {
+        "name": "search_ecology_database",
+        "input": {
+          "query": "primary productivity ecosystem energy flow"
+        }
+      }
+    ]
+  },
+  {
+    "input": "Explain the concept of photosynthesis and its importance in the ecosystem.",
+    "actual_output": "Photosynthesis is the process by which plants convert sunlight, carbon dioxide, and water into glucose and oxygen. The chemical equation is 6CO2 + 6H2O + light energy → C6H12O6 + 6O2. This process is crucial for ecosystems because it produces oxygen for other organisms to breathe, removes carbon dioxide from the atmosphere, and forms the base of most food chains by converting solar energy into chemical energy that can be consumed by other organisms.",
+    "custom_column_key_values": {
+      "topic": "biology",
+      "difficulty": "medium"
+    }
+  }
+]

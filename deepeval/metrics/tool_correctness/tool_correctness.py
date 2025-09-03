@@ -18,7 +18,6 @@ class ToolCorrectnessMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
-        LLMTestCaseParams.ACTUAL_OUTPUT,
         LLMTestCaseParams.TOOLS_CALLED,
         LLMTestCaseParams.EXPECTED_TOOLS,
     ]
@@ -115,7 +114,15 @@ class ToolCorrectnessMetric(BaseMetric):
 
         elif self.should_consider_ordering:
             lcs, weighted_length = self._compute_weighted_lcs()
-            score = weighted_length / len(expected_tools_names)
+            if (
+                len(self.tools_called) == len(self.expected_tools)
+                and len(self.expected_tools) == 0
+            ):
+                score = 1.0
+            elif len(self.expected_tools) == 0:
+                score = 0.0
+            else:
+                score = weighted_length / len(self.expected_tools)
             missing = set(expected_tools_names) - set(tools_called_names)
             out_of_order = set(expected_tools_names) - set(
                 [tool.name for tool in lcs]
@@ -149,7 +156,15 @@ class ToolCorrectnessMetric(BaseMetric):
             score = self._calculate_exact_match_score()
         elif self.should_consider_ordering:
             _, weighted_length = self._compute_weighted_lcs()
-            score = weighted_length / len(self.expected_tools)
+            if (
+                len(self.tools_called) == len(self.expected_tools)
+                and len(self.expected_tools) == 0
+            ):
+                score = 1.0
+            elif len(self.expected_tools) == 0:
+                score = 0.0
+            else:
+                score = weighted_length / len(self.expected_tools)
         else:
             score = self._calculate_non_exact_match_score()
         return 0 if self.strict_mode and score < self.threshold else score
@@ -158,6 +173,11 @@ class ToolCorrectnessMetric(BaseMetric):
     def _calculate_exact_match_score(self):
         if len(self.tools_called) != len(self.expected_tools):
             return 0.0
+        if (
+            len(self.tools_called) == len(self.expected_tools)
+            and len(self.expected_tools) == 0
+        ):
+            return 1.0
         for i in range(len(self.tools_called)):
             if self.tools_called[i].name != self.expected_tools[i].name:
                 return 0.0

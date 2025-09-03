@@ -14,11 +14,10 @@ from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
 )
-from deepeval.cli.recommend import app as recommend_app
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
-from deepeval.utils import delete_file_if_exists
+from deepeval.utils import delete_file_if_exists, open_browser
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
     global_test_run_manager,
@@ -30,11 +29,14 @@ from deepeval.cli.utils import (
     clear_evaluation_model_keys,
     clear_embedding_model_keys,
 )
-from deepeval.confident.api import is_confident
+from deepeval.confident.api import (
+    get_confident_api_key,
+    is_confident,
+    set_confident_api_key,
+)
 
 app = typer.Typer(name="deepeval")
 app.add_typer(test_app, name="test")
-app.add_typer(recommend_app, name="recommend")
 
 
 class Regions(Enum):
@@ -80,23 +82,9 @@ def login(
         "-c",
         help="Optional confident API key to bypass login.",
     ),
-    use_existing: Optional[bool] = typer.Option(
-        False,
-        "--use-existing",
-        "-u",
-        help="Use the existing API key stored in the key file if present.",
-    ),
 ):
     with capture_login_event() as span:
-        # Use the confident_api_key if it is provided, otherwise proceed with existing logic
         try:
-            if use_existing:
-                confident_api_key = KEY_FILE_HANDLER.fetch_data(
-                    KeyValues.API_KEY
-                )
-                if confident_api_key:
-                    print("Using existing API key.")
-
             if confident_api_key:
                 api_key = confident_api_key
             else:
@@ -128,14 +116,14 @@ def login(
                                 "❌ API Key cannot be empty. Please try again.\n"
                             )
 
-            KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+            set_confident_api_key(api_key)
             span.set_attribute("completed", True)
 
             print(
                 "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
             )
             print(
-                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://documentation.confident-ai.com/docs/getting-started/setup]https://documentation.confident-ai.com/docs/getting-started/setup[/link][/bold]"
+                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://www.confident-ai.com/docs/llm-evaluation/quickstart]https://www.confident-ai.com/docs/llm-evaluation/quickstart[/link][/bold]"
             )
         except:
             span.set_attribute("completed", False)
@@ -143,7 +131,7 @@ def login(
 
 @app.command()
 def logout():
-    KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
+    set_confident_api_key(None)
     delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
     print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
@@ -157,7 +145,7 @@ def view():
             )
             if last_test_run_link:
                 print(f"🔗 View test run: {last_test_run_link}")
-                webbrowser.open(last_test_run_link)
+                open_browser(last_test_run_link)
             else:
                 upload_and_open_link(_span=span)
         else:
@@ -178,20 +166,37 @@ def enable_grpc_logging():
 def set_openai_env(
     model: str = typer.Option(..., "--model", help="OpenAI model name"),
     cost_per_input_token: Optional[float] = typer.Option(
-        ..., "--cost_per_input_token", help="OpenAI cost per input token"
+        None,
+        "--cost_per_input_token",
+        help=(
+            "USD per input token. Optional for known OpenAI models (pricing is preconfigured); "
+            "REQUIRED if you use a custom/unsupported model."
+        ),
     ),
     cost_per_output_token: Optional[float] = typer.Option(
-        ..., "--cost_per_output_token", help="OpenAI cost per output token"
+        None,
+        "--cost_per_output_token",
+        help=(
+            "USD per output token. Optional for known OpenAI models (pricing is preconfigured); "
+            "REQUIRED if you use a custom/unsupported model."
+        ),
     ),
 ):
+    """Configure OpenAI as the active model.
+
+    Notes:
+    - If `model` is a known OpenAI model, costs can be omitted (built-in pricing will be used).
+    - If `model` is custom/unsupported, you must pass both --cost_per_input_token and --cost_per_output_token.
+    """
+
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_OPENAI_MODEL, "YES")
     KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_MODEL_NAME, model)
     KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_output_token)
+        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_input_token)
     )
     KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_input_token)
+        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_output_token)
     )
     print(
         f":raising_hands: Congratulations! You're now using OpenAI's `{model}` for all evals that require an LLM."

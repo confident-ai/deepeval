@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from google.genai import types
-from typing import Optional
+from typing import Optional, Dict
 from google import genai
 
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
@@ -45,6 +45,7 @@ class GeminiModel(DeepEvalBaseLLM):
         project: Optional[str] = None,
         location: Optional[str] = None,
         temperature: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = (
@@ -70,6 +71,7 @@ class GeminiModel(DeepEvalBaseLLM):
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name, **kwargs)
 
     def should_use_vertexai(self):
@@ -126,19 +128,19 @@ class GeminiModel(DeepEvalBaseLLM):
         self.model_safety_settings = [
             types.SafetySetting(
                 category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
             ),
             types.SafetySetting(
                 category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
             ),
             types.SafetySetting(
                 category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
             ),
             types.SafetySetting(
                 category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-                threshold=types.HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                threshold=types.HarmBlockThreshold.BLOCK_NONE,
             ),
         ]
         return self.client.models
@@ -162,6 +164,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 ),
             )
             return response.parsed, 0
@@ -172,6 +175,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 ),
             )
             return response.text, 0
@@ -197,6 +201,7 @@ class GeminiModel(DeepEvalBaseLLM):
                     response_schema=schema,
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 ),
             )
             return response.parsed, 0
@@ -207,6 +212,7 @@ class GeminiModel(DeepEvalBaseLLM):
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,
+                    **self.generation_kwargs,
                 ),
             )
             return response.text, 0

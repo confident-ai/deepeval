@@ -2,7 +2,7 @@ from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.tracing import (
     observe,
     update_current_span,
-    LlmAttributes,
+    update_llm_span,
 )
 import asyncio
 from openai import AsyncClient
@@ -23,6 +23,8 @@ async def meta_agent(query: str):
         messages=[{"role": "user", "content": query}],
     )
     update_current_span(
+        input=query,
+        output=response,
         metadata={"user_id": "11111", "date": "1/1/11"},
         test_case=LLMTestCase(
             input="What is this again?",
@@ -33,12 +35,10 @@ async def meta_agent(query: str):
             tools_called=[ToolCall(name="test")],
             expected_tools=[ToolCall(name="test")],
         ),
-        attributes=LlmAttributes(
-            input=query,
-            output=response,
-            input_token_count=response.usage.total_tokens,
-            output_token_count=response.usage.total_tokens,
-        ),
+    )
+    update_llm_span(
+        input_token_count=response.usage.total_tokens,
+        output_token_count=response.usage.total_tokens,
     )
     return (response.choices[0].message.content,)
 

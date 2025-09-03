@@ -1,0 +1,199 @@
+[
+    {
+        "input": "What is the tallest mountain in the world?",
+        "actual_output": "Mount Everest",
+        "expected_output": "Mount Everest",
+        "retrieval_context": [
+            "Mountain heights list",
+            "Moutain list"
+        ],
+        "context": [
+            "Geography",
+            "Mountains"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "Solve 5 * 7",
+        "actual_output": "35",
+        "expected_output": "35",
+        "retrieval_context": [
+            "Basic arithmetic"
+        ],
+        "context": [
+            "Math",
+            "Multiplication"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "Define 'photosynthesis'",
+        "actual_output": "Process by which green plants convert light energy into chemical energy",
+        "expected_output": "Process by which green plants convert light energy into chemical energy",
+        "retrieval_context": [
+            "Biology textbooks",
+            "Science API"
+        ],
+        "context": [
+            "Biology",
+            "Photosynthesis"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is the capital of France?",
+        "actual_output": "Paris",
+        "expected_output": "Paris",
+        "retrieval_context": [
+            "World capitals list"
+        ],
+        "context": [
+            "Geography",
+            "Capital Cities"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is the square root of 64?",
+        "actual_output": "8",
+        "expected_output": "8",
+        "retrieval_context": [
+            "Basic arithmetic"
+        ],
+        "context": [
+            "Math",
+            "Square Roots"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What causes rain?",
+        "actual_output": "Rain is caused by the condensation of water vapor in the atmosphere.",
+        "expected_output": "Rain is caused by the condensation of water vapor in the atmosphere.",
+        "retrieval_context": [
+            "Weather patterns data"
+        ],
+        "context": [
+            "Science",
+            "Meteorology"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "Translate 'Hello' into Spanish.",
+        "actual_output": "Hola",
+        "expected_output": "Hola",
+        "retrieval_context": [
+            "Translation data"
+        ],
+        "context": [
+            "Language",
+            "Translation"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is the chemical formula of water?",
+        "actual_output": "H2O",
+        "expected_output": "H2O",
+        "retrieval_context": [
+            "Chemical compounds data"
+        ],
+        "context": [
+            "Chemistry",
+            "Molecules"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is the speed of light?",
+        "actual_output": "299,792,458 meters per second",
+        "expected_output": "299,792,458 meters per second",
+        "retrieval_context": [
+            "Physics constants list"
+        ],
+        "context": [
+            "Physics",
+            "Speed of Light"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "Who wrote 'Romeo and Juliet'?",
+        "actual_output": "William Shakespeare",
+        "expected_output": "William Shakespeare",
+        "retrieval_context": [
+            "Literary works list"
+        ],
+        "context": [
+            "Literature",
+            "Shakespeare"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is the largest planet in our solar system?",
+        "actual_output": "Jupiter",
+        "expected_output": "Jupiter",
+        "retrieval_context": [
+            "Solar system data"
+        ],
+        "context": [
+            "Astronomy",
+            "Planets"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "How many continents are there?",
+        "actual_output": "7",
+        "expected_output": "7",
+        "retrieval_context": [
+            "Continents list"
+        ],
+        "context": [
+            "Geography",
+            "Continents"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is the boiling point of water?",
+        "actual_output": "100°C",
+        "expected_output": "100°C",
+        "retrieval_context": [
+            "Temperature data"
+        ],
+        "context": [
+            "Science",
+            "Temperature"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "What is 15% of 200?",
+        "actual_output": "30",
+        "expected_output": "30",
+        "retrieval_context": [
+            "Basic arithmetic"
+        ],
+        "context": [
+            "Math",
+            "Percentages"
+        ],
+        "source_file": null
+    },
+    {
+        "input": "Who wrote 'Romeo and Juliet'?",
+        "actual_output": "William Shakespeare",
+        "expected_output": "William Shakespeare",
+        "retrieval_context": [
+            "Literary works list"
+        ],
+        "context": [
+            "Literature",
+            "Shakespeare"
+        ],
+        "source_file": null
+    }
+]

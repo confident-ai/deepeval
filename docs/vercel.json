@@ -87,7 +87,7 @@
     },
     {
       "source": "/confident-ai/:path*",
-      "destination": "https://documentation.confident-ai.com/docs",
+      "destination": "https://www.confident-ai.com/docs",
       "statusCode": 301
     },    
     {

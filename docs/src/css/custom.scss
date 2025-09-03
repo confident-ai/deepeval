@@ -16,7 +16,7 @@
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
   --ifm-code-font-size: 95%;
-  --ifm-font-weight-bold: 600 !important;
+  // --ifm-font-weight-bold: 600 !important;
   --ifm-menu-color: #747480 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 
@@ -435,6 +435,15 @@ html[data-theme="dark"] .sidebar-item-icon-others > a::before {
     brightness(95%) contrast(95%);
 }
 
+
+.theme-code-block-highlighted-line {
+  background-color: #233144 !important;
+}
+
+.theme-code-block-highlighted-line > span {
+  background-color: #233144 !important;
+}
+
 .menu {
   font-weight: 400;
   background-image: radial-gradient(rgba(0, 0, 0, 0.121) 1px, transparent 1px);
@@ -488,6 +497,13 @@ html[data-theme="dark"] .menu {
 
 // CODE STYLING
 
+[class*="codeLineNumber"]::before {
+  font-size: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 
 [class*="codeBlockTitle"] {
   font-size: 14px !important;
@@ -497,11 +513,11 @@ html[data-theme="dark"] .menu {
 }
 
 .theme-code-block-highlighted-line {
-  background-color: #242945 !important;
+  background-color: #293344 !important;
 }
 
 .theme-code-block-highlighted-line > span {
-  background-color: #242945 !important;
+  background-color: #293344 !important;
 }
 
 /* Add border to code blocks */
@@ -512,4 +528,12 @@ html[data-theme="dark"] .menu {
 
 html[data-theme="dark"] .prism-code {
   border: 1px solid #334155;
+}
+
+.header-colab-button {
+  float: right;
+  margin-top: -120px; /* Adjust this value to position it at the top */
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
 }

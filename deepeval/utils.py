@@ -6,6 +6,7 @@ import json
 import time
 from typing import Any, Optional, Dict, List, Union
 from collections.abc import Iterable
+import webbrowser
 import tqdm
 import re
 import string
@@ -18,7 +19,8 @@ from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
-from deepeval.key_handler import KeyValues, KEY_FILE_HANDLER
+from deepeval.confident.api import set_confident_api_key
+from deepeval.constants import CONFIDENT_OPEN_BROWSER
 
 
 def get_lcs(seq1, seq2):
@@ -187,6 +189,18 @@ def set_verbose_mode(yes: Optional[bool]):
         os.environ["DEEPEVAL_VERBOSE_MODE"] = "YES"
 
 
+def set_identifier(identifier: Optional[str]):
+    if identifier:
+        os.environ["DEEPEVAL_IDENTIFIER"] = identifier
+
+
+def get_identifier() -> Optional[str]:
+    try:
+        return os.environ["DEEPEVAL_IDENTIFIER"]
+    except:
+        return None
+
+
 def should_use_cache():
     try:
         if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
@@ -212,7 +226,7 @@ def login(api_key: str):
 
     from rich import print
 
-    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
+    set_confident_api_key(api_key)
     print(
         "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
     )
@@ -253,6 +267,12 @@ def is_in_ci_env() -> bool:
             return True
 
     return False
+
+
+def open_browser(url: str):
+    if os.getenv(CONFIDENT_OPEN_BROWSER) != "NO":
+        if is_in_ci_env() == False:
+            webbrowser.open(url)
 
 
 def capture_contextvars(single_obj):
@@ -487,10 +507,14 @@ def update_pbar(
 ):
     if progress is None or pbar_id is None:
         return
-    advance = progress.tasks[pbar_id].remaining if advance_to_end else advance
+    # Get amount to advance
+    current_task = next(t for t in progress.tasks if t.id == pbar_id)
+    if advance_to_end:
+        advance = current_task.remaining
+    # Advance
     progress.update(pbar_id, advance=advance, total=total)
-    task_obj = next(t for t in progress.tasks if t.id == pbar_id)
-    if task_obj.finished and remove:
+    # Remove if finished
+    if current_task.finished and remove:
         progress.remove_task(pbar_id)
 
 

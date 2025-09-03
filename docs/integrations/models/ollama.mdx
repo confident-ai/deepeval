@@ -48,7 +48,7 @@ from deepeval.models import OllamaModel
 from deepeval.metrics import AnswerRelevancyMetric
 
 model = OllamaModel(
-    model_name="deepseek-r1:1.5b",
+    model="deepseek-r1:1.5b",
     base_url="http://localhost:11434",
     temperature=0
 )
@@ -61,6 +61,11 @@ There are **FIVE** mandatory and **ONE** optional parameters when creating an `A
 - `model`: A string specifying the name of the Ollama model to use.
 - [Optional] `base_url`: A string specifying the base URL of the Ollama server. Defaulted to `'http://localhost:11434'`.
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://ollama.readthedocs.io/en/api/#parameters).
+:::
 
 ### Available Ollama Models
 

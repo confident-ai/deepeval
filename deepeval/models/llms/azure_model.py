@@ -34,6 +34,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
         user: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         # fetch Azure deployment parameters
@@ -63,6 +64,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
         # args and kwargs will be passed to the underlying model, in load_model function
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(parse_model_name(model_name))
 
     ###############################################
@@ -123,11 +125,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             ],
             temperature=self.temperature,
             user=self.user,
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens,
-            completion.usage.completion_tokens,
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -172,6 +174,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
                     user=self.user,
+                    **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -189,6 +192,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             ],
             temperature=self.temperature,
             user=self.user,
+            **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
@@ -224,6 +228,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             logprobs=True,
             top_logprobs=top_logprobs,
             user=self.user,
+            **self.generation_kwargs,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -251,6 +256,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             logprobs=True,
             top_logprobs=top_logprobs,
             user=self.user,
+            **self.generation_kwargs,
         )
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
@@ -283,12 +289,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
                 azure_deployment=self.deployment_name,
-                **self.kwargs,
+                **self.kwargs,  # ← Keep this for client initialization
             )
         return AsyncAzureOpenAI(
             api_key=self.azure_openai_api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.deployment_name,
-            **self.kwargs,
+            **self.kwargs,  # ← Keep this for client initialization
         )

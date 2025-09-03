@@ -5,8 +5,11 @@ module.exports = {
       label: "LLM Frameworks",
       items: [
         "frameworks/openai",
-        // "frameworks/llamaindex",
-        // "frameworks/huggingface",
+        "frameworks/langchain",
+        "frameworks/langgraph",
+        "frameworks/llamaindex",
+        "frameworks/crewai",
+        "frameworks/pydanticai",
       ],
       collapsed: false,
     },

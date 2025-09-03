@@ -1,4 +1,4 @@
-from typing import Optional, List, Union, Callable, Dict, Any, Tuple
+from typing import Optional, List, Union, Callable
 from rich.progress import Progress
 from pydantic import BaseModel
 from dataclasses import asdict
@@ -27,6 +27,8 @@ from deepeval.simulator.schema import (
 )
 from deepeval.progress_context import conversation_simulator_progress_context
 from deepeval.dataset import ConversationalGolden
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
+from deepeval.simulator.schema import SimulateHttpResponse
 
 
 class ConversationSimulator:
@@ -37,30 +39,45 @@ class ConversationSimulator:
         opening_message: Optional[str] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
+        language: str = "English",
+        run_remote: bool = False,
     ):
         self.model_callback = model_callback
         self.is_callback_async = inspect.iscoroutinefunction(
             self.model_callback
         )
-        self.simulator_model, self.using_native_model = initialize_model(
-            simulator_model
-        )
         self.opening_message = opening_message
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.async_mode = async_mode
-        self.language = "English"
+        self.language = language
         self.simulated_conversations: List[ConversationalTestCase] = []
         self.template = ConversationSimulatorTemplate
+        self.run_remote = run_remote
+        if not run_remote:
+            self.simulator_model, self.using_native_model = initialize_model(
+                simulator_model
+            )
+        else:
+            if not is_confident():
+                raise ValueError(
+                    "Confident API key not found. Run `deepeval login` to login."
+                )
+            self.simulator_model = None
+            self.using_native_model = False
 
     def simulate(
         self,
         conversational_goldens: List[ConversationalGolden],
-        max_turns: int = 10,
+        max_user_simulations: int = 10,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
 
         with conversation_simulator_progress_context(
-            simulator_model=self.simulator_model.get_model_name(),
+            simulator_model=(
+                self.simulator_model.get_model_name()
+                if self.simulator_model
+                else "Confident API"
+            ),
             num_conversations=len(conversational_goldens),
             async_mode=self.async_mode,
         ) as (progress, pbar_id), progress:
@@ -70,7 +87,7 @@ class ConversationSimulator:
                 loop.run_until_complete(
                     self._a_simulate(
                         conversational_goldens=conversational_goldens,
-                        max_turns=max_turns,
+                        max_user_simulations=max_user_simulations,
                         progress=progress,
                         pbar_id=pbar_id,
                     )
@@ -83,7 +100,7 @@ class ConversationSimulator:
                     conversational_test_case = (
                         self._simulate_single_conversation(
                             golden=golden,
-                            max_turns=max_turns,
+                            max_user_simulations=max_user_simulations,
                             index=conversation_index,
                             progress=progress,
                             pbar_id=pbar_id,
@@ -98,7 +115,7 @@ class ConversationSimulator:
     async def _a_simulate(
         self,
         conversational_goldens: List[ConversationalGolden],
-        max_turns: int,
+        max_user_simulations: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
@@ -111,7 +128,7 @@ class ConversationSimulator:
             async with self.semaphore:
                 return await self._a_simulate_single_conversation(
                     golden=golden,
-                    max_turns=max_turns,
+                    max_user_simulations=max_user_simulations,
                     index=conversation_index,
                     progress=progress,
                     pbar_id=pbar_id,
@@ -130,64 +147,66 @@ class ConversationSimulator:
     def _simulate_single_conversation(
         self,
         golden: ConversationalGolden,
-        max_turns: int,
+        max_user_simulations: int,
         index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> ConversationalTestCase:
-        if max_turns <= 0:
-            raise ValueError("max_turns must be greater than 0")
+        simulation_counter = 0
+        if max_user_simulations <= 0:
+            raise ValueError("max_user_simulations must be greater than 0")
 
         # Define pbar
-        max_turns_including_opening = (
-            max_turns + 1 if self.opening_message else max_turns
-        )
-        pbar_turns_id = add_pbar(
+        pbar_max_user_simluations_id = add_pbar(
             progress,
             f"\t⚡ Test case #{index}",
-            total=max_turns_including_opening,
+            total=max_user_simulations + 1,
         )
 
         additional_metadata = {"User Description": golden.user_description}
         user_input = None
         thread_id = str(uuid.uuid4())
-        turns = []
-        if self.opening_message:
+        turns: List[Turn] = []
+        if self.opening_message and golden.turns is None:
             turns.append(Turn(role="assistant", content=self.opening_message))
-            update_pbar(progress, pbar_turns_id)
 
-        # Generate first user input
-        prompt = self.template.simulate_first_user_turn(golden, self.language)
-        simulated_input: SimulatedInput = self.generate_schema(
-            prompt, SimulatedInput
-        )
-        turns.append(Turn(role="user", content=simulated_input.simulated_input))
-        update_pbar(progress, pbar_turns_id)
+        if golden.turns is not None:
+            turns.extend(golden.turns)
 
         while True:
             # Stop conversation if needed
             stop_conversation = self.stop_conversation(
-                turns, golden.expected_outcome, progress, pbar_turns_id
+                turns,
+                golden,
+                progress,
+                pbar_max_user_simluations_id,
             )
             if stop_conversation:
                 break
 
             # Generate turn from user
-            if len(turns) >= max_turns_including_opening:
+            if simulation_counter >= max_user_simulations:
+                update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            prompt = self.template.simulate_user_turn(
-                golden, turns, self.language
-            )
-            simulated_input: SimulatedInput = self.generate_schema(
-                prompt, SimulatedInput
-            )
-            user_input = simulated_input.simulated_input
-            turns.append(Turn(role="user", content=user_input))
-            update_pbar(progress, pbar_turns_id)
+            if len(turns) == 0 or (
+                len(turns) == 1
+                and self.opening_message
+                and golden.turns is None
+            ):
+                # Generate first user input
+                user_input = self.generate_first_user_input(golden)
+                turns.append(Turn(role="user", content=user_input))
+                update_pbar(progress, pbar_max_user_simluations_id)
+                simulation_counter += 1
+            elif turns[-1].role != "user":
+                user_input = self.generate_next_user_input(golden, turns)
+                turns.append(Turn(role="user", content=user_input))
+                update_pbar(progress, pbar_max_user_simluations_id)
+                simulation_counter += 1
+            else:
+                user_input = turns[-1].content
 
             # Generate turn from assistant
-            if len(turns) >= max_turns_including_opening:
-                break
             if self.is_callback_async:
                 turn = asyncio.run(
                     self.a_generate_turn_from_callback(
@@ -205,7 +224,6 @@ class ConversationSimulator:
                     thread_id=thread_id,
                 )
             turns.append(turn)
-            update_pbar(progress, pbar_turns_id)
 
         update_pbar(progress, pbar_id)
         return ConversationalTestCase(
@@ -228,64 +246,68 @@ class ConversationSimulator:
     async def _a_simulate_single_conversation(
         self,
         golden: ConversationalGolden,
-        max_turns: int,
+        max_user_simulations: int,
         index: Optional[int] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> ConversationalTestCase:
-        if max_turns <= 0:
-            raise ValueError("max_turns must be greater than 0")
+        simulation_counter = 0
+        if max_user_simulations <= 0:
+            raise ValueError("max_user_simulations must be greater than 0")
 
         # Define pbar
-        max_turns_including_opening = (
-            max_turns + 1 if self.opening_message else max_turns
-        )
-        pbar_turns_id = add_pbar(
+        pbar_max_user_simluations_id = add_pbar(
             progress,
             f"\t⚡ Test case #{index}",
-            total=max_turns_including_opening,
+            total=max_user_simulations + 1,
         )
 
         additional_metadata = {"User Description": golden.user_description}
         user_input = None
         thread_id = str(uuid.uuid4())
-        turns = []
-        if self.opening_message:
+        turns: List[Turn] = []
+        if self.opening_message and golden.turns is None:
             turns.append(Turn(role="assistant", content=self.opening_message))
-            update_pbar(progress, pbar_turns_id)
 
-        # Generate first user input
-        prompt = self.template.simulate_first_user_turn(golden, self.language)
-        simulated_input: SimulatedInput = await self.a_generate_schema(
-            prompt, SimulatedInput
-        )
-        turns.append(Turn(role="user", content=simulated_input.simulated_input))
-        update_pbar(progress, pbar_turns_id)
+        if golden.turns is not None:
+            turns.extend(golden.turns)
 
         while True:
             # Stop conversation if needed
             stop_conversation = await self.a_stop_conversation(
-                turns, golden.expected_outcome, progress, pbar_turns_id
+                turns,
+                golden,
+                progress,
+                pbar_max_user_simluations_id,
             )
             if stop_conversation:
                 break
 
             # Generate turn from user
-            if len(turns) >= max_turns_including_opening:
+            if simulation_counter >= max_user_simulations:
+                update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            prompt = self.template.simulate_user_turn(
-                golden, turns, self.language
-            )
-            simulated_input: SimulatedInput = await self.a_generate_schema(
-                prompt, SimulatedInput
-            )
-            user_input = simulated_input.simulated_input
-            turns.append(Turn(role="user", content=user_input))
-            update_pbar(progress, pbar_turns_id)
+            if len(turns) == 0 or (
+                len(turns) == 1
+                and self.opening_message
+                and golden.turns is None
+            ):
+                # Generate first user input
+                user_input = await self.a_generate_first_user_input(golden)
+                turns.append(Turn(role="user", content=user_input))
+                update_pbar(progress, pbar_max_user_simluations_id)
+                simulation_counter += 1
+            elif turns[-1].role != "user":
+                user_input = await self.a_generate_next_user_input(
+                    golden, turns
+                )
+                turns.append(Turn(role="user", content=user_input))
+                update_pbar(progress, pbar_max_user_simluations_id)
+                simulation_counter += 1
+            else:
+                user_input = turns[-1].content
 
             # Generate turn from assistant
-            if len(turns) >= max_turns_including_opening:
-                break
             if self.is_callback_async:
                 turn = await self.a_generate_turn_from_callback(
                     user_input,
@@ -301,7 +323,6 @@ class ConversationSimulator:
                     thread_id=thread_id,
                 )
             turns.append(turn)
-            update_pbar(progress, pbar_turns_id)
 
         update_pbar(progress, pbar_id)
         return ConversationalTestCase(
@@ -322,56 +343,208 @@ class ConversationSimulator:
         )
 
     ############################################
+    ### Generate User Inputs ###################
+    ############################################
+
+    def generate_first_user_input(self, golden: ConversationalGolden):
+        if not self.run_remote:
+            prompt = self.template.simulate_first_user_turn(
+                golden, self.language
+            )
+            simulated_input: SimulatedInput = self.generate_schema(
+                prompt, SimulatedInput
+            )
+            user_input = simulated_input.simulated_input
+        else:
+            api = Api()
+            data, _ = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.SIMULATE_ENDPOINT,
+                body=self.dump_conversational_golden(golden),
+            )
+            res = SimulateHttpResponse(
+                user_input=data["userResponse"], complete=data["completed"]
+            )
+            user_input = res.user_input
+        return user_input
+
+    async def a_generate_first_user_input(self, golden: ConversationalGolden):
+        if not self.run_remote:
+            prompt = self.template.simulate_first_user_turn(
+                golden, self.language
+            )
+            simulated_input: SimulatedInput = await self.a_generate_schema(
+                prompt, SimulatedInput
+            )
+            user_input = simulated_input.simulated_input
+        else:
+            api = Api()
+            data, _ = await api.a_send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.SIMULATE_ENDPOINT,
+                body=self.dump_conversational_golden(golden),
+            )
+            res = SimulateHttpResponse(
+                user_input=data["userResponse"], complete=data["completed"]
+            )
+            user_input = res.user_input
+        return user_input
+
+    def generate_next_user_input(
+        self, golden: ConversationalGolden, turns: List[Turn]
+    ):
+        if not self.run_remote:
+            prompt = self.template.simulate_user_turn(
+                golden, turns, self.language
+            )
+            simulated_input: SimulatedInput = self.generate_schema(
+                prompt, SimulatedInput
+            )
+            user_input = simulated_input.simulated_input
+        else:
+            api = Api()
+            temp_golden = ConversationalGolden(
+                scenario=golden.scenario,
+                expected_outcome=golden.expected_outcome,
+                user_description=golden.user_description,
+                context=golden.context,
+                turns=turns,
+            )
+            data, _ = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.SIMULATE_ENDPOINT,
+                body=self.dump_conversational_golden(temp_golden),
+            )
+            res = SimulateHttpResponse(
+                user_input=data["userResponse"], complete=data["completed"]
+            )
+            user_input = res.user_input
+        return user_input
+
+    async def a_generate_next_user_input(
+        self, golden: ConversationalGolden, turns: List[Turn]
+    ):
+        if not self.run_remote:
+            prompt = self.template.simulate_user_turn(
+                golden, turns, self.language
+            )
+            simulated_input: SimulatedInput = await self.a_generate_schema(
+                prompt, SimulatedInput
+            )
+            user_input = simulated_input.simulated_input
+        else:
+            api = Api()
+            temp_golden = ConversationalGolden(
+                scenario=golden.scenario,
+                expected_outcome=golden.expected_outcome,
+                user_description=golden.user_description,
+                context=golden.context,
+                turns=turns,
+            )
+            data, _ = await api.a_send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.SIMULATE_ENDPOINT,
+                body=self.dump_conversational_golden(temp_golden),
+            )
+            res = SimulateHttpResponse(
+                user_input=data["userResponse"], complete=data["completed"]
+            )
+            user_input = res.user_input
+        return user_input
+
+    ############################################
     ### Stop Conversation ######################
     ############################################
 
     def stop_conversation(
         self,
         turns: List[Turn],
-        expected_outcome: Optional[str],
+        golden: ConversationalGolden,
         progress: Optional[Progress] = None,
         pbar_turns_id: Optional[int] = None,
     ):
-        conversation_history = json.dumps([asdict(t) for t in turns], indent=4)
-        prompt = self.template.stop_simulation(
-            conversation_history, expected_outcome
-        )
-        if expected_outcome is not None:
-            is_complete: ConversationCompletion = self.generate_schema(
-                prompt, ConversationCompletion
+        if not self.run_remote:
+            conversation_history = json.dumps(
+                [asdict(t) for t in turns], indent=4
             )
-            if is_complete.is_complete:
-                update_pbar(
-                    progress,
-                    pbar_turns_id,
-                    advance_to_end=is_complete.is_complete,
+            prompt = self.template.stop_simulation(
+                conversation_history, golden.expected_outcome
+            )
+            if golden.expected_outcome is not None:
+                is_complete: ConversationCompletion = self.generate_schema(
+                    prompt, ConversationCompletion
                 )
-            return is_complete.is_complete
-        return False
+                if is_complete.is_complete:
+                    update_pbar(
+                        progress,
+                        pbar_turns_id,
+                        advance_to_end=is_complete.is_complete,
+                    )
+                return is_complete.is_complete
+            return False
+        else:
+            api = Api()
+            temp_golden = ConversationalGolden(
+                scenario=golden.scenario,
+                expected_outcome=golden.expected_outcome,
+                user_description=golden.user_description,
+                context=golden.context,
+                turns=turns,
+            )
+            data, _ = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.SIMULATE_ENDPOINT,
+                body=self.dump_conversational_golden(temp_golden),
+            )
+            res = SimulateHttpResponse(
+                user_input=data["userResponse"], complete=data["completed"]
+            )
+            return res.complete
 
     async def a_stop_conversation(
         self,
         turns: List[Turn],
-        expected_outcome: Optional[str],
+        golden: ConversationalGolden,
         progress: Optional[Progress] = None,
         pbar_turns_id: Optional[int] = None,
     ):
-        conversation_history = json.dumps([asdict(t) for t in turns], indent=4)
-        prompt = self.template.stop_simulation(
-            conversation_history, expected_outcome
-        )
-        if expected_outcome is not None:
-            is_complete: ConversationCompletion = await self.a_generate_schema(
-                prompt, ConversationCompletion
+        if not self.run_remote:
+            conversation_history = json.dumps(
+                [asdict(t) for t in turns], indent=4
             )
-            if is_complete.is_complete:
-                update_pbar(
-                    progress,
-                    pbar_turns_id,
-                    advance_to_end=is_complete.is_complete,
+            prompt = self.template.stop_simulation(
+                conversation_history, golden.expected_outcome
+            )
+            if golden.expected_outcome is not None:
+                is_complete: ConversationCompletion = (
+                    await self.a_generate_schema(prompt, ConversationCompletion)
                 )
-            return is_complete.is_complete
-        return False
+                if is_complete.is_complete:
+                    update_pbar(
+                        progress,
+                        pbar_turns_id,
+                        advance_to_end=is_complete.is_complete,
+                    )
+                return is_complete.is_complete
+            return False
+        else:
+            api = Api()
+            temp_golden = ConversationalGolden(
+                scenario=golden.scenario,
+                expected_outcome=golden.expected_outcome,
+                user_description=golden.user_description,
+                context=golden.context,
+                turns=turns,
+            )
+            data, _ = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.SIMULATE_ENDPOINT,
+                body=self.dump_conversational_golden(temp_golden),
+            )
+            res = SimulateHttpResponse(
+                user_input=data["userResponse"], complete=data["completed"]
+            )
+            return res.complete
 
     ############################################
     ### Generate Structured Response ###########
@@ -382,8 +555,7 @@ class ConversationSimulator:
         prompt: str,
         schema: BaseModel,
     ) -> BaseModel:
-        _, using_native_model = initialize_model(model=self.simulator_model)
-        if using_native_model:
+        if self.using_native_model:
             res, cost = self.simulator_model.generate(prompt, schema=schema)
             self.simulation_cost += cost
             return res
@@ -401,8 +573,7 @@ class ConversationSimulator:
         prompt: str,
         schema: BaseModel,
     ) -> BaseModel:
-        _, using_native_model = initialize_model(model=self.simulator_model)
-        if using_native_model:
+        if self.using_native_model:
             res, cost = await self.simulator_model.a_generate(
                 prompt, schema=schema
             )
@@ -460,3 +631,42 @@ class ConversationSimulator:
         return await model_callback(
             **{k: v for k, v in candidate_kwargs.items() if k in supported_args}
         )
+
+    ############################################
+    ### Invoke Model Callback ##################
+    ############################################
+
+    def dump_conversational_golden(self, golden: ConversationalGolden):
+        new_golden = ConversationalGolden(
+            scenario=golden.scenario,
+            expected_outcome=golden.expected_outcome,
+            user_description=golden.user_description,
+            context=golden.context,
+            turns=(
+                [
+                    Turn(
+                        role=turn.role,
+                        content=turn.content,
+                        user_id=turn.user_id,
+                        retrieval_context=turn.retrieval_context,
+                        tools_called=turn.tools_called,
+                    )
+                    for turn in golden.turns
+                ]
+                if golden.turns is not None
+                else None
+            ),
+        )
+        try:
+            body = new_golden.model_dump(
+                by_alias=True,
+                exclude_none=True,
+                exclude={"turns": {"__all__": {"_mcp_interaction"}}},
+            )
+        except AttributeError:
+            body = new_golden.dict(
+                by_alias=True,
+                exclude_none=True,
+                exclude={"turns": {"__all__": {"_mcp_interaction"}}},
+            )
+        return {"conversationalGolden": body}

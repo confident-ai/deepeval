@@ -4,7 +4,10 @@ import requests
 import json
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.logi_qa.task import LogiQATask
 from deepeval.benchmarks.logi_qa.template import LogiQATemplate
@@ -46,8 +49,12 @@ class LogiQA(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
-    ) -> Dict:
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: int | None = None,
+        **kwargs,
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("LogiQA", len(self.tasks)):
@@ -153,7 +160,9 @@ class LogiQA(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template

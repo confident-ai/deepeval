@@ -4,9 +4,12 @@ from deepeval.integrations.langchain.callback import CallbackHandler
 from deepeval.metrics import TaskCompletionMetric
 import deepeval
 from langgraph.prebuilt import create_react_agent
-from deepeval.evaluate import dataset
-from deepeval.dataset import Golden
+from deepeval.dataset import Golden, EvaluationDataset
 from deepeval.evaluate.configs import AsyncConfig
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 task_completion = TaskCompletionMetric(
     threshold=0.7, model="gpt-4o-mini", include_reason=True
@@ -29,14 +32,15 @@ goldens = [
     Golden(input="What is the weather in Paris, France?"),
 ]
 
-for golden in dataset(goldens=goldens):
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
     agent.invoke(
         input={"messages": [{"role": "user", "content": golden.input}]},
         config={
             "callbacks": [
                 CallbackHandler(
                     metrics=[task_completion],
-                    metric_collection="task_completion",
                 )
             ]
         },

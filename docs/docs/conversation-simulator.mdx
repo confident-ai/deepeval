@@ -13,9 +13,10 @@ sidebar_label: Conversation Simulator
 
 `deepeval`'s `ConversationSimulator` allows you to simulate full conversations between a fake user and your chatbot, unlike the [synthesizer](/docs/synthesizer-introduction) which generates regular goldens representing single, atomic LLM interactions.
 
-```python showLineNumbers
+```python title="main.py" showLineNumbers
 from deepeval.test_case import Turn
 from deepeval.simulator import ConversationSimulator
+from deepeval.dataset import ConversationalGolden
 
 # Create ConversationalGolden
 conversation_golden = ConversationalGolden(
@@ -30,7 +31,7 @@ async def chatbot_callback(input):
 
 # Run Simulation
 simulator = ConversationSimulator(model_callback=chatbot_callback)
-conversational_test_cases = simulator.simulate(goldens=[conversation_golden])
+conversational_test_cases = simulator.simulate(conversational_goldens=[conversation_golden])
 print(conversational_test_cases)
 ```
 
@@ -100,10 +101,12 @@ conversational_test_cases = simulator.simulate(conversational_goldens=[conversat
 There are **ONE** mandatory and **ONE** optional parameter when calling the `simulate` method:
 
 - `conversational_goldens`: a list of `ConversationalGolden`s that specify the scenario and user description.
-- [Optional] `max_turns`: an integer that specifies the maximum number of turns to simulate per conversation. Defaulted to `10`.
+- [Optional] `max_user_simulations`: an integer that specifies the maximum number of user-assistant message cycles to simulate per conversation. Defaulted to `10`.
 
-:::info
-A simulation ends either when the converaiton achieves the expected outcome outlined in a `ConversationalGolden`, or when the `max_turns` has been reached.
+A simulation ends either when the converaiton achieves the expected outcome outlined in a `ConversationalGolden`, or when the `max_user_simulations` has been reached.
+
+:::tip
+You can also generate conversations from existing turns. Simply populate your `ConversationalGolden` with a list of initial `Turn`s, and the simulator will continue the conversation.
 :::
 
 ## Evaluate Simulated Conversations

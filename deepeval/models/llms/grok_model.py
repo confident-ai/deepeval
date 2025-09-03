@@ -49,6 +49,7 @@ class GrokModel(DeepEvalBaseLLM):
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         temperature: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         model_name = model or KEY_FILE_HANDLER.fetch_data(
@@ -73,6 +74,7 @@ class GrokModel(DeepEvalBaseLLM):
             or os.getenv("GROK_API_KEY")
         )
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         super().__init__(model_name)
 
     ###############################################
@@ -92,6 +94,7 @@ class GrokModel(DeepEvalBaseLLM):
         chat = client.chat.create(
             model=self.model_name,
             temperature=self.temperature,
+            **self.generation_kwargs,
         )
         chat.append(user(prompt))
 
@@ -128,6 +131,7 @@ class GrokModel(DeepEvalBaseLLM):
         chat = client.chat.create(
             model=self.model_name,
             temperature=self.temperature,
+            **self.generation_kwargs,
         )
         chat.append(user(prompt))
 

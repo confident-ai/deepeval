@@ -34,6 +34,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         temperature: float = 0,
         input_token_cost: float = 0,
         output_token_cost: float = 0,
+        generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         _check_aiobotocore_available()
@@ -46,8 +47,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self.temperature = temperature
         self.input_token_cost = input_token_cost
         self.output_token_cost = output_token_cost
-        self.top_p = 0
-        self.max_tokens = 1000
 
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
@@ -57,6 +56,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self._config = Config(retries={"max_attempts": 5, "mode": "adaptive"})
         self._exit_stack = AsyncExitStack()
         self.kwargs = kwargs
+        self.generation_kwargs = generation_kwargs or {}
         self._client = None
 
     ###############################################
@@ -119,8 +119,9 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
             "inferenceConfig": {
                 "temperature": self.temperature,
-                "topP": self.top_p,
-                "maxTokens": self.max_tokens,
+                "topP": self.generation_kwargs.get("top_p", 0),
+                "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
+                **self.generation_kwargs,
             },
         }
 

@@ -133,7 +133,7 @@ if not telemetry_opt_out():
 if (
     os.getenv("ERROR_REPORTING") == "YES"
     and not blocked_by_firewall()
-    and not os.getenv("TELEMETRY_OPT_OUT")
+    and not telemetry_opt_out()
 ):
 
     def handle_exception(exc_type, exc_value, exc_traceback):
@@ -338,49 +338,6 @@ def capture_conversation_simulator_run(num_conversations: int):
 
 
 @contextmanager
-def capture_red_teamer_run(
-    attacks_per_vulnerability_type: int,
-    vulnerabilities: List[str],
-    attack_enhancements: Dict,
-):
-    if telemetry_opt_out():
-        yield
-    else:
-        # data
-        event = "Invoked redteamer"
-        distinct_id = get_unique_id()
-        # capture posthog
-        posthog.capture(
-            distinct_id=distinct_id,
-            event=event,
-        )
-        # capture new relic
-        with tracer.start_as_current_span(event) as span:
-            # if anonymous_public_ip:
-            #     span.set_attribute("user.public_ip", anonymous_public_ip)
-            # span.set_attribute("logged_in_with", get_logged_in_with())
-            # span.set_attribute("environment", IS_RUNNING_IN_JUPYTER)
-            # span.set_attribute("user.status", get_status())
-            # span.set_attribute("user.unique_id", get_unique_id())
-            # span.set_attribute(
-            #     "feature_status.redteaming",
-            #     get_feature_status(Feature.REDTEAMING),
-            # )
-            # span.set_attribute(
-            #     "attacks_per_vulnerability", attacks_per_vulnerability_type
-            # )
-            # for vuln in vulnerabilities:
-            #     for types in vuln.get_types():
-            #         span.set_attribute(f"vulnerability.{types.value}", 1)
-            # for enhancement, value in attack_enhancements.items():
-            #     span.set_attribute(
-            #         f"attack_enhancement.{enhancement.value}", value
-            #     )
-            # set_last_feature(Feature.REDTEAMING)
-            yield span
-
-
-@contextmanager
 def capture_guardrails(guards: List[str]):
     if telemetry_opt_out():
         yield
@@ -560,11 +517,12 @@ def capture_send_trace():
 
 
 # tracing integration
+@contextmanager
 def capture_tracing_integration(integration_name: str):
     if telemetry_opt_out():
         yield
     else:
-        event = f"Tracing Integration: {integration_name}"
+        event = f"Tracing Integration: deepeval.integrations.{integration_name}"
         distinct_id = get_unique_id()
         properties = {
             "logged_in_with": get_logged_in_with(),
@@ -588,6 +546,8 @@ def capture_tracing_integration(integration_name: str):
         with tracer.start_as_current_span(event) as span:
             for property, value in properties.items():
                 span.set_attribute(property, value)
+            # OTEL/New Relic filtering attributes
+            span.set_attribute("integration.name", integration_name)
             yield span
 
 
@@ -611,6 +571,12 @@ def read_telemetry_file() -> dict:
 
 def write_telemetry_file(data: dict):
     """Writes the given key-value pairs to the telemetry data file."""
+    # respect opt out
+    if telemetry_opt_out():
+        return
+
+    # ensure directory exists before write
+    os.makedirs(HIDDEN_DIR, exist_ok=True)
     with open(TELEMETRY_PATH, "w") as file:
         for key, value in data.items():
             file.write(f"{key}={value}\n")
@@ -624,6 +590,9 @@ def get_status() -> str:
 
 def get_unique_id() -> str:
     """Gets or generates a unique ID and updates the telemetry file."""
+    # respect opt out
+    if telemetry_opt_out():
+        return "telemetry-opted-out"
     data = read_telemetry_file()
     unique_id = data.get("DEEPEVAL_ID")
     if not unique_id:

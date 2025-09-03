@@ -27,6 +27,9 @@ from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
+from .mcp.mcp_task_completion import MCPTaskCompletionMetric
+from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
+from .mcp_use_metric.mcp_use_metric import MCPUseMetric
 from .turn_relevancy.turn_relevancy import (
     TurnRelevancyMetric,
 )
@@ -51,3 +54,61 @@ from .multimodal_metrics import (
     MultimodalToolCorrectnessMetric,
     MultimodalGEval,
 )
+
+
+__all__ = [
+    # Base classes
+    "BaseMetric",
+    "BaseConversationalMetric",
+    "BaseMultimodalMetric",
+    "BaseArenaMetric",
+    # Core metrics
+    "GEval",
+    "ArenaGEval",
+    "ConversationalGEval",
+    "DAGMetric",
+    # RAG metrics
+    "AnswerRelevancyMetric",
+    "FaithfulnessMetric",
+    "ContextualRecallMetric",
+    "ContextualRelevancyMetric",
+    "ContextualPrecisionMetric",
+    # MCP metrics
+    "MCPTaskCompletionMetric",
+    "MultiTurnMCPUseMetric",
+    "MCPUseMetric",
+    # Content quality metrics
+    "HallucinationMetric",
+    "BiasMetric",
+    "ToxicityMetric",
+    "SummarizationMetric",
+    # Safety and compliance metrics
+    "PIILeakageMetric",
+    "NonAdviceMetric",
+    "MisuseMetric",
+    "RoleViolationMetric",
+    "RoleAdherenceMetric",
+    # Task-specific metrics
+    "ToolCorrectnessMetric",
+    "JsonCorrectnessMetric",
+    "PromptAlignmentMetric",
+    "TaskCompletionMetric",
+    "ArgumentCorrectnessMetric",
+    "KnowledgeRetentionMetric",
+    # Conversational metrics
+    "TurnRelevancyMetric",
+    "ConversationCompletenessMetric",
+    # Multimodal metrics
+    "TextToImageMetric",
+    "ImageEditingMetric",
+    "ImageCoherenceMetric",
+    "ImageHelpfulnessMetric",
+    "ImageReferenceMetric",
+    "MultimodalContextualRecallMetric",
+    "MultimodalContextualRelevancyMetric",
+    "MultimodalContextualPrecisionMetric",
+    "MultimodalAnswerRelevancyMetric",
+    "MultimodalFaithfulnessMetric",
+    "MultimodalToolCorrectnessMetric",
+    "MultimodalGEval",
+]

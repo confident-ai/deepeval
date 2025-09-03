@@ -46,6 +46,11 @@ There are **TWO** mandatory and **FIVE** optional parameters when creating an `A
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 - [Optional] `input_token_cost`: A float specifying the per-input-token cost in USD. Defaulted to 0.
 - [Optional] `output_token_cost`: A float specifying the per-output-token cost in USD. Defaulted to 0.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
+
+:::tip
+Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+:::
 
 ### Available Amazon Bedrock Models
 

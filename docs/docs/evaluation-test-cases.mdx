@@ -22,7 +22,7 @@ Throughout this documentation, you should assume the term 'test case' refers to 
 An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has **NINE** parameters:
 
 - `input`
-- `actual_output`
+- [Optional] `actual_output`
 - [Optional] `expected_output`
 - [Optional] `context`
 - [Optional] `retrieval_context`
@@ -235,7 +235,7 @@ deepeval test run test_file.py
 
 ### Actual Output
 
-The `actual_output` is simply what your LLM application returns for a given input. This is what your users are going to interact with. Typically, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
+The `actual_output` is an **optional** parameter and represents what your LLM app outputs for a given input. Typically, you would import your LLM application (or parts of it) into your test file, and invoke it at runtime to get the actual output.
 
 ```python
 # A hypothetical LLM application example
@@ -249,13 +249,15 @@ test_case = LLMTestCase(
 )
 ```
 
+The `actual_output` is an optional parameter because some systems (such as RAG retrievers) does not require an LLM output to be evaluated.
+
 :::note
 You may also choose to evaluate with precomputed `actual_output`s, instead of generating `actual_output`s at evaluation time.
 :::
 
 ### Expected Output
 
-The `expected_output` is literally what you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
+The `expected_output` is an **optional** parameter and represents you would want the ideal output to be. Note that this parameter is **optional** depending on the metric you want to evaluate.
 
 The expected output doesn't have to exactly match the actual output in order for your test case to pass since `deepeval` uses a variety of methods to evaluate non-deterministic LLM outputs. We'll go into more details [in the metrics section.](/docs/metrics-introduction)
 

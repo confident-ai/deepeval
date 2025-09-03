@@ -2,7 +2,10 @@ from typing import List, Optional, Dict
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
-from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.math_qa.task import MathQATask
 from deepeval.benchmarks.math_qa.template import MathQATemplate
@@ -44,8 +47,12 @@ class MathQA(DeepEvalBaseBenchmark):
             self.confinement_instructions = confinement_instructions
 
     def evaluate(
-        self, model: DeepEvalBaseLLM, batch_size: Optional[int] = None
-    ) -> Dict:
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: int | None = None,
+        **kwargs,
+    ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
 
         with capture_benchmark_run("MathQA", len(self.tasks)):
@@ -151,7 +158,9 @@ class MathQA(DeepEvalBaseBenchmark):
             )
             self.overall_score = overall_accuracy
 
-            return overall_accuracy
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
 
     def predict(self, model: DeepEvalBaseLLM, golden: Golden) -> Dict:
         # Define prompt template
@@ -165,7 +174,10 @@ class MathQA(DeepEvalBaseBenchmark):
             res: MultipleChoiceSchemaLower = model.generate(
                 prompt=prompt, schema=MultipleChoiceSchemaLower
             )
-            prediction = res.answer
+            if isinstance(res, (tuple, list)):
+                prediction = res[0].answer
+            else:
+                prediction = res.answer
         except TypeError:
             prompt += f"\n\n{self.confinement_instructions}"
             prediction = model.generate(prompt)
@@ -231,7 +243,7 @@ class MathQA(DeepEvalBaseBenchmark):
         if self.dataset:
             dataset = self.dataset
         else:
-            dataset = load_dataset("allenai/math_qa", trust_remote_code=True)
+            dataset = load_dataset("regisss/math_qa")
             self.dataset = dataset
 
         # Construct test set

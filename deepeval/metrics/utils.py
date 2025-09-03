@@ -260,15 +260,6 @@ def check_llm_test_case_params(
         raise MissingTestCaseParamsError(error_str)
 
 
-def check_llm_test_cases_params(
-    test_cases: List[LLMTestCase],
-    test_case_params: List[LLMTestCaseParams],
-    metric: BaseMetric,
-):
-    for test_case in test_cases:
-        check_llm_test_case_params(test_case, test_case_params, metric)
-
-
 def check_arena_test_case_params(
     arena_test_case: ArenaTestCase,
     test_case_params: List[LLMTestCaseParams],
@@ -361,24 +352,6 @@ def check_mllm_test_cases_params(
             actual_output_image_count,
             metric,
         )
-
-
-def check_matching_llm_test_case_inputs(test_cases: List[LLMTestCase]):
-    if len(test_cases) == 0:
-        raise ValueError("Test cases cannot be empty")
-    input = test_cases[0].input
-    for test_case in test_cases[1:]:
-        if test_case.input != input:
-            raise MismatchedTestCaseInputsError(
-                "'input's of test case(s) do not match"
-            )
-
-    expected_output = test_cases[0].expected_output
-    for test_case in test_cases[1:]:
-        if test_case.expected_output != expected_output:
-            raise MismatchedTestCaseInputsError(
-                "'expected_output's of test case(s) do not match"
-            )
 
 
 def trimAndLoadJson(

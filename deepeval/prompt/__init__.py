@@ -1,2 +1,3 @@
 from .prompt import Prompt
-from .api import PromptApi
+
+__all__ = ["Prompt"]
