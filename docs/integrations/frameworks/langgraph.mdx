@@ -8,8 +8,14 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import ColabButton from "@site/src/components/ColabButton";
 
 # LangGraph
+
+<ColabButton 
+  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/cookbooks/examples/notebooks/langgraph.ipynb" 
+  className="header-colab-button"
+/>
 
 [LangGraph](https://www.langchain.com/langgraph) is an open-source framework for developing applications powered by large language models, enabling chaining of LLMs with external data sources and expressive workflows to build advanced generative AI solutions.
 
@@ -131,15 +137,4 @@ If you need to evaluate individual components of your LangGraph application, [se
 
 ## Evals in Production
 
-To run online evaluations in production, simply replace `metrics` in `CallbackHandler` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LangGraph agent to production.
-
-:::info
-This will automatically evaluate all incoming traces in production with the task completion metrics defined in your [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations).
-:::
-
-```python filename="main.py" showLineNumbers
-result = agent.invoke(
-    input = {"messages": [{"role": "user", "content": "what is the weather in sf"}]}, 
-    config = {"callbacks": [CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")]}
-)
-```
+To run online evaluations in production, simply replace `
