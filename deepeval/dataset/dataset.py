@@ -713,8 +713,8 @@ class EvaluationDataset:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
+                    url_params={"alias": alias},
                     params={
-                        "alias": alias,
                         "finalized": str(finalized).lower(),
                         "public": str(public).lower(),
                     },
