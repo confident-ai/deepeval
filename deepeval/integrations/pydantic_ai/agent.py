@@ -1,6 +1,6 @@
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.metrics import BaseMetric
-from typing import List
+from typing import List, Optional
 import functools
 import inspect
 import json
@@ -63,6 +63,52 @@ class PydanticAIAgent(Agent):
             # Patch the run method only for this instance
             self._patch_run_method()
             self._patch_run_method_sync()
+            self._patch_tool_decorator()
+
+    def _patch_tool_decorator(self):
+        """Patch the tool decorator to print input and output"""
+        original_tool = self.tool
+        
+        @functools.wraps(original_tool)
+        def patched_tool(*args, metric_collection: Optional[str] = None, metrics: Optional[List[BaseMetric]] = None, **kwargs):
+            print(f"[TOOL DECORATOR INPUT] args={args}, kwargs={kwargs}")
+            
+            # Extract the function from args (first positional argument)
+            if args and callable(args[0]):
+                original_func = args[0]
+                
+                # Create a patched version of the function
+                if inspect.iscoroutinefunction(original_func):
+                    @functools.wraps(original_func)
+                    async def patched_async_func(*func_args, **func_kwargs):
+                        
+                        result = await original_func(*func_args, **func_kwargs)
+
+                        return result
+                    patched_func = patched_async_func
+                else:
+                    @functools.wraps(original_func)
+                    def patched_sync_func(*func_args, **func_kwargs):
+                        
+                        result = original_func(*func_args, **func_kwargs)
+    
+                        return result
+                    patched_func = patched_sync_func
+                
+                # Replace the function in args with the patched version
+                new_args = (patched_func,) + args[1:]
+            else:
+                new_args = args
+            
+            # Just call the original decorator with patched function
+            result = original_tool(*new_args, **kwargs)
+            
+            print(f"[TOOL DECORATOR OUTPUT] result={result}")
+            
+            return result
+        
+        # Replace the tool method for this instance
+        self.tool = patched_tool
 
     def _patch_run_method(self):
         """Patch the Agent.run method only for this PydanticAIAgent instance"""
@@ -272,3 +318,5 @@ class PydanticAIAgent(Agent):
 
         # Replace the method only for this instance
         self.run_sync = patched_run
+    
+    
