@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 
+from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -88,6 +89,7 @@ class AgentSpan(BaseSpan):
 
 class LlmSpan(BaseSpan):
     model: Optional[str] = None
+    prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"
     )
