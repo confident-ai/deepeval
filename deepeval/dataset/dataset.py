@@ -809,6 +809,19 @@ class EvaluationDataset:
                 f"[link={link}]{link}[/link]"
             )
 
+    def delete(
+        self,
+        alias: str,
+    ):
+        api = Api()
+        api.send_request(
+            method=HttpMethods.DELETE,
+            endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
+            url_params={"alias": alias},
+        )
+        console = Console()
+        console.print("✅ Dataset successfully deleted from Confident AI!")
+
     def generate_goldens_from_docs(
         self,
         document_paths: List[str],

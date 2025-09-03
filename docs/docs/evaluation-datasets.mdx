@@ -309,7 +309,7 @@ This pushes all goldens in your evaluation dataset to Confident AI. If you don't
 
 ```python
 ...
-dataset.push(alias="My dataset", overwrite=True) # Very dangerous, this will delete all existing goldens in your dataset
+dataset.push(alias="My dataset")
 ```
 
 Lastly, if you're unsure whether your goldens are ready for evaluation, you should `queue` them instead:
@@ -337,8 +337,8 @@ from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(goldens)
 dataset.save_as(
-    file_type="json", 
-    directory="./deepeval-test-dataset", 
+    file_type="json",
+    directory="./deepeval-test-dataset",
 )
 ```
 
@@ -363,8 +363,8 @@ from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(goldens)
 dataset.save_as(
-    file_type="csv", 
-    directory="./deepeval-test-dataset", 
+    file_type="csv",
+    directory="./deepeval-test-dataset",
 )
 ```
 
