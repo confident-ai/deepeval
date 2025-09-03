@@ -250,7 +250,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-        print("CVN -> ", prompt)
+        # print("CVN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=ConversationalMetricScoreReason
@@ -274,7 +274,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             score=metric.score,
             name=metric.__name__,
         )
-        print("CVN -> ", prompt)
+        # print("CVN -> ", prompt)
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(
                 prompt, schema=ConversationalMetricScoreReason
@@ -356,7 +356,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
             instructions=self.instructions,
             text=text,
         )
-        print("CTN -> ", prompt)
+        # print("CTN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=ConversationalTaskNodeOutput
@@ -418,7 +418,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
             instructions=self.instructions,
             text=text,
         )
-        print("CTN -> ", prompt)
+        # print("CTN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
                 prompt, schema=ConversationalTaskNodeOutput
@@ -529,7 +529,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             criteria=self.criteria,
             text=text,
         )
-        print("CBJN -> ", prompt)
+        # print("CBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=ConversationalBinaryJudgementVerdict
@@ -588,7 +588,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             criteria=self.criteria,
             text=text,
         )
-        print("CBJN -> ", prompt)
+        # print("CBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
                 prompt, schema=ConversationalBinaryJudgementVerdict
@@ -709,7 +709,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
         )
-        print("CNBJN -> ", prompt)
+        # print("CNBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.generate(
                 prompt, schema=self._verdict_schema
@@ -762,7 +762,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
         )
-        print("CNBJN -> ", prompt)
+        # print("CNBJN -> ", prompt)
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
                 prompt, schema=self._verdict_schema
