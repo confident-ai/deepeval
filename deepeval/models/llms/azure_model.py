@@ -33,6 +33,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
         temperature: float = 0,
+        user: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -57,6 +58,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature
+        self.user = user or KEY_FILE_HANDLER.fetch_data(
+            ModelKeyValues.AZURE_OPENAI_USER_ID
+        )
 
         # args and kwargs will be passed to the underlying model, in load_model function
         self.kwargs = kwargs
@@ -85,6 +89,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -102,6 +107,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 json_output = trim_and_load_json(
                     completion.choices[0].message.content
@@ -118,6 +124,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
+            user=self.user,
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -148,6 +155,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format=schema,
                     temperature=self.temperature,
+                    user=self.user,
                 )
                 structured_output: BaseModel = completion.choices[
                     0
@@ -165,6 +173,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                     ],
                     response_format={"type": "json_object"},
                     temperature=self.temperature,
+                    user=self.user,
                     **self.generation_kwargs,
                 )
                 json_output = trim_and_load_json(
@@ -182,6 +191,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 {"role": "user", "content": prompt},
             ],
             temperature=self.temperature,
+            user=self.user,
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content
@@ -217,6 +227,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
+            user=self.user,
             **self.generation_kwargs,
         )
         # Cost calculation
@@ -244,6 +255,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             temperature=self.temperature,
             logprobs=True,
             top_logprobs=top_logprobs,
+            user=self.user,
             **self.generation_kwargs,
         )
         # Cost calculation

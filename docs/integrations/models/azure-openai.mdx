@@ -52,7 +52,7 @@ model = AzureOpenAIModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **FIVE** mandatory and **ONE** optional parameters when creating an `AzureOpenAIModel`:
+There are **FIVE** mandatory and **TWO** optional parameters when creating an `AzureOpenAIModel`:
 
 - `model_name`: A string specifying the name of the Azure OpenAI model to use.
 - `deployment_name`: A string specifying the name of your Azure OpenAI deployment.
@@ -60,6 +60,7 @@ There are **FIVE** mandatory and **ONE** optional parameters when creating an `A
 - `openai_api_version`: A string specifying the OpenAI API version used in your deployment.
 - `azure_endpoint`: A string specifying your Azure OpenAI endpoint URL.
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `user`: A string specifying the user ID for the request. This is useful for tracking and logging purposes. Defaulted to None.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
 
 :::tip

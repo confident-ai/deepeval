@@ -239,6 +239,9 @@ def set_azure_openai_env(
     azure_model_version: Optional[str] = typer.Option(
         None, "--model-version", help="Azure model version (optional)"
     ),
+    azure_user_id: Optional[str] = typer.Option(
+        None, "--user-id", help="Azure OpenAI user unique identifier (optional)"
+    ),
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(
@@ -262,6 +265,11 @@ def set_azure_openai_env(
             ModelKeyValues.AZURE_MODEL_VERSION, azure_model_version
         )
 
+    if azure_user_id is not None:
+        KEY_FILE_HANDLER.write_key(
+            ModelKeyValues.AZURE_OPENAI_USER_ID, azure_user_id
+        )
+
     KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "YES")
     KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "NO")
 
@@ -277,16 +285,25 @@ def set_azure_openai_embedding_env(
         "--embedding-deployment-name",
         help="Azure embedding deployment name",
     ),
+    azure_user_id: Optional[str] = typer.Option(
+        None, "--user-id", help="Azure OpenAI user unique identifier (optional)"
+    ),
 ):
     clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(
         EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
     )
+
+    if azure_user_id is not None:
+        KEY_FILE_HANDLER.write_key(
+            EmbeddingKeyValues.AZURE_OPENAI_USER_ID, azure_user_id
+        )
     KEY_FILE_HANDLER.write_key(
         EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES"
     )
     KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "NO")
+
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
     )
@@ -297,6 +314,7 @@ def unset_azure_openai_env():
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_ENDPOINT)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_API_VERSION)
+    KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_USER_ID)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_DEPLOYMENT_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_MODEL_VERSION)
@@ -313,6 +331,7 @@ def unset_azure_openai_embedding_env():
         EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
     )
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING)
+    KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.AZURE_OPENAI_USER_ID)
 
     print(
         ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
