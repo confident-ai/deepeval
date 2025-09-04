@@ -31,7 +31,8 @@ class State(TypedDict):
 # ---------------------------
 # Build nodes
 # ---------------------------
-llm = ChatOpenAI(model="gpt-4o-mini", metadata={"metric_collection": "test_collection_1"}).bind_tools([get_weather]) # pass metrics here
+llm = ChatOpenAI(
+    model="gpt-4o-mini", metadata={"metric_collection": "test_collection_1"}).bind_tools([get_weather]) # pass metrics here
 
 def call_llm(state: State):
     response = llm.invoke(state["messages"])
