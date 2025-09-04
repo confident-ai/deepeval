@@ -11,6 +11,7 @@ def test_metrics_imports():
         ArenaGEval,
         ConversationalGEval,
         DAGMetric,
+        DeepAcyclicGraph,
         # RAG metrics
         AnswerRelevancyMetric,
         FaithfulnessMetric,
@@ -67,6 +68,7 @@ def test_metrics_imports():
         ArenaGEval,
         ConversationalGEval,
         DAGMetric,
+        DeepAcyclicGraph,
         AnswerRelevancyMetric,
         FaithfulnessMetric,
         ContextualRecallMetric,
@@ -130,6 +132,19 @@ def test_dag_imports():
     assert BinaryJudgementNode is not None
     assert NonBinaryJudgementNode is not None
     assert VerdictNode is not None
+
+def test_conversational_dag_imports():
+    from deepeval.metrics.conversational_dag import (
+        ConversationalTaskNode,
+        ConversationalBinaryJudgementNode,
+        ConversationalNonBinaryJudgementNode,
+        ConversationalVerdictNode,
+    )
+
+    assert ConversationalTaskNode is not None
+    assert ConversationalBinaryJudgementNode is not None
+    assert ConversationalNonBinaryJudgementNode is not None
+    assert ConversationalVerdictNode is not None
 
 
 def test_core_modules_import():
