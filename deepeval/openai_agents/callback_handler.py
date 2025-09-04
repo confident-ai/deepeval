@@ -4,6 +4,7 @@ from deepeval.tracing.tracing import (
     current_trace_context,
 )
 from deepeval.openai_agents.extractors import *
+from agents.tracing.traces import TraceImpl
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
@@ -37,7 +38,11 @@ class DeepEvalTracingProcessor(TracingProcessor):
         self.span_observers: dict[str, Observer] = {}
 
     def on_trace_start(self, trace: "Trace") -> None:
-        observer = Observer(span_type=SpanType.AGENT, func_name=trace.name)
+        metric_collection = None
+        if isinstance(trace, TraceImpl):
+            metric_collection = trace.metadata.get("metric_collection", None)
+
+        observer = Observer(span_type=SpanType.AGENT, func_name=trace.name, metric_collection=metric_collection)
         self.root_span_observers[trace.trace_id] = observer
         observer.__enter__()
 
