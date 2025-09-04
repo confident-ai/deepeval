@@ -611,7 +611,11 @@ class TraceManager:
             environment=(
                 self.environment if not trace.environment else trace.environment
             ),
-            status=TraceSpanApiStatus.SUCCESS if trace.status == TraceSpanStatus.SUCCESS else TraceSpanApiStatus.ERRORED,
+            status=(
+                TraceSpanApiStatus.SUCCESS
+                if trace.status == TraceSpanStatus.SUCCESS
+                else TraceSpanApiStatus.ERRORED
+            ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:

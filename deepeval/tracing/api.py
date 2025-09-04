@@ -109,7 +109,7 @@ class TraceApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
-    status: Optional[TraceSpanApiStatus] = TraceSpanApiStatus.SUCCESS
+    status: Optional[TraceSpanApiStatus] = Field(TraceSpanApiStatus.SUCCESS)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(

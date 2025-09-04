@@ -248,7 +248,11 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         tools_called=trace.tools_called,
         expected_tools=trace.expected_tools,
         metadata=golden.additional_metadata,
-        status=TraceSpanApiStatus.SUCCESS if trace.status == TraceSpanStatus.SUCCESS else TraceSpanApiStatus.ERRORED,
+        status=(
+            TraceSpanApiStatus.SUCCESS
+            if trace.status == TraceSpanStatus.SUCCESS
+            else TraceSpanApiStatus.ERRORED
+        ),
     )
 
 
