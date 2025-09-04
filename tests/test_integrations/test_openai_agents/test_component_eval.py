@@ -80,7 +80,7 @@ weather_agent = Agent(
 async def run_weather_agent(user_input: str):
     """Run the weather agent with user input"""
     runner = Runner()
-    result = await runner.run(weather_agent, user_input)
+    result = await runner.run(weather_agent, user_input, metric_collection="test_collection_1")
     return result.final_output
 
 # Usage example
