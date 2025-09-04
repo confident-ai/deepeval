@@ -18,21 +18,10 @@ from deepeval.metrics.dag.utils import (
 class TestDeepAcyclicGraph:
     """Tests for DAG validation, copying, and parameter extraction."""
 
-    @staticmethod
-    def make_verdict_nodes():
-        return VerdictNode(verdict=False, score=0), VerdictNode(
-            verdict=True, score=1
-        )
-
-    @staticmethod
-    def make_binary_judgement_node():
-        leaf_false, leaf_true = TestDeepAcyclicGraph.make_verdict_nodes()
-        return BinaryJudgementNode(
-            criteria="?", children=[leaf_false, leaf_true]
-        )
-
     def test_is_valid_dag_true(self):
-        judgement_node = self.make_binary_judgement_node()
+        leaf_false = VerdictNode(verdict=False, score=0)
+        leaf_true = VerdictNode(verdict=True, score=10)
+        judgement_node = BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
         root = TaskNode(
             instructions="Extract",
             output_label="X",
@@ -41,7 +30,7 @@ class TestDeepAcyclicGraph:
         )
         assert is_valid_dag_from_roots([root]) is True
 
-    def test_is_valid_dag_false_cycle(self):
+    def test_is_acyclic_dag(self):
         node_a = TaskNode(
             "Task A", output_label="A", evaluation_params=[], children=[]
         )
@@ -52,7 +41,8 @@ class TestDeepAcyclicGraph:
         assert is_valid_dag_from_roots([node_a]) is False
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
-        leaf_false, leaf_true = self.make_verdict_nodes()
+        leaf_false = VerdictNode(verdict=False, score=0)
+        leaf_true = VerdictNode(verdict=True, score=10)
         inner_judge = BinaryJudgementNode(
             criteria="Inner?", children=[leaf_false, leaf_true]
         )
@@ -68,9 +58,50 @@ class TestDeepAcyclicGraph:
         )
         assert is_valid_dag(task) is True
 
+    def test_binary_judge_2_values(self):
+        verdict1 = VerdictNode(verdict=True, score=10)
+        verdict2 = VerdictNode(verdict=False, score=5)
+        verdict3 = VerdictNode(verdict=True, score=0)
+        with pytest.raises(ValueError):
+            BinaryJudgementNode(
+                criteria="Should have strings in verdics",
+                children=[verdict1, verdict2, verdict3]
+            )
+
+    def test_valid_non_binary(self):
+        verdict1 = VerdictNode(verdict="True", score=10)
+        verdict2 = VerdictNode(verdict="Idk", score=5)
+        verdict3 = VerdictNode(verdict="False", score=0)
+        judge_node = NonBinaryJudgementNode(
+            criteria="Should have strings in verdics",
+            children=[verdict1, verdict2, verdict3]
+        )
+
+        assert is_valid_dag(judge_node) is True
+    
+    def test_invalid_non_binary(self):
+        verdict1 = VerdictNode(verdict=True, score=10)
+        verdict2 = VerdictNode(verdict=False, score=0)
+        with pytest.raises(ValueError):
+            NonBinaryJudgementNode(
+                criteria="Should have strings in verdics",
+                children=[verdict1, verdict2]
+            )
+
+    def test_invalid_verdicts(self):
+        leaf_false = VerdictNode(verdict=False, score=0)
+        leaf_true = VerdictNode(verdict=False, score=10)
+        with pytest.raises(ValueError):
+            BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
+
     def test_extract_required_params(self):
-        judgement_node = self.make_binary_judgement_node()
-        judgement_node.evaluation_params = [LLMTestCaseParams.EXPECTED_OUTPUT]
+        leaf_false = VerdictNode(verdict=False, score=0)
+        leaf_true = VerdictNode(verdict=True, score=10)
+        judgement_node = BinaryJudgementNode(
+            criteria="?", 
+            children=[leaf_false, leaf_true],
+            evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT]
+        )
         task = TaskNode(
             instructions="Extract something",
             output_label="abc",
@@ -85,6 +116,11 @@ class TestDeepAcyclicGraph:
         assert LLMTestCaseParams.ACTUAL_OUTPUT in params
         assert LLMTestCaseParams.EXPECTED_OUTPUT in params
         assert len(params) == 3
+
+    def test_invalid_child_type(self):
+        invalid_child = "string_instead_of_node"  # Invalid child type
+        with pytest.raises(AttributeError):
+            TaskNode(instructions="Invalid task", output_label="X", evaluation_params=[], children=[invalid_child])
 
     def test_extract_required_params_non_binary(self):
         leaf1 = VerdictNode(verdict="A", score=0.1)
@@ -106,10 +142,12 @@ class TestDeepAcyclicGraph:
         assert len(params) == 2
 
     def test_disallow_multiple_judgement_roots(self):
-        node1 = self.make_binary_judgement_node()
-        node2 = self.make_binary_judgement_node()
+        leaf_false = VerdictNode(verdict=False, score=0)
+        leaf_true = VerdictNode(verdict=True, score=10)
+        judgement_node1 = BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
+        judgement_node2 = BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
         with pytest.raises(ValueError):
-            DeepAcyclicGraph(root_nodes=[node1, node2])
+            DeepAcyclicGraph(root_nodes=[judgement_node1, judgement_node2])
 
     def test_only_score_or_child(self):
         leaf_false = VerdictNode(verdict=False, score=0)
@@ -120,40 +158,63 @@ class TestDeepAcyclicGraph:
         node1 = TaskNode("Task 1", "Label1", [], [])
         node2 = TaskNode("Task 2", "Label2", [], [])
         dag = DeepAcyclicGraph(root_nodes=[node1, node2])
-        assert isinstance(dag, DeepAcyclicGraph)
+        assert is_valid_dag(dag) is True
 
     def test_copy_graph_isolated_and_deep(self):
-        leaf_false, leaf_true = self.make_verdict_nodes()
-        judge = BinaryJudgementNode(
-            criteria="Check?", children=[leaf_false, leaf_true]
-        )
+        INSTRUCTIONS = "Instruction 1:"
+        OUTPUT_LABEL = "Output label"
+        CRITERIA = "Criteria: "
+
+        leaf_false = VerdictNode(verdict=False, score=0)
+        leaf_true = VerdictNode(verdict=True, score=10)
+        judgement_node = BinaryJudgementNode(criteria=CRITERIA, children=[leaf_false, leaf_true])
         task = TaskNode(
-            instructions="Do X",
-            output_label="outX",
+            instructions=INSTRUCTIONS,
+            output_label=OUTPUT_LABEL,
             evaluation_params=[],
-            children=[judge],
+            children=[judgement_node],
         )
         dag = DeepAcyclicGraph(root_nodes=[task])
+
         copied = copy_graph(dag)
         copied_task = copied.root_nodes[0]
         copied_judge = copied_task.children[0]
         copied_leaf_false = copied_judge.children[0]
         copied_leaf_true = copied_judge.children[1]
+
+        ids_set = {
+            hash(dag),
+            hash(leaf_false),
+            hash(leaf_true),
+            hash(judgement_node),
+            hash(task),
+            hash(copied),
+            hash(copied_leaf_false),
+            hash(copied_leaf_true),
+            hash(copied_judge),
+            hash(copied_task),
+        }
+
+        assert len(ids_set) == 10
         assert copied is not dag
-        assert copied_task is not task
+        assert isinstance(copied, DeepAcyclicGraph)
+        assert isinstance(copied_leaf_false, VerdictNode)
+        assert isinstance(copied_leaf_true, VerdictNode)
+        assert isinstance(copied_judge, BinaryJudgementNode)
         assert isinstance(copied_task, TaskNode)
-        assert copied_task.output_label == "outX"
-        assert copied_task.instructions == "Do X"
-        assert len(copied_task.children) == 1
-        assert copied_judge is not judge
-        assert copied_judge.criteria == "Check?"
-        assert len(copied_judge.children) == 2
+        assert copied_task is not task
+        assert copied_judge is not judgement_node
         assert copied_leaf_false is not leaf_false
+        assert copied_leaf_true is not leaf_true
+        assert copied_task.output_label == OUTPUT_LABEL
+        assert copied_task.instructions == INSTRUCTIONS
+        assert len(copied_task.children) == 1
+        assert len(copied_judge.children) == 2
+        assert copied_judge.criteria == CRITERIA
         assert copied_leaf_false.verdict is False
         assert copied_leaf_false.score == 0
-        assert copied_leaf_true is not leaf_true
         assert copied_leaf_true.verdict is True
-        assert copied_leaf_true.score == 1
+        assert copied_leaf_true.score == 10
 
     def test_non_binary_node_in_dag(self):
         leaf1 = VerdictNode(verdict="One", score=0.1)
@@ -171,7 +232,7 @@ class TestDeepAcyclicGraph:
             children=[non_binary],
         )
         dag = DeepAcyclicGraph(root_nodes=[task])
-        assert is_valid_dag_from_roots(dag.root_nodes)
+        assert is_valid_dag(dag)
 
     def test_task_node_leaf(self):
         task = TaskNode(
@@ -193,12 +254,3 @@ class TestDeepAcyclicGraph:
         task = TaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task])
         assert is_valid_dag_from_roots(dag.root_nodes)
-
-    def test_is_valid_dag_multiple_roots_valid(self):
-        task1 = TaskNode("Task 1", "A", [], [])
-        task2 = TaskNode("Task 2", "B", [], [])
-        assert is_valid_dag_from_roots([task1, task2]) is True
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
