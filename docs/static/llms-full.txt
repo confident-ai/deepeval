@@ -1364,14 +1364,14 @@ If at any point you think you might have accidentally sent us sensitive data, **
 By default, `deepeval` uses `Sentry` to track only very basic telemetry data (number of evaluations run and which metric is used). Personally identifiable information is explicitly excluded. We also provide the option of opting out of the telemetry data collection through an environment variable:
 
 ```codeBlockLines_e6Vv
-export DEEPEVAL_TELEMETRY_OPT_OUT="YES"
+export DEEPEVAL_TELEMETRY_OPT_OUT=1
 
 ```
 
-`deepeval` also only tracks errors and exceptions raised within the package **only if you have explicitly opted in**, and **does not collect any user or company data in any way**. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to "YES".
+`deepeval` also only tracks errors and exceptions raised within the package **only if you have explicitly opted in**, and **does not collect any user or company data in any way**. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to 1.
 
 ```codeBlockLines_e6Vv
-export ERROR_REPORTING="YES"
+export ERROR_REPORTING=1
 
 ```
 

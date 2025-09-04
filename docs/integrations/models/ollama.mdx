@@ -15,6 +15,15 @@ ollama run deepseek-r1:1.5b
 
 :::
 
+### Environment Setup
+DeepEval can use a local Ollama server (default: `http://127.0.0.1:11434`).
+Optionally set a custom host:
+
+```bash
+# .env.local
+OLLAMA_HOST=http://127.0.0.1:11434
+```
+
 ### Command Line
 
 To configure your Ollama model through the CLI, run the following command. Replace `deepseek-r1:1.5b` with any Ollama-supported model of your choice.

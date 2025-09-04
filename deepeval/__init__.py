@@ -2,6 +2,11 @@ import os
 import warnings
 import re
 
+# load environment variables before other imports
+from .env import autoload_dotenv as _autoload_dotenv
+
+_autoload_dotenv()
+
 # Optionally add telemetry
 from ._version import __version__
 
@@ -11,7 +16,7 @@ from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login
 from deepeval.telemetry import *
 
-if os.getenv("DEEPEVAL_GRPC_LOGGING") != "YES":
+if os.getenv("DEEPEVAL_GRPC_LOGGING") != "1":
     os.environ["GRPC_VERBOSITY"] = "ERROR"
     os.environ["GRPC_TRACE"] = ""
 
@@ -61,7 +66,7 @@ def check_for_update():
 
 
 def update_warning_opt_in():
-    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_IN") == "YES"
+    return os.getenv("DEEPEVAL_UPDATE_WARNING_OPT_IN") == "1"
 
 
 def is_read_only_env():

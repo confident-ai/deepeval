@@ -34,7 +34,7 @@ TELEMETRY_PATH = os.path.join(HIDDEN_DIR, TELEMETRY_DATA_FILE)
 
 
 def telemetry_opt_out():
-    return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "YES"
+    return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "1"
 
 
 def blocked_by_firewall():
@@ -131,7 +131,7 @@ if not telemetry_opt_out():
 
 
 if (
-    os.getenv("ERROR_REPORTING") == "YES"
+    os.getenv("ERROR_REPORTING") == "1"
     and not blocked_by_firewall()
     and not telemetry_opt_out()
 ):

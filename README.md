@@ -140,6 +140,16 @@ Let's pretend your LLM application is a RAG based customer support chatbot; here
 ```
 pip install -U deepeval
 ```
+### Environment variables (.env / .env.local)
+
+DeepEval auto-loads `.env.local` then `.env` from the current working directory **at import time**.
+**Precedence:** process env -> `.env.local` -> `.env`.
+Opt out with `DEEPEVAL_DISABLE_DOTENV=1`.
+
+```bash
+cp .env.example .env.local
+# then edit .env.local (ignored by git)
+```
 
 ## Create an account (highly recommended)
 
@@ -362,6 +372,20 @@ deepeval test run test_chatbot.py
 You should see a link displayed in the CLI once the test has finished running. Paste it into your browser to view the results!
 
 ![Demo GIF](assets/demo.gif)
+
+<br />
+
+## Configuration
+
+### Environment variables via .env files
+
+Using `.env.local` or `.env` is optional. If they are missing, DeepEval uses your existing environment variables. When present, dotenv environment variables are auto-loaded at import time (unless you set `DEEPEVAL_DISABLE_DOTENV=1`).
+
+**Precedence:** process env -> `.env.local` -> `.env`
+
+```bash
+cp .env.example .env.local
+# then edit .env.local (ignored by git)
 
 <br />
 
