@@ -38,23 +38,10 @@ class DeepEvalTracingProcessor(TracingProcessor):
         self.span_observers: dict[str, Observer] = {}
 
     def on_trace_start(self, trace: "Trace") -> None:
-        metric_collection = None
-        if isinstance(trace, TraceImpl):
-            metric_collection = trace.metadata.get("metric_collection", None)
-
-        observer = Observer(span_type=SpanType.AGENT, func_name=trace.name, metric_collection=metric_collection)
-        self.root_span_observers[trace.trace_id] = observer
-        observer.__enter__()
+        pass
 
     def on_trace_end(self, trace: "Trace") -> None:
-        # set thread id if exists
-        current_trace = current_trace_context.get()
-        thread_id = getattr(trace, "group_id", None)
-        current_trace.thread_id = thread_id
-
-        observer = self.root_span_observers.pop(trace.trace_id, None)
-        if observer:
-            observer.__exit__(None, None, None)
+        pass
 
     def on_span_start(self, span: "Span") -> None:
         if not span.started_at:
@@ -64,7 +51,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if span_type == "llm":
             observer.observe_kwargs["model"] = "temporary model"
         observer.update_span_properties = (
-            lambda span_type: update_span_properties(span_type, span.span_data)
+            lambda base_span: update_span_properties(base_span, span.span_data)
         )
         self.span_observers[span.span_id] = observer
         observer.__enter__()
