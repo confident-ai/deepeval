@@ -109,7 +109,7 @@ class Turn(BaseModel):
 class ConversationalTestCase(BaseModel):
     turns: List[Turn]
     scenario: Optional[str] = Field(default=None)
-    context: Optional[str] = Field(default=None)
+    context: Optional[List[str]] = Field(default=None)
     name: Optional[str] = Field(default=None)
     user_description: Optional[str] = Field(
         default=None, serialization_alias="userDescription"

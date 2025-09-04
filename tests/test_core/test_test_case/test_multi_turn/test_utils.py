@@ -4,7 +4,7 @@ from deepeval.metrics.utils import get_unit_interactions
 
 def make_turns(seq):
     """Helper to create Turn objects from list of (role, content)."""
-    return [Turn(role, content) for role, content in seq]
+    return [Turn(role=role, content=content) for role, content in seq]
 
 
 class TestGetUnitInteractions:

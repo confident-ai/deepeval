@@ -191,7 +191,9 @@ class LLMTestCase(BaseModel):
     _dataset_rank: Optional[int] = PrivateAttr(default=None)
     _dataset_alias: Optional[str] = PrivateAttr(default=None)
     _dataset_id: Optional[str] = PrivateAttr(default=None)
-    _identifier: Optional[str] = PrivateAttr(default=str(uuid.uuid4()))
+    _identifier: Optional[str] = PrivateAttr(
+        default_factory=lambda: str(uuid.uuid4())
+    )
 
     @model_validator(mode="before")
     def validate_input(cls, data):
