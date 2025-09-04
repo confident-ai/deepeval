@@ -1,9 +1,9 @@
-from agents import Agent, Runner, function_tool, add_trace_processor
+from agents import add_trace_processor
 import asyncio
 import random
 import requests
 from deepeval.openai_agents import DeepEvalTracingProcessor
-from deepeval.openai_agents import Runner
+from deepeval.openai_agents import Runner, Agent
 from deepeval.openai_agents import function_tool
 
 add_trace_processor(DeepEvalTracingProcessor())
@@ -79,6 +79,8 @@ weather_agent = Agent(
     """,
     tools=[get_location_coordinates, get_current_weather],
     tool_use_behavior="run_llm_again",
+    metric_collection="test_collection_1",
+    # metrics=[task_completion_metric]
 )
 
 
