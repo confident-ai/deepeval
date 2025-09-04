@@ -49,7 +49,7 @@ python-dotenv = "^1.1.1"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
-black = "*"
+black = {extras = ["jupyter"], version = "^25.1.0"}
 chromadb = "*"
 langchain = "*"
 langchain_core = "*"
