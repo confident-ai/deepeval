@@ -1,7 +1,6 @@
 from deepeval.tracing.tracing import (
     Observer,
-    SpanType,
-    current_trace_context,
+    current_span_context,
 )
 from deepeval.openai_agents.extractors import *
 
@@ -48,16 +47,22 @@ class DeepEvalTracingProcessor(TracingProcessor):
         span_type = self.get_span_kind(span.span_data)
         if span_type == "tool":
             return
-        observer = Observer(span_type=span_type, func_name="NA")
-        if span_type == "llm":
-            observer.observe_kwargs["model"] = "temporary model"
-        observer.update_span_properties = (
-            lambda base_span: update_span_properties(base_span, span.span_data)
-        )
-        self.span_observers[span.span_id] = observer
-        observer.__enter__()
+        elif span_type == "llm":
+            return
+        else:
+            observer = Observer(span_type=span_type, func_name="NA")
+            observer.update_span_properties = (
+                lambda base_span: update_span_properties(base_span, span.span_data)
+            )
+            self.span_observers[span.span_id] = observer
+            observer.__enter__()
 
     def on_span_end(self, span: "Span") -> None:
+        span_type = self.get_span_kind(span.span_data)
+        if span_type == "llm":
+            current_span = current_span_context.get()
+            if current_span:
+                update_span_properties(current_span, span.span_data)
         observer = self.span_observers.pop(span.span_id, None)
         if observer:
             observer.__exit__(None, None, None)
