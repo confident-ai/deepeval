@@ -6,7 +6,7 @@ from typer.testing import CliRunner
 # Silence telemetry for all tests so we don't have to deal with the noise
 @pytest.fixture(autouse=True)
 def _telemetry_opt_out(monkeypatch):
-    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")
     yield
 
 

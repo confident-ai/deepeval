@@ -34,7 +34,6 @@ from deepeval.key_handler import (
 from deepeval.telemetry import capture_login_event, capture_view_event
 from deepeval.cli.test import app as test_app
 from deepeval.cli.server import start_server
-from deepeval.cli.dotenv_handler import DotenvHandler
 from deepeval.utils import delete_file_if_exists, open_browser
 from deepeval.test_run.test_run import (
     LATEST_TEST_RUN_FILE_PATH,
@@ -836,7 +835,7 @@ def set_local_model_env(
     switch_model_provider(ModelKeyValues.USE_LOCAL_MODEL, save_target)
     if save_target:
         handled, path = save_environ_to_store(
-            save,
+            save_target,
             {
                 ModelKeyValues.LOCAL_MODEL_NAME: model_name,
                 ModelKeyValues.LOCAL_MODEL_BASE_URL: base_url,
