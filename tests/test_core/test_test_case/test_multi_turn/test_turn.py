@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 from deepeval.test_case import Turn, ToolCall
-from deepeval.test_case.mcp import MCPToolCall, MCPResourceCall, MCPPromptCall
 
 
 class TestTurnInitialization:

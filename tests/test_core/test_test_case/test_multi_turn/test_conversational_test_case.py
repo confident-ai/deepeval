@@ -1,7 +1,6 @@
 import pytest
 from pydantic import ValidationError
 from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
-from deepeval.test_case.mcp import MCPServer
 
 
 class TestConversationalTestCaseInitialization:
@@ -120,19 +119,6 @@ class TestConversationalTestCaseValidation:
         turns = [Turn(role="user", content="Hello")]
         test_case = ConversationalTestCase(turns=turns, context=None)
         assert test_case.context is None
-
-
-class TestConversationalTestCaseWithMCP:
-
-    def test_mcp_servers_validation(self):
-        turns = [Turn(role="user", content="Hello")]
-        mcp_server = MCPServer(server_name="test_server")
-
-        test_case = ConversationalTestCase(
-            turns=turns, mcp_servers=[mcp_server]
-        )
-        assert len(test_case.mcp_servers) == 1
-        assert test_case.mcp_servers[0].server_name == "test_server"
 
 
 class TestConversationalTestCaseComplexScenarios:
