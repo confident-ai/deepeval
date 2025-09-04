@@ -170,10 +170,15 @@ class GEval(BaseMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt)
+            res, cost = await self.model.a_generate(prompt, schema=Steps)
+            res: Steps | str  # Original typehint is wrong
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
+            if isinstance(res, Steps):
+                return res.steps
+            else:
+
+                data = trimAndLoadJson(res, self)
+                return data["steps"]
         else:
             try:
                 res: Steps = await self.model.a_generate(prompt, schema=Steps)
@@ -194,10 +199,14 @@ class GEval(BaseMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt)
+            res, cost = self.model.generate(prompt, schema=Steps)
+            res: Steps | str  # Original typehint is wrong
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res, self)
-            return data["steps"]
+            if isinstance(res, Steps):
+                return res.steps
+            else:
+                data = trimAndLoadJson(res, self)
+                return data["steps"]
         else:
             try:
                 res: Steps = self.model.generate(prompt, schema=Steps)
@@ -269,10 +278,16 @@ class GEval(BaseMetric):
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
             if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
+                res, cost = await self.model.a_generate(
+                    prompt, schema=ReasonScore
+                )
+                res: ReasonScore | str  # Original typehint is wrong
                 self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
+                if isinstance(res, ReasonScore):
+                    return res.score, res.reason
+                else:
+                    data = trimAndLoadJson(res, self)
+                    return data["score"], data["reason"]
             else:
                 try:
                     res: ReasonScore = await self.model.a_generate(
@@ -342,10 +357,14 @@ class GEval(BaseMetric):
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
             if self.using_native_model:
-                res, cost = self.model.generate(prompt)
+                res, cost = self.model.generate(prompt, schema=ReasonScore)
+                res: ReasonScore | str  # Original typehint is wrong
                 self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
+                if isinstance(res, ReasonScore):
+                    return res.score, res.reason
+                else:
+                    data = trimAndLoadJson(res, self)
+                    return data["score"], data["reason"]
             else:
                 try:
                     res: ReasonScore = self.model.generate(
