@@ -734,6 +734,7 @@ class Observer:
         self.result = None
 
         self.name: str = self.observe_kwargs.get("name", func_name)
+        self.prompt = self.observe_kwargs.get("prompt", None)
         self.metrics = metrics
         self.metric_collection = metric_collection
         self.span_type: Optional[SpanType] = span_type
@@ -813,6 +814,10 @@ class Observer:
             current_span.input = trace_manager.mask(self.function_kwargs)
         if current_span.output is None:
             current_span.output = trace_manager.mask(self.result)
+        
+        if isinstance(current_span, LlmSpan) and self.prompt and not current_span.prompt:
+            current_span.prompt = self.prompt
+
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:

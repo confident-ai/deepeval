@@ -40,6 +40,7 @@ class Runner(BaseRunner):
                 run_config.model_provider,
                 metrics=getattr(starting_agent, "metrics", None) or metrics,
                 metric_collection=getattr(starting_agent, "metric_collection", None) or metric_collection,
+                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
             )
 
         input_val = args[1] if len(args) >= 2 else kwargs.get("input", None)
@@ -73,6 +74,7 @@ class Runner(BaseRunner):
                 run_config.model_provider,
                 metrics=getattr(starting_agent, "metrics", None) or metrics,
                 metric_collection=getattr(starting_agent, "metric_collection", None) or metric_collection,
+                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
             )
 
         input_val = args[1] if len(args) >= 2 else kwargs.get("input", None)

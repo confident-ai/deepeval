@@ -4,6 +4,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Optional, Awaitable, Callable
 
 from deepeval.tracing import observe
+from deepeval.prompt import Prompt
 
 try:
     from agents.agent import Agent as BaseAgent
@@ -13,20 +14,18 @@ except Exception as e:
 
 
 class _ObservedModel(Model):
-    """
-    Wraps a Model to observe get_response (and optionally stream_response) with deepeval.observe.
-    """
-
     def __init__(
         self,
         inner: Model,
         *,
         metrics: Optional[list[Any]] = None,
         metric_collection: Optional[str] = None,
+        deepeval_prompt: Optional[Any] = None,
     ) -> None:
         self._inner = inner
         self._metrics = metrics
         self._metric_collection = metric_collection
+        self._deepeval_prompt = deepeval_prompt
 
     # Delegate attributes not overridden
     def __getattr__(self, name: str) -> Any:
@@ -64,6 +63,7 @@ class _ObservedModel(Model):
             metric_collection=self._metric_collection,
             type="llm",
             model=model_name,
+            prompt=self._deepeval_prompt,
         )(self._inner.get_response)
 
         return await wrapped(
@@ -127,20 +127,18 @@ class _ObservedModel(Model):
 
 
 class _ObservedProvider(ModelProvider):
-    """
-    Wraps a ModelProvider to return observed Models.
-    """
-
     def __init__(
         self,
         base: ModelProvider,
         *,
         metrics: Optional[list[Any]] = None,
         metric_collection: Optional[str] = None,
+        deepeval_prompt: Optional[Any] = None,
     ) -> None:
         self._base = base
         self._metrics = metrics
         self._metric_collection = metric_collection
+        self._deepeval_prompt = deepeval_prompt
 
     def get_model(self, model_name: str | None) -> Model:
         model = self._base.get_model(model_name)
@@ -148,6 +146,7 @@ class _ObservedProvider(ModelProvider):
             model,
             metrics=self._metrics,
             metric_collection=self._metric_collection,
+            deepeval_prompt=self._deepeval_prompt,
         )
 
 
@@ -160,6 +159,7 @@ class DeepEvalAgent(BaseAgent[Any]):
 
     metrics: list[Any] | None = field(default=None)
     metric_collection: str | None = field(default=None)
+    deepeval_prompt: Prompt | None = field(default=None)
 
     def __post_init__(self):
         super().__post_init__()
@@ -172,6 +172,7 @@ class DeepEvalAgent(BaseAgent[Any]):
                         self.model,
                         metrics=self.metrics,
                         metric_collection=self.metric_collection,
+                        deepeval_prompt=self.deepeval_prompt,
                     )
             except Exception:
                 # If we can't import or wrap, silently skip.
