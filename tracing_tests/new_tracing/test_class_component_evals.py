@@ -6,6 +6,7 @@ from deepeval.metrics import (
     AnswerRelevancyMetric,
     BiasMetric,
     FaithfulnessMetric,
+    TaskCompletionMetric,
 )
 from deepeval.tracing import (
     update_current_span,
@@ -53,14 +54,14 @@ class AIAgent:
     @observe(type="llm", model="gpt-4o")
     async def generate_text(self, prompt: str):
         generated_text = f"Generated text for: {prompt}"
-        update_current_span(
-            input=prompt,
-            output=generated_text,
-        )
-        update_llm_span(
-            input_token_count=len(prompt.split()),
-            output_token_count=len(generated_text.split()),
-        )
+        # update_current_span(
+        #     input=prompt,
+        #     output=generated_text,
+        # )
+        # update_llm_span(
+        #     input_token_count=len(prompt.split()),
+        #     output_token_count=len(generated_text.split()),
+        # )
         await sleep(random.uniform(1, 3))
         return generated_text
 
@@ -72,10 +73,10 @@ class AIAgent:
             f"Document 2 about {query}",
             f"Document 3 about {query}",
         ]
-        update_current_span(
-            input=query,
-            retrieval_context=documents,
-        )
+        # update_current_span(
+        #     input=query,
+        #     retrieval_context=documents,
+        # )
         return documents
 
     @observe("CustomEmbedder")
@@ -120,11 +121,11 @@ class AIAgent:
         metrics=[AnswerRelevancyMetric(), BiasMetric()],
     )
     async def weather_agent(self, query: str):
-        update_current_span(
-            test_case=LLMTestCase(
-                input=query, actual_output="Weather information unavailable"
-            )
-        )
+        # update_current_span(
+        #     test_case=LLMTestCase(
+        #         input=query, actual_output="Weather information unavailable"
+        #     )
+        # )
         await sleep(random.uniform(1, 3))
         return "Weather information unavailable"
 
@@ -150,7 +151,7 @@ class AIAgent:
             "research_agent",
             "custom_research_agent",
         ],
-        metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        metrics=[TaskCompletionMetric(), BiasMetric()],
         metric_collection="Test",
     )
     async def meta_agent(self, input: str):
@@ -164,9 +165,9 @@ class AIAgent:
         Custom Analysis: {custom_info}
         """
 
-        update_current_span(
-            test_case=LLMTestCase(input=input, actual_output=final_response)
-        )
+        # update_current_span(
+        #     test_case=LLMTestCase(input=input, actual_output=final_response)
+        # )
         return final_response
 
 
@@ -177,7 +178,7 @@ async def meta_agent(input: str):
 
 ###################################v
 
-from deepeval.dataset import Golden
+from deepeval.dataset import Golden, EvaluationDataset
 from deepeval import evaluate
 
 goldens = [
@@ -185,16 +186,32 @@ goldens = [
     Golden(input="Tell me about Elon Musk."),
 ]
 
-# Run Async
-evaluate(
-    goldens=goldens * 2,
-    observed_callback=meta_agent,
-    async_config=AsyncConfig(run_async=True, max_concurrent=40),
-    cache_config=CacheConfig(write_cache=True),
-    # display_config=DisplayConfig(show_indicator=False),
+dataset = EvaluationDataset(goldens=goldens)
+dataset.add_test_case(
+    LLMTestCase(
+        input="What's the weather like in SF?",
+        actual_output="It's sunny in SF.",
+    )
+)
+dataset.add_test_case(
+    LLMTestCase(
+        input="Tell me about Elon Musk.",
+        actual_output="Elon Musk is a billionaire entrepreneur.",
+    )
 )
 
+import asyncio
 
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(meta_agent(golden.input))
+    dataset.evaluate(task)
+
+# evaluate(
+#     dataset=dataset,
+#     observed_callback=meta_agent,
+#     async_config=AsyncConfig(run_async=True),
+#     display_config=DisplayConfig(show_indicator=False),
+# )
 # evaluate(
 #     goldens=goldens,
 #     observed_callback=meta_agent,
@@ -227,7 +244,6 @@ evaluate(
 #     assert_test(golden=golden, observed_callback=meta_agent)
 
 # # Gather multiple traceable tasks
-import asyncio
 
 
 # async def run_parallel_examples():
