@@ -12,11 +12,11 @@ from deepeval.metrics.utils import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.g_eval.schema import *
-from deepeval.metrics.conversational_dag.graph import DeepAcyclicGraph
-from deepeval.metrics.conversational_dag.utils import copy_graph
-from deepeval.metrics.conversational_dag.utils import (
+from deepeval.metrics import DeepAcyclicGraph
+from deepeval.metrics.dag.utils import (
     is_valid_dag_from_roots,
     extract_required_params,
+    copy_graph,
 )
 
 
@@ -34,11 +34,11 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         verbose_mode: bool = False,
         _include_dag_suffix: bool = True,
     ):
-        if is_valid_dag_from_roots(dag.root_nodes) == False:
+        if is_valid_dag_from_roots(dag.root_nodes, is_conversational=True) == False:
             raise ValueError("Cycle detected in DAG graph.")
 
         self._verbose_steps: List[str] = []
-        self.dag = copy_graph(dag)
+        self.dag = copy_graph(dag, is_conversational=True)
         self.name = name
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
@@ -56,7 +56,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ) -> float:
         check_conversational_test_case_params(
-            test_case, extract_required_params(self.dag.root_nodes), self
+            test_case, extract_required_params(self.dag.root_nodes, is_conversational=True), self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -91,7 +91,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ) -> float:
         check_conversational_test_case_params(
-            test_case, extract_required_params(self.dag.root_nodes), self
+            test_case, extract_required_params(self.dag.root_nodes, is_conversational=True), self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None

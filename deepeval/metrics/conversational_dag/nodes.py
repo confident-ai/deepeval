@@ -23,11 +23,11 @@ from .templates import (
     ConversationalTaskNodeTemplate,
     ConversationalVerdictNodeTemplate,
 )
-from .schema import (
-    ConversationalBinaryJudgementVerdict,
-    ConversationalMetricScoreReason,
-    ConversationalNonBinaryJudgementVerdict,
-    ConversationalTaskNodeOutput,
+from deepeval.metrics.dag.schema import (
+    BinaryJudgementVerdict,
+    MetricScoreReason,
+    NonBinaryJudgementVerdict,
+    TaskNodeOutput
 )
 
 
@@ -257,18 +257,18 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         )
         if metric.using_native_model:
             res, cost = metric.model.generate(
-                prompt, schema=ConversationalMetricScoreReason
+                prompt, schema=MetricScoreReason
             )
             metric.evaluation_cost += cost
         else:
             try:
-                res: ConversationalMetricScoreReason = metric.model.generate(
-                    prompt, schema=ConversationalMetricScoreReason
+                res: MetricScoreReason = metric.model.generate(
+                    prompt, schema=MetricScoreReason
                 )
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                res = ConversationalMetricScoreReason(**data)
+                res = MetricScoreReason(**data)
 
         return res.reason
 
@@ -280,20 +280,20 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         )
         if metric.using_native_model:
             res, cost = await metric.model.a_generate(
-                prompt, schema=ConversationalMetricScoreReason
+                prompt, schema=MetricScoreReason
             )
             metric.evaluation_cost += cost
         else:
             try:
-                res: ConversationalMetricScoreReason = (
+                res: MetricScoreReason = (
                     await metric.model.a_generate(
-                        prompt, schema=ConversationalMetricScoreReason
+                        prompt, schema=MetricScoreReason
                     )
                 )
             except TypeError:
                 res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                res = ConversationalMetricScoreReason(**data)
+                res = MetricScoreReason(**data)
 
         return res.reason
 
@@ -370,20 +370,20 @@ class ConversationalTaskNode(ConversationalBaseNode):
         )
         if metric.using_native_model:
             res, cost = metric.model.generate(
-                prompt, schema=ConversationalTaskNodeOutput
+                prompt, schema=TaskNodeOutput
             )
             metric.evaluation_cost += cost
             self._output = res.output
         else:
             try:
-                res: ConversationalTaskNodeOutput = metric.model.generate(
-                    prompt, schema=ConversationalTaskNodeOutput
+                res: TaskNodeOutput = metric.model.generate(
+                    prompt, schema=TaskNodeOutput
                 )
                 self._output = res.output
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self._output = ConversationalTaskNodeOutput(**data).output
+                self._output = TaskNodeOutput(**data).output
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -439,20 +439,20 @@ class ConversationalTaskNode(ConversationalBaseNode):
         )
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
-                prompt, schema=ConversationalTaskNodeOutput
+                prompt, schema=TaskNodeOutput
             )
             metric.evaluation_cost += cost
             self._output = res.output
         else:
             try:
-                res: ConversationalTaskNodeOutput = metric.model.a_generate(
-                    prompt, schema=ConversationalTaskNodeOutput
+                res: TaskNodeOutput = metric.model.a_generate(
+                    prompt, schema=TaskNodeOutput
                 )
                 self._output = res.output
             except TypeError:
                 res = metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self._output = ConversationalTaskNodeOutput(**data).output
+                self._output = TaskNodeOutput(**data).output
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -475,7 +475,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
     turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
-    _verdict: Optional[ConversationalBinaryJudgementVerdict] = None
+    _verdict: Optional[BinaryJudgementVerdict] = None
     _parents: Optional[List[ConversationalBaseNode]] = None
 
     def __hash__(self):
@@ -559,22 +559,22 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
         )
         if metric.using_native_model:
             res, cost = metric.model.generate(
-                prompt, schema=ConversationalBinaryJudgementVerdict
+                prompt, schema=BinaryJudgementVerdict
             )
             metric.evaluation_cost += cost
             self._verdict = res
         else:
             try:
-                res: ConversationalBinaryJudgementVerdict = (
+                res: BinaryJudgementVerdict = (
                     metric.model.generate(
-                        prompt, schema=ConversationalBinaryJudgementVerdict
+                        prompt, schema=BinaryJudgementVerdict
                     )
                 )
                 self._verdict = res
             except TypeError:
                 res = metric.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self._verdict = ConversationalBinaryJudgementVerdict(**data)
+                self._verdict = BinaryJudgementVerdict(**data)
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -625,22 +625,22 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
         )
         if metric.using_native_model:
             res, cost = metric.model.a_generate(
-                prompt, schema=ConversationalBinaryJudgementVerdict
+                prompt, schema=BinaryJudgementVerdict
             )
             metric.evaluation_cost += cost
             self._verdict = res
         else:
             try:
-                res: ConversationalBinaryJudgementVerdict = (
+                res: BinaryJudgementVerdict = (
                     metric.model.a_generate(
-                        prompt, schema=ConversationalBinaryJudgementVerdict
+                        prompt, schema=BinaryJudgementVerdict
                     )
                 )
                 self._verdict = res
             except TypeError:
                 res = metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                self._verdict = ConversationalBinaryJudgementVerdict(**data)
+                self._verdict = BinaryJudgementVerdict(**data)
 
         metric._verbose_steps.append(
             construct_node_verbose_log(self, self._depth)
@@ -663,7 +663,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
     turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
-    _verdict: Optional[ConversationalNonBinaryJudgementVerdict] = None
+    _verdict: Optional[NonBinaryJudgementVerdict] = None
     _parents: Optional[List[ConversationalBaseNode]] = None
 
     def __hash__(self):
