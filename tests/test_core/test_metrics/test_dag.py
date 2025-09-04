@@ -21,7 +21,9 @@ class TestDeepAcyclicGraph:
     def test_is_valid_dag_true(self):
         leaf_false = VerdictNode(verdict=False, score=0)
         leaf_true = VerdictNode(verdict=True, score=10)
-        judgement_node = BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
+        judgement_node = BinaryJudgementNode(
+            criteria="?", children=[leaf_false, leaf_true]
+        )
         root = TaskNode(
             instructions="Extract",
             output_label="X",
@@ -65,7 +67,7 @@ class TestDeepAcyclicGraph:
         with pytest.raises(ValueError):
             BinaryJudgementNode(
                 criteria="Should have strings in verdics",
-                children=[verdict1, verdict2, verdict3]
+                children=[verdict1, verdict2, verdict3],
             )
 
     def test_valid_non_binary(self):
@@ -74,18 +76,18 @@ class TestDeepAcyclicGraph:
         verdict3 = VerdictNode(verdict="False", score=0)
         judge_node = NonBinaryJudgementNode(
             criteria="Should have strings in verdics",
-            children=[verdict1, verdict2, verdict3]
+            children=[verdict1, verdict2, verdict3],
         )
 
         assert is_valid_dag(judge_node) is True
-    
+
     def test_invalid_non_binary(self):
         verdict1 = VerdictNode(verdict=True, score=10)
         verdict2 = VerdictNode(verdict=False, score=0)
         with pytest.raises(ValueError):
             NonBinaryJudgementNode(
                 criteria="Should have strings in verdics",
-                children=[verdict1, verdict2]
+                children=[verdict1, verdict2],
             )
 
     def test_invalid_verdicts(self):
@@ -98,9 +100,9 @@ class TestDeepAcyclicGraph:
         leaf_false = VerdictNode(verdict=False, score=0)
         leaf_true = VerdictNode(verdict=True, score=10)
         judgement_node = BinaryJudgementNode(
-            criteria="?", 
+            criteria="?",
             children=[leaf_false, leaf_true],
-            evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT]
+            evaluation_params=[LLMTestCaseParams.EXPECTED_OUTPUT],
         )
         task = TaskNode(
             instructions="Extract something",
@@ -120,7 +122,12 @@ class TestDeepAcyclicGraph:
     def test_invalid_child_type(self):
         invalid_child = "string_instead_of_node"  # Invalid child type
         with pytest.raises(AttributeError):
-            TaskNode(instructions="Invalid task", output_label="X", evaluation_params=[], children=[invalid_child])
+            TaskNode(
+                instructions="Invalid task",
+                output_label="X",
+                evaluation_params=[],
+                children=[invalid_child],
+            )
 
     def test_extract_required_params_non_binary(self):
         leaf1 = VerdictNode(verdict="A", score=0.1)
@@ -144,8 +151,12 @@ class TestDeepAcyclicGraph:
     def test_disallow_multiple_judgement_roots(self):
         leaf_false = VerdictNode(verdict=False, score=0)
         leaf_true = VerdictNode(verdict=True, score=10)
-        judgement_node1 = BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
-        judgement_node2 = BinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
+        judgement_node1 = BinaryJudgementNode(
+            criteria="?", children=[leaf_false, leaf_true]
+        )
+        judgement_node2 = BinaryJudgementNode(
+            criteria="?", children=[leaf_false, leaf_true]
+        )
         with pytest.raises(ValueError):
             DeepAcyclicGraph(root_nodes=[judgement_node1, judgement_node2])
 
@@ -167,7 +178,9 @@ class TestDeepAcyclicGraph:
 
         leaf_false = VerdictNode(verdict=False, score=0)
         leaf_true = VerdictNode(verdict=True, score=10)
-        judgement_node = BinaryJudgementNode(criteria=CRITERIA, children=[leaf_false, leaf_true])
+        judgement_node = BinaryJudgementNode(
+            criteria=CRITERIA, children=[leaf_false, leaf_true]
+        )
         task = TaskNode(
             instructions=INSTRUCTIONS,
             output_label=OUTPUT_LABEL,
