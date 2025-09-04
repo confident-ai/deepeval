@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
@@ -25,18 +25,17 @@ class TurnParams(Enum):
     MCP_PROMPTS = "mcp_prompts_called"
 
 
-@dataclass
-class Turn:
+class Turn(BaseModel):
     role: Literal["user", "assistant"]
     content: str
-    user_id: Optional[str] = None
-    retrieval_context: Optional[List[str]] = None
-    tools_called: Optional[List[ToolCall]] = None
-    mcp_tools_called: Optional[List[MCPToolCall]] = None
-    mcp_resources_called: Optional[List[MCPResourceCall]] = None
-    mcp_prompts_called: Optional[List[MCPPromptCall]] = None
-    additional_metadata: Optional[Dict] = None
-    _mcp_interaction: bool = False
+    user_id: Optional[str] = Field(default=None)
+    retrieval_context: Optional[List[str]] = Field(default=None)
+    tools_called: Optional[List[ToolCall]] = Field(default=None)
+    mcp_tools_called: Optional[List[MCPToolCall]] = Field(default=None)
+    mcp_resources_called: Optional[List[MCPResourceCall]] = Field(default=None)
+    mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(default=None)
+    additional_metadata: Optional[Dict] = Field(default=None)
+    _mcp_interaction: bool = PrivateAttr(default=False)
 
     def __repr__(self):
         attrs = [f"role={self.role!r}", f"content={self.content!r}"]
@@ -56,11 +55,16 @@ class Turn:
             attrs.append(f"additional_metadata={self.additional_metadata!r}")
         return f"Turn({', '.join(attrs)})"
 
-    def __post_init__(self):
+    @model_validator(mode="before")
+    def validate_input(cls, data):
+        mcp_tools_called = data.get("mcp_tools_called")
+        mcp_prompts_called = data.get("mcp_prompts_called")
+        mcp_resources_called = data.get("mcp_resources_called")
+
         if (
-            self.mcp_tools_called is not None
-            or self.mcp_prompts_called is not None
-            or self.mcp_resources_called is not None
+            mcp_tools_called is not None
+            or mcp_prompts_called is not None
+            or mcp_resources_called is not None
         ):
             from mcp.types import (
                 CallToolResult,
@@ -68,74 +72,91 @@ class Turn:
                 GetPromptResult,
             )
 
-            self._mcp_interaction = True
-            if self.mcp_tools_called is not None:
-                if not isinstance(self.mcp_tools_called, list) or not all(
+            data["_mcp_interaction"] = True
+            if mcp_tools_called is not None:
+                if not isinstance(mcp_tools_called, list) or not all(
                     isinstance(tool_called, MCPToolCall)
                     and isinstance(tool_called.result, CallToolResult)
-                    for tool_called in self.mcp_tools_called
+                    for tool_called in mcp_tools_called
                 ):
                     raise TypeError(
                         "The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types"
                     )
 
-            if self.mcp_resources_called is not None:
-                if not isinstance(self.mcp_resources_called, list) or not all(
+            if mcp_resources_called is not None:
+                if not isinstance(mcp_resources_called, list) or not all(
                     isinstance(resource_called, MCPResourceCall)
                     and isinstance(resource_called.result, ReadResourceResult)
-                    for resource_called in self.mcp_resources_called
+                    for resource_called in mcp_resources_called
                 ):
                     raise TypeError(
                         "The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types"
                     )
 
-            if self.mcp_prompts_called is not None:
-                if not isinstance(self.mcp_prompts_called, list) or not all(
+            if mcp_prompts_called is not None:
+                if not isinstance(mcp_prompts_called, list) or not all(
                     isinstance(prompt_called, MCPPromptCall)
                     and isinstance(prompt_called.result, GetPromptResult)
-                    for prompt_called in self.mcp_prompts_called
+                    for prompt_called in mcp_prompts_called
                 ):
                     raise TypeError(
                         "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
                     )
 
+        return data
 
-@dataclass
-class ConversationalTestCase:
+
+class ConversationalTestCase(BaseModel):
     turns: List[Turn]
-    chatbot_role: Optional[str] = None
-    scenario: Optional[str] = None
-    user_description: Optional[str] = None
-    expected_outcome: Optional[str] = None
-    context: Optional[str] = None
-    name: Optional[str] = field(default=None)
-    additional_metadata: Optional[Dict] = None
-    comments: Optional[str] = None
-    tags: Optional[List[str]] = field(default=None)
-    mcp_servers: Optional[List[MCPServer]] = None
-    _dataset_rank: Optional[int] = field(default=None, repr=False)
-    _dataset_alias: Optional[str] = field(default=None, repr=False)
-    _dataset_id: Optional[str] = field(default=None, repr=False)
+    scenario: Optional[str] = Field(default=None)
+    context: Optional[str] = Field(default=None)
+    name: Optional[str] = Field(default=None)
+    user_description: Optional[str] = Field(
+        default=None, serialization_alias="userDescription"
+    )
+    expected_outcome: Optional[str] = Field(
+        default=None, serialization_alias="expectedOutcome"
+    )
+    chatbot_role: Optional[str] = Field(
+        default=None, serialization_alias="chatbotRole"
+    )
+    additional_metadata: Optional[Dict] = Field(
+        default=None, serialization_alias="additionalMetadata"
+    )
+    comments: Optional[str] = Field(default=None)
+    tags: Optional[List[str]] = Field(default=None)
+    mcp_servers: Optional[List[MCPServer]] = Field(default=None)
 
-    def __post_init__(self):
-        if len(self.turns) == 0:
+    _dataset_rank: Optional[int] = PrivateAttr(default=None)
+    _dataset_alias: Optional[str] = PrivateAttr(default=None)
+    _dataset_id: Optional[str] = PrivateAttr(default=None)
+
+    @model_validator(mode="before")
+    def validate_input(cls, data):
+        turns = data.get("turns")
+        context = data.get("context")
+        mcp_servers = data.get("mcp_servers")
+
+        if len(turns) == 0:
             raise TypeError("'turns' must not be empty")
 
         # Ensure `context` is None or a list of strings
-        if self.context is not None:
-            if not isinstance(self.context, list) or not all(
-                isinstance(item, str) for item in self.context
+        if context is not None:
+            if not isinstance(context, list) or not all(
+                isinstance(item, str) for item in context
             ):
                 raise TypeError("'context' must be None or a list of strings")
 
-        if self.mcp_servers is not None:
-            validate_mcp_servers(self.mcp_servers)
+        if mcp_servers is not None:
+            validate_mcp_servers(mcp_servers)
 
         copied_turns = []
-        for turn in self.turns:
+        for turn in turns:
             if not isinstance(turn, Turn):
                 raise TypeError("'turns' must be a list of `Turn`s")
 
             copied_turns.append(deepcopy(turn))
 
-        self.turns = copied_turns
+        data["turns"] = copied_turns
+
+        return data

@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, model_validator, PrivateAttr
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 from enum import Enum
@@ -143,120 +143,159 @@ class ToolCall(BaseModel):
         )
 
 
-@dataclass
-class LLMTestCase:
+class LLMTestCase(BaseModel):
     input: str
-    actual_output: Optional[str] = None
-    expected_output: Optional[str] = None
-    context: Optional[List[str]] = None
-    retrieval_context: Optional[List[str]] = None
-    additional_metadata: Optional[Dict] = None
-    tools_called: Optional[List[ToolCall]] = None
-    comments: Optional[str] = None
-    expected_tools: Optional[List[ToolCall]] = None
-    token_cost: Optional[float] = None
-    completion_time: Optional[float] = None
-    name: Optional[str] = field(default=None)
-    tags: Optional[List[str]] = field(default=None)
-    mcp_servers: Optional[List[MCPServer]] = None
-    mcp_tools_called: Optional[List[MCPToolCall]] = None
-    mcp_resources_called: Optional[List[MCPResourceCall]] = None
-    mcp_prompts_called: Optional[List[MCPPromptCall]] = None
-    _trace_dict: Optional[Dict] = field(default=None, repr=False)
-    _dataset_rank: Optional[int] = field(default=None, repr=False)
-    _dataset_alias: Optional[str] = field(default=None, repr=False)
-    _dataset_id: Optional[str] = field(default=None, repr=False)
-    _identifier: Optional[str] = field(default=str(uuid.uuid4()), repr=False)
+    actual_output: Optional[str] = Field(
+        default=None, serialization_alias="actualOutput"
+    )
+    expected_output: Optional[str] = Field(
+        default=None, serialization_alias="expectedOutput"
+    )
+    context: Optional[List[str]] = Field(
+        default=None, serialization_alias="context"
+    )
+    retrieval_context: Optional[List[str]] = Field(
+        default=None, serialization_alias="retrievalContext"
+    )
+    additional_metadata: Optional[Dict] = Field(
+        default=None, serialization_alias="additionalMetadata"
+    )
+    tools_called: Optional[List[ToolCall]] = Field(
+        default=None, serialization_alias="toolsCalled"
+    )
+    comments: Optional[str] = Field(
+        default=None, serialization_alias="comments"
+    )
+    expected_tools: Optional[List[ToolCall]] = Field(
+        default=None, serialization_alias="expectedTools"
+    )
+    token_cost: Optional[float] = Field(
+        default=None, serialization_alias="tokenCost"
+    )
+    completion_time: Optional[float] = Field(
+        default=None, serialization_alias="completionTime"
+    )
+    name: Optional[str] = Field(default=None)
+    tags: Optional[List[str]] = Field(default=None)
+    mcp_servers: Optional[List[MCPServer]] = Field(default=None)
+    mcp_tools_called: Optional[List[MCPToolCall]] = Field(
+        default=None, serialization_alias="mcpToolsCalled"
+    )
+    mcp_resources_called: Optional[List[MCPResourceCall]] = Field(
+        default=None, serialization_alias="mcpResourcesCalled"
+    )
+    mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(
+        default=None, serialization_alias="mcpPromptsCalled"
+    )
+    _trace_dict: Optional[Dict] = PrivateAttr(default=None)
+    _dataset_rank: Optional[int] = PrivateAttr(default=None)
+    _dataset_alias: Optional[str] = PrivateAttr(default=None)
+    _dataset_id: Optional[str] = PrivateAttr(default=None)
+    _identifier: Optional[str] = PrivateAttr(default=str(uuid.uuid4()))
 
-    def __post_init__(self):
-        if self.input is not None:
-            if not isinstance(self.input, str):
+    @model_validator(mode="before")
+    def validate_input(cls, data):
+        input = data.get("input")
+        actual_output = data.get("actual_output")
+        context = data.get("context")
+        retrieval_context = data.get("retrieval_context")
+        tools_called = data.get("tools_called")
+        expected_tools = data.get("expected_tools")
+        mcp_servers = data.get("mcp_servers")
+        mcp_tools_called = data.get("mcp_tools_called")
+        mcp_resources_called = data.get("mcp_resources_called")
+        mcp_prompts_called = data.get("mcp_prompts_called")
+
+        if input is not None:
+            if not isinstance(input, str):
                 raise TypeError("'input' must be a string")
 
-        if self.actual_output is not None:
-            if not isinstance(self.actual_output, str):
+        if actual_output is not None:
+            if not isinstance(actual_output, str):
                 raise TypeError("'actual_output' must be a string")
 
         # Ensure `context` is None or a list of strings
-        if self.context is not None:
-            if not isinstance(self.context, list) or not all(
-                isinstance(item, str) for item in self.context
+        if context is not None:
+            if not isinstance(context, list) or not all(
+                isinstance(item, str) for item in context
             ):
                 raise TypeError("'context' must be None or a list of strings")
 
         # Ensure `retrieval_context` is None or a list of strings
-        if self.retrieval_context is not None:
-            if not isinstance(self.retrieval_context, list) or not all(
-                isinstance(item, str) for item in self.retrieval_context
+        if retrieval_context is not None:
+            if not isinstance(retrieval_context, list) or not all(
+                isinstance(item, str) for item in retrieval_context
             ):
                 raise TypeError(
                     "'retrieval_context' must be None or a list of strings"
                 )
 
         # Ensure `tools_called` is None or a list of strings
-        if self.tools_called is not None:
-            if not isinstance(self.tools_called, list) or not all(
-                isinstance(item, ToolCall) for item in self.tools_called
+        if tools_called is not None:
+            if not isinstance(tools_called, list) or not all(
+                isinstance(item, ToolCall) for item in tools_called
             ):
                 raise TypeError(
                     "'tools_called' must be None or a list of `ToolCall`"
                 )
 
         # Ensure `expected_tools` is None or a list of strings
-        if self.expected_tools is not None:
-            if not isinstance(self.expected_tools, list) or not all(
-                isinstance(item, ToolCall) for item in self.expected_tools
+        if expected_tools is not None:
+            if not isinstance(expected_tools, list) or not all(
+                isinstance(item, ToolCall) for item in expected_tools
             ):
                 raise TypeError(
                     "'expected_tools' must be None or a list of `ToolCall`"
                 )
 
         # Ensure `mcp_server` is None or a list of `MCPServer`
-        if self.mcp_servers is not None:
-            if not isinstance(self.mcp_servers, list) or not all(
-                isinstance(item, MCPServer) for item in self.mcp_servers
+        if mcp_servers is not None:
+            if not isinstance(mcp_servers, list) or not all(
+                isinstance(item, MCPServer) for item in mcp_servers
             ):
                 raise TypeError(
                     "'mcp_server' must be None or a list of 'MCPServer'"
                 )
             else:
-                validate_mcp_servers(self.mcp_servers)
+                validate_mcp_servers(mcp_servers)
 
         # Ensure `mcp_tools_called` is None or a list of `MCPToolCall`
-        if self.mcp_tools_called is not None:
+        if mcp_tools_called is not None:
             from mcp.types import CallToolResult
 
-            if not isinstance(self.mcp_tools_called, list) or not all(
+            if not isinstance(mcp_tools_called, list) or not all(
                 isinstance(tool_called, MCPToolCall)
                 and isinstance(tool_called.result, CallToolResult)
-                for tool_called in self.mcp_tools_called
+                for tool_called in mcp_tools_called
             ):
                 raise TypeError(
                     "The 'tools_called' must be a list of 'MCPToolCall' with result of type 'CallToolResult' from mcp.types"
                 )
 
         # Ensure `mcp_resources_called` is None or a list of `MCPResourceCall`
-        if self.mcp_resources_called is not None:
+        if mcp_resources_called is not None:
             from mcp.types import ReadResourceResult
 
-            if not isinstance(self.mcp_resources_called, list) or not all(
+            if not isinstance(mcp_resources_called, list) or not all(
                 isinstance(resource_called, MCPResourceCall)
                 and isinstance(resource_called.result, ReadResourceResult)
-                for resource_called in self.mcp_resources_called
+                for resource_called in mcp_resources_called
             ):
                 raise TypeError(
                     "The 'resources_called' must be a list of 'MCPResourceCall' with result of type 'ReadResourceResult' from mcp.types"
                 )
 
         # Ensure `mcp_prompts_called` is None or a list of `MCPPromptCall`
-        if self.mcp_prompts_called is not None:
+        if mcp_prompts_called is not None:
             from mcp.types import GetPromptResult
 
-            if not isinstance(self.mcp_prompts_called, list) or not all(
+            if not isinstance(mcp_prompts_called, list) or not all(
                 isinstance(prompt_called, MCPPromptCall)
                 and isinstance(prompt_called.result, GetPromptResult)
-                for prompt_called in self.mcp_prompts_called
+                for prompt_called in mcp_prompts_called
             ):
                 raise TypeError(
                     "The 'prompts_called' must be a list of 'MCPPromptCall' with result of type 'GetPromptResult' from mcp.types"
                 )
+
+        return data
