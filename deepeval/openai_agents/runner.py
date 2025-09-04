@@ -9,7 +9,7 @@ from agents import (
     RunResultStreaming,
 )
 from deepeval.tracing.tracing import Observer
-from deepeval.tracing.context import current_span_context
+from deepeval.tracing.context import current_span_context, current_trace_context
 
 # Import observed provider/model helpers from our agent module
 from deepeval.openai_agents.agent import _ObservedProvider
@@ -52,9 +52,12 @@ class Runner(BaseRunner):
             function_kwargs={"input": input_val},
         ) as observer:
             current_span = current_span_context.get()
+            current_trace = current_trace_context.get()
+            current_trace.input = input_val
             if current_span:
                 current_span.input = input_val
             res = await super().run(*args, **kwargs)
+            current_trace.output = str(res)
             observer.result = str(res)
         return res
 
@@ -86,9 +89,12 @@ class Runner(BaseRunner):
             function_kwargs={"input": input_val},
         ) as observer:
             current_span = current_span_context.get()
+            current_trace = current_trace_context.get()
+            current_trace.input = input_val
             if current_span:
                 current_span.input = input_val
             res = super().run_sync(*args, **kwargs)
+            current_trace.output = str(res)
             observer.result = str(res)
 
         return res
