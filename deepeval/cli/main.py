@@ -154,7 +154,7 @@ def view():
 
 @app.command(name="enable-grpc-logging")
 def enable_grpc_logging():
-    os.environ["DEEPEVAL_GRPC_LOGGING"] = "YES"
+    os.environ["DEEPEVAL_GRPC_LOGGING"] = "1"
 
 
 #############################################
