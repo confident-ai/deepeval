@@ -1,6 +1,5 @@
 from agents import Agent, add_trace_processor
-from deepeval.openai_agents import DeepEvalTracingProcessor
-from deepeval.integrations.agents import Runner
+from deepeval.openai_agents import DeepEvalTracingProcessor, Runner
 
 add_trace_processor(DeepEvalTracingProcessor())
 
