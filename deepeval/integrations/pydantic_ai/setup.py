@@ -49,8 +49,7 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
                 )
             )
         )
-        trace.set_tracer_provider(tracer_provider)
-
+                
         # create an instrumented exporter
         from pydantic_ai.models.instrumented import InstrumentationSettings
         from pydantic_ai import Agent
@@ -61,3 +60,4 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
 
         # instrument all agents
         Agent.instrument_all(instrument=instrumentation_settings)
+

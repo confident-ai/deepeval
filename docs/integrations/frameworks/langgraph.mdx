@@ -135,6 +135,36 @@ for golden in dataset.evals_iterator():
 If you need to evaluate individual components of your LangGraph application, [set up tracing](/docs/evaluation-llm-tracing) instead.
 :::
 
+## Component-level Evals
+
+Using `deepeval`, you can now evaluate individual components of your LangGraph application.
+
+### LLM
+Define `metrics` or `metric_collection` in the metadata of the all the `BaseLanguageModel`s in your LangGraph application.
+
+```python title="main.py" showLineNumbers {6}
+from langchain_openai import ChatOpenAI
+...
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini", 
+    metadata={"metric_collection": "test_collection_1"}
+).bind_tools([get_weather])
+```
+
+### Tool
+To pass `metrics` or `metric_collection` to the tools, you can use the DeepEval's LangChain `tool` decorator.
+```python title="main.py" showLineNumbers {5}
+# from langchain_core.tools import tool
+from deepeval.integrations.langchain import tool
+...
+
+@tool(metric_collection="test_collection_1")
+def get_weather(location: str) -> str:
+    """Get the current weather in a location."""
+    return f"It's always sunny in {location}!"
+```
+
 ## Evals in Production
 
 To run online evaluations in production, simply replace `

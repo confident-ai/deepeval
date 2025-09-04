@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from typing import List
 import textwrap
 import json
@@ -48,7 +47,9 @@ class ConversationSimulatorTemplate:
         turns: List[Turn],
         language: str,
     ) -> str:
-        previous_conversation = json.dumps([asdict(t) for t in turns], indent=4)
+        previous_conversation = json.dumps(
+            [t.model_dump() for t in turns], indent=4
+        )
         prompt = textwrap.dedent(
             f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 

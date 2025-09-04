@@ -124,6 +124,26 @@ for golden in dataset.evals_iterator():
 If you need to evaluate individual components of your Pydantic AI application, [set up tracing](/docs/evaluation-llm-tracing) instead.
 :::
 
+## Component-level Evals
+
+DeepEval supports evaluating individual components of your Pydantic AI application.
+
+### Tool
+Pass `metrics` or `metric_collection` to the `tool` decorator from DeepEval's Pydantic AI `Agent`.
+
+```python title="main.py" showLineNumbers {8}
+from deepeval.integrations.pydantic_ai import Agent
+
+weather_agent = Agent(
+    "openai:gpt-4o-mini",
+    instructions='Be concise, reply with one sentence.'
+)
+
+@weather_agent.tool(metric_collection="test_collection_1")
+async def get_lat_lng(location_description: str) -> (float, float):
+    return 1.0, 2.0
+```
+
 ## Evals in Production
 
 To run online evaluations in production, replace `metrics` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your Pydantic AI agent to production.

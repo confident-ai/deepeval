@@ -26,6 +26,7 @@ from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
     TraceApi,
+    TraceSpanApiStatus,
 )
 from deepeval.telemetry import capture_send_trace
 from deepeval.tracing.patchers import patch_openai_client
@@ -610,6 +611,11 @@ class TraceManager:
             environment=(
                 self.environment if not trace.environment else trace.environment
             ),
+            status=(
+                TraceSpanApiStatus.SUCCESS
+                if trace.status == TraceSpanStatus.SUCCESS
+                else TraceSpanApiStatus.ERRORED
+            ),
         )
 
     def _convert_span_to_api_span(self, span: BaseSpan) -> BaseApiSpan:
@@ -819,6 +825,8 @@ class Observer:
                 current_trace.input = self.function_kwargs
             if current_trace.output is None:
                 current_trace.output = self.result
+            if current_span.status == TraceSpanStatus.ERRORED:
+                current_trace.status = TraceSpanStatus.ERRORED
             if current_trace and current_trace.uuid == current_span.trace_uuid:
                 other_active_spans = [
                     span
