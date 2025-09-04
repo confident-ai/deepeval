@@ -472,6 +472,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
     children: List[ConversationalVerdictNode]
     evaluation_params: Optional[List[TurnParams]] = None
+    turn_window: Tuple[int, int]
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[ConversationalBinaryJudgementVerdict] = None
@@ -528,7 +529,14 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
         if self._indegree > 0:
             return
 
+        if self.turn_window is not None:
+            is_valid_turn_window(self.turn_window, test_case.turns)
+
+        if not self.turn_window:
+            self.turn_window = 0, len(test_case.turns) - 1
+
         text = """"""
+        start, end = self.turn_window
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, ConversationalTaskNode):
@@ -536,12 +544,14 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
 
         if self.evaluation_params is not None:
             text += "Full Conversation: \n"
-            for turn in test_case.turns:
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
                 for param in self.evaluation_params:
                     value = getattr(turn, param.value)
                     if isinstance(value, ToolCall):
                         value = repr(value)
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
+                    text += "\n"
 
         prompt = ConversationalBinaryJudgementTemplate.generate_binary_verdict(
             criteria=self.criteria,
@@ -585,7 +595,14 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
         if self._indegree > 0:
             return
 
+        if self.turn_window is not None:
+            is_valid_turn_window(self.turn_window, test_case.turns)
+
+        if not self.turn_window:
+            self.turn_window = 0, len(test_case.turns) - 1
+
         text = """"""
+        start, end = self.turn_window
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, ConversationalTaskNode):
@@ -593,7 +610,8 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
 
         if self.evaluation_params is not None:
             text += "Full Conversation: \n"
-            for turn in test_case.turns:
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
                 for param in self.evaluation_params:
                     value = getattr(turn, param.value)
                     if isinstance(value, ToolCall):
@@ -642,6 +660,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
     children: List[ConversationalVerdictNode]
     evaluation_params: Optional[List[TurnParams]] = None
+    turn_window: Tuple[int, int]
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[ConversationalNonBinaryJudgementVerdict] = None
@@ -709,18 +728,29 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         if self._indegree > 0:
             return
 
+        if self.turn_window is not None:
+            is_valid_turn_window(self.turn_window, test_case.turns)
+
+        if not self.turn_window:
+            self.turn_window = 0, len(test_case.turns) - 1
+
         text = """"""
+        start, end = self.turn_window
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n"
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
-            for param in self.evaluation_params:
-                value = getattr(test_case.turns, param.value)
-                if isinstance(value, ToolCall):
-                    value = repr(value)
-                text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
+            text += "Full Conversation: \n"
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
+                for param in self.evaluation_params:
+                    value = getattr(turn, param.value)
+                    if isinstance(value, ToolCall):
+                        value = repr(value)
+                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
+                    text += "\n"
 
         prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
@@ -761,18 +791,29 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
         if self._indegree > 0:
             return
 
+        if self.turn_window is not None:
+            is_valid_turn_window(self.turn_window, test_case.turns)
+
+        if not self.turn_window:
+            self.turn_window = 0, len(test_case.turns) - 1
+
         text = """"""
+        start, end = self.turn_window
         if self._parents is not None:
             for parent in self._parents:
                 if isinstance(parent, ConversationalTaskNode):
-                    text += f"{parent.output_label}:\n{parent._output}\n"
+                    text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
-            for param in self.evaluation_params:
-                value = getattr(test_case.turns, param.value)
-                if isinstance(value, ToolCall):
-                    value = repr(value)
-                text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
+            text += "Full Conversation: \n"
+            for index in range(start, end + 1):
+                turn = test_case.turns[index]
+                for param in self.evaluation_params:
+                    value = getattr(turn, param.value)
+                    if isinstance(value, ToolCall):
+                        value = repr(value)
+                    text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
+                    text += "\n"
 
         prompt = ConversationalNonBinaryJudgementTemplate.generate_non_binary_verdict(
             criteria=self.criteria, text=text, options=self._verdict_options
