@@ -1,7 +1,6 @@
 from typing import Optional, List, Union, Callable
 from rich.progress import Progress
 from pydantic import BaseModel
-from dataclasses import asdict
 import inspect
 import asyncio
 import uuid
@@ -465,7 +464,7 @@ class ConversationSimulator:
     ):
         if not self.run_remote:
             conversation_history = json.dumps(
-                [asdict(t) for t in turns], indent=4
+                [t.model_dump() for t in turns], indent=4
             )
             prompt = self.template.stop_simulation(
                 conversation_history, golden.expected_outcome
@@ -510,7 +509,7 @@ class ConversationSimulator:
     ):
         if not self.run_remote:
             conversation_history = json.dumps(
-                [asdict(t) for t in turns], indent=4
+                [t.model_dump() for t in turns], indent=4
             )
             prompt = self.template.stop_simulation(
                 conversation_history, golden.expected_outcome

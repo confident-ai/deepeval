@@ -114,6 +114,7 @@ class TraceApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
+    status: Optional[TraceSpanApiStatus] = Field(TraceSpanApiStatus.SUCCESS)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -132,3 +133,7 @@ class TraceApi(BaseModel):
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
+
+    class Config:
+        use_enum_values = True
+        validate_assignment = True

@@ -248,6 +248,8 @@ class CallbackHandler(BaseCallbackHandler):
             model=model,
             # fallback for on_end callback
             end_time=perf_counter(),
+            metric_collection=metadata.get("metric_collection", None),
+            metrics=metadata.get("metrics", None),
         )
 
         self.add_span_to_trace(llm_span)
@@ -348,6 +350,8 @@ class CallbackHandler(BaseCallbackHandler):
             ),
             # fallback for on_end callback
             end_time=perf_counter(),
+            metric_collection=metadata.get("metric_collection", None),
+            metrics=metadata.get("metrics", None),
         )
         self.add_span_to_trace(tool_span)
 
