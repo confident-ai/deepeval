@@ -4,7 +4,6 @@ from deepeval.tracing.tracing import (
     current_trace_context,
 )
 from deepeval.openai_agents.extractors import *
-from agents.tracing.traces import TraceImpl
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
@@ -22,7 +21,6 @@ try:
     openai_agents_available = True
 except ImportError:
     openai_agents_available = False
-
 
 def _check_openai_agents_available():
     if not openai_agents_available:
@@ -47,6 +45,8 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if not span.started_at:
             return
         span_type = self.get_span_kind(span.span_data)
+        if span_type == "tool":
+            return
         observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
             observer.observe_kwargs["model"] = "temporary model"
