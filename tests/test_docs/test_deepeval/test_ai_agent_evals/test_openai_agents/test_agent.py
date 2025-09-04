@@ -1,5 +1,6 @@
-from agents import Agent, Runner, add_trace_processor, RunConfig
+from agents import Agent, add_trace_processor
 from deepeval.openai_agents import DeepEvalTracingProcessor
+from deepeval.integrations.agents import Runner
 
 add_trace_processor(DeepEvalTracingProcessor())
 
@@ -8,5 +9,5 @@ agent = Agent(name="Assistant", instructions="You are a helpful assistant")
 result = Runner.run_sync(
     starting_agent=agent, 
     input="Write a haiku about recursion in programming.", 
-    run_config=RunConfig(trace_metadata={"metric_collection": "test_collection_1"})
+    metric_collection="task_completion"
 )
