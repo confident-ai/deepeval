@@ -933,6 +933,7 @@ def is_valid_turn_window(
         or (end - start) >= len(turns)
         or start < 0
         or end < 0
+        or end == len(turns)
     ):
         raise ValueError(
             "The 'turn_window' passed is invalid. Please recheck your 'turn_window' values."
