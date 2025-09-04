@@ -1100,6 +1100,7 @@ class EvaluationDataset:
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
         tracer: Optional[Tracer] = NoOpTracer,
+        test_run_id: Optional[str] = None,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1149,7 +1150,9 @@ class EvaluationDataset:
                     error_config=error_config,
                     async_config=async_config,
                 ):
-                    with tracer.start_as_current_span("evals_iterator", context=Context()):
+                    with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
+                        if test_run_id:
+                            span.set_attribute("confident.trace.test_run_id", test_run_id)
                         yield golden
             else:
                 for golden in execute_agentic_test_cases_from_loop(
@@ -1161,7 +1164,9 @@ class EvaluationDataset:
                     test_results=test_results,
                     identifier=identifier,
                 ):
-                    with tracer.start_as_current_span("evals_iterator", context=Context()):
+                    with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
+                        if test_run_id:
+                            span.set_attribute("confident.trace.test_run_id", test_run_id)
                         yield golden
 
             end_time = time.perf_counter()
