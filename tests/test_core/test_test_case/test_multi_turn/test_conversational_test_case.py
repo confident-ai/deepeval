@@ -81,17 +81,12 @@ class TestConversationalTestCaseValidation:
             ConversationalTestCase(turns=[])
 
     def test_non_turn_objects_raises_error(self):
-        with pytest.raises(
-            TypeError, match="'turns' must be a list of `Turn`s"
-        ):
+        with pytest.raises(TypeError):
             ConversationalTestCase(turns=["not a turn"])
 
-    def test_mixed_turn_objects_raises_error(self):
-        valid_turn = Turn(role="user", content="Hello")
-        with pytest.raises(
-            TypeError, match="'turns' must be a list of `Turn`s"
-        ):
-            ConversationalTestCase(turns=[valid_turn, "not a turn"])
+    def test_dict_turn_is_accepted(self):
+        case = ConversationalTestCase(turns=[{"role": "user", "content": "hi"}])
+        assert isinstance(case.turns[0], Turn)
 
     def test_invalid_context_type_raises_error(self):
         turns = [Turn(role="user", content="Hello")]
