@@ -135,6 +135,7 @@ def update_llm_span(
     if prompt:
         current_span.prompt = prompt
 
+
 def update_retriever_span(
     embedder: Optional[str] = None,
     top_k: Optional[int] = None,

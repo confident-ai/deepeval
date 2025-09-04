@@ -25,6 +25,7 @@ class PromptApi(BaseModel):
     alias: Optional[str] = None
     version: Optional[str] = None
 
+
 class MetricData(BaseModel):
     name: str
     threshold: float
