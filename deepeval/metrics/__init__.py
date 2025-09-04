@@ -5,7 +5,7 @@ from .base_metric import (
     BaseArenaMetric,
 )
 
-from .dag.dag import DAGMetric
+from .dag.dag import DAGMetric, DeepAcyclicGraph
 from .conversational_dag.conversational_dag import ConversationalDAGMetric
 from .bias.bias import BiasMetric
 from .toxicity.toxicity import ToxicityMetric
@@ -68,6 +68,7 @@ __all__ = [
     "ArenaGEval",
     "ConversationalGEval",
     "DAGMetric",
+    "DeepAcyclicGraph",
     "ConversationalDAGMetric"
     # RAG metrics
     "AnswerRelevancyMetric",
