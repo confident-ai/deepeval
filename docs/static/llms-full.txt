@@ -1368,7 +1368,7 @@ export DEEPEVAL_TELEMETRY_OPT_OUT=1
 
 ```
 
-`deepeval` also only tracks errors and exceptions raised within the package **only if you have explicitly opted in**, and **does not collect any user or company data in any way**. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to "1".
+`deepeval` also only tracks errors and exceptions raised within the package **only if you have explicitly opted in**, and **does not collect any user or company data in any way**. To help us catch bugs for future releases, set the `ERROR_REPORTING` environment variable to 1.
 
 ```codeBlockLines_e6Vv
 export ERROR_REPORTING=1
