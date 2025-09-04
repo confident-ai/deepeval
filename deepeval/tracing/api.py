@@ -21,6 +21,10 @@ class TraceSpanApiStatus(Enum):
     ERRORED = "ERRORED"
 
 
+class PromptApi(BaseModel):
+    alias: Optional[str] = None
+    version: Optional[str] = None
+
 class MetricData(BaseModel):
     name: str
     threshold: float
@@ -72,6 +76,7 @@ class BaseApiSpan(BaseModel):
 
     # llm
     model: Optional[str] = None
+    prompt: Optional[PromptApi] = None
     input_token_count: Optional[float] = Field(None, alias="inputTokenCount")
     output_token_count: Optional[float] = Field(None, alias="outputTokenCount")
     cost_per_input_token: Optional[float] = Field(
