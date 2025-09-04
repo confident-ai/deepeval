@@ -3,6 +3,7 @@ from deepeval.tracing.tracing import (
     current_span_context,
 )
 from deepeval.openai_agents.extractors import *
+from deepeval.tracing.context import current_trace_context
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
@@ -45,6 +46,12 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if not span.started_at:
             return
         span_type = self.get_span_kind(span.span_data)
+        if span_type == "agent":
+            if isinstance(span.span_data, AgentSpanData):
+                current_trace = current_trace_context.get()
+                if current_trace:
+                    current_trace.name = span.span_data.name
+            
         if span_type == "tool":
             return
         elif span_type == "llm":
