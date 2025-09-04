@@ -483,10 +483,6 @@ def set_azure_openai_embedding_env(
         EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
     )
-    KEY_FILE_HANDLER.write_key(
-        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES"
-    )
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "NO")
 
     save_target = resolve_save_target(save)
     switch_model_provider(
@@ -1145,7 +1141,6 @@ def set_deepseek_model_env(
                 ModelKeyValues.DEEPSEEK_MODEL_NAME: model_name,
                 ModelKeyValues.DEEPSEEK_API_KEY: api_key,
                 ModelKeyValues.TEMPERATURE: str(temperature),
-                ModelKeyValues.USE_DEEPSEEK_MODEL: "YES",
             },
         )
 
@@ -1343,9 +1338,9 @@ def set_gemini_model_env(
             err=True,
         )
         raise typer.Exit(code=1)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GEMINI_MODEL, "YES")
     if model_name is not None:
         KEY_FILE_HANDLER.write_key(ModelKeyValues.GEMINI_MODEL_NAME, model_name)
+
     if google_api_key is None:
         KEY_FILE_HANDLER.write_key(
             ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES"
