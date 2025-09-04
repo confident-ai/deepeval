@@ -29,7 +29,9 @@ def _compute_description(
         name_override=name_override,
         description_override=description_override,
         docstring_style=docstring_style,
-        use_docstring_info=use_docstring_info if use_docstring_info is not None else True,
+        use_docstring_info=(
+            use_docstring_info if use_docstring_info is not None else True
+        ),
         strict_json_schema=strict_mode if strict_mode is not None else True,
     )
     return schema.description
@@ -58,12 +60,16 @@ def _wrap_with_observe(
     return observed
 
 
-def function_tool(func: Optional[Callable[..., Any]] = None, /, *args: Any, **kwargs: Any) -> Any:
+def function_tool(
+    func: Optional[Callable[..., Any]] = None, /, *args: Any, **kwargs: Any
+) -> Any:
     metrics = kwargs.pop("metrics", None)
     metric_collection = kwargs.pop("metric_collection", None)
 
     if _agents_function_tool is None:
-        raise RuntimeError("agents.function_tool is not available. Please install agents via your package manager")
+        raise RuntimeError(
+            "agents.function_tool is not available. Please install agents via your package manager"
+        )
 
     # Peek decorator options to mirror description logic
     name_override = kwargs.get("name_override")

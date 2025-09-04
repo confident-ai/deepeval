@@ -22,6 +22,7 @@ try:
 except ImportError:
     openai_agents_available = False
 
+
 def _check_openai_agents_available():
     if not openai_agents_available:
         raise ImportError(

@@ -69,14 +69,21 @@ class PydanticAIAgent(Agent):
     def _patch_tool_decorator(self):
         """Patch the tool decorator to print input and output"""
         original_tool = self.tool
-        
+
         @functools.wraps(original_tool)
-        def patched_tool(*args, metric_collection: Optional[str] = None, metrics: Optional[List[BaseMetric]] = None, **kwargs):
-            
+        def patched_tool(
+            *args,
+            metric_collection: Optional[str] = None,
+            metrics: Optional[List[BaseMetric]] = None,
+            **kwargs
+        ):
+
             # Check if function is in args (direct decoration: @agent.tool)
             if args and callable(args[0]):
                 original_func = args[0]
-                patched_func = self._create_patched_function(original_func, metric_collection, metrics)
+                patched_func = self._create_patched_function(
+                    original_func, metric_collection, metrics
+                )
                 new_args = (patched_func,) + args[1:]
                 result = original_tool(*new_args, **kwargs)
                 return result
@@ -84,48 +91,67 @@ class PydanticAIAgent(Agent):
                 # Decorator called with parameters: @agent.tool(metric_collection="...")
                 # Return a decorator that will receive the function
                 def decorator_with_params(func):
-                    patched_func = self._create_patched_function(func, metric_collection, metrics)
+                    patched_func = self._create_patched_function(
+                        func, metric_collection, metrics
+                    )
                     return original_tool(patched_func, **kwargs)
+
                 return decorator_with_params
 
         # Replace the tool method for this instance
         self.tool = patched_tool
 
-    def _create_patched_function(self, original_func, metric_collection, metrics):
+    def _create_patched_function(
+        self, original_func, metric_collection, metrics
+    ):
         """Create a patched version of the function that adds tracing"""
         if inspect.iscoroutinefunction(original_func):
+
             @functools.wraps(original_func)
             async def patched_async_func(*func_args, **func_kwargs):
                 result = await original_func(*func_args, **func_kwargs)
-                
+
                 current_span = trace.get_current_span()
                 if current_span.is_recording():
                     try:
                         result_str = str(result)
                     except Exception:
                         result_str = ""
-                    current_span.set_attribute("confident.span.output", result_str)
+                    current_span.set_attribute(
+                        "confident.span.output", result_str
+                    )
                     if metric_collection:
-                        current_span.set_attribute("confident.span.metric_collection", metric_collection)
-                    #TODO: add metrics in component level evals
+                        current_span.set_attribute(
+                            "confident.span.metric_collection",
+                            metric_collection,
+                        )
+                    # TODO: add metrics in component level evals
                 return result
+
             return patched_async_func
         else:
+
             @functools.wraps(original_func)
             def patched_sync_func(*func_args, **func_kwargs):
                 result = original_func(*func_args, **func_kwargs)
-                
+
                 current_span = trace.get_current_span()
                 if current_span.is_recording():
                     try:
                         result_str = str(result)
                     except Exception:
                         result_str = ""
-                    current_span.set_attribute("confident.span.output", result_str)
+                    current_span.set_attribute(
+                        "confident.span.output", result_str
+                    )
                     if metric_collection:
-                        current_span.set_attribute("confident.span.metric_collection", metric_collection)
-                    #TODO: add metrics in component level evals
+                        current_span.set_attribute(
+                            "confident.span.metric_collection",
+                            metric_collection,
+                        )
+                    # TODO: add metrics in component level evals
                 return result
+
             return patched_sync_func
 
     def _patch_run_method(self):
@@ -336,5 +362,3 @@ class PydanticAIAgent(Agent):
 
         # Replace the method only for this instance
         self.run_sync = patched_run
-    
-    
