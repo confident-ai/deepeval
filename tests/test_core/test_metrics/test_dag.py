@@ -52,7 +52,7 @@ class TestDeepAcyclicGraph:
         assert is_valid_dag_from_roots([node_a]) is False
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
-        leaf_false, leaf_true = TestDeepAcyclicGraph.make_verdict_nodes()
+        leaf_false, leaf_true = self.make_verdict_nodes()
         inner_judge = BinaryJudgementNode(
             criteria="Inner?", children=[leaf_false, leaf_true]
         )
