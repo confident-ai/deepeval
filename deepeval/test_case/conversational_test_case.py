@@ -1,4 +1,10 @@
-from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    PrivateAttr,
+    model_validator,
+    AliasChoices,
+)
 from typing import List, Optional, Dict, Literal
 from copy import deepcopy
 from enum import Enum
@@ -28,13 +34,27 @@ class TurnParams(Enum):
 class Turn(BaseModel):
     role: Literal["user", "assistant"]
     content: str
-    user_id: Optional[str] = Field(default=None)
-    retrieval_context: Optional[List[str]] = Field(default=None)
-    tools_called: Optional[List[ToolCall]] = Field(default=None)
+    user_id: Optional[str] = Field(
+        default=None, validation_alias=AliasChoices("userId", "user_id")
+    )
+    retrieval_context: Optional[List[str]] = Field(
+        default=None,
+        validation_alias=AliasChoices("retrievalContext", "retrieval_context"),
+    )
+    tools_called: Optional[List[ToolCall]] = Field(
+        default=None,
+        validation_alias=AliasChoices("toolsCalled", "tools_called"),
+    )
     mcp_tools_called: Optional[List[MCPToolCall]] = Field(default=None)
     mcp_resources_called: Optional[List[MCPResourceCall]] = Field(default=None)
     mcp_prompts_called: Optional[List[MCPPromptCall]] = Field(default=None)
-    additional_metadata: Optional[Dict] = Field(default=None)
+    additional_metadata: Optional[Dict] = Field(
+        default=None,
+        serialization_alias="additionalMetadata",
+        validation_alias=AliasChoices(
+            "additionalMetadata", "additional_metadata"
+        ),
+    )
     _mcp_interaction: bool = PrivateAttr(default=False)
 
     def __repr__(self):
@@ -112,16 +132,26 @@ class ConversationalTestCase(BaseModel):
     context: Optional[List[str]] = Field(default=None)
     name: Optional[str] = Field(default=None)
     user_description: Optional[str] = Field(
-        default=None, serialization_alias="userDescription"
+        default=None,
+        serialization_alias="userDescription",
+        validation_alias=AliasChoices("userDescription", "user_description"),
     )
     expected_outcome: Optional[str] = Field(
-        default=None, serialization_alias="expectedOutcome"
+        default=None,
+        serialization_alias="expectedOutcome",
+        validation_alias=AliasChoices("expectedOutcome", "expected_outcome"),
     )
     chatbot_role: Optional[str] = Field(
-        default=None, serialization_alias="chatbotRole"
+        default=None,
+        serialization_alias="chatbotRole",
+        validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
     )
     additional_metadata: Optional[Dict] = Field(
-        default=None, serialization_alias="additionalMetadata"
+        default=None,
+        serialization_alias="additionalMetadata",
+        validation_alias=AliasChoices(
+            "additionalMetadata", "additional_metadata"
+        ),
     )
     comments: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)

@@ -95,6 +95,145 @@ class TestLLMTestCaseInitialization:
         assert test_case.tags == ["machine-learning", "AI", "test"]
 
 
+class TestLLMTestCaseCamelCaseInitialization:
+
+    def test_camelcase_field_initialization(self):
+        input_text = "What is artificial intelligence?"
+        actual_output_text = "AI is a branch of computer science..."
+        expected_output_text = "AI involves creating smart machines..."
+        context_list = ["AI is important", "Technology revolution"]
+        retrieval_context_list = [
+            "Retrieved AI context 1",
+            "Retrieved AI context 2",
+        ]
+        metadata_dict = {"source": "camelCase test", "version": 2.0}
+        comments_text = "This is a camelCase test case"
+        token_cost_value = 0.08
+        completion_time_value = 2.5
+        name_text = "AI Question Test CamelCase"
+        tags_list = ["artificial-intelligence", "camelCase", "test"]
+
+        tool_call = ToolCall(
+            name="search_tool",
+            description="A search tool",
+            reasoning="Need to search for information",
+            output={"results": ["result1", "result2"]},
+            inputParameters={
+                "query": "test query"
+            },  # camelCase for input_parameters
+        )
+
+        test_case = LLMTestCase(
+            input=input_text,
+            actualOutput=actual_output_text,  # camelCase
+            expectedOutput=expected_output_text,  # camelCase
+            context=context_list,
+            retrievalContext=retrieval_context_list,  # camelCase
+            additionalMetadata=metadata_dict,  # camelCase
+            toolsCalled=[tool_call],  # camelCase
+            comments=comments_text,
+            expectedTools=[tool_call],  # camelCase
+            tokenCost=token_cost_value,  # camelCase
+            completionTime=completion_time_value,  # camelCase
+            name=name_text,
+            tags=tags_list,
+        )
+
+        # Verify all fields are properly set using the same variables
+        assert test_case.input == input_text
+        assert test_case.actual_output == actual_output_text
+        assert test_case.expected_output == expected_output_text
+        assert test_case.context == context_list
+        assert test_case.retrieval_context == retrieval_context_list
+        assert test_case.additional_metadata == metadata_dict
+        assert len(test_case.tools_called) == 1
+        assert test_case.tools_called[0] == tool_call
+        assert test_case.comments == comments_text
+        assert len(test_case.expected_tools) == 1
+        assert test_case.expected_tools[0] == tool_call
+        assert test_case.token_cost == token_cost_value
+        assert test_case.completion_time == completion_time_value
+        assert test_case.name == name_text
+        assert test_case.tags == tags_list
+
+    def test_mixed_case_initialization(self):
+        input_text = "Mixed case test"
+        actual_output_text = "This uses camelCase"
+        expected_output_text = "This uses snake_case"
+        context_list = ["mixed", "case"]
+        retrieval_context_list = ["snake_case context"]
+        metadata_dict = {"mixed": "case"}
+        token_cost_value = 0.02
+        completion_time_value = 1.0
+
+        test_case = LLMTestCase(
+            input=input_text,
+            actualOutput=actual_output_text,  # camelCase
+            expected_output=expected_output_text,  # snake_case
+            context=context_list,
+            retrieval_context=retrieval_context_list,  # snake_case
+            additionalMetadata=metadata_dict,  # camelCase
+            token_cost=token_cost_value,  # snake_case
+            completionTime=completion_time_value,  # camelCase
+        )
+
+        assert test_case.input == input_text
+        assert test_case.actual_output == actual_output_text
+        assert test_case.expected_output == expected_output_text
+        assert test_case.context == context_list
+        assert test_case.retrieval_context == retrieval_context_list
+        assert test_case.additional_metadata == metadata_dict
+        assert test_case.token_cost == token_cost_value
+        assert test_case.completion_time == completion_time_value
+
+    def test_tool_call_camelcase_initialization(self):
+        # Test data variables
+        input_text = "Tool parameter test"
+        camel_tool_name = "camel_tool"
+        camel_tool_description = "A tool with camelCase params"
+        camel_tool_reasoning = "Testing camelCase"
+        camel_input_params = {"queryParam": "camelCase value", "maxResults": 10}
+        camel_output = {"camelCaseResult": "success"}
+
+        snake_tool_name = "snake_tool"
+        snake_tool_description = "A tool with snake_case params"
+        snake_tool_reasoning = "Testing snake_case"
+        snake_input_params = {
+            "query_param": "snake_case value",
+            "max_results": 5,
+        }
+        snake_output = {"snake_case_result": "success"}
+
+        # Test ToolCall with camelCase
+        tool_call_camel = ToolCall(
+            name=camel_tool_name,
+            description=camel_tool_description,
+            reasoning=camel_tool_reasoning,
+            inputParameters=camel_input_params,
+            output=camel_output,
+        )
+
+        # Test ToolCall with snake_case
+        tool_call_snake = ToolCall(
+            name=snake_tool_name,
+            description=snake_tool_description,
+            reasoning=snake_tool_reasoning,
+            input_parameters=snake_input_params,
+            output=snake_output,
+        )
+
+        test_case = LLMTestCase(
+            input=input_text,
+            toolsCalled=[tool_call_camel, tool_call_snake],
+        )
+
+        assert len(test_case.tools_called) == 2
+        assert test_case.tools_called[0].name == camel_tool_name
+        assert test_case.tools_called[0].input_parameters == camel_input_params
+        assert test_case.tools_called[1].name == snake_tool_name
+        assert test_case.tools_called[1].input_parameters == snake_input_params
+
+
 class TestLLMTestCaseTypeValidation:
 
     def test_input_must_be_string(self):

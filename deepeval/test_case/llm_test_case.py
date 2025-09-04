@@ -1,5 +1,10 @@
-from pydantic import Field, BaseModel, model_validator, PrivateAttr
-from dataclasses import dataclass, field
+from pydantic import (
+    Field,
+    BaseModel,
+    model_validator,
+    PrivateAttr,
+    AliasChoices,
+)
 from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
@@ -68,7 +73,9 @@ class ToolCall(BaseModel):
     reasoning: Optional[str] = None
     output: Optional[Any] = None
     input_parameters: Optional[Dict[str, Any]] = Field(
-        None, serialization_alias="inputParameters"
+        None,
+        serialization_alias="inputParameters",
+        validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
 
     def __eq__(self, other):
@@ -146,40 +153,59 @@ class ToolCall(BaseModel):
 class LLMTestCase(BaseModel):
     input: str
     actual_output: Optional[str] = Field(
-        default=None, serialization_alias="actualOutput"
+        default=None,
+        serialization_alias="actualOutput",
+        validation_alias=AliasChoices("actualOutput", "actual_output"),
     )
     expected_output: Optional[str] = Field(
-        default=None, serialization_alias="expectedOutput"
+        default=None,
+        serialization_alias="expectedOutput",
+        validation_alias=AliasChoices("expectedOutput", "expected_output"),
     )
     context: Optional[List[str]] = Field(
         default=None, serialization_alias="context"
     )
     retrieval_context: Optional[List[str]] = Field(
-        default=None, serialization_alias="retrievalContext"
+        default=None,
+        serialization_alias="retrievalContext",
+        validation_alias=AliasChoices("retrievalContext", "retrieval_context"),
     )
     additional_metadata: Optional[Dict] = Field(
-        default=None, serialization_alias="additionalMetadata"
+        default=None,
+        serialization_alias="additionalMetadata",
+        validation_alias=AliasChoices(
+            "additionalMetadata", "additional_metadata"
+        ),
     )
     tools_called: Optional[List[ToolCall]] = Field(
-        default=None, serialization_alias="toolsCalled"
+        default=None,
+        serialization_alias="toolsCalled",
+        validation_alias=AliasChoices("toolsCalled", "tools_called"),
     )
     comments: Optional[str] = Field(
         default=None, serialization_alias="comments"
     )
     expected_tools: Optional[List[ToolCall]] = Field(
-        default=None, serialization_alias="expectedTools"
+        default=None,
+        serialization_alias="expectedTools",
+        validation_alias=AliasChoices("expectedTools", "expected_tools"),
     )
     token_cost: Optional[float] = Field(
-        default=None, serialization_alias="tokenCost"
+        default=None,
+        serialization_alias="tokenCost",
+        validation_alias=AliasChoices("tokenCost", "token_cost"),
     )
     completion_time: Optional[float] = Field(
-        default=None, serialization_alias="completionTime"
+        default=None,
+        serialization_alias="completionTime",
+        validation_alias=AliasChoices("completionTime", "completion_time"),
     )
     name: Optional[str] = Field(default=None)
     tags: Optional[List[str]] = Field(default=None)
     mcp_servers: Optional[List[MCPServer]] = Field(default=None)
     mcp_tools_called: Optional[List[MCPToolCall]] = Field(
-        default=None, serialization_alias="mcpToolsCalled"
+        default=None,
+        serialization_alias="mcpToolsCalled",
     )
     mcp_resources_called: Optional[List[MCPResourceCall]] = Field(
         default=None, serialization_alias="mcpResourcesCalled"
