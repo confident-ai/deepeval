@@ -182,10 +182,17 @@ class ConversationalTestCase(BaseModel):
 
         copied_turns = []
         for turn in turns:
-            if not isinstance(turn, Turn):
-                raise TypeError("'turns' must be a list of `Turn`s")
-
-            copied_turns.append(deepcopy(turn))
+            if isinstance(turn, Turn):
+                copied_turns.append(deepcopy(turn))
+            elif isinstance(turn, dict):
+                try:
+                    copied_turns.append(Turn.model_validate(turn))
+                except Exception as e:
+                    raise TypeError(f"Invalid dict for Turn: {turn} ({e})")
+            else:
+                raise TypeError(
+                    f"'turns' must be a list of Turn or dict, got {type(turn)}"
+                )
 
         data["turns"] = copied_turns
 
