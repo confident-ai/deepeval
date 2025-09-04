@@ -341,3 +341,76 @@ class TestConversationalTestCaseSerialization:
         assert "expectedOutcome" in dumped
         assert "chatbotRole" in dumped
         assert "additionalMetadata" in dumped
+
+
+class TestConversationalTestCaseCamelCaseInitialization:
+
+    def test_camelcase_field_initialization(self):
+        # Test data variables
+        scenario_text = "Customer support interaction"
+        context_list = [
+            "Previous conversation history",
+            "User is a premium customer",
+        ]
+        name_text = "Support Chat Test"
+        user_description_text = "Frustrated customer with billing issue"
+        expected_outcome_text = "Issue resolved satisfactorily"
+        chatbot_role_text = "Helpful customer service agent"
+        metadata_dict = {"priority": "high", "department": "billing"}
+        comments_text = "Test case for billing dispute resolution"
+        tags_list = ["billing", "dispute", "premium"]
+
+        turns = [
+            Turn(role="user", content="Hello"),
+            Turn(role="assistant", content="Hi there!"),
+        ]
+
+        test_case = ConversationalTestCase(
+            turns=turns,
+            scenario=scenario_text,
+            context=context_list,
+            name=name_text,
+            userDescription=user_description_text,  # camelCase
+            expectedOutcome=expected_outcome_text,  # camelCase
+            chatbotRole=chatbot_role_text,  # camelCase
+            additionalMetadata=metadata_dict,  # camelCase
+            comments=comments_text,
+            tags=tags_list,
+        )
+
+        # Verify all fields are properly set using the same variables
+        assert len(test_case.turns) == 2
+        assert test_case.scenario == scenario_text
+        assert test_case.context == context_list
+        assert test_case.name == name_text
+        assert test_case.user_description == user_description_text
+        assert test_case.expected_outcome == expected_outcome_text
+        assert test_case.chatbot_role == chatbot_role_text
+        assert test_case.additional_metadata == metadata_dict
+        assert test_case.comments == comments_text
+        assert test_case.tags == tags_list
+
+    def test_mixed_case_initialization(self):
+        # Test data variables
+        scenario_text = "Mixed case scenario"
+        user_description_text = "User with mixed case test"
+        expected_outcome_text = "Mixed case outcome"
+        chatbot_role_text = "Mixed case role"
+        metadata_dict = {"testType": "mixed", "caseStyle": "camelSnake"}
+
+        turns = [Turn(role="user", content="Mixed case test")]
+
+        test_case = ConversationalTestCase(
+            turns=turns,
+            scenario=scenario_text,
+            userDescription=user_description_text,  # camelCase
+            expected_outcome=expected_outcome_text,  # snake_case
+            chatbot_role=chatbot_role_text,  # snake_case
+            additionalMetadata=metadata_dict,  # camelCase
+        )
+
+        assert test_case.scenario == scenario_text
+        assert test_case.user_description == user_description_text
+        assert test_case.expected_outcome == expected_outcome_text
+        assert test_case.chatbot_role == chatbot_role_text
+        assert test_case.additional_metadata == metadata_dict

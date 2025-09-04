@@ -342,3 +342,113 @@ class TestTurnSerialization:
         assert "retrieval_context" not in dumped
         assert "tools_called" not in dumped
         assert "additional_metadata" not in dumped
+
+
+class TestTurnCamelCaseInitialization:
+
+    def test_camelcase_field_initialization(self):
+        # Test data variables
+        role_value = "assistant"
+        content_text = "Let me check the weather for you."
+        user_id_value = "user123"
+        retrieval_context_list = ["Weather data from API", "Current conditions"]
+        metadata_dict = {
+            "timestamp": "2024-01-01T10:00:00Z",
+            "model": "gpt-4",
+        }
+
+        tool_call = ToolCall(
+            name="weather_tool",
+            description="Get weather info",
+            reasoning="User asked about weather",
+            output={"temperature": "75F", "condition": "sunny"},
+            inputParameters={"location": "New York"},  # camelCase
+        )
+
+        turn = Turn(
+            role=role_value,
+            content=content_text,
+            userId=user_id_value,  # camelCase
+            retrievalContext=retrieval_context_list,  # camelCase
+            toolsCalled=[tool_call],  # camelCase
+            additionalMetadata=metadata_dict,  # camelCase
+        )
+
+        # Verify all fields are properly set using the same variables
+        assert turn.role == role_value
+        assert turn.content == content_text
+        assert turn.user_id == user_id_value
+        assert turn.retrieval_context == retrieval_context_list
+        assert len(turn.tools_called) == 1
+        assert turn.tools_called[0].name == "weather_tool"
+        assert turn.additional_metadata == metadata_dict
+
+    def test_mixed_case_initialization(self):
+        # Test data variables
+        role_value = "user"
+        content_text = "Mixed case turn test"
+        user_id_value = "mixedUser123"
+        retrieval_context_list = ["Mixed context item"]
+        metadata_dict = {"testMode": "mixed", "caseType": "both"}
+
+        turn = Turn(
+            role=role_value,
+            content=content_text,
+            userId=user_id_value,  # camelCase
+            retrieval_context=retrieval_context_list,  # snake_case
+            additionalMetadata=metadata_dict,  # camelCase
+        )
+
+        assert turn.role == role_value
+        assert turn.content == content_text
+        assert turn.user_id == user_id_value
+        assert turn.retrieval_context == retrieval_context_list
+        assert turn.additional_metadata == metadata_dict
+
+    def test_turn_with_camelcase_tools(self):
+        # Test data variables
+        role_value = "assistant"
+        content_text = "Using tools with camelCase parameters"
+
+        camel_tool_name = "search_tool"
+        camel_input_params = {
+            "searchQuery": "camelCase search",
+            "maxResults": 10,
+        }
+        camel_output = {"searchResults": ["result1", "result2"]}
+
+        snake_tool_name = "calc_tool"
+        snake_input_params = {"expression": "2 + 2", "precision": 2}
+        snake_output = {"calculation_result": 4}
+
+        # Test ToolCall with camelCase
+        tool_call_camel = ToolCall(
+            name=camel_tool_name,
+            description="Search tool with camelCase",
+            reasoning="Need to search",
+            inputParameters=camel_input_params,  # camelCase
+            output=camel_output,
+        )
+
+        # Test ToolCall with snake_case
+        tool_call_snake = ToolCall(
+            name=snake_tool_name,
+            description="Calculator tool with snake_case",
+            reasoning="Need to calculate",
+            input_parameters=snake_input_params,  # snake_case
+            output=snake_output,
+        )
+
+        turn = Turn(
+            role=role_value,
+            content=content_text,
+            toolsCalled=[tool_call_camel, tool_call_snake],  # camelCase
+        )
+
+        assert turn.role == role_value
+        assert turn.content == content_text
+        assert len(turn.tools_called) == 2
+        assert turn.tools_called[0].name == camel_tool_name
+        assert turn.tools_called[0].input_parameters == camel_input_params
+        assert turn.tools_called[1].name == snake_tool_name
+        assert turn.tools_called[1].input_parameters == snake_input_params
