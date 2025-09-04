@@ -472,7 +472,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
     children: List[ConversationalVerdictNode]
     evaluation_params: Optional[List[TurnParams]] = None
-    turn_window: Tuple[int, int]
+    turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[ConversationalBinaryJudgementVerdict] = None
@@ -660,7 +660,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
     criteria: str
     children: List[ConversationalVerdictNode]
     evaluation_params: Optional[List[TurnParams]] = None
-    turn_window: Tuple[int, int]
+    turn_window: Tuple[int, int] = None
     label: Optional[str] = None
     _verbose_logs: Optional[str] = None
     _verdict: Optional[ConversationalNonBinaryJudgementVerdict] = None
