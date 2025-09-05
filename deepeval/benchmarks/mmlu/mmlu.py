@@ -40,7 +40,7 @@ class MMLU(DeepEvalBaseBenchmark):
         self.verbose_mode: bool = verbose_mode
         if not confinement_instructions:
             self.confinement_instructions = (
-                "Output 'A', 'B', 'C', or 'D'. Full answer not needed."
+                "CRITICAL: You must respond with ONLY a single letter: A, B, C, or D. Do not provide any explanation, reasoning, or additional text. Just the letter."
             )
         else:
             self.confinement_instructions = confinement_instructions
@@ -186,9 +186,13 @@ class MMLU(DeepEvalBaseBenchmark):
                 prediction = res[0].answer
             else:
                 prediction = res.answer
-        except TypeError:
+            
+        except Exception as e:
+            print(f"DEBUG: Structured output failed with: {e}")
             prompt += f"\n\n{self.confinement_instructions}"
-            prediction = model.generate(prompt)
+            raw_response = model.generate(prompt)
+            print(f"DEBUG: Raw model response: {repr(raw_response)}")
+            prediction = raw_response
 
         # For native models, shouldn't happen but just in case
         if isinstance(prediction, tuple):
