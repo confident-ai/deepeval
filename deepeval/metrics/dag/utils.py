@@ -21,20 +21,20 @@ from deepeval.test_case import LLMTestCaseParams, TurnParams
 
 def is_valid_dag_from_roots(
     root_nodes: Union[list[BaseNode], list[ConversationalBaseNode]],
-    is_conversational: bool = False,
+    multiturn: bool,
 ) -> bool:
     visited = set()
     for root in root_nodes:
-        if not is_valid_dag(root, visited, set(), is_conversational):
+        if not is_valid_dag(root, multiturn, visited, set()):
             return False
     return True
 
 
 def is_valid_dag(
     node: Union[BaseNode, ConversationalBaseNode],
+    multiturn: bool,
     visited=None,
     stack=None,
-    is_conversational=False,
 ) -> bool:
     if visited is None:
         visited = set()
@@ -48,14 +48,14 @@ def is_valid_dag(
 
     visited.add(node)
     stack.add(node)
-    if not is_conversational:
+    if not multiturn:
         if (
             isinstance(node, TaskNode)
             or isinstance(node, BinaryJudgementNode)
             or isinstance(node, NonBinaryJudgementNode)
         ):
             for child in node.children:
-                if not is_valid_dag(child, visited, stack, is_conversational):
+                if not is_valid_dag(child, multiturn, visited, stack):
                     return False
     else:
         if (
@@ -64,7 +64,7 @@ def is_valid_dag(
             or isinstance(node, ConversationalNonBinaryJudgementNode)
         ):
             for child in node.children:
-                if not is_valid_dag(child, visited, stack, is_conversational):
+                if not is_valid_dag(child, multiturn, visited, stack):
                     return False
 
     stack.remove(node)
@@ -73,16 +73,16 @@ def is_valid_dag(
 
 def extract_required_params(
     nodes: list[BaseNode],
+    multiturn: bool,
     required_params: Optional[
         Union[Set[LLMTestCaseParams], Set[TurnParams]]
     ] = None,
-    is_conversational=False,
 ) -> Union[Set[LLMTestCaseParams], Set[TurnParams]]:
     if required_params is None:
         required_params = set()
 
     for node in nodes:
-        if not is_conversational:
+        if not multiturn:
             if (
                 isinstance(node, TaskNode)
                 or isinstance(node, BinaryJudgementNode)
@@ -91,7 +91,7 @@ def extract_required_params(
                 if node.evaluation_params is not None:
                     required_params.update(node.evaluation_params)
                 extract_required_params(
-                    node.children, required_params, is_conversational
+                    node.children, multiturn, required_params
                 )
         else:
             if (
@@ -102,14 +102,14 @@ def extract_required_params(
                 if node.evaluation_params is not None:
                     required_params.update(node.evaluation_params)
                 extract_required_params(
-                    node.children, required_params, is_conversational
+                    node.children, multiturn, required_params
                 )
 
     return required_params
 
 
 def copy_graph(
-    original_dag: DeepAcyclicGraph, is_conversational: bool = False
+    original_dag: DeepAcyclicGraph
 ) -> DeepAcyclicGraph:
     # This mapping avoids re-copying nodes that appear in multiple places.
     visited: Union[
@@ -147,7 +147,7 @@ def copy_graph(
                 "_depth",
             ]
         }
-        if not is_conversational:
+        if not original_dag.multiturn:
             if (
                 isinstance(node, TaskNode)
                 or isinstance(node, BinaryJudgementNode)

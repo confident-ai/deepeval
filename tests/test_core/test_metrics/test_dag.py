@@ -36,7 +36,7 @@ class TestDeepAcyclicGraph:
             children=[judgement_node],
             evaluation_params=[LLMTestCaseParams.INPUT],
         )
-        assert is_valid_dag_from_roots([root], is_conversational=False) is True
+        assert is_valid_dag_from_roots([root], multiturn=False) is True
 
     def test_is_acyclic_dag(self):
         node_a = TaskNode(
@@ -47,7 +47,7 @@ class TestDeepAcyclicGraph:
         )
         node_a.children.append(node_b)
         assert (
-            is_valid_dag_from_roots([node_a], is_conversational=False) is False
+            is_valid_dag_from_roots([node_a], multiturn=False) is False
         )
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
@@ -66,7 +66,7 @@ class TestDeepAcyclicGraph:
             evaluation_params=[],
             children=[outer_judge],
         )
-        assert is_valid_dag(task, is_conversational=False) is True
+        assert is_valid_dag(task, multiturn=False) is True
 
     def test_binary_judge_2_values(self):
         verdict1 = VerdictNode(verdict=True, score=10)
@@ -87,7 +87,7 @@ class TestDeepAcyclicGraph:
             children=[verdict1, verdict2, verdict3],
         )
 
-        assert is_valid_dag(judge_node, is_conversational=False) is True
+        assert is_valid_dag(judge_node, multiturn=False) is True
 
     def test_invalid_non_binary(self):
         verdict1 = VerdictNode(verdict=True, score=10)
@@ -121,7 +121,7 @@ class TestDeepAcyclicGraph:
             ],
             children=[judgement_node],
         )
-        params = extract_required_params([task], is_conversational=False)
+        params = extract_required_params([task], multiturn=False)
         assert LLMTestCaseParams.INPUT in params
         assert LLMTestCaseParams.ACTUAL_OUTPUT in params
         assert LLMTestCaseParams.EXPECTED_OUTPUT in params
@@ -151,7 +151,7 @@ class TestDeepAcyclicGraph:
             evaluation_params=[LLMTestCaseParams.INPUT],
             children=[non_binary],
         )
-        params = extract_required_params([task], is_conversational=False)
+        params = extract_required_params([task], multiturn=False)
         assert LLMTestCaseParams.INPUT in params
         assert LLMTestCaseParams.EXPECTED_OUTPUT in params
         assert len(params) == 2
@@ -168,7 +168,6 @@ class TestDeepAcyclicGraph:
         with pytest.raises(ValueError):
             DeepAcyclicGraph(
                 root_nodes=[judgement_node1, judgement_node2],
-                is_conversational=False,
             )
 
     def test_only_score_or_child(self):
@@ -180,9 +179,9 @@ class TestDeepAcyclicGraph:
         node1 = TaskNode("Task 1", "Label1", [], [])
         node2 = TaskNode("Task 2", "Label2", [], [])
         dag = DeepAcyclicGraph(
-            root_nodes=[node1, node2], is_conversational=False
+            root_nodes=[node1, node2]
         )
-        assert is_valid_dag(dag, is_conversational=False) is True
+        assert is_valid_dag(dag, multiturn=False) is True
 
     def test_copy_graph_isolated_and_deep(self):
         INSTRUCTIONS = "Instruction 1:"
@@ -200,9 +199,9 @@ class TestDeepAcyclicGraph:
             evaluation_params=[],
             children=[judgement_node],
         )
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=False)
+        dag = DeepAcyclicGraph(root_nodes=[task])
 
-        copied = copy_graph(dag, is_conversational=False)
+        copied = copy_graph(dag)
         copied_task = copied.root_nodes[0]
         copied_judge = copied_task.children[0]
         copied_leaf_false = copied_judge.children[0]
@@ -257,8 +256,8 @@ class TestDeepAcyclicGraph:
             evaluation_params=[],
             children=[non_binary],
         )
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=False)
-        assert is_valid_dag(dag, is_conversational=False)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        assert is_valid_dag(dag, multiturn=False)
 
     def test_task_node_leaf(self):
         task = TaskNode(
@@ -267,8 +266,8 @@ class TestDeepAcyclicGraph:
             evaluation_params=[LLMTestCaseParams.INPUT],
             children=[],
         )
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=False)
-        assert is_valid_dag_from_roots(dag.root_nodes, is_conversational=False)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
 
     def test_verdict_node_with_child(self):
         leaf = VerdictNode(verdict=False, score=0.0)
@@ -278,8 +277,8 @@ class TestDeepAcyclicGraph:
             children=[VerdictNode(verdict=False, score=0), verdict],
         )
         task = TaskNode("Check", "result", [], [judge])
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=False)
-        assert is_valid_dag_from_roots(dag.root_nodes, is_conversational=False)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=False)
 
 
 class TestConversationalDeepAcyclicGraph:
@@ -295,7 +294,7 @@ class TestConversationalDeepAcyclicGraph:
             children=[judgement_node],
             evaluation_params=[TurnParams.ROLE],
         )
-        assert is_valid_dag_from_roots([root], is_conversational=True) is True
+        assert is_valid_dag_from_roots([root], multiturn=True) is True
 
     def test_is_acyclic_dag(self):
         node_a = ConversationalTaskNode(
@@ -306,7 +305,7 @@ class TestConversationalDeepAcyclicGraph:
         )
         node_a.children.append(node_b)
         assert (
-            is_valid_dag_from_roots([node_a], is_conversational=True) is False
+            is_valid_dag_from_roots([node_a], multiturn=True) is False
         )
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
@@ -327,7 +326,7 @@ class TestConversationalDeepAcyclicGraph:
             evaluation_params=[],
             children=[outer_judge],
         )
-        assert is_valid_dag(task, is_conversational=True) is True
+        assert is_valid_dag(task, multiturn=True) is True
 
     def test_binary_judge_2_values(self):
         verdict1 = ConversationalVerdictNode(verdict=True, score=10)
@@ -347,7 +346,7 @@ class TestConversationalDeepAcyclicGraph:
             criteria="Should have strings in verdics",
             children=[verdict1, verdict2, verdict3],
         )
-        assert is_valid_dag(judge_node, is_conversational=True) is True
+        assert is_valid_dag(judge_node, multiturn=True) is True
 
     def test_invalid_non_binary(self):
         verdict1 = ConversationalVerdictNode(verdict=True, score=10)
@@ -380,7 +379,7 @@ class TestConversationalDeepAcyclicGraph:
             evaluation_params=[TurnParams.ROLE],
             children=[judgement_node],
         )
-        params = extract_required_params([task], is_conversational=True)
+        params = extract_required_params([task], multiturn=True)
         assert TurnParams.ROLE in params
         assert TurnParams.CONTENT in params
         assert len(params) == 2
@@ -409,7 +408,7 @@ class TestConversationalDeepAcyclicGraph:
             evaluation_params=[TurnParams.ROLE],
             children=[non_binary],
         )
-        params = extract_required_params([task], is_conversational=True)
+        params = extract_required_params([task], multiturn=True)
         assert TurnParams.ROLE in params
         assert TurnParams.CONTENT in params
         assert len(params) == 2
@@ -426,7 +425,6 @@ class TestConversationalDeepAcyclicGraph:
         with pytest.raises(ValueError):
             DeepAcyclicGraph(
                 root_nodes=[judgement_node1, judgement_node2],
-                is_conversational=True,
             )
 
     def test_only_score_or_child(self):
@@ -440,9 +438,9 @@ class TestConversationalDeepAcyclicGraph:
         node1 = ConversationalTaskNode("Task 1", "Label1", [], [])
         node2 = ConversationalTaskNode("Task 2", "Label2", [], [])
         dag = DeepAcyclicGraph(
-            root_nodes=[node1, node2], is_conversational=True
+            root_nodes=[node1, node2]
         )
-        assert is_valid_dag(dag, is_conversational=True) is True
+        assert is_valid_dag(dag, multiturn=True) is True
 
     def test_copy_graph_isolated_and_deep(self):
         INSTRUCTIONS = "Instruction 1:"
@@ -460,9 +458,9 @@ class TestConversationalDeepAcyclicGraph:
             evaluation_params=[],
             children=[judgement_node],
         )
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=True)
+        dag = DeepAcyclicGraph(root_nodes=[task])
 
-        copied = copy_graph(dag, is_conversational=True)
+        copied = copy_graph(dag)
         copied_task = copied.root_nodes[0]
         copied_judge = copied_task.children[0]
         copied_leaf_false = copied_judge.children[0]
@@ -516,8 +514,8 @@ class TestConversationalDeepAcyclicGraph:
             evaluation_params=[],
             children=[non_binary],
         )
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=True)
-        assert is_valid_dag(dag, is_conversational=True)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        assert is_valid_dag(dag, multiturn=True)
 
     def test_task_node_leaf(self):
         task = ConversationalTaskNode(
@@ -526,8 +524,8 @@ class TestConversationalDeepAcyclicGraph:
             evaluation_params=[TurnParams.ROLE],
             children=[],
         )
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=True)
-        assert is_valid_dag_from_roots(dag.root_nodes, is_conversational=True)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=True)
 
     def test_verdict_node_with_child(self):
         leaf = ConversationalVerdictNode(verdict=False, score=0.0)
@@ -540,5 +538,5 @@ class TestConversationalDeepAcyclicGraph:
             ],
         )
         task = ConversationalTaskNode("Check", "result", [], [judge])
-        dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=True)
-        assert is_valid_dag_from_roots(dag.root_nodes, is_conversational=True)
+        dag = DeepAcyclicGraph(root_nodes=[task])
+        assert is_valid_dag_from_roots(dag.root_nodes, multiturn=True)
