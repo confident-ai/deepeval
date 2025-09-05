@@ -212,7 +212,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                     )
                 copied_convo_g_eval = ConversationalGEval(**convo_g_eval_args)
 
-                copied_convo_g_eval.a_measure(
+                await copied_convo_g_eval.a_measure(
                     test_case=test_case, _show_indicator=False
                 )
                 metric._verbose_steps.append(
@@ -228,7 +228,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 )[0]
                 copied_metric.verbose_mode = False
 
-                copied_metric.a_measure(
+                await copied_metric.a_measure(
                     test_case=test_case, _show_indicator=False
                 )
                 metric._verbose_steps.append(
@@ -238,7 +238,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
                 if metric.include_reason:
                     metric.reason = copied_metric.reason
             else:
-                self.child._a_execute(
+                await self.child._a_execute(
                     metric=metric, test_case=test_case, depth=depth
                 )
         else:
@@ -247,7 +247,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             )
             metric.score = self.score / 10
             if metric.include_reason:
-                metric.reason = self._a_generate_reason(metric=metric)
+                metric.reason = await self._a_generate_reason(metric=metric)
 
     def _generate_reason(self, metric: BaseConversationalMetric):
         prompt = ConversationalVerdictNodeTemplate.generate_reason(
@@ -432,17 +432,17 @@ class ConversationalTaskNode(ConversationalBaseNode):
             text=text,
         )
         if metric.using_native_model:
-            res, cost = metric.model.a_generate(prompt, schema=TaskNodeOutput)
+            res, cost = await metric.model.a_generate(prompt, schema=TaskNodeOutput)
             metric.evaluation_cost += cost
             self._output = res.output
         else:
             try:
-                res: TaskNodeOutput = metric.model.a_generate(
+                res: TaskNodeOutput = await metric.model.a_generate(
                     prompt, schema=TaskNodeOutput
                 )
                 self._output = res.output
             except TypeError:
-                res = metric.model.a_generate(prompt)
+                res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 self._output = TaskNodeOutput(**data).output
 
@@ -614,19 +614,19 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             text=text,
         )
         if metric.using_native_model:
-            res, cost = metric.model.a_generate(
+            res, cost = await metric.model.a_generate(
                 prompt, schema=BinaryJudgementVerdict
             )
             metric.evaluation_cost += cost
             self._verdict = res
         else:
             try:
-                res: BinaryJudgementVerdict = metric.model.a_generate(
+                res: BinaryJudgementVerdict = await metric.model.a_generate(
                     prompt, schema=BinaryJudgementVerdict
                 )
                 self._verdict = res
             except TypeError:
-                res = metric.model.a_generate(prompt)
+                res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 self._verdict = BinaryJudgementVerdict(**data)
 
@@ -807,19 +807,19 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
             criteria=self.criteria, text=text, options=self._verdict_options
         )
         if metric.using_native_model:
-            res, cost = metric.model.a_generate(
+            res, cost = await metric.model.a_generate(
                 prompt, schema=self._verdict_schema
             )
             metric.evaluation_cost += cost
             self._verdict = res
         else:
             try:
-                res: self._verdict_schema = metric.model.a_generate(
+                res: self._verdict_schema = await metric.model.a_generate(
                     prompt, schema=self._verdict_schema
                 )
                 self._verdict = res
             except TypeError:
-                res = metric.model.a_generate(prompt)
+                res = await metric.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 self._verdict = self._verdict_schema(**data)
 
