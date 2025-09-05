@@ -1,0 +1,245 @@
+---
+id: metrics-conversational-dag
+title: Conversational-DAG
+sidebar_label: Conversational-DAG
+---
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer multiTurn={true} custom={true} />
+
+The `ConversationalDAGMetric` is the most versatile custom metric that allows you to build  deterministic decision trees for multi-turn evaluations. It uses LLM-as-a-judge to run evals on an entire conversation by traversing a decison tree.
+
+## Required Arguments
+
+The `ConversationalDAGMetric` metric requires you to create a `ConversationalTestCase` with the following arguments:
+
+- `turns`
+
+You'll also want to supply any additional arguments such as `retrieval_context` and `tools_called` in `turns` if your evaluation criteria depends on these parameters.
+
+## Usage
+
+The `ConversationalDAGMetric` can be used to evaluate entire conversations on a decision based criteria. This allows us to create robust evaluations on conversations unlike any other metrics. The conversational dag also allows us to use the regular conversational metrics to run evaluations on the final level.
+
+```python
+from deepeval.metrics import ConversationalDAGMetric
+
+metric = ConversationalDAGMetric(
+    name="Custom Conversational DAG Metric",
+    dag=dag
+)
+```
+
+There are **TWO** mandatory and **SIX** optional parameters required when creating a `ConversationalDAGMetric`:
+
+- `name`: name of the metric.
+- `dag`: a `DeepAcyclicGraph` which represents your evaluation decision tree. Here's [how to create one](#creating-a-dag).
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+## Creating a DAG
+
+To use the `ConversationalDAGMetric`, we need to first create a valid `DeepAcyclicGraph` (DAG) that represents a decision tree to get a final verdict. Here's an example decision tree that checks whether a _playful chatbot_ performs it's role correctly.
+
+![DAG Image for Multi-Turn](./images/docs:conversational-dag.png)
+
+<details>
+<summary><strong>Why use DAG?</strong></summary>
+
+While using a DAG for evaluation may seem complex at first, it provides significantly greater insight and control over what is and isn't tested. DAGs allow you to structure your evaluation logic from the ground up, enabling precise, fully customizable workflows.
+
+Unlike other custom metrics like the `ConversationalGEval` which often abstract the evaluation process or introduce non-deterministic elements, DAGs give you full transparency and control. You can still incorporate these metrics (e.g., `ConversationalGEval` or any other `deepeval` metric) within a DAG, but now you have the flexibility to decide exactly where and how they are applied in your evaluation pipeline.
+
+This makes DAGs not only more powerful but also more reliable for complex and highly tailored evaluation needs.
+
+</details>
+
+A `DeepAcyclicGraph` for a `ConversationalDAGMetric` can be created using the conversational nodes from `deepeval`.
+
+## Conversational DAG nodes
+
+There are exactly **FOUR** different node types you can choose from to create a `DeepAcyclicGraph`.
+
+### Task node
+
+The `ConversationalTaskNode` is designed specifically for processing either the data from a test case using parameters from `TurnParams`, or the output from a parent `ConversationalTaskNode`. 
+
+:::note
+The `ConversationalDAGMetric` allows you to choose a certain window of turns to run evaluations on as well.
+
+![DAG with turns window](./images/docs:conversational-dag-turn-window.png)
+:::
+
+You can also break down a conversation into atomic units by choosing a specific window of conversation turns. Here's how to create a `ConversationalTaskNode`:
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalTaskNode
+from deepeval.test_case import TurnParams
+
+task_node = ConversationalTaskNode(
+    instructions="Summarize the assistant's replies in one paragraph.",
+    output_label="Summary",
+    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    children=[binary_node],
+    turn_window=(0,6),
+)
+```
+
+There are **THREE** mandatory and **THREE** optional parameter when creating a `ConversationalTaskNode`:
+
+- `instructions`: a string specifying how to process a conversation, and/or outputs from a previous parent `TaskNode`.
+- `output_label`: a string representing the final output. The `child` `ConversationalBaseNode`s will use the `output_label` to reference the output from the current `ConversationalTaskNode`.
+- `children`: a list of `ConversationalBaseNode`s. There **must not** be a `ConversationalVerdictNode` in the list of children for a `ConversationalTaskNode`.
+- [Optional] `evaluation_params`: a list of type `TurnParams`. Include only the parameters that are relevant for processing.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
+- [Optional] `turn_window`: a tuple of 2 indices (inclusive) specifying the conversation window the task node must focus on. The window must contain the conversation where the task must be performed.
+
+### Binary judgement node
+
+The `ConversationalBinaryJudgementNode` determines whether the verdict is `True` or `False` based on the given `criteria`.
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalBinaryJudgementNode
+
+binary_node = ConversationalBinaryJudgementNode(
+    criteria="Does the assistant's reply satisfy user's question?",
+    children=[
+        ConversationalVerdictNode(verdict=False, score=0),
+        ConversationalVerdictNode(verdict=True, score=10),
+    ],
+)
+```
+
+There are **TWO** mandatory and **THREE** optional parameter when creating a `ConversationalBinaryJudgementNode`:
+
+- `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `Turn`.
+- `children`: a list of exactly two `ConversationalVerdictNodes`, one with a verdict value of `True`, and the other with a value of `False`.
+- [Optional] `evaluation_params`: a list of type `TurnParams`. Include only the parameters that are relevant for processing.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
+- [Optional] `turn_window`: a tuple of 2 indices (inclusive) specifying the conversation window the task node must focus on. The window must contain the conversation where the task must be performed.
+
+:::caution
+There is no need to specify that output has to be either `True` or `False` in the `criteria`.
+:::
+
+### Non-binary judgement node
+
+The `ConversationalNonBinaryJudgementNode` determines what the `verdict` is based on the given `criteria` and available `verdit` options.
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalNonBinaryJudgementNode
+
+non_binary_node = ConversationalNonBinaryJudgementNode(
+    criteria="How was the assistant's behaviour towards user?",
+    children=[
+        ConversationalVerdictNode(verdict="Rude", score=0),
+        ConversationalVerdictNode(verdict="Neutral", score=5),
+        ConversationalVerdictNode(verdict="Playful", score=10),
+    ],
+)
+```
+
+There are **TWO** mandatory and **THREE** optional parameter when creating a `ConversationalNonBinaryJudgementNode`:
+
+- `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `Turn`.
+- `children`: a list of `ConversationalVerdictNodes`, where the `verdict` values determine the possible verdict of the current non-binary judgement.
+- [Optional] `evaluation_params`: a list of type `TurnParams`. Include only the parameters that are relevant for processing.
+- [Optional] `label`: a string that will be displayed in the verbose logs if `verbose_mode` is `True`.
+- [Optional] `turn_window`: a tuple of 2 indices (inclusive) specifying the conversation window the task node must focus on. The window must contain the conversation where the task must be performed.
+
+:::caution
+There is no need to specify the options of what to output in the `criteria`.
+:::
+
+### Verdict node
+
+The `ConversationalVerdictNode` **is always a leaf node** and must not be the root node of your DAG. The verdict node contains no additional logic, and simply returns the determined score based on the specified verdict.
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalVerdictNode
+...
+
+ConversationalVerdictNode(verdict="Good", score=9),
+```
+
+There is **ONE** mandatory and **TWO** optional parameter when creating a `ConversationalVerdictNode`:
+
+- `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is non-binary, else boolean if the parent is binary.
+- [Optional] `score`: an integer between **0 - 10** that determines the final score of your `ConversationalDAGMetric` based on the specified `verdict` value. You must provide a `score` if `child` is None.
+- [Optional] `child`: a `ConversationalBaseNode` **OR** any `BaseConversationalMetric`, including `ConversationalGEval` metric instances. 
+
+If the `score` is not provided, the `ConversationalDAGMetric` will use the provided child to run the provided `ConversationalBaseMetric` instance to calculate a `score`, **OR** propagate the DAG execution to the `ConversationalBaseNode` child.
+
+:::caution
+You must provide either `score` or `child`, but not both.
+:::
+
+## Putting Everything Together
+
+We can now use the nodes we've just created to create a `DeepAcyclicGraph` and use it to create a `ConversationalDAGMetric`. Here's how to do that:
+
+```python title="main.py"
+from deepeval.metrics.dag import DeepAcyclicGraph
+from deepeval.metrics.conversational_dag import (
+    ConversationalTaskNode,
+    ConversationalBinaryJudgementNode,
+    ConversationalNonBinaryJudgementNode,
+    ConversationalVerdictNode,
+)
+from deepeval.test_case import TurnParams
+
+non_binary_node = ConversationalNonBinaryJudgementNode(
+    criteria="How was the assistant's behaviour towards user?",
+    children=[
+        ConversationalVerdictNode(verdict="Rude", score=0),
+        ConversationalVerdictNode(verdict="Neutral", score=5),
+        ConversationalVerdictNode(verdict="Playful", score=10),
+    ],
+)
+
+binary_node = ConversationalBinaryJudgementNode(
+    criteria="Does the assistant's reply satisfy user's question?",
+    children=[
+        ConversationalVerdictNode(verdict=False, score=0),
+        ConversationalVerdictNode(verdict=True, child=non_binary_node),
+    ],
+)
+
+task_node = ConversationalTaskNode(
+    instructions="Summarize the assistant's replies in one paragraph.",
+    output_label="Summary",
+    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    children=[binary_node],
+    turn_window=(0,6),
+)
+
+dag = DeepAcyclicGraph(root_nodes=[task_node])
+```
+
+:::tip
+Building your nodes in a bottom up fashion makes it easier to create a valid DAG and understand the flow.
+:::
+
+This is exactly the same DAG we've seen in the example images till now. We can now pass this `dag` to `ConversationalDAGMetric` and run an evaluation.
+
+```python title="main.py"
+from deepeval.metrics import ConversationalDAGMetric
+...
+
+playful_chatbot = ConversationalDAGMetric(
+    name="Playful Chatbot",
+    dag=dag,
+)
+```
+
+You can now pass a `ConversationalTestCase` and this metric in the `evaluate` function to run your evals.
+
+## How Is It Calculated
+
+The `ConversationalDAGMetric` score is determined by traversing the custom decision tree in topological order, using any evaluation models along the way to perform judgements to determine which path to take.
