@@ -432,7 +432,9 @@ class ConversationalTaskNode(ConversationalBaseNode):
             text=text,
         )
         if metric.using_native_model:
-            res, cost = await metric.model.a_generate(prompt, schema=TaskNodeOutput)
+            res, cost = await metric.model.a_generate(
+                prompt, schema=TaskNodeOutput
+            )
             metric.evaluation_cost += cost
             self._output = res.output
         else:
