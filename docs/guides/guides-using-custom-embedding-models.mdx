@@ -15,17 +15,26 @@ Throughout `deepeval`, only the `generate_goldens_from_docs()` method in the `Sy
 
 This guide will teach you how to use literally **ANY** embedding model to extract context from documents that are required for synthetic data generation.
 
+:::tip Persisting settings
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
 ### Using Azure OpenAI
 
 You can use Azure's OpenAI embedding models by running the following commands in the CLI:
 
 ```bash
-deepeval set-azure-openai --openai-endpoint=<endpoint> \
-    --openai-endpoint=<endpoint> \ # e.g. https://example-resource.azure.openai.com/
+deepeval set-azure-openai \
+    # e.g. https://example-resource.azure.openai.com/
+    --openai-endpoint=<endpoint> \
     --openai-api-key=<api_key> \
-    --openai-model-name=<model_name> \ # e.g. gpt-4.1
-    --deployment-name=<deployment_name> \  # e.g. Test Deployment
-    --openai-api-version=<openai_api_version> \ # e.g. 2025-01-01-preview
+    # e.g. gpt-4.1
+    --openai-model-name=<model_name> \
+    # e.g. Test Deployment
+    --deployment-name=<deployment_name> \
+    # e.g. 2025-01-01-preview
+    --openai-api-version=<openai_api_version> \
     --model-version=<model_version> # e.g. 2024-11-20
 ```
 
@@ -96,7 +105,7 @@ deepeval unset-local-embeddings
 
 For additional instructions about LLM model and embeddings model availability and base URLs, consult the provider's documentation.
 
-### Using Any Custom Model
+### Using A Custom Embedding Model
 
 Alternatively, you can also create a custom embedding model in code by inheriting the base `DeepEvalBaseEmbeddingModel` class. Here is an example of using the same custom Azure OpenAI embedding model but created in code instead using langchain's `langchain_openai` module:
 
