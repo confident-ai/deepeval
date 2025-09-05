@@ -133,6 +133,7 @@ def test_dag_imports():
     assert NonBinaryJudgementNode is not None
     assert VerdictNode is not None
 
+
 def test_conversational_dag_imports():
     from deepeval.metrics.conversational_dag import (
         ConversationalTaskNode,

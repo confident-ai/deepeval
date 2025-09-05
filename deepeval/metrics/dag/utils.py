@@ -14,15 +14,15 @@ from deepeval.metrics.conversational_dag import (
     ConversationalBinaryJudgementNode,
     ConversationalNonBinaryJudgementNode,
     ConversationalTaskNode,
-    ConversationalVerdictNode
+    ConversationalVerdictNode,
 )
 from deepeval.test_case import LLMTestCaseParams, TurnParams
 
 
 def is_valid_dag_from_roots(
-        root_nodes: Union[list[BaseNode], list[ConversationalBaseNode]],
-        is_conversational: bool = False,
-    ) -> bool:
+    root_nodes: Union[list[BaseNode], list[ConversationalBaseNode]],
+    is_conversational: bool = False,
+) -> bool:
     visited = set()
     for root in root_nodes:
         if not is_valid_dag(root, visited, set(), is_conversational):
@@ -31,11 +31,11 @@ def is_valid_dag_from_roots(
 
 
 def is_valid_dag(
-        node: Union[BaseNode, ConversationalBaseNode], 
-        visited=None, 
-        stack=None,
-        is_conversational=False,
-    ) -> bool:
+    node: Union[BaseNode, ConversationalBaseNode],
+    visited=None,
+    stack=None,
+    is_conversational=False,
+) -> bool:
     if visited is None:
         visited = set()
     if stack is None:
@@ -73,7 +73,9 @@ def is_valid_dag(
 
 def extract_required_params(
     nodes: list[BaseNode],
-    required_params: Optional[Union[Set[LLMTestCaseParams], Set[TurnParams]]] = None,
+    required_params: Optional[
+        Union[Set[LLMTestCaseParams], Set[TurnParams]]
+    ] = None,
     is_conversational=False,
 ) -> Union[Set[LLMTestCaseParams], Set[TurnParams]]:
     if required_params is None:
@@ -88,7 +90,9 @@ def extract_required_params(
             ):
                 if node.evaluation_params is not None:
                     required_params.update(node.evaluation_params)
-                extract_required_params(node.children, required_params, is_conversational)
+                extract_required_params(
+                    node.children, required_params, is_conversational
+                )
         else:
             if (
                 isinstance(node, ConversationalTaskNode)
@@ -97,16 +101,25 @@ def extract_required_params(
             ):
                 if node.evaluation_params is not None:
                     required_params.update(node.evaluation_params)
-                extract_required_params(node.children, required_params, is_conversational)
+                extract_required_params(
+                    node.children, required_params, is_conversational
+                )
 
     return required_params
 
 
-def copy_graph(original_dag: DeepAcyclicGraph, is_conversational: bool = False) -> DeepAcyclicGraph:
+def copy_graph(
+    original_dag: DeepAcyclicGraph, is_conversational: bool = False
+) -> DeepAcyclicGraph:
     # This mapping avoids re-copying nodes that appear in multiple places.
-    visited: Union[Dict[BaseNode, BaseNode], Dict[ConversationalBaseNode, ConversationalBaseNode]] = {}
+    visited: Union[
+        Dict[BaseNode, BaseNode],
+        Dict[ConversationalBaseNode, ConversationalBaseNode],
+    ] = {}
 
-    def copy_node(node: Union[BaseNode, ConversationalBaseNode]) -> Union[BaseNode, ConversationalBaseNode]:
+    def copy_node(
+        node: Union[BaseNode, ConversationalBaseNode],
+    ) -> Union[BaseNode, ConversationalBaseNode]:
         if node in visited:
             return visited[node]
 

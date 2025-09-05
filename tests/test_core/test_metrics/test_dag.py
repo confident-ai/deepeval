@@ -46,7 +46,9 @@ class TestDeepAcyclicGraph:
             "Task B", output_label="B", evaluation_params=[], children=[node_a]
         )
         node_a.children.append(node_b)
-        assert is_valid_dag_from_roots([node_a], is_conversational=False) is False
+        assert (
+            is_valid_dag_from_roots([node_a], is_conversational=False) is False
+        )
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
         leaf_false = VerdictNode(verdict=False, score=0)
@@ -164,7 +166,10 @@ class TestDeepAcyclicGraph:
             criteria="?", children=[leaf_false, leaf_true]
         )
         with pytest.raises(ValueError):
-            DeepAcyclicGraph(root_nodes=[judgement_node1, judgement_node2], is_conversational=False)
+            DeepAcyclicGraph(
+                root_nodes=[judgement_node1, judgement_node2],
+                is_conversational=False,
+            )
 
     def test_only_score_or_child(self):
         leaf_false = VerdictNode(verdict=False, score=0)
@@ -174,7 +179,9 @@ class TestDeepAcyclicGraph:
     def test_allow_multiple_tasknode_roots(self):
         node1 = TaskNode("Task 1", "Label1", [], [])
         node2 = TaskNode("Task 2", "Label2", [], [])
-        dag = DeepAcyclicGraph(root_nodes=[node1, node2], is_conversational=False)
+        dag = DeepAcyclicGraph(
+            root_nodes=[node1, node2], is_conversational=False
+        )
         assert is_valid_dag(dag, is_conversational=False) is True
 
     def test_copy_graph_isolated_and_deep(self):
@@ -298,7 +305,9 @@ class TestConversationalDeepAcyclicGraph:
             "Task B", output_label="B", evaluation_params=[], children=[node_a]
         )
         node_a.children.append(node_b)
-        assert is_valid_dag_from_roots([node_a], is_conversational=True) is False
+        assert (
+            is_valid_dag_from_roots([node_a], is_conversational=True) is False
+        )
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
         leaf_false = ConversationalVerdictNode(verdict=False, score=0)
@@ -306,7 +315,9 @@ class TestConversationalDeepAcyclicGraph:
         inner_judge = ConversationalBinaryJudgementNode(
             criteria="Inner?", children=[leaf_false, leaf_true]
         )
-        verdict_node = ConversationalVerdictNode(verdict="Yes", child=inner_judge)
+        verdict_node = ConversationalVerdictNode(
+            verdict="Yes", child=inner_judge
+        )
         outer_judge = ConversationalNonBinaryJudgementNode(
             criteria="Outer?", children=[verdict_node]
         )
@@ -351,7 +362,9 @@ class TestConversationalDeepAcyclicGraph:
         leaf_false = ConversationalVerdictNode(verdict=False, score=0)
         leaf_true = ConversationalVerdictNode(verdict=False, score=10)
         with pytest.raises(ValueError):
-            ConversationalBinaryJudgementNode(criteria="?", children=[leaf_false, leaf_true])
+            ConversationalBinaryJudgementNode(
+                criteria="?", children=[leaf_false, leaf_true]
+            )
 
     def test_extract_required_params(self):
         leaf_false = ConversationalVerdictNode(verdict=False, score=0)
@@ -411,17 +424,24 @@ class TestConversationalDeepAcyclicGraph:
             criteria="?", children=[leaf_false, leaf_true]
         )
         with pytest.raises(ValueError):
-            DeepAcyclicGraph(root_nodes=[judgement_node1, judgement_node2], is_conversational=True)
+            DeepAcyclicGraph(
+                root_nodes=[judgement_node1, judgement_node2],
+                is_conversational=True,
+            )
 
     def test_only_score_or_child(self):
         leaf_false = ConversationalVerdictNode(verdict=False, score=0)
         with pytest.raises(ValueError):
-            ConversationalVerdictNode(verdict=True, score=10, child=[leaf_false])
+            ConversationalVerdictNode(
+                verdict=True, score=10, child=[leaf_false]
+            )
 
     def test_allow_multiple_tasknode_roots(self):
         node1 = ConversationalTaskNode("Task 1", "Label1", [], [])
         node2 = ConversationalTaskNode("Task 2", "Label2", [], [])
-        dag = DeepAcyclicGraph(root_nodes=[node1, node2], is_conversational=True)
+        dag = DeepAcyclicGraph(
+            root_nodes=[node1, node2], is_conversational=True
+        )
         assert is_valid_dag(dag, is_conversational=True) is True
 
     def test_copy_graph_isolated_and_deep(self):
@@ -514,7 +534,10 @@ class TestConversationalDeepAcyclicGraph:
         verdict = ConversationalVerdictNode(verdict=True, child=leaf)
         judge = ConversationalBinaryJudgementNode(
             "Pass?",
-            children=[ConversationalVerdictNode(verdict=False, score=0), verdict],
+            children=[
+                ConversationalVerdictNode(verdict=False, score=0),
+                verdict,
+            ],
         )
         task = ConversationalTaskNode("Check", "result", [], [judge])
         dag = DeepAcyclicGraph(root_nodes=[task], is_conversational=True)

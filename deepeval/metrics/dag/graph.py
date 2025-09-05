@@ -9,7 +9,7 @@ from deepeval.metrics.dag import (
 from deepeval.metrics.conversational_dag import (
     ConversationalBaseNode,
     ConversationalBinaryJudgementNode,
-    ConversationalNonBinaryJudgementNode
+    ConversationalNonBinaryJudgementNode,
 )
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.metrics import BaseMetric, BaseConversationalMetric
@@ -19,7 +19,7 @@ class DeepAcyclicGraph:
     def __init__(
         self,
         root_nodes: Union[List[BaseNode], List[ConversationalBaseNode]],
-        is_conversational: bool = False
+        is_conversational: bool = False,
     ):
         if not is_conversational:
             for root_node in root_nodes:
@@ -42,17 +42,17 @@ class DeepAcyclicGraph:
         self.root_nodes = root_nodes
 
     def _execute(
-        self, 
-        metric: Union[BaseMetric, BaseConversationalMetric], 
-        test_case: Union[LLMTestCase, ConversationalTestCase]
+        self,
+        metric: Union[BaseMetric, BaseConversationalMetric],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ) -> None:
         for root_node in self.root_nodes:
             root_node._execute(metric=metric, test_case=test_case, depth=0)
 
     async def _a_execute(
         self,
-        metric: Union[BaseMetric, BaseConversationalMetric], 
-        test_case: Union[LLMTestCase, ConversationalTestCase]
+        metric: Union[BaseMetric, BaseConversationalMetric],
+        test_case: Union[LLMTestCase, ConversationalTestCase],
     ) -> None:
         await asyncio.gather(
             *(

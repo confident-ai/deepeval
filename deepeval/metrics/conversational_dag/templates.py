@@ -34,7 +34,6 @@ class ConversationalVerdictNodeTemplate:
         )
 
 
-
 class ConversationalTaskNodeTemplate:
     @staticmethod
     def generate_task_output(instructions: str, text: str):
@@ -58,7 +57,6 @@ class ConversationalTaskNodeTemplate:
                 JSON:
             """
         )
-
 
 
 class ConversationalBinaryJudgementTemplate:
@@ -88,10 +86,11 @@ class ConversationalBinaryJudgementTemplate:
         )
 
 
-
 class ConversationalNonBinaryJudgementTemplate:
     @staticmethod
-    def generate_non_binary_verdict(criteria: str, text: str, options: List[str]):
+    def generate_non_binary_verdict(
+        criteria: str, text: str, options: List[str]
+    ):
         return dedent(
             f"""{criteria}
 
@@ -116,4 +115,3 @@ class ConversationalNonBinaryJudgementTemplate:
                 JSON:
             """
         )
-

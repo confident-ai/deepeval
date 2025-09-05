@@ -27,7 +27,7 @@ from deepeval.metrics.dag.schema import (
     BinaryJudgementVerdict,
     MetricScoreReason,
     NonBinaryJudgementVerdict,
-    TaskNodeOutput
+    TaskNodeOutput,
 )
 
 
@@ -256,9 +256,7 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             name=metric.__name__,
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(
-                prompt, schema=MetricScoreReason
-            )
+            res, cost = metric.model.generate(prompt, schema=MetricScoreReason)
             metric.evaluation_cost += cost
         else:
             try:
@@ -285,10 +283,8 @@ class ConversationalVerdictNode(ConversationalBaseNode):
             metric.evaluation_cost += cost
         else:
             try:
-                res: MetricScoreReason = (
-                    await metric.model.a_generate(
-                        prompt, schema=MetricScoreReason
-                    )
+                res: MetricScoreReason = await metric.model.a_generate(
+                    prompt, schema=MetricScoreReason
                 )
             except TypeError:
                 res = await metric.model.a_generate(prompt)
@@ -369,9 +365,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
             text=text,
         )
         if metric.using_native_model:
-            res, cost = metric.model.generate(
-                prompt, schema=TaskNodeOutput
-            )
+            res, cost = metric.model.generate(prompt, schema=TaskNodeOutput)
             metric.evaluation_cost += cost
             self._output = res.output
         else:
@@ -438,9 +432,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
             text=text,
         )
         if metric.using_native_model:
-            res, cost = metric.model.a_generate(
-                prompt, schema=TaskNodeOutput
-            )
+            res, cost = metric.model.a_generate(prompt, schema=TaskNodeOutput)
             metric.evaluation_cost += cost
             self._output = res.output
         else:
@@ -565,10 +557,8 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             self._verdict = res
         else:
             try:
-                res: BinaryJudgementVerdict = (
-                    metric.model.generate(
-                        prompt, schema=BinaryJudgementVerdict
-                    )
+                res: BinaryJudgementVerdict = metric.model.generate(
+                    prompt, schema=BinaryJudgementVerdict
                 )
                 self._verdict = res
             except TypeError:
@@ -631,10 +621,8 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
             self._verdict = res
         else:
             try:
-                res: BinaryJudgementVerdict = (
-                    metric.model.a_generate(
-                        prompt, schema=BinaryJudgementVerdict
-                    )
+                res: BinaryJudgementVerdict = metric.model.a_generate(
+                    prompt, schema=BinaryJudgementVerdict
                 )
                 self._verdict = res
             except TypeError:
