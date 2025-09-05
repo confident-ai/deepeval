@@ -59,6 +59,7 @@ module.exports = {
           items: [
             "metrics-llm-evals",
             "metrics-dag",
+            "metrics-conversational-dag",
             "metrics-conversational-g-eval",
             "multimodal-metrics-g-eval",
             "metrics-arena-g-eval",
