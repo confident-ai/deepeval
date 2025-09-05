@@ -44,9 +44,14 @@ deepeval set-openai \
 The CLI command above sets `gpt-4.1` as the default model for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset the current settings:
 
 ```bash
-deepeval unset-open-ai
+deepeval unset-openai
 ```
 
+:::
+
+:::tip Persisting settings
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
 :::
 
 ### Python

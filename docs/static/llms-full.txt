@@ -41,7 +41,7 @@ Security and safety test LLM applications for vulnerabilities](https://deepeval.
 Opt-in to update warnings as follows:
 
 ```codeBlockLines_e6Vv
-export DEEPEVAL_UPDATE_WARNING_OPT_IN="YES"
+export DEEPEVAL_UPDATE_WARNING_OPT_IN="1"
 
 ```
 
