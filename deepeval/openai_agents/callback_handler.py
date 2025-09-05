@@ -51,7 +51,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
                 current_trace = current_trace_context.get()
                 if current_trace:
                     current_trace.name = span.span_data.name
-            
+
         if span_type == "tool":
             return
         elif span_type == "llm":
@@ -59,7 +59,9 @@ class DeepEvalTracingProcessor(TracingProcessor):
         else:
             observer = Observer(span_type=span_type, func_name="NA")
             observer.update_span_properties = (
-                lambda base_span: update_span_properties(base_span, span.span_data)
+                lambda base_span: update_span_properties(
+                    base_span, span.span_data
+                )
             )
             self.span_observers[span.span_id] = observer
             observer.__enter__()

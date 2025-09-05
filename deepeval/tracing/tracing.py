@@ -814,10 +814,13 @@ class Observer:
             current_span.input = trace_manager.mask(self.function_kwargs)
         if current_span.output is None:
             current_span.output = trace_manager.mask(self.result)
-        
-        if isinstance(current_span, LlmSpan) and self.prompt and not current_span.prompt:
-            current_span.prompt = self.prompt
 
+        if (
+            isinstance(current_span, LlmSpan)
+            and self.prompt
+            and not current_span.prompt
+        ):
+            current_span.prompt = self.prompt
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:

@@ -12,6 +12,7 @@ add_trace_processor(DeepEvalTracingProcessor())
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
+
 @function_tool(metric_collection="test_collection_1")
 def get_current_weather(latitude: float, longitude: float) -> dict:
     """
@@ -83,7 +84,7 @@ weather_agent = Agent(
     tools=[get_location_coordinates, get_current_weather],
     tool_use_behavior="run_llm_again",
     metric_collection="test_collection_1",
-    deepeval_prompt = prompt
+    deepeval_prompt=prompt,
 )
 
 

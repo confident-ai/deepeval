@@ -10,7 +10,9 @@ try:
     from agents.agent import Agent as BaseAgent
     from agents.models.interface import Model, ModelProvider
 except Exception as e:
-    raise RuntimeError("openai-agents is required for this integration. Please install it.") from e
+    raise RuntimeError(
+        "openai-agents is required for this integration. Please install it."
+    ) from e
 
 
 class _ObservedModel(Model):
@@ -166,7 +168,10 @@ class DeepEvalAgent(BaseAgent[Any]):
         # If a direct Model instance is set on the agent, wrap it here.
         if self.model is not None and not isinstance(self.model, str):
             try:
-                from agents.models.interface import Model as _Model  # local import for safety
+                from agents.models.interface import (
+                    Model as _Model,
+                )  # local import for safety
+
                 if isinstance(self.model, _Model):
                     self.model = _ObservedModel(
                         self.model,

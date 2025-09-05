@@ -29,7 +29,9 @@ class Runner(BaseRunner):
         metrics = kwargs.pop("metrics", None)
 
         # Ensure the model provider is wrapped so _get_model(...) uses observed Models
-        starting_agent = args[0] if len(args) > 0 else kwargs.get("starting_agent")
+        starting_agent = (
+            args[0] if len(args) > 0 else kwargs.get("starting_agent")
+        )
         run_config: RunConfig | None = kwargs.get("run_config")
         if run_config is None:
             run_config = RunConfig()
@@ -39,8 +41,13 @@ class Runner(BaseRunner):
             run_config.model_provider = _ObservedProvider(
                 run_config.model_provider,
                 metrics=getattr(starting_agent, "metrics", None) or metrics,
-                metric_collection=getattr(starting_agent, "metric_collection", None) or metric_collection,
-                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
+                metric_collection=getattr(
+                    starting_agent, "metric_collection", None
+                )
+                or metric_collection,
+                deepeval_prompt=getattr(
+                    starting_agent, "deepeval_prompt", None
+                ),
             )
 
         input_val = args[1] if len(args) >= 2 else kwargs.get("input", None)
@@ -66,7 +73,9 @@ class Runner(BaseRunner):
         metric_collection = kwargs.pop("metric_collection", None)
         metrics = kwargs.pop("metrics", None)
 
-        starting_agent = args[0] if len(args) > 0 else kwargs.get("starting_agent")
+        starting_agent = (
+            args[0] if len(args) > 0 else kwargs.get("starting_agent")
+        )
         run_config: RunConfig | None = kwargs.get("run_config")
         if run_config is None:
             run_config = RunConfig()
@@ -76,8 +85,13 @@ class Runner(BaseRunner):
             run_config.model_provider = _ObservedProvider(
                 run_config.model_provider,
                 metrics=getattr(starting_agent, "metrics", None) or metrics,
-                metric_collection=getattr(starting_agent, "metric_collection", None) or metric_collection,
-                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
+                metric_collection=getattr(
+                    starting_agent, "metric_collection", None
+                )
+                or metric_collection,
+                deepeval_prompt=getattr(
+                    starting_agent, "deepeval_prompt", None
+                ),
             )
 
         input_val = args[1] if len(args) >= 2 else kwargs.get("input", None)
