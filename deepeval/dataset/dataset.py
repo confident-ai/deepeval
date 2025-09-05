@@ -1,6 +1,8 @@
 from asyncio import Task
 from typing import Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
+from opentelemetry.trace import Tracer, NoOpTracer
+from opentelemetry.context import Context
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
@@ -1097,6 +1099,8 @@ class EvaluationDataset:
         cache_config: Optional["CacheConfig"] = None,
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
+        tracer: Optional[Tracer] = NoOpTracer,
+        test_run_id: Optional[str] = None,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1135,7 +1139,7 @@ class EvaluationDataset:
 
             if async_config.run_async:
                 loop = get_or_create_event_loop()
-                yield from a_execute_agentic_test_cases_from_loop(
+                for golden in a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     identifier=identifier,
                     loop=loop,
@@ -1145,9 +1149,13 @@ class EvaluationDataset:
                     cache_config=cache_config,
                     error_config=error_config,
                     async_config=async_config,
-                )
+                ):
+                    with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
+                        if test_run_id:
+                            span.set_attribute("confident.trace.test_run_id", test_run_id)
+                        yield golden
             else:
-                yield from execute_agentic_test_cases_from_loop(
+                for golden in execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     trace_metrics=metrics,
                     display_config=display_config,
@@ -1155,7 +1163,11 @@ class EvaluationDataset:
                     error_config=error_config,
                     test_results=test_results,
                     identifier=identifier,
-                )
+                ):
+                    with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
+                        if test_run_id:
+                            span.set_attribute("confident.trace.test_run_id", test_run_id)
+                        yield golden
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
