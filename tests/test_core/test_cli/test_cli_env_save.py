@@ -176,6 +176,40 @@ def test_openai_save_and_unset(env_path: Path):
     assert env.get("UNRELATED_KEY") == "keepme"
 
 
+def test_openai_omits_optional_costs_when_absent(env_path: Path):
+    """Calling set-openai without cost overrides must not write 'None' into dotenv or JSON."""
+    argv = build_args(
+        "set-openai",
+        options={"--model": "gpt-4o-mini"},
+        save_path=env_path,  # imply --save dotenv:env_path
+    )
+    invoke_ok(app, argv)
+
+    # JSON: model present, costs absent
+    assert_deepeval_json_contains(
+        {ModelKeyValues.OPENAI_MODEL_NAME: "gpt-4o-mini"}
+    )
+    assert_deepeval_json_lacks(
+        [
+            ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN,
+            ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN,
+        ]
+    )
+
+    # dotenv: model present, costs absent (not "None")
+    assert_env_contains(
+        env_path,
+        {ModelKeyValues.OPENAI_MODEL_NAME: "gpt-4o-mini"},
+    )
+    assert_env_lacks(
+        env_path,
+        [
+            ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN,
+            ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN,
+        ],
+    )
+
+
 def test_set_openai_without_save_updates_json_only(tmp_path: Path):
 
     # Setup
@@ -627,6 +661,44 @@ def test_local_model_save_and_unset(env_path: Path):
     assert env.get("UNRELATED_KEY") == "keepme"
 
 
+def test_local_model_does_not_write_none_api_key_when_missing(env_path: Path):
+    argv = build_args(
+        "set-local-model",
+        options={
+            "--model-name": "local-model",
+            "--base-url": "http://localhost:8000",
+            # no --api-key on purpose
+            "--format": "json",
+        },
+        save_path=env_path,
+    )
+    invoke_ok(app, argv)
+
+    # JSON: format/model/base present; api key absent
+    assert_deepeval_json_contains(
+        {
+            ModelKeyValues.LOCAL_MODEL_NAME: "local-model",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "http://localhost:8000",
+            ModelKeyValues.LOCAL_MODEL_FORMAT: "json",
+        }
+    )
+    assert_deepeval_json_lacks([ModelKeyValues.LOCAL_MODEL_API_KEY])
+
+    # dotenv: no API key line at all (not "None")
+    assert_env_contains(
+        env_path,
+        {
+            ModelKeyValues.LOCAL_MODEL_NAME: "local-model",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "http://localhost:8000",
+            ModelKeyValues.LOCAL_MODEL_FORMAT: "json",
+        },
+    )
+    assert_env_lacks(
+        env_path,
+        [ModelKeyValues.LOCAL_MODEL_API_KEY],
+    )
+
+
 def test_grok_model_save_and_unset(env_path: Path):
     """Verify: set-grok-model --save writes expected keys; unset removes only those."""
     # Setup
@@ -881,6 +953,41 @@ def test_local_embeddings_save_and_unset(env_path: Path):
     )
     env = read_dotenv_as_dict(env_path)
     assert env.get("UNRELATED_KEY") == "keepme"
+
+
+def test_local_embeddings_does_not_write_none_api_key_when_missing(
+    env_path: Path,
+):
+    argv = build_args(
+        "set-local-embeddings",
+        options={
+            "--model-name": "emb-model",
+            "--base-url": "http://localhost:9000",
+            # no --api-key
+        },
+        save_path=env_path,
+    )
+    invoke_ok(app, argv)
+
+    assert_deepeval_json_contains(
+        {
+            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "emb-model",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "http://localhost:9000",
+        }
+    )
+    assert_deepeval_json_lacks([EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY])
+
+    assert_env_contains(
+        env_path,
+        {
+            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "emb-model",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "http://localhost:9000",
+        },
+    )
+    assert_env_lacks(
+        env_path,
+        [EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY],
+    )
 
 
 def test_gemini_model_save_and_unset(env_path: Path):
@@ -1177,3 +1284,123 @@ def test_litellm_model_save_and_unset(env_path: Path):
     )
     env = read_dotenv_as_dict(env_path)
     assert env.get("UNRELATED_KEY") == "keepme"
+
+
+def test_login_with_confident_api_key_implies_dotenv_save(env_path: Path):
+    """--confident-api-key should persist to dotenv by default; should not hit JSON secrets."""
+    argv = build_args(
+        "login",
+        options={"--confident-api-key": "ck-test-123"},  # no --save provided
+        save_path=env_path,  # build_args wires default save target; we still want to verify content goes here
+    )
+    invoke_ok(app, argv)
+
+    # dotenv: key present
+    assert_env_contains(
+        env_path,
+        {
+            KeyValues.API_KEY: "ck-test-123",
+        },
+    )
+
+    # JSON: key must not be written (secrets never go to JSON)
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+
+def test_login_with_confident_api_key_honors_custom_save_path(tmp_path: Path):
+    custom_env = tmp_path / ".myconf.env"
+    argv = build_args(
+        "login",
+        options={"--confident-api-key": "ck-custom"},
+        save_path=custom_env,
+    )
+    invoke_ok(app, argv)
+
+    assert_env_contains(
+        custom_env,
+        {KeyValues.API_KEY: "ck-custom"},
+    )
+
+
+def test_logout_removes_dotenv_and_json_by_default(env_path: Path):
+    """logout should remove from dotenv (default path) and JSON store without requiring --save."""
+    # Login
+    argv = build_args(
+        "login",
+        options={"--confident-api-key": "ck-test-xyz"},
+        save_path=env_path,
+    )
+    invoke_ok(app, argv)
+
+    # Sanity: login wrote api_key into dotenv; nothing in JSON
+    assert_env_contains(env_path, {KeyValues.API_KEY: "ck-test-xyz"})
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+    # Logout (no --save flag; should still remove from dotenv + JSON)
+    argv = build_args("logout", save_path=env_path)
+    invoke_ok(app, argv)
+
+    # Dotenv no longer contains either alias
+    env_after = read_dotenv_as_dict(env_path)
+    assert "api_key" not in env_after
+    assert "CONFIDENT_API_KEY" not in env_after
+
+    # JSON cleared
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+
+def test_logout_honors_custom_save_path(tmp_path: Path):
+    """logout should remove keys from a custom dotenv path when provided."""
+    custom_env = tmp_path / ".myconf.env"
+
+    # Login to custom path
+    argv = build_args(
+        "login",
+        options={"--confident-api-key": "ck-custom"},
+        save_path=custom_env,
+    )
+    invoke_ok(app, argv)
+    assert_env_contains(custom_env, {KeyValues.API_KEY: "ck-custom"})
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+    # Logout using the same custom path
+    argv = build_args("logout", save_path=custom_env)
+    invoke_ok(app, argv)
+
+    env_after = read_dotenv_as_dict(custom_env)
+    assert "api_key" not in env_after
+    assert "CONFIDENT_API_KEY" not in env_after
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+
+def test_login_then_logout_roundtrip_default_path(env_path: Path):
+    """Roundtrip: login writes to dotenv (default), logout removes from dotenv and JSON."""
+
+    # Login
+    argv = build_args(
+        "login",
+        options={"--confident-api-key": "ck-roundtrip"},
+        save_path=env_path,
+    )
+    invoke_ok(app, argv)
+    assert_env_contains(env_path, {KeyValues.API_KEY: "ck-roundtrip"})
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+    # Logout
+    argv = build_args("logout", save_path=env_path)
+    invoke_ok(app, argv)
+    env_after = read_dotenv_as_dict(env_path)
+    assert "api_key" not in env_after
+    assert "CONFIDENT_API_KEY" not in env_after
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
+
+
+def test_logout_is_idempotent(env_path: Path):
+    """Calling logout when nothing is set should succeed and not create files."""
+
+    argv = build_args("logout", save_path=env_path)
+    invoke_ok(app, argv)
+
+    # No dotenv created and JSON lacks the key
+    assert not env_path.exists()
+    assert_deepeval_json_lacks([KeyValues.API_KEY])
