@@ -1,10 +1,40 @@
 """File for handling API key"""
 
+import os
 import json
+import logging
+
 from enum import Enum
 from typing import Union
 
 from .constants import KEY_FILE, HIDDEN_DIR
+
+
+logger = logging.getLogger(__name__)
+
+
+SECRET_KEYS = {
+    # General providers
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    # Azure OpenAI
+    "AZURE_OPENAI_API_KEY",
+    # Google / Gemini
+    "GOOGLE_API_KEY",
+    # xAI Grok
+    "GROK_API_KEY",
+    # Moonshot
+    "MOONSHOT_API_KEY",
+    # DeepSeek
+    "DEEPSEEK_API_KEY",
+    # LiteLLM
+    "LITELLM_API_KEY",
+    # Local gateways (if any require keys)
+    "LOCAL_MODEL_API_KEY",
+    "LOCAL_EMBEDDING_API_KEY",
+}
+
+_WARNED_SECRET_KEYS = set()
 
 
 class KeyValues(Enum):
@@ -79,10 +109,21 @@ class KeyFileHandler:
     def __init__(self):
         self.data = {}
 
+    def _ensure_dir(self):
+        os.makedirs(HIDDEN_DIR, exist_ok=True)
+
     def write_key(
         self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues], value
     ):
         """Appends or updates data in the hidden file"""
+
+        # hard stop on secrets: never write to disk
+        if key.value in SECRET_KEYS:
+            logger.warning(
+                f"{key} is blacklisted, refusing to persist. Keep your secrets in .env or .env.local instead"
+            )
+            return
+
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 # Load existing data
@@ -99,13 +140,15 @@ class KeyFileHandler:
         self.data[key.value] = value
 
         # Write the updated data back to the file
+        self._ensure_dir()
         with open(f"{HIDDEN_DIR}/{KEY_FILE}", "w") as f:
             json.dump(self.data, f)
 
     def fetch_data(
         self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
     ):
-        """Fetches the data from the hidden file"""
+        """Fetches the data from the hidden file.
+        NOTE: secrets in this file are deprecated; prefer env/.env."""
         try:
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
                 try:
@@ -116,7 +159,24 @@ class KeyFileHandler:
         except FileNotFoundError:
             # Handle the case when the file doesn't exist
             self.data = {}
-        return self.data.get(key.value)
+
+        value = self.data.get(key.value)
+
+        # Deprecation: warn only if we're actually returning a secret
+        if (
+            value is not None
+            and key.value in SECRET_KEYS
+            and key.value not in _WARNED_SECRET_KEYS
+        ):
+            logger.warning(
+                f"Reading secret '{key.value}' from legacy {HIDDEN_DIR}/{KEY_FILE}. "
+                "Persisting API keys in plaintext is deprecated. "
+                "Move this to your environment (.env / .env.local). "
+                "This fallback will be removed in a future release."
+            )
+            _WARNED_SECRET_KEYS.add(key.value)
+
+        return value
 
     def remove_key(
         self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
@@ -130,6 +190,7 @@ class KeyFileHandler:
                     # Handle corrupted JSON file
                     self.data = {}
             self.data.pop(key.value, None)  # Remove the key if it exists
+            self._ensure_dir()
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "w") as f:
                 json.dump(self.data, f)
         except FileNotFoundError:

@@ -1,3 +1,20 @@
+"""
+DeepEval CLI: Model Provider Configuration Commands
+
+General behavior for all `set-*` / `unset-*` commands:
+
+- Non-secret settings (model name, endpoint, deployment, toggles) are always
+  persisted in the hidden `.deepeval/.deepeval` JSON store.
+- Secrets (API keys) are **never** written to the JSON store.
+- If `--save=dotenv[:path]` is passed, both secrets and non-secrets are
+  written to the specified dotenv file (default: `.env.local`).
+  Dotenv files should be git-ignored.
+- If `--save` is not passed, only the JSON store is updated.
+- When unsetting a provider, only that provider’s keys are removed.
+  If another provider’s credentials remain (e.g. `OPENAI_API_KEY`), it
+  may still be selected as the default.
+"""
+
 import os
 from typing import Optional
 from rich import print
@@ -28,6 +45,10 @@ from deepeval.cli.utils import (
     PROD,
     clear_evaluation_model_keys,
     clear_embedding_model_keys,
+    resolve_save_target,
+    save_environ_to_store,
+    unset_environ_in_store,
+    switch_model_provider,
 )
 from deepeval.confident.api import (
     get_confident_api_key,
@@ -55,16 +76,49 @@ def find_available_port():
         return s.getsockname()[1]
 
 
+def is_openai_configured() -> bool:
+    api_key = os.getenv("OPENAI_API_KEY") or KEY_FILE_HANDLER.fetch_data(
+        ModelKeyValues.OPENAI_API_KEY
+    )
+    return bool(api_key)
+
+
 @app.command(name="set-confident-region")
 def set_confident_region_command(
     region: Regions = typer.Argument(
         ..., help="The data region to use (US or EU)"
-    )
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     """Set the Confident AI data region."""
     # Add flag emojis based on region
     flag = "🇺🇸" if region == Regions.US else "🇪🇺"
     KEY_FILE_HANDLER.write_key(KeyValues.CONFIDENT_REGION, region.value)
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                KeyValues.CONFIDENT_REGION: region.value,
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
     print(
         f":raising_hands: Congratulations! You're now using the {flag}  {region.value} data region for Confident AI."
     )
@@ -78,7 +132,7 @@ def login(
     ),
     confident_api_key: Optional[str] = typer.Option(
         None,
-        "--confident-api-key",
+        "--confident-api-key (NOT persisted; set in .env[.local])",
         "-c",
         help="Optional confident API key to bypass login.",
     ),
@@ -181,16 +235,47 @@ def set_openai_env(
             "REQUIRED if you use a custom/unsupported model."
         ),
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
-    """Configure OpenAI as the active model.
+    """
+    Configure OpenAI as the active LLM provider.
 
-    Notes:
-    - If `model` is a known OpenAI model, costs can be omitted (built-in pricing will be used).
-    - If `model` is custom/unsupported, you must pass both --cost_per_input_token and --cost_per_output_token.
+    What this does:
+    - Sets the active provider flag to `USE_OPENAI_MODEL`.
+    - Persists the selected model name and any cost overrides in the JSON store.
+    - secrets are ever written to `.deepeval/.deepeval` (JSON).
+
+    Pricing rules:
+    - If `model` is a known OpenAI model, you may omit costs (built‑in pricing is used).
+    - If `model` is custom/unsupported, you must provide both
+      `--cost_per_input_token` and `--cost_per_output_token`.
+
+    Secrets & saving:
+    - Set your `OPENAI_API_KEY` via environment or a dotenv file.
+    - Pass `--save=dotenv[:path]` to write configuration to a dotenv file
+      (default: `.env.local`). Supported secrets, such as `OPENAI_API_KEY`, are
+      persisted there if present in your environment.
+
+    Args:
+        model: OpenAI model name, such as `gpt-4o-mini`.
+        cost_per_input_token: USD per input token (optional for known models).
+        cost_per_output_token: USD per output token (optional for known models).
+        save: Persist config (and supported secrets) to a dotenv file; format `dotenv[:path]`.
+
+    Example:
+        deepeval set-openai \\
+          --model gpt-4o-mini \\
+          --cost_per_input_token 0.0005 \\
+          --cost_per_output_token 0.0015 \\
+          --save dotenv:.env.local
     """
 
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_OPENAI_MODEL, "YES")
     KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_MODEL_NAME, model)
     KEY_FILE_HANDLER.write_key(
         ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_input_token)
@@ -198,20 +283,93 @@ def set_openai_env(
     KEY_FILE_HANDLER.write_key(
         ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_output_token)
     )
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_OPENAI_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.OPENAI_MODEL_NAME: model,
+                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN: str(
+                    cost_per_input_token
+                ),
+                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN: str(
+                    cost_per_output_token
+                ),
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
     print(
         f":raising_hands: Congratulations! You're now using OpenAI's `{model}` for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-openai")
-def unset_openai_env():
+def unset_openai_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the OpenAI related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
+    """
+    Unset OpenAI as the active provider.
+
+    Behavior:
+    - Removes OpenAI keys (model, costs, toggle) from the JSON store.
+    - If `--save` is provided, removes those keys from the specified dotenv file.
+    - After unsetting, if `OPENAI_API_KEY` is still set in the environment,
+      OpenAI may still be usable by default. Otherwise, no active provider is configured.
+
+    Args:
+        --save: Remove OpenAI keys from the given dotenv file as well.
+
+    Example:
+        deepeval unset-openai --save dotenv:.env.local
+    """
+
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_OPENAI_MODEL)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN)
-    print(
-        ":raising_hands: Congratulations! You're now using default OpenAI settings on DeepEval for all evals that require an LLM."
-    )
+
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.USE_OPENAI_MODEL,
+                ModelKeyValues.OPENAI_MODEL_NAME,
+                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN,
+                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN,
+            ],
+        )
+        if handled:
+            print(f"Removed OpenAI environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "OpenAI has been unset. No active provider is configured. Set one with the CLI, or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -222,7 +380,9 @@ def unset_openai_env():
 @app.command(name="set-azure-openai")
 def set_azure_openai_env(
     azure_openai_api_key: str = typer.Option(
-        ..., "--openai-api-key", help="Azure OpenAI API key"
+        ...,
+        "--openai-api-key",
+        help="Azure OpenAI API key (NOT persisted; set in .env[.local])",
     ),
     azure_openai_endpoint: str = typer.Option(
         ..., "--openai-endpoint", help="Azure OpenAI endpoint"
@@ -239,11 +399,16 @@ def set_azure_openai_env(
     azure_model_version: Optional[str] = typer.Option(
         None, "--model-version", help="Azure model version (optional)"
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
+
     clear_evaluation_model_keys()
-    KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.AZURE_OPENAI_API_KEY, azure_openai_api_key
-    )
+
     KEY_FILE_HANDLER.write_key(
         ModelKeyValues.AZURE_MODEL_NAME, openai_model_name
     )
@@ -262,8 +427,37 @@ def set_azure_openai_env(
             ModelKeyValues.AZURE_MODEL_VERSION, azure_model_version
         )
 
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "YES")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "NO")
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_AZURE_OPENAI, save_target)
+
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.AZURE_OPENAI_API_KEY: azure_openai_api_key,
+                ModelKeyValues.AZURE_OPENAI_ENDPOINT: azure_openai_endpoint,
+                ModelKeyValues.OPENAI_API_VERSION: openai_api_version,
+                ModelKeyValues.AZURE_DEPLOYMENT_NAME: azure_deployment_name,
+                ModelKeyValues.AZURE_MODEL_NAME: openai_model_name,
+                **(
+                    {ModelKeyValues.AZURE_MODEL_VERSION: azure_model_version}
+                    if azure_model_version
+                    else {}
+                ),
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
 
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI for all evals that require an LLM."
@@ -277,23 +471,57 @@ def set_azure_openai_embedding_env(
         "--embedding-deployment-name",
         help="Azure embedding deployment name",
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(
         EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
         azure_embedding_deployment_name,
     )
-    KEY_FILE_HANDLER.write_key(
-        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "YES"
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(
+        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, save_target
     )
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "NO")
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME: azure_embedding_deployment_name,
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
     print(
         ":raising_hands: Congratulations! You're now using Azure OpenAI Embeddings within DeepEval."
     )
 
 
 @app.command(name="unset-azure-openai")
-def unset_azure_openai_env():
+def unset_azure_openai_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Azure OpenAI–related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    )
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_OPENAI_ENDPOINT)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.OPENAI_API_VERSION)
@@ -302,21 +530,73 @@ def unset_azure_openai_env():
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.AZURE_MODEL_VERSION)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_AZURE_OPENAI)
 
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.AZURE_OPENAI_API_KEY,
+                ModelKeyValues.AZURE_OPENAI_ENDPOINT,
+                ModelKeyValues.OPENAI_API_VERSION,
+                ModelKeyValues.AZURE_DEPLOYMENT_NAME,
+                ModelKeyValues.AZURE_MODEL_NAME,
+                ModelKeyValues.AZURE_MODEL_VERSION,
+                ModelKeyValues.USE_AZURE_OPENAI,
+            ],
+        )
+        if handled:
+            print(f"Removed Azure OpenAI environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "Azure OpenAI configuration removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 @app.command(name="unset-azure-openai-embedding")
-def unset_azure_openai_embedding_env():
+def unset_azure_openai_embedding_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Azure OpenAI embedding related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(
         EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
     )
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING)
 
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
-    )
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
+                EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING,
+            ],
+        )
+        if handled:
+            print(
+                f"Removed Azure OpenAI embedding environment variables from {path}."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: Regular OpenAI embeddings will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The Azure OpenAI embedding model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -333,27 +613,84 @@ def set_ollama_model_env(
         "--base-url",
         help="Base URL for the local model API",
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_BASE_URL, base_url)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "YES")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "NO")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_API_KEY, "ollama")
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_LOCAL_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.LOCAL_MODEL_NAME: model_name,
+                ModelKeyValues.LOCAL_MODEL_BASE_URL: base_url,
+                ModelKeyValues.LOCAL_MODEL_API_KEY: "ollama",
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
     print(
         ":raising_hands: Congratulations! You're now using a local Ollama model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-ollama")
-def unset_ollama_model_env():
+def unset_ollama_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Ollama related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_BASE_URL)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_LOCAL_MODEL)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_API_KEY)
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.LOCAL_MODEL_NAME,
+                ModelKeyValues.LOCAL_MODEL_BASE_URL,
+                ModelKeyValues.USE_LOCAL_MODEL,
+                ModelKeyValues.LOCAL_MODEL_API_KEY,
+            ],
+        )
+        if handled:
+            print(f"Removed Ollama environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "local Ollama model configuration removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 @app.command(name="set-ollama-embeddings")
@@ -367,6 +704,12 @@ def set_ollama_embeddings_env(
         "--base-url",
         help="Base URL for the Ollama embedding model API",
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_embedding_model_keys()
     KEY_FILE_HANDLER.write_key(
@@ -375,13 +718,30 @@ def set_ollama_embeddings_env(
     KEY_FILE_HANDLER.write_key(
         EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url
     )
-    KEY_FILE_HANDLER.write_key(
-        EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, "ollama"
-    )
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "YES")
-    KEY_FILE_HANDLER.write_key(
-        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO"
-    )
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: model_name,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: base_url,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY: "ollama",
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
 
     print(
         ":raising_hands: Congratulations! You're now using Ollama embeddings for all evals that require text embeddings."
@@ -389,15 +749,45 @@ def set_ollama_embeddings_env(
 
 
 @app.command(name="unset-ollama-embeddings")
-def unset_ollama_embeddings_env():
+def unset_ollama_embeddings_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Ollama embedding related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL)
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY)
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
 
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
-    )
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY,
+                EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS,
+            ],
+        )
+        if handled:
+            print(
+                f"Removed Ollama embedding environment variables from {path}."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: Regular OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The local Ollama embedding model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -414,39 +804,108 @@ def set_local_model_env(
         ..., "--base-url", help="Base URL for the local model API"
     ),
     api_key: Optional[str] = typer.Option(
-        None, "--api-key", help="API key for the local model (if required)"
+        None,
+        "--api-key",
+        help="API key for the local model (if required) (NOT persisted; set in .env[.local])",
     ),
     format: Optional[str] = typer.Option(
         "json",
         "--format",
         help="Format of the response from the local model (default: json)",
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_NAME, model_name)
     KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_BASE_URL, base_url)
-    if api_key:
-        KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_API_KEY, api_key)
+
     if format:
         KEY_FILE_HANDLER.write_key(ModelKeyValues.LOCAL_MODEL_FORMAT, format)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "YES")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "NO")
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_LOCAL_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.LOCAL_MODEL_NAME: model_name,
+                ModelKeyValues.LOCAL_MODEL_BASE_URL: base_url,
+                ModelKeyValues.LOCAL_MODEL_API_KEY: api_key,
+                **(
+                    {ModelKeyValues.LOCAL_MODEL_API_KEY: api_key}
+                    if api_key
+                    else {}
+                ),
+                **(
+                    {ModelKeyValues.LOCAL_MODEL_FORMAT: format}
+                    if format
+                    else {}
+                ),
+            },
+        )
+
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
     print(
         ":raising_hands: Congratulations! You're now using a local model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-local-model")
-def unset_local_model_env():
+def unset_local_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the local model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_BASE_URL)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LOCAL_MODEL_FORMAT)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_LOCAL_MODEL)
 
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.LOCAL_MODEL_NAME,
+                ModelKeyValues.LOCAL_MODEL_BASE_URL,
+                ModelKeyValues.USE_LOCAL_MODEL,
+                ModelKeyValues.LOCAL_MODEL_API_KEY,
+                ModelKeyValues.LOCAL_MODEL_FORMAT,
+            ],
+        )
+        if handled:
+            print(f"Removed local model environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The local model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -460,31 +919,90 @@ def set_grok_model_env(
         ..., "--model-name", help="Name of the Grok model"
     ),
     api_key: str = typer.Option(
-        ..., "--api-key", help="API key for the Grok model"
+        ...,
+        "--api-key",
+        help="API key for the Grok model (NOT persisted; set in .env[.local])",
     ),
     temperature: float = typer.Option(
         0, "--temperature", help="Temperature for the Grok model"
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.GROK_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.GROK_API_KEY, api_key)
     KEY_FILE_HANDLER.write_key(ModelKeyValues.TEMPERATURE, str(temperature))
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GROK_MODEL, "YES")
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_GROK_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.GROK_MODEL_NAME: model_name,
+                ModelKeyValues.GROK_API_KEY: api_key,
+                ModelKeyValues.TEMPERATURE: str(temperature),
+            },
+        )
+
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
     print(
         ":raising_hands: Congratulations! You're now using a Grok model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-grok")
-def unset_grok_model_env():
+def unset_grok_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Grok model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.GROK_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.GROK_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.TEMPERATURE)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_GROK_MODEL)
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.GROK_MODEL_NAME,
+                ModelKeyValues.GROK_API_KEY,
+                ModelKeyValues.TEMPERATURE,
+                ModelKeyValues.USE_GROK_MODEL,
+            ],
+        )
+        if handled:
+            print(f"Removed Grok model environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The Grok model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -498,31 +1016,91 @@ def set_moonshot_model_env(
         ..., "--model-name", help="Name of the Moonshot model"
     ),
     api_key: str = typer.Option(
-        ..., "--api-key", help="API key for the Moonshot model"
+        ...,
+        "--api-key",
+        help="API key for the Moonshot model (NOT persisted; set in .env[.local])",
     ),
     temperature: float = typer.Option(
         0, "--temperature", help="Temperature for the Moonshot model"
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.MOONSHOT_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.MOONSHOT_API_KEY, api_key)
     KEY_FILE_HANDLER.write_key(ModelKeyValues.TEMPERATURE, str(temperature))
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_MOONSHOT_MODEL, "YES")
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_MOONSHOT_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.MOONSHOT_MODEL_NAME: model_name,
+                ModelKeyValues.MOONSHOT_API_KEY: api_key,
+                ModelKeyValues.TEMPERATURE: str(temperature),
+            },
+        )
+
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
     print(
         ":raising_hands: Congratulations! You're now using a Moonshot model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-moonshot")
-def unset_moonshot_model_env():
+def unset_moonshot_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Moonshot model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.MOONSHOT_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.MOONSHOT_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.TEMPERATURE)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_MOONSHOT_MODEL)
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.MOONSHOT_MODEL_NAME,
+                ModelKeyValues.MOONSHOT_API_KEY,
+                ModelKeyValues.TEMPERATURE,
+                ModelKeyValues.USE_MOONSHOT_MODEL,
+            ],
+        )
+        if handled:
+            print(f"Removed Moonshot model environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The Moonshot model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -536,31 +1114,91 @@ def set_deepseek_model_env(
         ..., "--model-name", help="Name of the DeepSeek model"
     ),
     api_key: str = typer.Option(
-        ..., "--api-key", help="API key for the DeepSeek model"
+        ...,
+        "--api-key",
+        help="API key for the DeepSeek model (NOT persisted; set in .env[.local])",
     ),
     temperature: float = typer.Option(
         0, "--temperature", help="Temperature for the DeepSeek model"
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.DEEPSEEK_MODEL_NAME, model_name)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.DEEPSEEK_API_KEY, api_key)
     KEY_FILE_HANDLER.write_key(ModelKeyValues.TEMPERATURE, str(temperature))
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_DEEPSEEK_MODEL, "YES")
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_DEEPSEEK_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.DEEPSEEK_MODEL_NAME: model_name,
+                ModelKeyValues.DEEPSEEK_API_KEY: api_key,
+                ModelKeyValues.TEMPERATURE: str(temperature),
+            },
+        )
+
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
     print(
         ":raising_hands: Congratulations! You're now using a DeepSeek model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-deepseek")
-def unset_deepseek_model_env():
+def unset_deepseek_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the DeepSeek model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.DEEPSEEK_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.DEEPSEEK_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.TEMPERATURE)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_DEEPSEEK_MODEL)
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.DEEPSEEK_MODEL_NAME,
+                ModelKeyValues.DEEPSEEK_API_KEY,
+                ModelKeyValues.TEMPERATURE,
+                ModelKeyValues.USE_DEEPSEEK_MODEL,
+            ],
+        )
+        if handled:
+            print(f"Removed DeepSeek model environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The Deepseek model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
@@ -577,7 +1215,15 @@ def set_local_embeddings_env(
         ..., "--base-url", help="Base URL for the local embeddings API"
     ),
     api_key: Optional[str] = typer.Option(
-        None, "--api-key", help="API key for the local embeddings (if required)"
+        None,
+        "--api-key",
+        help="API key for the local embeddings (if required) (NOT persisted; set in .env[.local])",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
 ):
     clear_embedding_model_keys()
@@ -587,35 +1233,76 @@ def set_local_embeddings_env(
     KEY_FILE_HANDLER.write_key(
         EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL, base_url
     )
-    if api_key:
-        KEY_FILE_HANDLER.write_key(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY, api_key
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: model_name,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: base_url,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY: api_key,
+            },
         )
-
-    KEY_FILE_HANDLER.write_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS, "YES")
-    KEY_FILE_HANDLER.write_key(
-        EmbeddingKeyValues.USE_AZURE_OPENAI_EMBEDDING, "NO"
-    )
-
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
     print(
         ":raising_hands: Congratulations! You're now using local embeddings for all evals that require text embeddings."
     )
 
 
 @app.command(name="unset-local-embeddings")
-def unset_local_embeddings_env():
+def unset_local_embeddings_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the local embedding related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL)
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY)
     KEY_FILE_HANDLER.remove_key(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
 
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI embeddings for all evals that require text embeddings."
-    )
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL,
+                EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY,
+                EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS,
+            ],
+        )
+        if handled:
+            print(f"Removed local embedding environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The local embeddings model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 #############################################
-# Ollama Integration ########################
+# Gemini Integration ########################
 #############################################
 
 
@@ -625,13 +1312,21 @@ def set_gemini_model_env(
         None, "--model-name", help="Gemini Model name"
     ),
     google_api_key: Optional[str] = typer.Option(
-        None, "--google-api-key", help="Google API Key for Gemini"
+        None,
+        "--google-api-key",
+        help="Google API Key for Gemini (NOT persisted; set in .env[.local])",
     ),
     google_cloud_project: Optional[str] = typer.Option(
         None, "--project-id", help="Google Cloud project ID"
     ),
     google_cloud_location: Optional[str] = typer.Option(
         None, "--location", help="Google Cloud location"
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
     ),
 ):
     clear_evaluation_model_keys()
@@ -643,14 +1338,10 @@ def set_gemini_model_env(
             err=True,
         )
         raise typer.Exit(code=1)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GEMINI_MODEL, "YES")
     if model_name is not None:
         KEY_FILE_HANDLER.write_key(ModelKeyValues.GEMINI_MODEL_NAME, model_name)
-    if google_api_key is not None:
-        KEY_FILE_HANDLER.write_key(
-            ModelKeyValues.GOOGLE_API_KEY, google_api_key
-        )
-    else:
+
+    if google_api_key is None:
         KEY_FILE_HANDLER.write_key(
             ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI, "YES"
         )
@@ -663,13 +1354,65 @@ def set_gemini_model_env(
         KEY_FILE_HANDLER.write_key(
             ModelKeyValues.GOOGLE_CLOUD_LOCATION, google_cloud_location
         )
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_GEMINI_MODEL, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                **(
+                    {ModelKeyValues.GOOGLE_API_KEY: google_api_key}
+                    if google_api_key
+                    else {ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI: "YES"}
+                ),
+                **(
+                    {ModelKeyValues.GEMINI_MODEL_NAME: model_name}
+                    if model_name
+                    else {}
+                ),
+                **(
+                    {ModelKeyValues.GOOGLE_CLOUD_PROJECT: google_cloud_project}
+                    if google_cloud_project
+                    else {}
+                ),
+                **(
+                    {
+                        ModelKeyValues.GOOGLE_CLOUD_LOCATION: google_cloud_location
+                    }
+                    if google_cloud_location
+                    else {}
+                ),
+            },
+        )
+
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
     print(
         ":raising_hands: Congratulations! You're now using a Gemini model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-gemini")
-def unset_gemini_model_env():
+def unset_gemini_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the Gemini related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_GEMINI_MODEL)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.GEMINI_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_API_KEY)
@@ -677,47 +1420,128 @@ def unset_gemini_model_env():
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_CLOUD_LOCATION)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI)
 
-    print(
-        ":raised_hands: Gemini model has been unset. You're now using regular OpenAI for all evals that require an LLM."
-    )
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.USE_GEMINI_MODEL,
+                ModelKeyValues.GEMINI_MODEL_NAME,
+                ModelKeyValues.GOOGLE_API_KEY,
+                ModelKeyValues.GOOGLE_CLOUD_PROJECT,
+                ModelKeyValues.GOOGLE_CLOUD_LOCATION,
+                ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI,
+            ],
+        )
+        if handled:
+            print(f"Removed Gemini environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The Gemini model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 @app.command(name="set-litellm")
 def set_litellm_model_env(
     model_name: str = typer.Argument(..., help="Name of the LiteLLM model"),
     api_key: Optional[str] = typer.Option(
-        None, "--api-key", help="API key for the model (if required)"
+        None,
+        "--api-key",
+        help="API key for the model (if required) (NOT persisted; set in .env[.local])",
     ),
     api_base: Optional[str] = typer.Option(
         None, "--api-base", help="Base URL for the model API (if required)"
     ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
 ):
-    """Set up a LiteLLM model for evaluation."""
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.LITELLM_MODEL_NAME, model_name)
-    if api_key:
-        KEY_FILE_HANDLER.write_key(ModelKeyValues.LITELLM_API_KEY, api_key)
+
     if api_base:
         KEY_FILE_HANDLER.write_key(ModelKeyValues.LITELLM_API_BASE, api_base)
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LITELLM, "YES")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_AZURE_OPENAI, "NO")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_LOCAL_MODEL, "NO")
-    KEY_FILE_HANDLER.write_key(ModelKeyValues.USE_GEMINI_MODEL, "NO")
+
+    save_target = resolve_save_target(save)
+    switch_model_provider(ModelKeyValues.USE_LITELLM, save_target)
+    if save_target:
+        handled, path = save_environ_to_store(
+            save_target,
+            {
+                ModelKeyValues.LITELLM_MODEL_NAME: model_name,
+                **(
+                    {ModelKeyValues.LITELLM_API_KEY: api_key} if api_key else {}
+                ),
+                **(
+                    {ModelKeyValues.LITELLM_API_BASE: api_base}
+                    if api_base
+                    else {}
+                ),
+            },
+        )
+        if handled:
+            print(
+                f"Saved environment variables to {path} (ensure it's git-ignored)."
+            )
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    else:
+        print(
+            "Tip: persist these settings to a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
     print(
         ":raising_hands: Congratulations! You're now using a LiteLLM model for all evals that require an LLM."
     )
 
 
 @app.command(name="unset-litellm")
-def unset_litellm_model_env():
-    """Remove LiteLLM model configuration."""
+def unset_litellm_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the LiteLLM related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LITELLM_MODEL_NAME)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LITELLM_API_KEY)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.LITELLM_API_BASE)
     KEY_FILE_HANDLER.remove_key(ModelKeyValues.USE_LITELLM)
-    print(
-        ":raising_hands: Congratulations! You're now using regular OpenAI for all evals that require an LLM."
-    )
+
+    save_target = resolve_save_target(save)
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                ModelKeyValues.LITELLM_MODEL_NAME,
+                ModelKeyValues.LITELLM_API_KEY,
+                ModelKeyValues.LITELLM_API_BASE,
+                ModelKeyValues.USE_LITELLM,
+            ],
+        )
+        if handled:
+            print(f"Removed LiteLLM environment variables from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The LiteLLM model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
 
 
 if __name__ == "__main__":
