@@ -6,6 +6,7 @@ sidebar_label: Conversational-DAG
 
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 
 <MetricTagsDisplayer multiTurn={true} custom={true} />
 
@@ -182,9 +183,77 @@ You must provide either `score` or `child`, but not both.
 
 ## Putting Everything Together
 
-We can now use the nodes we've just created to create a `DeepAcyclicGraph` and use it to create a `ConversationalDAGMetric`. Here's how to do that:
+We can now use these nodes to create a `DeepAcyclicGraph` and pass it in a `ConversationalDAGMetric`. We will first create all our nodes separately in a top-down approach.
 
-```python title="main.py"
+:::note
+We will create the same DAG as shown in the example images till now.
+:::
+
+### Creating DAG
+
+<Timeline>
+<TimelineItem title="Using task node to extract summary">
+
+We will use the `ConversationalTaskNode` to extract the summary of the entire conversation.
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalTaskNode
+
+task_node = ConversationalTaskNode(
+    instructions="Summarize the assistant's replies in one paragraph.",
+    output_label="Summary",
+    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
+    children=[],
+)
+```
+
+There are no children for this node yet, however, we will modify these individual nodes later to create a final DAG.
+
+</TimelineItem>
+<TimelineItem title="Classifying summary using the binary judgement node">
+
+We will use the `ConversationalBinaryJudgementNode` to make a binary classification that determines whether the user was satisfied or not.
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalBinaryJudgementNode
+
+binary_node = ConversationalBinaryJudgementNode(
+    criteria="Does the assistant's reply satisfy user's question?",
+    children=[
+        ConversationalVerdictNode(verdict=False, score=0),
+        ConversationalVerdictNode(verdict=True, child=10),
+    ],
+)
+```
+
+Here the `score` for satisfaction is 10. This will later change to a `child` that allows us to traverse a new path if user was satisfied.
+
+</TimelineItem>
+<TimelineItem title="Classifying assistant's behavior">
+
+We will use the `ConversationalNonBinaryJudgementNode` to classify assiatant's behaviour towards user to see if it matches the ideal behaviour pattern.
+
+```python
+from deepeval.metrics.conversational_dag import ConversationalNonBinaryJudgementNode
+
+non_binary_node = ConversationalNonBinaryJudgementNode(
+    criteria="How was the assistant's behaviour towards user?",
+    children=[
+        ConversationalVerdictNode(verdict="Rude", score=0),
+        ConversationalVerdictNode(verdict="Neutral", score=5),
+        ConversationalVerdictNode(verdict="Playful", score=10),
+    ],
+)
+```
+
+This is the final node in our DAG.
+
+</TimelineItem>
+<TimelineItem title="Connecting the DAG">
+
+We will now use bottom up approach to connect all the nodes we've created i.e, we will first **initialize the leaf nodes and go up connecting the parents to children**.
+
+```python {23,31,34}
 from deepeval.metrics.dag import DeepAcyclicGraph
 from deepeval.metrics.conversational_dag import (
     ConversationalTaskNode,
@@ -216,29 +285,64 @@ task_node = ConversationalTaskNode(
     output_label="Summary",
     evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
     children=[binary_node],
-    turn_window=(0,6),
 )
 
 dag = DeepAcyclicGraph(root_nodes=[task_node])
 ```
 
-:::tip
-Building your nodes in a bottom up fashion makes it easier to create a valid DAG and understand the flow.
-:::
+Here, we can see that we've made the `non_binary_node` as the child for `binary_node` when `verdict` is `True`. We have also made the `binary_node` as the child of `task_node` after the summary has been extracted.
 
-This is exactly the same DAG we've seen in the example images till now. We can now pass this `dag` to `ConversationalDAGMetric` and run an evaluation.
+With this we've successfully created our DAG (deep acyclic graph) with the `task_node` as our root node.
+
+</TimelineItem>
+</Timeline>
+
+### Creating DAG metric
+
+We have created exactly the same DAG as shown in the above example images. We can now pass this `dag` to `ConversationalDAGMetric` and run an evaluation.
 
 ```python title="main.py"
 from deepeval.metrics import ConversationalDAGMetric
-...
 
-playful_chatbot = ConversationalDAGMetric(
+playful_chatbot_metric = ConversationalDAGMetric(
     name="Playful Chatbot",
     dag=dag,
 )
 ```
 
-You can now pass a `ConversationalTestCase` and this metric in the `evaluate` function to run your evals.
+Use the `evaluate` function with conversational test cases and this metric to run evals.
+
+```python title="test_chatbot.py"
+from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval.metrics import ConversationalDAGMetric
+from deepeval import evaluate
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="what's the weather like today?"),
+        Turn(role="assistant", content="Why do you care bro?"),
+        Turn(role="user", content="Just tell me the weather in Paris"),
+        Turn(role="assistant", content="The weather in Paris today is sunny and 24°C."),
+        Turn(role="user", content="Should I take an umbrella?"),
+        Turn(role="assistant", content="Are you stupid?"),
+    ],
+    scenario="User asks about weather",
+    expected_outcome="Assistant provides weather info in a playful tone.",
+)
+
+playful_chatbot_metric = ConversationalDAGMetric(
+    name="Playful Chatbot",
+    dag=dag,
+)
+
+evaluate([test_case], [playful_chatbot_metric])
+```
+
+Get your eval results by running the following command:
+
+```bash
+python test_chatbot.py
+```
 
 ## How Is It Calculated
 
