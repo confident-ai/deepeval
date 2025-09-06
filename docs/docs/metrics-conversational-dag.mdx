@@ -48,7 +48,7 @@ There are **TWO** mandatory and **SIX** optional parameters required when creati
 
 To use the `ConversationalDAGMetric`, we need to first create a valid `DeepAcyclicGraph` (DAG) that represents a decision tree to get a final verdict. Here's an example decision tree that checks whether a _playful chatbot_ performs it's role correctly.
 
-![DAG Image for Multi-Turn](./images/docs:conversational-dag.png)
+![DAG Image for Multi-Turn](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:conversational-dag.png)
 
 <details>
 <summary><strong>Why use DAG?</strong></summary>
@@ -74,7 +74,7 @@ The `ConversationalTaskNode` is designed specifically for processing either the 
 :::note
 The `ConversationalDAGMetric` allows you to choose a certain window of turns to run evaluations on as well.
 
-![DAG with turns window](./images/docs:conversational-dag-turn-window.png)
+![DAG with turns window](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:conversational-dag-turn-window.png)
 :::
 
 You can also break down a conversation into atomic units by choosing a specific window of conversation turns. Here's how to create a `ConversationalTaskNode`:
