@@ -14,6 +14,11 @@ import VideoDisplayer from "@site/src/components/VideoDisplayer";
 
 `deepeval` offers 40+ SOTA, read-to-use metrics for you to quickly get started with. Essentially, while the metric acts as the ruler based on a specific criteria of interest, a test case represents the thing you're trying to measure.
 
+:::tip Persisting settings
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
 ## Quick Summary
 
 Almost all predefined metrics on `deepeval` uses **LLM-as-a-judge**, with various techniques such as **QAG** (question-answer-generation), **DAG** (deep acyclic graphs), and **G-Eval** to score [test cases](/docs/evaluation-test-cases), which represents atomic interactions with your LLM app.
