@@ -115,13 +115,31 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_converse_request_body(self, prompt: str) -> dict:
+        # Inline parameter translation with defaults
+        param_mapping = {
+            "max_tokens": "maxTokens", 
+            "top_p": "topP",
+            "top_k": "topK",
+            "stop_sequences": "stopSequences",
+        }
+        
+        # Start with defaults for required parameters
+        translated_kwargs = {
+            "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
+            "topP": self.generation_kwargs.get("top_p", 0),
+        }
+        
+        # Add any other parameters from generation_kwargs
+        for key, value in self.generation_kwargs.items():
+            if key not in ["max_tokens", "top_p"]:  # Skip already handled defaults
+                aws_key = param_mapping.get(key, key)
+                translated_kwargs[aws_key] = value
+        
         return {
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
             "inferenceConfig": {
                 "temperature": self.temperature,
-                "topP": self.generation_kwargs.get("top_p", 0),
-                "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
-                **self.generation_kwargs,
+                **translated_kwargs,
             },
         }
 
