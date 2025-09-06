@@ -66,9 +66,9 @@ Congratulations! You've successfully run your first LLM evaluation with DeepEval
 
 ## Setting Up Confident AI
 
-While DeepEval works great standalone, you can connect it to [Confident AI](https://www.confident-ai.com) — our cloud platform for dashboards, logging, collaboration, and more — built for LLM evaluation. **Best of all, it's free to get started!** _(No credit card required.)_
+While DeepEval works great standalone, you can connect it to [Confident AI](https://www.confident-ai.com) — our cloud platform for dashboards, logging, collaboration, and more — built for LLM evaluation. **It’s free to get started.**
 
-You can [sign up here](https://www.confident-ai.com), or you can run the following command
+You can [sign up here](https://www.confident-ai.com), or run:
 
 ```bash
 deepeval login
@@ -105,5 +105,30 @@ Or through the CLI:
 ```bash
 deepeval login --confident-api-key "your-confident-api-key"
 ```
+
+:::note Login persistence
+`deepeval login` persists your key to a dotenv file by default (.env.local).
+To change the target, use `--save`, e.g.:
+
+```bash
+# custom path
+deepeval login --confident-api-key "ck_..." --save dotenv:.env.custom
+```
+
+For compatibility, the key is saved under `api_key` and `CONFIDENT_API_KEY`.
+Secrets are never written to the JSON keystore.
+:::
+
+:::tip Logging out / rotating keys
+Use deepeval logout to clear the JSON keystore and remove saved keys from your dotenv file:
+
+```bash
+# default removes from .env.local
+deepeval logout
+
+# or specify a custom target
+deepeval logout --save dotenv:.myconf.env
+```
+:::
 
 You're all set! You can now evaluate LLMs locally and monitor them in Confident AI.
