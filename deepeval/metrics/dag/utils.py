@@ -108,9 +108,7 @@ def extract_required_params(
     return required_params
 
 
-def copy_graph(
-    original_dag: DeepAcyclicGraph
-) -> DeepAcyclicGraph:
+def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
     # This mapping avoids re-copying nodes that appear in multiple places.
     visited: Union[
         Dict[BaseNode, BaseNode],
