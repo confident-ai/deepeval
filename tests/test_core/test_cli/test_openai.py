@@ -7,6 +7,7 @@ from typer.testing import CliRunner
 
 # Typer CLI entrypoint
 from deepeval.cli.main import app
+
 # Model + pricing table we want to get populated
 from deepeval.models.llms.openai_model import GPTModel, model_pricing
 
@@ -21,7 +22,9 @@ def _isolate_tmp_cwd(tmp_path, monkeypatch):
     # run everything from a clean temp dir
     monkeypatch.chdir(tmp_path)
     # point the JSON store to a file under this temp dir
-    monkeypatch.setenv("DEEPEVAL_KEY_FILE", str(tmp_path / ".deepeval" / ".deepeval"))
+    monkeypatch.setenv(
+        "DEEPEVAL_KEY_FILE", str(tmp_path / ".deepeval" / ".deepeval")
+    )
     # silence telemetry to reduce noise
     monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")
     # provide a dummy API key to satisfy existence
@@ -38,9 +41,12 @@ def test_cli_set_openai_persists_and_enables_snapshot_pricing(tmp_path):
         app,
         [
             "set-openai",
-            "--model", SNAPSHOT,
-            "--cost_per_input_token", str(INPUT_PRICE),
-            "--cost_per_output_token", str(OUTPUT_PRICE),
+            "--model",
+            SNAPSHOT,
+            "--cost_per_input_token",
+            str(INPUT_PRICE),
+            "--cost_per_output_token",
+            str(OUTPUT_PRICE),
         ],
         catch_exceptions=False,
     )
@@ -62,7 +68,9 @@ def test_cli_set_openai_persists_and_enables_snapshot_pricing(tmp_path):
     assert model.get_model_name() == SNAPSHOT
 
     # pricing table should have been populated for the snapshot
-    assert SNAPSHOT in model_pricing, "Snapshot should be inserted into model_pricing"
+    assert (
+        SNAPSHOT in model_pricing
+    ), "Snapshot should be inserted into model_pricing"
     assert model_pricing[SNAPSHOT]["input"] == float(INPUT_PRICE)
     assert model_pricing[SNAPSHOT]["output"] == float(OUTPUT_PRICE)
 

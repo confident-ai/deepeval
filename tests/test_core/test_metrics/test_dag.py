@@ -46,9 +46,7 @@ class TestDeepAcyclicGraph:
             "Task B", output_label="B", evaluation_params=[], children=[node_a]
         )
         node_a.children.append(node_b)
-        assert (
-            is_valid_dag_from_roots([node_a], multiturn=False) is False
-        )
+        assert is_valid_dag_from_roots([node_a], multiturn=False) is False
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
         leaf_false = VerdictNode(verdict=False, score=0)
@@ -178,9 +176,7 @@ class TestDeepAcyclicGraph:
     def test_allow_multiple_tasknode_roots(self):
         node1 = TaskNode("Task 1", "Label1", [], [])
         node2 = TaskNode("Task 2", "Label2", [], [])
-        dag = DeepAcyclicGraph(
-            root_nodes=[node1, node2]
-        )
+        dag = DeepAcyclicGraph(root_nodes=[node1, node2])
         assert is_valid_dag(dag, multiturn=False) is True
 
     def test_copy_graph_isolated_and_deep(self):
@@ -304,9 +300,7 @@ class TestConversationalDeepAcyclicGraph:
             "Task B", output_label="B", evaluation_params=[], children=[node_a]
         )
         node_a.children.append(node_b)
-        assert (
-            is_valid_dag_from_roots([node_a], multiturn=True) is False
-        )
+        assert is_valid_dag_from_roots([node_a], multiturn=True) is False
 
     def test_is_valid_dag_deep_nested_mixed_nodes(self):
         leaf_false = ConversationalVerdictNode(verdict=False, score=0)
@@ -437,9 +431,7 @@ class TestConversationalDeepAcyclicGraph:
     def test_allow_multiple_tasknode_roots(self):
         node1 = ConversationalTaskNode("Task 1", "Label1", [], [])
         node2 = ConversationalTaskNode("Task 2", "Label2", [], [])
-        dag = DeepAcyclicGraph(
-            root_nodes=[node1, node2]
-        )
+        dag = DeepAcyclicGraph(root_nodes=[node1, node2])
         assert is_valid_dag(dag, multiturn=True) is True
 
     def test_copy_graph_isolated_and_deep(self):
