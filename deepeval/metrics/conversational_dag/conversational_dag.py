@@ -35,7 +35,9 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         _include_dag_suffix: bool = True,
     ):
         if (
-            is_valid_dag_from_roots(root_nodes=dag.root_nodes, multiturn=dag.multiturn)
+            is_valid_dag_from_roots(
+                root_nodes=dag.root_nodes, multiturn=dag.multiturn
+            )
             == False
         ):
             raise ValueError("Cycle detected in DAG graph.")
@@ -60,9 +62,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
     ) -> float:
         check_conversational_test_case_params(
             test_case,
-            extract_required_params(
-                self.dag.root_nodes, multiturn=True
-            ),
+            extract_required_params(self.dag.root_nodes, multiturn=True),
             self,
         )
 
@@ -99,9 +99,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
     ) -> float:
         check_conversational_test_case_params(
             test_case,
-            extract_required_params(
-                self.dag.root_nodes, multiturn=True
-            ),
+            extract_required_params(self.dag.root_nodes, multiturn=True),
             self,
         )
 

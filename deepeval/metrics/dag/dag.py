@@ -34,7 +34,12 @@ class DAGMetric(BaseMetric):
         verbose_mode: bool = False,
         _include_dag_suffix: bool = True,
     ):
-        if is_valid_dag_from_roots(root_nodes=dag.root_nodes, multiturn=dag.multiturn) == False:
+        if (
+            is_valid_dag_from_roots(
+                root_nodes=dag.root_nodes, multiturn=dag.multiturn
+            )
+            == False
+        ):
             raise ValueError("Cycle detected in DAG graph.")
 
         self._verbose_steps: List[str] = []
@@ -56,7 +61,9 @@ class DAGMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
         check_llm_test_case_params(
-            test_case, extract_required_params(self.dag.root_nodes, self.dag.multiturn), self
+            test_case,
+            extract_required_params(self.dag.root_nodes, self.dag.multiturn),
+            self,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -91,7 +98,9 @@ class DAGMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
         check_llm_test_case_params(
-            test_case, extract_required_params(self.dag.root_nodes, self.dag.multiturn), self
+            test_case,
+            extract_required_params(self.dag.root_nodes, self.dag.multiturn),
+            self,
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
