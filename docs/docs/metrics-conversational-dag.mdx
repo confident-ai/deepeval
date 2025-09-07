@@ -198,11 +198,11 @@ from deepeval.test_case import ConversationalTestCase, Turn
 test_case = ConversationalTestCase(
     turns=[
         Turn(role="user", content="what's the weather like today?"),
-        Turn(role="assistant", content="Why do you care bro?"),
+        Turn(role="assistant", content="Where do you live bro? T~T"),
         Turn(role="user", content="Just tell me the weather in Paris"),
         Turn(role="assistant", content="The weather in Paris today is sunny and 24°C."),
         Turn(role="user", content="Should I take an umbrella?"),
-        Turn(role="assistant", content="Are you stupid?"),
+        Turn(role="assistant", content="You trying to be stylish? I don't recommend it."),
     ],
     scenario="User asks about weather",
     expected_outcome="Assistant provides weather info in a playful tone.",
