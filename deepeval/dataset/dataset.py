@@ -1,7 +1,7 @@
 from asyncio import Task
 from typing import Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
-from opentelemetry.trace import Tracer, NoOpTracer
+from opentelemetry.trace import Tracer
 from opentelemetry.context import Context
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
