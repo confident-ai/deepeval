@@ -208,7 +208,7 @@ goldens = [
 
 dataset = EvaluationDataset(goldens=goldens)
 # for golden in goldens:
-for golden in dataset.evals_iterator(tracer=deepeval_tracer):
+for golden in dataset.evals_iterator(run_otel=True, tracer=deepeval_tracer):
     meta_agent(golden.input)
 
 # Force flush your custom tracer provider, not the global one

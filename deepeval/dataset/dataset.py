@@ -20,6 +20,7 @@ from deepeval.dataset.utils import (
     convert_convo_goldens_to_convo_test_cases,
     convert_convo_test_cases_to_convo_goldens,
     format_turns,
+    get_global_tracer,
     parse_turns,
     trimAndLoadJson,
 )
@@ -1099,8 +1100,8 @@ class EvaluationDataset:
         cache_config: Optional["CacheConfig"] = None,
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
-        tracer: Optional[Tracer] = NoOpTracer,
-        test_run_id: Optional[str] = None,
+        run_otel: Optional[bool] = False,
+        tracer: Optional[Tracer] = None,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1150,10 +1151,14 @@ class EvaluationDataset:
                     error_config=error_config,
                     async_config=async_config,
                 ):
-                    with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
-                        if test_run_id:
-                            span.set_attribute("confident.trace.test_run_id", test_run_id)
+                    if run_otel:
+                        if not tracer:
+                            tracer = get_global_tracer()
+                        with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
+                            yield golden
+                    else:
                         yield golden
+
             else:
                 for golden in execute_agentic_test_cases_from_loop(
                     goldens=goldens,
@@ -1164,9 +1169,12 @@ class EvaluationDataset:
                     test_results=test_results,
                     identifier=identifier,
                 ):
-                    with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
-                        if test_run_id:
-                            span.set_attribute("confident.trace.test_run_id", test_run_id)
+                    if run_otel:
+                        if not tracer:
+                            tracer = get_global_tracer()
+                        with tracer.start_as_current_span("evals_iterator", context=Context()) as span:
+                            yield golden
+                    else:
                         yield golden
 
             end_time = time.perf_counter()
