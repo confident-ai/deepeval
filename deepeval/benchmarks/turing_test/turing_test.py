@@ -25,7 +25,7 @@ class TuringTest(DeepEvalBaseBenchmark):
         conversation_starters: Optional[List[str]] = None,
         max_turns: int = 10,
         judge_model: Optional[str] = None,
-        n_starters: int = 50,
+        n_starters: int = 300,
         verbose_mode: bool = False,
         **kwargs,
     ):
@@ -88,11 +88,13 @@ class TuringTest(DeepEvalBaseBenchmark):
                 
                 # Judge which sounds more human
                 winner = self._judge_human_likeness(
-                    target_conversation, ref_conversation, 
+                    target_conversation, 
                     target_model.get_model_name(),
                     self.reference_model.get_model_name(),
                     starter
                 )
+
+                print(target_conversation)
                 
                 if winner == target_model.get_model_name():
                     total_wins += 1
@@ -133,14 +135,14 @@ class TuringTest(DeepEvalBaseBenchmark):
         
         # Initialize conversation histories
         conversation_a = [{"role": "user", "content": starter}]
-        conversation_b = []
+        conversation_b = [{"role": "assistant", "content": starter}]
         
         for turn in range(self.max_turns):
             if turn % 2 == 0:  # Model A's turn
                 try:
                     response_a = model_a.generate(
                         self._format_conversation_for_model(conversation_a)
-                    )
+                    )[0]
                     conversation_a.append({"role": "assistant", "content": response_a})
                     conversation_b.append({"role": "user", "content": response_a})
                 except Exception as e:
@@ -151,7 +153,7 @@ class TuringTest(DeepEvalBaseBenchmark):
                 try:
                     response_b = model_b.generate(
                         self._format_conversation_for_model(conversation_b)
-                    )
+                    )[0]
                     conversation_b.append({"role": "assistant", "content": response_b})
                     conversation_a.append({"role": "user", "content": response_b})
                 except Exception as e:
@@ -172,7 +174,6 @@ class TuringTest(DeepEvalBaseBenchmark):
     def _judge_human_likeness(
         self,
         conversation_a: List[Dict[str, str]],
-        conversation_b: List[Dict[str, str]], 
         model_a_name: str,
         model_b_name: str,
         starter: str
@@ -181,11 +182,10 @@ class TuringTest(DeepEvalBaseBenchmark):
         
         # Format conversations for judging
         formatted_a = TuringTestTemplate.format_conversation(conversation_a)
-        formatted_b = TuringTestTemplate.format_conversation(conversation_b)
         
         # Create judge prompt
         judge_prompt = TuringTestTemplate.judge_human_likeness(
-            formatted_a, formatted_b, model_a_name, model_b_name, starter
+            formatted_a, model_a_name, model_b_name, starter
         )
         
         try:
@@ -207,10 +207,10 @@ class TuringTest(DeepEvalBaseBenchmark):
             return model_a_name  # Default fallback
 
     def _get_default_starters(self) -> List[str]:
-        """Get 300 conversation starters from multiple sources"""
+        """Get conversation starters from multiple sources (100 from each)"""
         starters = []
         
-        # Try to load from datasets
+        # Try to load from datasets (100 from each source)
         starters.extend(self._load_personachat_starters(100))
         starters.extend(self._load_dailydialog_starters(100))
         starters.extend(self._get_curated_diversity_starters())
@@ -222,18 +222,22 @@ class TuringTest(DeepEvalBaseBenchmark):
         """Load conversation starters from PersonaChat dataset"""
         try:
             from datasets import load_dataset
-            dataset = load_dataset("bavard/personachat_truecased", split="train")
+            dataset = load_dataset("AlekseyKorshuk/persona-chat", split="train")
             
             starters = []
             for conversation in dataset:
                 if len(starters) >= n_samples:
                     break
                 
-                # Get first user utterance from history
-                if conversation.get('history') and len(conversation['history']) > 0:
-                    first_turn = conversation['history'][0]
-                    if self._is_good_starter(first_turn):
-                        starters.append(first_turn)
+                # Get first user utterance from utterances history
+                if conversation.get('utterances') and len(conversation['utterances']) > 0:
+                    for utterance in conversation['utterances']:
+                        if utterance.get('history') and len(utterance['history']) > 0:
+                            first_turn = utterance['history'][0]
+                            starters.append(first_turn)
+                
+                if len(starters) >= n_samples:
+                    break
             
             return starters
             
@@ -246,18 +250,17 @@ class TuringTest(DeepEvalBaseBenchmark):
         """Load conversation starters from DailyDialog dataset"""
         try:
             from datasets import load_dataset
-            dataset = load_dataset("daily_dialog", split="train")
+            dataset = load_dataset("pixelsandpointers/daily_dialog_w_turn_templates", split="train")
             
             starters = []
             for dialogue in dataset:
                 if len(starters) >= n_samples:
                     break
                 
-                # Get first utterance from dialogue
-                if dialogue.get('dialog') and len(dialogue['dialog']) > 0:
-                    first_utterance = dialogue['dialog'][0]
-                    if self._is_good_starter(first_utterance):
-                        starters.append(first_utterance)
+                # Get first utterance from dialogue (using 'first' field)
+                if dialogue.get('first'):
+                    first_utterance = dialogue['first'].strip()
+                    starters.append(first_utterance)
             
             return starters
             
@@ -265,59 +268,6 @@ class TuringTest(DeepEvalBaseBenchmark):
             if self.verbose_mode:
                 print(f"Could not load DailyDialog: {e}")
             return self._get_dailydialog_fallback()
-
-    def _is_good_starter(self, text: str) -> bool:
-        """Filter for good conversation starters"""
-        if not text or len(text.strip()) < 10:
-            return False
-        if len(text) > 300:  # Too long
-            return False
-        if text.startswith(('http', 'www', '@')):  # URLs or mentions
-            return False
-        if text.count('?') > 3:  # Too many questions
-            return False
-        
-        # Prefer conversational patterns
-        conversational_indicators = [
-            '?', 'what', 'how', 'why', 'do you', 'have you', 
-            'what\'s', 'how\'s', 'i\'ve been', 'lately', 'think', 'feel'
-        ]
-        
-        text_lower = text.lower()
-        if any(indicator in text_lower for indicator in conversational_indicators):
-            return True
-            
-        return False
-
-    def _get_personachat_fallback(self) -> List[str]:
-        """Fallback PersonaChat-style starters if dataset unavailable"""
-        return [
-            "Hi! What do you like to do for fun?",
-            "Hey there! What's your favorite type of music?",
-            "Hello! Do you have any pets?",
-            "What's your dream job?",
-            "What kind of movies do you enjoy?",
-            "Do you prefer the city or the countryside?",
-            "What's your favorite season and why?",
-            "Are you more of a morning person or a night owl?",
-            "What's something you're passionate about?",
-            "Do you have any hobbies you're really into?",
-        ]
-
-    def _get_dailydialog_fallback(self) -> List[str]:
-        """Fallback DailyDialog-style starters if dataset unavailable"""
-        return [
-            "How was your day today?",
-            "What are your plans for the weekend?",
-            "Have you seen any good movies lately?",
-            "What did you have for lunch?",
-            "How's the weather where you are?",
-            "What's new with you?",
-            "Are you busy these days?",
-            "What time do you usually go to bed?",
-            "Do you like to cook?",
-            "How do you usually spend your evenings?",
-        ]
 
     def _get_curated_diversity_starters(self) -> List[str]:
         """100 manually curated starters for maximum diversity"""

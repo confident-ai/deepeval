@@ -6,7 +6,6 @@ class TuringTestTemplate:
     @staticmethod
     def judge_human_likeness(
         conversation_a: str,
-        conversation_b: str,
         model_a_name: str,
         model_b_name: str,
         conversation_starter: str,
@@ -18,11 +17,8 @@ class TuringTestTemplate:
             **CONVERSATION STARTER:**
             "{conversation_starter}"
 
-            **CONVERSATION A ({model_a_name}):**
+            **CONVERSATION ({model_a_name} is assistant, and {model_b_name} is user):**
             {conversation_a}
-
-            **CONVERSATION B ({model_b_name}):**
-            {conversation_b}
 
             **EVALUATION CRITERIA:**
             Determine which conversation sounds more natural and human-like based on:

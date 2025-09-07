@@ -6,19 +6,19 @@ then uses an LLM judge to determine which model sounds more human-like.
 """
 
 from deepeval.benchmarks import TuringTest
-from deepeval.models import OpenAIModel, AnthropicModel
+from deepeval.models import GPTModel, AnthropicModel
 
 def main():
     # Initialize models
-    target_model = OpenAIModel(model="gpt-4")
-    reference_model = AnthropicModel(model="claude-3-sonnet-20240229")
+    target_model = GPTModel(model="gpt-4.1")
+    reference_model = AnthropicModel(model="claude-sonnet-4-20250514")
     
     # Create TuringTest benchmark
     benchmark = TuringTest(
         reference_model=reference_model,
         max_turns=8,  # 8 turns per conversation
-        judge_model="gpt-4",  # Model to judge human-likeness
-        n_starters=10,  # Use 10 conversation starters for quick test
+        judge_model="gpt-4.1",  # Model to judge human-likeness
+        #n_starters=10,  # Use 10 conversation starters for quick test
         verbose_mode=True
     )
     
