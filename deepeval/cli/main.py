@@ -54,6 +54,7 @@ from deepeval.confident.api import (
     get_confident_api_key,
     is_confident,
     set_confident_api_key,
+    CONFIDENT_API_KEY_ENV_VAR,
 )
 
 app = typer.Typer(name="deepeval")
@@ -132,15 +133,22 @@ def login(
     ),
     confident_api_key: Optional[str] = typer.Option(
         None,
-        "--confident-api-key (NOT persisted; set in .env[.local])",
+        "--confident-api-key",
         "-c",
-        help="Optional confident API key to bypass login.",
+        help="Confident API key (non-interactive). If omitted, you'll be prompted to enter one. In all cases the key is saved to a dotenv file (default: .env.local) unless overridden with --save.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Where to persist settings. Format: dotenv[:path]. Defaults to .env.local. If omitted, login still writes to .env.local.",
     ),
 ):
     with capture_login_event() as span:
+        completed = False
         try:
+            # Resolve the key from CLI flag or interactive flow
             if confident_api_key:
-                api_key = confident_api_key
+                key = confident_api_key.strip()
             else:
                 render_login_message()
 
@@ -158,35 +166,91 @@ def login(
                 login_url = f"{PROD}/pair?code={pairing_code}&port={port}"
                 webbrowser.open(login_url)
                 print(
-                    f"(open this link if your browser did not opend: [link={PROD}]{PROD}[/link])"
+                    f"(open this link if your browser did not open: [link={PROD}]{PROD}[/link])"
                 )
+
+                # Manual fallback if still empty
                 if api_key == "":
                     while True:
-                        api_key = input(f"🔐 Enter your API Key: ").strip()
+                        api_key = input("🔐 Enter your API Key: ").strip()
                         if api_key:
                             break
                         else:
                             print(
                                 "❌ API Key cannot be empty. Please try again.\n"
                             )
+                key = api_key.strip()
 
-            set_confident_api_key(api_key)
-            span.set_attribute("completed", True)
+            save_target = resolve_save_target(save) or "dotenv:.env.local"
+            handled, path = save_environ_to_store(
+                save_target,
+                {KeyValues.API_KEY: key, CONFIDENT_API_KEY_ENV_VAR: key},
+            )
+            if handled:
+                print(
+                    f"Saved environment variables to {path} (ensure it's git-ignored)."
+                )
+            else:
+                print("Unsupported --save option. Use --save=dotenv[:path].")
 
+            completed = True
             print(
-                "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
+                "\n🎉🥳 Congratulations! You've successfully logged in! :raising_hands:"
             )
             print(
-                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. Follow our quickstart tutorial here: [bold][link=https://www.confident-ai.com/docs/llm-evaluation/quickstart]https://www.confident-ai.com/docs/llm-evaluation/quickstart[/link][/bold]"
+                "You're now using DeepEval with [rgb(106,0,255)]Confident AI[/rgb(106,0,255)]. "
+                "Follow our quickstart tutorial here: "
+                "[bold][link=https://www.confident-ai.com/docs/llm-evaluation/quickstart]"
+                "https://www.confident-ai.com/docs/llm-evaluation/quickstart[/link][/bold]"
             )
-        except:
-            span.set_attribute("completed", False)
+        except Exception as e:
+            completed = False
+            print(f"Login failed: {e}")
+        finally:
+            if getattr(span, "set_attribute", None):
+                span.set_attribute("completed", completed)
 
 
 @app.command()
-def logout():
+def logout(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Where to remove the saved key from. Use format dotenv[:path]. If omitted, logout removes from .env.local. JSON keystore is always cleared.",
+    )
+):
+    """
+    Log out of Confident AI.
+
+    Behavior:
+    - Always clears the Confident API key from the JSON keystore and process env.
+    - Also removes credentials from a dotenv file; defaults to .env.local.
+      Override the target with --save=dotenv[:path].
+    """
     set_confident_api_key(None)
+
+    # Remove from dotenv file (both names)
+    save_target = resolve_save_target(save) or "dotenv:.env.local"
+    if save_target:
+        handled, path = unset_environ_in_store(
+            save_target,
+            [
+                KeyValues.API_KEY,
+                CONFIDENT_API_KEY_ENV_VAR,
+            ],
+        )
+        if handled:
+            print(f"Removed Confident AI key(s) from {path}.")
+        else:
+            print("Unsupported --save option. Use --save=dotenv[:path].")
+    else:
+        print(
+            "Tip: remove keys from a dotenv file with --save=dotenv[:path] (default .env.local) "
+            "or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
     delete_file_if_exists(LATEST_TEST_RUN_FILE_PATH)
+
     print("\n🎉🥳 You've successfully logged out! :raising_hands: ")
 
 
@@ -277,12 +341,16 @@ def set_openai_env(
 
     clear_evaluation_model_keys()
     KEY_FILE_HANDLER.write_key(ModelKeyValues.OPENAI_MODEL_NAME, model)
-    KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN, str(cost_per_input_token)
-    )
-    KEY_FILE_HANDLER.write_key(
-        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN, str(cost_per_output_token)
-    )
+    if cost_per_input_token is not None:
+        KEY_FILE_HANDLER.write_key(
+            ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN,
+            str(cost_per_input_token),
+        )
+    if cost_per_output_token is not None:
+        KEY_FILE_HANDLER.write_key(
+            ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN,
+            str(cost_per_output_token),
+        )
 
     save_target = resolve_save_target(save)
     switch_model_provider(ModelKeyValues.USE_OPENAI_MODEL, save_target)
@@ -291,11 +359,23 @@ def set_openai_env(
             save_target,
             {
                 ModelKeyValues.OPENAI_MODEL_NAME: model,
-                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN: str(
-                    cost_per_input_token
+                **(
+                    {
+                        ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN: str(
+                            cost_per_input_token
+                        )
+                    }
+                    if cost_per_input_token is not None
+                    else {}
                 ),
-                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN: str(
-                    cost_per_output_token
+                **(
+                    {
+                        ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN: str(
+                            cost_per_output_token
+                        )
+                    }
+                    if cost_per_output_token is not None
+                    else {}
                 ),
             },
         )
@@ -835,7 +915,6 @@ def set_local_model_env(
             {
                 ModelKeyValues.LOCAL_MODEL_NAME: model_name,
                 ModelKeyValues.LOCAL_MODEL_BASE_URL: base_url,
-                ModelKeyValues.LOCAL_MODEL_API_KEY: api_key,
                 **(
                     {ModelKeyValues.LOCAL_MODEL_API_KEY: api_key}
                     if api_key
@@ -1242,7 +1321,11 @@ def set_local_embeddings_env(
             {
                 EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: model_name,
                 EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: base_url,
-                EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY: api_key,
+                **(
+                    {EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY: api_key}
+                    if api_key
+                    else {}
+                ),
             },
         )
         if handled:
