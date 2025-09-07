@@ -7,7 +7,12 @@ sidebar_label: Conversational-DAG
 import Equation from "@site/src/components/Equation";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
+import ColabButton from "@site/src/components/ColabButton";
 
+<ColabButton 
+  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/examples/dag-examples/conversational_dag.ipynb" 
+  className="header-colab-button"
+/>
 <MetricTagsDisplayer multiTurn={true} custom={true} />
 
 The `ConversationalDAGMetric` is the most versatile custom metric that allows you to build  deterministic decision trees for multi-turn evaluations. It uses LLM-as-a-judge to run evals on an entire conversation by traversing a decison tree.
@@ -87,7 +92,7 @@ task_node = ConversationalTaskNode(
     instructions="Summarize the assistant's replies in one paragraph.",
     output_label="Summary",
     evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
-    children=[binary_node],
+    children=[],
     turn_window=(0,6),
 )
 ```
@@ -209,15 +214,15 @@ Just by eyeballing the conversation, we can tell that the user's request was sat
 ### Creating DAG
 
 <Timeline>
-<TimelineItem title="Summarizing the conversation">
+<TimelineItem title="Summarize the conversation">
 
-Sometimes, conversations can get pretty long which means we might have to summarize it entirely while keeping important details specific for our use case.  The `ConversationalTaskNode` allows us to perform tasks like this on our test cases.
+When conversations get long, summarizing them can help focus the evaluation on key information. The `ConversationalTaskNode` allows us to perform tasks like this on our test cases.
 
 ```python
 from deepeval.metrics.conversational_dag import ConversationalTaskNode
 
 task_node = ConversationalTaskNode(
-    instructions="Summarize the conversation and explain assiatant's behaviour overall.",
+    instructions="Summarize the conversation and explain assistant's behaviour overall.",
     output_label="Summary",
     evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
     children=[],
@@ -231,7 +236,7 @@ There are no children for this node yet, however, we will modify these individua
 :::
 
 </TimelineItem>
-<TimelineItem title="Checking user's satisfaction">
+<TimelineItem title="Evaluate user satisfaction">
 
 Some decisions like the user satisfaction here may be a simple close-ended question that is either **yes** or **no**. We will use the `ConversationalBinaryJudgementNode` to make judgements that can be classified as a binary decision.
 
@@ -242,17 +247,17 @@ binary_node = ConversationalBinaryJudgementNode(
     criteria="Do the assistant's replies satisfy user's questions?",
     children=[
         ConversationalVerdictNode(verdict=False, score=0),
-        ConversationalVerdictNode(verdict=True, child=10),
+        ConversationalVerdictNode(verdict=True, score=10),
     ],
 )
 ```
 
-Here the `score` for satisfaction is 10. This will later change to a `child` that allows us to traverse a new path if user was satisfied.
+Here the `score` for satisfaction is 10. We will later change that to a `child` node which will allows us to traverse a new path if user was satisfied.
 
 </TimelineItem>
-<TimelineItem title="Classifying assistant's behavior">
+<TimelineItem title="Judge assistant's behavior">
 
-Decisions like behaviour analysis can be a multi-class classification. We will use the `ConversationalNonBinaryJudgementNode` to classify assiatant's behaviour from a given list of options from our verdicts.
+Decisions like behaviour analysis can be a multi-class classification. We will use the `ConversationalNonBinaryJudgementNode` to classify assistant's behaviour from a given list of options from our verdicts.
 
 ```python
 from deepeval.metrics.conversational_dag import ConversationalNonBinaryJudgementNode
@@ -274,7 +279,7 @@ non_binary_node = ConversationalNonBinaryJudgementNode(
 This is the final node in our DAG.
 
 </TimelineItem>
-<TimelineItem title="Connecting the nodes">
+<TimelineItem title="Connect the DAG together">
 
 We will now use bottom up approach to connect all the nodes we've created i.e, we will first **initialize the leaf nodes and go up connecting the parents to children**.
 
@@ -306,7 +311,7 @@ binary_node = ConversationalBinaryJudgementNode(
 )
 
 task_node = ConversationalTaskNode(
-    instructions="Summarize the conversation and explain assiatant's behaviour overall.",
+    instructions="Summarize the conversation and explain assistant's behaviour overall.",
     output_label="Summary",
     evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT],
     children=[binary_node],
@@ -319,8 +324,18 @@ Here, we can see that we've made the `non_binary_node` as the child for `binary_
 
 With this we've successfully created our DAG (deep acyclic graph) with the `task_node` as our root node.
 
+:::note
+Starting with a task node is useful when your evaluation depends on extracting your turns for better context — but it's not required for all DAGs. (You can use any node as your root node)
+:::
+
 </TimelineItem>
 </Timeline>
+
+✅ We have now successfully created a DAG that evaluates the above test case example. Here's what this DAG does:
+
+- Summarize the conversation using the `ConversationalTaskNode`
+- Determine user satisfaction using the `ConversationalBinaryJudgementNode`
+- Classify assistant's behaviour using the `ConversationalNonBinaryJudgementNode`
 
 ### Creating DAG metric
 
@@ -344,7 +359,7 @@ from deepeval import evaluate
 evaluate([test_case], [playful_chatbot_metric])
 ```
 
-What would you classify the above conversation as according to our DAG? Run your evals in this colab notebook and compare your evaluation with the `ConversationalDAGMetric`'s result.
+What would you classify the above conversation as according to our DAG? Run your evals in [this colab notebook](https://github.com/confident-ai/deepeval/tree/main/examples/dag-examples/conversational_dag.ipynb) and compare your evaluation with the `ConversationalDAGMetric`'s result.
 
 ## How Is It Calculated
 
