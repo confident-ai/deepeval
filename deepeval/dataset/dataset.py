@@ -1211,6 +1211,7 @@ class EvaluationDataset:
             if run_otel:
                 self.end_otel_test_run(tracer)
 
+            # wrap up test run if not OTEL
             if not run_otel:
                 confident_link = global_test_run_manager.wrap_up_test_run(
                     run_duration, display_table=False
