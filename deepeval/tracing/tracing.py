@@ -548,9 +548,16 @@ class TraceManager:
         llm_spans = []
         retriever_spans = []
         tool_spans = []
+        is_otlp_test_run: bool = False
 
         # Process all spans in the trace iteratively
         span_stack = list(trace.root_spans)  # Start with root spans
+
+        # check if any of the root spans have the name of the evals iterator
+        if not is_otlp_test_run:
+            for root_span in trace.root_spans:
+                if root_span.name == "evals_iterator":
+                    is_otlp_test_run = True
 
         while span_stack:
             span = span_stack.pop()
