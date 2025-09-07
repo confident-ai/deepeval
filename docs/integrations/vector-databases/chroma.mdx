@@ -10,6 +10,11 @@ sidebar_label: Chroma
 
 DeepEval allows you to easily evaluate and optimize your Chroma retriever by **tuning hyperparameters** like `n_results` (more commonly known as top-K) and the `embedding model` used in your Chroma retrieval pipeline.
 
+:::caution
+Chroma is not only an optional retriever you can evaluate, it is also a **required dependency** for the `deepeval.synthesizer.generate_goldens_from_docs()` method.
+This method uses Chroma as its built-in backend for chunk storage and retrieval during context construction. If you plan to generate goldens from documents, make sure to install `chromadb`:
+:::
+
 :::info
 To get started, install Chroma through the CLI using the following command:
 
@@ -98,7 +103,7 @@ By default, Chroma utilizes `cosine similarity` to find similar chunks.
 To evaluate your Chroma retriever, you'll first need to prepare an `input` query and generate a response from your RAG pipeline in order to create an `LLMTestCase`. You'll also need to extract the contexts retrieved from your Chroma collection during generation and prepare the expected LLM response to complete the `LLMTestCase`.
 
 :::information
-By default, `input` and `actual_output` are required for all metrics. However, `retrieval_context`, `context`, and `expected_output` are optional, and different metrics may or may not require additional parameters. To check the specific requirements, [visit the metrics section](/docs/metrics-introduction).  
+By default, `input` and `actual_output` are required for all metrics. However, `retrieval_context`, `context`, and `expected_output` are optional, and different metrics may or may not require additional parameters. To check the specific requirements, [visit the metrics section](/docs/metrics-introduction).
 :::
 
 After you've prepared your `LLMTestCase`, evaluating your Chroma retriever is as easy passing the test case along with your selection of metrics into DeepEval's `evaluate` function.

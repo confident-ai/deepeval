@@ -90,7 +90,7 @@ from deepeval.synthesizer import Synthesizer
 
 ...
 synthesizer.generate_goldens_from_docs(
-    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    document_paths=['example.txt', 'example.docx', 'example.pdf', 'example.md', 'example.markdown', 'example.mdx'],
     include_expected_output=True
 )
 print(synthesizer.synthetic_goldens)
