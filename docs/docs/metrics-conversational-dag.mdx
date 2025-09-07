@@ -97,7 +97,7 @@ task_node = ConversationalTaskNode(
 )
 ```
 
-There are **THREE** mandatory and **THREE** optional parameter when creating a `ConversationalTaskNode`:
+There are **THREE** mandatory and **THREE** optional parameters when creating a `ConversationalTaskNode`:
 
 - `instructions`: a string specifying how to process a conversation, and/or outputs from a previous parent `TaskNode`.
 - `output_label`: a string representing the final output. The `child` `ConversationalBaseNode`s will use the `output_label` to reference the output from the current `ConversationalTaskNode`.
@@ -122,7 +122,7 @@ binary_node = ConversationalBinaryJudgementNode(
 )
 ```
 
-There are **TWO** mandatory and **THREE** optional parameter when creating a `ConversationalBinaryJudgementNode`:
+There are **TWO** mandatory and **THREE** optional parameters when creating a `ConversationalBinaryJudgementNode`:
 
 - `criteria`: a yes/no question based on output from parent node(s) and optionally parameters from the `Turn`.
 - `children`: a list of exactly two `ConversationalVerdictNodes`, one with a verdict value of `True`, and the other with a value of `False`.
@@ -151,7 +151,7 @@ non_binary_node = ConversationalNonBinaryJudgementNode(
 )
 ```
 
-There are **TWO** mandatory and **THREE** optional parameter when creating a `ConversationalNonBinaryJudgementNode`:
+There are **TWO** mandatory and **THREE** optional parameters when creating a `ConversationalNonBinaryJudgementNode`:
 
 - `criteria`: an open-ended question based on output from parent node(s) and optionally parameters from the `Turn`.
 - `children`: a list of `ConversationalVerdictNodes`, where the `verdict` values determine the possible verdict of the current non-binary judgement.
@@ -174,7 +174,7 @@ from deepeval.metrics.conversational_dag import ConversationalVerdictNode
 ConversationalVerdictNode(verdict="Good", score=9),
 ```
 
-There is **ONE** mandatory and **TWO** optional parameter when creating a `ConversationalVerdictNode`:
+There is **ONE** mandatory and **TWO** optional parameters when creating a `ConversationalVerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is non-binary, else boolean if the parent is binary.
 - [Optional] `score`: an integer between **0 - 10** that determines the final score of your `ConversationalDAGMetric` based on the specified `verdict` value. You must provide a `score` if `child` is None.
@@ -188,7 +188,7 @@ You must provide either `score` or `child`, but not both.
 
 ## Putting Everything Together
 
-Now that we've learnt everything about the Conversational DAG. Let's take an example use case to create an actual DAG and use the `ConversationalDAGMetric` to evaluate our DAG.
+Now that we've covered the fundamentals of Conversational DAGs, let's build one step-by-step for a real-world use case: evaluating whether an assistant remains playful while still satisfying the user's requests.
 
 We will take an example conversation between a user and an assistant. In this conversation, we will systematically evaluate whether the assistant is satisfying the user's requests while being playful with the user. Here's an example conversational test case:
 
@@ -229,10 +229,10 @@ task_node = ConversationalTaskNode(
 )
 ```
 
-You can also pass a `turn_window` to focus on just some parts of the conversation as needed.
+You can also pass a `turn_window` to focus on just some parts of the conversation as needed. There are no children for this node yet, however, we will modify these individual nodes later to create a final DAG.
 
 :::note
-There are no children for this node yet, however, we will modify these individual nodes later to create a final DAG.
+Starting with a task node is useful when your evaluation depends on extracting your turns for better context — but it's not required for all DAGs. (You can use any node as your root node)
 :::
 
 </TimelineItem>
@@ -323,10 +323,6 @@ dag = DeepAcyclicGraph(root_nodes=[task_node])
 Here, we can see that we've made the `non_binary_node` as the child for `binary_node` when `verdict` is `True`. We have also made the `binary_node` as the child of `task_node` after the summary has been extracted.
 
 With this we've successfully created our DAG (deep acyclic graph) with the `task_node` as our root node.
-
-:::note
-Starting with a task node is useful when your evaluation depends on extracting your turns for better context — but it's not required for all DAGs. (You can use any node as your root node)
-:::
 
 </TimelineItem>
 </Timeline>
