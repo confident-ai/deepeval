@@ -20,7 +20,7 @@ from deepeval.dataset.utils import (
     convert_convo_goldens_to_convo_test_cases,
     convert_convo_test_cases_to_convo_goldens,
     format_turns,
-    get_global_tracer,
+    check_tracer,
     parse_turns,
     trimAndLoadJson,
 )
@@ -1092,20 +1092,6 @@ class EvaluationDataset:
         print(f"Evaluation dataset saved at {full_file_path}!")
         return full_file_path
 
-    def start_otel_test_run(self, tracer: Optional[Tracer] = None):
-        print("Starting OTLP test run")
-        if not tracer:
-            tracer = get_global_tracer()
-        with tracer.start_as_current_span("start_otel_test_run", context=Context()):
-            pass
-
-    def end_otel_test_run(self, tracer: Optional[Tracer] = None):
-        print("Ending OTLP test run")
-        if not tracer:
-            tracer = get_global_tracer()
-        with tracer.start_as_current_span("stop_otel_test_run", context=Context()):
-            pass
-
     def evals_iterator(
         self,
         metrics: Optional[List[BaseMetric]] = None,
@@ -1152,7 +1138,7 @@ class EvaluationDataset:
             start_time = time.perf_counter()
             test_results: List[TestResult] = []
 
-            # OTEL: start test run
+            # sandwich start trace for OTEL
             if run_otel:
                 self.start_otel_test_run(tracer)
 
@@ -1170,9 +1156,8 @@ class EvaluationDataset:
                     async_config=async_config,
                 ):
                     if run_otel:
-                        if not tracer:
-                            tracer = get_global_tracer()
-                        with tracer.start_as_current_span("evals_iterator", context=Context()) as span: # TODO: think of how tracer can be changed for iterator
+                        _tracer = check_tracer(tracer)
+                        with _tracer.start_as_current_span("evals_iterator", context=Context()) as span: # TODO: think of how tracer can be changed for iterator
                             yield golden
                     else:
                         yield golden
@@ -1188,9 +1173,8 @@ class EvaluationDataset:
                     identifier=identifier,
                 ):
                     if run_otel:
-                        if not tracer:
-                            tracer = get_global_tracer()
-                        with tracer.start_as_current_span("evals_iterator", context=Context()) as span: # TODO: think of how tracer can be changed for iterator
+                        _tracer = check_tracer(tracer)
+                        with _tracer.start_as_current_span("evals_iterator", context=Context()) as span: # TODO: think of how tracer can be changed for iterator
                             yield golden
                     else:
                         yield golden
@@ -1223,7 +1207,7 @@ class EvaluationDataset:
             openai_test_case_pairs.clear()
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
-            # OTEL: end test run
+            # sandwich end trace for OTEL
             if run_otel:
                 self.end_otel_test_run(tracer)
 
@@ -1236,3 +1220,15 @@ class EvaluationDataset:
                 )
     def evaluate(self, task: Task):
         global_evaluation_tasks.append(task)
+
+    def start_otel_test_run(self, tracer: Optional[Tracer] = None):
+        print("Starting OTLP test run")
+        _tracer = check_tracer(tracer)
+        with _tracer.start_as_current_span("start_otel_test_run", context=Context()):
+            pass
+
+    def end_otel_test_run(self, tracer: Optional[Tracer] = None):
+        print("Ending OTLP test run")
+        _tracer = check_tracer(tracer)
+        with _tracer.start_as_current_span("stop_otel_test_run", context=Context()):
+            pass

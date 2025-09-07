@@ -156,16 +156,15 @@ def parse_turns(turns_str: str) -> List[Turn]:
         )
     return res
 
-def get_global_tracer() -> Tracer:
-    # Get the global tracer provider
-    tracer_provider = trace.get_tracer_provider()
+def check_tracer(tracer: Optional[Tracer] = None) -> Tracer:
+    if tracer:
+        return tracer
     
-    # Check if the tracer provider is the default no-op implementation
+    tracer_provider = trace.get_tracer_provider()
     if isinstance(tracer_provider, NoOpTracerProvider):
         raise RuntimeError(
             "No global OpenTelemetry tracer provider is configured." #TODO: link to docs
         )
     
-    # Get a tracer from the configured provider
     return tracer_provider.get_tracer(__name__)
         
