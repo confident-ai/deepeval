@@ -34,7 +34,7 @@ from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_docs(
-    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    document_paths=['example.txt', 'example.docx', 'example.pdf',  'example.md', 'example.markdown', 'example.mdx'],
 )
 ```
 
@@ -81,7 +81,7 @@ synthesizer.generate_goldens_from_contexts(
 
 ## Document Chunking
 
-In DeepEval, documents are divided into **fixed-size chunks**, which are then used to generate contexts for your goldens. This chunking process is critical because it directly influences the quality of the contexts, which are used to generated synthetic goldens. You can control this process using the following parameters:
+In DeepEval, documents are divided into **fixed-size chunks**, which are then used to generate contexts for your goldens. This chunking process is critical because it directly influences the quality of the contexts, which are used to generate synthetic goldens. You can control this process using the following parameters:
 
 - `chunk_size`: Defines the size of each chunk in tokens. Default is 1024.
 - `chunk_overlap`: Specifies the number of overlapping tokens between consecutive chunks. Default is 0 (no overlap).
@@ -96,7 +96,7 @@ from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_docs(
-    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    document_paths=['example.txt', 'example.docx', 'example.pdf',  'example.md', 'example.markdown', 'example.mdx'],
     chunk_size=1024,
     chunk_overlap=0
 )
@@ -143,7 +143,7 @@ from deepeval.synthesizer import Synthesizer
 
 synthesizer = Synthesizer()
 synthesizer.generate_goldens_from_docs(
-    document_paths=['example.txt', 'example.docx', 'example.pdf'],
+    document_paths=['example.txt', 'example.docx', 'example.pdf',  'example.md', 'example.markdown', 'example.mdx'],
     num_evolutions=3,
     evolutions={
         Evolution.REASONING: 0.1,
@@ -194,7 +194,7 @@ from deepeval.synthesizer import Synthesizer
 
 # Generate goldens from documents
 goldens = synthesizer.generate_goldens_from_docs(
-  document_paths=['example.txt', 'example.docx', 'example.pdf']
+  document_paths=['example.txt', 'example.docx', 'example.pdf',  'example.md', 'example.markdown', 'example.mdx'],
 )
 
 # Access evolutions through the DataFrame
@@ -218,7 +218,7 @@ The first two qualification steps happen during **context generation**. Each chu
 - **Structure:** How well-organized and logical the content is.
 - **Relevance:** How closely the content relates to the main topic.
 
-:::note  
+:::note
 Scores range from 0 to 1. To pass, a chunk must achieve an average score of at least 0.5. A maximum of 3 retries is allowed for each chunk if it initially fails.
 :::
 
@@ -244,7 +244,7 @@ from deepeval.synthesizer import Synthesizer
 
 # Generate goldens from documents
 goldens = synthesizer.generate_goldens_from_docs(
-  document_paths=['example.txt', 'example.docx', 'example.pdf']
+  document_paths=['example.txt', 'example.docx', 'example.pdf',  'example.md', 'example.markdown', 'example.mdx'],
 )
 
 # Access quality scores through the DataFrame

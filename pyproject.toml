@@ -59,6 +59,7 @@ tiktoken = "*"
 pypdf = "*"
 docx2txt = "*"
 pandas = "*"
+pysqlite3-binary = "^0.5.4"
 
 [tool.black]
 line-length = 80
