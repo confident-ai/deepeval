@@ -6,38 +6,38 @@
         "get_location_coordinates",
         "get_current_weather"
       ],
-      "endTime": "2025-09-08T13:16:56.676Z",
+      "endTime": "<is_present>",
       "input": {},
       "metadata": {
         "output_type": "str"
       },
       "name": "Weather Specialist Agent",
-      "parentUuid": "857da36e-6f91-415a-bfb7-863150fa67f5",
-      "startTime": "2025-09-08T13:16:50.698Z",
+      "parentUuid": "<is_present>",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "agent",
-      "uuid": "894b310f-054c-488d-98f2-55695d2aebf2"
+      "uuid": "<is_present>"
     }
   ],
   "baseSpans": [
     {
-      "endTime": "2025-09-08T13:16:56.676Z",
+      "endTime": "<is_present>",
       "input": "What's the weather like in London today?",
       "metricCollection": "test_collection_1",
       "name": "run",
       "output": "<is_present>",
-      "startTime": "2025-09-08T13:16:50.697Z",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "base",
-      "uuid": "857da36e-6f91-415a-bfb7-863150fa67f5"
+      "uuid": "<is_present>"
     }
   ],
-  "endTime": "2025-09-08T13:16:56.676Z",
+  "endTime": "<is_present>",
   "environment": "development",
   "input": "What's the weather like in London today?",
   "llmSpans": [
     {
-      "endTime": "2025-09-08T13:16:56.675Z",
+      "endTime": "<is_present>",
       "input": [
         {
           "content": "What's the weather like in London today?",
@@ -65,28 +65,28 @@
           "role": "tool"
         }
       ],
-      "inputTokenCount": "<is_present>",
+      "inputTokenCount": 419.0,
       "metadata": {
-        "cached_input_tokens": "<is_present>",
-        "ouptut_reasoning_tokens": "<is_present>"
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
       },
       "metricCollection": "test_collection_1",
       "model": "gpt-4.1-2025-04-14",
       "name": "LLM Generation",
       "output": "<is_present>",
       "outputTokenCount": "<is_present>",
-      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "parentUuid": "<is_present>",
       "prompt": {
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-08T13:16:53.483Z",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "llm",
-      "uuid": "5da26aca-02b5-43cb-9c67-0b6bf597da02"
+      "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-08T13:16:53.481Z",
+      "endTime": "<is_present>",
       "input": [
         {
           "content": "What's the weather like in London today?",
@@ -104,28 +104,28 @@
           "role": "tool"
         }
       ],
-      "inputTokenCount": "<is_present>",
+      "inputTokenCount": 312.0,
       "metadata": {
-        "cached_input_tokens": "<is_present>",
-        "ouptut_reasoning_tokens": "<is_present>"
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
       },
       "metricCollection": "test_collection_1",
       "model": "gpt-4.1-2025-04-14",
       "name": "LLM Generation",
       "output": "<is_present>",
-      "outputTokenCount": "<is_present>",
-      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "outputTokenCount": 27.0,
+      "parentUuid": "<is_present>",
       "prompt": {
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-08T13:16:52.446Z",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "llm",
-      "uuid": "2f20937e-77c9-458d-b663-036df2c78147"
+      "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-08T13:16:52.445Z",
+      "endTime": "<is_present>",
       "input": [
         {
           "content": "What's the weather like in London today?",
@@ -133,37 +133,37 @@
           "type": "message"
         }
       ],
-      "inputTokenCount": "<is_present>",
+      "inputTokenCount": 268.0,
       "metadata": {
-        "cached_input_tokens": "<is_present>",
-        "ouptut_reasoning_tokens": "<is_present>"
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
       },
       "metricCollection": "test_collection_1",
       "model": "gpt-4.1-2025-04-14",
       "name": "LLM Generation",
       "output": "<is_present>",
-      "outputTokenCount": "<is_present>",
-      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "outputTokenCount": 17.0,
+      "parentUuid": "<is_present>",
       "prompt": {
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-08T13:16:50.702Z",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "llm",
-      "uuid": "ec349fc6-b271-4154-a71b-fe28925dae22"
+      "uuid": "<is_present>"
     }
   ],
   "metricCollection": "test_collection_1",
   "name": "Weather Specialist Agent",
   "output": "<is_present>",
   "retrieverSpans": [],
-  "startTime": "2025-09-08T13:16:50.697Z",
+  "startTime": "<is_present>",
   "status": "SUCCESS",
   "toolSpans": [
     {
       "description": "Fetches weather data for a given location using the Open-Meteo API.",
-      "endTime": "2025-09-08T13:16:53.483Z",
+      "endTime": "<is_present>",
       "input": {
         "latitude": 51.5074,
         "longitude": -0.1278
@@ -180,15 +180,15 @@
         "wind_direction_10m": 180,
         "wind_speed_10m": 5.2
       },
-      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
-      "startTime": "2025-09-08T13:16:53.482Z",
+      "parentUuid": "<is_present>",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "tool",
-      "uuid": "3f3bb412-8b5e-4dd7-9e66-1889bd48fcb5"
+      "uuid": "<is_present>"
     },
     {
       "description": "Get latitude and longitude for a city name.",
-      "endTime": "2025-09-08T13:16:52.445Z",
+      "endTime": "<is_present>",
       "input": {
         "city_name": "London"
       },
@@ -197,12 +197,12 @@
         "lat": 51.5074,
         "lng": -0.1278
       },
-      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
-      "startTime": "2025-09-08T13:16:52.445Z",
+      "parentUuid": "<is_present>",
+      "startTime": "<is_present>",
       "status": "SUCCESS",
       "type": "tool",
-      "uuid": "f5ef545b-329a-494e-9883-bb2413ba88b7"
+      "uuid": "<is_present>"
     }
   ],
-  "uuid": "42cf9b7b-316f-49ba-9fb1-746614b76059"
+  "uuid": "<is_present>"
 }

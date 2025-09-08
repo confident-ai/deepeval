@@ -119,37 +119,11 @@ def replace_self_with_class_name(obj):
     except:
         return f"<self>"
 
-_IGNORE_DYNAMIC_KEYS = {
-    "uuid",
-    "parentUuid",
-    "startTime",
-    "endTime",
-    # snake_case variants for safety
-    "parent_uuid",
-    "start_time",
-    "end_time",
-    "trace_uuid",
-    "traceUuid",
-}
-
 _PLACEHOLDER = "<is_present>"
 
-def _sanitize_dynamic_fields(obj):
-    if isinstance(obj, dict):
-        return {
-            k: _sanitize_dynamic_fields(v)
-            for k, v in obj.items()
-            if k not in _IGNORE_DYNAMIC_KEYS
-        }
-    if isinstance(obj, list):
-        return [_sanitize_dynamic_fields(v) for v in obj]
-    return obj
-
 def _apply_placeholders(expected, actual, path=""):
-    """
-    Replace placeholder values in expected with actual values so equality works,
-    while ensuring presence of those keys/elements.
-    """
+    if expected == _PLACEHOLDER:
+        return actual
     if isinstance(expected, dict):
         if not isinstance(actual, dict):
             raise AssertionError(f"Type mismatch at {path or '<root>'}: expected object, got {type(actual).__name__}")
@@ -172,11 +146,44 @@ def _apply_placeholders(expected, actual, path=""):
             _apply_placeholders(ev, av, f"{path}[{i}]")
             for i, (ev, av) in enumerate(zip(expected, actual))
         ]
-    # primitives
     return expected
 
+def _mark_differences(expected, actual):
+    if expected == _PLACEHOLDER:
+        return _PLACEHOLDER
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        keys = set(expected.keys()) | set(actual.keys())
+        out = {}
+        for k in keys:
+            ev = expected.get(k)
+            av = actual.get(k)
+            if ev == _PLACEHOLDER:
+                out[k] = _PLACEHOLDER
+            elif k not in expected:
+                out[k] = _PLACEHOLDER
+            elif k not in actual:
+                out[k] = ev
+            else:
+                if isinstance(ev, dict) and isinstance(av, dict):
+                    out[k] = _mark_differences(ev, av)
+                elif isinstance(ev, list) and isinstance(av, list):
+                    out[k] = _mark_differences(ev, av)
+                else:
+                    out[k] = ev if ev == av else _PLACEHOLDER
+        return out
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return _PLACEHOLDER
+        marked = []
+        for ev, av in zip(expected, actual):
+            if isinstance(ev, (dict, list)) or isinstance(av, (dict, list)):
+                marked.append(_mark_differences(ev, av))
+            else:
+                marked.append(ev if ev == av else _PLACEHOLDER)
+        return marked
+    return expected if expected == actual else _PLACEHOLDER
+
 def test_trace_body(body: Dict[str, Any]):
-    # Read mode from CLI args: --mode=gen or --mode gen
     mode = None
     try:
         for idx, arg in enumerate(sys.argv):
@@ -189,17 +196,15 @@ def test_trace_body(body: Dict[str, Any]):
     except Exception:
         mode = None
 
-    if mode not in ("gen", "test"):
+    if mode not in ("gen", "test", "mark_dynamic"):
         return
 
-    # Resolve the entrypoint file from the python command
     entry_file = None
     try:
         cmd0 = sys.argv[0] if sys.argv else None
         if cmd0 and cmd0.endswith(".py"):
             entry_file = cmd0
         else:
-            # Fallback: try to find a plausible caller .py from the stack
             for frame_info in reversed(inspect.stack()):
                 fp = frame_info.filename
                 if fp and fp.endswith(".py") and "deepeval/tracing" not in fp and "site-packages" not in fp:
@@ -214,7 +219,6 @@ def test_trace_body(body: Dict[str, Any]):
     abs_entry = os.path.abspath(entry_file)
     dir_path = os.path.dirname(abs_entry)
 
-    # Optional: --file-name=<name>.json or --file-name <name>.json
     file_arg = None
     try:
         for idx, arg in enumerate(sys.argv):
@@ -235,12 +239,23 @@ def test_trace_body(body: Dict[str, Any]):
 
     file_path = os.path.join(dir_path, file_name)
 
-    serializable_body = make_json_serializable(body)
-    normalized_body = _sanitize_dynamic_fields(serializable_body)
+    actual_body = make_json_serializable(body)
 
     if mode == "gen":
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(normalized_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+            json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return
+
+    if mode == "mark_dynamic":
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                expected = json.load(f)
+            marked = _mark_differences(expected, actual_body)
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(marked, f, ensure_ascii=False, indent=2, sort_keys=True)
+        else:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
         return
 
     if mode == "test":
@@ -249,17 +264,15 @@ def test_trace_body(body: Dict[str, Any]):
         with open(file_path, "r", encoding="utf-8") as f:
             expected = json.load(f)
 
-        expected_normalized = _sanitize_dynamic_fields(expected)
-        # Align placeholders by substituting actual values where expected marks <is_present>
         try:
-            expected_aligned = _apply_placeholders(expected_normalized, normalized_body)
+            expected_aligned = _apply_placeholders(expected, actual_body)
         except AssertionError as e:
             raise AssertionError(str(e))
 
-        if normalized_body != expected_aligned:
+        if actual_body != expected_aligned:
             try:
                 expected_str = json.dumps(expected_aligned, ensure_ascii=False, indent=2, sort_keys=True)
-                actual_str = json.dumps(normalized_body, ensure_ascii=False, indent=2, sort_keys=True)
+                actual_str = json.dumps(actual_body, ensure_ascii=False, indent=2, sort_keys=True)
                 diff = "\n".join(
                     difflib.unified_diff(
                         expected_str.splitlines(),
