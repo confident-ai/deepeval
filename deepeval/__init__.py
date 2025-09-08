@@ -3,9 +3,9 @@ import warnings
 import re
 
 # load environment variables before other imports
-from .env import autoload_dotenv as _autoload_dotenv
+from deepeval.config.settings import autoload_dotenv
 
-_autoload_dotenv()
+autoload_dotenv()
 
 from ._version import __version__
 from deepeval.evaluate import evaluate, assert_test

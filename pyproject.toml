@@ -46,6 +46,8 @@ google-genai = "^1.9.0"
 posthog = "^6.3.0"
 pyfiglet = "*"
 python-dotenv = "^1.1.1"
+pydantic = "^2.11.7"
+pydantic-settings = "^2.10.1"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"

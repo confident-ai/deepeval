@@ -1,26 +1,111 @@
-from contextvars import ContextVar
-from enum import Enum
 import copy
 import os
 import json
 import time
-from typing import Any, Optional, Dict, List, Union
-from collections.abc import Iterable
 import webbrowser
 import tqdm
 import re
 import string
-from dataclasses import asdict, is_dataclass
-import re
 import asyncio
 import nest_asyncio
 import uuid
+
+from contextvars import ContextVar
+from enum import Enum
+from typing import Any, Optional, Dict, List, Union
+from collections.abc import Iterable
+from dataclasses import asdict, is_dataclass
 from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
 from deepeval.confident.api import set_confident_api_key
 from deepeval.constants import CONFIDENT_OPEN_BROWSER
+
+
+_TRUTHY = frozenset({"1", "true", "t", "yes", "y", "on", "enable", "enabled"})
+_FALSY = frozenset({"0", "false", "f", "no", "n", "off", "disable", "disabled"})
+
+
+def parse_bool(value: Any, default: bool = False) -> bool:
+    """
+    Parse an arbitrary value into a boolean using env style semantics.
+
+    Truthy tokens (case-insensitive, quotes/whitespace ignored):
+      1, true, t, yes, y, on, enable, enabled
+    Falsy tokens:
+      0, false, f, no, n, off, disable, disabled
+
+    - bool -> returned as is
+    - None -> returns `default`
+    - int/float -> False if == 0, else True
+    - str/other -> matched against tokens above; non-matching -> `default`
+
+    Args:
+        value: Value to interpret.
+        default: Value to return if `value` is None or doesn’t match any token.
+
+    Returns:
+        The interpreted boolean.
+    """
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return value != 0
+
+    s = str(value).strip().strip('"').strip("'").lower()
+    if not s:
+        return default
+    if s in _TRUTHY:
+        return True
+    if s in _FALSY:
+        return False
+    return default
+
+
+def get_env_bool(key: str, default: bool = False) -> bool:
+    """
+    Read an environment variable and parse it as a boolean using `parse_bool`.
+
+    Args:
+        key: Environment variable name.
+        default: Returned when the variable is unset or does not match any token.
+
+    Returns:
+        Parsed boolean value.
+    """
+    return parse_bool(os.getenv(key), default)
+
+
+def bool_to_env_str(value: bool) -> str:
+    """
+    Canonicalize a boolean to the env/dotenv string form: "1" or "0".
+
+    Args:
+        value: Boolean to serialize.
+
+    Returns:
+        "1" if True, "0" if False.
+    """
+    return "1" if bool(value) else "0"
+
+
+def set_env_bool(key: str, value: Optional[bool] = False) -> None:
+    """
+    Set an environment variable to a canonical boolean string ("1" or "0").
+
+    Args:
+        key: The environment variable name to set.
+        value: The boolean value to store. If None, it is treated as False.
+               True -> "1", False/None -> "0".
+
+    Notes:
+        - This function always overwrites the variable in `os.environ`.
+        - Use `get_env_bool` to read back and parse the value safely.
+    """
+    os.environ[key] = bool_to_env_str(bool(value))
 
 
 def get_lcs(seq1, seq2):
@@ -140,53 +225,31 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
-def should_skip_on_missing_params():
-    try:
-        if os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] == "YES":
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
 def set_should_skip_on_missing_params(yes: bool):
-    if yes:
-        os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] = "YES"
-    else:
-        os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] = "NO"
+    set_env_bool("SKIP_DEEPEVAL_MISSING_PARAMS", yes)
 
 
 def should_ignore_errors():
-    try:
-        if os.environ["IGNORE_DEEPEVAL_ERRORS"] == "YES":
-            return True
-        else:
-            return False
-    except:
-        return False
+    return get_env_bool("IGNORE_DEEPEVAL_ERRORS")
+
+
+def should_skip_on_missing_params() -> bool:
+    return get_env_bool("SKIP_DEEPEVAL_MISSING_PARAMS")
 
 
 def set_should_ignore_errors(yes: bool):
-    if yes:
-        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "YES"
-    else:
-        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "NO"
+    set_env_bool("IGNORE_DEEPEVAL_ERRORS", yes)
 
 
-def should_verbose_print() -> Union[bool, None]:
-    try:
-        if os.environ["DEEPEVAL_VERBOSE_MODE"] == "YES":
-            return True
-        else:
-            return None
-    except:
-        return None
+def should_verbose_print() -> Optional[bool]:
+    return (
+        True if get_env_bool("DEEPEVAL_VERBOSE_MODE", default=False) else None
+    )
 
 
 def set_verbose_mode(yes: Optional[bool]):
     if yes:
-        os.environ["DEEPEVAL_VERBOSE_MODE"] = "YES"
+        set_env_bool("DEEPEVAL_VERBOSE_MODE", True)
 
 
 def set_identifier(identifier: Optional[str]):
@@ -195,27 +258,15 @@ def set_identifier(identifier: Optional[str]):
 
 
 def get_identifier() -> Optional[str]:
-    try:
-        return os.environ["DEEPEVAL_IDENTIFIER"]
-    except:
-        return None
+    return os.getenv("DEEPEVAL_IDENTIFIER")
 
 
 def should_use_cache():
-    try:
-        if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
-            return True
-        else:
-            return False
-    except:
-        return False
+    return get_env_bool("ENABLE_DEEPEVAL_CACHE")
 
 
 def set_should_use_cache(yes: bool):
-    if yes:
-        os.environ["ENABLE_DEEPEVAL_CACHE"] = "YES"
-    else:
-        os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
+    set_env_bool("ENABLE_DEEPEVAL_CACHE", yes)
 
 
 def login(api_key: str):
@@ -233,17 +284,11 @@ def login(api_key: str):
 
 
 def set_is_running_deepeval(flag: bool):
-    if flag:
-        os.environ["DEEPEVAL"] = "YES"
-    else:
-        os.environ["DEEPEVAL"] = "NO"
+    set_env_bool("DEEPEVAL", flag)
 
 
 def get_is_running_deepeval() -> bool:
-    try:
-        return os.environ["DEEPEVAL"] == "YES"
-    except:
-        return False
+    return get_env_bool("DEEPEVAL")
 
 
 def is_in_ci_env() -> bool:
@@ -270,8 +315,8 @@ def is_in_ci_env() -> bool:
 
 
 def open_browser(url: str):
-    if os.getenv(CONFIDENT_OPEN_BROWSER) != "NO":
-        if is_in_ci_env() == False:
+    if get_env_bool(CONFIDENT_OPEN_BROWSER, default=True):
+        if not is_in_ci_env():
             webbrowser.open(url)
 
 
@@ -439,6 +484,8 @@ def normalize_text(text: str) -> str:
 
 
 def get_freer_gpu():
+    import numpy as np
+
     os.system("nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp_smi")
     memory_available = [
         int(x.split()[2]) + 5 * i
