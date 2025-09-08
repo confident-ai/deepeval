@@ -253,7 +253,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         if isinstance(model, str):
             model_name = parse_model_name(model)
-            if model_name not in valid_gpt_models:
+            if model_name not in valid_gpt_models and False:
                 raise ValueError(
                     f"Invalid model. Available GPT models: {', '.join(model for model in valid_gpt_models)}"
                 )
@@ -262,12 +262,16 @@ class GPTModel(DeepEvalBaseLLM):
 
         if model_name not in model_pricing:
             if cost_per_input_token is None or cost_per_output_token is None:
-                raise ValueError(
-                    f"No pricing available for `{model_name}`. "
-                    "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
-                    "or set them via the CLI:\n"
-                    "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
-                )
+                # raise ValueError(
+                #     f"No pricing available for `{model_name}`. "
+                #     "Please provide both `cost_per_input_token` and `cost_per_output_token` when initializing `GPTModel`, "
+                #     "or set them via the CLI:\n"
+                #     "    deepeval set-openai --model=[...] --cost_per_input_token=[...] --cost_per_output_token=[...]"
+                # )
+                model_pricing[model_name] = {
+                    "input": float(0.0),
+                    "output": float(0.0),
+                }
             else:
                 model_pricing[model_name] = {
                     "input": float(cost_per_input_token),

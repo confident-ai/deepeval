@@ -16,6 +16,7 @@ from .winogrande.winogrande import Winogrande
 from .equity_med_qa.equity_med_qa import EquityMedQA
 from .ifeval.ifeval import IFEval
 from .turing_test.turing_test import TuringTest
+from .ai_belief_test.ai_belief_test import AIBeliefTest
 
 __all__ = [
     "BigBenchHard",
@@ -36,4 +37,5 @@ __all__ = [
     "EquityMedQA",
     "IFEval",
     "TuringTest",
+    "AIBeliefTest",
 ]
