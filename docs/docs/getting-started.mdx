@@ -43,22 +43,28 @@ pip install -U deepeval
 deepeval login
 ```
 
-:::tip
-Confident AI is free and allows you to keep all evaluation results on the cloud. Sign up [here.](https://app.confident-ai.com)
-:::
+<details>
 
-## Configure Environment Variables
+<summary>Configure Environment Variables</summary>
 
-DeepEval autoloads environment files (at import time):
+DeepEval autoloads environment files (at import time)
 
 - **Precedence:** existing process env -> `.env.local` -> `.env`
 - **Opt-out:** set `DEEPEVAL_DISABLE_DOTENV=1`
+
+More information on `env` settings can be [found here.](/docs/evaluation-flags-and-configs#environment-flags)
 
 ```bash
 # quickstart
 cp .env.example .env.local
 # then edit .env.local (ignored by git)
 ```
+
+</details>
+
+:::note
+Confident AI is free and allows you to keep all evaluation results on the cloud. Sign up [here.](https://app.confident-ai.com)
+:::
 
 ## Create Your First Test Run
 

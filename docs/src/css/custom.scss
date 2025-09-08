@@ -15,14 +15,20 @@
   --ifm-color-primary-light: #7c3edd;
   --ifm-color-primary-lighter: #8349df;
   --ifm-color-primary-lightest: #996ae5;
-  --ifm-code-font-size: 95%;
-  // --ifm-font-weight-bold: 600 !important;
-  --ifm-menu-color: #747480 !important;
+  --ifm-code-font-size: 90%;
+  --ifm-menu-color: #747680 !important;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  .theme-doc-markdown {
+    p, ul {
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+  }
 
   .alert {
     padding: 0.75rem;
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .alert--info {
@@ -91,11 +97,12 @@ html[data-theme="dark"] {
 details {
   color: #1d232e;
   background-color: white !important;
-  border: 1px solid #cad1d8 !important;
+  border: 1px solid #e9eef2 !important;
   border-radius: 4px !important;
-  padding: 0.75rem 1rem !important;
+  padding: 0.75rem 0.75rem !important;
   margin-bottom: 1rem !important;
-  box-shadow: 0 1px 6px 0 rgba(192, 194, 205, 0.409) !important;
+  margin-top: 2rem !important;
+  box-shadow: 0 1px 6px 0 rgba(213, 215, 223, 0.409) !important;
 }
 
 details summary {
@@ -108,6 +115,11 @@ details summary::before {
 
 details [class*="collapsibleContent"] {
   border-top: 1px solid #e2e8f0 !important;
+
+  p, ul {
+    font-size: 14px !important;
+    line-height: 1.75;
+  }
 }
 
 .tabs-container > div {
@@ -523,7 +535,7 @@ html[data-theme="dark"] .menu {
 /* Add border to code blocks */
 .prism-code {
   border-radius: 6px;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 html[data-theme="dark"] .prism-code {

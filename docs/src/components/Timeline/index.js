@@ -14,7 +14,7 @@ export function TimelineItem({ title, children }) {
         <div className={styles.timelineLine}></div>
       </div>
       <div className={styles.timelineContent}>
-        <h3>{title}</h3>
+        <h3 className={styles.timelineTitle}>{title}</h3>
         <MDXContent>{children}</MDXContent>
       </div>
     </div>

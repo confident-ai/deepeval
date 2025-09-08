@@ -1,7 +1,7 @@
 ---
 id: metrics-conversational-dag
-title: Conversational-DAG
-sidebar_label: Conversational-DAG
+title: Conversational DAG
+sidebar_label: Conversational DAG
 ---
 
 import Equation from "@site/src/components/Equation";
@@ -9,13 +9,24 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import ColabButton from "@site/src/components/ColabButton";
 
-<ColabButton 
-  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/examples/dag-examples/conversational_dag.ipynb" 
+<ColabButton
+  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/examples/dag-examples/conversational_dag.ipynb"
   className="header-colab-button"
 />
 <MetricTagsDisplayer multiTurn={true} custom={true} />
 
-The `ConversationalDAGMetric` is the most versatile custom metric that allows you to build  deterministic decision trees for multi-turn evaluations. It uses LLM-as-a-judge to run evals on an entire conversation by traversing a decison tree.
+The `ConversationalDAGMetric` is the most versatile custom metric that allows you to build deterministic decision trees for multi-turn evaluations. It uses LLM-as-a-judge to run evals on an entire conversation by traversing a decison tree.
+
+<details>
+<summary><strong>Why use DAG (over G-Eval)?</strong></summary>
+
+While using a DAG for evaluation may seem complex at first, it provides significantly greater insight and control over what is and isn't tested. DAGs allow you to structure your evaluation logic from the ground up, enabling precise, fully customizable workflows.
+
+Unlike other custom metrics like the `ConversationalGEval` which often abstract the evaluation process or introduce non-deterministic elements, DAGs give you full transparency and control. You can still incorporate these metrics (e.g., `ConversationalGEval` or any other `deepeval` metric) within a DAG, but now you have the flexibility to decide exactly where and how they are applied in your evaluation pipeline.
+
+This makes DAGs not only more powerful but also more reliable for complex and highly tailored evaluation needs.
+
+</details>
 
 ## Required Arguments
 
@@ -27,15 +38,15 @@ You'll also want to supply any additional arguments such as `retrieval_context` 
 
 ## Usage
 
-The `ConversationalDAGMetric` can be used to evaluate entire conversations on a decision based criteria. This allows us to create robust evaluations on conversations unlike any other metrics. The conversational dag also allows us to use the regular conversational metrics to run evaluations on the final level.
+The `ConversationalDAGMetric` can be used to evaluate entire conversations based on LLM-as-a-judge decision-trees.
 
 ```python
+from deepeval.dag import DeepAcyclicGraph
 from deepeval.metrics import ConversationalDAGMetric
 
-metric = ConversationalDAGMetric(
-    name="Custom Conversational DAG Metric",
-    dag=dag
-)
+dag = DeepAcyclicGraph(root_nodes=[...])
+
+metric = ConversationalDAGMetric(name="Instruction Following", dag=dag)
 ```
 
 There are **TWO** mandatory and **SIX** optional parameters required when creating a `ConversationalDAGMetric`:
@@ -49,32 +60,19 @@ There are **TWO** mandatory and **SIX** optional parameters required when creati
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
-## Creating a DAG
+The conversational dag also allows us to use regular conversational metrics to run evaluations as individual leaf nodes.
+
+## Multi-Turn Nodes
 
 To use the `ConversationalDAGMetric`, we need to first create a valid `DeepAcyclicGraph` (DAG) that represents a decision tree to get a final verdict. Here's an example decision tree that checks whether a _playful chatbot_ performs it's role correctly.
 
 ![DAG Image for Multi-Turn](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:conversational-dag.png)
 
-<details>
-<summary><strong>Why use DAG?</strong></summary>
-
-While using a DAG for evaluation may seem complex at first, it provides significantly greater insight and control over what is and isn't tested. DAGs allow you to structure your evaluation logic from the ground up, enabling precise, fully customizable workflows.
-
-Unlike other custom metrics like the `ConversationalGEval` which often abstract the evaluation process or introduce non-deterministic elements, DAGs give you full transparency and control. You can still incorporate these metrics (e.g., `ConversationalGEval` or any other `deepeval` metric) within a DAG, but now you have the flexibility to decide exactly where and how they are applied in your evaluation pipeline.
-
-This makes DAGs not only more powerful but also more reliable for complex and highly tailored evaluation needs.
-
-</details>
-
-A `DeepAcyclicGraph` for a `ConversationalDAGMetric` can be created using the conversational nodes from `deepeval`.
-
-## Conversational DAG nodes
-
-There are exactly **FOUR** different node types you can choose from to create a `DeepAcyclicGraph`.
+There are exactly **FOUR** different node types you can choose from to create a multi-turn `DeepAcyclicGraph`.
 
 ### Task node
 
-The `ConversationalTaskNode` is designed specifically for processing either the data from a test case using parameters from `TurnParams`, or the output from a parent `ConversationalTaskNode`. 
+The `ConversationalTaskNode` is designed specifically for processing either the data from a test case using parameters from `TurnParams`, or the output from a parent `ConversationalTaskNode`.
 
 :::note
 The `ConversationalDAGMetric` allows you to choose a certain window of turns to run evaluations on as well.
@@ -169,16 +167,15 @@ The `ConversationalVerdictNode` **is always a leaf node** and must not be the ro
 
 ```python
 from deepeval.metrics.conversational_dag import ConversationalVerdictNode
-...
 
-ConversationalVerdictNode(verdict="Good", score=9),
+verdict_node = ConversationalVerdictNode(verdict="Good", score=9),
 ```
 
 There is **ONE** mandatory and **TWO** optional parameters when creating a `ConversationalVerdictNode`:
 
 - `verdict`: a string **OR** boolean representing the possible outcomes of the previous parent node. It must be a string if the parent is non-binary, else boolean if the parent is binary.
 - [Optional] `score`: an integer between **0 - 10** that determines the final score of your `ConversationalDAGMetric` based on the specified `verdict` value. You must provide a `score` if `child` is None.
-- [Optional] `child`: a `ConversationalBaseNode` **OR** any `BaseConversationalMetric`, including `ConversationalGEval` metric instances. 
+- [Optional] `child`: a `ConversationalBaseNode` **OR** any `BaseConversationalMetric`, including `ConversationalGEval` metric instances.
 
 If the `score` is not provided, the `ConversationalDAGMetric` will use the provided child to run the provided `ConversationalBaseMetric` instance to calculate a `score`, **OR** propagate the DAG execution to the `ConversationalBaseNode` child.
 
@@ -186,11 +183,9 @@ If the `score` is not provided, the `ConversationalDAGMetric` will use the provi
 You must provide either `score` or `child`, but not both.
 :::
 
-## Putting Everything Together
+## Full Walkthrough
 
-Now that we've covered the fundamentals of Conversational DAGs, let's build one step-by-step for a real-world use case: evaluating whether an assistant remains playful while still satisfying the user's requests.
-
-We will take an example conversation between a user and an assistant. In this conversation, we will systematically evaluate whether the assistant is satisfying the user's requests while being playful with the user. Here's an example conversational test case:
+Now that we've covered the fundamentals of multi-turn DAGs, let's build one step-by-step for a real-world use case: evaluating whether an assistant remains playful while still satisfying the user's requests.
 
 ```python
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -203,15 +198,13 @@ test_case = ConversationalTestCase(
         Turn(role="assistant", content="The weather in Paris today is sunny and 24°C."),
         Turn(role="user", content="Should I take an umbrella?"),
         Turn(role="assistant", content="You trying to be stylish? I don't recommend it."),
-    ],
-    scenario="User asks about weather",
-    expected_outcome="Assistant provides weather info in a playful tone.",
+    ]
 )
 ```
 
 Just by eyeballing the conversation, we can tell that the user's request was satisfied but the assistant might've been rude. A normal `ConversationalGEval` might not work well here, so let's build a deterministic decision tree that'll evaluate the conversation step by step.
 
-### Creating DAG
+### Construct the graph
 
 <Timeline>
 <TimelineItem title="Summarize the conversation">
@@ -273,7 +266,7 @@ non_binary_node = ConversationalNonBinaryJudgementNode(
 ```
 
 :::note
- The `ConversationalNonBinaryJudgementNode` only outputs one of the values of verdicts from it's children automatically. You don't have to provide any additional instruction in the criteria.
+The `ConversationalNonBinaryJudgementNode` only outputs one of the values of verdicts from it's children automatically. You don't have to provide any additional instruction in the criteria.
 :::
 
 This is the final node in our DAG.
@@ -320,12 +313,7 @@ task_node = ConversationalTaskNode(
 dag = DeepAcyclicGraph(root_nodes=[task_node])
 ```
 
-Here, we can see that we've made the `non_binary_node` as the child for `binary_node` when `verdict` is `True`. We have also made the `binary_node` as the child of `task_node` after the summary has been extracted.
-
-With this we've successfully created our DAG (deep acyclic graph) with the `task_node` as our root node.
-
-</TimelineItem>
-</Timeline>
+We can see that we've made the `non_binary_node` as the child for `binary_node` when `verdict` is `True`. We have also made the `binary_node` as the child of `task_node` after the summary has been extracted.
 
 ✅ We have now successfully created a DAG that evaluates the above test case example. Here's what this DAG does:
 
@@ -333,26 +321,25 @@ With this we've successfully created our DAG (deep acyclic graph) with the `task
 - Determine user satisfaction using the `ConversationalBinaryJudgementNode`
 - Classify assistant's behaviour using the `ConversationalNonBinaryJudgementNode`
 
-### Creating DAG metric
+</TimelineItem>
+</Timeline>
 
-We have created exactly the same DAG as shown in the above example images. We can now pass this `dag` to `ConversationalDAGMetric` and run an evaluation.
+### Create the metric
+
+We have created exactly the same DAG as shown in the above example images. We can now pass this graph to `ConversationalDAGMetric` and run an evaluation.
 
 ```python title="main.py"
 from deepeval.metrics import ConversationalDAGMetric
 
-playful_chatbot_metric = ConversationalDAGMetric(
-    name="Playful Chatbot",
-    dag=dag,
-)
+playful_chatbot_metric = ConversationalDAGMetric(name="Instruction Following", dag=dag)
 ```
 
 Pass the test cases and the DAG metric in `evaluate` function and run the python script to get your eval results.
 
 ```python title="test_chatbot.py"
 from deepeval import evaluate
-...
 
-evaluate([test_case], [playful_chatbot_metric])
+evaluate([convo_test_case], [playful_chatbot_metric])
 ```
 
 What would you classify the above conversation as according to our DAG? Run your evals in [this colab notebook](https://github.com/confident-ai/deepeval/tree/main/examples/dag-examples/conversational_dag.ipynb) and compare your evaluation with the `ConversationalDAGMetric`'s result.

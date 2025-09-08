@@ -6,18 +6,18 @@ sidebar_label: Flags and Configs
 
 Sometimes you might want to customize the behavior of different settings for `evaluate()` and `assert_test()`, and this can be done using "configs" (short for configurations) and "flags".
 
-:::tip
+:::note
 For example, if you're using a [custom LLM judge for evaluation](/guides/guides-using-custom-llms), you may wish to `ignore_errors` to not interrupt evaluations whenever your model fails to produce a valid JSON, or avoid rate limit errors entirely by lowering the `max_concurrent` value.
 :::
 
 ## Environment Flags
 
-| Variable                    | Values          | Effect                                  |
-|-----------------------------|-----------------|-----------------------------------------|
-| `DEEPEVAL_DISABLE_DOTENV`   | `1` / unset     | Disable .env autoload at import         |
-| `DEEPEVAL_GRPC_LOGGING`     | `1` / unset     | Enable extra gRPC logging               |
-| `DEEPEVAL_RESULTS_FOLDER`   | path            | Change local results output folder      |
-| `DEEPEVAL_FILE_SYSTEM`      | `READ_ONLY`     | Restrict file writes in constrained env |
+| Variable                  | Values      | Effect                                  |
+| ------------------------- | ----------- | --------------------------------------- |
+| `DEEPEVAL_DISABLE_DOTENV` | `1` / unset | Disable .env autoload at import         |
+| `DEEPEVAL_GRPC_LOGGING`   | `1` / unset | Enable extra gRPC logging               |
+| `DEEPEVAL_RESULTS_FOLDER` | path        | Change local results output folder      |
+| `DEEPEVAL_FILE_SYSTEM`    | `READ_ONLY` | Restrict file writes in constrained env |
 
 DeepEval autoloads `.env.local`, then `.env`, from current working directory at import time.
 
@@ -33,10 +33,10 @@ deepeval unset-openai --save=dotenv:.env.local
 
 **Behavior:**
 
-* Without --save: non-secret settings are stored in .deepeval/.deepeval (JSON). Secrets are never written there.
-* With --save=dotenv[:path]: both secrets and non-secrets are written to the specified dotenv (default: .env.local).
-* Dotenv files should be git ignored.
-* When unsetting a provider with --save, only that provider’s keys are removed from the dotenv file.
+- Without --save: non-secret settings are stored in .deepeval/.deepeval (JSON). Secrets are never written there.
+- With --save=dotenv[:path]: both secrets and non-secrets are written to the specified dotenv (default: .env.local).
+- Dotenv files should be git ignored.
+- When unsetting a provider with --save, only that provider’s keys are removed from the dotenv file.
 
 **Project default (optional):**
 Set a project wide default so you don’t have to pass `--save` every time:

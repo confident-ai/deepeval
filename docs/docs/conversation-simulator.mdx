@@ -56,8 +56,8 @@ There are **ONE** mandatory and **FOUR** optional parameters when creating a `Co
 - `model_callback`: a callback that wraps around your conversational agent.
 - [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to `gpt-4.1`.
 - [Optional] `opening_message`: a string that specifies your LLM chatbot's opening message. You should only provide this **IF** your chatbot is designed to talk before a user does. Defaulted to `None`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent generation of goldens**. Defaulted to `True`.
-- [Optional] `max_concurrent`: an integer that determines the maximum number of goldens that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent simulation of conversations**. Defaulted to `True`.
+- [Optional] `max_concurrent`: an integer that determines the maximum number of conversations that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `100`.
 
 ### Model callback
 
@@ -109,7 +109,7 @@ A simulation ends either when the converaiton achieves the expected outcome outl
 You can also generate conversations from existing turns. Simply populate your `ConversationalGolden` with a list of initial `Turn`s, and the simulator will continue the conversation.
 :::
 
-## Evaluate Simulated Conversations
+## Evaluate Simulated Turns
 
 The `simulate` function returns a list of `ConversationalTestCase`s, which can be used to evaluate your LLM chatbot using `deepeval`'s conversational metrics. Use simulated conversations to run [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluations:
 

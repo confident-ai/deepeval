@@ -13,34 +13,6 @@ End-to-end evaluation assesses the "observable" inputs and outputs of your LLM a
 
 ![end-to-end evals](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:end-to-end-llm-evals.png)
 
-:::tip
-To get a more intuitive and fully sharable [LLM test report](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports) login to Confident AI [here](https://app.confident-ai.com) or run the following in your terminal:
-
-```bash
-deepeval login
-```
-:::
-
-## What Are E2E Evals
-
-Running an end-to-end LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. You would typically:
-
-- Loop through a list of `Golden`s
-- Invoke your LLM app with each golden's `input`
-- Generate a set of test cases ready for evaluation
-- Apply metrics to your test cases and run evaluations
-
-<div style={{ textAlign: "center", margin: "2rem 0" }}>
-
-```mermaid
-flowchart LR
-  A[Invoke LLM app with Golden Inputs] --> B[Generate Test Cases]
-  B --> C[Apply Evaluation Metrics]
-  C --> D[Test Run Created]
-```
-
-</div>
-
 <details>
 <summary><strong>When should you run End-to-End evaluations?</strong></summary>
 
@@ -61,13 +33,30 @@ Most of what you saw in DeepEval's <a href="/docs/getting-started">quickstart</a
 
 </details>
 
+## What Are E2E Evals
+
+Running an end-to-end LLM evaluation creates a **test run** — a collection of test cases that benchmarks your LLM application at a specific point in time. You would typically:
+
+- Loop through a list of `Golden`s
+- Invoke your LLM app with each golden's `input`
+- Generate a set of test cases ready for evaluation
+- Apply metrics to your test cases and run evaluations
+
+:::info
+To get a more fully sharable [LLM test report](https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports) login to Confident AI [here](https://app.confident-ai.com) or run the following in your terminal:
+
+```bash
+deepeval login
+```
+
+:::
+
 ## Setup Your Test Environment
 
 <Timeline>
 <TimelineItem title="Create a dataset">
 
 [Datasets](/docs/evaluation-datasets) in `deepeval` allow you to store [`Golden`](/docs/evaluation-datasets#what-are-goldens)s, which are like a precursors to test cases. They allow you to create test case dynamically during evaluation time by calling your LLM application. Here's how you can create goldens:
-
 
 <Tabs>
 <TabItem label="Single-Turn" value="single-turn">
@@ -123,7 +112,7 @@ from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(goldens)
 dataset.save_as(
-    file_type="csv", 
+    file_type="csv",
     directory="./example"
 )
 ```
@@ -136,7 +125,7 @@ from deepeval.dataset import EvaluationDataset
 
 dataset = EvaluationDataset(goldens)
 dataset.save_as(
-    file_type="json", 
+    file_type="json",
     directory="./example"
 )
 ```
@@ -154,7 +143,7 @@ When it comes to selecting metrics for your application, we recommend choosing n
 - (2 - 3) **Generic metrics** for your application type. (_e.g. Agents, RAG, Chabot_)
 - (1 - 2) **Custom metrics** for your specific use case.
 
-You can read our [metrics section](/docs/metrics-introduction) to learn about the 40+ metrics we offer.  Or come to [our discord](https://discord.com/invite/a3K9c8GRGt) and get some tailored recommendations from our team.
+You can read our [metrics section](/docs/metrics-introduction) to learn about the 40+ metrics we offer. Or come to [our discord](https://discord.com/invite/a3K9c8GRGt) and get some tailored recommendations from our team.
 
 </TimelineItem>
 </Timeline>
@@ -207,16 +196,16 @@ dataset.add_goldens_from_json_file(
     input_key_name="query"
 )
 ```
+
 </TabItem>
 </Tabs>
 
 You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
 
-
 </TimelineItem>
 <TimelineItem title="Create test cases using dataset">
 
-You can now create `LLMTestCase`s using the goldens by calling your LLM application. 
+You can now create `LLMTestCase`s using the goldens by calling your LLM application.
 
 ```python title="main.py"
 from your_agent import your_llm_app # Replace with your LLM app
@@ -239,7 +228,7 @@ You can also add test cases directly into your dataset by using the `add_test_ca
 </TimelineItem>
 <TimelineItem title="Run end-to-end evals">
 
-You should pass the `test_cases` and `metrics` you've decided in the `evaluate()` function to run end-to-end evals. 
+You should pass the `test_cases` and `metrics` you've decided in the `evaluate()` function to run end-to-end evals.
 
 ```python title="main.py" {}
 from your_agent import your_llm_app # Replace with your LLM app
@@ -439,6 +428,7 @@ dataset.add_goldens_from_json_file(
     input_key_name="query"
 )
 ```
+
 </TabItem>
 
 <TabItem value="from-csv" label="From CSV">
@@ -459,7 +449,6 @@ dataset.add_goldens_from_csv_file(
 </Tabs>
 
 You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
-
 
 </TimelineItem>
 <TimelineItem title="Simulate turns">
@@ -508,7 +497,7 @@ from deepeval import evaluate
 ...
 
 evaluate(
-  conversational_test_cases, 
+  conversational_test_cases,
   metrics=[TurnRelevancyMetric()],
   hyperparameters={
       model="gpt-4.1",
@@ -533,7 +522,6 @@ This is exactly the same as `assert_test()` in `deepeval test run`, but in a dif
 </TimelineItem>
 </Timeline>
 
-:::tip
 We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance overtime like this:
 
 <VideoDisplayer
@@ -541,12 +529,10 @@ We highly recommend setting up [Confident AI](https://app.confident-ai.com) with
   confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
   label="Test Reports After Running Evals on Confident AI"
 />
-:::
 
 ## E2E Evals For Tracing
 
 If you've [setup tracing](/docs/evaluation-llm-tracing) for you LLM application, you can run end-to-end evals using the `evals_iterator()` function.
-
 
 <Timeline>
 <TimelineItem title="Load your dataset">
@@ -592,11 +578,11 @@ dataset.add_goldens_from_json_file(
     input_key_name="query"
 )
 ```
+
 </TabItem>
 </Tabs>
 
 You can [learn more about loading datasets here](/docs/evaluation-datasets#load-dataset).
-
 
 </TimelineItem>
 
@@ -632,13 +618,13 @@ There are **TWO** ways to create test cases when using the `update_current_trace
 - [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
 
 - Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
-    - [Optional] `input`
-    - [Optional] `output`
-    - [Optional] `retrieval_context`
-    - [Optional] `context`
-    - [Optional] `expected_output`
-    - [Optional] `tools_called`
-    - [Optional] `expected_tools`
+  - [Optional] `input`
+  - [Optional] `output`
+  - [Optional] `retrieval_context`
+  - [Optional] `context`
+  - [Optional] `expected_output`
+  - [Optional] `tools_called`
+  - [Optional] `expected_tools`
 
 :::note
 You can use the individual `LLMTestCase` params in the `update_current_trace` function to override the values of the `test_case` you passed.

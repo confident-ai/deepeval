@@ -67,16 +67,14 @@ Tracing your LLM applications allows you to:
 
 - **Run end-to-end evals with trace data:** Use the `evals_iterator` with `metrics` to perform comprehensive evaluations using your traces.
 
-## Setup Tracing
+## Setup Your First Trace
 
 To set up tracing in your LLM app, you need to understand two key concepts:
 
 - **Trace**: The full execution of your app, made up of one or more spans.
 - **Span**: A specific component or unit of work—like an LLM call, tool invocation, or document retrieval.
 
-The [`@observe`](#observe) decorator is the primary way to setup tracing for your LLM application. You need to find the individual components of your LLM application and decorate them with `deepeval`'s `@observe` decorator. 
-
-Here's how you can setup tracing for you application in just a few steps:
+The [`@observe`](#observe) decorator is the primary way to setup tracing for your LLM application.
 
 <Timeline>
 <TimelineItem title="Decorate your components">
@@ -153,6 +151,7 @@ It's free to get started. Just the following command:
 ```bash
 deepeval login
 ```
+
 :::
 
 </TimelineItem>
@@ -183,10 +182,10 @@ From the above example, an observed component `generate` calling another observe
 
 There are **FOUR** optional parameters when using the `@observe` decorator:
 
-- [Optional] `metric_collection`: The name of the metric collection you stored in the Confident AI platform.
 - [Optional] `metrics`: A list of metrics of type `BaseMetric` that will be used to evaluate your span.
 - [Optional] `name`: The function name or a string specifying how this span is displayed on Confident AI.
 - [Optional] `type`: A string specifying the type of span. The value can be any one of `llm`, `retriever`, `tool`, and `agent`. Any other value is treated as a custom span type.
+- [Optional] `metric_collection`: The name of the metric collection you stored on Confident AI.
 
 <details>
 <summary><strong>Click here to learn more about span types</strong></summary>
@@ -215,11 +214,11 @@ def generate(query: str) -> str:
     # Your implementation
     res = f"Output for given {query} and {context}."
     update_current_span(test_case=LLMTestCase(
-        input=query, 
+        input=query,
         actual_output=res,
         retrieval_context=context
     ))
-    return res 
+    return res
 
 @observe()
 def retrieve(query: str) -> str:
@@ -234,13 +233,13 @@ There are **TWO** ways to create test cases when using the `update_current_span`
 - [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
 
 - Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
-    - [Optional] `input`
-    - [Optional] `output`
-    - [Optional] `retrieval_context`
-    - [Optional] `context`
-    - [Optional] `expected_output`
-    - [Optional] `tools_called`
-    - [Optional] `expected_tools`
+  - [Optional] `input`
+  - [Optional] `output`
+  - [Optional] `retrieval_context`
+  - [Optional] `context`
+  - [Optional] `expected_output`
+  - [Optional] `tools_called`
+  - [Optional] `expected_tools`
 
 :::note
 You can use the individual `LLMTestCase` params in the `update_current_span` function to override the values of the `test_case` you passed.
@@ -278,19 +277,20 @@ There are **TWO** ways to create test cases when using the `update_current_trace
 - [Optional] `test_case`: Takes an `LLMTestCase` to create a span level test case for that component.
 
 - Or, You can also opt to give the values of `LLMTestCase` directly by using the following attributes:
-    - [Optional] `input`
-    - [Optional] `output`
-    - [Optional] `retrieval_context`
-    - [Optional] `context`
-    - [Optional] `expected_output`
-    - [Optional] `tools_called`
-    - [Optional] `expected_tools`
+  - [Optional] `input`
+  - [Optional] `output`
+  - [Optional] `retrieval_context`
+  - [Optional] `context`
+  - [Optional] `expected_output`
+  - [Optional] `tools_called`
+  - [Optional] `expected_tools`
 
 :::note
 You can use the individual `LLMTestCase` params in the `update_current_trace` function to override the values of the `test_case` you passed.
 :::
 
 ## Environment Variables
+
 If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. To disable them completely, just set the following environment variables:
 
 ```bash
@@ -306,15 +306,13 @@ Now that you have your traces, you can run either end-to-end or component level 
   items={[
     {
       title: "End-to-End Evals",
-      description:
-        "Learn how to run end-to-end evals with your trace data,",
+      description: "Learn how to run end-to-end evals with your trace data,",
       icon: "SendToBack",
       to: "/docs/evaluation-end-to-end-llm-evals#use-evaluate-in-python-scripts",
     },
     {
       title: "Component-Level Evals",
-      description:
-        "Learn how to run component-level evals using tracing.",
+      description: "Learn how to run component-level evals using tracing.",
       icon: "ArrowDownWideNarrow",
       to: "/docs/evaluation-component-level-llm-evals#use-python-scripts",
     },
