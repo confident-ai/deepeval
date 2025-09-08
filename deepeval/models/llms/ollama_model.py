@@ -1,5 +1,5 @@
 from ollama import Client, AsyncClient, ChatResponse
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
 
 from deepeval.models import DeepEvalBaseLLM
@@ -63,6 +63,50 @@ class OllamaModel(DeepEvalBaseLLM):
         response: ChatResponse = await chat_model.chat(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            format=schema.model_json_schema() if schema else None,
+            options={
+                **{"temperature": self.temperature},
+                **self.generation_kwargs,
+            },
+        )
+        return (
+            (
+                schema.model_validate_json(response.message.content)
+                if schema
+                else response.message.content
+            ),
+            0,
+        )
+
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        chat_model = self.load_model()
+        response: ChatResponse = chat_model.chat(
+            model=self.model_name,
+            messages=messages,
+            format=schema.model_json_schema() if schema else None,
+            options={
+                **{"temperature": self.temperature},
+                **self.generation_kwargs,
+            },
+        )
+        return (
+            (
+                schema.model_validate_json(response.message.content)
+                if schema
+                else response.message.content
+            ),
+            0,
+        )
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[str, float]:
+        chat_model = self.load_model(async_mode=True)
+        response: ChatResponse = await chat_model.chat(
+            model=self.model_name,
+            messages=messages,
             format=schema.model_json_schema() if schema else None,
             options={
                 **{"temperature": self.temperature},

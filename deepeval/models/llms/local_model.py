@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
 
 from openai import OpenAI, AsyncOpenAI
@@ -68,6 +68,42 @@ class LocalModel(DeepEvalBaseLLM):
         response: ChatCompletion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        res_content = response.choices[0].message.content
+
+        if schema:
+            json_output = trim_and_load_json(res_content)
+            return schema.model_validate(json_output), 0.0
+        else:
+            return res_content, 0.0
+
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=False)
+        response: ChatCompletion = client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        res_content = response.choices[0].message.content
+
+        if schema:
+            json_output = trim_and_load_json(res_content)
+            return schema.model_validate(json_output), 0.0
+        else:
+            return res_content, 0.0
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=True)
+        response: ChatCompletion = await client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
             temperature=self.temperature,
             **self.generation_kwargs,
         )

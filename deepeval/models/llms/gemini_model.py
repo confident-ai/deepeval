@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from google.genai import types
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Union, Tuple
 from google import genai
 
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
@@ -209,6 +209,110 @@ class GeminiModel(DeepEvalBaseLLM):
             response = await self.client.aio.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
+                config=types.GenerateContentConfig(
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                ),
+            )
+            return response.text, 0
+
+    def _convert_messages_to_gemini_format(self, messages: List[Dict[str, str]]) -> List[types.Content]:
+        """Convert standard message format to Gemini's Content format.
+        
+        Args:
+            messages: List of messages with 'role' and 'content' keys
+            
+        Returns:
+            List of Gemini Content objects
+        """
+        gemini_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            # Map roles to Gemini format
+            if role == "assistant":
+                role = "model"
+            elif role == "system":
+                # Gemini doesn't have a system role, so we'll prepend system messages to user content
+                role = "user"
+                content = f"[System]: {content}"
+            
+            gemini_messages.append(types.Content(role=role, parts=[types.Part(text=content)]))
+        
+        return gemini_messages
+
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, BaseModel], float]:
+        """Generates text from a list of messages.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys
+            schema: Optional Pydantic model for structured output
+
+        Returns:
+            Generated text response or structured output as Pydantic model, and cost
+        """
+        gemini_messages = self._convert_messages_to_gemini_format(messages)
+        
+        if schema is not None:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=gemini_messages,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                ),
+            )
+            return response.parsed, 0
+        else:
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=gemini_messages,
+                config=types.GenerateContentConfig(
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                ),
+            )
+            return response.text, 0
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, BaseModel], float]:
+        """Asynchronously generates text from a list of messages.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys
+            schema: Optional Pydantic model for structured output
+
+        Returns:
+            Generated text response or structured output as Pydantic model, and cost
+        """
+        gemini_messages = self._convert_messages_to_gemini_format(messages)
+        
+        if schema is not None:
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=gemini_messages,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=schema,
+                    safety_settings=self.model_safety_settings,
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                ),
+            )
+            return response.parsed, 0
+        else:
+            response = await self.client.aio.models.generate_content(
+                model=self.model_name,
+                contents=gemini_messages,
                 config=types.GenerateContentConfig(
                     safety_settings=self.model_safety_settings,
                     temperature=self.temperature,

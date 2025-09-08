@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
 
@@ -161,6 +161,80 @@ class KimiModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            **self.generation_kwargs,
+        )
+        output = completion.choices[0].message.content
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
+
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=False)
+        if schema and self.model_name in json_mode_models:
+            completion = client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=self.temperature,
+                **self.generation_kwargs,
+            )
+            json_output = trim_and_load_json(
+                completion.choices[0].message.content
+            )
+            cost = self.calculate_cost(
+                completion.usage.prompt_tokens,
+                completion.usage.completion_tokens,
+            )
+            return schema.model_validate(json_output), cost
+
+        completion = client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+            **self.generation_kwargs,
+        )
+        output = completion.choices[0].message.content
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=True)
+        if schema and self.model_name in json_mode_models:
+            completion = await client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                response_format={"type": "json_object"},
+                temperature=self.temperature,
+                **self.generation_kwargs,
+            )
+            json_output = trim_and_load_json(
+                completion.choices[0].message.content
+            )
+            cost = self.calculate_cost(
+                completion.usage.prompt_tokens,
+                completion.usage.completion_tokens,
+            )
+            return schema.model_validate(json_output), cost
+
+        completion = await client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
             **self.generation_kwargs,
         )
         output = completion.choices[0].message.content

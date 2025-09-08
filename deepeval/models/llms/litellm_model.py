@@ -282,6 +282,104 @@ class LiteLLMModel(DeepEvalBaseLLM):
             logging.error(f"Error in LiteLLM generate_samples: {e}")
             raise
 
+    @retry(
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Union[str, Dict, Tuple[str, float]]:
+        from litellm import completion
+
+        completion_params = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": self.temperature,
+        }
+
+        if self.api_key:
+            completion_params["api_key"] = self.api_key
+        if self.api_base:
+            completion_params["api_base"] = self.api_base
+
+        # Add schema if provided
+        if schema:
+            completion_params["response_format"] = schema
+
+        # Add any additional parameters
+        completion_params.update(self.kwargs)
+        completion_params.update(self.generation_kwargs)
+
+        try:
+            response = completion(**completion_params)
+            content = response.choices[0].message.content
+            cost = self.calculate_cost(response)
+
+            if schema:
+                json_output = trim_and_load_json(content)
+                return (
+                    schema(**json_output),
+                    cost,
+                )  # Return both the schema instance and cost as defined as native model
+            else:
+                return content, cost  # Return tuple with cost
+        except Exception as e:
+            logging.error(f"Error in LiteLLM chat generation: {str(e)}")
+            raise e
+
+    @retry(
+        wait=wait_exponential_jitter(
+            initial=INITIAL_WAIT, exp_base=EXP_BASE, jitter=JITTER, max=MAX_WAIT
+        ),
+        stop=stop_after_attempt(MAX_RETRIES),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Union[str, Dict, Tuple[str, float]]:
+        from litellm import acompletion
+
+        completion_params = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": self.temperature,
+        }
+
+        if self.api_key:
+            completion_params["api_key"] = self.api_key
+        if self.api_base:
+            completion_params["api_base"] = self.api_base
+
+        # Add schema if provided
+        if schema:
+            completion_params["response_format"] = schema
+
+        # Add any additional parameters
+        completion_params.update(self.kwargs)
+        completion_params.update(self.generation_kwargs)
+
+        try:
+            response = await acompletion(**completion_params)
+            content = response.choices[0].message.content
+            cost = self.calculate_cost(response)
+
+            if schema:
+                json_output = trim_and_load_json(content)
+                return (
+                    schema(**json_output),
+                    cost,
+                )  # Return both the schema instance and cost as defined as native model
+            else:
+                return content, cost  # Return tuple with cost
+        except Exception as e:
+            logging.error(f"Error in LiteLLM async chat generation: {str(e)}")
+            raise e
+
     def calculate_cost(self, response: Any) -> float:
         """Calculate the cost of the response based on token usage."""
         try:

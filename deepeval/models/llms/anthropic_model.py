@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from anthropic import Anthropic, AsyncAnthropic
 from pydantic import BaseModel
 import os
@@ -94,6 +94,46 @@ class AnthropicModel(DeepEvalBaseLLM):
         else:
             json_output = trim_and_load_json(message.content[0].text)
 
+            return schema.model_validate(json_output), cost
+
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        chat_model = self.load_model()
+        message = chat_model.messages.create(
+            max_tokens=1024,
+            messages=messages,
+            model=self.model_name,
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        cost = self.calculate_cost(
+            message.usage.input_tokens, message.usage.output_tokens
+        )
+        if schema is None:
+            return message.content[0].text, cost
+        else:
+            json_output = trim_and_load_json(message.content[0].text)
+            return schema.model_validate(json_output), cost
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[str, float]:
+        chat_model = self.load_model(async_mode=True)
+        message = await chat_model.messages.create(
+            max_tokens=1024,
+            messages=messages,
+            model=self.model_name,
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        cost = self.calculate_cost(
+            message.usage.input_tokens, message.usage.output_tokens
+        )
+        if schema is None:
+            return message.content[0].text, cost
+        else:
+            json_output = trim_and_load_json(message.content[0].text)
             return schema.model_validate(json_output), cost
 
     ###############################################

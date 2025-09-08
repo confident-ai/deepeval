@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
 import asyncio
@@ -89,6 +89,32 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message)
             return schema.model_validate(json_output), cost
 
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        return asyncio.run(self.a_chat_generate(messages, schema))
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        payload = self.get_converse_request_body_from_messages(messages)
+        client = await self._ensure_client()
+        response = await client.converse(
+            modelId=self.model_id,
+            messages=payload["messages"],
+            inferenceConfig=payload["inferenceConfig"],
+        )
+        message = response["output"]["message"]["content"][0]["text"]
+        cost = self.calculate_cost(
+            response["usage"]["inputTokens"],
+            response["usage"]["outputTokens"],
+        )
+        if schema is None:
+            return message, cost
+        else:
+            json_output = trim_and_load_json(message)
+            return schema.model_validate(json_output), cost
+
     ###############################################
     # Client management
     ###############################################
@@ -117,6 +143,35 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     def get_converse_request_body(self, prompt: str) -> dict:
         return {
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
+            "inferenceConfig": {
+                "temperature": self.temperature,
+                "topP": self.generation_kwargs.get("top_p", 0),
+                "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
+                **self.generation_kwargs,
+            },
+        }
+
+    def get_converse_request_body_from_messages(self, messages: List[Dict[str, str]]) -> dict:
+        # Convert message format to Bedrock format
+        bedrock_messages = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            # Map roles to Bedrock format
+            if role == "assistant":
+                role = "assistant"
+            elif role == "system":
+                # Bedrock handles system messages differently, we'll prepend to user content
+                role = "user"
+                content = f"[System]: {content}"
+            else:
+                role = "user"
+            
+            bedrock_messages.append({"role": role, "content": [{"text": content}]})
+        
+        return {
+            "messages": bedrock_messages,
             "inferenceConfig": {
                 "temperature": self.temperature,
                 "topP": self.generation_kwargs.get("top_p", 0),

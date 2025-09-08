@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Dict, Union, Tuple
 from deepeval.models.utils import parse_model_name
 
 
@@ -59,6 +59,32 @@ class DeepEvalBaseLLM(ABC):
 
         Returns:
             A string.
+        """
+        pass
+
+    @abstractmethod
+    def chat_generate(self, messages: List[Dict[str, str]], *args, **kwargs) -> Union[str, Tuple[str, float]]:
+        """Runs the model to output LLM response from a list of messages.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys
+                     Example: [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi!"}]
+
+        Returns:
+            A string response or tuple of (response, cost).
+        """
+        pass
+
+    @abstractmethod
+    async def a_chat_generate(self, messages: List[Dict[str, str]], *args, **kwargs) -> Union[str, Tuple[str, float]]:
+        """Asynchronously runs the model to output LLM response from a list of messages.
+
+        Args:
+            messages: List of message dictionaries with 'role' and 'content' keys
+                     Example: [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi!"}]
+
+        Returns:
+            A string response or tuple of (response, cost).
         """
         pass
 

@@ -93,8 +93,6 @@ class TuringTest(DeepEvalBaseBenchmark):
                     self.reference_model.get_model_name(),
                     starter
                 )
-
-                print(target_conversation)
                 
                 if winner == target_model.get_model_name():
                     total_wins += 1
@@ -140,8 +138,8 @@ class TuringTest(DeepEvalBaseBenchmark):
         for turn in range(self.max_turns):
             if turn % 2 == 0:  # Model A's turn
                 try:
-                    response_a = model_a.generate(
-                        self._format_conversation_for_model(conversation_a)
+                    response_a = model_a.chat_generate(
+                        conversation_a
                     )[0]
                     conversation_a.append({"role": "assistant", "content": response_a})
                     conversation_b.append({"role": "user", "content": response_a})
@@ -151,8 +149,8 @@ class TuringTest(DeepEvalBaseBenchmark):
                     break
             else:  # Model B's turn
                 try:
-                    response_b = model_b.generate(
-                        self._format_conversation_for_model(conversation_b)
+                    response_b = model_b.chat_generate(
+                        conversation_b
                     )[0]
                     conversation_b.append({"role": "assistant", "content": response_b})
                     conversation_a.append({"role": "user", "content": response_b})
@@ -162,14 +160,6 @@ class TuringTest(DeepEvalBaseBenchmark):
                     break
         
         return conversation_a, conversation_b
-
-    def _format_conversation_for_model(self, conversation: List[Dict[str, str]]) -> str:
-        """Format conversation history for model input"""
-        formatted = []
-        for turn in conversation:
-            role = "Human" if turn["role"] == "user" else "Assistant"
-            formatted.append(f"{role}: {turn['content']}")
-        return "\n".join(formatted)
 
     def _judge_human_likeness(
         self,
@@ -185,9 +175,9 @@ class TuringTest(DeepEvalBaseBenchmark):
         
         # Create judge prompt
         judge_prompt = TuringTestTemplate.judge_human_likeness(
-            formatted_a, model_a_name, model_b_name, starter
+            formatted_a, starter
         )
-        
+        print(judge_prompt)
         try:
             # Get judge response
             if self.using_native_judge:
@@ -195,11 +185,11 @@ class TuringTest(DeepEvalBaseBenchmark):
             else:
                 response = self.judge_model.generate(judge_prompt, schema=HumanLikenessWinner)
                 if hasattr(response, 'winner'):
-                    return response.winner
+                    return model_a_name if response.winner == "model_a" else model_b_name
             
             # Parse JSON response
             result = trimAndLoadJson(response, self)
-            return result.get("winner", model_a_name)  # Default to model_a if parsing fails
+            return model_a_name if result.get("winner") == "model_a" else model_b_name # Default to model_a if parsing fails
             
         except Exception as e:
             if self.verbose_mode:

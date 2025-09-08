@@ -1,6 +1,6 @@
 from openai.types.chat.chat_completion import ChatCompletion
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
 import logging
@@ -410,6 +410,125 @@ class GPTModel(DeepEvalBaseLLM):
         completion = await client.chat.completions.create(
             model=self.model_name,
             messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        output = completion.choices[0].message.content
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        client = self.load_model(async_mode=False)
+        if schema:
+            if self.model_name in structured_outputs_models:
+                completion = client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format=schema,
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                )
+                structured_output: BaseModel = completion.choices[
+                    0
+                ].message.parsed
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return structured_output, cost
+            if self.model_name in json_mode_models:
+                completion = client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                )
+                json_output = trim_and_load_json(
+                    completion.choices[0].message.content
+                )
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return schema.model_validate(json_output), cost
+
+        completion = client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        output = completion.choices[0].message.content
+        cost = self.calculate_cost(
+            completion.usage.prompt_tokens, completion.usage.completion_tokens
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
+
+    @retry(
+        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
+        retry=retry_if_exception_type(retryable_exceptions),
+        after=log_retry_error,
+    )
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, BaseModel], float]:
+        client = self.load_model(async_mode=True)
+        if schema:
+            if self.model_name in structured_outputs_models:
+                completion = await client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format=schema,
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                )
+                structured_output: BaseModel = completion.choices[
+                    0
+                ].message.parsed
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return structured_output, cost
+            if self.model_name in json_mode_models:
+                completion = await client.beta.chat.completions.parse(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format={"type": "json_object"},
+                    temperature=self.temperature,
+                    **self.generation_kwargs,
+                )
+                json_output = trim_and_load_json(
+                    completion.choices[0].message.content
+                )
+                cost = self.calculate_cost(
+                    completion.usage.prompt_tokens,
+                    completion.usage.completion_tokens,
+                )
+                return schema.model_validate(json_output), cost
+
+        client: AsyncOpenAI
+        completion = await client.chat.completions.create(
+            model=self.model_name,
+            messages=messages,
             temperature=self.temperature,
             **self.generation_kwargs,
         )

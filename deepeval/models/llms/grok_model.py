@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union, Dict
+from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel
 import os
 
@@ -134,6 +134,100 @@ class GrokModel(DeepEvalBaseLLM):
             **self.generation_kwargs,
         )
         chat.append(user(prompt))
+
+        if schema and self.model_name in structured_outputs_models:
+            response, structured_output = await chat.parse(schema)
+            cost = self.calculate_cost(
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
+            )
+            return structured_output, cost
+
+        response = await chat.sample()
+        output = response.content
+        cost = self.calculate_cost(
+            response.usage.prompt_tokens,
+            response.usage.completion_tokens,
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
+
+    def chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        try:
+            from xai_sdk.chat import user, assistant
+        except ImportError:
+            raise ImportError(
+                "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
+            )
+        client = self.load_model(async_mode=False)
+        chat = client.chat.create(
+            model=self.model_name,
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        
+        # Convert messages to Grok format
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            if role == "user":
+                chat.append(user(content))
+            elif role == "assistant":
+                chat.append(assistant(content))
+            # Note: Grok doesn't have system role, so we skip system messages
+
+        if schema and self.model_name in structured_outputs_models:
+            response, structured_output = chat.parse(schema)
+            cost = self.calculate_cost(
+                response.usage.prompt_tokens,
+                response.usage.completion_tokens,
+            )
+            return structured_output, cost
+
+        response = chat.sample()
+        output = response.content
+        cost = self.calculate_cost(
+            response.usage.prompt_tokens,
+            response.usage.completion_tokens,
+        )
+        if schema:
+            json_output = trim_and_load_json(output)
+            return schema.model_validate(json_output), cost
+        else:
+            return output, cost
+
+    async def a_chat_generate(
+        self, messages: List[Dict[str, str]], schema: Optional[BaseModel] = None
+    ) -> Tuple[Union[str, Dict], float]:
+        try:
+            from xai_sdk.chat import user, assistant
+        except ImportError:
+            raise ImportError(
+                "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
+            )
+        client = self.load_model(async_mode=True)
+        chat = client.chat.create(
+            model=self.model_name,
+            temperature=self.temperature,
+            **self.generation_kwargs,
+        )
+        
+        # Convert messages to Grok format
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            
+            if role == "user":
+                chat.append(user(content))
+            elif role == "assistant":
+                chat.append(assistant(content))
+            # Note: Grok doesn't have system role, so we skip system messages
 
         if schema and self.model_name in structured_outputs_models:
             response, structured_output = await chat.parse(schema)
