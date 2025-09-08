@@ -28,6 +28,8 @@ This makes DAGs not only more powerful but also more reliable for complex and hi
 
 </details>
 
+![DAG Image for Multi-Turn](https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:conversational-dag.png)
+
 ## Required Arguments
 
 The `ConversationalDAGMetric` metric requires you to create a `ConversationalTestCase` with the following arguments:
@@ -66,8 +68,6 @@ The conversational dag also allows us to use regular conversational metrics to r
 
 To use the `ConversationalDAGMetric`, we need to first create a valid `DeepAcyclicGraph` (DAG) that represents a decision tree to get a final verdict. Here's an example decision tree that checks whether a _playful chatbot_ performs it's role correctly.
 
-![DAG Image for Multi-Turn](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:conversational-dag.png)
-
 There are exactly **FOUR** different node types you can choose from to create a multi-turn `DeepAcyclicGraph`.
 
 ### Task node
@@ -77,7 +77,7 @@ The `ConversationalTaskNode` is designed specifically for processing either the 
 :::note
 The `ConversationalDAGMetric` allows you to choose a certain window of turns to run evaluations on as well.
 
-![DAG with turns window](https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:conversational-dag-turn-window.png)
+![DAG with turns window](https://deepeval-docs.s3.us-east-1.amazonaws.com/metrics:dag:turn-windows.png)
 :::
 
 You can also break down a conversation into atomic units by choosing a specific window of conversation turns. Here's how to create a `ConversationalTaskNode`:
