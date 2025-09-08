@@ -1,0 +1,208 @@
+{
+  "agentSpans": [
+    {
+      "agentHandoffs": [],
+      "availableTools": [
+        "get_location_coordinates",
+        "get_current_weather"
+      ],
+      "endTime": "2025-09-08T13:16:56.676Z",
+      "input": {},
+      "metadata": {
+        "output_type": "str"
+      },
+      "name": "Weather Specialist Agent",
+      "parentUuid": "857da36e-6f91-415a-bfb7-863150fa67f5",
+      "startTime": "2025-09-08T13:16:50.698Z",
+      "status": "SUCCESS",
+      "type": "agent",
+      "uuid": "894b310f-054c-488d-98f2-55695d2aebf2"
+    }
+  ],
+  "baseSpans": [
+    {
+      "endTime": "2025-09-08T13:16:56.676Z",
+      "input": "What's the weather like in London today?",
+      "metricCollection": "test_collection_1",
+      "name": "run",
+      "output": "RunResult:\n- Last agent: Agent(name=\"Weather Specialist Agent\", ...)\n- Final output (str):\n    Weather Summary:\n    - London is experiencing clear and pleasant weather today. The temperature is around 22.5°C, with relatively comfortable humidity at 55%. There's no precipitation, and a light breeze is coming from the south at about 5.2 km/h.\n    \n    Suggestions:\n    - This is ideal weather for outdoor activities—consider going for a walk, a picnic, or simply enjoying time outside.\n    - Dress in light, breathable clothing to stay comfortable.\n    - Stay hydrated, especially if you'll be active outdoors.\n    - No safety concerns or special precautions are necessary today, as conditions are calm and favorable.\n- 5 new item(s)\n- 3 raw response(s)\n- 0 input guardrail result(s)\n- 0 output guardrail result(s)\n(See `RunResult` for more details)",
+      "startTime": "2025-09-08T13:16:50.697Z",
+      "status": "SUCCESS",
+      "type": "base",
+      "uuid": "857da36e-6f91-415a-bfb7-863150fa67f5"
+    }
+  ],
+  "endTime": "2025-09-08T13:16:56.676Z",
+  "environment": "development",
+  "input": "What's the weather like in London today?",
+  "llmSpans": [
+    {
+      "endTime": "2025-09-08T13:16:56.675Z",
+      "input": [
+        {
+          "content": "What's the weather like in London today?",
+          "role": "user",
+          "type": "message"
+        },
+        {
+          "arguments": "{\"city_name\":\"London\"}",
+          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "name": "get_location_coordinates"
+        },
+        {
+          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "output": "{'lat': 51.5074, 'lng': -0.1278}",
+          "role": "tool"
+        },
+        {
+          "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+          "call_id": "call_snjaeyPHz2iAjVvPVz55f1YL",
+          "name": "get_current_weather"
+        },
+        {
+          "call_id": "call_snjaeyPHz2iAjVvPVz55f1YL",
+          "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+          "role": "tool"
+        }
+      ],
+      "inputTokenCount": 419.0,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
+      },
+      "metricCollection": "test_collection_1",
+      "model": "gpt-4.1-2025-04-14",
+      "name": "LLM Generation",
+      "output": "Weather Summary:\n- London is experiencing clear and pleasant weather today. The temperature is around 22.5°C, with relatively comfortable humidity at 55%. There's no precipitation, and a light breeze is coming from the south at about 5.2 km/h.\n\nSuggestions:\n- This is ideal weather for outdoor activities—consider going for a walk, a picnic, or simply enjoying time outside.\n- Dress in light, breathable clothing to stay comfortable.\n- Stay hydrated, especially if you'll be active outdoors.\n- No safety concerns or special precautions are necessary today, as conditions are calm and favorable.",
+      "outputTokenCount": 121.0,
+      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-08T13:16:53.483Z",
+      "status": "SUCCESS",
+      "type": "llm",
+      "uuid": "5da26aca-02b5-43cb-9c67-0b6bf597da02"
+    },
+    {
+      "endTime": "2025-09-08T13:16:53.481Z",
+      "input": [
+        {
+          "content": "What's the weather like in London today?",
+          "role": "user",
+          "type": "message"
+        },
+        {
+          "arguments": "{\"city_name\":\"London\"}",
+          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "name": "get_location_coordinates"
+        },
+        {
+          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "output": "{'lat': 51.5074, 'lng': -0.1278}",
+          "role": "tool"
+        }
+      ],
+      "inputTokenCount": 312.0,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
+      },
+      "metricCollection": "test_collection_1",
+      "model": "gpt-4.1-2025-04-14",
+      "name": "LLM Generation",
+      "output": "{\"call_id\": \"call_snjaeyPHz2iAjVvPVz55f1YL\", \"name\": \"get_current_weather\", \"arguments\": \"{\\\"latitude\\\":51.5074,\\\"longitude\\\":-0.1278}\"}",
+      "outputTokenCount": 27.0,
+      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-08T13:16:52.446Z",
+      "status": "SUCCESS",
+      "type": "llm",
+      "uuid": "2f20937e-77c9-458d-b663-036df2c78147"
+    },
+    {
+      "endTime": "2025-09-08T13:16:52.445Z",
+      "input": [
+        {
+          "content": "What's the weather like in London today?",
+          "role": "user",
+          "type": "message"
+        }
+      ],
+      "inputTokenCount": 268.0,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
+      },
+      "metricCollection": "test_collection_1",
+      "model": "gpt-4.1-2025-04-14",
+      "name": "LLM Generation",
+      "output": "{\"call_id\": \"call_Hv7fWgdILw67n4ak3lFFopRq\", \"name\": \"get_location_coordinates\", \"arguments\": \"{\\\"city_name\\\":\\\"London\\\"}\"}",
+      "outputTokenCount": 17.0,
+      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-08T13:16:50.702Z",
+      "status": "SUCCESS",
+      "type": "llm",
+      "uuid": "ec349fc6-b271-4154-a71b-fe28925dae22"
+    }
+  ],
+  "metricCollection": "test_collection_1",
+  "name": "Weather Specialist Agent",
+  "output": "RunResult:\n- Last agent: Agent(name=\"Weather Specialist Agent\", ...)\n- Final output (str):\n    Weather Summary:\n    - London is experiencing clear and pleasant weather today. The temperature is around 22.5°C, with relatively comfortable humidity at 55%. There's no precipitation, and a light breeze is coming from the south at about 5.2 km/h.\n    \n    Suggestions:\n    - This is ideal weather for outdoor activities—consider going for a walk, a picnic, or simply enjoying time outside.\n    - Dress in light, breathable clothing to stay comfortable.\n    - Stay hydrated, especially if you'll be active outdoors.\n    - No safety concerns or special precautions are necessary today, as conditions are calm and favorable.\n- 5 new item(s)\n- 3 raw response(s)\n- 0 input guardrail result(s)\n- 0 output guardrail result(s)\n(See `RunResult` for more details)",
+  "retrieverSpans": [],
+  "startTime": "2025-09-08T13:16:50.697Z",
+  "status": "SUCCESS",
+  "toolSpans": [
+    {
+      "description": "Fetches weather data for a given location using the Open-Meteo API.",
+      "endTime": "2025-09-08T13:16:53.483Z",
+      "input": {
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "metricCollection": "test_collection_1",
+      "name": "get_current_weather",
+      "output": {
+        "apparent_temperature": 21.0,
+        "dummy": true,
+        "humidity": 55,
+        "precipitation": 0.0,
+        "temperature_2m": 22.5,
+        "weather_code": 1,
+        "wind_direction_10m": 180,
+        "wind_speed_10m": 5.2
+      },
+      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "startTime": "2025-09-08T13:16:53.482Z",
+      "status": "SUCCESS",
+      "type": "tool",
+      "uuid": "3f3bb412-8b5e-4dd7-9e66-1889bd48fcb5"
+    },
+    {
+      "description": "Get latitude and longitude for a city name.",
+      "endTime": "2025-09-08T13:16:52.445Z",
+      "input": {
+        "city_name": "London"
+      },
+      "name": "get_location_coordinates",
+      "output": {
+        "lat": 51.5074,
+        "lng": -0.1278
+      },
+      "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
+      "startTime": "2025-09-08T13:16:52.445Z",
+      "status": "SUCCESS",
+      "type": "tool",
+      "uuid": "f5ef545b-329a-494e-9883-bb2413ba88b7"
+    }
+  ],
+  "uuid": "42cf9b7b-316f-49ba-9fb1-746614b76059"
+}

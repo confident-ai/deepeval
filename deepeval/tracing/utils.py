@@ -1,11 +1,15 @@
 import os
+import inspect
+import json
+import sys
+import difflib
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 from collections import deque
+from typing import Any, Dict
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
-
 
 class Environment(Enum):
     PRODUCTION = "production"
@@ -115,3 +119,84 @@ def replace_self_with_class_name(obj):
         return f"<{obj.__class__.__name__}>"
     except:
         return f"<self>"
+
+def test_trace_body(body: Dict[str, Any]):
+    mode = os.getenv("TEST_TRACE")
+    if not mode:
+        return
+
+    mode = mode.lower()
+
+    # Resolve the entrypoint file from the python command
+    entry_file = None
+    try:
+        cmd0 = sys.argv[0] if sys.argv else None
+        if cmd0 and cmd0.endswith(".py"):
+            entry_file = cmd0
+        else:
+            # Fallback: try to find a plausible caller .py from the stack
+            for frame_info in reversed(inspect.stack()):
+                fp = frame_info.filename
+                if fp and fp.endswith(".py") and "deepeval/tracing" not in fp and "site-packages" not in fp:
+                    entry_file = fp
+                    break
+    except Exception:
+        entry_file = None
+
+    if not entry_file:
+        entry_file = "unknown.py"
+
+    abs_entry = os.path.abspath(entry_file)
+    dir_path = os.path.dirname(abs_entry)
+
+    # Optional: --file-name=<name>.json or --file-name <name>.json
+    file_arg = None
+    try:
+        for idx, arg in enumerate(sys.argv):
+            if isinstance(arg, str) and arg.startswith("--file-name="):
+                file_arg = arg.split("=", 1)[1].strip().strip('"').strip("'")
+                break
+            if arg == "--file-name" and idx + 1 < len(sys.argv):
+                file_arg = str(sys.argv[idx + 1]).strip().strip('"').strip("'")
+                break
+    except Exception:
+        file_arg = None
+
+    if file_arg:
+        file_name = os.path.basename(file_arg)
+    else:
+        base_name = os.path.splitext(os.path.basename(abs_entry))[0]
+        file_name = f"{base_name}.json"
+
+    file_path = os.path.join(dir_path, file_name)
+
+    serializable_body = make_json_serializable(body)
+
+    if mode == "gen":
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(serializable_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return
+
+    if mode == "test":
+        if not os.path.exists(file_path):
+            raise AssertionError(f"Assertion file not found: {file_path}")
+        with open(file_path, "r", encoding="utf-8") as f:
+            expected = json.load(f)
+
+        if serializable_body != expected:
+            try:
+                expected_str = json.dumps(expected, ensure_ascii=False, indent=2, sort_keys=True)
+                actual_str = json.dumps(serializable_body, ensure_ascii=False, indent=2, sort_keys=True)
+                diff = "\n".join(
+                    difflib.unified_diff(
+                        expected_str.splitlines(),
+                        actual_str.splitlines(),
+                        fromfile="expected",
+                        tofile="actual",
+                        lineterm="",
+                    )
+                )
+            except Exception:
+                diff = "<diff unavailable>"
+            raise AssertionError(f"Trace body does not match expected file: {file_path}\n{diff}")
+        return

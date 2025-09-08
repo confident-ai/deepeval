@@ -9,6 +9,8 @@ import atexit
 import queue
 import uuid
 import os
+import json
+import time
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -50,6 +52,7 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
+    test_trace_body,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -492,6 +495,11 @@ class TraceManager:
             with capture_send_trace():
                 try:
                     api = Api(api_key=self.confident_api_key)
+                    try: 
+                        test_trace_body(body)
+                    except Exception as e:
+                        pass
+                    
                     _, link = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,

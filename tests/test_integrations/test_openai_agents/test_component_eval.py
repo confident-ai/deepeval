@@ -27,13 +27,13 @@ def get_current_weather(latitude: float, longitude: float) -> dict:
     """
     # Return random dummy weather data for testing purposes
     return {
-        "temperature_2m": round(random.uniform(-10, 35), 1),
-        "humidity": random.randint(20, 100),
-        "apparent_temperature": round(random.uniform(-15, 40), 1),
-        "precipitation": round(random.uniform(0, 20), 1),
-        "weather_code": random.choice([0, 1, 2, 3, 45, 48, 51, 61, 71, 80, 95]),
-        "wind_speed_10m": round(random.uniform(0, 30), 1),
-        "wind_direction_10m": random.randint(0, 360),
+        "temperature_2m": 22.5,
+        "humidity": 55,
+        "apparent_temperature": 21.0,
+        "precipitation": 0.0,
+        "weather_code": 1,
+        "wind_speed_10m": 5.2,
+        "wind_direction_10m": 180,
         "dummy": True,
     }
 
