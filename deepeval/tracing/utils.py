@@ -262,4 +262,6 @@ def test_trace_body(body: Dict[str, Any]):
             except Exception:
                 diff = "<diff unavailable>"
             raise AssertionError(f"Trace body does not match expected file: {file_path}\n{diff}")
+        
+        print(f"Test trace body passed: {file_path}")
         return
