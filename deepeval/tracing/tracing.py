@@ -404,6 +404,15 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
+
+                    try:
+                        test_trace_body(body)
+                    except Exception as e:
+                        if isinstance(e, AssertionError):
+                            raise e
+                        else:
+                            pass
+                        
                     api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
