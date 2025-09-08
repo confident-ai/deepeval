@@ -176,11 +176,21 @@ def _apply_placeholders(expected, actual, path=""):
     return expected
 
 def test_trace_body(body: Dict[str, Any]):
-    mode = os.getenv("TEST_TRACE")
-    if not mode:
-        return
+    # Read mode from CLI args: --mode=gen or --mode gen
+    mode = None
+    try:
+        for idx, arg in enumerate(sys.argv):
+            if isinstance(arg, str) and arg.startswith("--mode="):
+                mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
+                break
+            if arg == "--mode" and idx + 1 < len(sys.argv):
+                mode = str(sys.argv[idx + 1]).strip().strip('"').strip("'").lower()
+                break
+    except Exception:
+        mode = None
 
-    mode = mode.lower()
+    if mode not in ("gen", "test"):
+        return
 
     # Resolve the entrypoint file from the python command
     entry_file = None
