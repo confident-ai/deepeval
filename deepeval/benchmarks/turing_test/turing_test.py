@@ -177,7 +177,7 @@ class TuringTest(DeepEvalBaseBenchmark):
         judge_prompt = TuringTestTemplate.judge_human_likeness(
             formatted_a, starter
         )
-        print(judge_prompt)
+        #print(judge_prompt)
         try:
             # Get judge response
             if self.using_native_judge:
