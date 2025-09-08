@@ -2,7 +2,7 @@ from asyncio import Task
 from typing import Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from opentelemetry.trace import Tracer
-from opentelemetry.context import Context
+from opentelemetry.context import Context, attach, detach
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
@@ -12,6 +12,8 @@ import os
 import datetime
 import time
 import ast
+import uuid
+from opentelemetry import baggage
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
@@ -1101,7 +1103,6 @@ class EvaluationDataset:
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
         run_otel: Optional[bool] = False,
-        tracer: Optional[Tracer] = None,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1140,7 +1141,8 @@ class EvaluationDataset:
 
             # sandwich start trace for OTEL
             if run_otel:
-                self.start_otel_test_run(tracer)
+                ctx = self.start_otel_test_run() # ignored span
+                ctx_token = attach(ctx)
 
             if async_config.run_async:
                 loop = get_or_create_event_loop()
@@ -1156,8 +1158,11 @@ class EvaluationDataset:
                     async_config=async_config,
                 ):
                     if run_otel:
-                        _tracer = check_tracer(tracer)
-                        with _tracer.start_as_current_span("evals_iterator", context=Context()) as span: # TODO: think of how tracer can be changed for iterator
+                        _tracer = check_tracer()
+                        with _tracer.start_as_current_span(
+                            name="evals_iterator",
+                            context=ctx,
+                        ):
                             yield golden
                     else:
                         yield golden
@@ -1173,8 +1178,11 @@ class EvaluationDataset:
                     identifier=identifier,
                 ):
                     if run_otel:
-                        _tracer = check_tracer(tracer)
-                        with _tracer.start_as_current_span("evals_iterator", context=Context()) as span: # TODO: think of how tracer can be changed for iterator
+                        _tracer = check_tracer()
+                        with _tracer.start_as_current_span(
+                            name = "evals_iterator",
+                            context=ctx,
+                        ):
                             yield golden
                     else:
                         yield golden
@@ -1209,7 +1217,8 @@ class EvaluationDataset:
 
             # sandwich end trace for OTEL
             if run_otel:
-                self.end_otel_test_run(tracer)
+                self.end_otel_test_run(ctx)
+                detach(ctx_token)
 
             # wrap up test run if not OTEL
             if not run_otel:
@@ -1219,17 +1228,22 @@ class EvaluationDataset:
                 return EvaluationResult(
                     test_results=test_results, confident_link=confident_link
                 )
+    
     def evaluate(self, task: Task):
         global_evaluation_tasks.append(task)
 
-    def start_otel_test_run(self, tracer: Optional[Tracer] = None):
-        print("Starting OTLP test run")
+    def start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
         _tracer = check_tracer(tracer)
-        with _tracer.start_as_current_span("start_otel_test_run", context=Context()):
-            pass
+        run_id = str(uuid.uuid4())
+        print("Starting OTLP test run with run_id: ", run_id)
+        ctx = baggage.set_baggage("confident.test.run_id", run_id, context=Context())
+        with _tracer.start_as_current_span("start_otel_test_run", context=ctx) as span:
+            span.set_attribute("confident.test.run_id", run_id)
+        return ctx
 
-    def end_otel_test_run(self, tracer: Optional[Tracer] = None):
-        print("Ending OTLP test run")
+    def end_otel_test_run(self, ctx: Context, tracer: Optional[Tracer] = None):
+        run_id = baggage.get_baggage("confident.test.run_id", context=ctx)
+        print("Ending OTLP test run with run_id: ", run_id)
         _tracer = check_tracer(tracer)
-        with _tracer.start_as_current_span("stop_otel_test_run", context=Context()):
-            pass
+        with _tracer.start_as_current_span("stop_otel_test_run", context=ctx) as span:
+            span.set_attribute("confident.test.run_id", run_id)

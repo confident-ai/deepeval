@@ -159,12 +159,17 @@ def parse_turns(turns_str: str) -> List[Turn]:
 def check_tracer(tracer: Optional[Tracer] = None) -> Tracer:
     if tracer:
         return tracer
-    
-    tracer_provider = trace.get_tracer_provider()
-    if isinstance(tracer_provider, NoOpTracerProvider):
+    # Prefer module-level test-run tracer if available
+    try:
+        from deepeval.dataset.test_run_tracer import (
+            GLOBAL_TEST_RUN_TRACER,
+        )
+        if GLOBAL_TEST_RUN_TRACER is not None:
+            return GLOBAL_TEST_RUN_TRACER
+    except Exception:
         raise RuntimeError(
             "No global OpenTelemetry tracer provider is configured." #TODO: link to docs
         )
     
-    return tracer_provider.get_tracer(__name__)
+    return GLOBAL_TEST_RUN_TRACER
         
