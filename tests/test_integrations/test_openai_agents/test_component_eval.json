@@ -25,7 +25,7 @@
       "input": "What's the weather like in London today?",
       "metricCollection": "test_collection_1",
       "name": "run",
-      "output": "RunResult:\n- Last agent: Agent(name=\"Weather Specialist Agent\", ...)\n- Final output (str):\n    Weather Summary:\n    - London is experiencing clear and pleasant weather today. The temperature is around 22.5°C, with relatively comfortable humidity at 55%. There's no precipitation, and a light breeze is coming from the south at about 5.2 km/h.\n    \n    Suggestions:\n    - This is ideal weather for outdoor activities—consider going for a walk, a picnic, or simply enjoying time outside.\n    - Dress in light, breathable clothing to stay comfortable.\n    - Stay hydrated, especially if you'll be active outdoors.\n    - No safety concerns or special precautions are necessary today, as conditions are calm and favorable.\n- 5 new item(s)\n- 3 raw response(s)\n- 0 input guardrail result(s)\n- 0 output guardrail result(s)\n(See `RunResult` for more details)",
+      "output": "<is_present>",
       "startTime": "2025-09-08T13:16:50.697Z",
       "status": "SUCCESS",
       "type": "base",
@@ -46,35 +46,35 @@
         },
         {
           "arguments": "{\"city_name\":\"London\"}",
-          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "call_id": "<is_present>",
           "name": "get_location_coordinates"
         },
         {
-          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "call_id": "<is_present>",
           "output": "{'lat': 51.5074, 'lng': -0.1278}",
           "role": "tool"
         },
         {
           "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
-          "call_id": "call_snjaeyPHz2iAjVvPVz55f1YL",
+          "call_id": "<is_present>",
           "name": "get_current_weather"
         },
         {
-          "call_id": "call_snjaeyPHz2iAjVvPVz55f1YL",
+          "call_id": "<is_present>",
           "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
           "role": "tool"
         }
       ],
-      "inputTokenCount": 419.0,
+      "inputTokenCount": "<is_present>",
       "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0
+        "cached_input_tokens": "<is_present>",
+        "ouptut_reasoning_tokens": "<is_present>"
       },
       "metricCollection": "test_collection_1",
       "model": "gpt-4.1-2025-04-14",
       "name": "LLM Generation",
-      "output": "Weather Summary:\n- London is experiencing clear and pleasant weather today. The temperature is around 22.5°C, with relatively comfortable humidity at 55%. There's no precipitation, and a light breeze is coming from the south at about 5.2 km/h.\n\nSuggestions:\n- This is ideal weather for outdoor activities—consider going for a walk, a picnic, or simply enjoying time outside.\n- Dress in light, breathable clothing to stay comfortable.\n- Stay hydrated, especially if you'll be active outdoors.\n- No safety concerns or special precautions are necessary today, as conditions are calm and favorable.",
-      "outputTokenCount": 121.0,
+      "output": "<is_present>",
+      "outputTokenCount": "<is_present>",
       "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
       "prompt": {
         "alias": "asd",
@@ -95,25 +95,25 @@
         },
         {
           "arguments": "{\"city_name\":\"London\"}",
-          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "call_id": "<is_present>",
           "name": "get_location_coordinates"
         },
         {
-          "call_id": "call_Hv7fWgdILw67n4ak3lFFopRq",
+          "call_id": "<is_present>",
           "output": "{'lat': 51.5074, 'lng': -0.1278}",
           "role": "tool"
         }
       ],
-      "inputTokenCount": 312.0,
+      "inputTokenCount": "<is_present>",
       "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0
+        "cached_input_tokens": "<is_present>",
+        "ouptut_reasoning_tokens": "<is_present>"
       },
       "metricCollection": "test_collection_1",
       "model": "gpt-4.1-2025-04-14",
       "name": "LLM Generation",
-      "output": "{\"call_id\": \"call_snjaeyPHz2iAjVvPVz55f1YL\", \"name\": \"get_current_weather\", \"arguments\": \"{\\\"latitude\\\":51.5074,\\\"longitude\\\":-0.1278}\"}",
-      "outputTokenCount": 27.0,
+      "output": "<is_present>",
+      "outputTokenCount": "<is_present>",
       "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
       "prompt": {
         "alias": "asd",
@@ -133,16 +133,16 @@
           "type": "message"
         }
       ],
-      "inputTokenCount": 268.0,
+      "inputTokenCount": "<is_present>",
       "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0
+        "cached_input_tokens": "<is_present>",
+        "ouptut_reasoning_tokens": "<is_present>"
       },
       "metricCollection": "test_collection_1",
       "model": "gpt-4.1-2025-04-14",
       "name": "LLM Generation",
-      "output": "{\"call_id\": \"call_Hv7fWgdILw67n4ak3lFFopRq\", \"name\": \"get_location_coordinates\", \"arguments\": \"{\\\"city_name\\\":\\\"London\\\"}\"}",
-      "outputTokenCount": 17.0,
+      "output": "<is_present>",
+      "outputTokenCount": "<is_present>",
       "parentUuid": "894b310f-054c-488d-98f2-55695d2aebf2",
       "prompt": {
         "alias": "asd",
@@ -156,7 +156,7 @@
   ],
   "metricCollection": "test_collection_1",
   "name": "Weather Specialist Agent",
-  "output": "RunResult:\n- Last agent: Agent(name=\"Weather Specialist Agent\", ...)\n- Final output (str):\n    Weather Summary:\n    - London is experiencing clear and pleasant weather today. The temperature is around 22.5°C, with relatively comfortable humidity at 55%. There's no precipitation, and a light breeze is coming from the south at about 5.2 km/h.\n    \n    Suggestions:\n    - This is ideal weather for outdoor activities—consider going for a walk, a picnic, or simply enjoying time outside.\n    - Dress in light, breathable clothing to stay comfortable.\n    - Stay hydrated, especially if you'll be active outdoors.\n    - No safety concerns or special precautions are necessary today, as conditions are calm and favorable.\n- 5 new item(s)\n- 3 raw response(s)\n- 0 input guardrail result(s)\n- 0 output guardrail result(s)\n(See `RunResult` for more details)",
+  "output": "<is_present>",
   "retrieverSpans": [],
   "startTime": "2025-09-08T13:16:50.697Z",
   "status": "SUCCESS",

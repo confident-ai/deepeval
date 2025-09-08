@@ -130,8 +130,9 @@ _IGNORE_DYNAMIC_KEYS = {
     "end_time",
     "trace_uuid",
     "traceUuid",
-    ""
 }
+
+_PLACEHOLDER = "<is_present>"
 
 def _sanitize_dynamic_fields(obj):
     if isinstance(obj, dict):
@@ -143,6 +144,36 @@ def _sanitize_dynamic_fields(obj):
     if isinstance(obj, list):
         return [_sanitize_dynamic_fields(v) for v in obj]
     return obj
+
+def _apply_placeholders(expected, actual, path=""):
+    """
+    Replace placeholder values in expected with actual values so equality works,
+    while ensuring presence of those keys/elements.
+    """
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            raise AssertionError(f"Type mismatch at {path or '<root>'}: expected object, got {type(actual).__name__}")
+        out = {}
+        for k, v in expected.items():
+            sub_path = f"{path}.{k}" if path else k
+            if v == _PLACEHOLDER:
+                if k not in actual:
+                    raise AssertionError(f"Missing required key at {sub_path}")
+                out[k] = actual[k]
+            else:
+                out[k] = _apply_placeholders(v, actual.get(k), sub_path)
+        return out
+    if isinstance(expected, list):
+        if not isinstance(actual, list):
+            raise AssertionError(f"Type mismatch at {path or '<root>'}: expected list, got {type(actual).__name__}")
+        if len(expected) != len(actual):
+            raise AssertionError(f"Length mismatch at {path or '<root>'}: expected {len(expected)}, got {len(actual)}")
+        return [
+            _apply_placeholders(ev, av, f"{path}[{i}]")
+            for i, (ev, av) in enumerate(zip(expected, actual))
+        ]
+    # primitives
+    return expected
 
 def test_trace_body(body: Dict[str, Any]):
     mode = os.getenv("TEST_TRACE")
@@ -209,10 +240,15 @@ def test_trace_body(body: Dict[str, Any]):
             expected = json.load(f)
 
         expected_normalized = _sanitize_dynamic_fields(expected)
+        # Align placeholders by substituting actual values where expected marks <is_present>
+        try:
+            expected_aligned = _apply_placeholders(expected_normalized, normalized_body)
+        except AssertionError as e:
+            raise AssertionError(str(e))
 
-        if normalized_body != expected_normalized:
+        if normalized_body != expected_aligned:
             try:
-                expected_str = json.dumps(expected_normalized, ensure_ascii=False, indent=2, sort_keys=True)
+                expected_str = json.dumps(expected_aligned, ensure_ascii=False, indent=2, sort_keys=True)
                 actual_str = json.dumps(normalized_body, ensure_ascii=False, indent=2, sort_keys=True)
                 diff = "\n".join(
                     difflib.unified_diff(
