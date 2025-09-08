@@ -113,12 +113,36 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
-
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
     except:
         return f"<self>"
+
+_IGNORE_DYNAMIC_KEYS = {
+    "uuid",
+    "parentUuid",
+    "startTime",
+    "endTime",
+    # snake_case variants for safety
+    "parent_uuid",
+    "start_time",
+    "end_time",
+    "trace_uuid",
+    "traceUuid",
+    ""
+}
+
+def _sanitize_dynamic_fields(obj):
+    if isinstance(obj, dict):
+        return {
+            k: _sanitize_dynamic_fields(v)
+            for k, v in obj.items()
+            if k not in _IGNORE_DYNAMIC_KEYS
+        }
+    if isinstance(obj, list):
+        return [_sanitize_dynamic_fields(v) for v in obj]
+    return obj
 
 def test_trace_body(body: Dict[str, Any]):
     mode = os.getenv("TEST_TRACE")
@@ -171,10 +195,11 @@ def test_trace_body(body: Dict[str, Any]):
     file_path = os.path.join(dir_path, file_name)
 
     serializable_body = make_json_serializable(body)
+    normalized_body = _sanitize_dynamic_fields(serializable_body)
 
     if mode == "gen":
         with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(serializable_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+            json.dump(normalized_body, f, ensure_ascii=False, indent=2, sort_keys=True)
         return
 
     if mode == "test":
@@ -183,10 +208,12 @@ def test_trace_body(body: Dict[str, Any]):
         with open(file_path, "r", encoding="utf-8") as f:
             expected = json.load(f)
 
-        if serializable_body != expected:
+        expected_normalized = _sanitize_dynamic_fields(expected)
+
+        if normalized_body != expected_normalized:
             try:
-                expected_str = json.dumps(expected, ensure_ascii=False, indent=2, sort_keys=True)
-                actual_str = json.dumps(serializable_body, ensure_ascii=False, indent=2, sort_keys=True)
+                expected_str = json.dumps(expected_normalized, ensure_ascii=False, indent=2, sort_keys=True)
+                actual_str = json.dumps(normalized_body, ensure_ascii=False, indent=2, sort_keys=True)
                 diff = "\n".join(
                     difflib.unified_diff(
                         expected_str.splitlines(),

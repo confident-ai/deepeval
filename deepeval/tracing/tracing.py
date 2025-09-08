@@ -498,7 +498,10 @@ class TraceManager:
                     try: 
                         test_trace_body(body)
                     except Exception as e:
-                        pass
+                        if isinstance(e, AssertionError):
+                            raise e
+                        else:
+                            pass
                     
                     _, link = api.send_request(
                         method=HttpMethods.POST,
