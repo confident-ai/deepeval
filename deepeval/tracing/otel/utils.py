@@ -272,7 +272,7 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
             def dfs(span: BaseSpan):
                 if span.metric_collection:
                     llm_test_case = LLMTestCase(
-                        input=span.input,
+                        input=str(span.input),
                         actual_output=(
                             str(span.output) if span.output is not None else None
                         ),
