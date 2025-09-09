@@ -8,6 +8,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
+from deepeval.confident.api import is_confident
 
 OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") else "https://otel.confident-ai.com"
 # OTLP_ENDPOINT = "http://127.0.0.1:4318"
@@ -18,9 +19,9 @@ GLOBAL_TEST_RUN_TRACER: Optional[OTelTracer] = None
 
 class RunIdSpanProcessor(SpanProcessor):
     def on_start(self, span, parent_context):
-        run_id = baggage.get_baggage("confident.test.run_id", context=parent_context)
+        run_id = baggage.get_baggage("confident.test_run.id", context=parent_context)
         if run_id:
-            span.set_attribute("confident.test.run_id", run_id)
+            span.set_attribute("confident.test_run.id", run_id)
     
     def on_end(self, span) -> None:  # type: ignore[override]
         # No-op
@@ -35,8 +36,7 @@ class RunIdSpanProcessor(SpanProcessor):
         return True
 
 def build_global_test_run_tracer(api_key: Optional[str] = None):
-    if api_key is None:
-        api_key = os.getenv("CONFIDENT_API_KEY")
+    api_key = is_confident()
     if api_key is None:
         raise ValueError("CONFIDENT_API_KEY is not set")
     if not OTLP_ENDPOINT:

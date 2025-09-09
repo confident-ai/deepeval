@@ -1141,7 +1141,7 @@ class EvaluationDataset:
 
             # sandwich start trace for OTEL
             if run_otel:
-                ctx = self.start_otel_test_run() # ignored span
+                ctx = self._start_otel_test_run() # ignored span
                 ctx_token = attach(ctx)
 
             if async_config.run_async:
@@ -1217,11 +1217,10 @@ class EvaluationDataset:
 
             # sandwich end trace for OTEL
             if run_otel:
-                self.end_otel_test_run(ctx)
+                self._end_otel_test_run(ctx)
                 detach(ctx_token)
 
-            # wrap up test run if not OTEL
-            if not run_otel:
+            else:
                 confident_link = global_test_run_manager.wrap_up_test_run(
                     run_duration, display_table=False
                 )
@@ -1232,18 +1231,18 @@ class EvaluationDataset:
     def evaluate(self, task: Task):
         global_evaluation_tasks.append(task)
 
-    def start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
+    def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
         _tracer = check_tracer(tracer)
         run_id = str(uuid.uuid4())
         print("Starting OTLP test run with run_id: ", run_id)
-        ctx = baggage.set_baggage("confident.test.run_id", run_id, context=Context())
+        ctx = baggage.set_baggage("confident.test_run.id", run_id, context=Context())
         with _tracer.start_as_current_span("start_otel_test_run", context=ctx) as span:
-            span.set_attribute("confident.test.run_id", run_id)
+            span.set_attribute("confident.test_run.id", run_id)
         return ctx
 
-    def end_otel_test_run(self, ctx: Context, tracer: Optional[Tracer] = None):
-        run_id = baggage.get_baggage("confident.test.run_id", context=ctx)
+    def _end_otel_test_run(self, ctx: Context, tracer: Optional[Tracer] = None):
+        run_id = baggage.get_baggage("confident.test_run.id", context=ctx)
         print("Ending OTLP test run with run_id: ", run_id)
         _tracer = check_tracer(tracer)
         with _tracer.start_as_current_span("stop_otel_test_run", context=ctx) as span:
-            span.set_attribute("confident.test.run_id", run_id)
+            span.set_attribute("confident.test_run.id", run_id)

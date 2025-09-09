@@ -82,7 +82,7 @@ class ConfidentSpanExporter(SpanExporter):
         spans: typing.Sequence[ReadableSpan],
         timeout_millis: int = 30000,
         api_key: Optional[str] = None,  # dynamic api key,
-        test_run_id: Optional[str] = None,
+        _test_run_id: Optional[str] = None,
     ) -> SpanExportResult:
         # build forest of spans
         forest = self._build_span_forest(spans)
@@ -227,7 +227,7 @@ class ConfidentSpanExporter(SpanExporter):
 
         # safely end all active traces or return them for test runs
         active_traces_keys = list(trace_manager.active_traces.keys())
-        if test_run_id:
+        if _test_run_id:
             traces = []
             for trace_key in active_traces_keys:
                 set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
@@ -235,7 +235,7 @@ class ConfidentSpanExporter(SpanExporter):
                 if trace:
                     traces.append(trace)
             trace_manager.clear_traces()
-            post_test_run(traces, test_run_id)
+            post_test_run(traces, _test_run_id)
             return SpanExportResult.SUCCESS
         else:
             for trace_key in active_traces_keys:
