@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Any, Optional, Awaitable, Callable
+from typing import Any, Optional, Awaitable, Callable, Generic, TypeVar
 
 from deepeval.tracing import observe
 from deepeval.prompt import Prompt
@@ -13,6 +13,8 @@ except Exception as e:
     raise RuntimeError(
         "openai-agents is required for this integration. Please install it."
     ) from e
+
+TContext = TypeVar('TContext')
 
 
 class _ObservedModel(Model):
@@ -153,7 +155,7 @@ class _ObservedProvider(ModelProvider):
 
 
 @dataclass
-class DeepEvalAgent(BaseAgent[Any]):
+class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     """
     A subclass of agents.Agent that accepts `metrics` and `metric_collection`
     and ensures the underlying model's `get_response` is wrapped with deepeval.observe.
