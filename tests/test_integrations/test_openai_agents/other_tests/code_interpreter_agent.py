@@ -1,7 +1,9 @@
 import asyncio
 
-from agents import Agent, CodeInterpreterTool, Runner, trace
+from agents import CodeInterpreterTool, trace, add_trace_processor  
+from deepeval.openai_agents import Runner, Agent, DeepEvalTracingProcessor
 
+add_trace_processor(DeepEvalTracingProcessor())
 
 async def code_interpreter_agent():
     agent = Agent(
@@ -35,3 +37,7 @@ async def code_interpreter_agent():
                 print(f"Other event: {event.item.type}")
 
         print(f"Final output: {result.final_output}")
+
+
+if __name__ == "__main__":
+    asyncio.run(code_interpreter_agent())

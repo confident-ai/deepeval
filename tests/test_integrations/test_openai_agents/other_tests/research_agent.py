@@ -3,16 +3,19 @@ from rich.console import Console
 import asyncio
 import time
 
-from agents import Runner, RunResult, custom_span, gen_trace_id, trace
+from agents import RunResult, custom_span, gen_trace_id, trace
 from agents.model_settings import ModelSettings
 from rich.console import Console, Group
-from agents import Agent, WebSearchTool
+from agents import WebSearchTool
 from rich.spinner import Spinner
 from pydantic import BaseModel
 from rich.live import Live
-from agents import Agent
 from typing import Any
 
+from deepeval.openai_agents import Runner, Agent, DeepEvalTracingProcessor
+from agents import add_trace_processor
+
+add_trace_processor(DeepEvalTracingProcessor())
 
 class AnalysisSummary(BaseModel):
     summary: str
@@ -115,7 +118,7 @@ verifier_agent = Agent(
 writer_agent = Agent(
     name="FinancialWriterAgent",
     instructions=WRITER_PROMPT,
-    model="gpt-4.5-preview-2025-02-27",
+    model="gpt-4o",
     output_type=FinancialReportData,
 )
 
@@ -302,6 +305,10 @@ class Printer:
 
 
 async def research_agent() -> None:
-    query = input("Enter a financial research query: ")
+    query = "What is the stock price of Apple?"
     mgr = FinancialResearchManager()
     await mgr.run(query)
+
+
+if __name__ == "__main__":
+    asyncio.run(research_agent())

@@ -1,8 +1,12 @@
 import asyncio
 import shutil
 
-from agents import Agent, Runner, trace
+from agents import Agent, Runner, trace, add_trace_processor
 from agents.mcp import MCPServer, MCPServerStdio
+
+from deepeval.openai_agents import Runner, Agent, DeepEvalTracingProcessor
+
+add_trace_processor(DeepEvalTracingProcessor())
 
 
 async def run(mcp_server: MCPServer, directory_path: str):
@@ -35,3 +39,7 @@ async def git_agent():
     ) as server:
         with trace(workflow_name="MCP Git Example"):
             await run(server, directory_path)
+
+
+if __name__ == "__main__":
+    asyncio.run(git_agent())

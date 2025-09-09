@@ -1,0 +1,109 @@
+{
+  "agentSpans": [
+    {
+      "agentHandoffs": [],
+      "availableTools": [],
+      "endTime": "<is_present>",
+      "input": {},
+      "metadata": {
+        "output_type": "str"
+      },
+      "name": "Assistant",
+      "parentUuid": "<is_present>",
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "agent",
+      "uuid": "<is_present>"
+    }
+  ],
+  "baseSpans": [
+    {
+      "endTime": "<is_present>",
+      "input": [
+        {
+          "content": [
+            {
+              "detail": "auto",
+              "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
+              "type": "input_image"
+            }
+          ],
+          "role": "user"
+        },
+        {
+          "content": "What do you see in this image?",
+          "role": "user"
+        }
+      ],
+      "name": "run",
+      "output": "<is_present>",
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "base",
+      "uuid": "<is_present>"
+    }
+  ],
+  "endTime": "<is_present>",
+  "environment": "development",
+  "input": [
+    {
+      "content": [
+        {
+          "detail": "auto",
+          "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
+          "type": "input_image"
+        }
+      ],
+      "role": "user"
+    },
+    {
+      "content": "What do you see in this image?",
+      "role": "user"
+    }
+  ],
+  "llmSpans": [
+    {
+      "endTime": "<is_present>",
+      "input": [
+        {
+          "content": [
+            {
+              "detail": "auto",
+              "image_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/GoldenGateBridge-001.jpg",
+              "type": "input_image"
+            }
+          ],
+          "role": "user",
+          "type": "message"
+        },
+        {
+          "content": "What do you see in this image?",
+          "role": "user",
+          "type": "message"
+        }
+      ],
+      "inputTokenCount": 795.0,
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0
+      },
+      "model": "gpt-4.1-2025-04-14",
+      "name": "LLM Generation",
+      "output": "<is_present>",
+      "outputTokenCount": "<is_present>",
+      "parentUuid": "<is_present>",
+      "prompt": {},
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "llm",
+      "uuid": "<is_present>"
+    }
+  ],
+  "name": "Assistant",
+  "output": "<is_present>",
+  "retrieverSpans": [],
+  "startTime": "<is_present>",
+  "status": "SUCCESS",
+  "toolSpans": [],
+  "uuid": "<is_present>"
+}
