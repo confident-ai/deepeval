@@ -56,6 +56,7 @@ from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 
+EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 class TraceManager:
     def __init__(self):
@@ -238,7 +239,7 @@ class TraceManager:
             parent_span = self.get_span_by_uuid(span.parent_uuid)
             if parent_span:
                 
-                if parent_span.name == "evals_iterator": # ignored span for otel test run
+                if parent_span.name == EVAL_DUMMY_SPAN_NAME: # ignored span for evaluation
                     span.parent_uuid = None
                     trace.root_spans.remove(parent_span)
                     trace.root_spans.append(span)

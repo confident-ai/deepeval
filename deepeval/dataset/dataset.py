@@ -52,6 +52,7 @@ from deepeval.test_run import (
 from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing import trace_manager
+from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
 
 
 valid_file_types = ["csv", "json", "jsonl"]
@@ -1160,7 +1161,7 @@ class EvaluationDataset:
                     if run_otel:
                         _tracer = check_tracer()
                         with _tracer.start_as_current_span(
-                            name="evals_iterator",
+                            name=EVAL_DUMMY_SPAN_NAME,
                             context=ctx,
                         ):
                             yield golden
@@ -1180,7 +1181,7 @@ class EvaluationDataset:
                     if run_otel:
                         _tracer = check_tracer()
                         with _tracer.start_as_current_span(
-                            name = "evals_iterator",
+                            name = EVAL_DUMMY_SPAN_NAME,
                             context=ctx,
                         ):
                             yield golden
