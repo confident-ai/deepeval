@@ -53,12 +53,12 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
-    test_trace_body,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
+from tests.test_integrations.utils import test_trace_body
 
 
 class TraceManager:
@@ -328,21 +328,6 @@ class TraceManager:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
 
-        # In test/gen/mark_dynamic modes, validate synchronously and propagate errors
-        mode = get_trace_mode()
-        if mode and mode in ("gen", "test", "mark_dynamic"):
-            try:
-                body = trace_api.model_dump(by_alias=True, exclude_none=True)
-            except AttributeError:
-                body = trace_api.dict(by_alias=True, exclude_none=True)
-            body = make_json_serializable(body)
-            try:
-                test_trace_body(body, mode)
-            except Exception as e:
-                print(f"Error in test/gen/mark_dynamic mode: {e}")
-
-            return
-
         if not trace_api.confident_api_key:
             if not is_confident() and self.confident_api_key is None:
                 self._print_trace_status(
@@ -362,21 +347,6 @@ class TraceManager:
     def post_trace(self, trace: Trace) -> Optional[str]:
         if not tracing_enabled() or not self.tracing_enabled:
             return None
-
-        # In test/gen/mark_dynamic modes, validate synchronously and propagate errors
-        mode = get_trace_mode()
-        if mode and mode in ("gen", "test", "mark_dynamic"):
-            trace_api = self.create_trace_api(trace)
-            try:
-                body = trace_api.model_dump(by_alias=True, exclude_none=True)
-            except AttributeError:
-                body = trace_api.dict(by_alias=True, exclude_none=True)
-            body = make_json_serializable(body)
-            try:
-                test_trace_body(body, mode)
-            except Exception as e:
-                print(f"Error in test/gen/mark_dynamic mode: {e}")
-            return
 
         if not trace.confident_api_key:
             if not is_confident() and self.confident_api_key is None:

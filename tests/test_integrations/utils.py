@@ -1,0 +1,286 @@
+import sys
+import os
+import json
+import difflib
+import inspect
+from typing import Optional, Sequence, Dict, Any, Callable
+import time
+
+_PLACEHOLDER = "<is_present>"
+
+def _apply_placeholders(expected, actual, path=""):
+    if expected == _PLACEHOLDER:
+        return actual
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            raise AssertionError(f"Type mismatch at {path or '<root>'}: expected object, got {type(actual).__name__}")
+        out = {}
+        for k, v in expected.items():
+            sub_path = f"{path}.{k}" if path else k
+            if v == _PLACEHOLDER:
+                if k not in actual:
+                    raise AssertionError(f"Missing required key at {sub_path}")
+                out[k] = actual[k]
+            else:
+                out[k] = _apply_placeholders(v, actual.get(k), sub_path)
+        return out
+    if isinstance(expected, list):
+        if not isinstance(actual, list):
+            raise AssertionError(f"Type mismatch at {path or '<root>'}: expected list, got {type(actual).__name__}")
+        if len(expected) != len(actual):
+            raise AssertionError(f"Length mismatch at {path or '<root>'}: expected {len(expected)}, got {len(actual)}")
+        return [
+            _apply_placeholders(ev, av, f"{path}[{i}]")
+            for i, (ev, av) in enumerate(zip(expected, actual))
+        ]
+    return expected
+
+def _mark_differences(expected, actual):
+    if expected == _PLACEHOLDER:
+        return _PLACEHOLDER
+    if isinstance(expected, dict) and isinstance(actual, dict):
+        keys = set(expected.keys()) | set(actual.keys())
+        out = {}
+        for k in keys:
+            ev = expected.get(k)
+            av = actual.get(k)
+            if ev == _PLACEHOLDER:
+                out[k] = _PLACEHOLDER
+            elif k not in expected:
+                out[k] = _PLACEHOLDER
+            elif k not in actual:
+                out[k] = ev
+            else:
+                if isinstance(ev, dict) and isinstance(av, dict):
+                    out[k] = _mark_differences(ev, av)
+                elif isinstance(ev, list) and isinstance(av, list):
+                    out[k] = _mark_differences(ev, av)
+                else:
+                    out[k] = ev if ev == av else _PLACEHOLDER
+        return out
+    if isinstance(expected, list) and isinstance(actual, list):
+        if len(expected) != len(actual):
+            return _PLACEHOLDER
+        marked = []
+        for ev, av in zip(expected, actual):
+            if isinstance(ev, (dict, list)) or isinstance(av, (dict, list)):
+                marked.append(_mark_differences(ev, av))
+            else:
+                marked.append(ev if ev == av else _PLACEHOLDER)
+        return marked
+    return expected if expected == actual else _PLACEHOLDER
+
+def get_trace_mode(args: Optional[Sequence[str]] = None) -> Optional[str]:
+    mode = None
+    try:
+        if args is None:
+            args = sys.argv
+        for idx, arg in enumerate(args):
+            if isinstance(arg, str) and arg.startswith("--mode="):
+                mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
+                break
+            if arg == "--mode" and idx + 1 < len(args):
+                mode = str(args[idx + 1]).strip().strip('"').strip("'").lower()
+                break
+    except Exception:
+        mode = None
+    
+    return mode
+
+def test_trace_body(body: Dict[str, Any], mode: str):
+    entry_file = None
+    try:
+        cmd0 = sys.argv[0] if sys.argv else None
+        if cmd0 and cmd0.endswith(".py"):
+            entry_file = cmd0
+        else:
+            for frame_info in reversed(inspect.stack()):
+                fp = frame_info.filename
+                if fp and fp.endswith(".py") and "deepeval/tracing" not in fp and "site-packages" not in fp:
+                    entry_file = fp
+                    break
+    except Exception:
+        entry_file = None
+
+    if not entry_file:
+        entry_file = "unknown.py"
+
+    abs_entry = os.path.abspath(entry_file)
+    dir_path = os.path.dirname(abs_entry)
+
+    file_arg = None
+    try:
+        for idx, arg in enumerate(sys.argv):
+            if isinstance(arg, str) and arg.startswith("--file-name="):
+                file_arg = arg.split("=", 1)[1].strip().strip('"').strip("'")
+                break
+            if arg == "--file-name" and idx + 1 < len(sys.argv):
+                file_arg = str(sys.argv[idx + 1]).strip().strip('"').strip("'")
+                break
+    except Exception:
+        file_arg = None
+
+    if file_arg:
+        # Respect the provided path (absolute or relative) instead of forcing the entry file's directory
+        file_path = os.path.abspath(file_arg)
+    else:
+        base_name = os.path.splitext(os.path.basename(abs_entry))[0]
+        file_path = os.path.join(dir_path, f"{base_name}.json")
+
+    actual_body = make_json_serializable(body)
+
+    if mode == "gen":
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return
+
+    if mode == "mark_dynamic":
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                expected = json.load(f)
+            marked = _mark_differences(expected, actual_body)
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(marked, f, ensure_ascii=False, indent=2, sort_keys=True)
+        else:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+        return
+
+    if mode == "test":
+        if not os.path.exists(file_path):
+            raise AssertionError(f"Assertion file not found: {file_path}")
+        with open(file_path, "r", encoding="utf-8") as f:
+            expected = json.load(f)
+
+        try:
+            expected_aligned = _apply_placeholders(expected, actual_body)
+        except AssertionError as e:
+            raise AssertionError(str(e))
+
+        if actual_body != expected_aligned:
+            try:
+                expected_str = json.dumps(expected_aligned, ensure_ascii=False, indent=2, sort_keys=True)
+                actual_str = json.dumps(actual_body, ensure_ascii=False, indent=2, sort_keys=True)
+                diff = "\n".join(
+                    difflib.unified_diff(
+                        expected_str.splitlines(),
+                        actual_str.splitlines(),
+                        fromfile="expected",
+                        tofile="actual",
+                        lineterm="",
+                    )
+                )
+            except Exception:
+                diff = "<diff unavailable>"
+            raise AssertionError(f"Trace body does not match expected file: {file_path}\n{diff}")
+        
+        print(f"Test trace body passed: {file_path}")
+        return
+
+
+def run_in_mode(mode: str, func: Callable, *args, file_path: Optional[str] = None, **kwargs):
+    """
+    Execute a callable while forcing trace mode for this process.
+
+    This temporarily injects or overrides the `--mode` argument in sys.argv
+    so that downstream tracing code sees the desired mode.
+
+    Args:
+        mode: One of "gen", "test", or "mark_dynamic".
+        func: The function to execute.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        The return value of `func(*args, **kwargs)`.
+    """
+    original_argv = list(sys.argv)
+    try:
+        # Build a modified argv that enforces the desired mode
+        new_argv = []
+        replaced = False
+        file_specified = False
+        i = 0
+        while i < len(original_argv):
+            arg = original_argv[i]
+            if isinstance(arg, str) and arg.startswith("--mode="):
+                new_argv.append(f"--mode={mode}")
+                replaced = True
+            elif arg == "--mode":
+                new_argv.append("--mode")
+                # Skip/replace the next token if present
+                if i + 1 < len(original_argv):
+                    new_argv.append(mode)
+                replaced = True
+                i += 1  # consume the value token as well
+            elif isinstance(arg, str) and arg.startswith("--file-name="):
+                file_specified = True
+                new_argv.append(arg)
+            elif arg == "--file-name":
+                new_argv.append(arg)
+                if i + 1 < len(original_argv):
+                    new_argv.append(original_argv[i + 1])
+                file_specified = True
+                i += 1  # consume the value token as well
+            else:
+                new_argv.append(arg)
+            i += 1
+
+        if not replaced:
+            new_argv.append(f"--mode={mode}")
+        # Inject file path for test/gen modes if not already specified and provided
+        if mode in ("test", "gen") and not file_specified and file_path:
+            new_argv.append(f"--file-name={file_path}")
+
+        sys.argv = new_argv
+        result = func(*args, **kwargs)
+        time.sleep(15)
+        return result
+    finally:
+        sys.argv = original_argv
+
+
+def run_in_test_mode(func: Callable, *args, **kwargs):
+    """Convenience wrapper for run_in_mode("test", ...)."""
+    return run_in_mode("test", func, *args, **kwargs)
+
+
+def compare_trace_files(expected_file_path: str, actual_file_path: str):
+    """
+    Compare two JSON trace files applying placeholder semantics.
+    Raises AssertionError with a unified diff on mismatch.
+    """
+    if not os.path.exists(expected_file_path):
+        raise AssertionError(f"Assertion file not found: {expected_file_path}")
+    if not os.path.exists(actual_file_path):
+        raise AssertionError(f"Actual file not found: {actual_file_path}")
+
+    with open(expected_file_path, "r", encoding="utf-8") as f:
+        expected = json.load(f)
+    with open(actual_file_path, "r", encoding="utf-8") as f:
+        actual = json.load(f)
+
+    try:
+        expected_aligned = _apply_placeholders(expected, actual)
+    except AssertionError as e:
+        raise AssertionError(str(e))
+
+    if actual != expected_aligned:
+        try:
+            expected_str = json.dumps(expected_aligned, ensure_ascii=False, indent=2, sort_keys=True)
+            actual_str = json.dumps(actual, ensure_ascii=False, indent=2, sort_keys=True)
+            diff = "\n".join(
+                difflib.unified_diff(
+                    expected_str.splitlines(),
+                    actual_str.splitlines(),
+                    fromfile="expected",
+                    tofile="actual",
+                    lineterm="",
+                )
+            )
+        except Exception:
+            diff = "<diff unavailable>"
+        raise AssertionError(f"Trace body does not match expected file: {expected_file_path}\n{diff}")
+
+    print(f"Test trace body passed: {expected_file_path}")
+    return
