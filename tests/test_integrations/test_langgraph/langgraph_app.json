@@ -108,7 +108,7 @@
             "additional_kwargs": {
               "refusal": null
             },
-            "content": "The weather in San Francisco is sunny!",
+            "content": "The weather in San Francisco is sunny!asdasd",
             "example": false,
             "id": "<is_present>",
             "invalid_tool_calls": [],

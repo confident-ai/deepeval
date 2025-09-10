@@ -1,4 +1,5 @@
 import os
+import time
 import inspect
 import json
 import sys
@@ -6,8 +7,9 @@ import difflib
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
+import time
 from collections import deque
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence, Callable
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
@@ -290,3 +292,70 @@ def test_trace_body(body: Dict[str, Any], mode: str):
         
         print(f"Test trace body passed: {file_path}")
         return
+
+
+def run_in_mode(mode: str, func: Callable, *args, file_path: Optional[str] = None, **kwargs):
+    """
+    Execute a callable while forcing trace mode for this process.
+
+    This temporarily injects or overrides the `--mode` argument in sys.argv
+    so that downstream tracing code sees the desired mode.
+
+    Args:
+        mode: One of "gen", "test", or "mark_dynamic".
+        func: The function to execute.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        The return value of `func(*args, **kwargs)`.
+    """
+    original_argv = list(sys.argv)
+    try:
+        # Build a modified argv that enforces the desired mode
+        new_argv = []
+        replaced = False
+        file_specified = False
+        i = 0
+        while i < len(original_argv):
+            arg = original_argv[i]
+            if isinstance(arg, str) and arg.startswith("--mode="):
+                new_argv.append(f"--mode={mode}")
+                replaced = True
+            elif arg == "--mode":
+                new_argv.append("--mode")
+                # Skip/replace the next token if present
+                if i + 1 < len(original_argv):
+                    new_argv.append(mode)
+                replaced = True
+                i += 1  # consume the value token as well
+            elif isinstance(arg, str) and arg.startswith("--file-name="):
+                file_specified = True
+                new_argv.append(arg)
+            elif arg == "--file-name":
+                new_argv.append(arg)
+                if i + 1 < len(original_argv):
+                    new_argv.append(original_argv[i + 1])
+                file_specified = True
+                i += 1  # consume the value token as well
+            else:
+                new_argv.append(arg)
+            i += 1
+
+        if not replaced:
+            new_argv.append(f"--mode={mode}")
+        # Inject file path only for test mode if not already specified and provided
+        if mode == "test" and not file_specified and file_path:
+            new_argv.append(f"--file-name={file_path}")
+
+        sys.argv = new_argv
+        result = func(*args, **kwargs)
+        time.sleep(10)
+        return result
+    finally:
+        sys.argv = original_argv
+
+
+def run_in_test_mode(func: Callable, *args, **kwargs):
+    """Convenience wrapper for run_in_mode("test", ...)."""
+    return run_in_mode("test", func, *args, **kwargs)
