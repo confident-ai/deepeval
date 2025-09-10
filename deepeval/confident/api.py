@@ -14,6 +14,8 @@ from tenacity import (
 import deepeval
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
 from deepeval.confident.types import ApiResponse, ConfidentApiError
+from deepeval.config.settings import get_settings
+
 
 CONFIDENT_API_KEY_ENV_VAR = "CONFIDENT_API_KEY"
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
@@ -31,20 +33,33 @@ def get_base_api_url():
         return API_BASE_URL
 
 
-def get_confident_api_key():
-    return os.getenv(CONFIDENT_API_KEY_ENV_VAR) or KEY_FILE_HANDLER.fetch_data(
-        KeyValues.API_KEY
-    )
+def get_confident_api_key() -> Optional[str]:
+    s = get_settings()
+    key: Optional[SecretStr] = s.CONFIDENT_API_KEY or s.API_KEY
+    return key.get_secret_value() if key else None
 
 
-def set_confident_api_key(api_key: Union[str, None]):
-    if api_key is None:
-        KEY_FILE_HANDLER.remove_key(KeyValues.API_KEY)
-        os.environ.pop(CONFIDENT_API_KEY_ENV_VAR, None)
-        return
+def set_confident_api_key(api_key: Optional[str]) -> None:
+    """
+    - Always updates runtime (os.environ) via settings.edit()
+    - If DEEPEVAL_DEFAULT_SAVE is set, also persists to dotenv
+    - Never writes secrets to the legacy JSON keystore (your Settings logic already skips secrets)
+    """
+    s = get_settings()
+    save = (
+        s.DEEPEVAL_DEFAULT_SAVE or None
+    )  # e.g. "dotenv" or "dotenv:/path/.env"
 
-    KEY_FILE_HANDLER.write_key(KeyValues.API_KEY, api_key)
-    os.environ[CONFIDENT_API_KEY_ENV_VAR] = api_key
+    # If you *only* want runtime changes unless a default save is present:
+    if save is None:
+        with s.edit(persist=False):
+            s.CONFIDENT_API_KEY = SecretStr(api_key) if api_key else None
+            s.API_KEY = SecretStr(api_key) if api_key else None
+    else:
+        # Respect default save: update runtime + write to dotenv, but not JSON
+        with s.edit(save=save, persist=None):
+            s.CONFIDENT_API_KEY = SecretStr(api_key) if api_key else None
+            s.API_KEY = SecretStr(api_key) if api_key else None
 
 
 def is_confident():
