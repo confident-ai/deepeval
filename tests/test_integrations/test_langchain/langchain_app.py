@@ -30,12 +30,11 @@ agent = create_tool_calling_agent(llm, [multiply], agent_prompt)
 
 agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 
-# run for testing (not needed for docs)
-result = agent_executor.invoke(
-    {"input": "What is 8 multiplied by 6?"},
-    config={
-        "callbacks": [CallbackHandler(metric_collection="task_completion")]
-    },
-)
-
-print(result)
+def execute_agent():
+    result = agent_executor.invoke(
+        {"input": "What is 8 multiplied by 6?"},
+        config={
+            "callbacks": [CallbackHandler(metric_collection="task_completion")]
+        },
+    )
+    return result
