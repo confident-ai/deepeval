@@ -8,14 +8,6 @@ from typing import Callable
 PLACEHOLDER = "<is_present>"
 
 def generate_test_json(func: Callable, name: str, *args, **kwargs):
-    """
-    Run `func` twice in forced --mode=gen, first writing to `name`, then to a
-    temporary file. Compare both generations and mask dynamic fields using
-    PLACEHOLDER semantics, finally writing the masked JSON to `name`.
-
-    This mirrors the behavior of tracing utilities without importing them.
-    """
-    # Resolve paths
     target_path = os.path.abspath(name)
     os.makedirs(os.path.dirname(target_path) or ".", exist_ok=True)
     tmp_path = target_path + ".tmp"
@@ -28,13 +20,11 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
             i = 0
             while i < len(original_argv):
                 arg = original_argv[i]
-                # Normalize/replace --mode
                 if isinstance(arg, str) and arg.startswith("--mode="):
                     new_argv.append("--mode=gen")
                     replaced_mode = True
                 elif arg == "--mode":
                     new_argv.append("--mode")
-                    # consume next token if present and replace value with gen
                     if i + 1 < len(original_argv):
                         # Skip the next original value
                         i += 1
@@ -96,10 +86,6 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
         pass
 
 def compare_trace_files(expected_file_path: str, actual_file_path: str):
-    """
-    Compare two JSON trace files applying placeholder semantics.
-    Raises AssertionError with a unified diff on mismatch.
-    """
     if not os.path.exists(expected_file_path):
         raise AssertionError(f"Assertion file not found: {expected_file_path}")
     if not os.path.exists(actual_file_path):
