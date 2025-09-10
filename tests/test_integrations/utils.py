@@ -10,6 +10,7 @@ from typing import Callable
 PLACEHOLDER = "<is_present>"
 TIME_KEYS = {"startTime", "endTime"}
 
+
 def _is_iso_timestamp(value: str) -> bool:
     if not isinstance(value, str):
         return False

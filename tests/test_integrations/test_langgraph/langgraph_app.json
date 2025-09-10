@@ -52,7 +52,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -118,7 +118,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
@@ -194,7 +194,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -284,7 +284,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
@@ -361,7 +361,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -427,7 +427,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
@@ -525,7 +525,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -614,7 +614,7 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "fp_8bda4d3a2c",
+          "system_fingerprint": "<is_present>",
           "token_usage": {
             "completion_tokens": "<is_present>",
             "completion_tokens_details": {
@@ -689,7 +689,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -803,7 +803,7 @@
             "logprobs": null,
             "model_name": "gpt-4o-mini-2024-07-18",
             "service_tier": "default",
-            "system_fingerprint": "fp_8bda4d3a2c",
+            "system_fingerprint": "<is_present>",
             "token_usage": {
               "completion_tokens": 15,
               "completion_tokens_details": {
@@ -898,7 +898,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -988,7 +988,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
@@ -1141,7 +1141,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -1227,7 +1227,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -1359,7 +1359,7 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "fp_8bda4d3a2c",
+          "system_fingerprint": "<is_present>",
           "token_usage": {
             "completion_tokens": 15,
             "completion_tokens_details": {
@@ -1524,7 +1524,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_8bda4d3a2c",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -1851,7 +1851,7 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "fp_8bda4d3a2c",
+          "system_fingerprint": "<is_present>",
           "token_usage": {
             "completion_tokens": 15,
             "completion_tokens_details": {
@@ -1917,7 +1917,7 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "fp_8bda4d3a2c",
+          "system_fingerprint": "<is_present>",
           "token_usage": {
             "completion_tokens": "<is_present>",
             "completion_tokens_details": {
