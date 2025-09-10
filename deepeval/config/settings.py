@@ -18,7 +18,7 @@ from pydantic import AnyUrl, SecretStr, field_validator, confloat
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Any, Dict, Optional, NamedTuple
 
-from deepeval.utils import parse_bool
+from deepeval.config.utils import parse_bool
 
 
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
@@ -151,6 +151,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "info"
     PYTHONPATH: str = "."
     CONFIDENT_REGION: Optional[str] = None
+    CONFIDENT_OPEN_BROWSER: Optional[bool] = True
 
     #
     # CLI
@@ -272,6 +273,14 @@ class Settings(BaseSettings):
     GRPC_VERBOSITY: Optional[str] = None
     GRPC_TRACE: Optional[str] = None
     ERROR_REPORTING: Optional[bool] = None
+    IGNORE_DEEPEVAL_ERRORS: Optional[bool] = None
+    SKIP_DEEPEVAL_MISSING_PARAMS: Optional[bool] = None
+    DEEPEVAL_VERBOSE_MODE: Optional[bool] = None
+    ENABLE_DEEPEVAL_CACHE: Optional[bool] = None
+    CONFIDENT_TRACE_FLUSH: Optional[bool] = None
+    CONFIDENT_TRACE_ENVIRONMENT: Optional[str] = "development"
+    CONFIDENT_TRACE_VERBOSE: Optional[bool] = True
+    CONFIDENT_SAMPLE_RATE: Optional[float] = 1.0
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = None
 
     ##############
@@ -279,6 +288,9 @@ class Settings(BaseSettings):
     ##############
 
     @field_validator(
+        "CONFIDENT_OPEN_BROWSER",
+        "CONFIDENT_TRACE_FLUSH",
+        "CONFIDENT_TRACE_VERBOSE",
         "USE_OPENAI_MODEL",
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
@@ -298,6 +310,10 @@ class Settings(BaseSettings):
         "TRANSFORMERS_NO_ADVISORY_WARNINGS",
         "CUDA_LAUNCH_BLOCKING",
         "ERROR_REPORTING",
+        "IGNORE_DEEPEVAL_ERRORS",
+        "SKIP_DEEPEVAL_MISSING_PARAMS",
+        "DEEPEVAL_VERBOSE_MODE",
+        "ENABLE_DEEPEVAL_CACHE",
         mode="before",
     )
     @classmethod
@@ -321,6 +337,7 @@ class Settings(BaseSettings):
         "OPENAI_COST_PER_INPUT_TOKEN",
         "OPENAI_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
+        "CONFIDENT_SAMPLE_RATE",
         mode="before",
     )
     @classmethod
@@ -330,6 +347,15 @@ class Settings(BaseSettings):
         s = str(v).strip().lower()
         if s in {"", "none", "null"}:
             return None
+        return float(v)
+
+    @field_validator("CONFIDENT_SAMPLE_RATE")
+    @classmethod
+    def _validate_sample_rate(cls, v):
+        if v is None:
+            return None
+        if not (0.0 <= float(v) <= 1.0):
+            raise ValueError("CONFIDENT_SAMPLE_RATE must be between 0 and 1")
         return float(v)
 
     @field_validator("DEEPEVAL_DEFAULT_SAVE", mode="before")
@@ -379,9 +405,15 @@ class Settings(BaseSettings):
     # Persistence support #
     #######################
     class _SettingsEditCtx:
-        def __init__(self, settings: "Settings", save: Optional[str]):
+        def __init__(
+            self,
+            settings: "Settings",
+            save: Optional[str],
+            persist: Optional[bool],
+        ):
             self._s = settings
             self._save = save
+            self._persist = persist
             self._before: Dict[str, Any] = {}
             self.result: Optional[PersistResult] = None
 
@@ -429,29 +461,30 @@ class Settings(BaseSettings):
             # .deepeval JSON support
             #
 
-            for k in changed_keys:
-                legacy_member = _find_legacy_enum(k)
-                if legacy_member is None:
-                    continue  # skip if not a defined as legacy field
+            if self._persist is not False:
+                for k in changed_keys:
+                    legacy_member = _find_legacy_enum(k)
+                    if legacy_member is None:
+                        continue  # skip if not a defined as legacy field
 
-                val = updates[k]
-                # Remove from JSON if unset
-                if val is None:
-                    KEY_FILE_HANDLER.remove_key(legacy_member)
-                    continue
+                    val = updates[k]
+                    # Remove from JSON if unset
+                    if val is None:
+                        KEY_FILE_HANDLER.remove_key(legacy_member)
+                        continue
 
-                # Never store secrets in the JSON keystore
-                if _is_secret_key(self._s, k):
-                    continue
+                    # Never store secrets in the JSON keystore
+                    if _is_secret_key(self._s, k):
+                        continue
 
-                # For booleans, the legacy store expects "YES"/"NO"
-                if isinstance(val, bool):
-                    KEY_FILE_HANDLER.write_key(
-                        legacy_member, "YES" if val else "NO"
-                    )
-                else:
-                    # store as string
-                    KEY_FILE_HANDLER.write_key(legacy_member, str(val))
+                    # For booleans, the legacy store expects "YES"/"NO"
+                    if isinstance(val, bool):
+                        KEY_FILE_HANDLER.write_key(
+                            legacy_member, "YES" if val else "NO"
+                        )
+                    else:
+                        # store as string
+                        KEY_FILE_HANDLER.write_key(legacy_member, str(val))
 
             #
             # dotenv store
@@ -459,7 +492,9 @@ class Settings(BaseSettings):
 
             # defer import to avoid cyclics
             handled, path = update_settings_and_persist(
-                updates, save=self._save
+                updates,
+                save=self._save,
+                persist_dotenv=(False if self._persist is False else True),
             )
             self.result = PersistResult(handled, path, updates)
             return False
@@ -489,17 +524,26 @@ class Settings(BaseSettings):
                 on = k == target_key
                 # dotenv persistence will serialize to "1"/"0"
                 setattr(self._s, k, on)
+                if self._persist is not False:
+                    # legacy json persistence will serialize to "YES"/"NO"
+                    legacy_member = _find_legacy_enum(k)
+                    if legacy_member is not None:
+                        KEY_FILE_HANDLER.write_key(
+                            legacy_member, "YES" if on else "NO"
+                        )
 
-                # legacy json persistence will serialize to "YES"/"NO"
-                legacy_member = _find_legacy_enum(k)
-                if legacy_member is not None:
-                    KEY_FILE_HANDLER.write_key(
-                        legacy_member, "YES" if on else "NO"
-                    )
+    def edit(
+        self, *, save: Optional[str] = None, persist: Optional[bool] = None
+    ):
+        """Context manager for atomic, persisted updates.
 
-    def edit(self, *, save: Optional[str] = None):
-        """Context manager for atomic, persisted updates."""
-        return self._SettingsEditCtx(self, save)
+        Args:
+            save: 'dotenv[:path]' to explicitly write to a dotenv file.
+                  None (default) respects DEEPEVAL_DEFAULT_SAVE if set.
+            persist: If False, do not write (dotenv, JSON), update runtime only.
+                     If True or None, normal persistence rules apply.
+        """
+        return self._SettingsEditCtx(self, save, persist)
 
     def set_model_provider(self, target, *, save: Optional[str] = None):
         """

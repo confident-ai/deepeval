@@ -21,91 +21,13 @@ from rich.console import Console, Theme
 
 from deepeval.confident.api import set_confident_api_key
 from deepeval.constants import CONFIDENT_OPEN_BROWSER
-
-
-_TRUTHY = frozenset({"1", "true", "t", "yes", "y", "on", "enable", "enabled"})
-_FALSY = frozenset({"0", "false", "f", "no", "n", "off", "disable", "disabled"})
-
-
-def parse_bool(value: Any, default: bool = False) -> bool:
-    """
-    Parse an arbitrary value into a boolean using env style semantics.
-
-    Truthy tokens (case-insensitive, quotes/whitespace ignored):
-      1, true, t, yes, y, on, enable, enabled
-    Falsy tokens:
-      0, false, f, no, n, off, disable, disabled
-
-    - bool -> returned as is
-    - None -> returns `default`
-    - int/float -> False if == 0, else True
-    - str/other -> matched against tokens above; non-matching -> `default`
-
-    Args:
-        value: Value to interpret.
-        default: Value to return if `value` is None or doesn’t match any token.
-
-    Returns:
-        The interpreted boolean.
-    """
-    if isinstance(value, bool):
-        return value
-    if value is None:
-        return default
-    if isinstance(value, (int, float)):
-        return value != 0
-
-    s = str(value).strip().strip('"').strip("'").lower()
-    if not s:
-        return default
-    if s in _TRUTHY:
-        return True
-    if s in _FALSY:
-        return False
-    return default
-
-
-def get_env_bool(key: str, default: bool = False) -> bool:
-    """
-    Read an environment variable and parse it as a boolean using `parse_bool`.
-
-    Args:
-        key: Environment variable name.
-        default: Returned when the variable is unset or does not match any token.
-
-    Returns:
-        Parsed boolean value.
-    """
-    return parse_bool(os.getenv(key), default)
-
-
-def bool_to_env_str(value: bool) -> str:
-    """
-    Canonicalize a boolean to the env/dotenv string form: "1" or "0".
-
-    Args:
-        value: Boolean to serialize.
-
-    Returns:
-        "1" if True, "0" if False.
-    """
-    return "1" if bool(value) else "0"
-
-
-def set_env_bool(key: str, value: Optional[bool] = False) -> None:
-    """
-    Set an environment variable to a canonical boolean string ("1" or "0").
-
-    Args:
-        key: The environment variable name to set.
-        value: The boolean value to store. If None, it is treated as False.
-               True -> "1", False/None -> "0".
-
-    Notes:
-        - This function always overwrites the variable in `os.environ`.
-        - Use `get_env_bool` to read back and parse the value safely.
-    """
-    os.environ[key] = bool_to_env_str(bool(value))
+from deepeval.config.settings import get_settings
+from deepeval.config.utils import (
+    parse_bool,
+    get_env_bool,
+    bool_to_env_str,
+    set_env_bool,
+)
 
 
 def get_lcs(seq1, seq2):
@@ -226,47 +148,54 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
 
 
 def set_should_skip_on_missing_params(yes: bool):
-    set_env_bool("SKIP_DEEPEVAL_MISSING_PARAMS", yes)
+    s = get_settings()
+    with s.edit(persist=False):
+        s.SKIP_DEEPEVAL_MISSING_PARAMS = yes
 
 
-def should_ignore_errors():
-    return get_env_bool("IGNORE_DEEPEVAL_ERRORS")
+def should_ignore_errors() -> bool:
+    return bool(get_settings().IGNORE_DEEPEVAL_ERRORS)
 
 
 def should_skip_on_missing_params() -> bool:
-    return get_env_bool("SKIP_DEEPEVAL_MISSING_PARAMS")
+    return bool(get_settings().SKIP_DEEPEVAL_MISSING_PARAMS)
 
 
 def set_should_ignore_errors(yes: bool):
-    set_env_bool("IGNORE_DEEPEVAL_ERRORS", yes)
+    s = get_settings()
+    with s.edit(persist=False):
+        s.IGNORE_DEEPEVAL_ERRORS = yes
 
 
-def should_verbose_print() -> Optional[bool]:
-    return (
-        True if get_env_bool("DEEPEVAL_VERBOSE_MODE", default=False) else None
-    )
+def should_verbose_print() -> bool:
+    return bool(get_settings().DEEPEVAL_VERBOSE_MODE)
 
 
 def set_verbose_mode(yes: Optional[bool]):
-    if yes:
-        set_env_bool("DEEPEVAL_VERBOSE_MODE", True)
+    s = get_settings()
+    with s.edit(persist=False):
+        s.DEEPEVAL_VERBOSE_MODE = yes
 
 
 def set_identifier(identifier: Optional[str]):
     if identifier:
-        os.environ["DEEPEVAL_IDENTIFIER"] = identifier
+        s = get_settings()
+        with s.edit(persist=False):
+            s.DEEPEVAL_IDENTIFIER = identifier
 
 
 def get_identifier() -> Optional[str]:
-    return os.getenv("DEEPEVAL_IDENTIFIER")
+    return get_settings().DEEPEVAL_IDENTIFIER
 
 
-def should_use_cache():
-    return get_env_bool("ENABLE_DEEPEVAL_CACHE")
+def should_use_cache() -> bool:
+    return bool(get_settings().ENABLE_DEEPEVAL_CACHE)
 
 
 def set_should_use_cache(yes: bool):
-    set_env_bool("ENABLE_DEEPEVAL_CACHE", yes)
+    s = get_settings()
+    with s.edit(persist=False):
+        s.ENABLE_DEEPEVAL_CACHE = yes
 
 
 def login(api_key: str):
@@ -315,7 +244,7 @@ def is_in_ci_env() -> bool:
 
 
 def open_browser(url: str):
-    if get_env_bool(CONFIDENT_OPEN_BROWSER, default=True):
+    if get_settings().CONFIDENT_OPEN_BROWSER:
         if not is_in_ci_env():
             webbrowser.open(url)
 
@@ -513,8 +442,11 @@ def wait_free_gpu(gb_needed):
 def select_freer_gpu():
     freer_gpu = str(get_freer_gpu())
     print("Will use GPU: %s" % (freer_gpu))
-    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "" + freer_gpu
+
+    s = get_settings()
+    with s.edit(persist=False):
+        s.CUDA_LAUNCH_BLOCKING = True
+        s.CUDA_VISIBLE_DEVICES = freer_gpu
     return freer_gpu
 
 

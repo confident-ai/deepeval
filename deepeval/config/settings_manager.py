@@ -61,6 +61,7 @@ def update_settings_and_persist(
     *,
     save: Optional[str] = None,
     unset: Iterable[StrOrEnum] = (),
+    persist_dotenv: bool = True,
 ) -> Tuple[bool, Optional[Path]]:
     """
     Write and update:
@@ -114,6 +115,9 @@ def update_settings_and_persist(
         os.environ[k] = v
     for k in to_unset:
         os.environ.pop(k, None)
+
+    if not persist_dotenv:
+        return True, None
 
     # persist to dotenv if save is ok
     ok, path = _resolve_save_path(save)
