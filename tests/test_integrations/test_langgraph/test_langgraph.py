@@ -2,7 +2,7 @@ import sys
 import os
 import tempfile
 import time
-from deepeval.tracing.utils import compare_trace_files
+from tests.test_integrations.utils import compare_trace_files
 from langgraph_app import execute_agent
 
 def test_exec_agent_logs():
