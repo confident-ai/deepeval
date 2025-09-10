@@ -53,12 +53,12 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
+    dump_body_to_json_file,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
-from tests.test_integrations.utils import test_trace_body
 
 
 class TraceManager:
@@ -407,8 +407,8 @@ class TraceManager:
                         api = Api(api_key=self.confident_api_key)
 
                     mode = get_trace_mode()
-                    if mode and mode in ("gen", "test", "mark_dynamic"):
-                        test_trace_body(body, mode)
+                    if mode == "gen":
+                        dump_body_to_json_file(body)
                     else:  
                         api_response, link = await api.a_send_request(
                             method=HttpMethods.POST,
@@ -503,8 +503,8 @@ class TraceManager:
                     api = Api(api_key=self.confident_api_key)
                     
                     mode = get_trace_mode()
-                    if mode and mode in ("gen", "test", "mark_dynamic"):
-                        test_trace_body(body, mode)
+                    if mode == "gen":
+                        dump_body_to_json_file(body)
                     else: 
                         _, link = api.send_request(
                             method=HttpMethods.POST,

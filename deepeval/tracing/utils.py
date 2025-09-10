@@ -399,3 +399,58 @@ def compare_trace_files(expected_file_path: str, actual_file_path: str):
 
     print(f"Test trace body passed: {expected_file_path}")
     return
+
+def dump_body_to_json_file(body: Dict[str, Any], file_path: Optional[str] = None) -> str:
+    """
+    Serialize `body` to a JSON file using the same resolution rules as test_trace_body's gen mode.
+    Priority:
+    1) file_path param (if provided)
+    2) --file-name flag (if present in sys.argv)
+    3) <entry_script_basename>.json in the entry script's directory
+
+    Returns the absolute path of the written JSON file.
+    """
+    entry_file = None
+    try:
+        cmd0 = sys.argv[0] if sys.argv else None
+        if cmd0 and cmd0.endswith(".py"):
+            entry_file = cmd0
+        else:
+            for frame_info in reversed(inspect.stack()):
+                fp = frame_info.filename
+                if fp and fp.endswith(".py") and "deepeval/tracing" not in fp and "site-packages" not in fp:
+                    entry_file = fp
+                    break
+    except Exception:
+        entry_file = None
+
+    if not entry_file:
+        entry_file = "unknown.py"
+
+    abs_entry = os.path.abspath(entry_file)
+    dir_path = os.path.dirname(abs_entry)
+
+    file_arg = None
+    try:
+        for idx, arg in enumerate(sys.argv):
+            if isinstance(arg, str) and arg.startswith("--file-name="):
+                file_arg = arg.split("=", 1)[1].strip().strip('"').strip("'")
+                break
+            if arg == "--file-name" and idx + 1 < len(sys.argv):
+                file_arg = str(sys.argv[idx + 1]).strip().strip('"').strip("'")
+                break
+    except Exception:
+        file_arg = None
+
+    if file_path:
+        dst_path = os.path.abspath(file_path)
+    elif file_arg:
+        dst_path = os.path.abspath(file_arg)
+    else:
+        base_name = os.path.splitext(os.path.basename(abs_entry))[0]
+        dst_path = os.path.join(dir_path, f"{base_name}.json")
+
+    actual_body = make_json_serializable(body)
+    with open(dst_path, "w", encoding="utf-8") as f:
+        json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+    return dst_path
