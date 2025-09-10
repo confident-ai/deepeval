@@ -1,7 +1,5 @@
 from agents import add_trace_processor
 import asyncio
-import random
-import requests
 from deepeval.openai_agents import Runner, Agent, function_tool, DeepEvalTracingProcessor
 
 from deepeval.prompt import Prompt
@@ -103,5 +101,5 @@ async def main():
     print(f"Agent Response: {response}")
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+def execute_agent():
+    return asyncio.run(main())
