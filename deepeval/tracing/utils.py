@@ -123,46 +123,10 @@ def replace_self_with_class_name(obj):
 
 from tests.test_integrations.utils import PLACEHOLDER
 
-def _mark_differences(expected, actual):
-    if expected == PLACEHOLDER:
-        return PLACEHOLDER
-    if isinstance(expected, dict) and isinstance(actual, dict):
-        keys = set(expected.keys()) | set(actual.keys())
-        out = {}
-        for k in keys:
-            ev = expected.get(k)
-            av = actual.get(k)
-            if ev == PLACEHOLDER:
-                out[k] = PLACEHOLDER
-            elif k not in expected:
-                out[k] = PLACEHOLDER
-            elif k not in actual:
-                out[k] = ev
-            else:
-                if isinstance(ev, dict) and isinstance(av, dict):
-                    out[k] = _mark_differences(ev, av)
-                elif isinstance(ev, list) and isinstance(av, list):
-                    out[k] = _mark_differences(ev, av)
-                else:
-                    out[k] = ev if ev == av else PLACEHOLDER
-        return out
-    if isinstance(expected, list) and isinstance(actual, list):
-        if len(expected) != len(actual):
-            return PLACEHOLDER
-        marked = []
-        for ev, av in zip(expected, actual):
-            if isinstance(ev, (dict, list)) or isinstance(av, (dict, list)):
-                marked.append(_mark_differences(ev, av))
-            else:
-                marked.append(ev if ev == av else PLACEHOLDER)
-        return marked
-    return expected if expected == actual else PLACEHOLDER
-
-def get_trace_mode(args: Optional[Sequence[str]] = None) -> Optional[str]:
+def get_trace_mode() -> Optional[str]:
     mode = None
     try:
-        if args is None:
-            args = sys.argv
+        args = sys.argv
         for idx, arg in enumerate(args):
             if isinstance(arg, str) and arg.startswith("--mode="):
                 mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
