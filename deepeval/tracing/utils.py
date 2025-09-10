@@ -236,12 +236,11 @@ def test_trace_body(body: Dict[str, Any], mode: str):
         file_arg = None
 
     if file_arg:
-        file_name = os.path.basename(file_arg)
+        # Respect the provided path (absolute or relative) instead of forcing the entry file's directory
+        file_path = os.path.abspath(file_arg)
     else:
         base_name = os.path.splitext(os.path.basename(abs_entry))[0]
-        file_name = f"{base_name}.json"
-
-    file_path = os.path.join(dir_path, file_name)
+        file_path = os.path.join(dir_path, f"{base_name}.json")
 
     actual_body = make_json_serializable(body)
 
@@ -344,13 +343,13 @@ def run_in_mode(mode: str, func: Callable, *args, file_path: Optional[str] = Non
 
         if not replaced:
             new_argv.append(f"--mode={mode}")
-        # Inject file path only for test mode if not already specified and provided
-        if mode == "test" and not file_specified and file_path:
+        # Inject file path for test/gen modes if not already specified and provided
+        if mode in ("test", "gen") and not file_specified and file_path:
             new_argv.append(f"--file-name={file_path}")
 
         sys.argv = new_argv
         result = func(*args, **kwargs)
-        time.sleep(10)
+        time.sleep(15)
         return result
     finally:
         sys.argv = original_argv
@@ -359,3 +358,44 @@ def run_in_mode(mode: str, func: Callable, *args, file_path: Optional[str] = Non
 def run_in_test_mode(func: Callable, *args, **kwargs):
     """Convenience wrapper for run_in_mode("test", ...)."""
     return run_in_mode("test", func, *args, **kwargs)
+
+
+def compare_trace_files(expected_file_path: str, actual_file_path: str):
+    """
+    Compare two JSON trace files applying placeholder semantics.
+    Raises AssertionError with a unified diff on mismatch.
+    """
+    if not os.path.exists(expected_file_path):
+        raise AssertionError(f"Assertion file not found: {expected_file_path}")
+    if not os.path.exists(actual_file_path):
+        raise AssertionError(f"Actual file not found: {actual_file_path}")
+
+    with open(expected_file_path, "r", encoding="utf-8") as f:
+        expected = json.load(f)
+    with open(actual_file_path, "r", encoding="utf-8") as f:
+        actual = json.load(f)
+
+    try:
+        expected_aligned = _apply_placeholders(expected, actual)
+    except AssertionError as e:
+        raise AssertionError(str(e))
+
+    if actual != expected_aligned:
+        try:
+            expected_str = json.dumps(expected_aligned, ensure_ascii=False, indent=2, sort_keys=True)
+            actual_str = json.dumps(actual, ensure_ascii=False, indent=2, sort_keys=True)
+            diff = "\n".join(
+                difflib.unified_diff(
+                    expected_str.splitlines(),
+                    actual_str.splitlines(),
+                    fromfile="expected",
+                    tofile="actual",
+                    lineterm="",
+                )
+            )
+        except Exception:
+            diff = "<diff unavailable>"
+        raise AssertionError(f"Trace body does not match expected file: {expected_file_path}\n{diff}")
+
+    print(f"Test trace body passed: {expected_file_path}")
+    return

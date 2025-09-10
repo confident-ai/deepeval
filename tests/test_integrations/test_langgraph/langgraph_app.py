@@ -21,5 +21,3 @@ def execute_agent():
             "callbacks": [CallbackHandler(metric_collection="task_completion")]
         },
     )
-
-run_in_test_mode(func=execute_agent, file_path="langgraph_app.json")

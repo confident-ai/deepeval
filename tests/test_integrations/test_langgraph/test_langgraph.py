@@ -1,11 +1,16 @@
-from deepeval.tracing.utils import run_in_test_mode
+import os
+import tempfile
+from deepeval.tracing.utils import run_in_mode, compare_trace_files
 from langgraph_app import execute_agent
 
-def test_exec_agent_logs(capsys):
-        run_in_test_mode(execute_agent, file_path="langgraph_app.json")
-        out, err = capsys.readouterr()
+def test_exec_agent_logs():
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
+        tmp_path = tmp.name
+        tmp.close()
         try:
-            assert "Trace body does not match expected file:" not in out
-        except AssertionError:
-            print(out)
-            raise
+                run_in_mode("gen", execute_agent, file_path=tmp_path)
+                expected_path = os.path.join(os.path.dirname(__file__), "langgraph_app.json")
+                compare_trace_files(expected_path, tmp_path)
+        finally:
+                if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
