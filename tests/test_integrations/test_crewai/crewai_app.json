@@ -46,8 +46,8 @@
         "token_usage": {
           "cached_prompt_tokens": 0,
           "completion_tokens": "<is_present>",
-          "prompt_tokens": 168,
-          "successful_requests": 1,
+          "prompt_tokens": "<is_present>",
+          "successful_requests": "<is_present>",
           "total_tokens": "<is_present>"
         }
       },
@@ -130,8 +130,8 @@
     "token_usage": {
       "cached_prompt_tokens": 0,
       "completion_tokens": "<is_present>",
-      "prompt_tokens": 168,
-      "successful_requests": 1,
+      "prompt_tokens": "<is_present>",
+      "successful_requests": "<is_present>",
       "total_tokens": "<is_present>"
     }
   },
