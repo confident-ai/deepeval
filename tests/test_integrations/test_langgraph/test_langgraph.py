@@ -1,6 +1,6 @@
+import sys
 import os
 import tempfile
-import sys
 import time
 from deepeval.tracing.utils import compare_trace_files
 from langgraph_app import execute_agent
@@ -15,7 +15,7 @@ def test_exec_agent_logs():
             original_argv = list(sys.argv)
             sys.argv = ["--mode=gen", f"--file-name={tmp_path}"]
             execute_agent()
-            time.sleep(15)
+            time.sleep(10)
             sys.argv = original_argv
             expected_path = os.path.join(os.path.dirname(__file__), "langgraph_app.json")
             compare_trace_files(expected_path, tmp_path)
