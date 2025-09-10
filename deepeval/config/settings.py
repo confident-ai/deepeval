@@ -1,3 +1,14 @@
+"""
+Central config for DeepEval.
+
+- Autoloads dotenv files into os.environ without overwriting existing vars
+  (order: .env -> .env.{APP_ENV} -> .env.local).
+- Defines the Pydantic `Settings` model and `get_settings()` singleton.
+- Exposes an `edit()` context manager that diffs changes and persists them to
+  dotenv and the legacy JSON keystore (non-secret keys only), with validators and
+  type coercion.
+"""
+
 import os
 import re
 
@@ -5,12 +16,49 @@ from dotenv import dotenv_values
 from pathlib import Path
 from pydantic import AnyUrl, SecretStr, field_validator, confloat
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Dict, Literal, Optional
+from typing import Any, Dict, Optional, NamedTuple
 
 from deepeval.utils import parse_bool
 
 
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
+
+
+def _find_legacy_enum(env_key: str):
+    from deepeval.key_handler import (
+        ModelKeyValues,
+        EmbeddingKeyValues,
+        KeyValues,
+    )
+
+    enums = (ModelKeyValues, EmbeddingKeyValues, KeyValues)
+
+    for enum in enums:
+        try:
+            return getattr(enum, env_key)
+        except AttributeError:
+            pass
+
+    for enum in enums:
+        for member in enum:
+            if member.value == env_key:
+                return member
+    return None
+
+
+def _is_secret_key(settings: "Settings", env_key: str) -> bool:
+    field = type(settings).model_fields.get(env_key)
+    if not field:
+        return False
+    if field.annotation is SecretStr:
+        return True
+    # Optional[SecretStr] etc.
+    from typing import get_origin, get_args, Union
+
+    origin = get_origin(field.annotation)
+    if origin is Union:
+        return any(arg is SecretStr for arg in get_args(field.annotation))
+    return False
 
 
 def _read_env_file(path: Path) -> Dict[str, str]:
@@ -26,8 +74,8 @@ def _read_env_file(path: Path) -> Dict[str, str]:
 
 
 def _discover_app_env_from_files(env_dir: Path) -> Optional[str]:
-    # prefer base .env, then .env.local for APP_ENV discovery
-    for name in (".env", ".env.local"):
+    # prefer base .env.local, then .env for APP_ENV discovery
+    for name in (".env.local", ".env"):
         v = _read_env_file(env_dir / name).get("APP_ENV")
         if v:
             v = str(v).strip()
@@ -60,7 +108,7 @@ def autoload_dotenv() -> None:
     base = _read_env_file(env_dir / ".env")
     local = _read_env_file(env_dir / ".env.local")
 
-    # Pick APP_ENV (process -> .env -> .env.local -> default)
+    # Pick APP_ENV (process -> .env.local -> .env -> default)
     app_env = (
         os.getenv("APP_ENV") or _discover_app_env_from_files(env_dir) or None
     )
@@ -82,8 +130,18 @@ def autoload_dotenv() -> None:
             os.environ[k] = v
 
 
+class PersistResult(NamedTuple):
+    handled: bool
+    path: Optional[Path]
+    updated: Dict[str, Any]  # typed, validated and changed
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(extra="ignore", case_sensitive=True)
+    model_config = SettingsConfigDict(
+        extra="ignore",
+        case_sensitive=True,
+        validate_assignment=True,
+    )
 
     #
     # General
@@ -92,6 +150,7 @@ class Settings(BaseSettings):
     APP_ENV: str = "dev"
     LOG_LEVEL: str = "info"
     PYTHONPATH: str = "."
+    CONFIDENT_REGION: Optional[str] = None
 
     #
     # CLI
@@ -126,6 +185,7 @@ class Settings(BaseSettings):
     # Model Keys
     #
 
+    API_KEY: Optional[SecretStr] = None
     CONFIDENT_API_KEY: Optional[SecretStr] = None
 
     # General
@@ -214,6 +274,10 @@ class Settings(BaseSettings):
     ERROR_REPORTING: Optional[bool] = None
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = None
 
+    ##############
+    # Validators #
+    ##############
+
     @field_validator(
         "USE_OPENAI_MODEL",
         "USE_AZURE_OPENAI",
@@ -249,7 +313,7 @@ class Settings(BaseSettings):
         if not s:
             return None
         # expand ~ and env vars;
-        # don't resolve to avoid failing on non-existent paths
+        # but don't resolve to avoid failing on non-existent paths
         return Path(os.path.expandvars(os.path.expanduser(s)))
 
     # Treat "", "none", "null" as None for numeric overrides
@@ -293,9 +357,165 @@ class Settings(BaseSettings):
         if v is None:
             return None
         s = str(v).strip().upper()
-        # allow some friendly aliases; keep or trim as you like
+
+        # adds friendly aliases
         if s in {"READ_ONLY", "READ-ONLY", "READONLY", "RO"}:
             return "READ_ONLY"
         raise ValueError(
             "DEEPEVAL_FILE_SYSTEM must be READ_ONLY (case-insensitive)."
         )
+
+    @field_validator("CONFIDENT_REGION", mode="before")
+    @classmethod
+    def _normalize_upper(cls, v):
+        if v is None:
+            return None
+        s = str(v).strip()
+        if not s:
+            return None
+        return s.upper()
+
+    #######################
+    # Persistence support #
+    #######################
+    class _SettingsEditCtx:
+        def __init__(self, settings: "Settings", save: Optional[str]):
+            self._s = settings
+            self._save = save
+            self._before: Dict[str, Any] = {}
+            self.result: Optional[PersistResult] = None
+
+        @property
+        def s(self) -> "Settings":
+            return self._s
+
+        def __enter__(self) -> "Settings._SettingsEditCtx":
+            # snapshot current state
+            self._before = {
+                k: getattr(self._s, k) for k in type(self._s).model_fields
+            }
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            if exc_type is not None:
+                return False  # don’t persist on error
+
+            from deepeval.config.settings_manager import (
+                update_settings_and_persist,
+                _normalize_for_env,
+            )
+
+            # lazy import legacy JSON store deps
+            from deepeval.key_handler import KEY_FILE_HANDLER
+
+            # compute diff of changed fields
+            after = {k: getattr(self._s, k) for k in type(self._s).model_fields}
+
+            before_norm = {
+                k: _normalize_for_env(v) for k, v in self._before.items()
+            }
+            after_norm = {k: _normalize_for_env(v) for k, v in after.items()}
+
+            changed_keys = {
+                k for k in after_norm if after_norm[k] != before_norm.get(k)
+            }
+            if not changed_keys:
+                self.result = PersistResult(False, None, {})
+                return False
+
+            updates = {k: after[k] for k in changed_keys}
+
+            #
+            # .deepeval JSON support
+            #
+
+            for k in changed_keys:
+                legacy_member = _find_legacy_enum(k)
+                if legacy_member is None:
+                    continue  # skip if not a defined as legacy field
+
+                val = updates[k]
+                # Remove from JSON if unset
+                if val is None:
+                    KEY_FILE_HANDLER.remove_key(legacy_member)
+                    continue
+
+                # Never store secrets in the JSON keystore
+                if _is_secret_key(self._s, k):
+                    continue
+
+                # For booleans, the legacy store expects "YES"/"NO"
+                if isinstance(val, bool):
+                    KEY_FILE_HANDLER.write_key(
+                        legacy_member, "YES" if val else "NO"
+                    )
+                else:
+                    # store as string
+                    KEY_FILE_HANDLER.write_key(legacy_member, str(val))
+
+            #
+            # dotenv store
+            #
+
+            # defer import to avoid cyclics
+            handled, path = update_settings_and_persist(
+                updates, save=self._save
+            )
+            self.result = PersistResult(handled, path, updates)
+            return False
+
+        def switch_model_provider(self, target) -> None:
+            """
+            Flip all USE_* toggles so that the one matching the target is True and the rest are False.
+            Also,  mirror this change into the legacy JSON keystore as "YES"/"NO".
+
+            `target` may be an Enum with `.value`, such as ModelKeyValues.USE_OPENAI_MODEL
+            or a plain string like "USE_OPENAI_MODEL".
+            """
+            from deepeval.key_handler import KEY_FILE_HANDLER
+
+            # Target key is the env style string, such as "USE_OPENAI_MODEL"
+            target_key = getattr(target, "value", str(target))
+
+            use_fields = [
+                k for k in type(self._s).model_fields if k.startswith("USE_")
+            ]
+            if target_key not in use_fields:
+                raise ValueError(
+                    f"{target_key} is not a recognized USE_* field"
+                )
+
+            for k in use_fields:
+                on = k == target_key
+                # dotenv persistence will serialize to "1"/"0"
+                setattr(self._s, k, on)
+
+                # legacy json persistence will serialize to "YES"/"NO"
+                legacy_member = _find_legacy_enum(k)
+                if legacy_member is not None:
+                    KEY_FILE_HANDLER.write_key(
+                        legacy_member, "YES" if on else "NO"
+                    )
+
+    def edit(self, *, save: Optional[str] = None):
+        """Context manager for atomic, persisted updates."""
+        return self._SettingsEditCtx(self, save)
+
+    def set_model_provider(self, target, *, save: Optional[str] = None):
+        """
+        Convenience wrapper to switch providers outside of an existing edit() block.
+        Returns the PersistResult.
+        """
+        with self.edit(save=save) as ctx:
+            ctx.switch_model_provider(target)
+        return ctx.result
+
+
+_settings_singleton: Optional[Settings] = None
+
+
+def get_settings() -> Settings:
+    global _settings_singleton
+    if _settings_singleton is None:
+        _settings_singleton = Settings()
+    return _settings_singleton
