@@ -3,9 +3,26 @@ import sys
 import time
 import json
 import difflib
+import re
+from datetime import datetime
 from typing import Callable
 
 PLACEHOLDER = "<is_present>"
+TIME_KEYS = {"startTime", "endTime"}
+
+def _is_iso_timestamp(value: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    # Matches YYYY-MM-DDTHH:MM:SS(.ffffff)?(Z|+HH:MM|-HH:MM)
+    pattern = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$")
+    if not pattern.match(value):
+        return False
+    try:
+        # Python's fromisoformat doesn't accept 'Z'; replace with +00:00
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return True
+    except ValueError:
+        return False
 
 def generate_test_json(func: Callable, name: str, *args, **kwargs):
     target_path = os.path.abspath(name)
@@ -130,6 +147,14 @@ def _apply_placeholders(expected, actual, path=""):
         out = {}
         for k, v in expected.items():
             sub_path = f"{path}.{k}" if path else k
+            # For time keys, always validate format and accept actual value
+            if k in TIME_KEYS:
+                if k not in actual:
+                    raise AssertionError(f"Missing required key at {sub_path}")
+                if not _is_iso_timestamp(actual[k]):
+                    raise AssertionError(f"Invalid ISO timestamp at {sub_path}: {actual[k]!r}")
+                out[k] = actual[k]
+                continue
             if v == PLACEHOLDER:
                 if k not in actual:
                     raise AssertionError(f"Missing required key at {sub_path}")
@@ -157,6 +182,10 @@ def _mark_differences(expected, actual):
         for k in keys:
             ev = expected.get(k)
             av = actual.get(k)
+            # For time keys, keep the original value and don't mark as placeholder
+            if k in TIME_KEYS:
+                out[k] = ev
+                continue
             if ev == PLACEHOLDER:
                 out[k] = PLACEHOLDER
             elif k not in expected:

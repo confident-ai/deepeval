@@ -2,7 +2,7 @@
   "agentSpans": [],
   "baseSpans": [
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:40.556Z",
       "input": {
         "messages": [
           {
@@ -108,7 +108,7 @@
             "additional_kwargs": {
               "refusal": null
             },
-            "content": "The weather in San Francisco is sunny!",
+            "content": "<is_present>",
             "example": false,
             "id": "<is_present>",
             "invalid_tool_calls": [],
@@ -120,7 +120,7 @@
               "service_tier": "default",
               "system_fingerprint": "fp_8bda4d3a2c",
               "token_usage": {
-                "completion_tokens": 9,
+                "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -132,7 +132,7 @@
                   "audio_tokens": 0,
                   "cached_tokens": 0
                 },
-                "total_tokens": 95
+                "total_tokens": "<is_present>"
               }
             },
             "tool_calls": [],
@@ -147,19 +147,19 @@
                 "audio": 0,
                 "reasoning": 0
               },
-              "output_tokens": 9,
-              "total_tokens": 95
+              "output_tokens": "<is_present>",
+              "total_tokens": "<is_present>"
             }
           }
         ]
       },
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:38.304Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:40.555Z",
       "input": {
         "messages": [
           {
@@ -274,7 +274,7 @@
             "additional_kwargs": {
               "refusal": null
             },
-            "content": "The weather in San Francisco is sunny!",
+            "content": "<is_present>",
             "example": false,
             "id": "<is_present>",
             "invalid_tool_calls": [],
@@ -286,7 +286,7 @@
               "service_tier": "default",
               "system_fingerprint": "fp_8bda4d3a2c",
               "token_usage": {
-                "completion_tokens": 9,
+                "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -298,7 +298,7 @@
                   "audio_tokens": 0,
                   "cached_tokens": 0
                 },
-                "total_tokens": 95
+                "total_tokens": "<is_present>"
               }
             },
             "tool_calls": [],
@@ -313,20 +313,20 @@
                 "audio": 0,
                 "reasoning": 0
               },
-              "output_tokens": 9,
-              "total_tokens": 95
+              "output_tokens": "<is_present>",
+              "total_tokens": "<is_present>"
             }
           }
         ]
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.665Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:40.555Z",
       "input": {
         "messages": [
           {
@@ -417,7 +417,7 @@
             "additional_kwargs": {
               "refusal": null
             },
-            "content": "The weather in San Francisco is sunny!",
+            "content": "<is_present>",
             "example": false,
             "id": "<is_present>",
             "invalid_tool_calls": [],
@@ -429,7 +429,7 @@
               "service_tier": "default",
               "system_fingerprint": "fp_8bda4d3a2c",
               "token_usage": {
-                "completion_tokens": 9,
+                "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -441,7 +441,7 @@
                   "audio_tokens": 0,
                   "cached_tokens": 0
                 },
-                "total_tokens": 95
+                "total_tokens": "<is_present>"
               }
             },
             "tool_calls": [],
@@ -456,8 +456,8 @@
                 "audio": 0,
                 "reasoning": 0
               },
-              "output_tokens": 9,
-              "total_tokens": 95
+              "output_tokens": "<is_present>",
+              "total_tokens": "<is_present>"
             }
           }
         ],
@@ -484,13 +484,13 @@
       "name": "should_continue",
       "output": "__end__",
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:40.555Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:40.555Z",
       "input": {
         "messages": [
           {
@@ -604,7 +604,7 @@
         "additional_kwargs": {
           "refusal": null
         },
-        "content": "The weather in San Francisco is sunny!",
+        "content": "<is_present>",
         "example": false,
         "id": "<is_present>",
         "invalid_tool_calls": [],
@@ -616,7 +616,7 @@
           "service_tier": "default",
           "system_fingerprint": "fp_8bda4d3a2c",
           "token_usage": {
-            "completion_tokens": 9,
+            "completion_tokens": "<is_present>",
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -628,7 +628,7 @@
               "audio_tokens": 0,
               "cached_tokens": 0
             },
-            "total_tokens": 95
+            "total_tokens": "<is_present>"
           }
         },
         "tool_calls": [],
@@ -643,18 +643,18 @@
             "audio": 0,
             "reasoning": 0
           },
-          "output_tokens": 9,
-          "total_tokens": 95
+          "output_tokens": "<is_present>",
+          "total_tokens": "<is_present>"
         }
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.665Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.665Z",
       "input": {
         "messages": [
           {
@@ -857,13 +857,13 @@
         }
       ],
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.665Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:40.555Z",
       "input": {
         "messages": [
           {
@@ -978,7 +978,7 @@
             "additional_kwargs": {
               "refusal": null
             },
-            "content": "The weather in San Francisco is sunny!",
+            "content": "<is_present>",
             "example": false,
             "id": "<is_present>",
             "invalid_tool_calls": [],
@@ -990,7 +990,7 @@
               "service_tier": "default",
               "system_fingerprint": "fp_8bda4d3a2c",
               "token_usage": {
-                "completion_tokens": 9,
+                "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -1002,7 +1002,7 @@
                   "audio_tokens": 0,
                   "cached_tokens": 0
                 },
-                "total_tokens": 95
+                "total_tokens": "<is_present>"
               }
             },
             "tool_calls": [],
@@ -1017,20 +1017,20 @@
                 "audio": 0,
                 "reasoning": 0
               },
-              "output_tokens": 9,
-              "total_tokens": 95
+              "output_tokens": "<is_present>",
+              "total_tokens": "<is_present>"
             }
           }
         ]
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.665Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.664Z",
       "input": [
         {
           "args": {
@@ -1076,13 +1076,13 @@
         ]
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.663Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.662Z",
       "input": {
         "messages": [
           {
@@ -1186,13 +1186,13 @@
         ]
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:38.304Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.662Z",
       "input": {
         "messages": [
           {
@@ -1295,13 +1295,13 @@
         "<is_present>"
       ],
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.662Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.662Z",
       "input": {
         "messages": [
           {
@@ -1402,13 +1402,13 @@
         }
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:38.306Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:38.306Z",
       "input": {
         "messages": [
           {
@@ -1459,13 +1459,13 @@
         }
       ],
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:38.306Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.662Z",
       "input": {
         "messages": [
           {
@@ -1569,13 +1569,13 @@
         ]
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:38.304Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     }
   ],
-  "endTime": "<is_present>",
+  "endTime": "2025-09-10T13:12:40.556Z",
   "environment": "development",
   "input": {
     "messages": [
@@ -1587,7 +1587,7 @@
   },
   "llmSpans": [
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:40.554Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -1689,20 +1689,20 @@
       "model": "gpt-4o-mini-2024-07-18",
       "name": "ChatOpenAI",
       "output": {
-        "content": "The weather in San Francisco is sunny!",
+        "content": "<is_present>",
         "role": "AI",
         "tool_calls": []
       },
-      "outputTokenCount": 9.0,
+      "outputTokenCount": "<is_present>",
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.665Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.661Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -1811,7 +1811,7 @@
       "outputTokenCount": 15.0,
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:38.306Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
@@ -1907,7 +1907,7 @@
         "additional_kwargs": {
           "refusal": null
         },
-        "content": "The weather in San Francisco is sunny!",
+        "content": "<is_present>",
         "example": false,
         "id": "<is_present>",
         "invalid_tool_calls": [],
@@ -1919,7 +1919,7 @@
           "service_tier": "default",
           "system_fingerprint": "fp_8bda4d3a2c",
           "token_usage": {
-            "completion_tokens": 9,
+            "completion_tokens": "<is_present>",
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1931,7 +1931,7 @@
               "audio_tokens": 0,
               "cached_tokens": 0
             },
-            "total_tokens": 95
+            "total_tokens": "<is_present>"
           }
         },
         "tool_calls": [],
@@ -1946,18 +1946,18 @@
             "audio": 0,
             "reasoning": 0
           },
-          "output_tokens": 9,
-          "total_tokens": 95
+          "output_tokens": "<is_present>",
+          "total_tokens": "<is_present>"
         }
       }
     ]
   },
   "retrieverSpans": [],
-  "startTime": "<is_present>",
+  "startTime": "2025-09-10T13:12:38.304Z",
   "status": "SUCCESS",
   "toolSpans": [
     {
-      "endTime": "<is_present>",
+      "endTime": "2025-09-10T13:12:39.664Z",
       "input": "{'city': 'San Francisco'}",
       "metadata": {
         "color": "green",
@@ -1995,7 +1995,7 @@
         "type": "tool"
       },
       "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
+      "startTime": "2025-09-10T13:12:39.664Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"

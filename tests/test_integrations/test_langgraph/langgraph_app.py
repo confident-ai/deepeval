@@ -1,6 +1,5 @@
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain import CallbackHandler
-from deepeval.tracing.utils import run_in_test_mode
 
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
