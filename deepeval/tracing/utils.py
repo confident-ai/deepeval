@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 from collections import deque
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Sequence
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
@@ -183,22 +183,24 @@ def _mark_differences(expected, actual):
         return marked
     return expected if expected == actual else _PLACEHOLDER
 
-def test_trace_body(body: Dict[str, Any]):
+def get_trace_mode(args: Optional[Sequence[str]] = None) -> Optional[str]:
     mode = None
     try:
-        for idx, arg in enumerate(sys.argv):
+        if args is None:
+            args = sys.argv
+        for idx, arg in enumerate(args):
             if isinstance(arg, str) and arg.startswith("--mode="):
                 mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
                 break
-            if arg == "--mode" and idx + 1 < len(sys.argv):
-                mode = str(sys.argv[idx + 1]).strip().strip('"').strip("'").lower()
+            if arg == "--mode" and idx + 1 < len(args):
+                mode = str(args[idx + 1]).strip().strip('"').strip("'").lower()
                 break
     except Exception:
         mode = None
+    
+    return mode
 
-    if mode not in ("gen", "test", "mark_dynamic"):
-        return
-
+def test_trace_body(body: Dict[str, Any], mode: str):
     entry_file = None
     try:
         cmd0 = sys.argv[0] if sys.argv else None

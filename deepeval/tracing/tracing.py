@@ -45,6 +45,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
+    get_trace_mode,
     replace_self_with_class_name,
     make_json_serializable,
     perf_counter_to_datetime,
@@ -405,28 +406,24 @@ class TraceManager:
                     else:
                         api = Api(api_key=self.confident_api_key)
 
-                    try:
-                        test_trace_body(body)
-                    except Exception as e:
-                        if isinstance(e, AssertionError):
-                            raise e
-                        else:
-                            pass
-                        
-                    api_response, link = await api.a_send_request(
-                        method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACES_ENDPOINT,
-                        body=body,
-                    )
-                    queue_size = self._trace_queue.qsize()
-                    in_flight = len(self._in_flight_tasks)
-                    status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.SUCCESS,
-                        message=f"Successfully posted trace {status}",
-                        description=link,
-                        environment=self.environment,
-                    )
+                    mode = get_trace_mode()
+                    if mode and mode in ("gen", "test", "mark_dynamic"):
+                        test_trace_body(body, mode)
+                    else:  
+                        api_response, link = await api.a_send_request(
+                            method=HttpMethods.POST,
+                            endpoint=Endpoints.TRACES_ENDPOINT,
+                            body=body,
+                        )
+                        queue_size = self._trace_queue.qsize()
+                        in_flight = len(self._in_flight_tasks)
+                        status = f"({queue_size} trace{'s' if queue_size!=1 else ''} remaining in queue, {in_flight} in flight)"
+                        self._print_trace_status(
+                            trace_worker_status=TraceWorkerStatus.SUCCESS,
+                            message=f"Successfully posted trace {status}",
+                            description=link,
+                            environment=self.environment,
+                        )
                 elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
                     # Main thread gone → to be flushed
                     remaining_trace_request_bodies.append(body)
@@ -504,26 +501,23 @@ class TraceManager:
             with capture_send_trace():
                 try:
                     api = Api(api_key=self.confident_api_key)
-                    try: 
-                        test_trace_body(body)
-                    except Exception as e:
-                        if isinstance(e, AssertionError):
-                            raise e
-                        else:
-                            pass
                     
-                    _, link = api.send_request(
-                        method=HttpMethods.POST,
-                        endpoint=Endpoints.TRACES_ENDPOINT,
-                        body=body,
-                    )
-                    qs = self._trace_queue.qsize()
-                    self._print_trace_status(
-                        trace_worker_status=TraceWorkerStatus.SUCCESS,
-                        message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
-                        description=link,
-                        environment=self.environment,
-                    )
+                    mode = get_trace_mode()
+                    if mode and mode in ("gen", "test", "mark_dynamic"):
+                        test_trace_body(body, mode)
+                    else: 
+                        _, link = api.send_request(
+                            method=HttpMethods.POST,
+                            endpoint=Endpoints.TRACES_ENDPOINT,
+                            body=body,
+                        )
+                        qs = self._trace_queue.qsize()
+                        self._print_trace_status(
+                            trace_worker_status=TraceWorkerStatus.SUCCESS,
+                            message=f"Successfully posted trace ({qs} traces remaining in queue, 1 in flight)",
+                            description=link,
+                            environment=self.environment,
+                        )
                 except Exception as e:
                     qs = self._trace_queue.qsize()
                     self._print_trace_status(
