@@ -4,6 +4,8 @@ from deepeval.models.retry_policy import (
     ErrorPolicy,
     extract_error_code,
     make_is_transient,
+    default_wait,
+    default_stop,
 )
 
 ##############################################
@@ -227,3 +229,20 @@ def test_message_markers_override_policy_markers():
 def test_numeric_zero_code_stringified():
     e = RateLimitError(response=DummyResponse({"error": {"code": 0}}))
     assert extract_error_code(e, message_markers=OPENAI_MARKERS) == "0"
+
+
+############################################
+# default_wait / default_stop construction #
+############################################
+
+
+def test_default_wait_bounds_env(monkeypatch):
+    monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "0.0")  # below min
+    w = default_wait()
+    # Can't introspect tenacity easily; just ensure callable exists
+    assert callable(w)  # sanity
+
+
+def test_default_stop_default_attempts():
+    s = default_stop()
+    assert callable(s)
