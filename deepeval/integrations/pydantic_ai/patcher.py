@@ -1,4 +1,5 @@
 import functools
+from deepeval.tracing.types import LlmOutput, LlmToolCall
 from pydantic_ai.agent import AgentRunResult
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import AgentSpan, LlmSpan
@@ -9,7 +10,7 @@ from deepeval.metrics.base_metric import BaseMetric
 try:
     from pydantic_ai.agent import Agent
     from pydantic_ai.models import Model
-    from pydantic_ai.messages import ModelResponse, ModelRequest, ModelResponsePart
+    from pydantic_ai.messages import ModelResponse, ModelRequest, ModelResponsePart, TextPart, ToolCallPart, SystemPromptPart, ToolReturnPart, UserPromptPart
     pydantic_ai_installed = True
 except:
     pydantic_ai_installed = True
@@ -165,9 +166,29 @@ def patch_all():
     _patch_agent_run()
     _patch_agent_tool_decorator()
 
-def set_llm_span_attributes(llm_span: LlmSpan, request: List[ModelRequest], result: ModelResponse):
-    llm_span.input = [r.parts for r in request] # debug more on this
-    llm_span.output = result.parts
+def set_llm_span_attributes(llm_span: LlmSpan, requests: List[ModelRequest], result: ModelResponse):
+    
+    input = []
+    for request in requests:
+        for part in request.parts:
+            if isinstance(part, SystemPromptPart):
+                input.append({"role": "System", "content": part.content})
+            elif isinstance(part, UserPromptPart):
+                input.append({"role": "User", "content": part.content})
+            elif isinstance(part, ToolCallPart):
+                input.append({"role": "Tool Call", "name": part.tool_name, "content": part.args_as_json_str()})
+            elif isinstance(part, ToolReturnPart):
+                input.append({"role": "Tool Return", "name": part.tool_name, "content": part.model_response_str()})
+    llm_span.input = input
+
+    content = ""
+    tool_calls = []
+    for part in result.parts:
+        if isinstance(part, TextPart):
+            content += part.content + "\n"
+        elif isinstance(part, ToolCallPart):
+            tool_calls.append(LlmToolCall(name=part.tool_name, args=part.args_as_dict()))
+    llm_span.output = LlmOutput(role="Assistant", content=content, tool_calls=tool_calls)
     llm_span.tools_called = _extract_tools_called_from_llm_response(result.parts)
 
 def set_agent_span_attributes(agent_span: AgentSpan, result: AgentRunResult):
