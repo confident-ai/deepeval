@@ -1,11 +1,14 @@
 import os
 import pytest
 import shutil
+
 import deepeval.telemetry as telemetry_mod
 
+from pathlib import Path
 
-def _no_hidden_store_dir(path: Path):
-    deepeval_path = tmp_path / ".deepeval"
+
+def _no_hidden_store_dir(base: Path):
+    deepeval_path = base / ".deepeval"
     shutil.rmtree(deepeval_path, ignore_error=True)
     yield
 
