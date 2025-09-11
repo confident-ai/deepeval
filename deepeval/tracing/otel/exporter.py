@@ -30,6 +30,7 @@ from deepeval.tracing.otel.utils import (
     to_hex_string,
     parse_string,
     parse_list_of_strings,
+    post_test_run,
 )
 from deepeval.tracing import perf_epoch_bridge as peb
 from deepeval.tracing.types import TraceAttributes
@@ -80,7 +81,8 @@ class ConfidentSpanExporter(SpanExporter):
         self,
         spans: typing.Sequence[ReadableSpan],
         timeout_millis: int = 30000,
-        api_key: Optional[str] = None,  # dynamic api key
+        api_key: Optional[str] = None,  # dynamic api key,
+        _test_run_id: Optional[str] = None,
     ) -> SpanExportResult:
         # build forest of spans
         forest = self._build_span_forest(spans)
@@ -223,14 +225,24 @@ class ConfidentSpanExporter(SpanExporter):
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
                 # no removing span because it can be parent of other spans
 
-        # safely end all active traces
+        # safely end all active traces or return them for test runs
         active_traces_keys = list(trace_manager.active_traces.keys())
-        for trace_key in active_traces_keys:
-            set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
-            trace_manager.end_trace(trace_key)
-        trace_manager.clear_traces()
-
-        return SpanExportResult.SUCCESS
+        if _test_run_id:
+            traces = []
+            for trace_key in active_traces_keys:
+                set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
+                trace = trace_manager.get_trace_by_uuid(trace_key)
+                if trace:
+                    traces.append(trace)
+            trace_manager.clear_traces()
+            post_test_run(traces, _test_run_id)
+            return SpanExportResult.SUCCESS
+        else:
+            for trace_key in active_traces_keys:
+                set_trace_time(trace_manager.get_trace_by_uuid(trace_key))
+                trace_manager.end_trace(trace_key)
+            trace_manager.clear_traces()
+            return SpanExportResult.SUCCESS
 
     def _convert_readable_span_to_base_span(
         self, span: ReadableSpan
