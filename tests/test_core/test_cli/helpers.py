@@ -214,15 +214,17 @@ def assert_env_model_switched_to(
     path: Path, selected_model: ModelKeyValues | EmbeddingKeyValues
 ):
     env = read_dotenv_as_dict(path)
+    want_on, want_off = "1", "0"
     for k in USE_MODEL_KEYS:
+        got = env.get(k.value)
         if k == selected_model:
             assert (
-                env.get(k.value) == "YES"
-            ), f"Expected {k}=YES in {path}, got {env.get(k.value)!r}"
+                got == want_on
+            ), f"Expected {k}={want_on} in {path}, got {got!r}"
         else:
             assert (
-                env.get(k.value) == "NO"
-            ), f"Expected {k}=NO in {path}, got {env.get(k.value)!r}"
+                got == want_off
+            ), f"Expected {k}={want_off} in {path}, got {got!r}"
 
 
 def assert_deepeval_json_model_switched_to(

@@ -340,7 +340,7 @@ def test_azure_save_and_unset_roundtrip(env_path: Path):
     argv = build_args(
         "set-azure-openai",
         options={
-            "--openai-endpoint": "https://fake-endpoint.openai.azure.com",
+            "--openai-endpoint": "https://fake-endpoint.openai.azure.com/",
             "--openai-api-key": "sk-test-123",
             "--deployment-name": "fake-deployment",
             "--openai-api-version": "2024-01-01",
@@ -352,7 +352,7 @@ def test_azure_save_and_unset_roundtrip(env_path: Path):
     invoke_ok(app, argv)
     assert_deepeval_json_contains(
         {
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT: "https://fake-endpoint.openai.azure.com",
+            ModelKeyValues.AZURE_OPENAI_ENDPOINT: "https://fake-endpoint.openai.azure.com/",
             ModelKeyValues.OPENAI_API_VERSION: "2024-01-01",
             ModelKeyValues.AZURE_DEPLOYMENT_NAME: "fake-deployment",
             ModelKeyValues.AZURE_MODEL_NAME: "gpt-4o-mini",
@@ -366,7 +366,7 @@ def test_azure_save_and_unset_roundtrip(env_path: Path):
         env_path,
         {
             ModelKeyValues.AZURE_OPENAI_API_KEY: "sk-test-123",
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT: "https://fake-endpoint.openai.azure.com",
+            ModelKeyValues.AZURE_OPENAI_ENDPOINT: "https://fake-endpoint.openai.azure.com/",
             ModelKeyValues.OPENAI_API_VERSION: "2024-01-01",
             ModelKeyValues.AZURE_DEPLOYMENT_NAME: "fake-deployment",
             ModelKeyValues.AZURE_MODEL_NAME: "gpt-4o-mini",
@@ -380,7 +380,7 @@ def test_azure_save_and_unset_roundtrip(env_path: Path):
     argv = build_args(
         "set-azure-openai",
         options={
-            "--openai-endpoint": "https://new-endpoint.openai.azure.com",
+            "--openai-endpoint": "https://new-endpoint.openai.azure.com/",
             "--openai-api-key": "sk-updated",
             "--deployment-name": "fake-deployment",
             "--openai-api-version": "2024-01-01",
@@ -393,7 +393,7 @@ def test_azure_save_and_unset_roundtrip(env_path: Path):
         env_path,
         {
             ModelKeyValues.AZURE_OPENAI_API_KEY: "sk-updated",
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT: "https://new-endpoint.openai.azure.com",
+            ModelKeyValues.AZURE_OPENAI_ENDPOINT: "https://new-endpoint.openai.azure.com/",
         },
     )
     assert_no_dupes(
@@ -505,7 +505,7 @@ def test_ollama_model_save_and_unset(env_path: Path):
     assert_deepeval_json_contains(
         {
             ModelKeyValues.LOCAL_MODEL_NAME: "ollama-model",
-            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com/",
         }
     )
 
@@ -516,7 +516,7 @@ def test_ollama_model_save_and_unset(env_path: Path):
         {
             ModelKeyValues.LOCAL_MODEL_API_KEY: "ollama",
             ModelKeyValues.LOCAL_MODEL_NAME: "ollama-model",
-            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com/",
         },
     )
 
@@ -558,7 +558,7 @@ def test_ollama_embedding_model_save_and_unset(env_path: Path):
     assert_deepeval_json_contains(
         {
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "ollama-embedding-model",
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com/",
         }
     )
 
@@ -569,7 +569,7 @@ def test_ollama_embedding_model_save_and_unset(env_path: Path):
         {
             EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY: "ollama",
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "ollama-embedding-model",
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com/",
         },
     )
 
@@ -613,7 +613,7 @@ def test_local_model_save_and_unset(env_path: Path):
     assert_deepeval_json_contains(
         {
             ModelKeyValues.LOCAL_MODEL_NAME: "local-model",
-            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com/",
             ModelKeyValues.LOCAL_MODEL_FORMAT: "custom",
         }
     )
@@ -625,7 +625,7 @@ def test_local_model_save_and_unset(env_path: Path):
         {
             ModelKeyValues.LOCAL_MODEL_API_KEY: "local-key",
             ModelKeyValues.LOCAL_MODEL_NAME: "local-model",
-            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "https://fake-endpoint.example.com/",
             ModelKeyValues.LOCAL_MODEL_FORMAT: "custom",
         },
     )
@@ -678,7 +678,7 @@ def test_local_model_does_not_write_none_api_key_when_missing(env_path: Path):
     assert_deepeval_json_contains(
         {
             ModelKeyValues.LOCAL_MODEL_NAME: "local-model",
-            ModelKeyValues.LOCAL_MODEL_BASE_URL: "http://localhost:8000",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "http://localhost:8000/",
             ModelKeyValues.LOCAL_MODEL_FORMAT: "json",
         }
     )
@@ -689,7 +689,7 @@ def test_local_model_does_not_write_none_api_key_when_missing(env_path: Path):
         env_path,
         {
             ModelKeyValues.LOCAL_MODEL_NAME: "local-model",
-            ModelKeyValues.LOCAL_MODEL_BASE_URL: "http://localhost:8000",
+            ModelKeyValues.LOCAL_MODEL_BASE_URL: "http://localhost:8000/",
             ModelKeyValues.LOCAL_MODEL_FORMAT: "json",
         },
     )
@@ -909,7 +909,7 @@ def test_local_embeddings_save_and_unset(env_path: Path):
     assert_deepeval_json_contains(
         {
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "local-embeddings-model",
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com/",
         }
     )
 
@@ -920,7 +920,7 @@ def test_local_embeddings_save_and_unset(env_path: Path):
         {
             EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY: "local-embeddings-key",
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "local-embeddings-model",
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "https://fake-endpoint.example.com/",
         },
     )
 
@@ -972,7 +972,7 @@ def test_local_embeddings_does_not_write_none_api_key_when_missing(
     assert_deepeval_json_contains(
         {
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "emb-model",
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "http://localhost:9000",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "http://localhost:9000/",
         }
     )
     assert_deepeval_json_lacks([EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY])
@@ -981,7 +981,7 @@ def test_local_embeddings_does_not_write_none_api_key_when_missing(
         env_path,
         {
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME: "emb-model",
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "http://localhost:9000",
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL: "http://localhost:9000/",
         },
     )
     assert_env_lacks(
@@ -1242,7 +1242,7 @@ def test_litellm_model_save_and_unset(env_path: Path):
     assert_deepeval_json_contains(
         {
             ModelKeyValues.LITELLM_MODEL_NAME: "litellm-model",
-            ModelKeyValues.LITELLM_API_BASE: "https://fake-endpoint.example.com",
+            ModelKeyValues.LITELLM_API_BASE: "https://fake-endpoint.example.com/",
         }
     )
 
@@ -1253,7 +1253,7 @@ def test_litellm_model_save_and_unset(env_path: Path):
         {
             ModelKeyValues.LITELLM_API_KEY: "litellm-api-key",
             ModelKeyValues.LITELLM_MODEL_NAME: "litellm-model",
-            ModelKeyValues.LITELLM_API_BASE: "https://fake-endpoint.example.com",
+            ModelKeyValues.LITELLM_API_BASE: "https://fake-endpoint.example.com/",
         },
     )
 
@@ -1299,7 +1299,7 @@ def test_login_with_confident_api_key_implies_dotenv_save(env_path: Path):
     assert_env_contains(
         env_path,
         {
-            KeyValues.API_KEY: "ck-test-123",
+            KeyValues.API_KEY.value.upper(): "ck-test-123",
         },
     )
 
@@ -1318,7 +1318,7 @@ def test_login_with_confident_api_key_honors_custom_save_path(tmp_path: Path):
 
     assert_env_contains(
         custom_env,
-        {KeyValues.API_KEY: "ck-custom"},
+        {KeyValues.API_KEY.value.upper(): "ck-custom"},
     )
 
 
@@ -1333,7 +1333,9 @@ def test_logout_removes_dotenv_and_json_by_default(env_path: Path):
     invoke_ok(app, argv)
 
     # Sanity: login wrote api_key into dotenv; nothing in JSON
-    assert_env_contains(env_path, {KeyValues.API_KEY: "ck-test-xyz"})
+    assert_env_contains(
+        env_path, {KeyValues.API_KEY.value.upper(): "ck-test-xyz"}
+    )
     assert_deepeval_json_lacks([KeyValues.API_KEY])
 
     # Logout (no --save flag; should still remove from dotenv + JSON)
@@ -1360,7 +1362,9 @@ def test_logout_honors_custom_save_path(tmp_path: Path):
         save_path=custom_env,
     )
     invoke_ok(app, argv)
-    assert_env_contains(custom_env, {KeyValues.API_KEY: "ck-custom"})
+    assert_env_contains(
+        custom_env, {KeyValues.API_KEY.value.upper(): "ck-custom"}
+    )
     assert_deepeval_json_lacks([KeyValues.API_KEY])
 
     # Logout using the same custom path
@@ -1383,7 +1387,9 @@ def test_login_then_logout_roundtrip_default_path(env_path: Path):
         save_path=env_path,
     )
     invoke_ok(app, argv)
-    assert_env_contains(env_path, {KeyValues.API_KEY: "ck-roundtrip"})
+    assert_env_contains(
+        env_path, {KeyValues.API_KEY.value.upper(): "ck-roundtrip"}
+    )
     assert_deepeval_json_lacks([KeyValues.API_KEY])
 
     # Logout

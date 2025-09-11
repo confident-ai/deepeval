@@ -53,7 +53,7 @@ def test_cli_set_azure_does_not_persist_secrets_to_hidden_store(tmp_path: Path):
     assert data.get(ModelKeyValues.AZURE_MODEL_NAME.value) == "gpt-4o-mini"
     assert (
         data.get(ModelKeyValues.AZURE_OPENAI_ENDPOINT.value)
-        == "https://fake-endpoint.openai.azure.com"
+        == "https://fake-endpoint.openai.azure.com/"
     )
     assert data.get(ModelKeyValues.OPENAI_API_VERSION.value) == "2024-01-01"
     assert (
