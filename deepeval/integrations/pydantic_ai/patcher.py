@@ -1,5 +1,6 @@
 import functools
 from pydantic_ai.agent import AgentRunResult
+from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import AgentSpan, LlmSpan
 from deepeval.tracing.tracing import Observer
 from typing import List, Callable, Optional
@@ -38,7 +39,6 @@ def _create_patched_tool(func: Callable, metrics: Optional[List[BaseMetric]] = N
     import asyncio
     original_func = func
     
-    # Check if the function is async
     is_async = asyncio.iscoroutinefunction(original_func)
     
     if is_async:
@@ -87,11 +87,23 @@ def _patch_agent_run():
     original_run = Agent.run
 
     @functools.wraps(original_run)
-    async def wrapper(*args, **kwargs):
+    async def wrapper(
+        *args,
+        metric_collection: Optional[str] = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        trace_name: Optional[str] = None,
+        trace_tags: Optional[List[str]] = None,
+        trace_metadata: Optional[dict] = None,
+        trace_thread_id: Optional[str] = None,
+        trace_user_id: Optional[str] = None, 
+        **kwargs
+     ):
         with Observer(
             span_type="agent",
             func_name="Agent",
             function_kwargs={"input": args[1]},
+            metrics=metrics,
+            metric_collection=metric_collection,
         ) as observer:
             result = await original_run(*args, **kwargs)
             observer.update_span_properties = (
@@ -99,7 +111,18 @@ def _patch_agent_run():
                     agent_span, result
                 )
             )
-            observer.result = result
+            observer.result = result.output
+            current_trace = current_trace_context.get()
+            
+            current_trace.input = args[1]
+            current_trace.output = result.output
+
+            current_trace.name = trace_name
+            current_trace.tags = trace_tags
+            current_trace.metadata = trace_metadata
+            current_trace.thread_id = trace_thread_id
+            current_trace.user_id = trace_user_id
+            
         return result
 
     Agent.run = wrapper
