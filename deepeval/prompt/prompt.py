@@ -1,11 +1,12 @@
 from enum import Enum
-from typing import Optional, List
+from typing import Optional, List, Dict
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 import time
 import json
 import os
 from pydantic import BaseModel
+import asyncio
 
 from deepeval.prompt.api import (
     PromptHttpResponse,
@@ -16,8 +17,8 @@ from deepeval.prompt.api import (
 )
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-
 from deepeval.constants import HIDDEN_DIR
+from deepeval.utils import get_or_create_event_loop
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
 
@@ -64,6 +65,8 @@ class Prompt:
         self._text_template = template
         self._messages_template = messages_template
         self.version = None
+        self._polling_tasks: Dict[str, asyncio.Task] = {}
+        self._refresh_map: Dict[str, int] = {}
 
     def interpolate(self, **kwargs):
         if self._type == PromptType.TEXT:
@@ -123,8 +126,16 @@ class Prompt:
         except Exception as e:
             raise Exception(f"Error reading Prompt cache from disk: {e}")
 
-    def _write_to_cache(self):
-        if not self.alias or not self.version:
+    def _write_to_cache(
+        self,
+        version: Optional[str] = None,
+        text_template: Optional[str] = None,
+        messages_template: Optional[List[PromptMessage]] = None,
+        prompt_version_id: Optional[str] = None,
+        type: Optional[PromptType] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
+    ):
+        if not self.alias or not version:
             return
 
         cache_data = {}
@@ -140,14 +151,14 @@ class Prompt:
             cache_data[self.alias] = {}
 
         # Cache the prompt
-        cache_data[self.alias][self.version] = {
+        cache_data[self.alias][version] = {
             "alias": self.alias,
-            "version": self.version,
-            "template": self._text_template,
-            "messages_template": self._messages_template,
-            "prompt_version_id": self._prompt_version_id,
-            "type": self._type,
-            "interpolation_type": self._interpolation_type,
+            "version": version,
+            "template": text_template,
+            "messages_template": messages_template,
+            "prompt_version_id": prompt_version_id,
+            "type": type,
+            "interpolation_type": interpolation_type,
         }
 
         # Ensure directory exists
@@ -163,11 +174,21 @@ class Prompt:
         fallback_to_cache: bool = True,
         write_to_cache: bool = True,
         default_to_cache: bool = True,
+        refresh: Optional[int] = 60,
     ):
+        if refresh:
+            default_to_cache = True
+            write_to_cache = False
         if self.alias is None:
             raise TypeError(
                 "Unable to pull prompt from Confident AI when no alias is provided."
             )
+
+        # Manage background prompt polling
+        loop = get_or_create_event_loop()
+        loop.run_until_complete(
+            self.create_polling_task(version, refresh)
+        )
 
         if default_to_cache:
             try:
@@ -254,7 +275,14 @@ class Prompt:
                 description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Done! ({time_taken}s)",
             )
             if write_to_cache:
-                self._write_to_cache()
+                self._write_to_cache(
+                    version=version or "latest",
+                    text_template=response.text,
+                    messages_template=response.messages,
+                    prompt_version_id=response.promptVersionId,
+                    type=response.type,
+                    interpolation_type=response.interpolation_type,
+                )
 
     def push(
         self,
@@ -300,3 +328,63 @@ class Prompt:
                 "✅ Prompt successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"
             )
+
+    ############################################
+    ### Polling
+    ############################################
+
+    async def create_polling_task(
+        self,
+        version: Optional[str],
+        refresh: Optional[int] = 60,
+    ):
+        if version is None:
+            return
+
+        # If polling task doesn't exist, start it
+        polling_task: Optional[asyncio.Task] = self._polling_tasks.get(version)
+        if refresh:
+            self._refresh_map[version] = refresh
+            if not polling_task:
+                self._polling_tasks[version] = asyncio.create_task(
+                    self.poll(version)
+                )
+
+        # If invalid `refresh`, stop the task
+        else:
+            if polling_task:
+                polling_task.cancel()
+            self._polling_tasks.pop(version)
+            self._refresh_map.pop(version)
+
+    async def poll(self, version: Optional[str] = None):
+        api = Api()
+        while True:
+            try:
+                data, _ = api.send_request(
+                    method=HttpMethods.GET,
+                    endpoint=Endpoints.PROMPTS_ENDPOINT,
+                    params={
+                        "alias": self.alias,
+                        "version": version,
+                    },
+                )
+                response = PromptHttpResponse(
+                    promptVersionId=data["promptVersionId"],
+                    text=data.get("text", None),
+                    messages=data.get("messages", None),
+                    type=data["type"],
+                    interpolation_type=data["interpolationType"],
+                )
+                self._write_to_cache(
+                    version=version or "latest",
+                    text_template=response.text,
+                    messages_template=response.messages,
+                    prompt_version_id=response.promptVersionId,
+                    type=response.type,
+                    interpolation_type=response.interpolation_type,
+                )
+            except Exception as e:
+                pass
+
+            await asyncio.sleep(self._refresh_map[version])
