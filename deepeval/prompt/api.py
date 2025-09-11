@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 from enum import Enum
 from typing import List, Optional
 
@@ -19,6 +19,25 @@ class PromptType(Enum):
     TEXT = "TEXT"
     LIST = "LIST"
 
+class PromptVersion(BaseModel):
+    id: str
+    version: str
+    commit_message: str = Field(
+        serialization_alias="commitMessage", 
+        validation_alias=AliasChoices("commit_message", "commitMessage")
+    )
+
+class PromptVersionsHttpResponse(BaseModel):
+    text_versions: Optional[List[PromptVersion]] = Field(
+        None, 
+        serialization_alias="textVersions", 
+        validation_alias=AliasChoices("text_versions", "textVersions")
+    )
+    messages_versions: Optional[List[PromptVersion]] = Field(
+        None, 
+        serialization_alias="messagesVersions", 
+        validation_alias=AliasChoices("messages_versions", "messagesVersions")
+    )
 
 class PromptHttpResponse(BaseModel):
     promptVersionId: str
@@ -28,7 +47,6 @@ class PromptHttpResponse(BaseModel):
         serialization_alias="interpolationType"
     )
     type: PromptType
-
 
 class PromptPushRequest(BaseModel):
     alias: str

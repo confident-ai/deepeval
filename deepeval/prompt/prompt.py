@@ -14,6 +14,7 @@ from deepeval.prompt.api import (
     PromptType,
     PromptInterpolationType,
     PromptPushRequest,
+    PromptVersionsHttpResponse,
 )
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -64,9 +65,23 @@ class Prompt:
         self.alias = alias
         self._text_template = template
         self._messages_template = messages_template
-        self.version = None
+        self._version = None
         self._polling_tasks: Dict[str, asyncio.Task] = {}
         self._refresh_map: Dict[str, int] = {}
+
+    @property
+    def version(self):
+        if self._version is not None and self._version != "latest":
+            return self._version
+        versions = self.get_versions()
+        if len(versions) == 0:
+            return "latest"
+        else:
+            return versions[-1].version
+
+    @version.setter
+    def version(self, value):
+        self._version = value
 
     def interpolate(self, **kwargs):
         if self._type == PromptType.TEXT:
@@ -96,6 +111,20 @@ class Prompt:
             return interpolated_messages
         else:
             raise ValueError(f"Unsupported prompt type: {self._type}")
+    
+    def get_versions(self) -> List:
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
+            url_params={"alias": self.alias},
+        )
+        versions = PromptVersionsHttpResponse(**data)
+        return versions.text_versions or versions.messages_versions or []
 
     def _read_from_cache(
         self, alias: str, version: Optional[str] = None
