@@ -5,9 +5,23 @@ from opentelemetry.trace import Tracer as OTelTracer
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter,
-)
+
+try:
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter,
+    )
+    is_opentelemetry_installed = True
+except Exception:
+    is_opentelemetry_installed = False
+
+
+def is_opentelemetry_available():
+    if not is_opentelemetry_installed:
+        raise ImportError(
+            "OpenTelemetry SDK is not available. Please install it with `pip install opentelemetry-exporter-otlp-proto-http`."
+        )
+    return True
+
 from deepeval.confident.api import get_confident_api_key
 
 OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") else "https://otel.confident-ai.com"
@@ -36,6 +50,7 @@ class RunIdSpanProcessor(SpanProcessor):
         return True
 
 def init_global_test_run_tracer(api_key: Optional[str] = None):
+    is_opentelemetry_available()
     api_key = get_confident_api_key()
     if api_key is None:
         raise ValueError("CONFIDENT_API_KEY is not set")
