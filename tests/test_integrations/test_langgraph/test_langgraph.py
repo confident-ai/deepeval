@@ -20,4 +20,3 @@ def test_exec_agent_logs():
         finally:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
-                print(f"Removed temp file: {tmp_path}")

@@ -186,7 +186,7 @@ class TraceManager:
             mode = get_deepeval_trace_mode()
             if mode == "gen":
                 body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
-                dump_body_to_json_file(body, self.trace_body_path)
+                dump_body_to_json_file(body)
             # Post the trace to the server before removing it
             elif not self.evaluating:
                 self.post_trace(trace)
