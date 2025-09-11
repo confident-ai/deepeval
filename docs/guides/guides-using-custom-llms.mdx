@@ -697,7 +697,7 @@ pip install instructor
 ```python
 from pydantic import BaseModel
 from anthropic import Anthropic
-
+import instructor
 from deepeval.models import DeepEvalBaseLLM
 
 
@@ -730,6 +730,53 @@ class CustomClaudeOpus(DeepEvalBaseLLM):
     def get_model_name(self):
         return "Claude-3 Opus"
 ```
+
+### `mistral-{small,large,medium}-latest` through Mistral
+
+Begin by installing the `instructor` and `mistralai` packages via pip:
+
+```bash
+pip install instructor mistralai
+```
+
+```python
+from pydantic import BaseModel
+from anthropic import Anthropic
+from deepeval.models import DeepEvalBaseLLM
+from mistralai import Mistral
+import os
+
+class CustomMistral(DeepEvalBaseLLM):
+    def __init__(self):
+        self.model = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
+        self.llm = 'mistral-small-latest' # or 'mistral-large-latest' or 'mistral-medium-latest'
+
+    def load_model(self):
+        return self.model
+
+    def generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        client = self.load_model()
+        instructor_client = instructor.from_mistral(
+            client=client,
+            mode=instructor.Mode.MISTRAL_STRUCTURED_OUTPUTS
+        )
+        respo = instructor_client.messages.create(
+            model=self.llm,
+            messages=[
+                { 'role' : 'user', 'content' : prompt }
+            ],
+            response_model=schema
+        )
+        return respo
+
+    async def a_generate(self, prompt: str, schema: BaseModel) -> BaseModel:
+        return self.generate(prompt, schema)
+
+    def get_model_name(self):
+        return f"Custom Mistral Model ({this.llm})"
+
+```
+
 
 ### Others
 
