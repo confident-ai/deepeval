@@ -2,8 +2,9 @@ import functools
 from pydantic_ai.agent import AgentRunResult
 from deepeval.tracing.types import AgentSpan, LlmSpan
 from deepeval.tracing.tracing import Observer
-from typing import List, Callable
+from typing import List, Callable, Optional
 from deepeval.test_case.llm_test_case import ToolCall
+from deepeval.metrics.base_metric import BaseMetric
 try:
     from pydantic_ai.agent import Agent
     from pydantic_ai.models import Model
@@ -11,6 +12,45 @@ try:
     pydantic_ai_installed = True
 except:
     pydantic_ai_installed = True
+
+def _patch_agent_tool_decorator():
+    original_tool = Agent.tool
+    
+    @functools.wraps(original_tool)
+    def wrapper(*args, metrics: Optional[List[BaseMetric]] = None, metric_collection: Optional[str] = None, **kwargs):
+        # Case 1: Direct decoration - @agent.tool
+        if args and callable(args[0]):
+            patched_func = _create_patched_tool(args[0], metrics, metric_collection)
+            new_args = (patched_func,) + args[1:]
+            return original_tool(*new_args, **kwargs)
+        
+        # Case 2: Decoration with arguments - @agent.tool(metrics=..., metric_collection=...)
+        else:
+            # Return a decorator function that will receive the actual function
+            def decorator(func):
+                patched_func = _create_patched_tool(func, metrics, metric_collection)
+                return original_tool(*args, **kwargs)(patched_func)
+            return decorator
+    
+    Agent.tool = wrapper
+
+def _create_patched_tool(func: Callable, metrics: Optional[List[BaseMetric]] = None, metric_collection: Optional[str] = None):
+    original_func = func
+    @functools.wraps(original_func)
+    async def wrapper(*args, **kwargs):
+        with Observer(
+            span_type="tool",
+            func_name=original_func.__name__,
+            metrics=metrics,
+            metric_collection=metric_collection,
+            function_kwargs={"args": args, **kwargs},
+        ) as observer:
+            result = await original_func(*args, **kwargs)
+            observer.result = result
+        
+        return result
+
+    return wrapper
 
 def _patch_agent_init():
     original_init = Agent.__init__
@@ -72,6 +112,7 @@ def _patch_llm_model(model: Model):
 def patch_all():
     _patch_agent_init()
     _patch_agent_run()
+    _patch_agent_tool_decorator()
 
 def set_llm_span_attributes(llm_span: LlmSpan, request: List[ModelRequest], result: ModelResponse):
     llm_span.input = [r.parts for r in request] # debug more on this
