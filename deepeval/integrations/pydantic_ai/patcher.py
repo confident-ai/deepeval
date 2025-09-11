@@ -7,7 +7,7 @@ from deepeval.test_case.llm_test_case import ToolCall
 try:
     from pydantic_ai.agent import Agent
     from pydantic_ai.models import Model
-    from pydantic_ai.messages import ModelResponse, ModelRequest
+    from pydantic_ai.messages import ModelResponse, ModelRequest, ModelResponsePart
     pydantic_ai_installed = True
 except:
     pydantic_ai_installed = True
@@ -76,10 +76,33 @@ def patch_all():
 def set_llm_span_attributes(llm_span: LlmSpan, request: List[ModelRequest], result: ModelResponse):
     llm_span.input = [r.parts for r in request] # debug more on this
     llm_span.output = result.parts
+    llm_span.tools_called = _extract_tools_called_from_llm_response(result.parts)
 
 def set_agent_span_attributes(agent_span: AgentSpan, result: AgentRunResult):
     agent_span.tools_called = _extract_tools_called(result)
 
+# llm tools called
+def _extract_tools_called_from_llm_response(result: List[ModelResponsePart]) -> List[ToolCall]:
+    tool_calls = []
+    
+    # Loop through each ModelResponsePart
+    for part in result:
+        # Look for parts with part_kind="tool-call"
+        if hasattr(part, 'part_kind') and part.part_kind == "tool-call":
+            # Extract tool name and args from the ToolCallPart
+            tool_name = part.tool_name
+            input_parameters = part.args_as_dict() if hasattr(part, 'args_as_dict') else None
+            
+            # Create and append ToolCall object
+            tool_call = ToolCall(
+                name=tool_name,
+                input_parameters=input_parameters
+            )
+            tool_calls.append(tool_call)
+    
+    return tool_calls
+
+#TODO: llm tools called (reposne is present next message)
 def _extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
     tool_calls = []
     
