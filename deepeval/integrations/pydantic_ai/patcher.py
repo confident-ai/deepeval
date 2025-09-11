@@ -35,22 +35,42 @@ def _patch_agent_tool_decorator():
     Agent.tool = wrapper
 
 def _create_patched_tool(func: Callable, metrics: Optional[List[BaseMetric]] = None, metric_collection: Optional[str] = None):
+    import asyncio
     original_func = func
-    @functools.wraps(original_func)
-    async def wrapper(*args, **kwargs):
-        with Observer(
-            span_type="tool",
-            func_name=original_func.__name__,
-            metrics=metrics,
-            metric_collection=metric_collection,
-            function_kwargs={"args": args, **kwargs},
-        ) as observer:
-            result = await original_func(*args, **kwargs)
-            observer.result = result
-        
-        return result
-
-    return wrapper
+    
+    # Check if the function is async
+    is_async = asyncio.iscoroutinefunction(original_func)
+    
+    if is_async:
+        @functools.wraps(original_func)
+        async def async_wrapper(*args, **kwargs):
+            with Observer(
+                span_type="tool",
+                func_name=original_func.__name__,
+                metrics=metrics,
+                metric_collection=metric_collection,
+                function_kwargs={"args": args, **kwargs},
+            ) as observer:
+                result = await original_func(*args, **kwargs)
+                observer.result = result
+            
+            return result
+        return async_wrapper
+    else:
+        @functools.wraps(original_func)
+        def sync_wrapper(*args, **kwargs):
+            with Observer(
+                span_type="tool",
+                func_name=original_func.__name__,
+                metrics=metrics,
+                metric_collection=metric_collection,
+                function_kwargs={"args": args, **kwargs},
+            ) as observer:
+                result = original_func(*args, **kwargs)
+                observer.result = result
+            
+            return result
+        return sync_wrapper
 
 def _patch_agent_init():
     original_init = Agent.__init__
