@@ -9,6 +9,7 @@ import string
 import asyncio
 import nest_asyncio
 import uuid
+import math
 
 from contextvars import ContextVar
 from enum import Enum
@@ -565,11 +566,14 @@ def read_env_float(
         return default
     try:
         v = float(raw)
-        if min_value is not None and v < min_value:
-            return default
-        return v
     except Exception:
         return default
+
+    if not math.isfinite(v):
+        return default
+    if min_value is not None and v < min_value:
+        return default
+    return v
 
 
 my_theme = Theme(
