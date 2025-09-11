@@ -76,9 +76,14 @@ def _patch_agent_init():
     original_init = Agent.__init__
 
     @functools.wraps(original_init)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(
+        self, 
+        *args, 
+        llm_metric_collection: Optional[str] = None,
+        llm_metrics: Optional[List[BaseMetric]] = None,
+        **kwargs):
         result = original_init(self, *args, **kwargs)
-        _patch_llm_model(self._model) # runtime patch of the model
+        _patch_llm_model(self._model, llm_metric_collection, llm_metrics) # runtime patch of the model
         return result
 
     Agent.__init__ = wrapper
@@ -112,6 +117,7 @@ def _patch_agent_run():
                 )
             )
             observer.result = result.output
+            
             current_trace = current_trace_context.get()
             
             current_trace.input = args[1]
@@ -122,12 +128,12 @@ def _patch_agent_run():
             current_trace.metadata = trace_metadata
             current_trace.thread_id = trace_thread_id
             current_trace.user_id = trace_user_id
-            
+
         return result
 
     Agent.run = wrapper
 
-def _patch_llm_model(model: Model):
+def _patch_llm_model(model: Model, llm_metric_collection: Optional[str] = None, llm_metrics: Optional[List[BaseMetric]] = None):
     original_func = model.request
     try:
         model_name = model.model_name
@@ -140,6 +146,8 @@ def _patch_llm_model(model: Model):
             span_type="llm",
             func_name="LLM",
             observe_kwargs={"model": model_name},
+            metrics=llm_metrics,
+            metric_collection=llm_metric_collection,
         ) as observer:
             result = await original_func(*args, **kwargs)
             request = kwargs.get("messages", [])
