@@ -9,6 +9,8 @@ import atexit
 import queue
 import uuid
 import os
+import json
+import time
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -50,6 +52,8 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
+    dump_body_to_json_file,
+    get_deepeval_trace_mode,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -179,8 +183,12 @@ class TraceManager:
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
 
+            mode = get_deepeval_trace_mode()
+            if mode == "gen":
+                body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
+                dump_body_to_json_file(body)
             # Post the trace to the server before removing it
-            if not self.evaluating:
+            elif not self.evaluating:
                 self.post_trace(trace)
             else:
                 if self.evaluation_loop:
@@ -401,6 +409,7 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
+  
                     api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -492,6 +501,7 @@ class TraceManager:
             with capture_send_trace():
                 try:
                     api = Api(api_key=self.confident_api_key)
+                     
                     _, link = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,

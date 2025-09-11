@@ -1,10 +1,7 @@
 from agents import add_trace_processor
 import asyncio
-import random
-import requests
-from deepeval.openai_agents import DeepEvalTracingProcessor
-from deepeval.openai_agents import Runner, Agent
-from deepeval.openai_agents import function_tool
+from deepeval.openai_agents import Runner, Agent, function_tool, DeepEvalTracingProcessor
+
 from deepeval.prompt import Prompt
 
 add_trace_processor(DeepEvalTracingProcessor())
@@ -27,13 +24,13 @@ def get_current_weather(latitude: float, longitude: float) -> dict:
     """
     # Return random dummy weather data for testing purposes
     return {
-        "temperature_2m": round(random.uniform(-10, 35), 1),
-        "humidity": random.randint(20, 100),
-        "apparent_temperature": round(random.uniform(-15, 40), 1),
-        "precipitation": round(random.uniform(0, 20), 1),
-        "weather_code": random.choice([0, 1, 2, 3, 45, 48, 51, 61, 71, 80, 95]),
-        "wind_speed_10m": round(random.uniform(0, 30), 1),
-        "wind_direction_10m": random.randint(0, 360),
+        "temperature_2m": 22.5,
+        "humidity": 55,
+        "apparent_temperature": 21.0,
+        "precipitation": 0.0,
+        "weather_code": 1,
+        "wind_speed_10m": 5.2,
+        "wind_direction_10m": 180,
         "dummy": True,
     }
 
@@ -104,5 +101,5 @@ async def main():
     print(f"Agent Response: {response}")
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+def execute_agent():
+    return asyncio.run(main())
