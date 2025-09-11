@@ -121,21 +121,21 @@ def replace_self_with_class_name(obj):
     except:
         return f"<self>"
 
-def get_trace_mode() -> Optional[str]:
-    mode = None
+def get_deepeval_trace_mode() -> Optional[str]:
+    deepeval_trace_mode = None
     try:
         args = sys.argv
         for idx, arg in enumerate(args):
-            if isinstance(arg, str) and arg.startswith("--mode="):
-                mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
+            if isinstance(arg, str) and arg.startswith("--deepeval-trace-mode="):
+                deepeval_trace_mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
                 break
-            if arg == "--mode" and idx + 1 < len(args):
-                mode = str(args[idx + 1]).strip().strip('"').strip("'").lower()
+            if arg == "--deepeval-trace-mode" and idx + 1 < len(args):
+                deepeval_trace_mode = str(args[idx + 1]).strip().strip('"').strip("'").lower()
                 break
     except Exception:
-        mode = None
+        deepeval_trace_mode = None
     
-    return mode
+    return deepeval_trace_mode
 
 def dump_body_to_json_file(body: Dict[str, Any], file_path: Optional[str] = None) -> str:
     entry_file = None
@@ -161,10 +161,10 @@ def dump_body_to_json_file(body: Dict[str, Any], file_path: Optional[str] = None
     file_arg = None
     try:
         for idx, arg in enumerate(sys.argv):
-            if isinstance(arg, str) and arg.startswith("--file-name="):
+            if isinstance(arg, str) and arg.startswith("--deepeval-trace-file-name="):
                 file_arg = arg.split("=", 1)[1].strip().strip('"').strip("'")
                 break
-            if arg == "--file-name" and idx + 1 < len(sys.argv):
+            if arg == "--deepeval-trace-file-name" and idx + 1 < len(sys.argv):
                 file_arg = str(sys.argv[idx + 1]).strip().strip('"').strip("'")
                 break
     except Exception:
