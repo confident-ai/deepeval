@@ -1,5 +1,4 @@
 import pytest
-import test
 
 from typer.testing import CliRunner
 from tests.test_core.helpers import (
