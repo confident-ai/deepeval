@@ -258,51 +258,52 @@ from deepeval.test_run.api import LLMApiTestCase
 from deepeval.test_run.test_run import global_test_run_manager
 from typing import Optional
 
+
 def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
-        # Accept single trace or list of traces
-        if isinstance(traces, Trace):
-            traces = [traces]
+    # Accept single trace or list of traces
+    if isinstance(traces, Trace):
+        traces = [traces]
 
-        api_test_cases: List[LLMApiTestCase] = []
+    api_test_cases: List[LLMApiTestCase] = []
 
-        # Collect test cases from spans that have metric_collection
-        for trace in traces:
-            trace_api = trace_manager.create_trace_api(trace)
+    # Collect test cases from spans that have metric_collection
+    for trace in traces:
+        trace_api = trace_manager.create_trace_api(trace)
 
-            def dfs(span: BaseSpan):
-                if span.metric_collection:
-                    llm_test_case = LLMTestCase(
-                        input=str(span.input),
-                        actual_output=(
-                            str(span.output) if span.output is not None else None
-                        ),
-                        expected_output=span.expected_output,
-                        context=span.context,
-                        retrieval_context=span.retrieval_context,
-                        tools_called=span.tools_called,
-                        expected_tools=span.expected_tools,
-                    )
-                    api_case = create_api_test_case(
-                        test_case=llm_test_case,
-                        trace=trace_api,
-                        index=None,
-                    )
-                    if isinstance(api_case, LLMApiTestCase):
-                        api_case.metric_collection = span.metric_collection
-                        api_test_cases.append(api_case)
+        def dfs(span: BaseSpan):
+            if span.metric_collection:
+                llm_test_case = LLMTestCase(
+                    input=str(span.input),
+                    actual_output=(
+                        str(span.output) if span.output is not None else None
+                    ),
+                    expected_output=span.expected_output,
+                    context=span.context,
+                    retrieval_context=span.retrieval_context,
+                    tools_called=span.tools_called,
+                    expected_tools=span.expected_tools,
+                )
+                api_case = create_api_test_case(
+                    test_case=llm_test_case,
+                    trace=trace_api,
+                    index=None,
+                )
+                if isinstance(api_case, LLMApiTestCase):
+                    api_case.metric_collection = span.metric_collection
+                    api_test_cases.append(api_case)
 
-                for child in span.children or []:
-                    dfs(child)
+            for child in span.children or []:
+                dfs(child)
 
-            for root in trace.root_spans:
-                dfs(root)
+        for root in trace.root_spans:
+            dfs(root)
 
-        # Prepare and post TestRun using the global test run manager
-        test_run_manager = global_test_run_manager
-        test_run_manager.create_test_run(identifier=test_run_id)
-        test_run = test_run_manager.get_test_run()
+    # Prepare and post TestRun using the global test run manager
+    test_run_manager = global_test_run_manager
+    test_run_manager.create_test_run(identifier=test_run_id)
+    test_run = test_run_manager.get_test_run()
 
-        for case in api_test_cases:
-            test_run.add_test_case(case)
+    for case in api_test_cases:
+        test_run.add_test_case(case)
 
-        # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
+    # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented

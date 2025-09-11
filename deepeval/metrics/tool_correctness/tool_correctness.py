@@ -223,9 +223,13 @@ class ToolCorrectnessMetric(BaseMetric):
                 total_score += best_score
                 matched_called_tools.add(best_called_tool)
         return (
-            1.0 if not self.expected_tools and not self.tools_called
-            else 0.0 if not self.expected_tools
-            else total_score / len(self.expected_tools)
+            1.0
+            if not self.expected_tools and not self.tools_called
+            else (
+                0.0
+                if not self.expected_tools
+                else total_score / len(self.expected_tools)
+            )
         )
 
     # Consider ordering score

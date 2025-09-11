@@ -60,6 +60,7 @@ from deepeval.tracing.api import PromptApi
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
+
 class TraceManager:
     def __init__(self):
         self.traces: List[Trace] = []
@@ -187,7 +188,9 @@ class TraceManager:
 
             mode = get_deepeval_trace_mode()
             if mode == "gen":
-                body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
+                body = self.create_trace_api(trace).model_dump(
+                    by_alias=True, exclude_none=True
+                )
                 dump_body_to_json_file(body)
             # Post the trace to the server before removing it
             elif not self.evaluating:
@@ -247,13 +250,15 @@ class TraceManager:
             # This is a child span, find its parent and add it to the parent's children
             parent_span = self.get_span_by_uuid(span.parent_uuid)
             if parent_span:
-                
-                if parent_span.name == EVAL_DUMMY_SPAN_NAME: # ignored span for evaluation
+
+                if (
+                    parent_span.name == EVAL_DUMMY_SPAN_NAME
+                ):  # ignored span for evaluation
                     span.parent_uuid = None
                     trace.root_spans.remove(parent_span)
                     trace.root_spans.append(span)
                     return
-                
+
                 parent_span.children.append(span)
             else:
                 trace.root_spans.append(span)
@@ -415,7 +420,7 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
-  
+
                     api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -507,7 +512,7 @@ class TraceManager:
             with capture_send_trace():
                 try:
                     api = Api(api_key=self.confident_api_key)
-                     
+
                     _, link = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
