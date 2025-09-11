@@ -43,7 +43,7 @@ You'll also want to supply any additional arguments such as `retrieval_context` 
 The `ConversationalDAGMetric` can be used to evaluate entire conversations based on LLM-as-a-judge decision-trees.
 
 ```python
-from deepeval.dag import DeepAcyclicGraph
+from deepeval.metrics.dag import DeepAcyclicGraph
 from deepeval.metrics import ConversationalDAGMetric
 
 dag = DeepAcyclicGraph(root_nodes=[...])
