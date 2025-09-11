@@ -1,9 +1,9 @@
-from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
+import logging
+from tenacity import retry, before_sleep_log
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
-import openai
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
@@ -13,15 +13,26 @@ from deepeval.models.llms.openai_model import (
     model_pricing,
     log_retry_error,
 )
+from deepeval.models.retry_policy import (
+    default_wait,
+    default_stop,
+    retry_predicate,
+    AZURE_OPENAI_ERROR_POLICY,
+)
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
 
-retryable_exceptions = (
-    openai.RateLimitError,
-    openai.APIConnectionError,
-    openai.APITimeoutError,
-    openai.LengthFinishReasonError,
+
+logger = logging.getLogger(__name__)
+
+_base_retry_rules_kw = dict(
+    wait=default_wait(),
+    stop=default_stop(),
+    retry=retry_predicate(AZURE_OPENAI_ERROR_POLICY),
+    before_sleep=before_sleep_log(logger, logging.INFO),
+    after=log_retry_error,
 )
+retry_azure = retry(**_base_retry_rules_kw)
 
 
 class AzureOpenAIModel(DeepEvalBaseLLM):
@@ -67,11 +78,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
-        after=log_retry_error,
-    )
+    @retry_azure
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -130,11 +137,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
-        after=log_retry_error,
-    )
+    @retry_azure
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
@@ -199,11 +202,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_azure
     def generate_raw_response(
         self,
         prompt: str,
@@ -226,11 +225,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_azure
     async def a_generate_raw_response(
         self,
         prompt: str,
@@ -271,18 +266,21 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return f"Azure OpenAI ({self.model_name})"
 
     def load_model(self, async_mode: bool = False):
+        # ensure SDK retries are disabled and let Tenacity handle this via our retry policy
+        kwargs = dict(self.kwargs or {})
+        kwargs["max_retries"] = 0
         if not async_mode:
             return AzureOpenAI(
                 api_key=self.azure_openai_api_key,
                 api_version=self.openai_api_version,
                 azure_endpoint=self.azure_endpoint,
                 azure_deployment=self.deployment_name,
-                **self.kwargs,  # ← Keep this for client initialization
+                **kwargs,  # ← Keep this for client initialization
             )
         return AsyncAzureOpenAI(
             api_key=self.azure_openai_api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.deployment_name,
-            **self.kwargs,  # ← Keep this for client initialization
+            **kwargs,  # ← Keep this for client initialization
         )

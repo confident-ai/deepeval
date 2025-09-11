@@ -244,7 +244,12 @@ def retry_predicate(policy: ErrorPolicy, **kw):
 # Built-in policies
 # --------------------------
 OPENAI_MESSAGE_MARKERS: dict[str, tuple[str, ...]] = {
-    "insufficient_quota": ("insufficient_quota", "exceeded your current quota"),
+    "insufficient_quota": (
+        "insufficient_quota",
+        "insufficient quota",
+        "exceeded your current quota",
+        "requestquotaexceeded",
+    ),
 }
 
 try:
@@ -267,6 +272,8 @@ try:
 except Exception:  # pragma: no cover - OpenAI may not be installed in some envs
     OPENAI_ERROR_POLICY = None
 
+AZURE_OPENAI_ERROR_POLICY = OPENAI_ERROR_POLICY
+
 
 __all__ = [
     "ErrorPolicy",
@@ -277,4 +284,5 @@ __all__ = [
     "retry_predicate",
     "OPENAI_MESSAGE_MARKERS",
     "OPENAI_ERROR_POLICY",
+    "AZURE_OPENAI_ERROR_POLICY",
 ]
