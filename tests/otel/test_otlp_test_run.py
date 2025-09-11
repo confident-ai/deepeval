@@ -20,7 +20,9 @@ def tool_span(tracer: NoOpTracer, input: str):
         span.set_attribute("confident.span.type", "tool")
         span.set_attribute("confident.tool.description", "tool description")
         span.set_attribute("confident.span.input", json.dumps({"input": input}))
-        span.set_attribute("confident.span.output", json.dumps({"output": input}))
+        span.set_attribute(
+            "confident.span.output", json.dumps({"output": input})
+        )
         time.sleep(1)
 
 
@@ -49,7 +51,9 @@ def agent_span(tracer: NoOpTracer, input: str):
             ["llm_agent", "retriever_span", "tool_span"],
         )
         span.set_attribute("confident.span.input", json.dumps({"input": input}))
-        span.set_attribute("confident.span.output", json.dumps({"output": input}))
+        span.set_attribute(
+            "confident.span.output", json.dumps({"output": input})
+        )
         span.set_attribute(
             "confident.trace.metadata", json.dumps({"test_key": "test_value"})
         )
@@ -82,10 +86,14 @@ def llm_agent(tracer: NoOpTracer, input: str):
 def meta_agent(tracer: NoOpTracer, input: str):
     with tracer.start_as_current_span("custom_span") as span:
         span.set_attribute("confident.span.name", "custom_span")
-        span.set_attribute("confident.span.metric_collection", "test_collection_1")
+        span.set_attribute(
+            "confident.span.metric_collection", "test_collection_1"
+        )
         span.set_attribute("confident.span.input", "test_input")
         span.set_attribute("confident.span.output", "test_actual_output")
-        span.set_attribute("confident.span.expected_output", "test_expected_output")
+        span.set_attribute(
+            "confident.span.expected_output", "test_expected_output"
+        )
         span.set_attribute("confident.span.context", ["context1", "context2"])
         span.set_attribute(
             "confident.span.retrieval_context", ["context1", "context2"]
@@ -118,8 +126,12 @@ def meta_agent(tracer: NoOpTracer, input: str):
                 )
             ],
         )
-        span.set_attribute("confident.span.metadata", json.dumps({"key": "value"}))
-        span.set_attribute("confident.span.metric_collection", "test_collection_1")
+        span.set_attribute(
+            "confident.span.metadata", json.dumps({"key": "value"})
+        )
+        span.set_attribute(
+            "confident.span.metric_collection", "test_collection_1"
+        )
 
         span.set_attribute("confident.trace.name", "test_trace")
         span.set_attribute("confident.trace.input", "test_input")
@@ -161,7 +173,9 @@ def meta_agent(tracer: NoOpTracer, input: str):
             ],
         )
         span.set_attribute("confident.trace.tags", ["tag1", "tag2"])
-        span.set_attribute("confident.trace.metadata", json.dumps({"key": "value"}))
+        span.set_attribute(
+            "confident.trace.metadata", json.dumps({"key": "value"})
+        )
         span.set_attribute("confident.trace.thread_id", "123")
         span.set_attribute("confident.trace.user_id", "456")
         time.sleep(1)
@@ -177,6 +191,7 @@ def build_dataset():
 
 
 from deepeval.dataset.test_run_tracer import init_global_test_run_tracer
+
 
 def run_with_otlp(api_key: str):
     provider, tracer = init_global_test_run_tracer(api_key)

@@ -1142,7 +1142,7 @@ class EvaluationDataset:
 
             # sandwich start trace for OTEL
             if run_otel:
-                ctx = self._start_otel_test_run() # ignored span
+                ctx = self._start_otel_test_run()  # ignored span
                 ctx_token = attach(ctx)
 
             if async_config.run_async:
@@ -1181,7 +1181,7 @@ class EvaluationDataset:
                     if run_otel:
                         _tracer = check_tracer()
                         with _tracer.start_as_current_span(
-                            name = EVAL_DUMMY_SPAN_NAME,
+                            name=EVAL_DUMMY_SPAN_NAME,
                             context=ctx,
                         ):
                             yield golden
@@ -1228,7 +1228,7 @@ class EvaluationDataset:
                 return EvaluationResult(
                     test_results=test_results, confident_link=confident_link
                 )
-    
+
     def evaluate(self, task: Task):
         global_evaluation_tasks.append(task)
 
@@ -1236,8 +1236,12 @@ class EvaluationDataset:
         _tracer = check_tracer(tracer)
         run_id = str(uuid.uuid4())
         print("Starting OTLP test run with run_id: ", run_id)
-        ctx = baggage.set_baggage("confident.test_run.id", run_id, context=Context())
-        with _tracer.start_as_current_span("start_otel_test_run", context=ctx) as span:
+        ctx = baggage.set_baggage(
+            "confident.test_run.id", run_id, context=Context()
+        )
+        with _tracer.start_as_current_span(
+            "start_otel_test_run", context=ctx
+        ) as span:
             span.set_attribute("confident.test_run.id", run_id)
         return ctx
 
@@ -1245,5 +1249,7 @@ class EvaluationDataset:
         run_id = baggage.get_baggage("confident.test_run.id", context=ctx)
         print("Ending OTLP test run with run_id: ", run_id)
         _tracer = check_tracer(tracer)
-        with _tracer.start_as_current_span("stop_otel_test_run", context=ctx) as span:
+        with _tracer.start_as_current_span(
+            "stop_otel_test_run", context=ctx
+        ) as span:
             span.set_attribute("confident.test_run.id", run_id)

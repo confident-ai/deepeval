@@ -27,4 +27,5 @@ agent = FunctionAgent(
 async def llm_app(input: str):
     return await agent.run(input)
 
+
 asyncio.run(llm_app("What is 3 * 12?"))

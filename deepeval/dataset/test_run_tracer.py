@@ -10,6 +10,7 @@ try:
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
         OTLPSpanExporter,
     )
+
     is_opentelemetry_installed = True
 except Exception:
     is_opentelemetry_installed = False
@@ -22,21 +23,29 @@ def is_opentelemetry_available():
         )
     return True
 
+
 from deepeval.confident.api import get_confident_api_key
 
-OTLP_ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT") else "https://otel.confident-ai.com"
+OTLP_ENDPOINT = (
+    os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    if os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+    else "https://otel.confident-ai.com"
+)
 # OTLP_ENDPOINT = "http://127.0.0.1:4318"
 
 # Module-level globals to be imported and used by other code
 GLOBAL_TEST_RUN_TRACER_PROVIDER: Optional[TracerProvider] = None
 GLOBAL_TEST_RUN_TRACER: Optional[OTelTracer] = None
 
+
 class RunIdSpanProcessor(SpanProcessor):
     def on_start(self, span, parent_context):
-        run_id = baggage.get_baggage("confident.test_run.id", context=parent_context)
+        run_id = baggage.get_baggage(
+            "confident.test_run.id", context=parent_context
+        )
         if run_id:
             span.set_attribute("confident.test_run.id", run_id)
-    
+
     def on_end(self, span) -> None:  # type: ignore[override]
         # No-op
         return None
@@ -48,6 +57,7 @@ class RunIdSpanProcessor(SpanProcessor):
     def force_flush(self, timeout_millis: int = 30000) -> bool:  # type: ignore[override]
         # No-op
         return True
+
 
 def init_global_test_run_tracer(api_key: Optional[str] = None):
     is_opentelemetry_available()

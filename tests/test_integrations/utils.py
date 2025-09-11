@@ -15,7 +15,9 @@ def _is_iso_timestamp(value: str) -> bool:
     if not isinstance(value, str):
         return False
     # Matches YYYY-MM-DDTHH:MM:SS(.ffffff)?(Z|+HH:MM|-HH:MM)
-    pattern = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$")
+    pattern = re.compile(
+        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})$"
+    )
     if not pattern.match(value):
         return False
     try:
@@ -24,6 +26,7 @@ def _is_iso_timestamp(value: str) -> bool:
         return True
     except ValueError:
         return False
+
 
 def generate_test_json(func: Callable, name: str, *args, **kwargs):
     target_path = os.path.abspath(name)
@@ -72,7 +75,10 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
             deadline = time.time() + 30
             while time.time() < deadline:
                 try:
-                    if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                    if (
+                        os.path.exists(output_path)
+                        and os.path.getsize(output_path) > 0
+                    ):
                         break
                 except Exception:
                     pass
@@ -103,6 +109,7 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
     except Exception:
         pass
 
+
 def compare_trace_files(expected_file_path: str, actual_file_path: str):
     if not os.path.exists(expected_file_path):
         raise AssertionError(f"Assertion file not found: {expected_file_path}")
@@ -121,8 +128,12 @@ def compare_trace_files(expected_file_path: str, actual_file_path: str):
 
     if actual != expected_aligned:
         try:
-            expected_str = json.dumps(expected_aligned, ensure_ascii=False, indent=2, sort_keys=True)
-            actual_str = json.dumps(actual, ensure_ascii=False, indent=2, sort_keys=True)
+            expected_str = json.dumps(
+                expected_aligned, ensure_ascii=False, indent=2, sort_keys=True
+            )
+            actual_str = json.dumps(
+                actual, ensure_ascii=False, indent=2, sort_keys=True
+            )
             diff = "\n".join(
                 difflib.unified_diff(
                     expected_str.splitlines(),
@@ -134,17 +145,22 @@ def compare_trace_files(expected_file_path: str, actual_file_path: str):
             )
         except Exception:
             diff = "<diff unavailable>"
-        raise AssertionError(f"Trace body does not match expected file: {expected_file_path}\n{diff}")
+        raise AssertionError(
+            f"Trace body does not match expected file: {expected_file_path}\n{diff}"
+        )
 
     print(f"Test trace body passed: {expected_file_path}")
     return
+
 
 def _apply_placeholders(expected, actual, path=""):
     if expected == PLACEHOLDER:
         return actual
     if isinstance(expected, dict):
         if not isinstance(actual, dict):
-            raise AssertionError(f"Type mismatch at {path or '<root>'}: expected object, got {type(actual).__name__}")
+            raise AssertionError(
+                f"Type mismatch at {path or '<root>'}: expected object, got {type(actual).__name__}"
+            )
         out = {}
         for k, v in expected.items():
             sub_path = f"{path}.{k}" if path else k
@@ -153,7 +169,9 @@ def _apply_placeholders(expected, actual, path=""):
                 if k not in actual:
                     raise AssertionError(f"Missing required key at {sub_path}")
                 if not _is_iso_timestamp(actual[k]):
-                    raise AssertionError(f"Invalid ISO timestamp at {sub_path}: {actual[k]!r}")
+                    raise AssertionError(
+                        f"Invalid ISO timestamp at {sub_path}: {actual[k]!r}"
+                    )
                 out[k] = actual[k]
                 continue
             if v == PLACEHOLDER:
@@ -165,14 +183,19 @@ def _apply_placeholders(expected, actual, path=""):
         return out
     if isinstance(expected, list):
         if not isinstance(actual, list):
-            raise AssertionError(f"Type mismatch at {path or '<root>'}: expected list, got {type(actual).__name__}")
+            raise AssertionError(
+                f"Type mismatch at {path or '<root>'}: expected list, got {type(actual).__name__}"
+            )
         if len(expected) != len(actual):
-            raise AssertionError(f"Length mismatch at {path or '<root>'}: expected {len(expected)}, got {len(actual)}")
+            raise AssertionError(
+                f"Length mismatch at {path or '<root>'}: expected {len(expected)}, got {len(actual)}"
+            )
         return [
             _apply_placeholders(ev, av, f"{path}[{i}]")
             for i, (ev, av) in enumerate(zip(expected, actual))
         ]
     return expected
+
 
 def _mark_differences(expected, actual):
     if expected == PLACEHOLDER:
