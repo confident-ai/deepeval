@@ -1,12 +1,13 @@
 import functools
 from pydantic_ai.agent import AgentRunResult
-from deepeval.tracing.types import AgentSpan
+from deepeval.tracing.types import AgentSpan, LlmSpan
 from deepeval.tracing.tracing import Observer
 from typing import List, Callable
 from deepeval.test_case.llm_test_case import ToolCall
 try:
     from pydantic_ai.agent import Agent
     from pydantic_ai.models import Model
+    from pydantic_ai.messages import ModelResponse, ModelRequest
     pydantic_ai_installed = True
 except:
     pydantic_ai_installed = True
@@ -34,7 +35,7 @@ def _patch_agent_run():
         ) as observer:
             result = await original_run(*args, **kwargs)
             observer.update_span_properties = (
-                lambda agent_span: update_agent_span_properties(
+                lambda agent_span: set_agent_span_attributes(
                     agent_span, result
                 )
             )
@@ -58,17 +59,25 @@ def _patch_llm_model(model: Model):
             observe_kwargs={"model": model_name},
         ) as observer:
             result = await original_func(*args, **kwargs)
-            # decide input, output and tools called
+            request = kwargs.get("messages", [])
+            if not request:
+                request = args[0]
+            observer.update_span_properties = (
+                lambda llm_span: set_llm_span_attributes(llm_span, args[0], result)
+            )
             observer.result = result
         return result
     model.request = wrapper
 
-from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 def patch_all():
     _patch_agent_init()
     _patch_agent_run()
 
-def update_agent_span_properties(agent_span: AgentSpan, result: AgentRunResult):
+def set_llm_span_attributes(llm_span: LlmSpan, request: List[ModelRequest], result: ModelResponse):
+    llm_span.input = [r.parts for r in request] # debug more on this
+    llm_span.output = result.parts
+
+def set_agent_span_attributes(agent_span: AgentSpan, result: AgentRunResult):
     agent_span.tools_called = _extract_tools_called(result)
 
 def _extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
@@ -97,6 +106,5 @@ def _extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
                         )
                         tool_calls.append(tool_call)
     
-    print(tool_calls)
     return tool_calls
     
