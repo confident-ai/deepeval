@@ -1,0 +1,143 @@
+{
+  "agentSpans": [
+    {
+      "agentHandoffs": [],
+      "availableTools": [],
+      "endTime": "<is_present>",
+      "expectedOutput": "A clear and concise explanation.",
+      "input": "Explain the given topic\n\nThis is the expected criteria for your final answer: A clear and concise explanation.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "metricCollection": "test_collection_1",
+      "name": "Consultant",
+      "output": "<is_present>",
+      "parentUuid": "<is_present>",
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "agent",
+      "uuid": "<is_present>"
+    }
+  ],
+  "baseSpans": [
+    {
+      "endTime": "<is_present>",
+      "input": {
+        "inputs": {
+          "input": "What are the LLMs?"
+        },
+        "self": "<Crew>"
+      },
+      "name": "kickoff",
+      "output": {
+        "json_dict": null,
+        "pydantic": null,
+        "raw": "<is_present>",
+        "tasks_output": [
+          {
+            "agent": "Consultant",
+            "description": "Explain the given topic",
+            "expected_output": "A clear and concise explanation.",
+            "json_dict": null,
+            "name": "Explain the given topic",
+            "output_format": "raw",
+            "pydantic": null,
+            "raw": "<is_present>",
+            "summary": "Explain the given topic..."
+          }
+        ],
+        "token_usage": {
+          "cached_prompt_tokens": 0,
+          "completion_tokens": "<is_present>",
+          "prompt_tokens": "<is_present>",
+          "successful_requests": "<is_present>",
+          "total_tokens": "<is_present>"
+        }
+      },
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "base",
+      "uuid": "<is_present>"
+    },
+    {
+      "endTime": "<is_present>",
+      "input": {
+        "inputs": {
+          "ask_for_human_input": false,
+          "input": "Explain the given topic\n\nThis is the expected criteria for your final answer: A clear and concise explanation.\nyou MUST return the actual complete content as the final answer, not a summary.",
+          "tool_names": "",
+          "tools": ""
+        },
+        "self": "<CrewAgentExecutor>"
+      },
+      "name": "invoke",
+      "output": {
+        "output": "<is_present>"
+      },
+      "parentUuid": "<is_present>",
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "base",
+      "uuid": "<is_present>"
+    }
+  ],
+  "endTime": "<is_present>",
+  "environment": "development",
+  "input": {
+    "inputs": {
+      "input": "What are the LLMs?"
+    },
+    "self": "<Crew>"
+  },
+  "llmSpans": [
+    {
+      "endTime": "<is_present>",
+      "input": [
+        {
+          "content": "You are Consultant. An expert consultant with a keen eye for software trends.\nYour personal goal is: Write clear, concise explanation.\nTo give my best complete final answer to the task respond using the exact following format:\n\nThought: I now can give a great answer\nFinal Answer: Your final answer must be the great and the most complete as possible, it must be outcome described.\n\nI MUST use these formats, my job depends on it!",
+          "role": "system"
+        },
+        {
+          "content": "\nCurrent Task: Explain the given topic\n\nThis is the expected criteria for your final answer: A clear and concise explanation.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:",
+          "role": "user"
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "name": "call",
+      "output": "<is_present>",
+      "parentUuid": "<is_present>",
+      "prompt": {},
+      "startTime": "<is_present>",
+      "status": "SUCCESS",
+      "type": "llm",
+      "uuid": "<is_present>"
+    }
+  ],
+  "output": {
+    "json_dict": null,
+    "pydantic": null,
+    "raw": "<is_present>",
+    "tasks_output": [
+      {
+        "agent": "Consultant",
+        "description": "Explain the given topic",
+        "expected_output": "A clear and concise explanation.",
+        "json_dict": null,
+        "name": "Explain the given topic",
+        "output_format": "raw",
+        "pydantic": null,
+        "raw": "<is_present>",
+        "summary": "Explain the given topic..."
+      }
+    ],
+    "token_usage": {
+      "cached_prompt_tokens": 0,
+      "completion_tokens": "<is_present>",
+      "prompt_tokens": "<is_present>",
+      "successful_requests": "<is_present>",
+      "total_tokens": "<is_present>"
+    }
+  },
+  "retrieverSpans": [],
+  "startTime": "<is_present>",
+  "status": "SUCCESS",
+  "toolSpans": [],
+  "uuid": "<is_present>"
+}

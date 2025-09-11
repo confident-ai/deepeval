@@ -9,16 +9,16 @@ import atexit
 import queue
 import uuid
 import os
+import json
+import time
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
 
-
+from deepeval.config.settings import get_settings
 from deepeval.constants import (
     CONFIDENT_TRACE_VERBOSE,
     CONFIDENT_TRACE_FLUSH,
-    CONFIDENT_SAMPLE_RATE,
-    CONFIDENT_TRACE_ENVIRONMENT,
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
@@ -50,6 +50,8 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
+    dump_body_to_json_file,
+    get_deepeval_trace_mode,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -65,25 +67,27 @@ class TraceManager:
             {}
         )  # Map of span_uuid to BaseSpan
 
+        settings = get_settings()
         # Initialize queue and worker thread for trace posting
         self._trace_queue = queue.Queue()
         self._worker_thread = None
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
-        self._daemon = (
-            False if os.getenv(CONFIDENT_TRACE_FLUSH) == "YES" else True
-        )
+        self._flush_enabled = bool(settings.CONFIDENT_TRACE_FLUSH)
+        self._daemon = not self._flush_enabled
 
         # trace manager attributes
         self.confident_api_key = None
         self.custom_mask_fn: Optional[Callable] = None
-        self.environment = os.environ.get(
-            CONFIDENT_TRACE_ENVIRONMENT, Environment.DEVELOPMENT.value
+        self.environment = (
+            settings.CONFIDENT_TRACE_ENVIRONMENT
+            if settings.CONFIDENT_TRACE_ENVIRONMENT is not None
+            else Environment.DEVELOPMENT.value
         )
         validate_environment(self.environment)
 
-        self.sampling_rate = os.environ.get(CONFIDENT_SAMPLE_RATE, 1)
+        self.sampling_rate = settings.CONFIDENT_SAMPLE_RATE
         validate_sampling_rate(self.sampling_rate)
         self.openai_client = None
         self.tracing_enabled = True
@@ -103,7 +107,8 @@ class TraceManager:
         queue_size = self._trace_queue.qsize()
         in_flight = len(self._in_flight_tasks)
         remaining_tasks = queue_size + in_flight
-        if os.getenv(CONFIDENT_TRACE_FLUSH) != "YES" and remaining_tasks > 0:
+
+        if not self._flush_enabled and remaining_tasks > 0:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size + in_flight} abaonded trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
@@ -179,8 +184,12 @@ class TraceManager:
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
 
+            mode = get_deepeval_trace_mode()
+            if mode == "gen":
+                body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
+                dump_body_to_json_file(body)
             # Post the trace to the server before removing it
-            if not self.evaluating:
+            elif not self.evaluating:
                 self.post_trace(trace)
             else:
                 if self.evaluation_loop:
@@ -274,10 +283,7 @@ class TraceManager:
         description: Optional[str] = None,
         environment: Optional[str] = None,
     ):
-        if (
-            os.getenv(CONFIDENT_TRACE_VERBOSE, "YES").upper() != "NO"
-            and self.evaluating is False
-        ):
+        if get_settings().CONFIDENT_TRACE_VERBOSE and self.evaluating is False:
             console = Console()
             message_prefix = "[dim][Confident AI Trace Log][/dim]"
             if trace_worker_status == TraceWorkerStatus.SUCCESS:
@@ -401,6 +407,7 @@ class TraceManager:
                         api = Api(api_key=trace_api.confident_api_key)
                     else:
                         api = Api(api_key=self.confident_api_key)
+  
                     api_response, link = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,
@@ -415,7 +422,7 @@ class TraceManager:
                         description=link,
                         environment=self.environment,
                     )
-                elif os.getenv(CONFIDENT_TRACE_FLUSH) == "YES":
+                elif self._flush_enabled:
                     # Main thread gone → to be flushed
                     remaining_trace_request_bodies.append(body)
 
@@ -492,6 +499,7 @@ class TraceManager:
             with capture_send_trace():
                 try:
                     api = Api(api_key=self.confident_api_key)
+                     
                     _, link = api.send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.TRACES_ENDPOINT,

@@ -3,9 +3,9 @@ import warnings
 import re
 
 # load environment variables before other imports
-from .env import autoload_dotenv as _autoload_dotenv
+from deepeval.config.settings import autoload_dotenv, get_settings
 
-_autoload_dotenv()
+autoload_dotenv()
 
 from ._version import __version__
 from deepeval.evaluate import evaluate, assert_test
@@ -14,9 +14,12 @@ from deepeval.test_run import on_test_run_end, log_hyperparameters
 from deepeval.utils import login
 from deepeval.telemetry import *
 
-if os.getenv("DEEPEVAL_GRPC_LOGGING") != "1":
-    os.environ["GRPC_VERBOSITY"] = "ERROR"
-    os.environ["GRPC_TRACE"] = ""
+
+settings = get_settings()
+if not settings.DEEPEVAL_GRPC_LOGGING:
+    os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
+    os.environ.setdefault("GRPC_TRACE", "")
+
 
 __all__ = [
     "login",

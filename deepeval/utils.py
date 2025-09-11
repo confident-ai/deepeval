@@ -1,26 +1,33 @@
-from contextvars import ContextVar
-from enum import Enum
 import copy
 import os
 import json
 import time
-from typing import Any, Optional, Dict, List, Union
-from collections.abc import Iterable
 import webbrowser
 import tqdm
 import re
 import string
-from dataclasses import asdict, is_dataclass
-import re
 import asyncio
 import nest_asyncio
 import uuid
+
+from contextvars import ContextVar
+from enum import Enum
+from typing import Any, Optional, Dict, List, Union
+from collections.abc import Iterable
+from dataclasses import asdict, is_dataclass
 from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
 from deepeval.confident.api import set_confident_api_key
 from deepeval.constants import CONFIDENT_OPEN_BROWSER
+from deepeval.config.settings import get_settings
+from deepeval.config.utils import (
+    parse_bool,
+    get_env_bool,
+    bool_to_env_str,
+    set_env_bool,
+)
 
 
 def get_lcs(seq1, seq2):
@@ -140,82 +147,55 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
-def should_skip_on_missing_params():
-    try:
-        if os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] == "YES":
-            return True
-        else:
-            return False
-    except:
-        return False
-
-
 def set_should_skip_on_missing_params(yes: bool):
-    if yes:
-        os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] = "YES"
-    else:
-        os.environ["SKIP_DEEPEVAL_MISSING_PARAMS"] = "NO"
+    s = get_settings()
+    with s.edit(persist=False):
+        s.SKIP_DEEPEVAL_MISSING_PARAMS = yes
 
 
-def should_ignore_errors():
-    try:
-        if os.environ["IGNORE_DEEPEVAL_ERRORS"] == "YES":
-            return True
-        else:
-            return False
-    except:
-        return False
+def should_ignore_errors() -> bool:
+    return bool(get_settings().IGNORE_DEEPEVAL_ERRORS)
+
+
+def should_skip_on_missing_params() -> bool:
+    return bool(get_settings().SKIP_DEEPEVAL_MISSING_PARAMS)
 
 
 def set_should_ignore_errors(yes: bool):
-    if yes:
-        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "YES"
-    else:
-        os.environ["IGNORE_DEEPEVAL_ERRORS"] = "NO"
+    s = get_settings()
+    with s.edit(persist=False):
+        s.IGNORE_DEEPEVAL_ERRORS = yes
 
 
-def should_verbose_print() -> Union[bool, None]:
-    try:
-        if os.environ["DEEPEVAL_VERBOSE_MODE"] == "YES":
-            return True
-        else:
-            return None
-    except:
-        return None
+def should_verbose_print() -> bool:
+    return bool(get_settings().DEEPEVAL_VERBOSE_MODE)
 
 
 def set_verbose_mode(yes: Optional[bool]):
-    if yes:
-        os.environ["DEEPEVAL_VERBOSE_MODE"] = "YES"
+    s = get_settings()
+    with s.edit(persist=False):
+        s.DEEPEVAL_VERBOSE_MODE = yes
 
 
 def set_identifier(identifier: Optional[str]):
     if identifier:
-        os.environ["DEEPEVAL_IDENTIFIER"] = identifier
+        s = get_settings()
+        with s.edit(persist=False):
+            s.DEEPEVAL_IDENTIFIER = identifier
 
 
 def get_identifier() -> Optional[str]:
-    try:
-        return os.environ["DEEPEVAL_IDENTIFIER"]
-    except:
-        return None
+    return get_settings().DEEPEVAL_IDENTIFIER
 
 
-def should_use_cache():
-    try:
-        if os.environ["ENABLE_DEEPEVAL_CACHE"] == "YES":
-            return True
-        else:
-            return False
-    except:
-        return False
+def should_use_cache() -> bool:
+    return bool(get_settings().ENABLE_DEEPEVAL_CACHE)
 
 
 def set_should_use_cache(yes: bool):
-    if yes:
-        os.environ["ENABLE_DEEPEVAL_CACHE"] = "YES"
-    else:
-        os.environ["ENABLE_DEEPEVAL_CACHE"] = "NO"
+    s = get_settings()
+    with s.edit(persist=False):
+        s.ENABLE_DEEPEVAL_CACHE = yes
 
 
 def login(api_key: str):
@@ -233,17 +213,11 @@ def login(api_key: str):
 
 
 def set_is_running_deepeval(flag: bool):
-    if flag:
-        os.environ["DEEPEVAL"] = "YES"
-    else:
-        os.environ["DEEPEVAL"] = "NO"
+    set_env_bool("DEEPEVAL", flag)
 
 
 def get_is_running_deepeval() -> bool:
-    try:
-        return os.environ["DEEPEVAL"] == "YES"
-    except:
-        return False
+    return get_env_bool("DEEPEVAL")
 
 
 def is_in_ci_env() -> bool:
@@ -270,8 +244,8 @@ def is_in_ci_env() -> bool:
 
 
 def open_browser(url: str):
-    if os.getenv(CONFIDENT_OPEN_BROWSER) != "NO":
-        if is_in_ci_env() == False:
+    if get_settings().CONFIDENT_OPEN_BROWSER:
+        if not is_in_ci_env():
             webbrowser.open(url)
 
 
@@ -439,6 +413,8 @@ def normalize_text(text: str) -> str:
 
 
 def get_freer_gpu():
+    import numpy as np
+
     os.system("nvidia-smi -q -d Memory |grep -A4 GPU|grep Free >tmp_smi")
     memory_available = [
         int(x.split()[2]) + 5 * i
@@ -466,8 +442,11 @@ def wait_free_gpu(gb_needed):
 def select_freer_gpu():
     freer_gpu = str(get_freer_gpu())
     print("Will use GPU: %s" % (freer_gpu))
-    os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
-    os.environ["CUDA_VISIBLE_DEVICES"] = "" + freer_gpu
+
+    s = get_settings()
+    with s.edit(persist=False):
+        s.CUDA_LAUNCH_BLOCKING = True
+        s.CUDA_VISIBLE_DEVICES = freer_gpu
     return freer_gpu
 
 
