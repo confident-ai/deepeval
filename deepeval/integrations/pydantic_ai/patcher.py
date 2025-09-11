@@ -2,10 +2,11 @@ import functools
 from pydantic_ai.agent import AgentRunResult
 from deepeval.tracing.types import AgentSpan
 from deepeval.tracing.tracing import Observer
-from typing import List
+from typing import List, Callable
 from deepeval.test_case.llm_test_case import ToolCall
 try:
     from pydantic_ai.agent import Agent
+    from pydantic_ai.models import Model
     pydantic_ai_installed = True
 except:
     pydantic_ai_installed = True
@@ -31,6 +32,23 @@ def _patch_agent_run():
 
     Agent.run = wrapper
 
+def _patch_llm_model(model: Model, model_name: str):
+    original_func = model.request
+    
+    @functools.wraps(original_func)
+    async def wrapper(*args, **kwargs):
+        with Observer(
+            span_type="llm",
+            func_name="LLM",
+            observe_kwargs={"model": model.model_name},
+        ) as observer:
+            result = await original_func(*args, **kwargs)
+            # decide input, output and tools called
+            observer.result = result
+        return result
+    model.request = wrapper
+
+from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 def patch_all():
     _patch_agent_run()
 
