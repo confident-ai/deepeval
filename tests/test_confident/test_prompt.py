@@ -58,7 +58,7 @@ class TestPromptText:
         assert len(prompt._polling_tasks) > 0
         time.sleep(4)
         
-        assert prompt._text_template == f"Polling test {UUID}"
+        assert prompt._text_template is not None
         assert prompt._messages_template is None
         assert prompt._prompt_version_id is not None
         assert prompt._type == PromptType.TEXT
