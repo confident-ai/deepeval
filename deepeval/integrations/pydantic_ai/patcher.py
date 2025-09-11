@@ -11,6 +11,17 @@ try:
 except:
     pydantic_ai_installed = True
 
+def _patch_agent_init():
+    original_init = Agent.__init__
+
+    @functools.wraps(original_init)
+    def wrapper(self, *args, **kwargs):
+        result = original_init(self, *args, **kwargs)
+        _patch_llm_model(self._model) # runtime patch of the model
+        return result
+
+    Agent.__init__ = wrapper
+
 def _patch_agent_run():
     original_run = Agent.run
 
@@ -32,15 +43,19 @@ def _patch_agent_run():
 
     Agent.run = wrapper
 
-def _patch_llm_model(model: Model, model_name: str):
+def _patch_llm_model(model: Model):
     original_func = model.request
-    
+    try:
+        model_name = model.model_name
+    except Exception:
+        model_name = "unknown"
+
     @functools.wraps(original_func)
     async def wrapper(*args, **kwargs):
         with Observer(
             span_type="llm",
             func_name="LLM",
-            observe_kwargs={"model": model.model_name},
+            observe_kwargs={"model": model_name},
         ) as observer:
             result = await original_func(*args, **kwargs)
             # decide input, output and tools called
@@ -50,6 +65,7 @@ def _patch_llm_model(model: Model, model_name: str):
 
 from pydantic_ai.models.openai import OpenAIChatModel, OpenAIResponsesModel
 def patch_all():
+    _patch_agent_init()
     _patch_agent_run()
 
 def update_agent_span_properties(agent_span: AgentSpan, result: AgentRunResult):
