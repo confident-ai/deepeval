@@ -56,7 +56,7 @@ jobs:
       - name: Run tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
         run: |
           poetry run pytest tests/test_core/ --ignore=tests/test_core/test_synthesizer/ --ignore=tests/test_core/test_datasets/
 
@@ -69,6 +69,6 @@ jobs:
       - name: Run core tests with dev dependencies
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          ONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
+          CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
         run: |
           poetry run pytest tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
