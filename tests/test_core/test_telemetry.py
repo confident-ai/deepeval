@@ -9,8 +9,7 @@ from pathlib import Path
 
 def _no_hidden_store_dir(base: Path):
     deepeval_path = base / ".deepeval"
-    shutil.rmtree(deepeval_path, ignore_error=True)
-    yield
+    shutil.rmtree(deepeval_path, ignore_errors=True)
 
 
 def test_telemetry_writes_create_dir_when_missing(tmp_path, monkeypatch):
