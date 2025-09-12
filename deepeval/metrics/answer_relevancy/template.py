@@ -37,7 +37,7 @@ JSON:
 Please generate a list of JSON with two keys: `verdict` and `reason`.
 The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement is relevant to addressing the original input, 'no' if the statement is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).
 The 'reason' is the reason for the verdict.
-Provide a 'reason' ONLY if the answer is 'no'. 
+Provide a 'reason' ONLY if the answer is 'no' or 'idk'. 
 The provided statements are statements made in the actual output.
 
 **
@@ -53,7 +53,8 @@ Example statements:
     "Security features include fingerprint authentication and an encrypted SSD.",
     "Every purchase comes with a one-year warranty.",
     "24/7 customer support is included.",
-    "Pineapples taste great on pizza."
+    "Pineapples taste great on pizza.",
+    "The laptop is a Dell XPS 13."
 ]
 
 Example JSON:
@@ -79,6 +80,10 @@ Example JSON:
         {{
             "verdict": "no",
             "reason": "The statement about pineapples on pizza is completely irrelevant to the input, which asks about laptop features."
+        }},
+        {{
+            "verdict": "idk",
+            "reason": "The statement about the laptop being a Dell XPS 13 is not directly relevant to the input, but could be used as a supporting point to address the input."
         }}
     ]  
 }}
