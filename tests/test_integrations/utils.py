@@ -41,20 +41,20 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
             i = 0
             while i < len(original_argv):
                 arg = original_argv[i]
-                if isinstance(arg, str) and arg.startswith("--mode="):
-                    new_argv.append("--mode=gen")
+                if isinstance(arg, str) and arg.startswith("--deepeval-trace-mode="):
+                    new_argv.append("--deepeval-trace-mode=gen")
                     replaced_mode = True
-                elif arg == "--mode":
-                    new_argv.append("--mode")
+                elif arg == "--deepeval-trace-mode":
+                    new_argv.append("--deepeval-trace-mode")
                     if i + 1 < len(original_argv):
                         # Skip the next original value
                         i += 1
                     new_argv.append("gen")
                     replaced_mode = True
-                # Remove any existing --file-name to avoid conflicts
-                elif isinstance(arg, str) and arg.startswith("--file-name="):
+                # Remove any existing --deepeval-trace-file-name to avoid conflicts
+                elif isinstance(arg, str) and arg.startswith("--deepeval-trace-file-name="):
                     pass
-                elif arg == "--file-name":
+                elif arg == "--deepeval-trace-file-name":
                     # Skip the value token as well
                     if i + 1 < len(original_argv):
                         i += 1
@@ -63,10 +63,10 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
                 i += 1
 
             if not replaced_mode:
-                new_argv.append("--mode=gen")
+                new_argv.append("--deepeval-trace-mode=gen")
 
             # Always enforce our target output path
-            new_argv.append(f"--file-name={output_path}")
+            new_argv.append(f"--deepeval-trace-file-name={output_path}")
 
             sys.argv = new_argv
             func(*args, **kwargs)

@@ -31,14 +31,6 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
     with capture_tracing_integration("pydantic_ai"):
         is_opentelemetry_available()
 
-        if api_key:
-            deepeval.login(api_key)
-
-        api_key = get_confident_api_key()
-
-        if not api_key:
-            raise ValueError("No api key provided.")
-
         # create a new tracer provider
         tracer_provider = TracerProvider()
         tracer_provider.add_span_processor(
