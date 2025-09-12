@@ -73,7 +73,7 @@ class Prompt:
     def version(self):
         if self._version is not None and self._version != "latest":
             return self._version
-        versions = self.get_versions()
+        versions = self._get_versions()
         if len(versions) == 0:
             return "latest"
         else:
@@ -112,7 +112,7 @@ class Prompt:
         else:
             raise ValueError(f"Unsupported prompt type: {self._type}")
     
-    def get_versions(self) -> List:
+    def _get_versions(self) -> List:
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
