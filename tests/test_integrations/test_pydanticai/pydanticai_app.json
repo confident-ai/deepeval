@@ -241,9 +241,9 @@
                     "rejected_prediction_tokens": 0
                   },
                   "input_audio_tokens": 0,
-                  "input_tokens": 72,
+                  "input_tokens": "<is_present>",
                   "output_audio_tokens": 0,
-                  "output_tokens": 17
+                  "output_tokens": "<is_present>"
                 }
               },
               {
@@ -337,7 +337,7 @@
                   "input_audio_tokens": 0,
                   "input_tokens": "<is_present>",
                   "output_audio_tokens": 0,
-                  "output_tokens": 14
+                  "output_tokens": "<is_present>"
                 }
               }
             ],
@@ -449,9 +449,9 @@
                     "rejected_prediction_tokens": 0
                   },
                   "input_audio_tokens": 0,
-                  "input_tokens": 72,
+                  "input_tokens": "<is_present>",
                   "output_audio_tokens": 0,
-                  "output_tokens": 17
+                  "output_tokens": "<is_present>"
                 }
               },
               {
@@ -545,7 +545,7 @@
                   "input_audio_tokens": 0,
                   "input_tokens": "<is_present>",
                   "output_audio_tokens": 0,
-                  "output_tokens": 14
+                  "output_tokens": "<is_present>"
                 }
               }
             ],
