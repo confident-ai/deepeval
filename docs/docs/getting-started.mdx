@@ -224,6 +224,17 @@ set DEEPEVAL_RESULTS_FOLDER=.\data
 
 </Tabs>
 
+### Retries & backoff (default behavior)
+
+By default, DeepEval retries **transient** LLM errors once (2 attempts total):
+
+- **Retried:** network/timeout errors and **5xx** server errors.
+- **Rate limits (429):** retried unless the provider marks them non-retryable
+  (for OpenAI, `insufficient_quota` is treated as non-retryable).
+- **Backoff:** exponential with jitter (initial **1s**, base **2**, jitter **2s**, cap **5s**).
+
+You can tune these via environment flags (no code changes). See [Environment Flags](./evaluation-flags-and-configs#environment-flags) for details.
+
 ## Test Runs With LLM Tracing
 
 While end-to-end evals treat your LLM app as a black-box, you also evaluate **individual components** within your LLM app through **LLM tracing**. This is the recommended way to evaluate AI agents.

@@ -12,6 +12,8 @@ For example, if you're using a [custom LLM judge for evaluation](/guides/guides-
 
 ## Environment Flags
 
+### General / Project Setup
+
 | Variable                  | Values      | Effect                                  |
 | ------------------------- | ----------- | --------------------------------------- |
 | `DEEPEVAL_DISABLE_DOTENV` | `1` / unset | Disable .env autoload at import         |
@@ -19,9 +21,9 @@ For example, if you're using a [custom LLM judge for evaluation](/guides/guides-
 | `DEEPEVAL_RESULTS_FOLDER` | path        | Change local results output folder      |
 | `DEEPEVAL_FILE_SYSTEM`    | `READ_ONLY` | Restrict file writes in constrained env |
 
-DeepEval autoloads `.env.local`, then `.env`, from current working directory at import time.
+DeepEval autoloads `.env.local`, then `.env`, from the current working directory at import time.
 
-### Persisting CLI settings with `--save`
+#### Persisting CLI settings with `--save`
 
 The `deepeval set-*` and `unset-*` commands accept an optional `--save` flag:
 
@@ -33,13 +35,15 @@ deepeval unset-openai --save=dotenv:.env.local
 
 **Behavior:**
 
-- Without --save: non-secret settings are stored in .deepeval/.deepeval (JSON). Secrets are never written there.
-- With --save=dotenv[:path]: both secrets and non-secrets are written to the specified dotenv (default: .env.local).
-- Dotenv files should be git ignored.
-- When unsetting a provider with --save, only that provider’s keys are removed from the dotenv file.
+- Without `--save`: non-secret settings are stored in `.deepeval/.deepeval` (JSON). Secrets are never written there.
 
-**Project default (optional):**
-Set a project wide default so you don’t have to pass `--save` every time:
+- With `--save=dotenv[:path]`: both secrets and non-secrets are written to the specified dotenv (default: `.env.local`).
+
+- Dotenv files should be git ignored.
+
+- When unsetting a provider with `--save`, only that provider’s keys are removed from the dotenv file.
+
+Project default (optional): set a default so you don’t have to pass `--save` every time:
 
 ```bash
 export DEEPEVAL_DEFAULT_SAVE="dotenv:.env.local"
@@ -48,6 +52,19 @@ export DEEPEVAL_DEFAULT_SAVE="dotenv:.env.local"
 If `DEEPEVAL_DEFAULT_SAVE` is set, it is used whenever `--save` is omitted.
 
 > Roadmap: future versions may support secure stores, such as keyring. The `--save` flag is designed to be pluggable.
+
+### Retry / Backoff Tuning
+
+These flags control retry and backoff behavior for API calls.
+
+| Variable                         | Type  | Default | Notes                         |
+| -------------------------------- | ----- | ------- | ----------------------------- |
+| `DEEPEVAL_RETRY_MAX_ATTEMPTS`    | int   | `2`     | Total attempts (1 retry)      |
+| `DEEPEVAL_RETRY_INITIAL_SECONDS` | float | `1.0`   | Initial backoff               |
+| `DEEPEVAL_RETRY_EXP_BASE`        | float | `2.0`   | Exponential base (≥ 1)        |
+| `DEEPEVAL_RETRY_JITTER`          | float | `2.0`   | Random jitter added per retry |
+| `DEEPEVAL_RETRY_CAP_SECONDS`     | float | `5.0`   | Max sleep between retries     |
+
 
 ## Configs for `evaluate()`
 
