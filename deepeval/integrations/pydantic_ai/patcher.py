@@ -11,6 +11,7 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.confident.api import get_confident_api_key
 from deepeval.integrations.pydantic_ai.otel import instrument_pydantic_ai
 from deepeval.telemetry import capture_tracing_integration
+from deepeval.prompt import Prompt
 try:
     from pydantic_ai.agent import Agent
     from pydantic_ai.models import Model
@@ -86,11 +87,12 @@ def _patch_agent_init():
         *args, 
         llm_metric_collection: Optional[str] = None,
         llm_metrics: Optional[List[BaseMetric]] = None,
+        llm_prompt: Optional[Prompt] = None,
         agent_metric_collection: Optional[str] = None,
         agent_metrics: Optional[List[BaseMetric]] = None,
         **kwargs):
         result = original_init(self, *args, **kwargs)
-        _patch_llm_model(self._model, llm_metric_collection, llm_metrics) # runtime patch of the model
+        _patch_llm_model(self._model, llm_metric_collection, llm_metrics, llm_prompt) # runtime patch of the model
         _patch_agent_run(agent_metric_collection, agent_metrics)
         return result
 
@@ -168,7 +170,12 @@ def _update_trace_context(
     current_trace.input = trace_input
     current_trace.output = trace_output
 
-def _patch_llm_model(model: Model, llm_metric_collection: Optional[str] = None, llm_metrics: Optional[List[BaseMetric]] = None):
+def _patch_llm_model(
+    model: Model, 
+    llm_metric_collection: Optional[str] = None, 
+    llm_metrics: Optional[List[BaseMetric]] = None, 
+    llm_prompt: Optional[Prompt] = None
+):
     original_func = model.request
     try:
         model_name = model.model_name
@@ -189,7 +196,7 @@ def _patch_llm_model(model: Model, llm_metric_collection: Optional[str] = None, 
             if not request:
                 request = args[0]
             observer.update_span_properties = (
-                lambda llm_span: set_llm_span_attributes(llm_span, args[0], result)
+                lambda llm_span: set_llm_span_attributes(llm_span, args[0], result, llm_prompt)
             )
             observer.result = result
         return result
@@ -212,7 +219,8 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
             _patch_agent_init()
             _patch_agent_tool_decorator()
 
-def set_llm_span_attributes(llm_span: LlmSpan, requests: List[ModelRequest], result: ModelResponse):
+def set_llm_span_attributes(llm_span: LlmSpan, requests: List[ModelRequest], result: ModelResponse, llm_prompt: Optional[Prompt] = None):
+    llm_span.prompt = llm_prompt
     
     input = []
     for request in requests:
