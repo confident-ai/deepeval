@@ -251,7 +251,8 @@ class Prompt:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.PROMPTS_ENDPOINT,
-                    params={"alias": self.alias, "version": version},
+                    url_params={"alias": self.alias},
+                    params={"version": version},
                 )
                 response = PromptHttpResponse(
                     promptVersionId=data["promptVersionId"],
@@ -348,6 +349,7 @@ class Prompt:
         _, link = api.send_request(
             method=HttpMethods.POST,
             endpoint=Endpoints.PROMPTS_ENDPOINT,
+            url_params={"alias": self.alias},
             body=body,
         )
 
@@ -393,10 +395,8 @@ class Prompt:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.PROMPTS_ENDPOINT,
-                    params={
-                        "alias": self.alias,
-                        "version": version,
-                    },
+                    url_params={"alias": self.alias},
+                    params={"version": version},
                 )
                 response = PromptHttpResponse(
                     promptVersionId=data["promptVersionId"],
