@@ -13,18 +13,11 @@ from typing import Any, Dict, Optional, Sequence, Callable
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
-
 class Environment(Enum):
     PRODUCTION = "production"
     DEVELOPMENT = "development"
     STAGING = "staging"
     TESTING = "testing"
-
-
-def _strip_nul(s: str) -> str:
-    # Replace embedded NUL, which Postgres cannot store in text/jsonb
-    # Do NOT try to escape as \u0000 because PG will still reject it.
-    return s.replace("\x00", "")
 
 
 def tracing_enabled():
@@ -55,11 +48,6 @@ def make_json_serializable(obj):
 
     def _serialize(o):
         oid = id(o)
-
-        # strip Nulls
-        if isinstance(o, str):
-            return _strip_nul(o)
-
         # Primitive types are already serializable
         if isinstance(o, (str, int, float, bool)) or o is None:
             return o
@@ -95,7 +83,7 @@ def make_json_serializable(obj):
             return result
 
         # Fallback: convert to string
-        return _strip_nul(str(o))
+        return str(o)
 
     return _serialize(obj)
 
@@ -127,40 +115,29 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
     # Return as a datetime object
     return datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
-
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
     except:
         return f"<self>"
 
-
 def get_deepeval_trace_mode() -> Optional[str]:
     deepeval_trace_mode = None
     try:
         args = sys.argv
         for idx, arg in enumerate(args):
-            if isinstance(arg, str) and arg.startswith(
-                "--deepeval-trace-mode="
-            ):
-                deepeval_trace_mode = (
-                    arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
-                )
+            if isinstance(arg, str) and arg.startswith("--deepeval-trace-mode="):
+                deepeval_trace_mode = arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
                 break
             if arg == "--deepeval-trace-mode" and idx + 1 < len(args):
-                deepeval_trace_mode = (
-                    str(args[idx + 1]).strip().strip('"').strip("'").lower()
-                )
+                deepeval_trace_mode = str(args[idx + 1]).strip().strip('"').strip("'").lower()
                 break
     except Exception:
         deepeval_trace_mode = None
-
+    
     return deepeval_trace_mode
 
-
-def dump_body_to_json_file(
-    body: Dict[str, Any], file_path: Optional[str] = None
-) -> str:
+def dump_body_to_json_file(body: Dict[str, Any], file_path: Optional[str] = None) -> str:
     entry_file = None
     try:
         cmd0 = sys.argv[0] if sys.argv else None
@@ -169,12 +146,7 @@ def dump_body_to_json_file(
         else:
             for frame_info in reversed(inspect.stack()):
                 fp = frame_info.filename
-                if (
-                    fp
-                    and fp.endswith(".py")
-                    and "deepeval/tracing" not in fp
-                    and "site-packages" not in fp
-                ):
+                if fp and fp.endswith(".py") and "deepeval/tracing" not in fp and "site-packages" not in fp:
                     entry_file = fp
                     break
     except Exception:
@@ -189,9 +161,7 @@ def dump_body_to_json_file(
     file_arg = None
     try:
         for idx, arg in enumerate(sys.argv):
-            if isinstance(arg, str) and arg.startswith(
-                "--deepeval-trace-file-name="
-            ):
+            if isinstance(arg, str) and arg.startswith("--deepeval-trace-file-name="):
                 file_arg = arg.split("=", 1)[1].strip().strip('"').strip("'")
                 break
             if arg == "--deepeval-trace-file-name" and idx + 1 < len(sys.argv):

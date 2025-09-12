@@ -50,7 +50,6 @@ class LLMApiTestCase(BaseModel):
     trace: Optional[TraceApi] = Field(None)
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
-    # metric_collection: Optional[str] = Field(None, alias="metricCollection")
 
     def update_metric_data(self, metric_data: MetricData):
         if self.metrics_data is None:

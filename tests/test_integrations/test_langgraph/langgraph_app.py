@@ -1,11 +1,9 @@
 from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain import CallbackHandler
 
-
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
     return f"It's always sunny in {city}!"
-
 
 agent = create_react_agent(
     model="openai:gpt-4o-mini",
@@ -13,13 +11,10 @@ agent = create_react_agent(
     prompt="You are a helpful assistant",
 )
 
-
 def execute_agent():
     return agent.invoke(
         input={
-            "messages": [
-                {"role": "user", "content": "what is the weather in sf"}
-            ]
+            "messages": [{"role": "user", "content": "what is the weather in sf"}]
         },
         config={
             "callbacks": [CallbackHandler(metric_collection="task_completion")]
