@@ -13,6 +13,7 @@ from deepeval.prompt.api import (
     PromptType,
     PromptInterpolationType,
     PromptPushRequest,
+    PromptVersionHttpRequest,
 )
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -156,6 +157,24 @@ class Prompt:
         # Write back to cache file
         with open(CACHE_FILE_NAME, "w") as f:
             json.dump(cache_data, f, cls=CustomEncoder)
+
+    def list_versions(self):
+        if self.alias is None:
+            raise TypeError(
+                "Unable to list prompt versions from Confident AI when no alias is provided."
+            )
+
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPT_VERSIONS_ENDPOINT,
+            url_params={"alias": self.alias},
+        )
+        try:
+            prompt_versions = PromptVersionHttpRequest(**data)
+            return prompt_versions
+        except Exception as e:
+            raise Exception(f"Error getting prompt versions: {e}")
 
     def pull(
         self,
