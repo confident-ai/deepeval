@@ -95,7 +95,7 @@ class MultimodalFaithfulnessTemplate:
         return textwrap.dedent(
             f"""Based on the given claims, which is a list of strings, generate a list of JSON objects to indicate whether EACH claim contradicts any facts in the retrieval context. The JSON will have 2 fields: 'verdict' and 'reason'.
                 The 'verdict' key should STRICTLY be either 'yes', 'no', or 'idk', which states whether the given claim agrees with the context. 
-                Provide a 'reason' ONLY if the answer is 'no'. 
+                Provide a 'reason' ONLY if the answer is 'no' or 'idk'. 
                 The provided claim is drawn from the actual output. Try to provide a correction in the reason using the facts in the retrieval context.
 
                 **
@@ -107,10 +107,12 @@ class MultimodalFaithfulnessTemplate:
                 {{
                     "verdicts": [
                         {{
-                            "verdict": "idk"
+                            "verdict": "idk",
+                            "reason": "The claim about Barack Obama is not directly addressed in the retrieval context, and so poses no contradiction."
                         }},
                         {{
-                            "verdict": "idk"
+                            "verdict": "idk",
+                            "reason": "The claim about Zurich being a city in London is incorrect but does not pose a contradiction to the retrieval context."
                         }},
                         {{
                             "verdict": "yes"
@@ -128,7 +130,7 @@ class MultimodalFaithfulnessTemplate:
                 ===== END OF EXAMPLE ======
 
                 The length of 'verdicts' SHOULD BE STRICTLY EQUAL to that of claims.
-                You DON'T have to provide a reason if the answer is 'yes' or 'idk'.
+                You DON'T have to provide a reason if the answer is 'yes'.
                 ONLY provide a 'no' answer if the retrieval context DIRECTLY CONTRADICTS the claims. YOU SHOULD NEVER USE YOUR PRIOR KNOWLEDGE IN YOUR JUDGEMENT.
                 Claims made using vague, suggestive, speculative language such as 'may have', 'possibility due to', does NOT count as a contradiction.
                 Claims that is not backed up due to a lack of information/is not mentioned in the retrieval contexts MUST be answered 'idk', otherwise I WILL DIE.

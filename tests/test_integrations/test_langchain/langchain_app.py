@@ -30,6 +30,7 @@ agent = create_tool_calling_agent(llm, [multiply], agent_prompt)
 
 agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 
+
 def execute_agent():
     result = agent_executor.invoke(
         {"input": "What is 8 multiplied by 6?"},

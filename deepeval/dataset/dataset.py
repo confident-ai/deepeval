@@ -1,6 +1,8 @@
 from asyncio import Task
 from typing import Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
+from opentelemetry.trace import Tracer
+from opentelemetry.context import Context, attach, detach
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
@@ -10,6 +12,8 @@ import os
 import datetime
 import time
 import ast
+import uuid
+from opentelemetry import baggage
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
@@ -18,6 +22,7 @@ from deepeval.dataset.utils import (
     convert_convo_goldens_to_convo_test_cases,
     convert_convo_test_cases_to_convo_goldens,
     format_turns,
+    check_tracer,
     parse_turns,
     trimAndLoadJson,
 )
@@ -47,6 +52,7 @@ from deepeval.test_run import (
 from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing import trace_manager
+from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
 
 
 valid_file_types = ["csv", "json", "jsonl"]
@@ -1097,6 +1103,7 @@ class EvaluationDataset:
         cache_config: Optional["CacheConfig"] = None,
         error_config: Optional["ErrorConfig"] = None,
         async_config: Optional["AsyncConfig"] = None,
+        run_otel: Optional[bool] = False,
     ) -> Iterator[Golden]:
         from deepeval.evaluate.utils import (
             aggregate_metric_pass_rates,
@@ -1133,9 +1140,14 @@ class EvaluationDataset:
             start_time = time.perf_counter()
             test_results: List[TestResult] = []
 
+            # sandwich start trace for OTEL
+            if run_otel:
+                ctx = self._start_otel_test_run()  # ignored span
+                ctx_token = attach(ctx)
+
             if async_config.run_async:
                 loop = get_or_create_event_loop()
-                yield from a_execute_agentic_test_cases_from_loop(
+                for golden in a_execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     identifier=identifier,
                     loop=loop,
@@ -1145,9 +1157,19 @@ class EvaluationDataset:
                     cache_config=cache_config,
                     error_config=error_config,
                     async_config=async_config,
-                )
+                ):
+                    if run_otel:
+                        _tracer = check_tracer()
+                        with _tracer.start_as_current_span(
+                            name=EVAL_DUMMY_SPAN_NAME,
+                            context=ctx,
+                        ):
+                            yield golden
+                    else:
+                        yield golden
+
             else:
-                yield from execute_agentic_test_cases_from_loop(
+                for golden in execute_agentic_test_cases_from_loop(
                     goldens=goldens,
                     trace_metrics=metrics,
                     display_config=display_config,
@@ -1155,7 +1177,16 @@ class EvaluationDataset:
                     error_config=error_config,
                     test_results=test_results,
                     identifier=identifier,
-                )
+                ):
+                    if run_otel:
+                        _tracer = check_tracer()
+                        with _tracer.start_as_current_span(
+                            name=EVAL_DUMMY_SPAN_NAME,
+                            context=ctx,
+                        ):
+                            yield golden
+                    else:
+                        yield golden
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
@@ -1184,12 +1215,41 @@ class EvaluationDataset:
             # clean up
             openai_test_case_pairs.clear()
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
-            confident_link = global_test_run_manager.wrap_up_test_run(
-                run_duration, display_table=False
-            )
-            return EvaluationResult(
-                test_results=test_results, confident_link=confident_link
-            )
+
+            # sandwich end trace for OTEL
+            if run_otel:
+                self._end_otel_test_run(ctx)
+                detach(ctx_token)
+
+            else:
+                confident_link = global_test_run_manager.wrap_up_test_run(
+                    run_duration, display_table=False
+                )
+                return EvaluationResult(
+                    test_results=test_results, confident_link=confident_link
+                )
 
     def evaluate(self, task: Task):
         global_evaluation_tasks.append(task)
+
+    def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
+        _tracer = check_tracer(tracer)
+        run_id = str(uuid.uuid4())
+        print("Starting OTLP test run with run_id: ", run_id)
+        ctx = baggage.set_baggage(
+            "confident.test_run.id", run_id, context=Context()
+        )
+        with _tracer.start_as_current_span(
+            "start_otel_test_run", context=ctx
+        ) as span:
+            span.set_attribute("confident.test_run.id", run_id)
+        return ctx
+
+    def _end_otel_test_run(self, ctx: Context, tracer: Optional[Tracer] = None):
+        run_id = baggage.get_baggage("confident.test_run.id", context=ctx)
+        print("Ending OTLP test run with run_id: ", run_id)
+        _tracer = check_tracer(tracer)
+        with _tracer.start_as_current_span(
+            "stop_otel_test_run", context=ctx
+        ) as span:
+            span.set_attribute("confident.test_run.id", run_id)

@@ -2,6 +2,10 @@ from typing import List, Optional, Any
 import json
 import re
 
+from opentelemetry.trace import Tracer
+from opentelemetry import trace
+from opentelemetry.trace import NoOpTracerProvider
+
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, Turn
@@ -151,3 +155,22 @@ def parse_turns(turns_str: str) -> List[Turn]:
             )
         )
     return res
+
+
+def check_tracer(tracer: Optional[Tracer] = None) -> Tracer:
+    if tracer:
+        return tracer
+    # Prefer module-level test-run tracer if available
+    try:
+        from deepeval.dataset.test_run_tracer import (
+            GLOBAL_TEST_RUN_TRACER,
+        )
+
+        if GLOBAL_TEST_RUN_TRACER is not None:
+            return GLOBAL_TEST_RUN_TRACER
+    except Exception:
+        raise RuntimeError(
+            "No global OpenTelemetry tracer provider is configured."  # TODO: link to docs
+        )
+
+    return GLOBAL_TEST_RUN_TRACER

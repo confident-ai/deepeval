@@ -175,6 +175,21 @@ correctness_metric = GEval(..., model="o1")
 DeepEval also integrates with these model providers: [Ollama](https://deepeval.com/integrations/models/ollama), [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai), [Anthropic](https://deepeval.com/integrations/models/anthropic), [Gemini](https://deepeval.com/integrations/models/gemini), etc. To use **ANY** custom LLM of your choice, [check out this part of the
 docs](/guides/guides-using-custom-llms).
 
+<details>
+
+<summary>Evaluations getting "stuck"?</summary>
+
+Most likely your evaluation LLM is failing and this might be due to rate limits or insufficient quotas. By default, `deepeval` retries **transient** LLM errors once (2 attempts total):
+
+- **Retried:** network/timeout errors and **5xx** server errors.
+- **Rate limits (429):** retried unless the provider marks them non-retryable
+  (for OpenAI, `insufficient_quota` is treated as non-retryable).
+- **Backoff:** exponential with jitter (initial **1s**, base **2**, jitter **2s**, cap **5s**).
+
+You can tune these via environment flags (no code changes). See [Environment Flags](./evaluation-flags-and-configs#environment-flags) for details.
+
+</details>
+
 :::
 
 ### Save Results
