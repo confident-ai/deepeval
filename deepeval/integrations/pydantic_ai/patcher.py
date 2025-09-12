@@ -1,4 +1,5 @@
 import functools
+import deepeval
 from deepeval.tracing.types import LlmOutput, LlmToolCall
 from pydantic_ai.agent import AgentRunResult
 from deepeval.tracing.context import current_trace_context
@@ -7,6 +8,9 @@ from deepeval.tracing.tracing import Observer
 from typing import List, Callable, Optional
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.metrics.base_metric import BaseMetric
+from deepeval.confident.api import get_confident_api_key
+from deepeval.integrations.pydantic_ai.otel import instrument_pydantic_ai
+from deepeval.telemetry import capture_tracing_integration
 try:
     from pydantic_ai.agent import Agent
     from pydantic_ai.models import Model
@@ -169,9 +173,22 @@ def _patch_llm_model(model: Model, llm_metric_collection: Optional[str] = None, 
         return result
     model.request = wrapper
 
-def patch_all():
-    _patch_agent_init()
-    _patch_agent_tool_decorator()
+def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
+
+    if api_key:
+        deepeval.login(api_key)
+
+    api_key = get_confident_api_key()
+
+    if not api_key:
+        raise ValueError("No api key provided.")
+    
+    if otel:
+        instrument_pydantic_ai(api_key)
+    else:
+        with capture_tracing_integration("pydantic_ai"):
+            _patch_agent_init()
+            _patch_agent_tool_decorator()
 
 def set_llm_span_attributes(llm_span: LlmSpan, requests: List[ModelRequest], result: ModelResponse):
     
