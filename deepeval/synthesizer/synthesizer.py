@@ -569,7 +569,7 @@ class Synthesizer:
         include_expected_output: bool,
         max_goldens_per_context: int,
         source_files: Optional[List[str]],
-        index: int,
+        context_index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         context_scores: Optional[List[float]] = None,
@@ -591,7 +591,7 @@ class Synthesizer:
         # Add pbars
         pbar_generate_goldens_id = add_pbar(
             progress,
-            f"\t⚡ Generating goldens from context #{index}",
+            f"\t⚡ Generating goldens from context #{context_index}",
             total=1 + max_goldens_per_context,
         )
         pbar_generate_inputs_id = add_pbar(
@@ -635,7 +635,7 @@ class Synthesizer:
 
         # Helper function to process each input in parallel
         async def process_input(
-            index: int,
+            input_index: int,
             data: SyntheticData,
             progress: Optional[Progress] = None,
         ):
@@ -646,7 +646,7 @@ class Synthesizer:
                 num_evolutions=self.evolution_config.num_evolutions,
                 evolutions=self.evolution_config.evolutions,
                 progress=progress,
-                pbar_evolve_input_id=pbar_evolve_input_ids[index],
+                pbar_evolve_input_id=pbar_evolve_input_ids[input_index],
                 remove_pbar=False,
             )
 
@@ -664,7 +664,7 @@ class Synthesizer:
                 )
                 evolved_input = res.input
                 update_pbar(
-                    progress, pbar_evolve_input_ids[index], remove=False
+                    progress, pbar_evolve_input_ids[input_index], remove=False
                 )
 
             # Generate expected output
@@ -677,7 +677,7 @@ class Synthesizer:
                 )
                 expected_output = await self._a_generate(expected_output_prompt)
                 update_pbar(
-                    progress, pbar_evolve_input_ids[index], remove=False
+                    progress, pbar_evolve_input_ids[input_index], remove=False
                 )
 
             # Create Golden
@@ -686,13 +686,13 @@ class Synthesizer:
                 context=context,
                 expected_output=expected_output,
                 source_file=(
-                    source_files[index]
-                    if source_files is not None and index < len(source_files)
+                    source_files[context_index]
+                    if source_files is not None and context_index < len(source_files)
                     else None
                 ),
                 additional_metadata={
                     "evolutions": evolutions_used,
-                    "synthetic_input_quality": scores[index],
+                    "synthetic_input_quality": scores[input_index],
                     # "context_quality": (
                     #     context_scores[data_index]
                     #     if context_scores is not None
