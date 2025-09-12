@@ -21,6 +21,12 @@ class Environment(Enum):
     TESTING = "testing"
 
 
+def _strip_nul(s: str) -> str:
+    # Replace embedded NUL, which Postgres cannot store in text/jsonb
+    # Do NOT try to escape as \u0000 because PG will still reject it.
+    return s.replace("\x00", "")
+
+
 def tracing_enabled():
     return os.getenv(CONFIDENT_TRACING_ENABLED, "YES").upper() == "YES"
 
@@ -49,6 +55,11 @@ def make_json_serializable(obj):
 
     def _serialize(o):
         oid = id(o)
+
+        # strip Nulls
+        if isinstance(o, str):
+            return _strip_nul(o)
+
         # Primitive types are already serializable
         if isinstance(o, (str, int, float, bool)) or o is None:
             return o
@@ -84,7 +95,7 @@ def make_json_serializable(obj):
             return result
 
         # Fallback: convert to string
-        return str(o)
+        return _strip_nul(str(o))
 
     return _serialize(obj)
 
