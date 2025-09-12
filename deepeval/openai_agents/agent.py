@@ -14,7 +14,7 @@ except Exception as e:
         "openai-agents is required for this integration. Please install it."
     ) from e
 
-TContext = TypeVar("TContext")
+TContext = TypeVar('TContext')
 
 
 class _ObservedModel(Model):

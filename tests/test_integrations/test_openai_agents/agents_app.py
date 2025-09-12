@@ -1,11 +1,6 @@
 from agents import add_trace_processor
 import asyncio
-from deepeval.openai_agents import (
-    Runner,
-    Agent,
-    function_tool,
-    DeepEvalTracingProcessor,
-)
+from deepeval.openai_agents import Runner, Agent, function_tool, DeepEvalTracingProcessor
 
 from deepeval.prompt import Prompt
 
