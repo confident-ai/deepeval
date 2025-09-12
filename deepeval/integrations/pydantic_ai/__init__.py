@@ -1,3 +1,3 @@
-from .patcher import instrument
+from .patcher import instrument as instrument_pydantic_ai
 
-__all__ = ["instrument"]
+__all__ = ["instrument_pydantic_ai"]

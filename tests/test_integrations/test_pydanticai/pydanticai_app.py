@@ -8,8 +8,8 @@ from pydantic import BaseModel
 from pydantic_ai import RunContext
 from pydantic_ai import Agent
 from deepeval.prompt import Prompt
-from deepeval.integrations.pydantic_ai import instrument
-instrument()
+from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
+instrument_pydantic_ai()
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
