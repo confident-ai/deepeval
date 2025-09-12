@@ -82,21 +82,27 @@ def _patch_agent_init():
         *args, 
         llm_metric_collection: Optional[str] = None,
         llm_metrics: Optional[List[BaseMetric]] = None,
+        agent_metric_collection: Optional[str] = None,
+        agent_metrics: Optional[List[BaseMetric]] = None,
         **kwargs):
         result = original_init(self, *args, **kwargs)
         _patch_llm_model(self._model, llm_metric_collection, llm_metrics) # runtime patch of the model
+        _patch_agent_run(agent_metric_collection, agent_metrics)
         return result
 
     Agent.__init__ = wrapper
 
-def _patch_agent_run():
+def _patch_agent_run(
+    agent_metric_collection: Optional[str] = None,
+    agent_metrics: Optional[List[BaseMetric]] = None,
+):
     original_run = Agent.run
 
     @functools.wraps(original_run)
     async def wrapper(
         *args,
-        metric_collection: Optional[str] = None,
-        metrics: Optional[List[BaseMetric]] = None,
+        trace_metric_collection: Optional[str] = None,
+        trace_metrics: Optional[List[BaseMetric]] = None,
         trace_name: Optional[str] = None,
         trace_tags: Optional[List[str]] = None,
         trace_metadata: Optional[dict] = None,
@@ -108,8 +114,8 @@ def _patch_agent_run():
             span_type="agent",
             func_name="Agent",
             function_kwargs={"input": args[1]},
-            metrics=metrics,
-            metric_collection=metric_collection,
+            metrics=agent_metrics,
+            metric_collection=agent_metric_collection,
         ) as observer:
             result = await original_run(*args, **kwargs)
             observer.update_span_properties = (
@@ -129,6 +135,8 @@ def _patch_agent_run():
             current_trace.metadata = trace_metadata
             current_trace.thread_id = trace_thread_id
             current_trace.user_id = trace_user_id
+            current_trace.metric_collection = trace_metric_collection
+            current_trace.metrics = trace_metrics
 
         return result
 
@@ -163,7 +171,6 @@ def _patch_llm_model(model: Model, llm_metric_collection: Optional[str] = None, 
 
 def patch_all():
     _patch_agent_init()
-    _patch_agent_run()
     _patch_agent_tool_decorator()
 
 def set_llm_span_attributes(llm_span: LlmSpan, requests: List[ModelRequest], result: ModelResponse):
