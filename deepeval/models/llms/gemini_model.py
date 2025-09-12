@@ -1,9 +1,10 @@
-from pydantic import BaseModel
-from google.genai import types
-from typing import Optional, Dict
-from google import genai
+from typing import Any, Dict, Optional, Tuple
 
-from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
+from google import genai
+from google.genai import types
+from pydantic import BaseModel
+
+from deepeval.key_handler import KEY_FILE_HANDLER, ModelKeyValues
 from deepeval.models.base_model import DeepEvalBaseLLM
 
 default_gemini_model = "gemini-1.5-pro"
@@ -145,6 +146,10 @@ class GeminiModel(DeepEvalBaseLLM):
         ]
         return self.client.models
 
+    ###############################################
+    # Generate functions
+    ###############################################
+
     def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
         """Generates text from a prompt.
 
@@ -216,6 +221,164 @@ class GeminiModel(DeepEvalBaseLLM):
                 ),
             )
             return response.text, 0
+
+    ###############################################
+    # Other generate functions
+    ###############################################
+
+    def generate_raw_response(
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+    ) -> Tuple[Any, float]:
+        """Generates a raw response with top log probabilities.
+
+        Mirrors the OpenAI interface: returns (raw_response, cost).
+        Cost is 0.0 as Gemini usage pricing calculation is not implemented here.
+        """
+        # Enable logprobs in generation config when supported
+        # Gemini only supports logprobs in the range [0, 20)
+        safe_logprobs = max(0, min(int(top_logprobs), 19))
+
+        raw = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                safety_settings=self.model_safety_settings,
+                temperature=self.temperature,
+                # Gemini logprobs configuration
+                response_logprobs=True,
+                logprobs=safe_logprobs,
+            ),
+        )
+        wrapped = GeminiModel.transform_gemini_to_openai_like(raw)
+        return wrapped, 0.0
+
+    async def a_generate_raw_response(
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+    ) -> Tuple[Any, float]:
+        """Async version: returns raw response with top log probabilities.
+
+        Returns (raw_response, cost). Cost is 0.0 for now.
+        """
+        # Gemini only supports logprobs in the range [0, 20)
+        safe_logprobs = max(0, min(int(top_logprobs), 19))
+
+        raw = await self.client.aio.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                safety_settings=self.model_safety_settings,
+                temperature=self.temperature,
+                response_logprobs=True,
+                logprobs=safe_logprobs,
+            ),
+        )
+        wrapped = GeminiModel.transform_gemini_to_openai_like(raw)
+        return wrapped, 0.0
+
+    ###############################################
+    # Utilities
+    ###############################################
+
+    @staticmethod
+    def transform_gemini_to_openai_like(raw: Any) -> Any:
+        """Transform a Gemini GenerateContentResponse into an OpenAI-like ChatCompletion.
+
+        Aligns with the actual Gemini response structure (snake_case):
+        - choices[0].message.content is built by concatenating candidate.content.parts[*].text
+        - choices[0].logprobs.content is built from candidate.logprobs_result:
+            - chosen_candidates: the emitted tokens per position
+            - top_candidates[i].candidates: top alternatives for position i with log_probability
+        """
+        # Extract primary candidate
+        candidates = getattr(raw, "candidates", None) or []
+        candidate0 = candidates[0] if candidates else None
+
+        # Build text content (prefer raw.text if available)
+        text_content = getattr(raw, "text", None) or ""
+        if (
+            not text_content
+            and candidate0
+            and getattr(candidate0, "content", None)
+        ):
+            parts = getattr(candidate0.content, "parts", None) or []
+            texts = []
+            for part in parts:
+                if hasattr(part, "text") and part.text:
+                    texts.append(part.text)
+            text_content = "".join(texts)
+
+        # Structures to mimic OpenAI
+        class _TokenTopLogprob:
+            def __init__(self, token: str, logprob: float):
+                self.token = token
+                self.logprob = logprob
+
+        class _TokenLogprob:
+            def __init__(
+                self, token: str, top_logprobs: list[_TokenTopLogprob]
+            ):
+                self.token = token
+                self.top_logprobs = top_logprobs
+
+        class _Logprobs:
+            def __init__(self, content: list[_TokenLogprob]):
+                self.content = content
+
+        class _Message:
+            def __init__(self, content: str):
+                self.content = content
+
+        class _Choice:
+            def __init__(self, message: _Message, logprobs: _Logprobs):
+                self.message = message
+                self.logprobs = logprobs
+
+        class _Completion:
+            def __init__(self, choices: list[_Choice]):
+                self.choices = choices
+
+        # Convert logprobs using the explicit Gemini fields
+        converted_tokens: list[_TokenLogprob] = []
+        try:
+            logprobs_result = (
+                getattr(candidate0, "logprobs_result", None)
+                if candidate0
+                else None
+            )
+            if logprobs_result is not None:
+                chosen = (
+                    getattr(logprobs_result, "chosen_candidates", None) or []
+                )
+                top = getattr(logprobs_result, "top_candidates", None) or []
+                length = min(len(chosen), len(top))
+                for i in range(length):
+                    chosen_token = getattr(chosen[i], "token", "") or ""
+                    per_token_top = []
+                    top_i = getattr(top[i], "candidates", None) or []
+                    for cand in top_i:
+                        tok = getattr(cand, "token", "") or ""
+                        lp = getattr(cand, "log_probability", None)
+                        if tok != "" and isinstance(lp, (int, float)):
+                            per_token_top.append(
+                                _TokenTopLogprob(tok, float(lp))
+                            )
+                    converted_tokens.append(
+                        _TokenLogprob(chosen_token, per_token_top)
+                    )
+        except Exception:
+            converted_tokens = []
+
+        logprobs_obj = _Logprobs(converted_tokens)
+        wrapped = _Completion([_Choice(_Message(text_content), logprobs_obj)])
+        return wrapped
+
+    ###############################################
+    # Model
+    ###############################################
 
     def get_model_name(self) -> str:
         """Returns the name of the Gemini model being used."""
