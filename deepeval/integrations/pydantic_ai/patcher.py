@@ -5,7 +5,7 @@ from pydantic_ai.agent import AgentRunResult
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import AgentSpan, LlmSpan
 from deepeval.tracing.tracing import Observer
-from typing import List, Callable, Optional
+from typing import List, Callable, Optional, Any
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.confident.api import get_confident_api_key
@@ -129,22 +129,44 @@ def _patch_agent_run(
             )
             observer.result = result.output
             
-            current_trace = current_trace_context.get()
-            
-            current_trace.input = args[1]
-            current_trace.output = result.output
-
-            current_trace.name = trace_name
-            current_trace.tags = trace_tags
-            current_trace.metadata = trace_metadata
-            current_trace.thread_id = trace_thread_id
-            current_trace.user_id = trace_user_id
-            current_trace.metric_collection = trace_metric_collection
-            current_trace.metrics = trace_metrics
+            _update_trace_context(
+                trace_name=trace_name, 
+                trace_tags=trace_tags, 
+                trace_metadata=trace_metadata, 
+                trace_thread_id=trace_thread_id, 
+                trace_user_id=trace_user_id, 
+                trace_metric_collection=trace_metric_collection, 
+                trace_metrics=trace_metrics, 
+                trace_input=args[1], 
+                trace_output=result.output
+            )
 
         return result
 
     Agent.run = wrapper
+
+def _update_trace_context(
+    trace_name: Optional[str] = None, 
+    trace_tags: Optional[List[str]] = None, 
+    trace_metadata: Optional[dict] = None, 
+    trace_thread_id: Optional[str] = None, 
+    trace_user_id: Optional[str] = None, 
+    trace_metric_collection: Optional[str] = None, 
+    trace_metrics: Optional[List[BaseMetric]] = None,
+    trace_input: Optional[Any] = None,
+    trace_output: Optional[Any] = None,
+):
+    
+    current_trace = current_trace_context.get()
+    current_trace.name = trace_name
+    current_trace.tags = trace_tags
+    current_trace.metadata = trace_metadata
+    current_trace.thread_id = trace_thread_id
+    current_trace.user_id = trace_user_id
+    current_trace.metric_collection = trace_metric_collection
+    current_trace.metrics = trace_metrics
+    current_trace.input = trace_input
+    current_trace.output = trace_output
 
 def _patch_llm_model(model: Model, llm_metric_collection: Optional[str] = None, llm_metrics: Optional[List[BaseMetric]] = None):
     original_func = model.request
