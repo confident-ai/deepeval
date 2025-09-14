@@ -14,9 +14,10 @@ from deepeval.models.llms.openai_model import (
     log_retry_error,
 )
 from deepeval.models.retry_policy import (
-    default_wait,
-    default_stop,
+    dynamic_wait,
+    dynamic_stop,
     retry_predicate,
+    sdk_retries_for,
     AZURE_OPENAI_ERROR_POLICY,
 )
 from deepeval.models.llms.utils import trim_and_load_json
@@ -26,8 +27,8 @@ from deepeval.models.utils import parse_model_name
 logger = logging.getLogger(__name__)
 
 _base_retry_rules_kw = dict(
-    wait=default_wait(),
-    stop=default_stop(),
+    wait=dynamic_wait(),
+    stop=dynamic_stop(),
     retry=retry_predicate(AZURE_OPENAI_ERROR_POLICY),
     before_sleep=before_sleep_log(logger, logging.INFO),
     after=log_retry_error,
@@ -267,8 +268,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         # ensure SDK retries are disabled and let Tenacity handle this via our retry policy
-        kwargs = dict(self.kwargs or {})
-        kwargs["max_retries"] = 0
+        kwargs = self._client_kwargs()
         if not async_mode:
             return AzureOpenAI(
                 api_key=self.azure_openai_api_key,
@@ -284,3 +284,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
             azure_deployment=self.deployment_name,
             **kwargs,  # ← Keep this for client initialization
         )
+
+    def _client_kwargs(self) -> Dict:
+        # start with any caller provided client kwargs
+        kwargs = dict(self.kwargs or {})
+        # if Tenacity should handle retries, disable SDK retries.
+        # if the user opts into SDK retries for azure, keep their max_retries as is.
+        if not sdk_retries_for("azure"):
+            kwargs["max_retries"] = 0
+        return kwargs

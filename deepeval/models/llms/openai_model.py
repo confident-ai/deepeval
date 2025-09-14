@@ -10,26 +10,20 @@ from openai import (
     AsyncOpenAI,
 )
 
-from tenacity import retry, RetryCallState, before_sleep_log
+from tenacity import retry, before_sleep_log
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
 from deepeval.models.retry_policy import (
     OPENAI_ERROR_POLICY,
-    default_wait,
-    default_stop,
+    dynamic_wait,
+    dynamic_stop,
     retry_predicate,
+    log_retry_error,
 )
 
-logger = logging.getLogger("deepeval.openai_model")
-
-
-def log_retry_error(retry_state: RetryCallState):
-    exception = retry_state.outcome.exception()
-    logger.error(
-        f"OpenAI Error: {exception} Retrying: {retry_state.attempt_number} time(s)..."
-    )
+logger = logging.getLogger(__name__)
 
 
 valid_gpt_models = [
@@ -220,8 +214,8 @@ models_requiring_temperature_1 = [
 ]
 
 _base_retry_rules_kw = dict(
-    wait=default_wait(),
-    stop=default_stop(),
+    wait=dynamic_wait(),
+    stop=dynamic_stop(),
     retry=retry_predicate(OPENAI_ERROR_POLICY),
     before_sleep=before_sleep_log(
         logger, logging.INFO
@@ -500,6 +494,7 @@ class GPTModel(DeepEvalBaseLLM):
     ###############################################
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
+        # TODO: consider loggin a warning instead of defaulting to whole model pricing
         pricing = model_pricing.get(self.model_name, model_pricing)
         input_cost = input_tokens * pricing["input"]
         output_cost = output_tokens * pricing["output"]

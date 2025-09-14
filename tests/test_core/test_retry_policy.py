@@ -1,11 +1,9 @@
-import pytest
-
 from deepeval.models.retry_policy import (
     ErrorPolicy,
     extract_error_code,
     make_is_transient,
-    default_wait,
-    default_stop,
+    dynamic_wait,
+    dynamic_stop,
 )
 
 ##############################################
@@ -29,6 +27,11 @@ class RateLimitError(Exception):
         super().__init__(msg)
         self.response = response
         self.body = body
+
+
+class FakeClientError(Exception):
+    def __init__(self, response):
+        self.response = response
 
 
 class NetTimeout(Exception): ...
@@ -174,24 +177,24 @@ def test_extract_code_body_not_dict_is_ignored():
 
 
 def test_http_status_non_int_or_missing_means_no_retry():
-    policy = make_policy()
-    pred = make_is_transient(policy)
+    base = make_policy()
 
     class WeirdHTTP(Exception):
         pass
 
-    # Build a policy that treats WeirdHTTP as an http_exc
+    # treat WeirdHTTP as an HTTP error, but it has no status_code attr
     weird_policy = ErrorPolicy(
-        auth_excs=policy.auth_excs,
-        rate_limit_excs=policy.rate_limit_excs,
-        network_excs=policy.network_excs,
-        http_excs=(WeirdHTTP,),  # no status_code attr
-        non_retryable_codes=policy.non_retryable_codes,
+        auth_excs=base.auth_excs,
+        rate_limit_excs=base.rate_limit_excs,
+        network_excs=base.network_excs,
+        http_excs=(WeirdHTTP,),  # no status_code -> should not retry
+        non_retryable_codes=base.non_retryable_codes,
         retry_5xx=True,
-        message_markers=policy.message_markers,
+        message_markers=base.message_markers,
     )
-    weird_pred = make_is_transient(weird_policy)
-    assert weird_pred(WeirdHTTP()) is False  # no status_code -> no retry
+
+    pred = make_is_transient(weird_policy)
+    assert pred(WeirdHTTP()) is False
 
 
 def test_retry_5xx_false_disables_server_retries():
@@ -232,17 +235,24 @@ def test_numeric_zero_code_stringified():
 
 
 ############################################
-# default_wait / default_stop construction #
+# dynamic_wait / dynamic_stop construction #
 ############################################
 
 
-def test_default_wait_bounds_env(monkeypatch):
+def test_dynamic_wait_bounds_env(monkeypatch):
     monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "0.0")  # below min
-    w = default_wait()
+    w = dynamic_wait()
     # Can't introspect tenacity easily; just ensure callable exists
     assert callable(w)  # sanity
 
 
-def test_default_stop_default_attempts():
-    s = default_stop()
+def test_dynamic_stop_default_attempts():
+    s = dynamic_stop()
     assert callable(s)
+
+
+def test_extract_code_botocore_shape():
+    e = FakeClientError(
+        {"Error": {"Code": "ThrottlingException", "Message": "..."}}
+    )
+    assert extract_error_code(e) == "ThrottlingException"

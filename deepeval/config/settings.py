@@ -16,12 +16,24 @@ from dotenv import dotenv_values
 from pathlib import Path
 from pydantic import AnyUrl, SecretStr, field_validator, confloat
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Any, Dict, Optional, NamedTuple
+from typing import Any, Dict, List, Optional, NamedTuple
 
-from deepeval.config.utils import parse_bool
+from deepeval.config.utils import (
+    parse_bool,
+    coerce_to_list,
+    dedupe_preserve_order,
+)
 
 
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
+_SUPPORTED_PROVIDER_SLUGS = {
+    "openai",
+    "azure",
+    "bedrock",
+    "anthropic",
+    "google",
+    "ollama",
+}
 
 
 def _find_legacy_enum(env_key: str):
@@ -265,6 +277,11 @@ class Settings(BaseSettings):
     LOCAL_EMBEDDING_BASE_URL: Optional[AnyUrl] = None
 
     #
+    # Retry Policy
+    #
+    DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = None
+
+    #
     # Telemetry and Debug
     #
     DEEPEVAL_TELEMETRY_OPT_OUT: Optional[bool] = None
@@ -400,6 +417,27 @@ class Settings(BaseSettings):
         if not s:
             return None
         return s.upper()
+
+    @field_validator("DEEPEVAL_SDK_RETRY_PROVIDERS", mode="before")
+    @classmethod
+    def _coerce_to_list(cls, v):
+        # works with JSON list, comma/space/semicolon separated, or real lists
+        return coerce_to_list(v, lower=True)
+
+    @field_validator("DEEPEVAL_SDK_RETRY_PROVIDERS", mode="after")
+    @classmethod
+    def _validate_sdk_provider_list(cls, v):
+        if v is None:
+            return None
+        v = dedupe_preserve_order(v)
+        # allow "*", otherwise enforce known slugs
+        filtered: List[str] = []
+        for item in v:
+            if item == "*" or item in _SUPPORTED_PROVIDER_SLUGS:
+                filtered.append(item)
+            # else:
+            #   TODO: log warning when in verbose or debug mode
+        return filtered or None
 
     #######################
     # Persistence support #

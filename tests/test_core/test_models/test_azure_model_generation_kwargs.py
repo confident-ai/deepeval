@@ -143,7 +143,7 @@ class TestAzureOpenAIModelGenerationKwargs:
 
     @patch("deepeval.models.llms.azure_model.AzureOpenAI")
     def test_load_model_passes_kwargs_to_client(self, mock_azure_openai):
-        """Test that kwargs are passed to Azure OpenAI client"""
+        """Test that client kwargs are passed, and SDK retries are disabled"""
         mock_client = Mock()
         mock_azure_openai.return_value = mock_client
 
@@ -154,22 +154,19 @@ class TestAzureOpenAIModelGenerationKwargs:
             azure_endpoint="test-endpoint",
             openai_api_version="2024-02-15-preview",
             timeout=30,
-            max_retries=5,
+            max_retries=5,  # user-provided, but we should override it to 0
         )
 
-        # Reset the mock since it was called during initialization
         mock_azure_openai.reset_mock()
 
-        client = model.load_model(async_mode=False)
+        _ = model.load_model(async_mode=False)
 
-        # Verify AzureOpenAI was called with kwargs
         mock_azure_openai.assert_called_once()
-        call_kwargs = mock_azure_openai.call_args[1]  # Get keyword arguments
+        call_kwargs = mock_azure_openai.call_args[1]
 
-        assert "timeout" in call_kwargs
-        assert "max_retries" in call_kwargs
         assert call_kwargs["timeout"] == 30
-        assert call_kwargs["max_retries"] == 5
+        # deepeval disables SDK retries to avoid double retries (Tenacity handles them)
+        assert call_kwargs["max_retries"] == 0
 
     def test_backwards_compatibility(self):
         """Test that existing code without generation_kwargs still works"""
