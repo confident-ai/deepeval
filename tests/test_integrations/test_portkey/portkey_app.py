@@ -11,10 +11,11 @@ config = {
 
 client = Portkey(config = config, metric_collection="test_collection_1")
 
-# Example: Send a chat completion request
-response = client.chat.completions.create(
-    messages=[{"role": "user", "content": "Hello, how are you?"}],
-    model="gpt-4o"
-)
 
-print(response.choices[0].message.content)
+def execute_chat_completion():
+    # Example: Send a chat completion request
+    response = client.chat.completions.create(
+        messages=[{"role": "user", "content": "Hello, how are you?"}],
+        model="gpt-4o"
+    )
+    print(response.choices[0].message.content)
