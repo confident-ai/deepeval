@@ -49,20 +49,20 @@ class TestPromptText:
     def test_polling(self):
         prompt = Prompt(alias=self.ALIAS_WITH_INTERPOLATION_TYPE)
         UUID = uuid.uuid4()
-        
+
         prompt.push(text=f"Polling test {UUID}")
         prompt.pull(refresh=2, version="00.00.01")
-        
+
         assert "00.00.01" in prompt._refresh_map
         assert prompt._refresh_map["00.00.01"] == 2
         assert len(prompt._polling_tasks) > 0
         time.sleep(4)
-        
+
         assert prompt._text_template is not None
         assert prompt._messages_template is None
         assert prompt._prompt_version_id is not None
         assert prompt._type == PromptType.TEXT
-        assert prompt._interpolation_type == PromptInterpolationType.FSTRING
+        assert prompt._interpolation_type == PromptInterpolationType.MUSTACHE
 
 
 class TestPromptList:
@@ -121,14 +121,14 @@ class TestPromptList:
         ]
         prompt.push(messages=messages)
         prompt.pull(refresh=2, version="00.00.01")
-        
+
         assert "00.00.01" in prompt._refresh_map
         assert prompt._refresh_map["00.00.01"] == 2
         assert len(prompt._polling_tasks) > 0
         time.sleep(4)
-        
+
         prompt.pull(refresh=0, version="00.00.01")
-        
+
         assert len(prompt._refresh_map) == 0
         assert len(prompt._polling_tasks) == 0
         assert prompt._text_template is None
