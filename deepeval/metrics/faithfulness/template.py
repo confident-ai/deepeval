@@ -4,7 +4,7 @@ from typing import Optional, List
 class FaithfulnessTemplate:
     @staticmethod
     def generate_claims(actual_output: str):
-        return f"""Based on the given text, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided text.
+        return f"""Based on the given text, please extract a comprehensive list of FACTUAL, undisputed truths, that can inferred from the provided actual AI output.
 These truths, MUST BE COHERENT, and CANNOT be taken out of context.
     
 Example:
@@ -24,9 +24,10 @@ Example JSON:
 IMPORTANT: Please make sure to only return in JSON format, with the "claims" key as a list of strings. No words or explanation is needed.
 Only include claims that are factual, BUT IT DOESN'T MATTER IF THEY ARE FACTUALLY CORRECT. The claims you extract should include the full context it was presented in, NOT cherry picked facts.
 You should NOT include any prior knowledge, and take the text at face value when extracting claims.
+You should be aware that it is an AI that is outputting these claims.
 **
 
-Text:
+AI Output:
 {actual_output}
 
 JSON:
