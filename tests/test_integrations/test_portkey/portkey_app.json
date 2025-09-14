@@ -1,0 +1,44 @@
+{
+  "agentSpans": [],
+  "baseSpans": [],
+  "endTime": "2025-09-14T14:32:55.155Z",
+  "environment": "development",
+  "input": {},
+  "llmSpans": [
+    {
+      "endTime": "2025-09-14T14:32:55.155Z",
+      "input": [
+        {
+          "content": "Hello, how are you?",
+          "role": "user"
+        }
+      ],
+      "metricCollection": "test_collection_1",
+      "model": "gpt-4o",
+      "name": "LLM",
+      "output": [
+        {
+          "content": "<is_present>",
+          "role": "AI"
+        }
+      ],
+      "prompt": {},
+      "startTime": "2025-09-14T14:32:53.801Z",
+      "status": "SUCCESS",
+      "type": "llm",
+      "uuid": "<is_present>"
+    }
+  ],
+  "metricCollection": "test_collection_1",
+  "output": [
+    {
+      "content": "<is_present>",
+      "role": "AI"
+    }
+  ],
+  "retrieverSpans": [],
+  "startTime": "2025-09-14T14:32:53.801Z",
+  "status": "SUCCESS",
+  "toolSpans": [],
+  "uuid": "<is_present>"
+}
