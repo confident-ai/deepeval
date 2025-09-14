@@ -1,5 +1,3 @@
-from .agent import PydanticAIAgent as Agent
-from .setup import instrument_pydantic_ai
+from .patcher import instrument as instrument_pydantic_ai
 
-
-__all__ = ["Agent", "instrument_pydantic_ai"]
+__all__ = ["instrument_pydantic_ai"]
