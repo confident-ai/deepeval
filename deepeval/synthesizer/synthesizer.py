@@ -361,7 +361,7 @@ class Synthesizer:
                 progress if _progress is None else nullcontext()
             ):
 
-                for i, context in enumerate(contexts):
+                for context_index, context in enumerate(contexts):
                     # Calculate pbar lengths
                     should_style = (
                         self.styling_config.input_format
@@ -381,7 +381,7 @@ class Synthesizer:
                     # Add pbars
                     pbar_generate_goldens_id = add_pbar(
                         progress,
-                        f"\t⚡ Generating goldens from context #{i}",
+                        f"\t⚡ Generating goldens from context #{context_index}",
                         total=1 + max_goldens_per_context,
                     )
                     pbar_generate_inputs_id = add_pbar(
@@ -421,7 +421,7 @@ class Synthesizer:
                         progress, pbar_generate_goldens_id, remove=False
                     )
 
-                    for j, data in enumerate(qualified_synthetic_inputs):
+                    for input_index, data in enumerate(qualified_synthetic_inputs):
                         # Evolve input
                         evolved_input, evolutions_used = self._evolve_input(
                             input=data.input,
@@ -429,7 +429,7 @@ class Synthesizer:
                             num_evolutions=self.evolution_config.num_evolutions,
                             evolutions=self.evolution_config.evolutions,
                             progress=progress,
-                            pbar_evolve_input_id=pbar_evolve_input_ids[j],
+                            pbar_evolve_input_id=pbar_evolve_input_ids[input_index],
                             remove_pbar=False,
                         )
 
@@ -441,7 +441,7 @@ class Synthesizer:
                                 task=self.styling_config.task,
                             )
                             update_pbar(
-                                progress, pbar_evolve_input_ids[j], remove=False
+                                progress, pbar_evolve_input_ids[input_index], remove=False
                             )
                             res: SyntheticData = self._generate_schema(
                                 prompt,
@@ -455,15 +455,15 @@ class Synthesizer:
                             input=evolved_input,
                             context=context,
                             source_file=(
-                                source_files[i]
+                                source_files[context_index]
                                 if source_files is not None
                                 else None
                             ),
                             additional_metadata={
                                 "evolutions": evolutions_used,
-                                "synthetic_input_quality": scores[j],
+                                "synthetic_input_quality": scores[input_index],
                                 "context_quality": (
-                                    _context_scores[i]
+                                    _context_scores[context_index]
                                     if _context_scores is not None
                                     else None
                                 ),
@@ -480,7 +480,7 @@ class Synthesizer:
                             res = self._generate(prompt)
                             golden.expected_output = res
                             update_pbar(
-                                progress, pbar_evolve_input_ids[j], remove=False
+                                progress, pbar_evolve_input_ids[input_index], remove=False
                             )
 
                         goldens.append(golden)
