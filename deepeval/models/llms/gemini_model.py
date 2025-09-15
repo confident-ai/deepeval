@@ -1,12 +1,33 @@
+import logging
+
 from pydantic import BaseModel
 from google.genai import types
 from typing import Optional, Dict
 from google import genai
+from tenacity import retry, before_sleep_log
 
+from deepeval.models.retry_policy import (
+    dynamic_wait,
+    dynamic_stop,
+    dynamic_retry,
+    log_retry_error,
+)
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseLLM
 
+
+logger = logging.getLogger(__name__)
 default_gemini_model = "gemini-1.5-pro"
+
+# consistent retry rules
+_retry_kw = dict(
+    wait=dynamic_wait(),
+    stop=dynamic_stop(),
+    retry=dynamic_retry("google"),
+    before_sleep=before_sleep_log(logger, logging.INFO),
+    after=log_retry_error,
+)
+retry_gemini = retry(**_retry_kw)
 
 
 class GeminiModel(DeepEvalBaseLLM):
@@ -145,6 +166,7 @@ class GeminiModel(DeepEvalBaseLLM):
         ]
         return self.client.models
 
+    @retry_gemini
     def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
         """Generates text from a prompt.
 
@@ -180,6 +202,7 @@ class GeminiModel(DeepEvalBaseLLM):
             )
             return response.text, 0
 
+    @retry_gemini
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> str:

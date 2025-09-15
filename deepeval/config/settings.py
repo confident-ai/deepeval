@@ -27,12 +27,14 @@ from deepeval.config.utils import (
 
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
 _SUPPORTED_PROVIDER_SLUGS = {
-    "openai",
     "azure",
-    "bedrock",
     "anthropic",
+    "bedrock",
+    "deepseek",
     "google",
+    "grok",
     "ollama",
+    "openai",
 }
 
 

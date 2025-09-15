@@ -108,6 +108,17 @@ def extract_error_code(
     Returns:
         The code string if found, else "".
     """
+    # 0. gRPC: use e.code() -> grpc.StatusCode
+    code_fn = getattr(e, "code", None)
+    if callable(code_fn):
+        try:
+            sc = code_fn()
+            name = getattr(sc, "name", None) or str(sc)
+            if isinstance(name, str):
+                return name.lower()
+        except Exception:
+            pass
+
     # 1. Structured JSON in e.response.json()
     resp = getattr(e, response_attr, None)
     if resp is not None:
@@ -290,8 +301,12 @@ try:
 except Exception:  # pragma: no cover - OpenAI may not be installed in some envs
     OPENAI_ERROR_POLICY = None
 
-AZURE_OPENAI_ERROR_POLICY = OPENAI_ERROR_POLICY
 
+##########################
+# Models that use OpenAI #
+##########################
+AZURE_OPENAI_ERROR_POLICY = OPENAI_ERROR_POLICY
+DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
 
 ######################
 # AWS Bedrock Policy #
@@ -356,6 +371,141 @@ except Exception:  # botocore not present (aiobotocore optional)
     BEDROCK_ERROR_POLICY = None
 
 
+####################
+# Anthropic Policy #
+####################
+
+try:
+    from anthropic import (
+        AuthenticationError,
+        RateLimitError,
+        APIConnectionError,
+        APITimeoutError,
+        APIStatusError,
+    )
+
+    ANTHROPIC_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(AuthenticationError,),
+        rate_limit_excs=(RateLimitError,),
+        network_excs=(APIConnectionError, APITimeoutError),
+        http_excs=(APIStatusError,),
+        non_retryable_codes=frozenset(),  # update if we learn of hard quota codes
+        message_markers={},
+    )
+except Exception:  # Anthropic optional
+    ANTHROPIC_ERROR_POLICY = None
+
+
+#####################
+# Google/Gemini Policy
+#####################
+# The google genai SDK raises google.genai.errors.*. Public docs and issues show:
+# - errors.ClientError for 4xx like 400/401/403/404/422/429
+# - errors.ServerError for 5xx
+# - errors.APIError is a common base that exposes `.code` and message text
+# The SDK doesn’t guarantee a `.status_code` attribute, but it commonly exposes `.code`,
+# so we treat ServerError as transient (network-like) to get 5xx retries.
+# For rate limiting (429 Resource Exhausted), we treat *ClientError* as rate limit class
+# and gate retries using message markers (code sniffing).
+# See: https://github.com/googleapis/python-genai?tab=readme-ov-file#error-handling
+try:
+    from google.genai import errors as gerrors
+
+    try:
+        # httpx is an indirect dependency
+        import httpx
+
+        _HTTPX_EXCS_NAMES = (
+            "ConnectError",
+            "ConnectTimeout",
+            "ReadTimeout",
+            "WriteTimeout",
+            "TimeoutException",
+            "PoolTimeout",
+        )
+        _HTTPX_EXCS = tuple(
+            getattr(httpx, name)
+            for name in _HTTPX_EXCS_NAMES
+            if hasattr(httpx, name)
+        )
+    except Exception:
+        _HTTPX_EXCS = ()
+
+    GOOGLE_MESSAGE_MARKERS = {
+        # retryable rate limit
+        "429": ("429", "resource_exhausted", "rate limit"),
+        # clearly non-retryable client codes
+        "401": ("401", "unauthorized", "api key"),
+        "403": ("403", "permission denied", "forbidden"),
+        "404": ("404", "not found"),
+        "400": ("400", "invalid argument", "bad request"),
+        "422": ("422", "failed_precondition", "unprocessable"),
+    }
+
+    GOOGLE_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),  # we will classify 401/403 via markers below (see non-retryable codes)
+        rate_limit_excs=(
+            gerrors.ClientError,
+        ),  # includes 429; markers decide retry vs not
+        network_excs=(gerrors.ServerError,)
+        + _HTTPX_EXCS,  # treat 5xx as transient
+        http_excs=(),  # no reliable .status_code on exceptions; handled above
+        # Non-retryable codes for *ClientError*. Anything else is retried.
+        non_retryable_codes=frozenset({"400", "401", "403", "404", "422"}),
+        message_markers=GOOGLE_MESSAGE_MARKERS,
+    )
+except Exception:
+    GOOGLE_ERROR_POLICY = None
+
+#################
+# Grok Policy   #
+#################
+# The xAI Python SDK (xai-sdk) uses gRPC. Errors raised are grpc.RpcError (sync)
+# and grpc.aio.AioRpcError (async). The SDK retries UNAVAILABLE by default with
+# backoff; you can disable via channel option ("grpc.enable_retries", 0) or
+# customize via "grpc.service_config". See xai-sdk docs.
+# Refs:
+# - https://github.com/xai-org/xai-sdk-python/blob/main/README.md#retries
+# - https://github.com/xai-org/xai-sdk-python/blob/main/README.md#error-codes
+try:
+    import grpc
+
+    try:
+        from grpc import aio as grpc_aio
+
+        _AioRpcError = getattr(grpc_aio, "AioRpcError", None)
+    except Exception:
+        _AioRpcError = None
+
+    _GRPC_EXCS = tuple(
+        c for c in (getattr(grpc, "RpcError", None), _AioRpcError) if c
+    )
+
+    # rely on extract_error_code reading e.code().name (lowercased).
+    GROK_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),  # handled via code() mapping below
+        rate_limit_excs=_GRPC_EXCS,  # gated by code() value
+        network_excs=(),  # gRPC code handles transience
+        http_excs=(),  # no .status_code on gRPC errors
+        non_retryable_codes=frozenset(
+            {
+                "invalid_argument",
+                "unauthenticated",
+                "permission_denied",
+                "not_found",
+                "resource_exhausted",
+                "failed_precondition",
+                "out_of_range",
+                "unimplemented",
+                "data_loss",
+            }
+        ),
+        message_markers={},
+    )
+except Exception:  # xai-sdk/grpc not present
+    GROK_ERROR_POLICY = None
+
+
 ###########
 # Helpers #
 ###########
@@ -367,8 +517,10 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     "openai": OPENAI_ERROR_POLICY,
     "azure": AZURE_OPENAI_ERROR_POLICY,
     "bedrock": BEDROCK_ERROR_POLICY,
-    # "anthropic": ANTHROPIC_ERROR_POLICY,
-    # "google": GOOGLE_ERROR_POLICY,
+    "anthropic": ANTHROPIC_ERROR_POLICY,
+    "deepseek": DEEPSEEK_ERROR_POLICY,
+    "google": GOOGLE_ERROR_POLICY,
+    "grok": GROK_ERROR_POLICY,
     # "ollama": OLLAMA_ERROR_POLICY,
 }
 
@@ -404,6 +556,22 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
         make_is_transient(BEDROCK_ERROR_POLICY)
         if BEDROCK_ERROR_POLICY
         else None
+    ),
+    "anthropic": (
+        make_is_transient(ANTHROPIC_ERROR_POLICY)
+        if ANTHROPIC_ERROR_POLICY
+        else None
+    ),
+    "deepseek": (
+        make_is_transient(DEEPSEEK_ERROR_POLICY)
+        if DEEPSEEK_ERROR_POLICY
+        else None
+    ),
+    "google": (
+        make_is_transient(GOOGLE_ERROR_POLICY) if GOOGLE_ERROR_POLICY else None
+    ),
+    "grok": (
+        make_is_transient(GROK_ERROR_POLICY) if GROK_ERROR_POLICY else None
     ),
 }
 
@@ -449,4 +617,8 @@ __all__ = [
     "AZURE_OPENAI_ERROR_POLICY",
     "BEDROCK_ERROR_POLICY",
     "BEDROCK_MESSAGE_MARKERS",
+    "ANTHROPIC_ERROR_POLICY",
+    "DEEPSEEK_ERROR_POLICY",
+    "GOOGLE_ERROR_POLICY",
+    "GROK_ERROR_POLICY",
 ]

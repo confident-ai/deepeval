@@ -16,10 +16,10 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
 from deepeval.models.retry_policy import (
-    OPENAI_ERROR_POLICY,
     dynamic_wait,
     dynamic_stop,
-    retry_predicate,
+    dynamic_retry,
+    sdk_retries_for,
     log_retry_error,
 )
 
@@ -216,17 +216,12 @@ models_requiring_temperature_1 = [
 _base_retry_rules_kw = dict(
     wait=dynamic_wait(),
     stop=dynamic_stop(),
-    retry=retry_predicate(OPENAI_ERROR_POLICY),
+    retry=dynamic_retry("openai"),
     before_sleep=before_sleep_log(
         logger, logging.INFO
     ),  # <- logs only on retries
     after=log_retry_error,
 )
-
-
-def _openai_client_kwargs():
-    # Avoid double-retry at SDK layer by disabling the SDK's own retries so tenacity is the single source of truth for retry logic.
-    return {"max_retries": 0}
 
 
 class GPTModel(DeepEvalBaseLLM):
@@ -508,13 +503,32 @@ class GPTModel(DeepEvalBaseLLM):
         return self.model_name
 
     def load_model(self, async_mode: bool = False):
-        kwargs = {**self.kwargs, **_openai_client_kwargs()}
         if not async_mode:
-            return OpenAI(
-                api_key=self._openai_api_key,
-                base_url=self.base_url,
-                **kwargs,
-            )
-        return AsyncOpenAI(
-            api_key=self._openai_api_key, base_url=self.base_url, **kwargs
+            return self._build_client(OpenAI)
+        return self._build_client(AsyncOpenAI)
+
+    def _client_kwargs(self) -> Dict:
+        """
+        If Tenacity is managing retries, force OpenAI SDK retries off to avoid double retries.
+        If the user opts into SDK retries for 'openai' via DEEPEVAL_SDK_RETRY_PROVIDERS,
+        leave their retry settings as is.
+        """
+        kwargs = dict(self.kwargs or {})
+        if not sdk_retries_for("openai"):
+            kwargs["max_retries"] = 0
+        return kwargs
+
+    def _build_client(self, cls):
+        kw = dict(
+            api_key=self._openai_api_key,
+            base_url=self.base_url,
+            **self._client_kwargs(),
         )
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # older OpenAI SDKs may not accept max_retries, in that case remove and retry once
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise
