@@ -86,6 +86,9 @@ class BaseApiSpan(BaseModel):
     cost_per_output_token: Optional[float] = Field(
         None, alias="costPerOutputToken"
     )
+    token_times: Optional[Dict[float, str]] = Field(
+        None, alias="tokenTimes"
+    )
 
     ## evals
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
