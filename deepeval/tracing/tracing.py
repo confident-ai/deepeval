@@ -719,7 +719,9 @@ class TraceManager:
 
             processed_token_intervals = {}
             for key, value in span.token_intervals.items():
-                time = to_zod_compatible_iso(perf_counter_to_datetime(key))
+                time = to_zod_compatible_iso(
+                    perf_counter_to_datetime(key), microsecond_precision=True
+                )
                 processed_token_intervals[time] = value
             api_span.token_intervals = processed_token_intervals
 

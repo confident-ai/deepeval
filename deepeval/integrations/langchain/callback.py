@@ -81,7 +81,6 @@ class CallbackHandler(BaseCallbackHandler):
                 user_id=user_id,
             )
             super().__init__()
-    
 
     def on_llm_new_token(
         self,
@@ -93,7 +92,9 @@ class CallbackHandler(BaseCallbackHandler):
         tags: Optional[list[str]] = None,
         **kwargs: Any,
     ):
-        llm_span: Optional[LlmSpan] = trace_manager.get_span_by_uuid(str(run_id))
+        llm_span: Optional[LlmSpan] = trace_manager.get_span_by_uuid(
+            str(run_id)
+        )
         if llm_span is None:
             return
         if llm_span.token_intervals is None:
