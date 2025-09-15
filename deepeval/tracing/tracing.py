@@ -716,7 +716,12 @@ class TraceManager:
             api_span.cost_per_output_token = span.cost_per_output_token
             api_span.input_token_count = span.input_token_count
             api_span.output_token_count = span.output_token_count
-            api_span.token_times = span.token_times
+
+            processed_token_times = {}
+            for key, value in span.token_times.items():
+                time = to_zod_compatible_iso(perf_counter_to_datetime(key))
+                processed_token_times[time] = value
+            api_span.token_times = processed_token_times
 
         return api_span
 
