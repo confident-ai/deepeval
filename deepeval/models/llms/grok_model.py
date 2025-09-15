@@ -30,7 +30,7 @@ model_pricing = {
     },
     "grok-3-fast": {
         "input": 0.60 / 1e6,
-        "output": 2.50 / 1e-6,
+        "output": 2.50 / 1e6,
     },
     "grok-3-mini-fast": {
         "input": 30 / 1e6,
