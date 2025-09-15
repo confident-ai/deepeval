@@ -96,10 +96,10 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span: Optional[LlmSpan] = trace_manager.get_span_by_uuid(str(run_id))
         if llm_span is None:
             return
-        if llm_span.token_times is None:
-            llm_span.token_times = {perf_counter(): token}
+        if llm_span.token_intervals is None:
+            llm_span.token_intervals = {perf_counter(): token}
         else:
-            llm_span.token_times[perf_counter()] = token
+            llm_span.token_intervals[perf_counter()] = token
 
     def check_active_trace_id(self):
         if self.active_trace_id is None:
