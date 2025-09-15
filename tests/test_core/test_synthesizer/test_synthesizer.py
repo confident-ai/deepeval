@@ -105,7 +105,10 @@ def async_synthesizer(evolution_config, styling_config):
 
 def test_generate_goldens_from_contexts(sync_synthesizer: Synthesizer):
     goldens: List[Golden] = sync_synthesizer.generate_goldens_from_contexts(
-        contexts=SQL_CONTEXTS, source_files=SQL_SOURCES, _send_data=False
+        contexts=SQL_CONTEXTS,
+        source_files=SQL_SOURCES,
+        max_goldens_per_context=2,
+        _send_data=False,
     )
 
     assert goldens is not None
