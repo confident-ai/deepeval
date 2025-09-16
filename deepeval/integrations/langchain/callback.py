@@ -1,3 +1,4 @@
+from re import S
 from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
@@ -28,6 +29,7 @@ try:
         enter_current_context,
         exit_current_context,
         exit_current_trace_context,
+        AgentSpan,
     )
 
     langchain_installed = True
@@ -60,6 +62,9 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[Dict[str, Any]] = None,
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
+
+        metrics: Optional[List[BaseMetric]] = None,
+        metric_collection: Optional[str] = None,
     ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
@@ -72,12 +77,53 @@ class CallbackHandler(BaseCallbackHandler):
             trace.metadata = metadata
             trace.thread_id = thread_id
             trace.user_id = user_id
-            
+
+            self.metrics = metrics
+            self.metric_collection = metric_collection
             current_trace_context.set(trace)
             super().__init__()
 
     def __del__(self):
         exit_current_trace_context(self.trace_uuid)
+    
+    def on_chain_start(
+        self,
+        serialized: dict[str, Any],
+        inputs: dict[str, Any],
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,  
+    ) -> Any:
+        if parent_run_id is None:
+            uuid_str = str(run_id)
+            base_span = enter_current_context(
+                uuid_str=uuid_str,
+                span_type="custom",
+                func_name=extract_name(serialized, **kwargs),
+            )
+            base_span.input = inputs
+            base_span.metrics = self.metrics
+            base_span.metric_collection = self.metric_collection
+
+    def on_chain_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        uuid_str = str(run_id)
+        base_span = trace_manager.get_span_by_uuid(uuid_str)
+        if base_span:
+            if isinstance(output, list):
+                base_span.output = output
+            else:
+                base_span.output = output
+            exit_current_context(uuid_str=uuid_str)
 
     def on_llm_start(
         self,
