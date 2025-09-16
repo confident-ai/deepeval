@@ -316,6 +316,7 @@ class ConversationalGEval(BaseConversationalMetric):
         else:
             prompt = ConversationalGEvalTemplate.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
+                test_case_content=test_case_content,
                 turns=[
                     convert_turn_to_dict(turn, self.evaluation_params)
                     for turn in test_case.turns
