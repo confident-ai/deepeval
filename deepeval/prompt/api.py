@@ -40,7 +40,7 @@ class PromptVersionsHttpResponse(BaseModel):
     )
 
 class PromptHttpResponse(BaseModel):
-    promptVersionId: str
+    id: str
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
     interpolation_type: PromptInterpolationType = Field(
