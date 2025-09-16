@@ -9,14 +9,17 @@ from pydantic_ai import RunContext
 from pydantic_ai import Agent
 from deepeval.prompt import Prompt
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
+
 instrument_pydantic_ai()
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
+
 @dataclass
 class Deps:
     client: AsyncClient
+
 
 weather_agent = Agent(
     "openai:gpt-4o-mini",
@@ -74,7 +77,8 @@ async def run_agent(input_query: str):
     async with AsyncClient() as client:
         deps = Deps(client=client)
         result = await weather_agent.run(
-            input_query, deps=deps,
+            input_query,
+            deps=deps,
             trace_metric_collection="test_collection_1",
             trace_name="test_trace_1",
             trace_tags=["test_tag_1"],

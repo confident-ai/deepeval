@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from tqdm import tqdm
 
 from deepeval.dataset import Golden
@@ -59,7 +59,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
         self,
         model: DeepEvalBaseLLM,
         *args,
-        batch_size: int | None = None,
+        batch_size: Union[int, None] = None,
         **kwargs,
     ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd

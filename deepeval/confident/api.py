@@ -10,6 +10,7 @@ from tenacity import (
     retry_if_exception_type,
     RetryCallState,
 )
+from pydantic import SecretStr
 
 import deepeval
 from deepeval.key_handler import KEY_FILE_HANDLER, KeyValues
