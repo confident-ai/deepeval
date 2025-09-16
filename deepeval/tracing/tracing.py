@@ -114,7 +114,7 @@ class TraceManager:
             self._print_trace_status(
                 message=f"WARNING: Exiting with {queue_size + in_flight} abaonded trace(s).",
                 trace_worker_status=TraceWorkerStatus.WARNING,
-                description=f"Set {CONFIDENT_TRACE_FLUSH}=YES as an environment variable to flush remaining traces to Confident AI.",
+                description=f"Set {CONFIDENT_TRACE_FLUSH}=1 as an environment variable to flush remaining traces to Confident AI.",
             )
 
     def mask(self, data: Any):
@@ -314,7 +314,7 @@ class TraceManager:
                     env_text,
                     message + ":",
                     description,
-                    f"\nTo disable dev logging, set {CONFIDENT_TRACE_VERBOSE}=NO as an environment variable.",
+                    f"\nTo disable dev logging, set {CONFIDENT_TRACE_VERBOSE}=0 as an environment variable.",
                 )
             else:
                 console.print(message_prefix, env_text, message)

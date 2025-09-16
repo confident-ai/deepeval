@@ -294,8 +294,8 @@ You can use the individual `LLMTestCase` params in the `update_current_trace` fu
 If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. To disable them completely, just set the following environment variables:
 
 ```bash
-CONFIDENT_TRACE_VERBOSE="NO"
-CONFIDENT_TRACE_FLUSH="NO"
+CONFIDENT_TRACE_VERBOSE=0
+CONFIDENT_TRACE_FLUSH=0
 ```
 
 ## Next Steps
