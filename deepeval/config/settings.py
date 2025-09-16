@@ -305,6 +305,12 @@ class Settings(BaseSettings):
     CONFIDENT_SAMPLE_RATE: Optional[float] = 1.0
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = None
 
+    #
+    # Network
+    #
+    MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
+    MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
+
     ##############
     # Validators #
     ##############

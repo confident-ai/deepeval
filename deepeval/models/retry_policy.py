@@ -271,6 +271,109 @@ def retry_predicate(policy: ErrorPolicy, **kw):
     return retry_if_exception(make_is_transient(policy, **kw))
 
 
+###########
+# Helpers #
+###########
+# Convenience helpers
+
+
+def sdk_retries_for(provider_slug: str) -> bool:
+    """True if this provider should delegate retries to the SDK (per settings)."""
+    chosen = get_settings().DEEPEVAL_SDK_RETRY_PROVIDERS or []
+    slug = provider_slug.lower()
+    return "*" in chosen or slug in chosen
+
+
+def get_retry_policy_for(provider_slug: str) -> Optional[ErrorPolicy]:
+    """
+    Return the ErrorPolicy for a given provider slug, or None when:
+      - the user requested SDK-managed retries for this provider, OR
+      - we have no usable policy (optional dependency missing).
+    """
+    if sdk_retries_for(provider_slug):
+        return None
+    return _POLICY_BY_SLUG.get(provider_slug.lower()) or None
+
+
+def dynamic_retry(slug: str):
+    """
+    Tenacity retry= argument that checks settings at *call time*.
+    If SDK retries are chosen (or no policy available), it never retries.
+    """
+    static_pred = _STATIC_PRED_BY_SLUG.get(slug)
+
+    def _pred(e: Exception) -> bool:
+        if sdk_retries_for(slug):
+            return False  # hand off to SDK
+        if static_pred is None:
+            return False  # no policy -> no Tenacity retries
+        return static_pred(e)  # use prebuilt predicate
+
+    return retry_if_exception(_pred)
+
+
+def log_retry_error(retry_state: RetryCallState):
+    exception = retry_state.outcome.exception()
+    if exception is None:
+        return
+    logger.error(
+        f"{exception} Retrying: {retry_state.attempt_number} time(s)..."
+    )
+
+
+def create_retry_decorator(provider_slug: str):
+    """
+    Build a Tenacity @retry decorator wired to our dynamic retry policy
+    for the given provider slug.
+    """
+    slug = provider_slug.lower()
+    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+    return retry(
+        wait=dynamic_wait(),
+        stop=dynamic_stop(),
+        retry=dynamic_retry(slug),
+        before_sleep=before_sleep_log(_logger, logging.INFO),
+        after=log_retry_error,
+    )
+
+
+def _httpx_net_excs() -> tuple[type, ...]:
+    try:
+        import httpx
+    except Exception:
+        return ()
+    names = (
+        "RequestError",  # base for transport errors
+        "TimeoutException",  # base for timeouts
+        "ConnectError",
+        "ConnectTimeout",
+        "ReadTimeout",
+        "WriteTimeout",
+        "PoolTimeout",
+    )
+    return tuple(getattr(httpx, n) for n in names if hasattr(httpx, n))
+
+
+def _requests_net_excs() -> tuple[type, ...]:
+    try:
+        import requests
+    except Exception:
+        return ()
+    names = (
+        "RequestException",
+        "Timeout",
+        "ConnectionError",
+        "ReadTimeout",
+        "SSLError",
+        "ChunkedEncodingError",
+    )
+    return tuple(
+        getattr(requests.exceptions, n)
+        for n in names
+        if hasattr(requests.exceptions, n)
+    )
+
+
 # --------------------------
 # Built-in policies
 # --------------------------
@@ -420,25 +523,8 @@ except Exception:  # Anthropic optional
 try:
     from google.genai import errors as gerrors
 
-    try:
-        # httpx is an indirect dependency
-        import httpx
-
-        _HTTPX_EXCS_NAMES = (
-            "ConnectError",
-            "ConnectTimeout",
-            "ReadTimeout",
-            "WriteTimeout",
-            "TimeoutException",
-            "PoolTimeout",
-        )
-        _HTTPX_EXCS = tuple(
-            getattr(httpx, name)
-            for name in _HTTPX_EXCS_NAMES
-            if hasattr(httpx, name)
-        )
-    except Exception:
-        _HTTPX_EXCS = ()
+    _HTTPX_NET_EXCS = _httpx_net_excs()
+    _REQUESTS_EXCS = _requests_net_excs()
 
     GOOGLE_MESSAGE_MARKERS = {
         # retryable rate limit
@@ -457,7 +543,8 @@ try:
             gerrors.ClientError,
         ),  # includes 429; markers decide retry vs not
         network_excs=(gerrors.ServerError,)
-        + _HTTPX_EXCS,  # treat 5xx as transient
+        + _HTTPX_NET_EXCS
+        + _REQUESTS_EXCS,  # treat 5xx as transient
         http_excs=(),  # no reliable .status_code on exceptions; handled above
         # Non-retryable codes for *ClientError*. Anything else is retried.
         non_retryable_codes=frozenset({"400", "401", "403", "404", "422"}),
@@ -526,22 +613,14 @@ LITELLM_ERROR_POLICY = None  # TODO: LiteLLM is going to take some extra care. I
 #########################
 
 try:
-    import httpx
-
     # Catch transport + timeout issues via base classes
-    _HTTPX_NET_EXCS = tuple(
-        exc_cls
-        for exc_cls in (
-            getattr(httpx, "RequestError", None),
-            getattr(httpx, "TimeoutException", None),
-        )
-        if exc_cls is not None
-    )
+    _HTTPX_NET_EXCS = _httpx_net_excs()
+    _REQUESTS_EXCS = _requests_net_excs()
 
     OLLAMA_ERROR_POLICY = ErrorPolicy(
         auth_excs=(),
         rate_limit_excs=(),  # no rate limiting semantics locally
-        network_excs=_HTTPX_NET_EXCS,  # retry network/timeouts
+        network_excs=_HTTPX_NET_EXCS + _REQUESTS_EXCS,  # retry network/timeouts
         http_excs=(),  # optionally add httpx.HTTPStatusError if you call raise_for_status()
         non_retryable_codes=frozenset(),
         message_markers={},
@@ -550,13 +629,8 @@ except Exception:
     OLLAMA_ERROR_POLICY = None
 
 
-###########
-# Helpers #
-###########
-# Convenience helpers
-
-# Map provider slugs to their policy objects. It's OK if some are None
-# (optional deps not installed), we'll treat that as "no Tenacity".
+# Map provider slugs to their policy objects.
+# It is OK if some are None, we'll treat that as "no Tenacity".
 _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     "openai": OPENAI_ERROR_POLICY,
     "azure": AZURE_OPENAI_ERROR_POLICY,
@@ -570,25 +644,6 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     "local": LOCAL_ERROR_POLICY,
     "ollama": OLLAMA_ERROR_POLICY,
 }
-
-
-def sdk_retries_for(provider_slug: str) -> bool:
-    """True if this provider should delegate retries to the SDK (per settings)."""
-    chosen = get_settings().DEEPEVAL_SDK_RETRY_PROVIDERS or []
-    slug = provider_slug.lower()
-    return "*" in chosen or slug in chosen
-
-
-def get_retry_policy_for(provider_slug: str) -> Optional[ErrorPolicy]:
-    """
-    Return the ErrorPolicy for a given provider slug, or None when:
-      - the user requested SDK-managed retries for this provider, OR
-      - we have no usable policy (optional dependency missing).
-    """
-    if sdk_retries_for(provider_slug):
-        return None
-    return _POLICY_BY_SLUG.get(provider_slug.lower()) or None
-
 
 _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     "openai": (
@@ -635,48 +690,6 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
         make_is_transient(OLLAMA_ERROR_POLICY) if OLLAMA_ERROR_POLICY else None
     ),
 }
-
-
-def dynamic_retry(slug: str):
-    """
-    Tenacity retry= argument that checks settings at *call time*.
-    If SDK retries are chosen (or no policy available), it never retries.
-    """
-    static_pred = _STATIC_PRED_BY_SLUG.get(slug)
-
-    def _pred(e: Exception) -> bool:
-        if sdk_retries_for(slug):
-            return False  # hand off to SDK
-        if static_pred is None:
-            return False  # no policy -> no Tenacity retries
-        return static_pred(e)  # use prebuilt predicate
-
-    return retry_if_exception(_pred)
-
-
-def log_retry_error(retry_state: RetryCallState):
-    exception = retry_state.outcome.exception()
-    if exception is None:
-        return
-    logger.error(
-        f"{exception} Retrying: {retry_state.attempt_number} time(s)..."
-    )
-
-
-def create_retry_decorator(provider_slug: str):
-    """
-    Build a Tenacity @retry decorator wired to our dynamic retry policy
-    for the given provider slug.
-    """
-    slug = provider_slug.lower()
-    _logger = logging.getLogger(f"deepeval.retry.{slug}")
-    return retry(
-        wait=dynamic_wait(),
-        stop=dynamic_stop(),
-        retry=dynamic_retry(slug),
-        before_sleep=before_sleep_log(_logger, logging.INFO),
-        after=log_retry_error,
-    )
 
 
 __all__ = [
