@@ -1,10 +1,17 @@
 from pydantic_ai import Agent
+from deepeval.tracing import observe
 from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
+
 instrument_pydantic_ai()
 
-agent = Agent("openai:gpt-4o-mini", system_prompt="Be concise, reply with one sentence.")
+@observe(type="tool", metric_collection="test_collection_1")
+def get_weather(city: str) -> str:
+    """Gets the weather for a given city."""
+    return f"I don't know the weather for {city}."
 
-result = agent.run_sync(
-    "What are the LLMs?",
-    metric_collection="test_collection_1"
+agent = Agent(
+    "openai:gpt-4o-mini",
+    tools=[get_weather],
+    system_prompt="You are a helpful weather agent.",
 )
+result = agent.run_sync("What is the weather in London?",)
