@@ -51,15 +51,28 @@ from deepeval.tracing.types import (
 )
 from deepeval.telemetry import capture_tracing_integration
 
-CUSTOM_SPAN_NAME_LIST = ["LangGraph"]
-
 class CallbackHandler(BaseCallbackHandler):
 
-    def __init__(self):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+    ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
             trace = trace_manager.start_new_trace()
+            
             self.trace_uuid = trace.uuid
+            
+            trace.name = name
+            trace.tags = tags
+            trace.metadata = metadata
+            trace.thread_id = thread_id
+            trace.user_id = user_id
+            
             current_trace_context.set(trace)
             super().__init__()
 

@@ -22,7 +22,7 @@ def execute_agent():
             ]
         },
         config={
-            "callbacks": [CallbackHandler()]
+            "callbacks": [CallbackHandler(name="langgraph-test", tags=["langgraph", "test"], metadata={"environment": "test"}, thread_id="123", user_id="456")]
         },
     )
 
