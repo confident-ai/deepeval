@@ -30,7 +30,7 @@ model_pricing = {
     },
     "kimi-k2-0711-preview": {
         "input": 0.60 / 1e6,
-        "output": 2.50 / 1e-6,
+        "output": 2.50 / 1e6,
     },
     "kimi-thinking-preview": {
         "input": 30 / 1e6,

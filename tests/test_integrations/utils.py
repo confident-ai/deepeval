@@ -41,7 +41,9 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
             i = 0
             while i < len(original_argv):
                 arg = original_argv[i]
-                if isinstance(arg, str) and arg.startswith("--deepeval-trace-mode="):
+                if isinstance(arg, str) and arg.startswith(
+                    "--deepeval-trace-mode="
+                ):
                     new_argv.append("--deepeval-trace-mode=gen")
                     replaced_mode = True
                 elif arg == "--deepeval-trace-mode":
@@ -52,7 +54,9 @@ def generate_test_json(func: Callable, name: str, *args, **kwargs):
                     new_argv.append("gen")
                     replaced_mode = True
                 # Remove any existing --deepeval-trace-file-name to avoid conflicts
-                elif isinstance(arg, str) and arg.startswith("--deepeval-trace-file-name="):
+                elif isinstance(arg, str) and arg.startswith(
+                    "--deepeval-trace-file-name="
+                ):
                     pass
                 elif arg == "--deepeval-trace-file-name":
                     # Skip the value token as well
