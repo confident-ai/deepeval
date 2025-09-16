@@ -148,13 +148,13 @@ def _patch_agent_run(
     @functools.wraps(original_run)
     async def wrapper(
         *args,
-        trace_metric_collection: Optional[str] = None,
-        trace_metrics: Optional[List[BaseMetric]] = None,
-        trace_name: Optional[str] = None,
-        trace_tags: Optional[List[str]] = None,
-        trace_metadata: Optional[dict] = None,
-        trace_thread_id: Optional[str] = None,
-        trace_user_id: Optional[str] = None,
+        metric_collection: Optional[str] = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[dict] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         **kwargs
     ):
         with Observer(
@@ -171,13 +171,13 @@ def _patch_agent_run(
             observer.result = result.output
 
             _update_trace_context(
-                trace_name=trace_name,
-                trace_tags=trace_tags,
-                trace_metadata=trace_metadata,
-                trace_thread_id=trace_thread_id,
-                trace_user_id=trace_user_id,
-                trace_metric_collection=trace_metric_collection,
-                trace_metrics=trace_metrics,
+                trace_name=name,
+                trace_tags=tags,
+                trace_metadata=metadata,
+                trace_thread_id=thread_id,
+                trace_user_id=user_id,
+                trace_metric_collection=metric_collection,
+                trace_metrics=metrics,
                 trace_input=args[1],
                 trace_output=result.output,
             )
