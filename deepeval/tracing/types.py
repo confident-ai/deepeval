@@ -102,6 +102,9 @@ class LlmSpan(BaseSpan):
     cost_per_output_token: Optional[float] = Field(
         None, serialization_alias="costPerOutputToken"
     )
+    token_intervals: Optional[Dict[float, str]] = Field(
+        None, serialization_alias="tokenTimes"
+    )
 
     # for serializing `prompt`
     model_config = {"arbitrary_types_allowed": True}

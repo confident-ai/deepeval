@@ -100,10 +100,14 @@ def make_json_serializable(obj):
     return _serialize(obj)
 
 
-def to_zod_compatible_iso(dt: datetime) -> str:
+def to_zod_compatible_iso(
+    dt: datetime, microsecond_precision: bool = False
+) -> str:
     return (
         dt.astimezone(timezone.utc)
-        .isoformat(timespec="milliseconds")
+        .isoformat(
+            timespec="microseconds" if microsecond_precision else "milliseconds"
+        )
         .replace("+00:00", "Z")
     )
 
