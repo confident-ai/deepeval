@@ -2,7 +2,7 @@
   "agentSpans": [],
   "baseSpans": [
     {
-      "endTime": "2025-09-10T13:12:40.556Z",
+      "endTime": "2025-09-16T10:37:32.516Z",
       "input": {
         "messages": [
           {
@@ -10,11 +10,6 @@
             "role": "user"
           }
         ]
-      },
-      "metadata": {
-        "metadata": {},
-        "name": "LangGraph",
-        "tags": []
       },
       "metricCollection": "task_completion",
       "name": "LangGraph",
@@ -52,7 +47,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "<is_present>",
+              "system_fingerprint": "fp_560af6e559",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -118,9 +113,9 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "<is_present>",
+              "system_fingerprint": "fp_560af6e559",
               "token_usage": {
-                "completion_tokens": "<is_present>",
+                "completion_tokens": 10,
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -132,7 +127,7 @@
                   "audio_tokens": 0,
                   "cached_tokens": 0
                 },
-                "total_tokens": "<is_present>"
+                "total_tokens": 96
               }
             },
             "tool_calls": [],
@@ -147,1435 +142,19 @@
                 "audio": 0,
                 "reasoning": 0
               },
-              "output_tokens": "<is_present>",
-              "total_tokens": "<is_present>"
+              "output_tokens": 10,
+              "total_tokens": 96
             }
           }
         ]
       },
-      "startTime": "2025-09-10T13:12:38.304Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:40.555Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          },
-          {
-            "additional_kwargs": {},
-            "content": "It's always sunny in San Francisco!",
-            "id": "<is_present>",
-            "name": "get_weather",
-            "response_metadata": {},
-            "status": "success",
-            "tool_call_id": "<is_present>",
-            "type": "tool"
-          }
-        ],
-        "remaining_steps": 22
-      },
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 3,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "agent",
-        "tags": [
-          "graph:step:3"
-        ]
-      },
-      "name": "agent",
-      "output": {
-        "messages": [
-          {
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "content": "<is_present>",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "stop",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": "<is_present>",
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 86,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": "<is_present>"
-              }
-            },
-            "tool_calls": [],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 86,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": "<is_present>",
-              "total_tokens": "<is_present>"
-            }
-          }
-        ]
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.665Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:40.555Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          },
-          {
-            "additional_kwargs": {},
-            "content": "It's always sunny in San Francisco!",
-            "id": "<is_present>",
-            "name": "get_weather",
-            "response_metadata": {},
-            "status": "success",
-            "tool_call_id": "<is_present>",
-            "type": "tool"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "content": "<is_present>",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "stop",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": "<is_present>",
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 86,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": "<is_present>"
-              }
-            },
-            "tool_calls": [],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 86,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": "<is_present>",
-              "total_tokens": "<is_present>"
-            }
-          }
-        ],
-        "remaining_steps": 22
-      },
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 3,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "should_continue",
-        "tags": [
-          "seq:step:3"
-        ]
-      },
-      "name": "should_continue",
-      "output": "__end__",
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:40.555Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:40.555Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          },
-          {
-            "additional_kwargs": {},
-            "content": "It's always sunny in San Francisco!",
-            "id": "<is_present>",
-            "name": "get_weather",
-            "response_metadata": {},
-            "status": "success",
-            "tool_call_id": "<is_present>",
-            "type": "tool"
-          }
-        ],
-        "remaining_steps": 22
-      },
-      "metadata": {
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 3,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "RunnableSequence",
-        "tags": [
-          "seq:step:1"
-        ]
-      },
-      "name": "RunnableSequence",
-      "output": {
-        "additional_kwargs": {
-          "refusal": null
-        },
-        "content": "<is_present>",
-        "example": false,
-        "id": "<is_present>",
-        "invalid_tool_calls": [],
-        "response_metadata": {
-          "finish_reason": "stop",
-          "id": "<is_present>",
-          "logprobs": null,
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "service_tier": "default",
-          "system_fingerprint": "<is_present>",
-          "token_usage": {
-            "completion_tokens": "<is_present>",
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens": 86,
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            },
-            "total_tokens": "<is_present>"
-          }
-        },
-        "tool_calls": [],
-        "type": "ai",
-        "usage_metadata": {
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "input_tokens": 86,
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          },
-          "output_tokens": "<is_present>",
-          "total_tokens": "<is_present>"
-        }
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.665Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:39.665Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          },
-          {
-            "additional_kwargs": {},
-            "content": "It's always sunny in San Francisco!",
-            "id": "<is_present>",
-            "name": "get_weather",
-            "response_metadata": {},
-            "status": "success",
-            "tool_call_id": "<is_present>",
-            "type": "tool"
-          }
-        ],
-        "remaining_steps": 22
-      },
-      "metadata": {
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 3,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "Prompt",
-        "tags": [
-          "seq:step:1"
-        ]
-      },
-      "name": "Prompt",
-      "output": [
-        {
-          "additional_kwargs": {},
-          "content": "You are a helpful assistant",
-          "response_metadata": {},
-          "type": "system"
-        },
-        {
-          "additional_kwargs": {},
-          "content": "what is the weather in sf",
-          "example": false,
-          "id": "<is_present>",
-          "response_metadata": {},
-          "type": "human"
-        },
-        {
-          "additional_kwargs": {
-            "refusal": null,
-            "tool_calls": [
-              {
-                "function": {
-                  "arguments": "{\"city\":\"San Francisco\"}",
-                  "name": "get_weather"
-                },
-                "id": "<is_present>",
-                "type": "function"
-              }
-            ]
-          },
-          "content": "",
-          "example": false,
-          "id": "<is_present>",
-          "invalid_tool_calls": [],
-          "response_metadata": {
-            "finish_reason": "tool_calls",
-            "id": "<is_present>",
-            "logprobs": null,
-            "model_name": "gpt-4o-mini-2024-07-18",
-            "service_tier": "default",
-            "system_fingerprint": "<is_present>",
-            "token_usage": {
-              "completion_tokens": 15,
-              "completion_tokens_details": {
-                "accepted_prediction_tokens": 0,
-                "audio_tokens": 0,
-                "reasoning_tokens": 0,
-                "rejected_prediction_tokens": 0
-              },
-              "prompt_tokens": 56,
-              "prompt_tokens_details": {
-                "audio_tokens": 0,
-                "cached_tokens": 0
-              },
-              "total_tokens": 71
-            }
-          },
-          "tool_calls": [
-            {
-              "args": {
-                "city": "San Francisco"
-              },
-              "id": "<is_present>",
-              "name": "get_weather",
-              "type": "tool_call"
-            }
-          ],
-          "type": "ai",
-          "usage_metadata": {
-            "input_token_details": {
-              "audio": 0,
-              "cache_read": 0
-            },
-            "input_tokens": 56,
-            "output_token_details": {
-              "audio": 0,
-              "reasoning": 0
-            },
-            "output_tokens": 15,
-            "total_tokens": 71
-          }
-        },
-        {
-          "additional_kwargs": {},
-          "content": "It's always sunny in San Francisco!",
-          "id": "<is_present>",
-          "name": "get_weather",
-          "response_metadata": {},
-          "status": "success",
-          "tool_call_id": "<is_present>",
-          "type": "tool"
-        }
-      ],
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.665Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:40.555Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          },
-          {
-            "additional_kwargs": {},
-            "content": "It's always sunny in San Francisco!",
-            "id": "<is_present>",
-            "name": "get_weather",
-            "response_metadata": {},
-            "status": "success",
-            "tool_call_id": "<is_present>",
-            "type": "tool"
-          }
-        ],
-        "remaining_steps": 22
-      },
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 3,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "call_model",
-        "tags": [
-          "seq:step:1"
-        ]
-      },
-      "name": "call_model",
-      "output": {
-        "messages": [
-          {
-            "additional_kwargs": {
-              "refusal": null
-            },
-            "content": "<is_present>",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "stop",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": "<is_present>",
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 86,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": "<is_present>"
-              }
-            },
-            "tool_calls": [],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 86,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": "<is_present>",
-              "total_tokens": "<is_present>"
-            }
-          }
-        ]
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.665Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:39.664Z",
-      "input": [
-        {
-          "args": {
-            "city": "San Francisco"
-          },
-          "id": "<is_present>",
-          "name": "get_weather",
-          "type": "tool_call"
-        }
-      ],
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "tools",
-          "langgraph_path": [
-            "__pregel_push",
-            0,
-            false
-          ],
-          "langgraph_step": 2,
-          "langgraph_triggers": [
-            "__pregel_push"
-          ]
-        },
-        "name": "tools",
-        "tags": [
-          "graph:step:2"
-        ]
-      },
-      "name": "tools",
-      "output": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "It's always sunny in San Francisco!",
-            "id": "<is_present>",
-            "name": "get_weather",
-            "response_metadata": {},
-            "status": "success",
-            "tool_call_id": "<is_present>",
-            "type": "tool"
-          }
-        ]
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.663Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:39.662Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          }
-        ],
-        "remaining_steps": 24
-      },
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 1,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "agent",
-        "tags": [
-          "graph:step:1"
-        ]
-      },
-      "name": "agent",
-      "output": {
-        "messages": [
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          }
-        ]
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:38.304Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:39.662Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          },
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          }
-        ],
-        "remaining_steps": 24
-      },
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 1,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "should_continue",
-        "tags": [
-          "seq:step:3"
-        ]
-      },
-      "name": "should_continue",
-      "output": [
-        "<is_present>"
-      ],
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.662Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:39.662Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          }
-        ],
-        "remaining_steps": 24
-      },
-      "metadata": {
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 1,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "RunnableSequence",
-        "tags": [
-          "seq:step:1"
-        ]
-      },
-      "name": "RunnableSequence",
-      "output": {
-        "additional_kwargs": {
-          "refusal": null,
-          "tool_calls": [
-            {
-              "function": {
-                "arguments": "{\"city\":\"San Francisco\"}",
-                "name": "get_weather"
-              },
-              "id": "<is_present>",
-              "type": "function"
-            }
-          ]
-        },
-        "content": "",
-        "example": false,
-        "id": "<is_present>",
-        "invalid_tool_calls": [],
-        "response_metadata": {
-          "finish_reason": "tool_calls",
-          "id": "<is_present>",
-          "logprobs": null,
-          "model_name": "gpt-4o-mini-2024-07-18",
-          "service_tier": "default",
-          "system_fingerprint": "<is_present>",
-          "token_usage": {
-            "completion_tokens": 15,
-            "completion_tokens_details": {
-              "accepted_prediction_tokens": 0,
-              "audio_tokens": 0,
-              "reasoning_tokens": 0,
-              "rejected_prediction_tokens": 0
-            },
-            "prompt_tokens": 56,
-            "prompt_tokens_details": {
-              "audio_tokens": 0,
-              "cached_tokens": 0
-            },
-            "total_tokens": 71
-          }
-        },
-        "tool_calls": [
-          {
-            "args": {
-              "city": "San Francisco"
-            },
-            "id": "<is_present>",
-            "name": "get_weather",
-            "type": "tool_call"
-          }
-        ],
-        "type": "ai",
-        "usage_metadata": {
-          "input_token_details": {
-            "audio": 0,
-            "cache_read": 0
-          },
-          "input_tokens": 56,
-          "output_token_details": {
-            "audio": 0,
-            "reasoning": 0
-          },
-          "output_tokens": 15,
-          "total_tokens": 71
-        }
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:38.306Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:38.306Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          }
-        ],
-        "remaining_steps": 24
-      },
-      "metadata": {
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 1,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "Prompt",
-        "tags": [
-          "seq:step:1"
-        ]
-      },
-      "name": "Prompt",
-      "output": [
-        {
-          "additional_kwargs": {},
-          "content": "You are a helpful assistant",
-          "response_metadata": {},
-          "type": "system"
-        },
-        {
-          "additional_kwargs": {},
-          "content": "what is the weather in sf",
-          "example": false,
-          "id": "<is_present>",
-          "response_metadata": {},
-          "type": "human"
-        }
-      ],
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:38.306Z",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    },
-    {
-      "endTime": "2025-09-10T13:12:39.662Z",
-      "input": {
-        "messages": [
-          {
-            "additional_kwargs": {},
-            "content": "what is the weather in sf",
-            "example": false,
-            "id": "<is_present>",
-            "response_metadata": {},
-            "type": "human"
-          }
-        ],
-        "remaining_steps": 24
-      },
-      "metadata": {
-        "metadata": {
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 1,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ]
-        },
-        "name": "call_model",
-        "tags": [
-          "seq:step:1"
-        ]
-      },
-      "name": "call_model",
-      "output": {
-        "messages": [
-          {
-            "additional_kwargs": {
-              "refusal": null,
-              "tool_calls": [
-                {
-                  "function": {
-                    "arguments": "{\"city\":\"San Francisco\"}",
-                    "name": "get_weather"
-                  },
-                  "id": "<is_present>",
-                  "type": "function"
-                }
-              ]
-            },
-            "content": "",
-            "example": false,
-            "id": "<is_present>",
-            "invalid_tool_calls": [],
-            "response_metadata": {
-              "finish_reason": "tool_calls",
-              "id": "<is_present>",
-              "logprobs": null,
-              "model_name": "gpt-4o-mini-2024-07-18",
-              "service_tier": "default",
-              "system_fingerprint": "<is_present>",
-              "token_usage": {
-                "completion_tokens": 15,
-                "completion_tokens_details": {
-                  "accepted_prediction_tokens": 0,
-                  "audio_tokens": 0,
-                  "reasoning_tokens": 0,
-                  "rejected_prediction_tokens": 0
-                },
-                "prompt_tokens": 56,
-                "prompt_tokens_details": {
-                  "audio_tokens": 0,
-                  "cached_tokens": 0
-                },
-                "total_tokens": 71
-              }
-            },
-            "tool_calls": [
-              {
-                "args": {
-                  "city": "San Francisco"
-                },
-                "id": "<is_present>",
-                "name": "get_weather",
-                "type": "tool_call"
-              }
-            ],
-            "type": "ai",
-            "usage_metadata": {
-              "input_token_details": {
-                "audio": 0,
-                "cache_read": 0
-              },
-              "input_tokens": 56,
-              "output_token_details": {
-                "audio": 0,
-                "reasoning": 0
-              },
-              "output_tokens": 15,
-              "total_tokens": 71
-            }
-          }
-        ]
-      },
-      "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:38.304Z",
+      "startTime": "2025-09-16T10:37:30.372Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     }
   ],
-  "endTime": "2025-09-10T13:12:40.556Z",
+  "endTime": "2025-09-16T10:37:32.516Z",
   "environment": "development",
   "input": {
     "messages": [
@@ -1587,7 +166,7 @@
   },
   "llmSpans": [
     {
-      "endTime": "2025-09-10T13:12:40.554Z",
+      "endTime": "2025-09-16T10:37:32.515Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -1611,81 +190,7 @@
         }
       ],
       "inputTokenCount": 86.0,
-      "metadata": {
-        "batch_size": 1,
-        "invocation_params": {
-          "_type": "openai-chat",
-          "model": "gpt-4o-mini",
-          "model_name": "gpt-4o-mini",
-          "stop": null,
-          "stream": false,
-          "tools": [
-            {
-              "function": {
-                "description": "Returns the weather in a city",
-                "name": "get_weather",
-                "parameters": {
-                  "properties": {
-                    "city": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                }
-              },
-              "type": "function"
-            }
-          ]
-        },
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 3,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ],
-          "ls_model_name": "gpt-4o-mini",
-          "ls_model_type": "chat",
-          "ls_provider": "openai",
-          "ls_temperature": null
-        },
-        "options": {
-          "stop": null
-        },
-        "serialized": {
-          "id": [
-            "langchain",
-            "chat_models",
-            "openai",
-            "ChatOpenAI"
-          ],
-          "kwargs": {
-            "model_name": "gpt-4o-mini",
-            "openai_api_key": {
-              "id": [
-                "OPENAI_API_KEY"
-              ],
-              "lc": 1,
-              "type": "secret"
-            },
-            "output_version": "v0"
-          },
-          "lc": 1,
-          "name": "ChatOpenAI",
-          "type": "constructor"
-        },
-        "tags": [
-          "seq:step:2"
-        ]
-      },
+      "metricCollection": "test_collection_1",
       "model": "gpt-4o-mini-2024-07-18",
       "name": "ChatOpenAI",
       "output": {
@@ -1693,16 +198,16 @@
         "role": "AI",
         "tool_calls": []
       },
-      "outputTokenCount": "<is_present>",
+      "outputTokenCount": 10.0,
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "2025-09-10T13:12:39.665Z",
+      "startTime": "2025-09-16T10:37:31.532Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-10T13:12:39.661Z",
+      "endTime": "2025-09-16T10:37:31.527Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -1718,81 +223,7 @@
         }
       ],
       "inputTokenCount": 56.0,
-      "metadata": {
-        "batch_size": 1,
-        "invocation_params": {
-          "_type": "openai-chat",
-          "model": "gpt-4o-mini",
-          "model_name": "gpt-4o-mini",
-          "stop": null,
-          "stream": false,
-          "tools": [
-            {
-              "function": {
-                "description": "Returns the weather in a city",
-                "name": "get_weather",
-                "parameters": {
-                  "properties": {
-                    "city": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "city"
-                  ],
-                  "type": "object"
-                }
-              },
-              "type": "function"
-            }
-          ]
-        },
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "agent",
-          "langgraph_path": [
-            "__pregel_pull",
-            "agent"
-          ],
-          "langgraph_step": 1,
-          "langgraph_triggers": [
-            "branch:to:agent"
-          ],
-          "ls_model_name": "gpt-4o-mini",
-          "ls_model_type": "chat",
-          "ls_provider": "openai",
-          "ls_temperature": null
-        },
-        "options": {
-          "stop": null
-        },
-        "serialized": {
-          "id": [
-            "langchain",
-            "chat_models",
-            "openai",
-            "ChatOpenAI"
-          ],
-          "kwargs": {
-            "model_name": "gpt-4o-mini",
-            "openai_api_key": {
-              "id": [
-                "OPENAI_API_KEY"
-              ],
-              "lc": 1,
-              "type": "secret"
-            },
-            "output_version": "v0"
-          },
-          "lc": 1,
-          "name": "ChatOpenAI",
-          "type": "constructor"
-        },
-        "tags": [
-          "seq:step:2"
-        ]
-      },
+      "metricCollection": "test_collection_1",
       "model": "gpt-4o-mini-2024-07-18",
       "name": "ChatOpenAI",
       "output": {
@@ -1811,12 +242,16 @@
       "outputTokenCount": 15.0,
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "2025-09-10T13:12:38.306Z",
+      "startTime": "2025-09-16T10:37:30.374Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
     }
   ],
+  "metadata": {
+    "environment": "test"
+  },
+  "name": "langgraph-test",
   "output": {
     "messages": [
       {
@@ -1851,7 +286,7 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "<is_present>",
+          "system_fingerprint": "fp_560af6e559",
           "token_usage": {
             "completion_tokens": 15,
             "completion_tokens_details": {
@@ -1917,9 +352,9 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "<is_present>",
+          "system_fingerprint": "fp_560af6e559",
           "token_usage": {
-            "completion_tokens": "<is_present>",
+            "completion_tokens": 10,
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -1931,7 +366,7 @@
               "audio_tokens": 0,
               "cached_tokens": 0
             },
-            "total_tokens": "<is_present>"
+            "total_tokens": 96
           }
         },
         "tool_calls": [],
@@ -1946,43 +381,27 @@
             "audio": 0,
             "reasoning": 0
           },
-          "output_tokens": "<is_present>",
-          "total_tokens": "<is_present>"
+          "output_tokens": 10,
+          "total_tokens": 96
         }
       }
     ]
   },
   "retrieverSpans": [],
-  "startTime": "2025-09-10T13:12:38.304Z",
+  "startTime": "2025-09-16T10:37:30.370Z",
   "status": "SUCCESS",
+  "tags": [
+    "langgraph",
+    "test"
+  ],
+  "threadId": "123",
   "toolSpans": [
     {
-      "endTime": "2025-09-10T13:12:39.664Z",
-      "input": "{'city': 'San Francisco'}",
-      "metadata": {
-        "color": "green",
-        "metadata": {
-          "checkpoint_ns": "<is_present>",
-          "langgraph_checkpoint_ns": "<is_present>",
-          "langgraph_node": "tools",
-          "langgraph_path": [
-            "__pregel_push",
-            0,
-            false
-          ],
-          "langgraph_step": 2,
-          "langgraph_triggers": [
-            "__pregel_push"
-          ]
-        },
-        "serialized": {
-          "description": "Returns the weather in a city",
-          "name": "get_weather"
-        },
-        "tags": [
-          "seq:step:1"
-        ]
+      "endTime": "2025-09-16T10:37:31.531Z",
+      "input": {
+        "city": "San Francisco"
       },
+      "metricCollection": "test_collection_1",
       "name": "get_weather",
       "output": {
         "additional_kwargs": {},
@@ -1995,11 +414,12 @@
         "type": "tool"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-10T13:12:39.664Z",
+      "startTime": "2025-09-16T10:37:31.530Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
     }
   ],
+  "userId": "456",
   "uuid": "<is_present>"
 }
