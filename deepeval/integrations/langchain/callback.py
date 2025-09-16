@@ -77,7 +77,6 @@ class CallbackHandler(BaseCallbackHandler):
             trace.metadata = metadata
             trace.thread_id = thread_id
             trace.user_id = user_id
-
             self.metrics = metrics
             self.metric_collection = metric_collection
             current_trace_context.set(trace)
@@ -105,6 +104,7 @@ class CallbackHandler(BaseCallbackHandler):
                 func_name=extract_name(serialized, **kwargs),
             )
             base_span.input = inputs
+            current_trace_context.get().input = inputs
             base_span.metrics = self.metrics
             base_span.metric_collection = self.metric_collection
 
@@ -119,10 +119,8 @@ class CallbackHandler(BaseCallbackHandler):
         uuid_str = str(run_id)
         base_span = trace_manager.get_span_by_uuid(uuid_str)
         if base_span:
-            if isinstance(output, list):
-                base_span.output = output
-            else:
-                base_span.output = output
+            base_span.output = output
+            current_trace_context.get().output = output
             exit_current_context(uuid_str=uuid_str)
 
     def on_llm_start(
