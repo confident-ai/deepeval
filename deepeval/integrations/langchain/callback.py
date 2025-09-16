@@ -77,12 +77,12 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-
+        uuid_str = str(run_id)
         input_messages = parse_prompts_to_messages(prompts, **kwargs)
         model = safe_extract_model_name(metadata, **kwargs)
 
         llm_span = enter_current_context(
-            uuid_str=str(run_id),
+            uuid_str=uuid_str,
             span_type="llm",
             func_name=extract_name(serialized, **kwargs),
         )
@@ -99,7 +99,8 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        llm_span: LlmSpan = trace_manager.get_span_by_uuid(str(run_id))
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
 
         output = ""
         total_input_tokens = 0
@@ -145,7 +146,7 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.input_token_count = total_input_tokens if total_input_tokens > 0 else None
         llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
 
-        exit_current_context(uuid_str=str(run_id))
+        exit_current_context(uuid_str=uuid_str)
 
     def on_tool_start(
         self,
@@ -159,9 +160,10 @@ class CallbackHandler(BaseCallbackHandler):
         inputs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        uuid_str = str(run_id)
 
         tool_span = enter_current_context(
-            uuid_str=str(run_id),
+            uuid_str=uuid_str,
             span_type="tool",
             func_name=extract_name(serialized, **kwargs), # ignored when setting the input
         )
@@ -177,6 +179,51 @@ class CallbackHandler(BaseCallbackHandler):
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
     
-        tool_span: ToolSpan = trace_manager.get_span_by_uuid(str(run_id))
+        uuid_str = str(run_id)
+        tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         tool_span.output = output
         exit_current_context(str(run_id))
+
+    def on_retriever_start(
+        self,
+        serialized: dict[str, Any],
+        query: str,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        **kwargs: Any,  # un-logged kwargs
+    ) -> Any:
+        uuid_str = str(run_id)
+        retriever_span = enter_current_context(
+            uuid_str=uuid_str,
+            span_type="retriever",
+            func_name=extract_name(serialized, **kwargs),
+            observe_kwargs={
+                "embedder": metadata.get("ls_embedding_provider", "unknown"),
+            },
+        )
+        retriever_span.input = query
+
+    def on_retriever_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,  # un-logged kwargs
+    ) -> Any:
+        uuid_str = str(run_id)
+        retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
+        
+        # prepare output
+        output_list = []
+        if isinstance(output, list):
+            for item in output:
+                output_list.append(str(item))
+        else:
+            output_list.append(str(output))
+        
+        retriever_span.output = output_list
+        exit_current_context(uuid_str=uuid_str)
