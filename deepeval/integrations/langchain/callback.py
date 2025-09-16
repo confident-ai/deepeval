@@ -1,17 +1,11 @@
-from re import S
 from typing import Any, Optional, List, Dict
 from uuid import UUID
-from time import perf_counter
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
     LlmOutput,
     LlmToolCall,
-    TraceAttributes,
 )
-from deepeval.metrics import BaseMetric, TaskCompletionMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.test_run import global_test_run_manager
-import uuid
+from deepeval.metrics import BaseMetric
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -22,15 +16,13 @@ try:
     # contains langchain imports
     from deepeval.integrations.langchain.utils import (
         parse_prompts_to_messages,
-        prepare_dict,
         extract_name,
         safe_extract_model_name,
         safe_extract_token_usage,
         enter_current_context,
         exit_current_context,
-        exit_current_trace_context,
-        AgentSpan,
     )
+    from deepeval.integrations.langchain.patch import tool
 
     langchain_installed = True
 except:
@@ -45,7 +37,6 @@ def is_langchain_installed():
 
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
-    BaseSpan,
     LlmSpan,
     RetrieverSpan,
     TraceSpanStatus,
@@ -252,7 +243,7 @@ class CallbackHandler(BaseCallbackHandler):
         uuid_str = str(run_id)
         tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         tool_span.output = output
-        exit_current_context(str(run_id))
+        exit_current_context(uuid_str=uuid_str)
 
     def on_tool_error(
         self,
