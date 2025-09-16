@@ -288,17 +288,14 @@ def exit_current_context(
         current_trace = current_trace_context.get()
         if current_span.status == TraceSpanStatus.ERRORED and current_trace:
             current_trace.status = TraceSpanStatus.ERRORED
-        if current_trace and current_trace.uuid == current_span.trace_uuid:
-            other_active_spans = [
-                span
-                for span in trace_manager.active_spans.values()
-                if span.trace_uuid == current_span.trace_uuid
-            ]
-            if not other_active_spans:
-                trace_manager.end_trace(current_span.trace_uuid)
-                current_trace_context.set(None)
-
+            
         current_span_context.set(None)
 
     if progress is not None and pbar_callback_id is not None:
         progress.update(pbar_callback_id, advance=1)
+
+def exit_current_trace_context(uuid_str: str):
+    current_trace = current_trace_context.get()
+    if current_trace and current_trace.uuid == uuid_str:
+        trace_manager.end_trace(uuid_str)
+        current_trace_context.set(None)

@@ -1,6 +1,7 @@
 from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
+from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
     LlmOutput,
     LlmToolCall,
@@ -26,6 +27,7 @@ try:
         safe_extract_token_usage,
         enter_current_context,
         exit_current_context,
+        exit_current_trace_context,
     )
 
     langchain_installed = True
@@ -38,11 +40,6 @@ def is_langchain_installed():
         raise ImportError(
             "LangChain is not installed. Please install it with `pip install langchain`."
         )
-
-
-# ASSUMPTIONS:
-# cycle for a single invoke call
-# one trace per cycle
 
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
@@ -59,43 +56,15 @@ CUSTOM_SPAN_NAME_LIST = ["LangGraph"]
 class CallbackHandler(BaseCallbackHandler):
 
     def __init__(self):
-        super().__init__()
+        is_langchain_installed()
+        with capture_tracing_integration("langchain.callback.CallbackHandler"):
+            trace = trace_manager.start_new_trace()
+            self.trace_uuid = trace.uuid
+            current_trace_context.set(trace)
+            super().__init__()
 
-    def on_chain_start(
-        self,
-        serialized: dict[str, Any],
-        inputs: dict[str, Any],
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None,
-        **kwargs: Any,
-    ) -> Any:
-
-        _name = extract_name(serialized, **kwargs)
-        if _name in CUSTOM_SPAN_NAME_LIST:
-
-            enter_current_context(
-                uuid_str=str(run_id),
-                span_type="custom", 
-                func_name=_name,
-            )
-
-    def on_chain_end(
-        self,
-        outputs: dict[str, Any],
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,  # un-logged kwargs
-    ) -> Any:
-
-        base_span = trace_manager.get_span_by_uuid(str(run_id))
-        if base_span is None:
-            return
-        
-        exit_current_context(uuid_str=str(run_id))
+    def __del__(self):
+        exit_current_trace_context(self.trace_uuid)
 
     def on_llm_start(
         self,
@@ -176,6 +145,4 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.input_token_count = total_input_tokens if total_input_tokens > 0 else None
         llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
 
-        exit_current_context(
-            uuid_str=str(run_id)
-        )
+        exit_current_context(uuid_str=str(run_id))
