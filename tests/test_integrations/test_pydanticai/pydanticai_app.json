@@ -3,14 +3,14 @@
     {
       "agentHandoffs": [],
       "availableTools": [],
-      "endTime": "2025-09-12T09:12:42.900Z",
+      "endTime": "2025-09-16T15:17:49.883Z",
       "input": {
         "input": "What's the weather in Paris?"
       },
       "metricCollection": "test_collection_1",
       "name": "Agent",
       "output": "<is_present>",
-      "startTime": "2025-09-12T09:12:38.098Z",
+      "startTime": "2025-09-16T15:17:40.291Z",
       "status": "SUCCESS",
       "toolsCalled": [
         {
@@ -32,12 +32,12 @@
     }
   ],
   "baseSpans": [],
-  "endTime": "2025-09-12T09:12:42.900Z",
+  "endTime": "2025-09-16T15:17:49.883Z",
   "environment": "development",
   "input": "What's the weather in Paris?",
   "llmSpans": [
     {
-      "endTime": "2025-09-12T09:12:42.899Z",
+      "endTime": "2025-09-16T15:17:49.882Z",
       "input": [
         {
           "content": "What's the weather in Paris?",
@@ -77,14 +77,14 @@
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-12T09:12:41.738Z",
+      "startTime": "2025-09-16T15:17:48.033Z",
       "status": "SUCCESS",
       "toolsCalled": [],
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-12T09:12:41.410Z",
+      "endTime": "2025-09-16T15:17:47.876Z",
       "input": [
         {
           "content": "What's the weather in Paris?",
@@ -122,7 +122,7 @@
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-12T09:12:40.449Z",
+      "startTime": "2025-09-16T15:17:44.548Z",
       "status": "SUCCESS",
       "toolsCalled": [
         {
@@ -137,7 +137,7 @@
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-12T09:12:40.058Z",
+      "endTime": "2025-09-16T15:17:44.383Z",
       "input": [
         {
           "content": "What's the weather in Paris?",
@@ -164,7 +164,7 @@
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-12T09:12:38.099Z",
+      "startTime": "2025-09-16T15:17:40.292Z",
       "status": "SUCCESS",
       "toolsCalled": [
         {
@@ -185,7 +185,7 @@
   "name": "test_trace_1",
   "output": "<is_present>",
   "retrieverSpans": [],
-  "startTime": "2025-09-12T09:12:38.098Z",
+  "startTime": "2025-09-16T15:17:40.291Z",
   "status": "SUCCESS",
   "tags": [
     "test_tag_1"
@@ -193,200 +193,10 @@
   "threadId": "test_thread_id_1",
   "toolSpans": [
     {
-      "endTime": "2025-09-12T09:12:41.737Z",
+      "endTime": "2025-09-16T15:17:48.033Z",
       "input": {
         "args": [
-          {
-            "deps": {
-              "client": {
-                "follow_redirects": false,
-                "max_redirects": 20
-              }
-            },
-            "messages": [
-              {
-                "instructions": "Be concise, reply with one sentence.",
-                "kind": "request",
-                "parts": [
-                  {
-                    "content": "What's the weather in Paris?",
-                    "part_kind": "user-prompt",
-                    "timestamp": "<is_present>"
-                  }
-                ]
-              },
-              {
-                "kind": "response",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "parts": [
-                  {
-                    "args": "{\"location_description\":\"Paris\"}",
-                    "part_kind": "tool-call",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_lat_lng"
-                  }
-                ],
-                "provider_details": null,
-                "provider_name": "openai",
-                "provider_response_id": "<is_present>",
-                "timestamp": "<is_present>",
-                "usage": {
-                  "cache_audio_read_tokens": 0,
-                  "cache_read_tokens": 0,
-                  "cache_write_tokens": 0,
-                  "details": {
-                    "accepted_prediction_tokens": 0,
-                    "audio_tokens": 0,
-                    "reasoning_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  },
-                  "input_audio_tokens": 0,
-                  "input_tokens": "<is_present>",
-                  "output_audio_tokens": 0,
-                  "output_tokens": "<is_present>"
-                }
-              },
-              {
-                "instructions": "Be concise, reply with one sentence.",
-                "kind": "request",
-                "parts": [
-                  {
-                    "content": {
-                      "lat": "<is_present>",
-                      "lng": "<is_present>"
-                    },
-                    "metadata": null,
-                    "part_kind": "tool-return",
-                    "timestamp": "<is_present>",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_lat_lng"
-                  }
-                ]
-              },
-              {
-                "kind": "response",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "parts": [
-                  {
-                    "args": "<is_present>",
-                    "part_kind": "tool-call",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_weather"
-                  }
-                ],
-                "provider_details": null,
-                "provider_name": "openai",
-                "provider_response_id": "<is_present>",
-                "timestamp": "<is_present>",
-                "usage": {
-                  "cache_audio_read_tokens": 0,
-                  "cache_read_tokens": 0,
-                  "cache_write_tokens": 0,
-                  "details": {
-                    "accepted_prediction_tokens": 0,
-                    "audio_tokens": 0,
-                    "reasoning_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  },
-                  "input_audio_tokens": 0,
-                  "input_tokens": "<is_present>",
-                  "output_audio_tokens": 0,
-                  "output_tokens": "<is_present>"
-                }
-              },
-              {
-                "instructions": "Be concise, reply with one sentence.",
-                "kind": "request",
-                "parts": [
-                  {
-                    "content": {
-                      "description": "<is_present>",
-                      "temperature": "<is_present>"
-                    },
-                    "metadata": null,
-                    "part_kind": "tool-return",
-                    "timestamp": "<is_present>",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_weather"
-                  }
-                ]
-              },
-              {
-                "kind": "response",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "parts": [
-                  {
-                    "content": "<is_present>",
-                    "part_kind": "text"
-                  }
-                ],
-                "provider_details": null,
-                "provider_name": "openai",
-                "provider_response_id": "<is_present>",
-                "timestamp": "<is_present>",
-                "usage": {
-                  "cache_audio_read_tokens": 0,
-                  "cache_read_tokens": 0,
-                  "cache_write_tokens": 0,
-                  "details": {
-                    "accepted_prediction_tokens": 0,
-                    "audio_tokens": 0,
-                    "reasoning_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  },
-                  "input_audio_tokens": 0,
-                  "input_tokens": "<is_present>",
-                  "output_audio_tokens": 0,
-                  "output_tokens": "<is_present>"
-                }
-              }
-            ],
-            "model": {
-              "_model_name": "gpt-4o-mini",
-              "_provider": {},
-              "client": {
-                "api_key": "<is_present>",
-                "chat": {
-                  "completions": {}
-                },
-                "max_retries": 2,
-                "organization": null,
-                "project": null,
-                "timeout": {
-                  "connect": 5,
-                  "pool": 600,
-                  "read": 600,
-                  "write": 600
-                },
-                "webhook_secret": null,
-                "websocket_base_url": null
-              }
-            },
-            "prompt": "What's the weather in Paris?",
-            "retries": {},
-            "retry": 0,
-            "run_step": 2,
-            "tool_call_id": "<is_present>",
-            "tool_name": "get_weather",
-            "trace_include_content": false,
-            "tracer": {},
-            "usage": {
-              "cache_audio_read_tokens": 0,
-              "cache_read_tokens": 0,
-              "cache_write_tokens": 0,
-              "details": {
-                "accepted_prediction_tokens": 0,
-                "audio_tokens": 0,
-                "reasoning_tokens": 0,
-                "rejected_prediction_tokens": 0
-              },
-              "input_audio_tokens": 0,
-              "input_tokens": "<is_present>",
-              "output_audio_tokens": 0,
-              "output_tokens": "<is_present>",
-              "requests": 3
-            }
-          }
+          "<RunContext>"
         ],
         "lat": "<is_present>",
         "lng": "<is_present>"
@@ -398,187 +208,16 @@
         "temperature": "<is_present>"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-12T09:12:41.410Z",
+      "startTime": "2025-09-16T15:17:47.876Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-12T09:12:40.447Z",
+      "endTime": "2025-09-16T15:17:44.547Z",
       "input": {
         "args": [
-          {
-            "deps": {
-              "client": "<circular>"
-            },
-            "messages": [
-              {
-                "instructions": "Be concise, reply with one sentence.",
-                "kind": "request",
-                "parts": [
-                  {
-                    "content": "What's the weather in Paris?",
-                    "part_kind": "user-prompt",
-                    "timestamp": "<circular>"
-                  }
-                ]
-              },
-              {
-                "kind": "response",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "parts": [
-                  {
-                    "args": "{\"location_description\":\"Paris\"}",
-                    "part_kind": "tool-call",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_lat_lng"
-                  }
-                ],
-                "provider_details": null,
-                "provider_name": "openai",
-                "provider_response_id": "<is_present>",
-                "timestamp": "<circular>",
-                "usage": {
-                  "cache_audio_read_tokens": 0,
-                  "cache_read_tokens": 0,
-                  "cache_write_tokens": 0,
-                  "details": {
-                    "accepted_prediction_tokens": 0,
-                    "audio_tokens": 0,
-                    "reasoning_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  },
-                  "input_audio_tokens": 0,
-                  "input_tokens": "<is_present>",
-                  "output_audio_tokens": 0,
-                  "output_tokens": "<is_present>"
-                }
-              },
-              {
-                "instructions": "Be concise, reply with one sentence.",
-                "kind": "request",
-                "parts": [
-                  {
-                    "content": {
-                      "lat": "<is_present>",
-                      "lng": "<is_present>"
-                    },
-                    "metadata": null,
-                    "part_kind": "tool-return",
-                    "timestamp": "<circular>",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_lat_lng"
-                  }
-                ]
-              },
-              {
-                "kind": "response",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "parts": [
-                  {
-                    "args": "<is_present>",
-                    "part_kind": "tool-call",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_weather"
-                  }
-                ],
-                "provider_details": null,
-                "provider_name": "openai",
-                "provider_response_id": "<is_present>",
-                "timestamp": "<circular>",
-                "usage": {
-                  "cache_audio_read_tokens": 0,
-                  "cache_read_tokens": 0,
-                  "cache_write_tokens": 0,
-                  "details": {
-                    "accepted_prediction_tokens": 0,
-                    "audio_tokens": 0,
-                    "reasoning_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  },
-                  "input_audio_tokens": 0,
-                  "input_tokens": "<is_present>",
-                  "output_audio_tokens": 0,
-                  "output_tokens": "<is_present>"
-                }
-              },
-              {
-                "instructions": "Be concise, reply with one sentence.",
-                "kind": "request",
-                "parts": [
-                  {
-                    "content": {
-                      "description": "<is_present>",
-                      "temperature": "<is_present>"
-                    },
-                    "metadata": null,
-                    "part_kind": "tool-return",
-                    "timestamp": "<circular>",
-                    "tool_call_id": "<is_present>",
-                    "tool_name": "get_weather"
-                  }
-                ]
-              },
-              {
-                "kind": "response",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "parts": [
-                  {
-                    "content": "<is_present>",
-                    "part_kind": "text"
-                  }
-                ],
-                "provider_details": null,
-                "provider_name": "openai",
-                "provider_response_id": "<is_present>",
-                "timestamp": "<circular>",
-                "usage": {
-                  "cache_audio_read_tokens": 0,
-                  "cache_read_tokens": 0,
-                  "cache_write_tokens": 0,
-                  "details": {
-                    "accepted_prediction_tokens": 0,
-                    "audio_tokens": 0,
-                    "reasoning_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  },
-                  "input_audio_tokens": 0,
-                  "input_tokens": "<is_present>",
-                  "output_audio_tokens": 0,
-                  "output_tokens": "<is_present>"
-                }
-              }
-            ],
-            "model": {
-              "_model_name": "gpt-4o-mini",
-              "_provider": "<circular>",
-              "client": "<circular>"
-            },
-            "prompt": "What's the weather in Paris?",
-            "retries": {},
-            "retry": 0,
-            "run_step": 1,
-            "tool_call_id": "<is_present>",
-            "tool_name": "get_lat_lng",
-            "trace_include_content": false,
-            "tracer": "<circular>",
-            "usage": {
-              "cache_audio_read_tokens": 0,
-              "cache_read_tokens": 0,
-              "cache_write_tokens": 0,
-              "details": {
-                "accepted_prediction_tokens": 0,
-                "audio_tokens": 0,
-                "reasoning_tokens": 0,
-                "rejected_prediction_tokens": 0
-              },
-              "input_audio_tokens": 0,
-              "input_tokens": "<is_present>",
-              "output_audio_tokens": 0,
-              "output_tokens": "<is_present>",
-              "requests": 3
-            }
-          }
+          "<RunContext>"
         ],
         "location_description": "Paris"
       },
@@ -589,7 +228,7 @@
         "lng": "<is_present>"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-12T09:12:40.060Z",
+      "startTime": "2025-09-16T15:17:44.384Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"

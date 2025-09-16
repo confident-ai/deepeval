@@ -26,6 +26,7 @@ try:
         ToolReturnPart,
         UserPromptPart,
     )
+    from pydantic_ai._run_context import RunContext
 
     pydantic_ai_installed = True
 except:
@@ -79,12 +80,14 @@ def _create_patched_tool(
 
         @functools.wraps(original_func)
         async def async_wrapper(*args, **kwargs):
+            sanitized_args = _sanitize_run_context(args)
+            sanitized_kwargs = _sanitize_run_context(kwargs)
             with Observer(
                 span_type="tool",
                 func_name=original_func.__name__,
                 metrics=metrics,
                 metric_collection=metric_collection,
-                function_kwargs={"args": args, **kwargs},
+                function_kwargs={"args": sanitized_args, **sanitized_kwargs},
             ) as observer:
                 result = await original_func(*args, **kwargs)
                 observer.result = result
@@ -96,12 +99,14 @@ def _create_patched_tool(
 
         @functools.wraps(original_func)
         def sync_wrapper(*args, **kwargs):
+            sanitized_args = _sanitize_run_context(args)
+            sanitized_kwargs = _sanitize_run_context(kwargs)
             with Observer(
                 span_type="tool",
                 func_name=original_func.__name__,
                 metrics=metrics,
                 metric_collection=metric_collection,
-                function_kwargs={"args": args, **kwargs},
+                function_kwargs={"args": sanitized_args, **sanitized_kwargs},
             ) as observer:
                 result = original_func(*args, **kwargs)
                 observer.result = result
@@ -109,7 +114,6 @@ def _create_patched_tool(
             return result
 
         return sync_wrapper
-
 
 def _patch_agent_init():
     original_init = Agent.__init__
@@ -374,3 +378,22 @@ def _extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
                         tool_calls.append(tool_call)
 
     return tool_calls
+
+def _sanitize_run_context(value):
+    """
+    Recursively replace pydantic-ai RunContext instances with '<RunContext>'.
+
+    This avoids leaking internal context details into recorded function kwargs,
+    while keeping the original arguments intact for the actual function call.
+    """
+    if isinstance(value, RunContext):
+        return "<RunContext>"
+    if isinstance(value, dict):
+        return {k: _sanitize_run_context(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        sanitized = [_sanitize_run_context(v) for v in value]
+        return tuple(sanitized) if isinstance(value, tuple) else sanitized
+    if isinstance(value, set):
+        return {_sanitize_run_context(v) for v in value}
+
+    return value
