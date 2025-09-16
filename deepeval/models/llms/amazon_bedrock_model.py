@@ -1,23 +1,15 @@
-import logging
 import asyncio
 
 from typing import Optional, Tuple, Union, Dict
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
-from tenacity import retry, before_sleep_log
-
-from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.llms.utils import trim_and_load_json
 
 from deepeval.models.retry_policy import (
-    dynamic_wait,
-    dynamic_stop,
-    dynamic_retry,
-    log_retry_error,
+    create_retry_decorator,
     sdk_retries_for,
 )
-
-logger = logging.getLogger(__name__)
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.llms.utils import trim_and_load_json
 
 # check aiobotocore availability
 try:
@@ -29,16 +21,7 @@ except ImportError:
     aiobotocore_available = False
 
 # define retry policy
-_retry_kw = dict(
-    wait=dynamic_wait(),
-    stop=dynamic_stop(),
-    retry=dynamic_retry(
-        "bedrock"
-    ),  # <- can disable at runtime with DEEPEVAL_SDK_RETRY_PROVIDERS
-    before_sleep=before_sleep_log(logger, logging.INFO),
-    after=log_retry_error,
-)
-retry_bedrock = retry(**_retry_kw)
+retry_bedrock = create_retry_decorator("bedrock")
 
 
 def _check_aiobotocore_available():

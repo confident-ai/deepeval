@@ -1,36 +1,21 @@
-import logging
-import os
 import warnings
 
 from typing import Optional, Tuple, Union, Dict
 from anthropic import Anthropic, AsyncAnthropic
 from pydantic import BaseModel
-from tenacity import retry, before_sleep_log
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.retry_policy import (
-    dynamic_wait,
-    dynamic_stop,
-    dynamic_retry,
-    log_retry_error,
+    create_retry_decorator,
     sdk_retries_for,
 )
 from deepeval.models.utils import parse_model_name
-
-
-logger = logging.getLogger(__name__)
+from deepeval.config.settings import get_settings
 
 
 # consistent retry rules
-_retry_kw = dict(
-    wait=dynamic_wait(),
-    stop=dynamic_stop(),
-    retry=dynamic_retry("anthropic"),
-    before_sleep=before_sleep_log(logger, logging.INFO),
-    after=log_retry_error,
-)
-retry_anthropic = retry(**_retry_kw)
+retry_anthropic = create_retry_decorator("anthropic")
 
 model_pricing = {
     "claude-opus-4-20250514": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
@@ -169,9 +154,9 @@ class AnthropicModel(DeepEvalBaseLLM):
         return kwargs
 
     def _build_client(self, cls):
+        settings = get_settings()
         kw = dict(
-            api_key=os.environ.get("ANTHROPIC_API_KEY")
-            or self._anthropic_api_key,
+            api_key=settings.ANTHROPIC_API_KEY or self._anthropic_api_key,
             **self._client_kwargs(),
         )
         try:

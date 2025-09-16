@@ -1,5 +1,3 @@
-import logging
-from tenacity import retry, before_sleep_log
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict
@@ -11,29 +9,17 @@ from deepeval.models.llms.openai_model import (
     structured_outputs_models,
     json_mode_models,
     model_pricing,
-    log_retry_error,
 )
 from deepeval.models.retry_policy import (
-    dynamic_wait,
-    dynamic_stop,
-    retry_predicate,
+    create_retry_decorator,
     sdk_retries_for,
-    AZURE_OPENAI_ERROR_POLICY,
 )
+
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
 
 
-logger = logging.getLogger(__name__)
-
-_base_retry_rules_kw = dict(
-    wait=dynamic_wait(),
-    stop=dynamic_stop(),
-    retry=retry_predicate(AZURE_OPENAI_ERROR_POLICY),
-    before_sleep=before_sleep_log(logger, logging.INFO),
-    after=log_retry_error,
-)
-retry_azure = retry(**_base_retry_rules_kw)
+retry_azure = create_retry_decorator("azure")
 
 
 class AzureOpenAIModel(DeepEvalBaseLLM):
@@ -267,29 +253,34 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         return f"Azure OpenAI ({self.model_name})"
 
     def load_model(self, async_mode: bool = False):
-        # ensure SDK retries are disabled and let Tenacity handle this via our retry policy
-        kwargs = self._client_kwargs()
         if not async_mode:
-            return AzureOpenAI(
-                api_key=self.azure_openai_api_key,
-                api_version=self.openai_api_version,
-                azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.deployment_name,
-                **kwargs,  # ← Keep this for client initialization
-            )
-        return AsyncAzureOpenAI(
+            return self._build_client(AzureOpenAI)
+        return self._build_client(AsyncAzureOpenAI)
+
+    def _client_kwargs(self) -> Dict:
+        """
+        If Tenacity is managing retries, force OpenAI SDK retries off to avoid double retries.
+        If the user opts into SDK retries for 'azure' via DEEPEVAL_SDK_RETRY_PROVIDERS,
+        leave their retry settings as is.
+        """
+        kwargs = dict(self.kwargs or {})
+        if not sdk_retries_for("azure"):
+            kwargs["max_retries"] = 0
+        return kwargs
+
+    def _build_client(self, cls):
+        kw = dict(
             api_key=self.azure_openai_api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.deployment_name,
-            **kwargs,  # ← Keep this for client initialization
+            **self._client_kwargs(),
         )
-
-    def _client_kwargs(self) -> Dict:
-        # start with any caller provided client kwargs
-        kwargs = dict(self.kwargs or {})
-        # if Tenacity should handle retries, disable SDK retries.
-        # if the user opts into SDK retries for azure, keep their max_retries as is.
-        if not sdk_retries_for("azure"):
-            kwargs["max_retries"] = 0
-        return kwargs
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # older OpenAI SDKs may not accept max_retries, in that case remove and retry once
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise

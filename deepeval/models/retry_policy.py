@@ -37,9 +37,11 @@ from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple
 from collections.abc import Mapping as ABCMapping
 from tenacity import (
     RetryCallState,
+    retry,
     wait_exponential_jitter,
     stop_after_attempt,
     retry_if_exception,
+    before_sleep_log,
 )
 from tenacity.stop import stop_base
 from tenacity.wait import wait_base
@@ -126,7 +128,7 @@ def extract_error_code(
         if isinstance(resp, ABCMapping):
             # Structured mapping directly on response
             cur = resp
-            for k in ("Error", "Code"):
+            for k in ("Error", "Code"):  # <- AWS boto style Error / Code
                 if not isinstance(cur, ABCMapping):
                     cur = {}
                     break
@@ -272,6 +274,11 @@ def retry_predicate(policy: ErrorPolicy, **kw):
 # --------------------------
 # Built-in policies
 # --------------------------
+
+##################
+# Open AI Policy #
+##################
+
 OPENAI_MESSAGE_MARKERS: dict[str, tuple[str, ...]] = {
     "insufficient_quota": (
         "insufficient_quota",
@@ -307,6 +314,8 @@ except Exception:  # pragma: no cover - OpenAI may not be installed in some envs
 ##########################
 AZURE_OPENAI_ERROR_POLICY = OPENAI_ERROR_POLICY
 DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
+KIMI_ERROR_POLICY = OPENAI_ERROR_POLICY
+LOCAL_ERROR_POLICY = OPENAI_ERROR_POLICY
 
 ######################
 # AWS Bedrock Policy #
@@ -506,6 +515,41 @@ except Exception:  # xai-sdk/grpc not present
     GROK_ERROR_POLICY = None
 
 
+############
+# Lite LLM #
+############
+LITELLM_ERROR_POLICY = None  # TODO: LiteLLM is going to take some extra care. I will return to this task last
+
+
+#########################
+# Ollama (local server) #
+#########################
+
+try:
+    import httpx
+
+    # Catch transport + timeout issues via base classes
+    _HTTPX_NET_EXCS = tuple(
+        exc_cls
+        for exc_cls in (
+            getattr(httpx, "RequestError", None),
+            getattr(httpx, "TimeoutException", None),
+        )
+        if exc_cls is not None
+    )
+
+    OLLAMA_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),
+        rate_limit_excs=(),  # no rate limiting semantics locally
+        network_excs=_HTTPX_NET_EXCS,  # retry network/timeouts
+        http_excs=(),  # optionally add httpx.HTTPStatusError if you call raise_for_status()
+        non_retryable_codes=frozenset(),
+        message_markers={},
+    )
+except Exception:
+    OLLAMA_ERROR_POLICY = None
+
+
 ###########
 # Helpers #
 ###########
@@ -521,7 +565,10 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     "deepseek": DEEPSEEK_ERROR_POLICY,
     "google": GOOGLE_ERROR_POLICY,
     "grok": GROK_ERROR_POLICY,
-    # "ollama": OLLAMA_ERROR_POLICY,
+    "kimi": KIMI_ERROR_POLICY,
+    "litellm": LITELLM_ERROR_POLICY,
+    "local": LOCAL_ERROR_POLICY,
+    "ollama": OLLAMA_ERROR_POLICY,
 }
 
 
@@ -573,6 +620,20 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     "grok": (
         make_is_transient(GROK_ERROR_POLICY) if GROK_ERROR_POLICY else None
     ),
+    "kimi": (
+        make_is_transient(KIMI_ERROR_POLICY) if KIMI_ERROR_POLICY else None
+    ),
+    "litellm": (
+        make_is_transient(LITELLM_ERROR_POLICY)
+        if LITELLM_ERROR_POLICY
+        else None
+    ),
+    "local": (
+        make_is_transient(LOCAL_ERROR_POLICY) if LOCAL_ERROR_POLICY else None
+    ),
+    "ollama": (
+        make_is_transient(OLLAMA_ERROR_POLICY) if OLLAMA_ERROR_POLICY else None
+    ),
 }
 
 
@@ -602,9 +663,26 @@ def log_retry_error(retry_state: RetryCallState):
     )
 
 
+def create_retry_decorator(provider_slug: str):
+    """
+    Build a Tenacity @retry decorator wired to our dynamic retry policy
+    for the given provider slug.
+    """
+    slug = provider_slug.lower()
+    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+    return retry(
+        wait=dynamic_wait(),
+        stop=dynamic_stop(),
+        retry=dynamic_retry(slug),
+        before_sleep=before_sleep_log(_logger, logging.INFO),
+        after=log_retry_error,
+    )
+
+
 __all__ = [
     "ErrorPolicy",
     "get_retry_policy_for",
+    "create_retry_decorator",
     "dynamic_retry",
     "extract_error_code",
     "make_is_transient",
@@ -621,4 +699,5 @@ __all__ = [
     "DEEPSEEK_ERROR_POLICY",
     "GOOGLE_ERROR_POLICY",
     "GROK_ERROR_POLICY",
+    "LOCAL_ERROR_POLICY",
 ]

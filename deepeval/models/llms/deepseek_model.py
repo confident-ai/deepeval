@@ -1,5 +1,3 @@
-import logging
-
 from typing import Optional, Tuple, Union, Dict
 from openai import OpenAI, AsyncOpenAI
 from pydantic import BaseModel
@@ -7,28 +5,14 @@ from pydantic import BaseModel
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
-from tenacity import retry, before_sleep_log
 from deepeval.models.retry_policy import (
-    dynamic_wait,
-    dynamic_stop,
-    dynamic_retry,
-    log_retry_error,
+    create_retry_decorator,
     sdk_retries_for,
 )
 
 
-logger = logging.getLogger(__name__)
-
 # consistent retry rules
-_retry_kw = dict(
-    wait=dynamic_wait(),
-    stop=dynamic_stop(),
-    retry=dynamic_retry("deepseek"),
-    before_sleep=before_sleep_log(logger, logging.INFO),
-    after=log_retry_error,
-)
-retry_deepseek = retry(**_retry_kw)
-
+retry_deepseek = create_retry_decorator("deepseek")
 
 model_pricing = {
     "deepseek-chat": {

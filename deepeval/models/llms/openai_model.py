@@ -1,5 +1,3 @@
-import logging
-
 from openai.types.chat.chat_completion import ChatCompletion
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from typing import Optional, Tuple, Union, Dict
@@ -10,21 +8,16 @@ from openai import (
     AsyncOpenAI,
 )
 
-from tenacity import retry, before_sleep_log
-
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
 from deepeval.models.retry_policy import (
-    dynamic_wait,
-    dynamic_stop,
-    dynamic_retry,
+    create_retry_decorator,
     sdk_retries_for,
-    log_retry_error,
 )
 
-logger = logging.getLogger(__name__)
 
+retry_openai = create_retry_decorator("openai")
 
 valid_gpt_models = [
     "gpt-3.5-turbo",
@@ -213,16 +206,6 @@ models_requiring_temperature_1 = [
     "gpt-5-chat-latest",
 ]
 
-_base_retry_rules_kw = dict(
-    wait=dynamic_wait(),
-    stop=dynamic_stop(),
-    retry=dynamic_retry("openai"),
-    before_sleep=before_sleep_log(
-        logger, logging.INFO
-    ),  # <- logs only on retries
-    after=log_retry_error,
-)
-
 
 class GPTModel(DeepEvalBaseLLM):
     def __init__(
@@ -300,7 +283,7 @@ class GPTModel(DeepEvalBaseLLM):
     # Generate functions
     ###############################################
 
-    @retry(**_base_retry_rules_kw)
+    @retry_openai
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -359,7 +342,7 @@ class GPTModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-    @retry(**_base_retry_rules_kw)
+    @retry_openai
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
@@ -423,7 +406,7 @@ class GPTModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
-    @retry(**_base_retry_rules_kw)
+    @retry_openai
     def generate_raw_response(
         self,
         prompt: str,
@@ -446,7 +429,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-    @retry(**_base_retry_rules_kw)
+    @retry_openai
     async def a_generate_raw_response(
         self,
         prompt: str,
@@ -469,7 +452,7 @@ class GPTModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-    @retry(**_base_retry_rules_kw)
+    @retry_openai
     def generate_samples(
         self, prompt: str, n: int, temperature: float
     ) -> Tuple[list[str], float]:

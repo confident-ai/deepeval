@@ -33,6 +33,9 @@ _SUPPORTED_PROVIDER_SLUGS = {
     "deepseek",
     "google",
     "grok",
+    "kimi",
+    "litellm",
+    "local",
     "ollama",
     "openai",
 }
