@@ -41,7 +41,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
     async def a_embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
-        response = embedding_model.embeddings.create(
+        response = await embedding_model.embeddings.create(
             model=self.model_name,
             input=[text],
         )
@@ -49,7 +49,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
-        response = embedding_model.embeddings.create(
+        response = await embedding_model.embeddings.create(
             model=self.model_name,
             input=texts,
         )
