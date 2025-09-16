@@ -2,7 +2,7 @@
   "agentSpans": [],
   "baseSpans": [
     {
-      "endTime": "2025-09-16T10:42:18.783Z",
+      "endTime": "2025-09-16T10:42:38.150Z",
       "input": {
         "input": "What is 8 multiplied by 6?"
       },
@@ -11,20 +11,20 @@
       "output": {
         "output": "8 multiplied by 6 is 48."
       },
-      "startTime": "2025-09-16T10:42:16.919Z",
+      "startTime": "2025-09-16T10:42:36.162Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     }
   ],
-  "endTime": "2025-09-16T10:42:18.783Z",
+  "endTime": "2025-09-16T10:42:38.150Z",
   "environment": "development",
   "input": {
     "input": "What is 8 multiplied by 6?"
   },
   "llmSpans": [
     {
-      "endTime": "2025-09-16T10:42:18.781Z",
+      "endTime": "2025-09-16T10:42:38.149Z",
       "input": [
         {
           "content": "You are a helpful assistant that can perform mathematical operations.",
@@ -57,13 +57,13 @@
       },
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "2025-09-16T10:42:18.006Z",
+      "startTime": "2025-09-16T10:42:37.354Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T10:42:18.000Z",
+      "endTime": "2025-09-16T10:42:37.346Z",
       "input": [
         {
           "content": "You are a helpful assistant that can perform mathematical operations.",
@@ -97,7 +97,7 @@
       },
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "2025-09-16T10:42:16.922Z",
+      "startTime": "2025-09-16T10:42:36.165Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
@@ -107,11 +107,11 @@
     "output": "8 multiplied by 6 is 48."
   },
   "retrieverSpans": [],
-  "startTime": "2025-09-16T10:42:16.917Z",
+  "startTime": "2025-09-16T10:42:36.161Z",
   "status": "SUCCESS",
   "toolSpans": [
     {
-      "endTime": "2025-09-16T10:42:18.002Z",
+      "endTime": "2025-09-16T10:42:37.349Z",
       "input": {
         "a": 8,
         "b": 6
@@ -120,7 +120,7 @@
       "name": "multiply",
       "output": 48,
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-16T10:42:18.001Z",
+      "startTime": "2025-09-16T10:42:37.348Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
