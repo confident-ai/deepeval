@@ -34,62 +34,37 @@ JSON:
     @staticmethod
     def generate_verdicts(input: str, statements: str):
         return f"""For the provided list of statements, determine whether each statement is relevant to address the input.
-Please generate a list of JSON with two keys: `verdict` and `reason`.
-The 'verdict' key should STRICTLY be either a 'yes', 'idk' or 'no'. Answer 'yes' if the statement is relevant to addressing the original input, 'no' if the statement is irrelevant, and 'idk' if it is ambiguous (eg., not directly relevant but could be used as a supporting point to address the input).
-The 'reason' is the reason for the verdict.
-Provide a 'reason' ONLY if the answer is 'no' or 'idk'. 
-The provided statements are statements made in the actual output.
+Generate JSON objects with 'verdict' and 'reason' fields.
+The 'verdict' should be 'yes' (relevant), 'no' (irrelevant), or 'idk' (ambiguous/supporting information).
+Provide 'reason' ONLY for 'no' or 'idk' verdicts.
+The statements are from an AI's actual output.
 
 **
 IMPORTANT: Please make sure to only return in valid and parseable JSON format, with the 'verdicts' key mapping to a list of JSON objects. Ensure all strings are closed appropriately. Repair any invalid JSON before you output it.
-Example input: 
-What features does the new laptop have?
 
-Example:
-Example statements: 
-[
-    "The new laptop model has a high-resolution Retina display.",
-    "It includes a fast-charging battery with up to 12 hours of usage.",
-    "Security features include fingerprint authentication and an encrypted SSD.",
-    "Every purchase comes with a one-year warranty.",
-    "24/7 customer support is included.",
-    "Pineapples taste great on pizza.",
-    "The laptop is a Dell XPS 13."
-]
-
-Example JSON:
+Expected JSON format:
 {{
     "verdicts": [
         {{
             "verdict": "yes"
         }},
         {{
-            "verdict": "yes"
-        }},
-        {{
-            "verdict": "yes"
-        }},
-        {{
             "verdict": "no",
-            "reason": "A one-year warranty is a purchase benefit, not a feature of the laptop itself."
-        }},
-        {{
-            "verdict": "no",
-            "reason": "Customer support is a service, not a feature of the laptop."
-        }},
-        {{
-            "verdict": "no",
-            "reason": "The statement about pineapples on pizza is completely irrelevant to the input, which asks about laptop features."
+            "reason": <explanation_for_irrelevance>
         }},
         {{
             "verdict": "idk",
-            "reason": "The statement about the laptop being a Dell XPS 13 is not directly relevant to the input, but could be used as a supporting point to address the input."
+            "reason": <explanation_for_ambiguity>
         }}
     ]  
 }}
-===== END OF EXAMPLE ======
 
-Since you are going to generate a verdict for each statement, the number of 'verdicts' SHOULD BE STRICTLY EQUAL to the number of `statements`.
+Generate ONE verdict per statement - number of 'verdicts' MUST equal number of statements.
+'verdict' must be STRICTLY 'yes', 'no', or 'idk':
+- 'yes': statement is relevant to addressing the input
+- 'no': statement is irrelevant to the input  
+- 'idk': statement is ambiguous (not directly relevant but could be supporting information)
+Provide 'reason' ONLY for 'no' or 'idk' verdicts.
 **          
 
 Input:

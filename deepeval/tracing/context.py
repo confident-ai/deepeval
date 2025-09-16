@@ -4,7 +4,6 @@ from contextvars import ContextVar
 from deepeval.tracing.types import BaseSpan, Trace
 from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
-from deepeval.metrics import BaseMetric
 from deepeval.prompt.prompt import Prompt
 
 current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
