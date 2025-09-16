@@ -33,6 +33,62 @@ except:
     pydantic_ai_installed = True
 
 
+def _patch_agent_run_sync(
+    agent_metric_collection: Optional[str] = None,
+    agent_metrics: Optional[List[BaseMetric]] = None,
+):
+    original_run_sync = Agent.run_sync
+    
+    @functools.wraps(original_run_sync)
+    def wrapper(
+        *args, 
+        metric_collection: Optional[str] = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[dict] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None, 
+        **kwargs
+    ):
+
+        with Observer(
+            span_type="agent",
+            func_name="Agent run_sync",
+            function_kwargs={"input": args[1]},
+            metrics=agent_metrics,
+            metric_collection=agent_metric_collection,
+        ) as observer:
+            
+            global RUN_SYNC_METHOD
+            try:
+                RUN_SYNC_METHOD = True
+                result = original_run_sync(*args, **kwargs)
+            finally:
+                RUN_SYNC_METHOD = False
+                
+            observer.update_span_properties = (
+                lambda agent_span: set_agent_span_attributes(
+                    agent_span, result
+                )
+            )
+            observer.result = result.output
+
+            _update_trace_context(
+                trace_name=name, 
+                trace_tags=tags, 
+                trace_metadata=metadata, 
+                trace_thread_id=thread_id, 
+                trace_user_id=user_id, 
+                trace_metric_collection=metric_collection, 
+                trace_metrics=metrics, 
+                trace_input=args[1], 
+                trace_output=result.output
+            )
+            
+        return result
+    Agent.run_sync = wrapper
+
 def _patch_agent_tool_decorator():
     original_tool = Agent.tool
 
