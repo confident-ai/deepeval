@@ -2,7 +2,7 @@
   "agentSpans": [],
   "baseSpans": [
     {
-      "endTime": "2025-09-16T10:37:32.516Z",
+      "endTime": "2025-09-16T10:38:30.998Z",
       "input": {
         "messages": [
           {
@@ -115,7 +115,7 @@
               "service_tier": "default",
               "system_fingerprint": "fp_560af6e559",
               "token_usage": {
-                "completion_tokens": 10,
+                "completion_tokens": "<is_present>",
                 "completion_tokens_details": {
                   "accepted_prediction_tokens": 0,
                   "audio_tokens": 0,
@@ -127,7 +127,7 @@
                   "audio_tokens": 0,
                   "cached_tokens": 0
                 },
-                "total_tokens": 96
+                "total_tokens": "<is_present>"
               }
             },
             "tool_calls": [],
@@ -142,19 +142,19 @@
                 "audio": 0,
                 "reasoning": 0
               },
-              "output_tokens": 10,
-              "total_tokens": 96
+              "output_tokens": "<is_present>",
+              "total_tokens": "<is_present>"
             }
           }
         ]
       },
-      "startTime": "2025-09-16T10:37:30.372Z",
+      "startTime": "2025-09-16T10:38:28.241Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     }
   ],
-  "endTime": "2025-09-16T10:37:32.516Z",
+  "endTime": "2025-09-16T10:38:30.998Z",
   "environment": "development",
   "input": {
     "messages": [
@@ -166,7 +166,7 @@
   },
   "llmSpans": [
     {
-      "endTime": "2025-09-16T10:37:32.515Z",
+      "endTime": "2025-09-16T10:38:30.997Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -198,16 +198,16 @@
         "role": "AI",
         "tool_calls": []
       },
-      "outputTokenCount": 10.0,
+      "outputTokenCount": "<is_present>",
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "2025-09-16T10:37:31.532Z",
+      "startTime": "2025-09-16T10:38:29.860Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T10:37:31.527Z",
+      "endTime": "2025-09-16T10:38:29.854Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -242,7 +242,7 @@
       "outputTokenCount": 15.0,
       "parentUuid": "<is_present>",
       "prompt": {},
-      "startTime": "2025-09-16T10:37:30.374Z",
+      "startTime": "2025-09-16T10:38:28.243Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
@@ -354,7 +354,7 @@
           "service_tier": "default",
           "system_fingerprint": "fp_560af6e559",
           "token_usage": {
-            "completion_tokens": 10,
+            "completion_tokens": "<is_present>",
             "completion_tokens_details": {
               "accepted_prediction_tokens": 0,
               "audio_tokens": 0,
@@ -366,7 +366,7 @@
               "audio_tokens": 0,
               "cached_tokens": 0
             },
-            "total_tokens": 96
+            "total_tokens": "<is_present>"
           }
         },
         "tool_calls": [],
@@ -381,14 +381,14 @@
             "audio": 0,
             "reasoning": 0
           },
-          "output_tokens": 10,
-          "total_tokens": 96
+          "output_tokens": "<is_present>",
+          "total_tokens": "<is_present>"
         }
       }
     ]
   },
   "retrieverSpans": [],
-  "startTime": "2025-09-16T10:37:30.370Z",
+  "startTime": "2025-09-16T10:38:28.240Z",
   "status": "SUCCESS",
   "tags": [
     "langgraph",
@@ -397,7 +397,7 @@
   "threadId": "123",
   "toolSpans": [
     {
-      "endTime": "2025-09-16T10:37:31.531Z",
+      "endTime": "2025-09-16T10:38:29.858Z",
       "input": {
         "city": "San Francisco"
       },
@@ -414,7 +414,7 @@
         "type": "tool"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-16T10:37:31.530Z",
+      "startTime": "2025-09-16T10:38:29.857Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
