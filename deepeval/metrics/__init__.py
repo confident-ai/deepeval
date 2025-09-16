@@ -69,7 +69,7 @@ __all__ = [
     "ConversationalGEval",
     "DAGMetric",
     "DeepAcyclicGraph",
-    "ConversationalDAGMetric"
+    "ConversationalDAGMetric",
     # RAG metrics
     "AnswerRelevancyMetric",
     "FaithfulnessMetric",
