@@ -7,7 +7,6 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
