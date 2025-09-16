@@ -293,7 +293,7 @@ class Prompt:
             self.version = version or "latest"
             self._text_template = response.text
             self._messages_template = response.messages
-            self._prompt_version_id = response.promptVersionId
+            self._prompt_version_id = response.id
             self._type = response.type
             self._interpolation_type = response.interpolation_type
 
@@ -308,7 +308,7 @@ class Prompt:
                     version=version or "latest",
                     text_template=response.text,
                     messages_template=response.messages,
-                    prompt_version_id=response.promptVersionId,
+                    prompt_version_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
                 )
@@ -406,7 +406,7 @@ class Prompt:
                     version=version or "latest",
                     text_template=response.text,
                     messages_template=response.messages,
-                    prompt_version_id=response.promptVersionId,
+                    prompt_version_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
                 )
