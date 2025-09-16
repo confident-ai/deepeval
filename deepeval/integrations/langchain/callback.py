@@ -1,5 +1,6 @@
 from typing import Any, Optional, List, Dict
 from uuid import UUID
+from time import perf_counter
 from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
     LlmOutput,
@@ -209,6 +210,23 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.status = TraceSpanStatus.ERRORED
         llm_span.error = str(error)
         exit_current_context(uuid_str=uuid_str)
+
+    def on_llm_new_token(
+        self,
+        token: str,
+        *,
+        chunk,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        **kwargs: Any,
+    ):
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+        if llm_span.token_intervals is None:
+            llm_span.token_intervals = {perf_counter(): token}
+        else:
+            llm_span.token_intervals[perf_counter()] = token
 
     def on_tool_start(
         self,
