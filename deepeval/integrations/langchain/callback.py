@@ -81,9 +81,6 @@ class CallbackHandler(BaseCallbackHandler):
             self.metric_collection = metric_collection
             current_trace_context.set(trace)
             super().__init__()
-
-    def __del__(self):
-        exit_current_trace_context(self.trace_uuid)
     
     def on_chain_start(
         self,
@@ -146,8 +143,11 @@ class CallbackHandler(BaseCallbackHandler):
 
         llm_span.input = input_messages
         llm_span.model = model
+        metrics = metadata.pop("metrics", None)
+        metric_collection = metadata.pop("metric_collection", None)
+        llm_span.metrics = metrics
+        llm_span.metric_collection = metric_collection
         
-
     def on_llm_end(
         self,
         response: LLMResult,
