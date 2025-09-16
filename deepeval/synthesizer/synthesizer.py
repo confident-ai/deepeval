@@ -421,7 +421,9 @@ class Synthesizer:
                         progress, pbar_generate_goldens_id, remove=False
                     )
 
-                    for input_index, data in enumerate(qualified_synthetic_inputs):
+                    for input_index, data in enumerate(
+                        qualified_synthetic_inputs
+                    ):
                         # Evolve input
                         evolved_input, evolutions_used = self._evolve_input(
                             input=data.input,
@@ -429,7 +431,9 @@ class Synthesizer:
                             num_evolutions=self.evolution_config.num_evolutions,
                             evolutions=self.evolution_config.evolutions,
                             progress=progress,
-                            pbar_evolve_input_id=pbar_evolve_input_ids[input_index],
+                            pbar_evolve_input_id=pbar_evolve_input_ids[
+                                input_index
+                            ],
                             remove_pbar=False,
                         )
 
@@ -441,7 +445,9 @@ class Synthesizer:
                                 task=self.styling_config.task,
                             )
                             update_pbar(
-                                progress, pbar_evolve_input_ids[input_index], remove=False
+                                progress,
+                                pbar_evolve_input_ids[input_index],
+                                remove=False,
                             )
                             res: SyntheticData = self._generate_schema(
                                 prompt,
@@ -480,7 +486,9 @@ class Synthesizer:
                             res = self._generate(prompt)
                             golden.expected_output = res
                             update_pbar(
-                                progress, pbar_evolve_input_ids[input_index], remove=False
+                                progress,
+                                pbar_evolve_input_ids[input_index],
+                                remove=False,
                             )
 
                         goldens.append(golden)
