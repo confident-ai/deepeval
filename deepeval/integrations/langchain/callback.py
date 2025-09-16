@@ -148,6 +148,20 @@ class CallbackHandler(BaseCallbackHandler):
 
         exit_current_context(uuid_str=uuid_str)
 
+    def on_llm_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+        llm_span.status = TraceSpanStatus.ERRORED
+        llm_span.error = str(error)
+        exit_current_context(uuid_str=uuid_str)
+
     def on_tool_start(
         self,
         serialized: dict[str, Any],
@@ -169,7 +183,6 @@ class CallbackHandler(BaseCallbackHandler):
         )
         tool_span.input = inputs
 
-    
     def on_tool_end(
         self,
         output: Any,
@@ -183,6 +196,20 @@ class CallbackHandler(BaseCallbackHandler):
         tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         tool_span.output = output
         exit_current_context(str(run_id))
+
+    def on_tool_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,  # un-logged kwargs
+    ) -> Any:
+        uuid_str = str(run_id)
+        tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
+        tool_span.status = TraceSpanStatus.ERRORED
+        tool_span.error = str(error)
+        exit_current_context(uuid_str=uuid_str)
 
     def on_retriever_start(
         self,
@@ -226,4 +253,18 @@ class CallbackHandler(BaseCallbackHandler):
             output_list.append(str(output))
         
         retriever_span.output = output_list
+        exit_current_context(uuid_str=uuid_str)
+
+    def on_retriever_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,  # un-logged kwargs
+    ) -> Any:
+        uuid_str = str(run_id)
+        retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
+        retriever_span.status = TraceSpanStatus.ERRORED
+        retriever_span.error = str(error)
         exit_current_context(uuid_str=uuid_str)
