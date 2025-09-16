@@ -22,6 +22,8 @@ def execute_agent():
             ]
         },
         config={
-            "callbacks": [CallbackHandler(metric_collection="task_completion")]
+            "callbacks": [CallbackHandler()]
         },
     )
+
+execute_agent()

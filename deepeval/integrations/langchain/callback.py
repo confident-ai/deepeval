@@ -146,3 +146,37 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
 
         exit_current_context(uuid_str=str(run_id))
+
+    def on_tool_start(
+        self,
+        serialized: dict[str, Any],
+        input_str: str,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        metadata: Optional[dict[str, Any]] = None,
+        inputs: Optional[dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+
+        tool_span = enter_current_context(
+            uuid_str=str(run_id),
+            span_type="tool",
+            func_name=extract_name(serialized, **kwargs), # ignored when setting the input
+        )
+        tool_span.input = inputs
+
+    
+    def on_tool_end(
+        self,
+        output: Any,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,  # un-logged kwargs
+    ) -> Any:
+    
+        tool_span: ToolSpan = trace_manager.get_span_by_uuid(str(run_id))
+        tool_span.output = output
+        exit_current_context(str(run_id))
