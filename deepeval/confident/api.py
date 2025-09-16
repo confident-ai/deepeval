@@ -89,7 +89,9 @@ class Endpoints(Enum):
     TEST_RUN_ENDPOINT = "/v1/test-run"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
+    PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:versionId"
     PROMPTS_ENDPOINT = "/v1/prompts"
+    PROMPTS_VERSIONS_ENDPOINT = "/v1/prompts/:alias/versions"
     SIMULATE_ENDPOINT = "/v1/simulate"
     EVALUATE_ENDPOINT = "/v1/evaluate"
 
