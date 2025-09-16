@@ -15,12 +15,12 @@ Usage:
 
 from __future__ import annotations
 import time
-from typing import Final
+from typing import Final, Union
 
 # Module globals are initialised exactly once.
-_anchor_perf_ns: int | None = None
-_anchor_wall_ns: int | None = None
-_offset_ns: int | None = None
+_anchor_perf_ns: Union[int, None] = None
+_anchor_wall_ns: Union[int, None] = None
+_offset_ns: Union[int, None] = None
 
 
 def init_clock_bridge() -> None:

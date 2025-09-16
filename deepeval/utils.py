@@ -516,7 +516,7 @@ def remove_pbars(
 
 
 def read_env_int(
-    name: str, default: int, *, min_value: int | None = None
+    name: str, default: int, *, min_value: Union[int, None] = None
 ) -> int:
     """Read an integer from an environment variable with safe fallback.
 
@@ -545,7 +545,7 @@ def read_env_int(
 
 
 def read_env_float(
-    name: str, default: float, *, min_value: float | None = None
+    name: str, default: float, *, min_value: Union[float, None] = None
 ) -> float:
     """Read a float from an environment variable with safe fallback.
 

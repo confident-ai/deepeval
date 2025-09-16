@@ -1,6 +1,5 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Union
 from tqdm import tqdm
-from typing import Union
 
 from deepeval.dataset import Golden
 from deepeval.benchmarks.base_benchmark import (
@@ -50,7 +49,7 @@ class DROP(DeepEvalBaseBenchmark):
         self,
         model: DeepEvalBaseLLM,
         *args,
-        batch_size: int | None = None,
+        batch_size: Union[int, None] = None,
         **kwargs,
     ) -> DeepEvalBaseBenchmarkResult:
         import pandas as pd
