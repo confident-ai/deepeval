@@ -13,6 +13,7 @@ from deepeval.integrations.pydantic_ai.otel import instrument_pydantic_ai
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.prompt import Prompt
 import inspect
+from contextvars import ContextVar
 
 try:
     from pydantic_ai.agent import Agent
@@ -34,9 +35,8 @@ try:
 except:
     pydantic_ai_installed = True
 
-RUN_SYNC_METHOD = False
+_IN_RUN_SYNC = ContextVar("deepeval_in_run_sync", default=False)
 _INSTRUMENTED = False
-
 
 def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
     global _INSTRUMENTED
@@ -147,12 +147,11 @@ def _patch_agent_run_sync(
             metric_collection=agent_metric_collection,
         ) as observer:
             
-            global RUN_SYNC_METHOD
+            token = _IN_RUN_SYNC.set(True)
             try:
-                RUN_SYNC_METHOD = True
                 result = original_run_sync(*args, **kwargs)
             finally:
-                RUN_SYNC_METHOD = False
+                _IN_RUN_SYNC.reset(token)
                 
             observer.update_span_properties = (
                 lambda agent_span: set_agent_span_attributes(
@@ -199,12 +198,14 @@ def _patch_agent_run(
         bound = sig.bind_partial(*args, **kwargs)
         bound.apply_defaults()
         input = bound.arguments.get("user_prompt", None)
+
+        in_sync = _IN_RUN_SYNC.get()
         with Observer(
-            span_type="agent" if not RUN_SYNC_METHOD else "custom",
-            func_name="Agent" if not RUN_SYNC_METHOD else "run",
+            span_type="agent" if not in_sync else "custom",
+            func_name="Agent" if not in_sync else "run",
             function_kwargs={"input": input},
-            metrics=agent_metrics if not RUN_SYNC_METHOD else None,
-            metric_collection=agent_metric_collection if not RUN_SYNC_METHOD else None,
+            metrics=agent_metrics if not in_sync else None,
+            metric_collection=agent_metric_collection if not in_sync else None,
         ) as observer:
             result = await original_run(*args, **kwargs)
             observer.update_span_properties = (
