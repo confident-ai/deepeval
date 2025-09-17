@@ -59,7 +59,7 @@ jobs:
       #              run test suite
       #----------------------------------------------
 
-      # Run tests (with secrets) — full suite
+      # Run tests (with secrets): full suite
       - name: Run tests
         if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
@@ -68,7 +68,7 @@ jobs:
             --ignore=tests/test_core/test_synthesizer/ \
             --ignore=tests/test_core/test_datasets/
 
-      # Run tests (no secrets) — skip e2e that require API keys
+      # Run tests (no secrets): skip e2e that require API keys
       - name: Run tests (no secrets)
         if: ${{ env.OPENAI_API_KEY == '' }}
         run: |
@@ -76,7 +76,8 @@ jobs:
             tests/test_core/ \
             --ignore=tests/test_core/test_synthesizer/ \
             --ignore=tests/test_core/test_datasets/ \
-            --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py
+            --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py \
+            --ignore=tests/test_core/test_tracing/test_dataset_iterator.py:
 
       #----------------------------------------------
       #    install dev dependencies (including chromadb) and run synthesizer tests
