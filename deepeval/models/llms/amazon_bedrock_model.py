@@ -104,7 +104,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     async def _ensure_client(self):
-        use_sdk = sdk_retries_for("bedrock")
+        use_sdk = sdk_retries_for(PS.BEDROCK)
 
         # only rebuild if client is missing or the sdk retry mode changes
         if self._client is None or self._sdk_retry_mode != use_sdk:

@@ -84,7 +84,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         leave their retry settings as is.
         """
         kwargs = dict(self.kwargs or {})
-        if not sdk_retries_for("azure"):
+        if not sdk_retries_for(PS.AZURE):
             kwargs["max_retries"] = 0
         return kwargs
 

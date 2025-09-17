@@ -150,7 +150,7 @@ class AnthropicModel(DeepEvalBaseLLM):
         kwargs = dict(self.kwargs or {})
         # If we are managing retries with Tenacity, force SDK retries off to avoid double retries.
         # if the user opts into SDK retries via DEEPEVAL_SDK_RETRY_PROVIDERS, then honor their max_retries.
-        if not sdk_retries_for("anthropic"):
+        if not sdk_retries_for(PS.ANTHROPIC):
             kwargs["max_retries"] = 0
         return kwargs
 

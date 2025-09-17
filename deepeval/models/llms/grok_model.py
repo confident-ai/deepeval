@@ -209,7 +209,7 @@ class GrokModel(DeepEvalBaseLLM):
         """
         kwargs = dict(self.kwargs or {})
         opts = list(kwargs.get("channel_options", []))
-        if not sdk_retries_for("grok"):
+        if not sdk_retries_for(PS.GROK):
             # remove any explicit enable flag, then disable retries
             opts = [
                 option

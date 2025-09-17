@@ -162,7 +162,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
         kwargs = dict(self.kwargs or {})
         # if we are managing retries with Tenacity, force SDK retries off to avoid double retries.
         # if the user opts into SDK retries for "deepseek" via DEEPEVAL_SDK_RETRY_PROVIDERS, honor it.
-        if not sdk_retries_for("deepseek"):
+        if not sdk_retries_for(PS.DEEPSEEK):
             kwargs["max_retries"] = 0
         return kwargs
 

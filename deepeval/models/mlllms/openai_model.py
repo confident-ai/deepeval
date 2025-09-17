@@ -249,7 +249,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
 
     def _client(self, async_mode: bool = False):
         kw = {"api_key": self._openai_api_key}
-        if not sdk_retries_for("openai"):
+        if not sdk_retries_for(PS.OPENAI):
             kw["max_retries"] = 0
         Client = AsyncOpenAI if async_mode else OpenAI
         return Client(**kw)

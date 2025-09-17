@@ -110,7 +110,7 @@ class LocalModel(DeepEvalBaseLLM):
         If users opt into SDK retries via DEEPEVAL_SDK_RETRY_PROVIDERS=local, leave them enabled.
         """
         kwargs = dict(self.kwargs or {})
-        if not sdk_retries_for("local"):
+        if not sdk_retries_for(PS.LOCAL):
             kwargs["max_retries"] = 0
         return kwargs
 
