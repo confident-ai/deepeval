@@ -26,12 +26,14 @@ def execute_agent():
         config={"callbacks": [CallbackHandler()]},
     )
 
+
 def api_call(is_failure: bool):
-    
+
     if is_failure:
         raise Exception("Test error")
-    
+
     return "Success"
+
 
 def app(is_failure: bool):
     with Observer(
@@ -43,5 +45,6 @@ def app(is_failure: bool):
         except Exception as e:
             raise e
         execute_agent()
+
 
 app(is_failure=False)

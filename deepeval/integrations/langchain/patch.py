@@ -4,6 +4,7 @@ from deepeval.tracing.context import current_span_context
 from typing import List, Optional, Callable
 from langchain_core.tools import tool as original_tool, BaseTool
 
+
 def tool(
     *args,
     metrics: Optional[List[BaseMetric]] = None,
@@ -22,8 +23,14 @@ def tool(
 
     return decorator
 
-def _patch_tool_decorator(func: Callable, metrics: Optional[List[BaseMetric]] = None, metric_collection: Optional[str] = None):
+
+def _patch_tool_decorator(
+    func: Callable,
+    metrics: Optional[List[BaseMetric]] = None,
+    metric_collection: Optional[str] = None,
+):
     original_func = func
+
     @functools.wraps(original_func)
     def wrapper(*args, **kwargs):
         current_span = current_span_context.get()
@@ -31,5 +38,6 @@ def _patch_tool_decorator(func: Callable, metrics: Optional[List[BaseMetric]] = 
         current_span.metric_collection = metric_collection
         res = original_func(*args, **kwargs)
         return res
+
     tool = wrapper
     return tool

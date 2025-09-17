@@ -65,6 +65,7 @@ def extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
 
     return tool_calls
 
+
 def sanitize_run_context(value):
     """
     Recursively replace pydantic-ai RunContext instances with '<RunContext>'.

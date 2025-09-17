@@ -36,6 +36,7 @@ def is_langchain_installed():
             "LangChain is not installed. Please install it with `pip install langchain`."
         )
 
+
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
     LlmSpan,
@@ -44,6 +45,7 @@ from deepeval.tracing.types import (
     ToolSpan,
 )
 from deepeval.telemetry import capture_tracing_integration
+
 
 class CallbackHandler(BaseCallbackHandler):
 
@@ -54,16 +56,15 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[Dict[str, Any]] = None,
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
-
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
     ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
             trace = trace_manager.start_new_trace()
-            
+
             self.trace_uuid = trace.uuid
-            
+
             trace.name = name
             trace.tags = tags
             trace.metadata = metadata
@@ -73,7 +74,7 @@ class CallbackHandler(BaseCallbackHandler):
             self.metric_collection = metric_collection
             current_trace_context.set(trace)
             super().__init__()
-    
+
     def on_chain_start(
         self,
         serialized: dict[str, Any],
@@ -83,7 +84,7 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, Any]] = None,
-        **kwargs: Any,  
+        **kwargs: Any,
     ) -> Any:
         if parent_run_id is None:
             uuid_str = str(run_id)
@@ -141,7 +142,7 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.metrics = metrics
         llm_span.metric_collection = metric_collection
         llm_span.prompt = prompt
-    
+
     def on_llm_end(
         self,
         response: LLMResult,
@@ -194,8 +195,12 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.model = model if model else llm_span.model
         llm_span.input = llm_span.input
         llm_span.output = output
-        llm_span.input_token_count = total_input_tokens if total_input_tokens > 0 else None
-        llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
+        llm_span.input_token_count = (
+            total_input_tokens if total_input_tokens > 0 else None
+        )
+        llm_span.output_token_count = (
+            total_output_tokens if total_output_tokens > 0 else None
+        )
 
         exit_current_context(uuid_str=uuid_str)
 
@@ -247,7 +252,9 @@ class CallbackHandler(BaseCallbackHandler):
         tool_span = enter_current_context(
             uuid_str=uuid_str,
             span_type="tool",
-            func_name=extract_name(serialized, **kwargs), # ignored when setting the input
+            func_name=extract_name(
+                serialized, **kwargs
+            ),  # ignored when setting the input
         )
         tool_span.input = inputs
 
@@ -259,7 +266,7 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-    
+
         uuid_str = str(run_id)
         tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         tool_span.output = output
@@ -311,7 +318,7 @@ class CallbackHandler(BaseCallbackHandler):
     ) -> Any:
         uuid_str = str(run_id)
         retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
-        
+
         # prepare output
         output_list = []
         if isinstance(output, list):
@@ -319,7 +326,7 @@ class CallbackHandler(BaseCallbackHandler):
                 output_list.append(str(item))
         else:
             output_list.append(str(output))
-        
+
         retriever_span.output = output_list
         exit_current_context(uuid_str=uuid_str)
 

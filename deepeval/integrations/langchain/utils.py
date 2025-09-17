@@ -111,6 +111,7 @@ def safe_extract_model_name(
 
     return None
 
+
 from typing import Any, List, Dict, Optional, Union, Literal, Callable
 from langchain_core.outputs import ChatGeneration
 from time import perf_counter
@@ -131,8 +132,11 @@ from deepeval.tracing.types import (
     TraceSpanStatus,
 )
 
+
 def enter_current_context(
-    span_type: Optional[Union[Literal["agent", "llm", "retriever", "tool"], str]],
+    span_type: Optional[
+        Union[Literal["agent", "llm", "retriever", "tool"], str]
+    ],
     func_name: str,
     metrics: Optional[Union[List[str], List[BaseMetric]]] = None,
     metric_collection: Optional[str] = None,
@@ -162,7 +166,9 @@ def enter_current_context(
         if current_trace:
             trace_uuid = current_trace.uuid
         else:
-            trace = trace_manager.start_new_trace(metric_collection=metric_collection)
+            trace = trace_manager.start_new_trace(
+                metric_collection=metric_collection
+            )
             trace_uuid = trace.uuid
             current_trace_context.set(trace)
 
@@ -237,6 +243,7 @@ def enter_current_context(
 
     return span_instance
 
+
 def exit_current_context(
     uuid_str: str,
     result: Any = None,
@@ -274,7 +281,10 @@ def exit_current_context(
     # Prefer provided progress info, but fallback to span fields if missing
     if progress is None and getattr(current_span, "progress", None) is not None:
         progress = current_span.progress
-    if pbar_callback_id is None and getattr(current_span, "pbar_callback_id", None) is not None:
+    if (
+        pbar_callback_id is None
+        and getattr(current_span, "pbar_callback_id", None) is not None
+    ):
         pbar_callback_id = current_span.pbar_callback_id
 
     trace_manager.remove_span(uuid_str)

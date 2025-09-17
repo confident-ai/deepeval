@@ -19,7 +19,10 @@ from deepeval.prompt.api import (
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
-from deepeval.utils import get_or_create_event_loop, get_or_create_general_event_loop
+from deepeval.utils import (
+    get_or_create_event_loop,
+    get_or_create_general_event_loop,
+)
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
 
@@ -111,7 +114,7 @@ class Prompt:
             return interpolated_messages
         else:
             raise ValueError(f"Unsupported prompt type: {self._type}")
-    
+
     def _get_versions(self) -> List:
         if self.alias is None:
             raise ValueError(
@@ -252,7 +255,10 @@ class Prompt:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
-                    url_params={"alias": self.alias, "versionId": version or "latest"},
+                    url_params={
+                        "alias": self.alias,
+                        "versionId": version or "latest",
+                    },
                 )
                 response = PromptHttpResponse(
                     id=data["id"],
@@ -394,7 +400,10 @@ class Prompt:
                 data, _ = api.send_request(
                     method=HttpMethods.GET,
                     endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
-                    url_params={"alias": self.alias, "versionId": version or "latest"},
+                    url_params={
+                        "alias": self.alias,
+                        "versionId": version or "latest",
+                    },
                 )
                 response = PromptHttpResponse(
                     id=data["id"],
