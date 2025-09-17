@@ -16,12 +16,6 @@ from deepeval.models.retry_policy import (
 )
 
 
-# Keep tenacity fast for tests
-@pytest.fixture(autouse=True)
-def no_sleep(monkeypatch):
-    monkeypatch.setattr(tenacity.nap, "sleep", lambda _: None, raising=True)
-
-
 ##############################################
 # Dummy exception shapes for offline testing #
 ##############################################
