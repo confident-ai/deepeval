@@ -77,7 +77,7 @@ jobs:
             --ignore=tests/test_core/test_synthesizer/ \
             --ignore=tests/test_core/test_datasets/ \
             --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py \
-            --ignore=tests/test_core/test_tracing/test_dataset_iterator.py:
+            --ignore=tests/test_core/test_tracing/test_dataset_iterator.py
 
       #----------------------------------------------
       #    install dev dependencies (including chromadb) and run synthesizer tests
