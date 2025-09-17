@@ -35,6 +35,51 @@ except:
     pydantic_ai_installed = True
 
 RUN_SYNC_METHOD = False
+_INSTRUMENTED = False
+
+
+def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
+    global _INSTRUMENTED
+    if api_key:
+        deepeval.login(api_key)
+
+    api_key = get_confident_api_key()
+
+    if not api_key:
+        raise ValueError("No api key provided.")
+
+    if otel:
+        instrument_pydantic_ai(api_key)
+    else:
+        with capture_tracing_integration("pydantic_ai"):
+            if _INSTRUMENTED:
+                return
+            _patch_agent_init()
+            _patch_agent_tool_decorator()
+            _INSTRUMENTED = True
+
+################### Init Patches ###################
+
+def _patch_agent_init():
+    original_init = Agent.__init__
+
+    @functools.wraps(original_init)
+    def wrapper(
+        *args,
+        llm_metric_collection: Optional[str] = None,
+        llm_metrics: Optional[List[BaseMetric]] = None,
+        llm_prompt: Optional[Prompt] = None,
+        agent_metric_collection: Optional[str] = None,
+        agent_metrics: Optional[List[BaseMetric]] = None,
+        **kwargs
+    ):
+        result = original_init(*args, **kwargs)
+        _patch_llm_model(args[0]._model, llm_metric_collection, llm_metrics, llm_prompt)  # runtime patch of the model
+        _patch_agent_run(args[0], agent_metric_collection, agent_metrics)
+        _patch_agent_run_sync(args[0], agent_metric_collection, agent_metrics)
+        return result
+
+    Agent.__init__ = wrapper
 
 def _patch_agent_tool_decorator():
     original_tool = Agent.tool
@@ -67,77 +112,7 @@ def _patch_agent_tool_decorator():
 
     Agent.tool = wrapper
 
-
-def _create_patched_tool(
-    func: Callable,
-    metrics: Optional[List[BaseMetric]] = None,
-    metric_collection: Optional[str] = None,
-):
-    import asyncio
-
-    original_func = func
-
-    is_async = asyncio.iscoroutinefunction(original_func)
-
-    if is_async:
-
-        @functools.wraps(original_func)
-        async def async_wrapper(*args, **kwargs):
-            sanitized_args = sanitize_run_context(args)
-            sanitized_kwargs = sanitize_run_context(kwargs)
-            with Observer(
-                span_type="tool",
-                func_name=original_func.__name__,
-                metrics=metrics,
-                metric_collection=metric_collection,
-                function_kwargs={"args": sanitized_args, **sanitized_kwargs},
-            ) as observer:
-                result = await original_func(*args, **kwargs)
-                observer.result = result
-
-            return result
-
-        return async_wrapper
-    else:
-
-        @functools.wraps(original_func)
-        def sync_wrapper(*args, **kwargs):
-            sanitized_args = sanitize_run_context(args)
-            sanitized_kwargs = sanitize_run_context(kwargs)
-            with Observer(
-                span_type="tool",
-                func_name=original_func.__name__,
-                metrics=metrics,
-                metric_collection=metric_collection,
-                function_kwargs={"args": sanitized_args, **sanitized_kwargs},
-            ) as observer:
-                result = original_func(*args, **kwargs)
-                observer.result = result
-
-            return result
-
-        return sync_wrapper
-
-def _patch_agent_init():
-    original_init = Agent.__init__
-
-    @functools.wraps(original_init)
-    def wrapper(
-        *args,
-        llm_metric_collection: Optional[str] = None,
-        llm_metrics: Optional[List[BaseMetric]] = None,
-        llm_prompt: Optional[Prompt] = None,
-        agent_metric_collection: Optional[str] = None,
-        agent_metrics: Optional[List[BaseMetric]] = None,
-        **kwargs
-    ):
-        result = original_init(*args, **kwargs)
-        _patch_llm_model(args[0]._model, llm_metric_collection, llm_metrics, llm_prompt)  # runtime patch of the model
-        _patch_agent_run(args[0], agent_metric_collection, agent_metrics)
-        _patch_agent_run_sync(args[0], agent_metric_collection, agent_metrics)
-        return result
-
-    Agent.__init__ = wrapper
+################### Runtime Patches ###################
 
 def _patch_agent_run_sync(
     agent: Agent,
@@ -201,7 +176,6 @@ def _patch_agent_run_sync(
         return result
     agent.run_sync = wrapper
 
-
 def _patch_agent_run(
     agent: Agent,
     agent_metric_collection: Optional[str] = None,
@@ -254,31 +228,6 @@ def _patch_agent_run(
 
     agent.run = wrapper
 
-
-def _update_trace_context(
-    trace_name: Optional[str] = None,
-    trace_tags: Optional[List[str]] = None,
-    trace_metadata: Optional[dict] = None,
-    trace_thread_id: Optional[str] = None,
-    trace_user_id: Optional[str] = None,
-    trace_metric_collection: Optional[str] = None,
-    trace_metrics: Optional[List[BaseMetric]] = None,
-    trace_input: Optional[Any] = None,
-    trace_output: Optional[Any] = None,
-):
-
-    current_trace = current_trace_context.get()
-    current_trace.name = trace_name
-    current_trace.tags = trace_tags
-    current_trace.metadata = trace_metadata
-    current_trace.thread_id = trace_thread_id
-    current_trace.user_id = trace_user_id
-    current_trace.metric_collection = trace_metric_collection
-    current_trace.metrics = trace_metrics
-    current_trace.input = trace_input
-    current_trace.output = trace_output
-
-
 def _patch_llm_model(
     model: Model,
     llm_metric_collection: Optional[str] = None,
@@ -317,26 +266,81 @@ def _patch_llm_model(
 
     model.request = wrapper
 
-_INSTRUMENTED = False
-def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
-    global _INSTRUMENTED
-    if api_key:
-        deepeval.login(api_key)
+################### Helper Functions ###################
 
-    api_key = get_confident_api_key()
+def _create_patched_tool(
+    func: Callable,
+    metrics: Optional[List[BaseMetric]] = None,
+    metric_collection: Optional[str] = None,
+):
+    import asyncio
 
-    if not api_key:
-        raise ValueError("No api key provided.")
+    original_func = func
 
-    if otel:
-        instrument_pydantic_ai(api_key)
+    is_async = asyncio.iscoroutinefunction(original_func)
+
+    if is_async:
+
+        @functools.wraps(original_func)
+        async def async_wrapper(*args, **kwargs):
+            sanitized_args = sanitize_run_context(args)
+            sanitized_kwargs = sanitize_run_context(kwargs)
+            with Observer(
+                span_type="tool",
+                func_name=original_func.__name__,
+                metrics=metrics,
+                metric_collection=metric_collection,
+                function_kwargs={"args": sanitized_args, **sanitized_kwargs},
+            ) as observer:
+                result = await original_func(*args, **kwargs)
+                observer.result = result
+
+            return result
+
+        return async_wrapper
     else:
-        with capture_tracing_integration("pydantic_ai"):
-            if _INSTRUMENTED:
-                return
-            _patch_agent_init()
-            _patch_agent_tool_decorator()
-            _INSTRUMENTED = True
+
+        @functools.wraps(original_func)
+        def sync_wrapper(*args, **kwargs):
+            sanitized_args = sanitize_run_context(args)
+            sanitized_kwargs = sanitize_run_context(kwargs)
+            with Observer(
+                span_type="tool",
+                func_name=original_func.__name__,
+                metrics=metrics,
+                metric_collection=metric_collection,
+                function_kwargs={"args": sanitized_args, **sanitized_kwargs},
+            ) as observer:
+                result = original_func(*args, **kwargs)
+                observer.result = result
+
+            return result
+
+        return sync_wrapper
+
+
+def _update_trace_context(
+    trace_name: Optional[str] = None,
+    trace_tags: Optional[List[str]] = None,
+    trace_metadata: Optional[dict] = None,
+    trace_thread_id: Optional[str] = None,
+    trace_user_id: Optional[str] = None,
+    trace_metric_collection: Optional[str] = None,
+    trace_metrics: Optional[List[BaseMetric]] = None,
+    trace_input: Optional[Any] = None,
+    trace_output: Optional[Any] = None,
+):
+
+    current_trace = current_trace_context.get()
+    current_trace.name = trace_name
+    current_trace.tags = trace_tags
+    current_trace.metadata = trace_metadata
+    current_trace.thread_id = trace_thread_id
+    current_trace.user_id = trace_user_id
+    current_trace.metric_collection = trace_metric_collection
+    current_trace.metrics = trace_metrics
+    current_trace.input = trace_input
+    current_trace.output = trace_output
 
 
 def set_llm_span_attributes(
@@ -387,7 +391,6 @@ def set_llm_span_attributes(
     llm_span.tools_called = extract_tools_called_from_llm_response(
         result.parts
     )
-
 
 def set_agent_span_attributes(agent_span: AgentSpan, result: AgentRunResult):
     agent_span.tools_called = extract_tools_called(result)
