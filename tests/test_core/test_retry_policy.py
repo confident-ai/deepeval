@@ -1,5 +1,6 @@
 import pytest
 import tenacity
+import logging
 
 from deepeval.models import retry_policy as rp
 from deepeval.config.settings import get_settings
@@ -514,3 +515,68 @@ def test_dynamic_retry_does_not_call_static_predicate_when_sdk_on(
         boom()
 
     assert calls["seen"] == 0  # never consulted
+
+
+###############
+# Diagnostics #
+###############
+
+
+def test_retry_logging_levels_change_at_runtime(monkeypatch, caplog, policy):
+    slug = "log_levels"
+    monkeypatch.setitem(rp._POLICY_BY_SLUG, slug, policy)
+    monkeypatch.setitem(
+        rp._STATIC_PRED_BY_SLUG, slug, rp.make_is_transient(policy)
+    )
+    monkeypatch.setattr(rp, "sdk_retries_for", lambda s: False, raising=True)
+
+    @create_retry_decorator(slug)
+    def boom():
+        raise NetTimeout()
+
+    settings = get_settings()
+
+    # Before: WARNING for before-sleep, ERROR for after
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = logging.WARNING
+        settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = logging.ERROR
+
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger=f"deepeval.retry.{slug}"):
+        with pytest.raises(tenacity.RetryError):  # <- expect RetryError
+            boom()
+
+    # There should be an ERROR "after" record, and no INFO-level records
+    assert any(r.levelno == logging.WARNING for r in caplog.records)
+    assert any(r.levelno == logging.ERROR for r in caplog.records)
+    assert not any(r.levelno == logging.INFO for r in caplog.records)
+    assert not any(r.levelno == logging.DEBUG for r in caplog.records)
+    assert all(
+        (r.exc_info is None) == (r.levelno < logging.ERROR)
+        for r in caplog.records
+    )
+
+    # After: INFO for before-sleep, DEBUG for after (no traceback at DEBUG)
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = logging.INFO
+        settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = logging.DEBUG
+
+    caplog.clear()
+    # Ensure we have at least 2 attempts so before_sleep runs.
+    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "2")
+    with caplog.at_level(logging.DEBUG, logger=f"deepeval.retry.{slug}"):
+        with pytest.raises(tenacity.RetryError):
+            boom()
+
+    # Both INFO (before) and DEBUG (after) should appear
+    assert any(r.levelno == logging.INFO for r in caplog.records)
+    assert any(r.levelno == logging.DEBUG for r in caplog.records)
+    assert not any(r.levelno >= logging.ERROR for r in caplog.records)
+    assert not any(r.levelno == logging.WARNING for r in caplog.records)
+    assert all(r.exc_info is None for r in caplog.records)
+
+    # turn the logging back down.
+    # TODO remove this once we can properly reset settings in tests
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = logging.WARNING
+        settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = logging.ERROR

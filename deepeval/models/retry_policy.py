@@ -1,30 +1,34 @@
 """Generic retry policy helpers for provider SDKs.
 
 This module lets models define *what is transient* vs *non-retryable* (permanent) failure
-without coupling to a specific SDK. You provide an `ErrorPolicy` describing
-exception classes and special “non-retryable” error codes, such as quota-exhausted from OpenAI,
-and get back a Tenacity predicate suitable for `retry_if_exception`.
+without coupling to a specific SDK. You provide an `ErrorPolicy` describing exception classes
+and special “non-retryable” error codes (quota-exhausted), and get back Tenacity components:
+a predicate suitable for `retry_if_exception`, plus convenience helpers for wait/stop/backoff.
+You can also use `create_retry_decorator(slug)` to wire Tenacity with dynamic policy + logging.
 
-Typical use:
+Notes:
+- `extract_error_code` best-effort parses codes from response JSON, `e.body`, botocore-style maps,
+  gRPC `e.code().name`, or message markers.
+- `dynamic_retry(slug)` consults settings at call time: if SDK retries are enabled for the slug,
+  Tenacity will not retry.
+- Logging callbacks (`before_sleep`, `after`) read log levels dynamically and log to
+  the `deepeval.retry.<slug>` logger.
 
-    # Import dependencies
-    from tenacity import retry, before_sleep_log
-    from deepeval.models.retry_policy import (
-        OPENAI_ERROR_POLICY, dynamic_wait, dynamic_stop, retry_predicate
-    )
+Configuration
+-------------
+Retry backoff (env):
+  DEEPEVAL_RETRY_MAX_ATTEMPTS       int   (default 2, >=1)
+  DEEPEVAL_RETRY_INITIAL_SECONDS    float (default 1.0, >=0)
+  DEEPEVAL_RETRY_EXP_BASE           float (default 2.0, >=1)
+  DEEPEVAL_RETRY_JITTER             float (default 2.0, >=0)
+  DEEPEVAL_RETRY_CAP_SECONDS        float (default 5.0, >=0)
 
-    # Define retry rule keywords
-    _retry_kw = dict(
-        wait=dynamic_wait(),
-        stop=dynamic_stop(),
-        retry=retry_predicate(OPENAI_ERROR_POLICY),
-        before_sleep=before_sleep_log(logger, logging.INFO), # <- Optional: logs only on retries
-    )
+SDK-managed retries (settings):
+  settings.DEEPEVAL_SDK_RETRY_PROVIDERS  list[str]  # e.g. ["azure"] or ["*"] for all
 
-    # Apply retry rule keywords where desired
-    @retry(**_retry_kw)
-    def call_openai(...):
-        ...
+Retry logging (settings; read at call time):
+  settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL  int/name  (default INFO)
+  settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL   int/name  (default ERROR)
 """
 
 from __future__ import annotations
@@ -41,7 +45,6 @@ from tenacity import (
     wait_exponential_jitter,
     stop_after_attempt,
     retry_if_exception,
-    before_sleep_log,
 )
 from tenacity.stop import stop_base
 from tenacity.wait import wait_base
@@ -312,13 +315,76 @@ def dynamic_retry(slug: str):
     return retry_if_exception(_pred)
 
 
-def log_retry_error(retry_state: RetryCallState):
-    exception = retry_state.outcome.exception()
-    if exception is None:
-        return
-    logger.error(
-        f"{exception} Retrying: {retry_state.attempt_number} time(s)..."
+def _retry_log_levels():
+    s = get_settings()
+    before_level = s.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL
+    after_level = s.DEEPEVAL_RETRY_AFTER_LOG_LEVEL
+    return (
+        before_level if before_level is not None else logging.INFO,
+        after_level if after_level is not None else logging.ERROR,
     )
+
+
+def make_before_sleep_log(slug: str):
+    """
+    Tenacity 'before_sleep' callback: runs before Tenacity sleeps for the next retry.
+    Read the level dynamically each time.
+    """
+    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+
+    def _before_sleep(retry_state: RetryCallState) -> None:
+        before_level, _ = _retry_log_levels()
+        if not _logger.isEnabledFor(before_level):
+            return
+
+        exc = retry_state.outcome.exception()
+        sleep = getattr(
+            getattr(retry_state, "next_action", None), "sleep", None
+        )
+
+        _logger.log(
+            before_level,
+            "Retrying in %s s (attempt %s) after %r",
+            sleep,
+            retry_state.attempt_number,
+            exc,
+        )
+
+    return _before_sleep
+
+
+def make_after_log(slug: str):
+    """
+    Tenacity 'after' callback: runs after each attempt. We log only when the
+    attempt raised, and we look up the level dynamically so changes to settings
+    take effect immediately.
+    """
+    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+
+    def _after(retry_state: RetryCallState) -> None:
+        exc = retry_state.outcome.exception()
+        if exc is None:
+            return
+
+        _, after_level = _retry_log_levels()
+        if not _logger.isEnabledFor(after_level):
+            return
+
+        exc_info = (
+            (type(exc), exc, getattr(exc, "__traceback__", None))
+            if after_level >= logging.ERROR
+            else None
+        )
+
+        _logger.log(
+            after_level,
+            "%s Retrying: %s time(s)...",
+            exc,
+            retry_state.attempt_number,
+            exc_info=exc_info,
+        )
+
+    return _after
 
 
 def create_retry_decorator(provider_slug: str):
@@ -327,13 +393,13 @@ def create_retry_decorator(provider_slug: str):
     for the given provider slug.
     """
     slug = provider_slug.lower()
-    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+
     return retry(
         wait=dynamic_wait(),
         stop=dynamic_stop(),
         retry=dynamic_retry(slug),
-        before_sleep=before_sleep_log(_logger, logging.INFO),
-        after=log_retry_error,
+        before_sleep=make_before_sleep_log(slug),
+        after=make_after_log(slug),
     )
 
 

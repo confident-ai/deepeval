@@ -285,6 +285,8 @@ class Settings(BaseSettings):
     # Retry Policy
     #
     DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = None
+    DEEPEVAL_RETRY_BEFORE_LOG_LEVEL: Optional[int] = None  # default -> INFO
+    DEEPEVAL_RETRY_AFTER_LOG_LEVEL: Optional[int] = None  # default -> ERROR
 
     #
     # Telemetry and Debug
@@ -449,6 +451,42 @@ class Settings(BaseSettings):
             # else:
             #   TODO: log warning when in verbose or debug mode
         return filtered or None
+
+    @field_validator(
+        "DEEPEVAL_RETRY_BEFORE_LOG_LEVEL",
+        "DEEPEVAL_RETRY_AFTER_LOG_LEVEL",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_log_level(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, (int, float)):
+            return int(v)
+
+        s = str(v).strip().upper()
+        if not s:
+            return None
+
+        import logging
+
+        # Accept standard names or numeric strings
+        name_to_level = {
+            "CRITICAL": logging.CRITICAL,
+            "ERROR": logging.ERROR,
+            "WARNING": logging.WARNING,
+            "INFO": logging.INFO,
+            "DEBUG": logging.DEBUG,
+            "NOTSET": logging.NOTSET,
+        }
+        if s.isdigit() or (s.startswith("-") and s[1:].isdigit()):
+            return int(s)
+        if s in name_to_level:
+            return name_to_level[s]
+        raise ValueError(
+            "Retry log level must be one of DEBUG, INFO, WARNING, ERROR, "
+            "CRITICAL, NOTSET, or a numeric logging level."
+        )
 
     #######################
     # Persistence support #
