@@ -54,13 +54,27 @@ jobs:
       #----------------------------------------------
       #              run test suite
       #----------------------------------------------
+
+      # Run tests (with secrets) — full suite
       - name: Run tests
+        if: ${{ secrets.OPENAI_API_KEY != '' }}
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          #poetry run pytest tests/test_core/ --ignore=tests/test_core/test_synthesizer/ --ignore=tests/test_core/test_datasets/
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
-          tests/test_core/ --ignore=tests/test_core/test_synthesizer/ --ignore=tests/test_core/test_datasets/
+            tests/test_core/ \
+            --ignore=tests/test_core/test_synthesizer/ \
+            --ignore=tests/test_core/test_datasets/
+
+      # Run tests (no secrets) — skip e2e that require API keys
+      - name: Run tests (no secrets)
+        if: ${{ secrets.OPENAI_API_KEY == '' }}
+        run: |
+          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
+            tests/test_core/ \
+            --ignore=tests/test_core/test_synthesizer/ \
+            --ignore=tests/test_core/test_datasets/ \
+            --ignore=tests/test_core/test_evaluation/test_end_to_end/test_configs.py
 
       #----------------------------------------------
       #    install dev dependencies (including chromadb) and run synthesizer tests
@@ -72,4 +86,5 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300\
+          tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
