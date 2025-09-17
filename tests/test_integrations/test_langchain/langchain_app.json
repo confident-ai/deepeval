@@ -2,7 +2,7 @@
   "agentSpans": [],
   "baseSpans": [
     {
-      "endTime": "2025-09-16T10:56:17.450Z",
+      "endTime": "2025-09-17T07:32:10.537Z",
       "input": {
         "input": "What is 8 multiplied by 6?"
       },
@@ -11,20 +11,20 @@
       "output": {
         "output": "8 multiplied by 6 is 48."
       },
-      "startTime": "2025-09-16T10:56:15.529Z",
+      "startTime": "2025-09-17T07:32:08.412Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     }
   ],
-  "endTime": "2025-09-16T10:56:17.450Z",
+  "endTime": "2025-09-17T07:32:10.537Z",
   "environment": "development",
   "input": {
     "input": "What is 8 multiplied by 6?"
   },
   "llmSpans": [
     {
-      "endTime": "2025-09-16T10:56:17.450Z",
+      "endTime": "2025-09-17T07:32:10.536Z",
       "input": [
         {
           "content": "You are a helpful assistant that can perform mathematical operations.",
@@ -56,15 +56,18 @@
         "tool_calls": []
       },
       "parentUuid": "<is_present>",
-      "prompt": {},
-      "startTime": "2025-09-16T10:56:16.623Z",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-17T07:32:09.806Z",
       "status": "SUCCESS",
       "tokenIntervals": "<is_present>",
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T10:56:16.620Z",
+      "endTime": "2025-09-17T07:32:09.798Z",
       "input": [
         {
           "content": "You are a helpful assistant that can perform mathematical operations.",
@@ -97,10 +100,36 @@
         ]
       },
       "parentUuid": "<is_present>",
-      "prompt": {},
-      "startTime": "2025-09-16T10:56:15.532Z",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-17T07:32:08.416Z",
       "status": "SUCCESS",
-      "tokenIntervals": "<is_present>",
+      "tokenIntervals": {
+        "2025-09-17T07:32:09.618576Z": "",
+        "2025-09-17T07:32:09.629137Z": "",
+        "2025-09-17T07:32:09.629848Z": "",
+        "2025-09-17T07:32:09.650480Z": "",
+        "2025-09-17T07:32:09.651092Z": "",
+        "2025-09-17T07:32:09.677647Z": "",
+        "2025-09-17T07:32:09.678216Z": "",
+        "2025-09-17T07:32:09.773785Z": "",
+        "2025-09-17T07:32:09.775086Z": "",
+        "2025-09-17T07:32:09.788072Z": "",
+        "2025-09-17T07:32:09.789695Z": "",
+        "2025-09-17T07:32:11.719685Z": "<is_present>",
+        "2025-09-17T07:32:11.837104Z": "<is_present>",
+        "2025-09-17T07:32:11.837857Z": "<is_present>",
+        "2025-09-17T07:32:11.957635Z": "<is_present>",
+        "2025-09-17T07:32:11.958899Z": "<is_present>",
+        "2025-09-17T07:32:12.085587Z": "<is_present>",
+        "2025-09-17T07:32:12.086857Z": "<is_present>",
+        "2025-09-17T07:32:12.239194Z": "<is_present>",
+        "2025-09-17T07:32:12.239442Z": "<is_present>",
+        "2025-09-17T07:32:12.240878Z": "<is_present>",
+        "2025-09-17T07:32:12.241029Z": "<is_present>"
+      },
       "type": "llm",
       "uuid": "<is_present>"
     }
@@ -109,11 +138,11 @@
     "output": "8 multiplied by 6 is 48."
   },
   "retrieverSpans": [],
-  "startTime": "2025-09-16T10:56:15.527Z",
+  "startTime": "2025-09-17T07:32:08.410Z",
   "status": "SUCCESS",
   "toolSpans": [
     {
-      "endTime": "2025-09-16T10:56:16.621Z",
+      "endTime": "2025-09-17T07:32:09.802Z",
       "input": {
         "a": 8,
         "b": 6
@@ -122,7 +151,7 @@
       "name": "multiply",
       "output": 48,
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-16T10:56:16.620Z",
+      "startTime": "2025-09-17T07:32:09.801Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
