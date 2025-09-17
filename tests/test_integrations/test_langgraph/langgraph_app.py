@@ -14,7 +14,7 @@ def get_weather(city: str) -> str:
 
 llm = ChatOpenAI(model="gpt-4o-mini",
  metadata={"metric_collection": "test_collection_1", "prompt": prompt})
- 
+
 agent = create_react_agent(
     model=llm,
     tools=[get_weather],
@@ -36,5 +36,3 @@ def execute_agent():
             )],
         },
     )
-
-execute_agent()
