@@ -10,9 +10,10 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
-retry_azure = create_retry_decorator("azure")
+retry_azure = create_retry_decorator(PS.AZURE)
 
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):

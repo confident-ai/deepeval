@@ -9,10 +9,11 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
 # consistent retry rules
-retry_deepseek = create_retry_decorator("deepseek")
+retry_deepseek = create_retry_decorator(PS.DEEPSEEK)
 
 model_pricing = {
     "deepseek-chat": {

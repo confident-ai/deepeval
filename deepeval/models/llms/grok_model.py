@@ -10,10 +10,11 @@ from deepeval.models.retry_policy import (
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.constants import ProviderSlug as PS
 
 
 # consistent retry rules
-retry_grok = create_retry_decorator("grok")
+retry_grok = create_retry_decorator(PS.GROK)
 
 
 structured_outputs_models = [

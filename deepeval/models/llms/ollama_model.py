@@ -8,9 +8,10 @@ from deepeval.models.retry_policy import (
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
+from deepeval.constants import ProviderSlug as PS
 
 
-retry_ollama = create_retry_decorator("ollama")
+retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class OllamaModel(DeepEvalBaseLLM):

@@ -12,8 +12,10 @@ from deepeval.key_handler import KEY_FILE_HANDLER, ModelKeyValues
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
+from deepeval.constants import ProviderSlug as PS
 
-retry_ollama = create_retry_decorator("ollama")
+
+retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class MultimodalOllamaModel(DeepEvalBaseMLLM):

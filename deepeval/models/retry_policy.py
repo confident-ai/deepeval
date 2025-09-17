@@ -37,7 +37,7 @@ import logging
 
 from deepeval.utils import read_env_int, read_env_float
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple
+from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
 from collections.abc import Mapping as ABCMapping
 from tenacity import (
     RetryCallState,
@@ -49,10 +49,15 @@ from tenacity import (
 from tenacity.stop import stop_base
 from tenacity.wait import wait_base
 
+from deepeval.constants import (
+    ProviderSlug as PS,
+    slugify,
+)
 from deepeval.config.settings import get_settings
 
 
 logger = logging.getLogger(__name__)
+Provider = Union[str, PS]
 
 # --------------------------
 # Policy description
@@ -280,29 +285,31 @@ def retry_predicate(policy: ErrorPolicy, **kw):
 # Convenience helpers
 
 
-def sdk_retries_for(provider_slug: str) -> bool:
+def sdk_retries_for(provider: Provider) -> bool:
     """True if this provider should delegate retries to the SDK (per settings)."""
     chosen = get_settings().DEEPEVAL_SDK_RETRY_PROVIDERS or []
-    slug = provider_slug.lower()
+    slug = slugify(provider)
     return "*" in chosen or slug in chosen
 
 
-def get_retry_policy_for(provider_slug: str) -> Optional[ErrorPolicy]:
+def get_retry_policy_for(provider: Provider) -> Optional[ErrorPolicy]:
     """
     Return the ErrorPolicy for a given provider slug, or None when:
       - the user requested SDK-managed retries for this provider, OR
       - we have no usable policy (optional dependency missing).
     """
-    if sdk_retries_for(provider_slug):
+    if sdk_retries_for(provider):
         return None
-    return _POLICY_BY_SLUG.get(provider_slug.lower()) or None
+    slug = slugify(provider)
+    return _POLICY_BY_SLUG.get(slug) or None
 
 
-def dynamic_retry(slug: str):
+def dynamic_retry(provider: Provider):
     """
     Tenacity retry= argument that checks settings at *call time*.
     If SDK retries are chosen (or no policy available), it never retries.
     """
+    slug = slugify(provider)
     static_pred = _STATIC_PRED_BY_SLUG.get(slug)
 
     def _pred(e: Exception) -> bool:
@@ -387,12 +394,12 @@ def make_after_log(slug: str):
     return _after
 
 
-def create_retry_decorator(provider_slug: str):
+def create_retry_decorator(provider: Provider):
     """
     Build a Tenacity @retry decorator wired to our dynamic retry policy
     for the given provider slug.
     """
-    slug = provider_slug.lower()
+    slug = slugify(provider)
 
     return retry(
         wait=dynamic_wait(),
@@ -696,65 +703,40 @@ except Exception:
 
 
 # Map provider slugs to their policy objects.
-# It is OK if some are None, we'll treat that as "no Tenacity".
+# It is OK if some are None, we'll treat that as no Error Policy / Tenacity
 _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
-    "openai": OPENAI_ERROR_POLICY,
-    "azure": AZURE_OPENAI_ERROR_POLICY,
-    "bedrock": BEDROCK_ERROR_POLICY,
-    "anthropic": ANTHROPIC_ERROR_POLICY,
-    "deepseek": DEEPSEEK_ERROR_POLICY,
-    "google": GOOGLE_ERROR_POLICY,
-    "grok": GROK_ERROR_POLICY,
-    "kimi": KIMI_ERROR_POLICY,
-    "litellm": LITELLM_ERROR_POLICY,
-    "local": LOCAL_ERROR_POLICY,
-    "ollama": OLLAMA_ERROR_POLICY,
+    PS.OPENAI.value: OPENAI_ERROR_POLICY,
+    PS.AZURE.value: AZURE_OPENAI_ERROR_POLICY,
+    PS.BEDROCK.value: BEDROCK_ERROR_POLICY,
+    PS.ANTHROPIC.value: ANTHROPIC_ERROR_POLICY,
+    PS.DEEPSEEK.value: DEEPSEEK_ERROR_POLICY,
+    PS.GOOGLE.value: GOOGLE_ERROR_POLICY,
+    PS.GROK.value: GROK_ERROR_POLICY,
+    PS.KIMI.value: KIMI_ERROR_POLICY,
+    PS.LITELLM.value: LITELLM_ERROR_POLICY,
+    PS.LOCAL.value: LOCAL_ERROR_POLICY,
+    PS.OLLAMA.value: OLLAMA_ERROR_POLICY,
 }
 
+
+def _opt_pred(
+    policy: Optional[ErrorPolicy],
+) -> Optional[Callable[[Exception], bool]]:
+    return make_is_transient(policy) if policy else None
+
+
 _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
-    "openai": (
-        make_is_transient(OPENAI_ERROR_POLICY) if OPENAI_ERROR_POLICY else None
-    ),
-    "azure": (
-        make_is_transient(AZURE_OPENAI_ERROR_POLICY)
-        if AZURE_OPENAI_ERROR_POLICY
-        else None
-    ),
-    "bedrock": (
-        make_is_transient(BEDROCK_ERROR_POLICY)
-        if BEDROCK_ERROR_POLICY
-        else None
-    ),
-    "anthropic": (
-        make_is_transient(ANTHROPIC_ERROR_POLICY)
-        if ANTHROPIC_ERROR_POLICY
-        else None
-    ),
-    "deepseek": (
-        make_is_transient(DEEPSEEK_ERROR_POLICY)
-        if DEEPSEEK_ERROR_POLICY
-        else None
-    ),
-    "google": (
-        make_is_transient(GOOGLE_ERROR_POLICY) if GOOGLE_ERROR_POLICY else None
-    ),
-    "grok": (
-        make_is_transient(GROK_ERROR_POLICY) if GROK_ERROR_POLICY else None
-    ),
-    "kimi": (
-        make_is_transient(KIMI_ERROR_POLICY) if KIMI_ERROR_POLICY else None
-    ),
-    "litellm": (
-        make_is_transient(LITELLM_ERROR_POLICY)
-        if LITELLM_ERROR_POLICY
-        else None
-    ),
-    "local": (
-        make_is_transient(LOCAL_ERROR_POLICY) if LOCAL_ERROR_POLICY else None
-    ),
-    "ollama": (
-        make_is_transient(OLLAMA_ERROR_POLICY) if OLLAMA_ERROR_POLICY else None
-    ),
+    PS.OPENAI.value: _opt_pred(OPENAI_ERROR_POLICY),
+    PS.AZURE.value: _opt_pred(AZURE_OPENAI_ERROR_POLICY),
+    PS.BEDROCK.value: _opt_pred(BEDROCK_ERROR_POLICY),
+    PS.ANTHROPIC.value: _opt_pred(ANTHROPIC_ERROR_POLICY),
+    PS.DEEPSEEK.value: _opt_pred(DEEPSEEK_ERROR_POLICY),
+    PS.GOOGLE.value: _opt_pred(GOOGLE_ERROR_POLICY),
+    PS.GROK.value: _opt_pred(GROK_ERROR_POLICY),
+    PS.KIMI.value: _opt_pred(KIMI_ERROR_POLICY),
+    PS.LITELLM.value: _opt_pred(LITELLM_ERROR_POLICY),
+    PS.LOCAL.value: _opt_pred(LOCAL_ERROR_POLICY),
+    PS.OLLAMA.value: _opt_pred(OLLAMA_ERROR_POLICY),
 }
 
 

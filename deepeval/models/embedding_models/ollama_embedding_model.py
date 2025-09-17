@@ -6,9 +6,10 @@ from deepeval.models import DeepEvalBaseEmbeddingModel
 from deepeval.models.retry_policy import (
     create_retry_decorator,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
-retry_ollama = create_retry_decorator("ollama")
+retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):

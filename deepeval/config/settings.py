@@ -9,6 +9,7 @@ Central config for DeepEval.
   type coercion.
 """
 
+import logging
 import os
 import re
 
@@ -23,22 +24,11 @@ from deepeval.config.utils import (
     coerce_to_list,
     dedupe_preserve_order,
 )
+from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
 
+logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
-_SUPPORTED_PROVIDER_SLUGS = {
-    "azure",
-    "anthropic",
-    "bedrock",
-    "deepseek",
-    "google",
-    "grok",
-    "kimi",
-    "litellm",
-    "local",
-    "ollama",
-    "openai",
-}
 
 
 def _find_legacy_enum(env_key: str):
@@ -442,15 +432,30 @@ class Settings(BaseSettings):
     def _validate_sdk_provider_list(cls, v):
         if v is None:
             return None
-        v = dedupe_preserve_order(v)
-        # allow "*", otherwise enforce known slugs
-        filtered: List[str] = []
+
+        normalized: list[str] = []
+        star = False
+
         for item in v:
-            if item == "*" or item in _SUPPORTED_PROVIDER_SLUGS:
-                filtered.append(item)
-            # else:
-            #   TODO: log warning when in verbose or debug mode
-        return filtered or None
+            s = str(item).strip()
+            if not s:
+                continue
+            if s == "*":
+                star = True
+                continue
+            s = slugify(s)
+            if s in SUPPORTED_PROVIDER_SLUGS:
+                normalized.append(s)
+            else:
+                if cls.DEEPEVAL_VERBOSE_MODE:
+                    logger.warning("Unknown provider slug %r dropped", item)
+
+        if star:
+            return ["*"]
+
+        # It is important to dedup after normalization to catch variants
+        normalized = dedupe_preserve_order(normalized)
+        return normalized or None
 
     @field_validator(
         "DEEPEVAL_RETRY_BEFORE_LOG_LEVEL",

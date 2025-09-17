@@ -12,10 +12,11 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models.utils import parse_model_name
 from deepeval.config.settings import get_settings
+from deepeval.constants import ProviderSlug as PS
 
 
 # consistent retry rules
-retry_anthropic = create_retry_decorator("anthropic")
+retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 
 model_pricing = {
     "claude-opus-4-20250514": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},

@@ -7,10 +7,11 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
 # consistent retry rules
-retry_local = create_retry_decorator("local")
+retry_local = create_retry_decorator(PS.LOCAL)
 
 
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):

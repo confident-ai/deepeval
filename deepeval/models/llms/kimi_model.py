@@ -9,8 +9,10 @@ from deepeval.models.retry_policy import (
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.constants import ProviderSlug as PS
 
-retry_kimi = create_retry_decorator("kimi")
+
+retry_kimi = create_retry_decorator(PS.KIMI)
 
 json_mode_models = [
     "kimi-thinking-preview",

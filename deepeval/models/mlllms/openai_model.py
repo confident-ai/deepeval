@@ -17,9 +17,10 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
-retry_openai = create_retry_decorator("openai")
+retry_openai = create_retry_decorator(PS.OPENAI)
 
 valid_multimodal_gpt_models = [
     "gpt-4o",

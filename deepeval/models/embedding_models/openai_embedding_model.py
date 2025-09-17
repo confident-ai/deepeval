@@ -5,9 +5,10 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
-retry_openai = create_retry_decorator("openai")
+retry_openai = create_retry_decorator(PS.OPENAI)
 
 valid_openai_embedding_models = [
     "text-embedding-3-small",

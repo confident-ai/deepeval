@@ -10,6 +10,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.constants import ProviderSlug as PS
 
 # check aiobotocore availability
 try:
@@ -21,7 +22,7 @@ except ImportError:
     aiobotocore_available = False
 
 # define retry policy
-retry_bedrock = create_retry_decorator("bedrock")
+retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
 
 def _check_aiobotocore_available():

@@ -8,6 +8,7 @@ from openai import (
     AsyncOpenAI,
 )
 
+from deepeval.constants import ProviderSlug as PS
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
@@ -17,7 +18,7 @@ from deepeval.models.retry_policy import (
 )
 
 
-retry_openai = create_retry_decorator("openai")
+retry_openai = create_retry_decorator(PS.OPENAI)
 
 valid_gpt_models = [
     "gpt-3.5-turbo",

@@ -17,9 +17,10 @@ from deepeval.models.retry_policy import (
 
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
+from deepeval.constants import ProviderSlug as PS
 
 
-retry_azure = create_retry_decorator("azure")
+retry_azure = create_retry_decorator(PS.AZURE)
 
 
 class AzureOpenAIModel(DeepEvalBaseLLM):

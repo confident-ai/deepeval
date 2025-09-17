@@ -11,10 +11,12 @@ from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
 from deepeval.config.settings import get_settings
+from deepeval.constants import ProviderSlug as PS
+
 
 default_multimodal_gemini_model = "gemini-1.5-pro"
 # consistent retry rules
-retry_gemini = create_retry_decorator("google")
+retry_gemini = create_retry_decorator(PS.GOOGLE)
 
 
 class MultimodalGeminiModel(DeepEvalBaseMLLM):
