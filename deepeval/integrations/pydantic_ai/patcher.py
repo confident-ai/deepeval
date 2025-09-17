@@ -28,6 +28,7 @@ try:
         UserPromptPart,
     )
     from pydantic_ai._run_context import RunContext
+    from deepeval.integrations.pydantic_ai.utils import extract_tools_called_from_llm_response, extract_tools_called, sanitize_run_context
 
     pydantic_ai_installed = True
 except:
@@ -82,8 +83,8 @@ def _create_patched_tool(
 
         @functools.wraps(original_func)
         async def async_wrapper(*args, **kwargs):
-            sanitized_args = _sanitize_run_context(args)
-            sanitized_kwargs = _sanitize_run_context(kwargs)
+            sanitized_args = sanitize_run_context(args)
+            sanitized_kwargs = sanitize_run_context(kwargs)
             with Observer(
                 span_type="tool",
                 func_name=original_func.__name__,
@@ -101,8 +102,8 @@ def _create_patched_tool(
 
         @functools.wraps(original_func)
         def sync_wrapper(*args, **kwargs):
-            sanitized_args = _sanitize_run_context(args)
-            sanitized_kwargs = _sanitize_run_context(kwargs)
+            sanitized_args = sanitize_run_context(args)
+            sanitized_kwargs = sanitize_run_context(kwargs)
             with Observer(
                 span_type="tool",
                 func_name=original_func.__name__,
@@ -383,90 +384,10 @@ def set_llm_span_attributes(
     llm_span.output = LlmOutput(
         role="Assistant", content=content, tool_calls=tool_calls
     )
-    llm_span.tools_called = _extract_tools_called_from_llm_response(
+    llm_span.tools_called = extract_tools_called_from_llm_response(
         result.parts
     )
 
 
 def set_agent_span_attributes(agent_span: AgentSpan, result: AgentRunResult):
-    agent_span.tools_called = _extract_tools_called(result)
-
-
-# llm tools called
-def _extract_tools_called_from_llm_response(
-    result: List[ModelResponsePart],
-) -> List[ToolCall]:
-    tool_calls = []
-
-    # Loop through each ModelResponsePart
-    for part in result:
-        # Look for parts with part_kind="tool-call"
-        if hasattr(part, "part_kind") and part.part_kind == "tool-call":
-            # Extract tool name and args from the ToolCallPart
-            tool_name = part.tool_name
-            input_parameters = (
-                part.args_as_dict() if hasattr(part, "args_as_dict") else None
-            )
-
-            # Create and append ToolCall object
-            tool_call = ToolCall(
-                name=tool_name, input_parameters=input_parameters
-            )
-            tool_calls.append(tool_call)
-
-    return tool_calls
-
-
-# TODO: llm tools called (reposne is present next message)
-def _extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
-    tool_calls = []
-
-    # Access the message history from the _state
-    message_history = result._state.message_history
-
-    # Scan through all messages in the history
-    for message in message_history:
-        # Check if this is a ModelResponse (kind="response")
-        if hasattr(message, "kind") and message.kind == "response":
-            # For ModelResponse messages, check each part
-            if hasattr(message, "parts"):
-                for part in message.parts:
-                    # Look for parts with part_kind="tool-call"
-                    if (
-                        hasattr(part, "part_kind")
-                        and part.part_kind == "tool-call"
-                    ):
-                        # Extract tool name and args from the ToolCallPart
-                        tool_name = part.tool_name
-                        input_parameters = (
-                            part.args_as_dict()
-                            if hasattr(part, "args_as_dict")
-                            else None
-                        )
-
-                        # Create and append ToolCall object
-                        tool_call = ToolCall(
-                            name=tool_name, input_parameters=input_parameters
-                        )
-                        tool_calls.append(tool_call)
-
-    return tool_calls
-
-def _sanitize_run_context(value):
-    """
-    Recursively replace pydantic-ai RunContext instances with '<RunContext>'.
-
-    This avoids leaking internal context details into recorded function kwargs,
-    while keeping the original arguments intact for the actual function call.
-    """
-    if isinstance(value, RunContext):
-        return "<RunContext>"
-    if isinstance(value, dict):
-        return {k: _sanitize_run_context(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple)):
-        sanitized = [_sanitize_run_context(v) for v in value]
-        return tuple(sanitized) if isinstance(value, tuple) else sanitized
-    if isinstance(value, set):
-        return {_sanitize_run_context(v) for v in value}
-
-    return value
+    agent_span.tools_called = extract_tools_called(result)
