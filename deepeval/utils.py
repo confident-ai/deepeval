@@ -133,7 +133,6 @@ def serialize_dict_with_sorting(obj):
 def serialize(obj) -> Union[str, None]:
     return json.dumps(serialize_dict_with_sorting(obj), sort_keys=True)
 
-
 def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     try:
         loop = asyncio.get_event_loop()
@@ -147,6 +146,16 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
         asyncio.set_event_loop(loop)
     return loop
 
+def get_or_create_general_event_loop() -> asyncio.AbstractEventLoop:
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError
+        return loop
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
 
 def set_should_skip_on_missing_params(yes: bool):
     s = get_settings()
