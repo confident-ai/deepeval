@@ -85,7 +85,16 @@ jobs:
       - name: Install dev dependencies
         run: poetry install --no-interaction --with dev
 
-      - name: Run core tests with dev dependencies
+      # Dev tests (with secrets)
+      - name: Run dev tests
+        if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300 \
-            tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+          tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+
+      # Dev tests (no secrets)
+      - name: Run dev tests (no secrets)
+        if: ${{ env.OPENAI_API_KEY == '' }}
+        run: |
+          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300 \
+          tests/test_core/test_datasets/
