@@ -12,6 +12,7 @@ from deepeval.confident.api import get_confident_api_key
 from deepeval.integrations.pydantic_ai.otel import instrument_pydantic_ai
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.prompt import Prompt
+import inspect
 
 try:
     from pydantic_ai.agent import Agent
@@ -121,7 +122,6 @@ def _patch_agent_init():
 
     @functools.wraps(original_init)
     def wrapper(
-        self,
         *args,
         llm_metric_collection: Optional[str] = None,
         llm_metrics: Optional[List[BaseMetric]] = None,
@@ -130,12 +130,10 @@ def _patch_agent_init():
         agent_metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
-        result = original_init(self, *args, **kwargs)
-        _patch_llm_model(
-            self._model, llm_metric_collection, llm_metrics, llm_prompt
-        )  # runtime patch of the model
-        _patch_agent_run(agent_metric_collection, agent_metrics)
-        _patch_agent_run_sync(agent_metric_collection, agent_metrics)
+        result = original_init(*args, **kwargs)
+        _patch_llm_model(args[0]._model, llm_metric_collection, llm_metrics, llm_prompt)  # runtime patch of the model
+        _patch_agent_run(args[0], agent_metric_collection, agent_metrics)
+        # _patch_agent_run_sync(args[0], agent_metric_collection, agent_metrics)
         return result
 
     Agent.__init__ = wrapper
@@ -159,10 +157,15 @@ def _patch_agent_run_sync(
         **kwargs
     ):
 
+        sig = inspect.signature(original_run_sync)
+        bound = sig.bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+        input = bound.arguments.get("user_prompt", None)
+
         with Observer(
             span_type="agent",
             func_name="Agent",
-            function_kwargs={"input": args[1]},
+            function_kwargs={"input": input},
             metrics=agent_metrics,
             metric_collection=agent_metric_collection,
         ) as observer:
@@ -189,7 +192,7 @@ def _patch_agent_run_sync(
                 trace_user_id=user_id, 
                 trace_metric_collection=metric_collection, 
                 trace_metrics=metrics, 
-                trace_input=args[1], 
+                trace_input=input, 
                 trace_output=result.output
             )
             
@@ -198,10 +201,11 @@ def _patch_agent_run_sync(
 
 
 def _patch_agent_run(
+    agent: Agent,
     agent_metric_collection: Optional[str] = None,
     agent_metrics: Optional[List[BaseMetric]] = None,
 ):
-    original_run = Agent.run
+    original_run = agent.run
 
     @functools.wraps(original_run)
     async def wrapper(
@@ -215,10 +219,14 @@ def _patch_agent_run(
         user_id: Optional[str] = None,
         **kwargs
     ):
+        sig = inspect.signature(original_run)
+        bound = sig.bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+        input = bound.arguments.get("user_prompt", None)
         with Observer(
             span_type="agent" if not RUN_SYNC_METHOD else "custom",
             func_name="Agent" if not RUN_SYNC_METHOD else "run",
-            function_kwargs={"input": args[1]},
+            function_kwargs={"input": input},
             metrics=agent_metrics if not RUN_SYNC_METHOD else None,
             metric_collection=agent_metric_collection if not RUN_SYNC_METHOD else None,
         ) as observer:
@@ -236,13 +244,13 @@ def _patch_agent_run(
                 trace_user_id=user_id,
                 trace_metric_collection=metric_collection,
                 trace_metrics=metrics,
-                trace_input=args[1],
+                trace_input=input,
                 trace_output=result.output,
             )
 
         return result
 
-    Agent.run = wrapper
+    agent.run = wrapper
 
 
 def _update_trace_context(
@@ -276,6 +284,8 @@ def _patch_llm_model(
     llm_prompt: Optional[Prompt] = None,
 ):
     original_func = model.request
+    sig = inspect.signature(original_func)
+
     try:
         model_name = model.model_name
     except Exception:
@@ -283,6 +293,10 @@ def _patch_llm_model(
 
     @functools.wraps(original_func)
     async def wrapper(*args, **kwargs):
+        bound = sig.bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+        request = bound.arguments.get("messages", [])
+
         with Observer(
             span_type="llm",
             func_name="LLM",
@@ -291,16 +305,13 @@ def _patch_llm_model(
             metric_collection=llm_metric_collection,
         ) as observer:
             result = await original_func(*args, **kwargs)
-            request = kwargs.get("messages", [])
-            if not request:
-                request = args[0]
             observer.update_span_properties = (
                 lambda llm_span: set_llm_span_attributes(
-                    llm_span, args[0], result, llm_prompt
+                    llm_span, request, result, llm_prompt
                 )
             )
             observer.result = result
-        return result
+            return result
 
     model.request = wrapper
 
