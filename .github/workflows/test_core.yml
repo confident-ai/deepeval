@@ -8,6 +8,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      # Expose once at job level because forked PRs can't use secrets.* in `if:` conditions.
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
@@ -57,9 +61,7 @@ jobs:
 
       # Run tests (with secrets) — full suite
       - name: Run tests
-        if: ${{ secrets.OPENAI_API_KEY != '' }}
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        if: ${{ env.OPENAI_API_KEY != '' }}
         run: |
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
             tests/test_core/ \
@@ -68,7 +70,7 @@ jobs:
 
       # Run tests (no secrets) — skip e2e that require API keys
       - name: Run tests (no secrets)
-        if: ${{ secrets.OPENAI_API_KEY == '' }}
+        if: ${{ env.OPENAI_API_KEY == '' }}
         run: |
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
             tests/test_core/ \
@@ -83,8 +85,6 @@ jobs:
         run: poetry install --no-interaction --with dev
 
       - name: Run core tests with dev dependencies
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300\
-          tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys -o faulthandler_timeout=300 \
+            tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
