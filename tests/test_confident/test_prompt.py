@@ -22,6 +22,7 @@ class TestPromptText:
 
         prompt.pull()
 
+        assert prompt.version[0] == "0"
         assert prompt._text_template == f"Hello, world! {UUID}"
         assert prompt._messages_template is None
         assert prompt._prompt_version_id is not None
@@ -40,6 +41,7 @@ class TestPromptText:
 
         prompt.pull()
 
+        assert prompt.version[0] == "0"
         assert prompt._text_template == f"Hello, world! {UUID}"
         assert prompt._messages_template is None
         assert prompt._prompt_version_id is not None
@@ -62,9 +64,9 @@ class TestPromptList:
         ]
 
         prompt.push(messages=messages)
-
         prompt.pull()
 
+        assert prompt.version[0] == "0"
         assert prompt._text_template is None
         assert prompt._messages_template == messages
         assert prompt._prompt_version_id is not None
@@ -88,6 +90,7 @@ class TestPromptList:
 
         prompt.pull()
 
+        assert prompt.version[0] == "0"
         assert prompt._text_template is None
         assert prompt._messages_template == messages
         assert prompt._prompt_version_id is not None
