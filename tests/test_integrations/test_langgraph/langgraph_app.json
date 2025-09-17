@@ -2,7 +2,7 @@
   "agentSpans": [],
   "baseSpans": [
     {
-      "endTime": "2025-09-16T10:38:30.998Z",
+      "endTime": "2025-09-17T07:34:45.899Z",
       "input": {
         "messages": [
           {
@@ -47,7 +47,7 @@
               "logprobs": null,
               "model_name": "gpt-4o-mini-2024-07-18",
               "service_tier": "default",
-              "system_fingerprint": "fp_560af6e559",
+              "system_fingerprint": "<is_present>",
               "token_usage": {
                 "completion_tokens": 15,
                 "completion_tokens_details": {
@@ -148,13 +148,13 @@
           }
         ]
       },
-      "startTime": "2025-09-16T10:38:28.241Z",
+      "startTime": "2025-09-17T07:34:44.269Z",
       "status": "SUCCESS",
       "type": "base",
       "uuid": "<is_present>"
     }
   ],
-  "endTime": "2025-09-16T10:38:30.998Z",
+  "endTime": "2025-09-17T07:34:45.899Z",
   "environment": "development",
   "input": {
     "messages": [
@@ -166,7 +166,7 @@
   },
   "llmSpans": [
     {
-      "endTime": "2025-09-16T10:38:30.997Z",
+      "endTime": "2025-09-17T07:34:45.899Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -200,14 +200,17 @@
       },
       "outputTokenCount": "<is_present>",
       "parentUuid": "<is_present>",
-      "prompt": {},
-      "startTime": "2025-09-16T10:38:29.860Z",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-17T07:34:45.192Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T10:38:29.854Z",
+      "endTime": "2025-09-17T07:34:45.188Z",
       "input": [
         {
           "content": "You are a helpful assistant",
@@ -241,8 +244,11 @@
       },
       "outputTokenCount": 15.0,
       "parentUuid": "<is_present>",
-      "prompt": {},
-      "startTime": "2025-09-16T10:38:28.243Z",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-17T07:34:44.270Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
@@ -286,7 +292,7 @@
           "logprobs": null,
           "model_name": "gpt-4o-mini-2024-07-18",
           "service_tier": "default",
-          "system_fingerprint": "fp_560af6e559",
+          "system_fingerprint": "<is_present>",
           "token_usage": {
             "completion_tokens": 15,
             "completion_tokens_details": {
@@ -388,7 +394,7 @@
     ]
   },
   "retrieverSpans": [],
-  "startTime": "2025-09-16T10:38:28.240Z",
+  "startTime": "2025-09-17T07:34:44.269Z",
   "status": "SUCCESS",
   "tags": [
     "langgraph",
@@ -397,7 +403,7 @@
   "threadId": "123",
   "toolSpans": [
     {
-      "endTime": "2025-09-16T10:38:29.858Z",
+      "endTime": "2025-09-17T07:34:45.191Z",
       "input": {
         "city": "San Francisco"
       },
@@ -414,7 +420,7 @@
         "type": "tool"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-16T10:38:29.857Z",
+      "startTime": "2025-09-17T07:34:45.190Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
