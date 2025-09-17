@@ -51,16 +51,6 @@ async def meta_agent(query: str):
             tools_called=[ToolCall(name="test")],
             expected_tools=[ToolCall(name="test")],
         ),
-        user_id="111",
-        test_case=LLMTestCase(
-            input="What is this again?",
-            actual_output="this is a latte",
-            expected_output="this is a mocha",
-            retrieval_context=["I love coffee"],
-            context=["I love coffee"],
-            tools_called=[ToolCall(name="test")],
-            expected_tools=[ToolCall(name="test")],
-        ),
     )
     print("query")
     return query

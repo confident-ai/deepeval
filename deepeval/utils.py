@@ -148,6 +148,18 @@ def get_or_create_event_loop() -> asyncio.AbstractEventLoop:
     return loop
 
 
+def get_or_create_general_event_loop() -> asyncio.AbstractEventLoop:
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_closed():
+            raise RuntimeError
+        return loop
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        return loop
+
+
 def set_should_skip_on_missing_params(yes: bool):
     s = get_settings()
     with s.edit(persist=False):

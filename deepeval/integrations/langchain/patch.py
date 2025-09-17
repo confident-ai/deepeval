@@ -1,7 +1,8 @@
-from langchain_core.tools import tool as original_tool, BaseTool
+import functools
 from deepeval.metrics import BaseMetric
-from typing import List, Optional, Callable, Any
-from functools import wraps
+from deepeval.tracing.context import current_span_context
+from typing import List, Optional, Callable
+from langchain_core.tools import tool as original_tool, BaseTool
 
 
 def tool(
@@ -16,17 +17,27 @@ def tool(
 
     # original_tool returns a decorator function, so we need to return a decorator
     def decorator(func: Callable) -> BaseTool:
-
-        # Apply the original tool decorator to get the BaseTool
+        func = _patch_tool_decorator(func, metrics, metric_collection)
         tool_instance = original_tool(*args, **kwargs)(func)
-
-        if isinstance(tool_instance, BaseTool):
-            if tool_instance.metadata is None:
-                tool_instance.metadata = {}
-
-            tool_instance.metadata["metric_collection"] = metric_collection
-            tool_instance.metadata["metrics"] = metrics
-
         return tool_instance
 
     return decorator
+
+
+def _patch_tool_decorator(
+    func: Callable,
+    metrics: Optional[List[BaseMetric]] = None,
+    metric_collection: Optional[str] = None,
+):
+    original_func = func
+
+    @functools.wraps(original_func)
+    def wrapper(*args, **kwargs):
+        current_span = current_span_context.get()
+        current_span.metrics = metrics
+        current_span.metric_collection = metric_collection
+        res = original_func(*args, **kwargs)
+        return res
+
+    tool = wrapper
+    return tool
