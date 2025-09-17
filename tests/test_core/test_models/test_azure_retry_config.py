@@ -4,6 +4,7 @@ from deepeval.models.retry_policy import (
     AZURE_OPENAI_ERROR_POLICY,
     OPENAI_MESSAGE_MARKERS,
     make_is_transient,
+    get_retry_policy_for,
 )
 
 
@@ -11,9 +12,22 @@ assert AZURE_OPENAI_ERROR_POLICY is not None, "OpenAI is a required dependency"
 
 
 def test_azure_retry_predicate_present():
-    assert hasattr(azure_model, "_base_retry_rules_kw")
-    assert "retry" in azure_model._base_retry_rules_kw
-    assert azure_model._base_retry_rules_kw["retry"] is not None
+    # 1) We have a retry policy wired for 'azure' (unless the user explicitly opts into SDK retries)
+    assert get_retry_policy_for("azure") is not None
+
+    # 2) All Azure model call sites are decorated with Tenacity (@retry_azure),
+    #    which Tenacity exposes as a 'retry' attribute on the wrapped function.
+    decorated_methods = (
+        "generate",
+        "a_generate",
+        "generate_raw_response",
+        "a_generate_raw_response",
+    )
+    for name in decorated_methods:
+        fn = getattr(azure_model.AzureOpenAIModel, name)
+        assert hasattr(
+            fn, "retry"
+        ), f"{name} should be decorated with Tenacity retry"
 
 
 def test_azure_sdk_retries_disabled(monkeypatch):
