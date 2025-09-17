@@ -5,14 +5,23 @@ from deepeval.integrations.langchain import tool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from deepeval.integrations.langchain import CallbackHandler
+from deepeval.prompt import Prompt
 
+prompt = Prompt(alias="asd")
+prompt.pull(version="00.00.01")
 
 @tool(metric_collection="test_collection_1")
 def multiply(a: int, b: int) -> int:
     """Returns the product of two numbers"""
     return a * b
 
-llm = ChatOpenAI(model="gpt-4o-mini", metadata={"metric_collection": "test_collection_1"},)
+llm = ChatOpenAI(
+    model="gpt-4o-mini", 
+    metadata={
+        "metric_collection": "test_collection_1",
+        "prompt": prompt
+    }
+)
 
 agent_prompt = ChatPromptTemplate.from_messages(
     [

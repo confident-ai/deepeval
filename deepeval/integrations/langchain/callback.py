@@ -127,7 +127,7 @@ class CallbackHandler(BaseCallbackHandler):
         input_messages = parse_prompts_to_messages(prompts, **kwargs)
         model = safe_extract_model_name(metadata, **kwargs)
 
-        llm_span = enter_current_context(
+        llm_span: LlmSpan = enter_current_context(
             uuid_str=uuid_str,
             span_type="llm",
             func_name=extract_name(serialized, **kwargs),
@@ -137,9 +137,11 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.model = model
         metrics = metadata.pop("metrics", None)
         metric_collection = metadata.pop("metric_collection", None)
+        prompt = metadata.pop("prompt", None)
         llm_span.metrics = metrics
         llm_span.metric_collection = metric_collection
-        
+        llm_span.prompt = prompt
+    
     def on_llm_end(
         self,
         response: LLMResult,
