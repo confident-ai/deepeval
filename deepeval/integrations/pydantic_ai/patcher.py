@@ -304,9 +304,9 @@ def _patch_llm_model(
 
     model.request = wrapper
 
-
+_INSTRUMENTED = False
 def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
-
+    global _INSTRUMENTED
     if api_key:
         deepeval.login(api_key)
 
@@ -319,8 +319,11 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
         instrument_pydantic_ai(api_key)
     else:
         with capture_tracing_integration("pydantic_ai"):
+            if _INSTRUMENTED:
+                return
             _patch_agent_init()
             _patch_agent_tool_decorator()
+            _INSTRUMENTED = True
 
 
 def set_llm_span_attributes(
