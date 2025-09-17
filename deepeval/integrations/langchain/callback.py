@@ -1,15 +1,12 @@
 from typing import Any, Optional, List, Dict
 from uuid import UUID
 from time import perf_counter
+from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.types import (
     LlmOutput,
     LlmToolCall,
-    TraceAttributes,
 )
-from deepeval.metrics import BaseMetric, TaskCompletionMetric
-from deepeval.test_case import LLMTestCase
-from deepeval.test_run import global_test_run_manager
-import uuid
+from deepeval.metrics import BaseMetric
 
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
@@ -20,11 +17,13 @@ try:
     # contains langchain imports
     from deepeval.integrations.langchain.utils import (
         parse_prompts_to_messages,
-        prepare_dict,
         extract_name,
         safe_extract_model_name,
         safe_extract_token_usage,
+        enter_current_context,
+        exit_current_context,
     )
+    from deepeval.integrations.langchain.patch import tool
 
     langchain_installed = True
 except:
@@ -37,14 +36,8 @@ def is_langchain_installed():
             "LangChain is not installed. Please install it with `pip install langchain`."
         )
 
-
-# ASSUMPTIONS:
-# cycle for a single invoke call
-# one trace per cycle
-
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
-    BaseSpan,
     LlmSpan,
     RetrieverSpan,
     TraceSpanStatus,
@@ -52,138 +45,35 @@ from deepeval.tracing.types import (
 )
 from deepeval.telemetry import capture_tracing_integration
 
-
 class CallbackHandler(BaseCallbackHandler):
-
-    active_trace_id: Optional[str] = None
-    metrics: List[BaseMetric] = []
-    metric_collection: Optional[str] = None
 
     def __init__(
         self,
-        metrics: List[BaseMetric] = [],
-        metric_collection: Optional[str] = None,
         name: Optional[str] = None,
         tags: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
+
+        metrics: Optional[List[BaseMetric]] = None,
+        metric_collection: Optional[str] = None,
     ):
         is_langchain_installed()
         with capture_tracing_integration("langchain.callback.CallbackHandler"):
+            trace = trace_manager.start_new_trace()
+            
+            self.trace_uuid = trace.uuid
+            
+            trace.name = name
+            trace.tags = tags
+            trace.metadata = metadata
+            trace.thread_id = thread_id
+            trace.user_id = user_id
             self.metrics = metrics
             self.metric_collection = metric_collection
-            self.trace_attributes = TraceAttributes(
-                name=name,
-                tags=tags,
-                metadata=metadata,
-                thread_id=thread_id,
-                user_id=user_id,
-            )
+            current_trace_context.set(trace)
             super().__init__()
-
-    def on_llm_new_token(
-        self,
-        token: str,
-        *,
-        chunk,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[list[str]] = None,
-        **kwargs: Any,
-    ):
-        llm_span: Optional[LlmSpan] = trace_manager.get_span_by_uuid(
-            str(run_id)
-        )
-        if llm_span is None:
-            return
-        if llm_span.token_intervals is None:
-            llm_span.token_intervals = {perf_counter(): token}
-        else:
-            llm_span.token_intervals[perf_counter()] = token
-
-    def check_active_trace_id(self):
-        if self.active_trace_id is None:
-            self.active_trace_id = trace_manager.start_new_trace().uuid
-
-    def add_span_to_trace(self, span: BaseSpan):
-        trace_manager.add_span(span)
-        trace_manager.add_span_to_trace(span)
-
-    def end_span(self, span: BaseSpan):
-        span.end_time = perf_counter()
-        span.status = TraceSpanStatus.SUCCESS
-        trace_manager.remove_span(str(span.uuid))
-
-        ######## Conditions to add metric_collection to span ########
-        if (
-            self.metric_collection and span.parent_uuid is None
-        ):  # if span is a root span
-            span.metric_collection = self.metric_collection
-
-        ######## Conditions to add metrics to span ########
-        if self.metrics and span.parent_uuid is None:  # if span is a root span
-
-            # prepare test_case for task_completion metric
-            for metric in self.metrics:
-                if isinstance(metric, TaskCompletionMetric):
-                    self.prepare_span_metric_test_case(metric, span)
-
-    def end_trace(self, span: BaseSpan):
-        current_trace = trace_manager.get_trace_by_uuid(self.active_trace_id)
-
-        ######## Conditions send the trace for evaluation ########
-        if self.metrics:
-            trace_manager.evaluating = (
-                True  # to avoid posting the trace to the server
-            )
-            trace_manager.evaluation_loop = (
-                True  # to avoid traces being evaluated twice
-            )
-            trace_manager.integration_traces_to_evaluate.append(current_trace)
-
-        if current_trace is not None:
-            current_trace.input = span.input
-            current_trace.output = span.output
-
-        # set trace attributes
-        if self.trace_attributes:
-            if self.trace_attributes.name:
-                current_trace.name = self.trace_attributes.name
-            if self.trace_attributes.tags:
-                current_trace.tags = self.trace_attributes.tags
-            if self.trace_attributes.metadata:
-                current_trace.metadata = self.trace_attributes.metadata
-            if self.trace_attributes.thread_id:
-                current_trace.thread_id = self.trace_attributes.thread_id
-            if self.trace_attributes.user_id:
-                current_trace.user_id = self.trace_attributes.user_id
-
-        trace_manager.end_trace(self.active_trace_id)
-        self.active_trace_id = None
-
-    def prepare_span_metric_test_case(
-        self, metric: TaskCompletionMetric, span: BaseSpan
-    ):
-        task_completion_metric = TaskCompletionMetric(
-            threshold=metric.threshold,
-            model=metric.model,
-            include_reason=metric.include_reason,
-            async_mode=metric.async_mode,
-            strict_mode=metric.strict_mode,
-            verbose_mode=metric.verbose_mode,
-        )
-        task_completion_metric.evaluation_cost = 0
-        _llm_test_case = LLMTestCase(input="None", actual_output="None")
-        _llm_test_case._trace_dict = trace_manager.create_nested_spans_dict(
-            span
-        )
-        task, _ = task_completion_metric._extract_task_and_outcome(
-            _llm_test_case
-        )
-        task_completion_metric.task = task
-        span.metrics = [task_completion_metric]
-
+    
     def on_chain_start(
         self,
         serialized: dict[str, Any],
@@ -193,45 +83,34 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, Any]] = None,
-        **kwargs: Any,
+        **kwargs: Any,  
     ) -> Any:
-
-        self.check_active_trace_id()
-        base_span = BaseSpan(
-            uuid=str(run_id),
-            status=TraceSpanStatus.ERRORED,
-            children=[],
-            trace_uuid=self.active_trace_id,
-            parent_uuid=str(parent_run_id) if parent_run_id else None,
-            start_time=perf_counter(),
-            name=extract_name(serialized, **kwargs),
-            input=inputs,
-            metadata=prepare_dict(
-                serialized=serialized, tags=tags, metadata=metadata, **kwargs
-            ),
-            # fallback for on_end callback
-            end_time=perf_counter(),
-        )
-        self.add_span_to_trace(base_span)
+        if parent_run_id is None:
+            uuid_str = str(run_id)
+            base_span = enter_current_context(
+                uuid_str=uuid_str,
+                span_type="custom",
+                func_name=extract_name(serialized, **kwargs),
+            )
+            base_span.input = inputs
+            current_trace_context.get().input = inputs
+            base_span.metrics = self.metrics
+            base_span.metric_collection = self.metric_collection
 
     def on_chain_end(
         self,
-        outputs: dict[str, Any],
+        output: Any,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,  # un-logged kwargs
+        **kwargs: Any,
     ) -> Any:
-
-        base_span = trace_manager.get_span_by_uuid(str(run_id))
-        if base_span is None:
-            return
-
-        base_span.output = outputs
-        self.end_span(base_span)
-
-        if parent_run_id is None:
-            self.end_trace(base_span)
+        uuid_str = str(run_id)
+        base_span = trace_manager.get_span_by_uuid(uuid_str)
+        if base_span:
+            base_span.output = output
+            current_trace_context.get().output = output
+            exit_current_context(uuid_str=uuid_str)
 
     def on_llm_start(
         self,
@@ -244,37 +123,25 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
-
-        self.check_active_trace_id()
-
-        # extract input
+        uuid_str = str(run_id)
         input_messages = parse_prompts_to_messages(prompts, **kwargs)
-
-        # extract model name
         model = safe_extract_model_name(metadata, **kwargs)
 
-        llm_span = LlmSpan(
-            uuid=str(run_id),
-            status=TraceSpanStatus.ERRORED,
-            children=[],
-            trace_uuid=self.active_trace_id,
-            parent_uuid=str(parent_run_id) if parent_run_id else None,
-            start_time=perf_counter(),
-            name=extract_name(serialized, **kwargs),
-            input=input_messages,
-            output="",
-            metadata=prepare_dict(
-                serialized=serialized, tags=tags, metadata=metadata, **kwargs
-            ),
-            model=model,
-            # fallback for on_end callback
-            end_time=perf_counter(),
-            metric_collection=metadata.get("metric_collection", None),
-            metrics=metadata.get("metrics", None),
+        llm_span: LlmSpan = enter_current_context(
+            uuid_str=uuid_str,
+            span_type="llm",
+            func_name=extract_name(serialized, **kwargs),
         )
 
-        self.add_span_to_trace(llm_span)
-
+        llm_span.input = input_messages
+        llm_span.model = model
+        metrics = metadata.pop("metrics", None)
+        metric_collection = metadata.pop("metric_collection", None)
+        prompt = metadata.pop("prompt", None)
+        llm_span.metrics = metrics
+        llm_span.metric_collection = metric_collection
+        llm_span.prompt = prompt
+    
     def on_llm_end(
         self,
         response: LLMResult,
@@ -283,12 +150,8 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        llm_span: LlmSpan = trace_manager.get_span_by_uuid(str(run_id))
-        if llm_span is None:
-            return
-
-        if not isinstance(llm_span, LlmSpan):
-            return
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
 
         output = ""
         total_input_tokens = 0
@@ -331,16 +194,41 @@ class CallbackHandler(BaseCallbackHandler):
         llm_span.model = model if model else llm_span.model
         llm_span.input = llm_span.input
         llm_span.output = output
-        llm_span.input_token_count = (
-            total_input_tokens if total_input_tokens > 0 else None
-        )
-        llm_span.output_token_count = (
-            total_output_tokens if total_output_tokens > 0 else None
-        )
+        llm_span.input_token_count = total_input_tokens if total_input_tokens > 0 else None
+        llm_span.output_token_count = total_output_tokens if total_output_tokens > 0 else None
 
-        self.end_span(llm_span)
-        if parent_run_id is None:
-            self.end_trace(llm_span)
+        exit_current_context(uuid_str=uuid_str)
+
+    def on_llm_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,
+    ) -> Any:
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+        llm_span.status = TraceSpanStatus.ERRORED
+        llm_span.error = str(error)
+        exit_current_context(uuid_str=uuid_str)
+
+    def on_llm_new_token(
+        self,
+        token: str,
+        *,
+        chunk,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        tags: Optional[list[str]] = None,
+        **kwargs: Any,
+    ):
+        uuid_str = str(run_id)
+        llm_span: LlmSpan = trace_manager.get_span_by_uuid(uuid_str)
+        if llm_span.token_intervals is None:
+            llm_span.token_intervals = {perf_counter(): token}
+        else:
+            llm_span.token_intervals[perf_counter()] = token
 
     def on_tool_start(
         self,
@@ -354,27 +242,14 @@ class CallbackHandler(BaseCallbackHandler):
         inputs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> Any:
+        uuid_str = str(run_id)
 
-        self.check_active_trace_id()
-
-        tool_span = ToolSpan(
-            uuid=str(run_id),
-            status=TraceSpanStatus.ERRORED,
-            children=[],
-            trace_uuid=self.active_trace_id,
-            parent_uuid=str(parent_run_id) if parent_run_id else None,
-            start_time=perf_counter(),
-            name=extract_name(serialized, **kwargs),
-            input=input_str,
-            metadata=prepare_dict(
-                serialized=serialized, tags=tags, metadata=metadata, **kwargs
-            ),
-            # fallback for on_end callback
-            end_time=perf_counter(),
-            metric_collection=metadata.get("metric_collection", None),
-            metrics=metadata.get("metrics", None),
+        tool_span = enter_current_context(
+            uuid_str=uuid_str,
+            span_type="tool",
+            func_name=extract_name(serialized, **kwargs), # ignored when setting the input
         )
-        self.add_span_to_trace(tool_span)
+        tool_span.input = inputs
 
     def on_tool_end(
         self,
@@ -384,17 +259,25 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-
-        tool_span = trace_manager.get_span_by_uuid(str(run_id))
-        if tool_span is None:
-            return
-
+    
+        uuid_str = str(run_id)
+        tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
         tool_span.output = output
+        exit_current_context(uuid_str=uuid_str)
 
-        self.end_span(tool_span)
-
-        if parent_run_id is None:
-            self.end_trace(tool_span)
+    def on_tool_error(
+        self,
+        error: BaseException,
+        *,
+        run_id: UUID,
+        parent_run_id: Optional[UUID] = None,
+        **kwargs: Any,  # un-logged kwargs
+    ) -> Any:
+        uuid_str = str(run_id)
+        tool_span: ToolSpan = trace_manager.get_span_by_uuid(uuid_str)
+        tool_span.status = TraceSpanStatus.ERRORED
+        tool_span.error = str(error)
+        exit_current_context(uuid_str=uuid_str)
 
     def on_retriever_start(
         self,
@@ -407,28 +290,16 @@ class CallbackHandler(BaseCallbackHandler):
         metadata: Optional[dict[str, Any]] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-
-        self.check_active_trace_id()
-
-        retriever_span = RetrieverSpan(
-            uuid=str(run_id),
-            status=TraceSpanStatus.ERRORED,
-            children=[],
-            trace_uuid=self.active_trace_id,
-            parent_uuid=str(parent_run_id) if parent_run_id else None,
-            start_time=perf_counter(),
-            name=extract_name(serialized, **kwargs),
-            embedder=metadata.get("ls_embedding_provider", "unknown"),
-            metadata=prepare_dict(
-                serialized=serialized, tags=tags, metadata=metadata, **kwargs
-            ),
-            # fallback for on_end callback
-            end_time=perf_counter(),
+        uuid_str = str(run_id)
+        retriever_span = enter_current_context(
+            uuid_str=uuid_str,
+            span_type="retriever",
+            func_name=extract_name(serialized, **kwargs),
+            observe_kwargs={
+                "embedder": metadata.get("ls_embedding_provider", "unknown"),
+            },
         )
         retriever_span.input = query
-        retriever_span.retrieval_context = []
-
-        self.add_span_to_trace(retriever_span)
 
     def on_retriever_end(
         self,
@@ -438,12 +309,9 @@ class CallbackHandler(BaseCallbackHandler):
         parent_run_id: Optional[UUID] = None,
         **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-
-        retriever_span = trace_manager.get_span_by_uuid(str(run_id))
-
-        if retriever_span is None:
-            return
-
+        uuid_str = str(run_id)
+        retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
+        
         # prepare output
         output_list = []
         if isinstance(output, list):
@@ -451,59 +319,9 @@ class CallbackHandler(BaseCallbackHandler):
                 output_list.append(str(item))
         else:
             output_list.append(str(output))
-
-        retriever_span.input = retriever_span.input
-        retriever_span.retrieval_context = output_list
-
-        self.end_span(retriever_span)
-
-        if parent_run_id is None:
-            self.end_trace(retriever_span)
-
-    ################## on_error callbacks ###############
-
-    def on_chain_error(
-        self,
-        error: BaseException,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
-    ) -> None:
-        base_span = trace_manager.get_span_by_uuid(str(run_id))
-        if base_span is None:
-            return
-
-        base_span.end_time = perf_counter()
-
-    def on_llm_error(
-        self,
-        error: BaseException,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
-    ) -> Any:
-
-        llm_span = trace_manager.get_span_by_uuid(str(run_id))
-        if llm_span is None:
-            return
-
-        llm_span.end_time = perf_counter()
-
-    def on_tool_error(
-        self,
-        error: BaseException,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
-    ) -> Any:
-        tool_span = trace_manager.get_span_by_uuid(str(run_id))
-        if tool_span is None:
-            return
-
-        tool_span.end_time = perf_counter()
+        
+        retriever_span.output = output_list
+        exit_current_context(uuid_str=uuid_str)
 
     def on_retriever_error(
         self,
@@ -511,10 +329,10 @@ class CallbackHandler(BaseCallbackHandler):
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
-        **kwargs: Any,
+        **kwargs: Any,  # un-logged kwargs
     ) -> Any:
-        retriever_span = trace_manager.get_span_by_uuid(str(run_id))
-        if retriever_span is None:
-            return
-
-        retriever_span.end_time = perf_counter()
+        uuid_str = str(run_id)
+        retriever_span: RetrieverSpan = trace_manager.get_span_by_uuid(uuid_str)
+        retriever_span.status = TraceSpanStatus.ERRORED
+        retriever_span.error = str(error)
+        exit_current_context(uuid_str=uuid_str)
