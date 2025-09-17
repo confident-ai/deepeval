@@ -133,16 +133,17 @@ def _patch_agent_init():
         result = original_init(*args, **kwargs)
         _patch_llm_model(args[0]._model, llm_metric_collection, llm_metrics, llm_prompt)  # runtime patch of the model
         _patch_agent_run(args[0], agent_metric_collection, agent_metrics)
-        # _patch_agent_run_sync(args[0], agent_metric_collection, agent_metrics)
+        _patch_agent_run_sync(args[0], agent_metric_collection, agent_metrics)
         return result
 
     Agent.__init__ = wrapper
 
 def _patch_agent_run_sync(
+    agent: Agent,
     agent_metric_collection: Optional[str] = None,
     agent_metrics: Optional[List[BaseMetric]] = None,
 ):
-    original_run_sync = Agent.run_sync
+    original_run_sync = agent.run_sync
     
     @functools.wraps(original_run_sync)
     def wrapper(
@@ -197,7 +198,7 @@ def _patch_agent_run_sync(
             )
             
         return result
-    Agent.run_sync = wrapper
+    agent.run_sync = wrapper
 
 
 def _patch_agent_run(
