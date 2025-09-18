@@ -284,7 +284,7 @@ class PIILeakageMetric(BaseMetric):
                 no_privacy_count += 1
 
         score = no_privacy_count / number_of_verdicts
-        return 1 if self.strict_mode and score < 1 else score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
         if self.error is not None:
