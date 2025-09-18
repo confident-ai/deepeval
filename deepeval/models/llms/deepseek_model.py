@@ -5,6 +5,15 @@ from pydantic import BaseModel
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
+)
+from deepeval.constants import ProviderSlug as PS
+
+
+# consistent retry rules
+retry_deepseek = create_retry_decorator(PS.DEEPSEEK)
 
 model_pricing = {
     "deepseek-chat": {
@@ -55,6 +64,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
+    @retry_deepseek
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -88,6 +98,7 @@ class DeepSeekModel(DeepEvalBaseLLM):
             )
             return output, cost
 
+    @retry_deepseek
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -141,13 +152,31 @@ class DeepSeekModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(
-                api_key=self.api_key, base_url=self.base_url, **self.kwargs
-            )
-        else:
-            return AsyncOpenAI(
-                api_key=self.api_key, base_url=self.base_url, **self.kwargs
-            )
+            return self._build_client(OpenAI)
+        return self._build_client(AsyncOpenAI)
 
     def get_model_name(self):
         return f"{self.model_name}"
+
+    def _client_kwargs(self) -> Dict:
+        kwargs = dict(self.kwargs or {})
+        # if we are managing retries with Tenacity, force SDK retries off to avoid double retries.
+        # if the user opts into SDK retries for "deepseek" via DEEPEVAL_SDK_RETRY_PROVIDERS, honor it.
+        if not sdk_retries_for(PS.DEEPSEEK):
+            kwargs["max_retries"] = 0
+        return kwargs
+
+    def _build_client(self, cls):
+        kw = dict(
+            api_key=self.api_key,
+            base_url=self.base_url,
+            **self._client_kwargs(),
+        )
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # In case an older OpenAI client doesn’t accept max_retries, drop it and retry.
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise

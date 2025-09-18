@@ -1,30 +1,34 @@
 """Generic retry policy helpers for provider SDKs.
 
 This module lets models define *what is transient* vs *non-retryable* (permanent) failure
-without coupling to a specific SDK. You provide an `ErrorPolicy` describing
-exception classes and special “non-retryable” error codes, such as quota-exhausted from OpenAI,
-and get back a Tenacity predicate suitable for `retry_if_exception`.
+without coupling to a specific SDK. You provide an `ErrorPolicy` describing exception classes
+and special “non-retryable” error codes (quota-exhausted), and get back Tenacity components:
+a predicate suitable for `retry_if_exception`, plus convenience helpers for wait/stop/backoff.
+You can also use `create_retry_decorator(slug)` to wire Tenacity with dynamic policy + logging.
 
-Typical use:
+Notes:
+- `extract_error_code` best-effort parses codes from response JSON, `e.body`, botocore-style maps,
+  gRPC `e.code().name`, or message markers.
+- `dynamic_retry(slug)` consults settings at call time: if SDK retries are enabled for the slug,
+  Tenacity will not retry.
+- Logging callbacks (`before_sleep`, `after`) read log levels dynamically and log to
+  the `deepeval.retry.<slug>` logger.
 
-    # Import dependencies
-    from tenacity import retry, before_sleep_log
-    from deepeval.models.retry_policy import (
-        OPENAI_ERROR_POLICY, default_wait, default_stop, retry_predicate
-    )
+Configuration
+-------------
+Retry backoff (env):
+  DEEPEVAL_RETRY_MAX_ATTEMPTS       int   (default 2, >=1)
+  DEEPEVAL_RETRY_INITIAL_SECONDS    float (default 1.0, >=0)
+  DEEPEVAL_RETRY_EXP_BASE           float (default 2.0, >=1)
+  DEEPEVAL_RETRY_JITTER             float (default 2.0, >=0)
+  DEEPEVAL_RETRY_CAP_SECONDS        float (default 5.0, >=0)
 
-    # Define retry rule keywords
-    _retry_kw = dict(
-        wait=default_wait(),
-        stop=default_stop(),
-        retry=retry_predicate(OPENAI_ERROR_POLICY),
-        before_sleep=before_sleep_log(logger, logging.INFO), # <- Optional: logs only on retries
-    )
+SDK-managed retries (settings):
+  settings.DEEPEVAL_SDK_RETRY_PROVIDERS  list[str]  # e.g. ["azure"] or ["*"] for all
 
-    # Apply retry rule keywords where desired
-    @retry(**_retry_kw)
-    def call_openai(...):
-        ...
+Retry logging (settings; read at call time):
+  settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL  int/name  (default INFO)
+  settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL   int/name  (default ERROR)
 """
 
 from __future__ import annotations
@@ -33,16 +37,27 @@ import logging
 
 from deepeval.utils import read_env_int, read_env_float
 from dataclasses import dataclass, field
-from typing import Iterable, Mapping, Callable, Sequence, Tuple
+from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
 from collections.abc import Mapping as ABCMapping
 from tenacity import (
+    RetryCallState,
+    retry,
     wait_exponential_jitter,
     stop_after_attempt,
     retry_if_exception,
 )
+from tenacity.stop import stop_base
+from tenacity.wait import wait_base
+
+from deepeval.constants import (
+    ProviderSlug as PS,
+    slugify,
+)
+from deepeval.config.settings import get_settings
 
 
 logger = logging.getLogger(__name__)
+Provider = Union[str, PS]
 
 # --------------------------
 # Policy description
@@ -89,9 +104,9 @@ def extract_error_code(
     """Best effort extraction of an error 'code' for SDK compatibility.
 
     Order of attempts:
-      1) Structured JSON via `e.response.json()` (typical HTTP error payload).
-      2) A dict stored on `e.body` (some gateways/proxies use this).
-      3) Message sniffing fallback, using `message_markers`.
+      1. Structured JSON via `e.response.json()` (typical HTTP error payload).
+      2. A dict stored on `e.body` (some gateways/proxies use this).
+      3. Message sniffing fallback, using `message_markers`.
 
     Args:
         e: The exception raised by the SDK/provider client.
@@ -103,23 +118,47 @@ def extract_error_code(
     Returns:
         The code string if found, else "".
     """
-    # 1) Structured JSON in e.response.json()
+    # 0. gRPC: use e.code() -> grpc.StatusCode
+    code_fn = getattr(e, "code", None)
+    if callable(code_fn):
+        try:
+            sc = code_fn()
+            name = getattr(sc, "name", None) or str(sc)
+            if isinstance(name, str):
+                return name.lower()
+        except Exception:
+            pass
+
+    # 1. Structured JSON in e.response.json()
     resp = getattr(e, response_attr, None)
     if resp is not None:
-        try:
-            cur = resp.json()
-            for k in code_path:
+
+        if isinstance(resp, ABCMapping):
+            # Structured mapping directly on response
+            cur = resp
+            for k in ("Error", "Code"):  # <- AWS boto style Error / Code
                 if not isinstance(cur, ABCMapping):
                     cur = {}
                     break
                 cur = cur.get(k, {})
             if isinstance(cur, (str, int)):
                 return str(cur)
-        except Exception:
-            # response.json() can raise; ignore and fall through
-            pass
 
-    # 2) SDK provided dict body
+        else:
+            try:
+                cur = resp.json()
+                for k in code_path:
+                    if not isinstance(cur, ABCMapping):
+                        cur = {}
+                        break
+                    cur = cur.get(k, {})
+                if isinstance(cur, (str, int)):
+                    return str(cur)
+            except Exception:
+                # if response.json() raises, ignore and fall through
+                pass
+
+    # 2. SDK provided dict body
     body = getattr(e, body_attr, None)
     if isinstance(body, ABCMapping):
         cur = body
@@ -131,7 +170,7 @@ def extract_error_code(
         if isinstance(cur, (str, int)):
             return str(cur)
 
-    # 3) Message sniff (hopefully this helps catch message codes that slip past the previous 2 parsers)
+    # 3. Message sniff (hopefully this helps catch message codes that slip past the previous 2 parsers)
     msg = str(e).lower()
     markers = message_markers or {}
     for code_key, needles in markers.items():
@@ -181,6 +220,7 @@ def make_is_transient(
             code = extract_error_code(
                 e, message_markers=(message_markers or policy.message_markers)
             )
+            code = (code or "").lower()
             return code not in non_retryable
 
         if isinstance(e, policy.network_excs):
@@ -203,32 +243,31 @@ def make_is_transient(
 # --------------------------
 
 
-def default_wait():
-    """Default backoff: exponential with jitter, capped.
-    Overridable via env:
-      - DEEPEVAL_RETRY_INITIAL_SECONDS (>=0)
-      - DEEPEVAL_RETRY_EXP_BASE      (>=1)
-      - DEEPEVAL_RETRY_JITTER        (>=0)
-      - DEEPEVAL_RETRY_CAP_SECONDS   (>=0)
-    """
-    initial = read_env_float(
-        "DEEPEVAL_RETRY_INITIAL_SECONDS", 1.0, min_value=0.0
-    )
-    exp_base = read_env_float("DEEPEVAL_RETRY_EXP_BASE", 2.0, min_value=1.0)
-    jitter = read_env_float("DEEPEVAL_RETRY_JITTER", 2.0, min_value=0.0)
-    cap = read_env_float("DEEPEVAL_RETRY_CAP_SECONDS", 5.0, min_value=0.0)
-    return wait_exponential_jitter(
-        initial=initial, exp_base=exp_base, jitter=jitter, max=cap
-    )
+class StopFromEnv(stop_base):
+    def __call__(self, retry_state):
+        attempts = read_env_int("DEEPEVAL_RETRY_MAX_ATTEMPTS", 2, min_value=1)
+        return stop_after_attempt(attempts)(retry_state)
 
 
-def default_stop():
-    """Default stop condition: at most N attempts (N-1 retries).
-    Overridable via env:
-      - DEEPEVAL_RETRY_MAX_ATTEMPTS (>=1)
-    """
-    attempts = read_env_int("DEEPEVAL_RETRY_MAX_ATTEMPTS", 2, min_value=1)
-    return stop_after_attempt(attempts)
+class WaitFromEnv(wait_base):
+    def __call__(self, retry_state):
+        initial = read_env_float(
+            "DEEPEVAL_RETRY_INITIAL_SECONDS", 1.0, min_value=0.0
+        )
+        exp_base = read_env_float("DEEPEVAL_RETRY_EXP_BASE", 2.0, min_value=1.0)
+        jitter = read_env_float("DEEPEVAL_RETRY_JITTER", 2.0, min_value=0.0)
+        cap = read_env_float("DEEPEVAL_RETRY_CAP_SECONDS", 5.0, min_value=0.0)
+        return wait_exponential_jitter(
+            initial=initial, exp_base=exp_base, jitter=jitter, max=cap
+        )(retry_state)
+
+
+def dynamic_stop():
+    return StopFromEnv()
+
+
+def dynamic_wait():
+    return WaitFromEnv()
 
 
 def retry_predicate(policy: ErrorPolicy, **kw):
@@ -240,11 +279,189 @@ def retry_predicate(policy: ErrorPolicy, **kw):
     return retry_if_exception(make_is_transient(policy, **kw))
 
 
+###########
+# Helpers #
+###########
+# Convenience helpers
+
+
+def sdk_retries_for(provider: Provider) -> bool:
+    """True if this provider should delegate retries to the SDK (per settings)."""
+    chosen = get_settings().DEEPEVAL_SDK_RETRY_PROVIDERS or []
+    slug = slugify(provider)
+    return "*" in chosen or slug in chosen
+
+
+def get_retry_policy_for(provider: Provider) -> Optional[ErrorPolicy]:
+    """
+    Return the ErrorPolicy for a given provider slug, or None when:
+      - the user requested SDK-managed retries for this provider, OR
+      - we have no usable policy (optional dependency missing).
+    """
+    if sdk_retries_for(provider):
+        return None
+    slug = slugify(provider)
+    return _POLICY_BY_SLUG.get(slug) or None
+
+
+def dynamic_retry(provider: Provider):
+    """
+    Tenacity retry= argument that checks settings at *call time*.
+    If SDK retries are chosen (or no policy available), it never retries.
+    """
+    slug = slugify(provider)
+    static_pred = _STATIC_PRED_BY_SLUG.get(slug)
+
+    def _pred(e: Exception) -> bool:
+        if sdk_retries_for(slug):
+            return False  # hand off to SDK
+        if static_pred is None:
+            return False  # no policy -> no Tenacity retries
+        return static_pred(e)  # use prebuilt predicate
+
+    return retry_if_exception(_pred)
+
+
+def _retry_log_levels():
+    s = get_settings()
+    before_level = s.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL
+    after_level = s.DEEPEVAL_RETRY_AFTER_LOG_LEVEL
+    return (
+        before_level if before_level is not None else logging.INFO,
+        after_level if after_level is not None else logging.ERROR,
+    )
+
+
+def make_before_sleep_log(slug: str):
+    """
+    Tenacity 'before_sleep' callback: runs before Tenacity sleeps for the next retry.
+    Read the level dynamically each time.
+    """
+    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+
+    def _before_sleep(retry_state: RetryCallState) -> None:
+        before_level, _ = _retry_log_levels()
+        if not _logger.isEnabledFor(before_level):
+            return
+
+        exc = retry_state.outcome.exception()
+        sleep = getattr(
+            getattr(retry_state, "next_action", None), "sleep", None
+        )
+
+        _logger.log(
+            before_level,
+            "Retrying in %s s (attempt %s) after %r",
+            sleep,
+            retry_state.attempt_number,
+            exc,
+        )
+
+    return _before_sleep
+
+
+def make_after_log(slug: str):
+    """
+    Tenacity 'after' callback: runs after each attempt. We log only when the
+    attempt raised, and we look up the level dynamically so changes to settings
+    take effect immediately.
+    """
+    _logger = logging.getLogger(f"deepeval.retry.{slug}")
+
+    def _after(retry_state: RetryCallState) -> None:
+        exc = retry_state.outcome.exception()
+        if exc is None:
+            return
+
+        _, after_level = _retry_log_levels()
+        if not _logger.isEnabledFor(after_level):
+            return
+
+        exc_info = (
+            (type(exc), exc, getattr(exc, "__traceback__", None))
+            if after_level >= logging.ERROR
+            else None
+        )
+
+        _logger.log(
+            after_level,
+            "%s Retrying: %s time(s)...",
+            exc,
+            retry_state.attempt_number,
+            exc_info=exc_info,
+        )
+
+    return _after
+
+
+def create_retry_decorator(provider: Provider):
+    """
+    Build a Tenacity @retry decorator wired to our dynamic retry policy
+    for the given provider slug.
+    """
+    slug = slugify(provider)
+
+    return retry(
+        wait=dynamic_wait(),
+        stop=dynamic_stop(),
+        retry=dynamic_retry(slug),
+        before_sleep=make_before_sleep_log(slug),
+        after=make_after_log(slug),
+    )
+
+
+def _httpx_net_excs() -> tuple[type, ...]:
+    try:
+        import httpx
+    except Exception:
+        return ()
+    names = (
+        "RequestError",  # base for transport errors
+        "TimeoutException",  # base for timeouts
+        "ConnectError",
+        "ConnectTimeout",
+        "ReadTimeout",
+        "WriteTimeout",
+        "PoolTimeout",
+    )
+    return tuple(getattr(httpx, n) for n in names if hasattr(httpx, n))
+
+
+def _requests_net_excs() -> tuple[type, ...]:
+    try:
+        import requests
+    except Exception:
+        return ()
+    names = (
+        "RequestException",
+        "Timeout",
+        "ConnectionError",
+        "ReadTimeout",
+        "SSLError",
+        "ChunkedEncodingError",
+    )
+    return tuple(
+        getattr(requests.exceptions, n)
+        for n in names
+        if hasattr(requests.exceptions, n)
+    )
+
+
 # --------------------------
 # Built-in policies
 # --------------------------
+
+##################
+# Open AI Policy #
+##################
+
 OPENAI_MESSAGE_MARKERS: dict[str, tuple[str, ...]] = {
-    "insufficient_quota": ("insufficient_quota", "exceeded your current quota"),
+    "insufficient_quota": (
+        "insufficient_quota",
+        "insufficient quota",
+        "exceeded your current quota",
+        "requestquotaexceeded",
+    ),
 }
 
 try:
@@ -268,13 +485,280 @@ except Exception:  # pragma: no cover - OpenAI may not be installed in some envs
     OPENAI_ERROR_POLICY = None
 
 
+##########################
+# Models that use OpenAI #
+##########################
+AZURE_OPENAI_ERROR_POLICY = OPENAI_ERROR_POLICY
+DEEPSEEK_ERROR_POLICY = OPENAI_ERROR_POLICY
+KIMI_ERROR_POLICY = OPENAI_ERROR_POLICY
+LOCAL_ERROR_POLICY = OPENAI_ERROR_POLICY
+
+######################
+# AWS Bedrock Policy #
+######################
+
+try:
+    from botocore.exceptions import (
+        ClientError,
+        EndpointConnectionError,
+        ConnectTimeoutError,
+        ReadTimeoutError,
+        ConnectionClosedError,
+    )
+
+    # Map common AWS error messages to keys via substring match (lowercased)
+    # Update as we encounter new error messages from the sdk
+    # These messages are heuristics, we don't have a list of exact error messages
+    BEDROCK_MESSAGE_MARKERS = {
+        # retryable throttling / transient
+        "throttlingexception": (
+            "throttlingexception",
+            "too many requests",
+            "rate exceeded",
+        ),
+        "serviceunavailableexception": (
+            "serviceunavailableexception",
+            "service unavailable",
+        ),
+        "internalserverexception": (
+            "internalserverexception",
+            "internal server error",
+        ),
+        "modeltimeoutexception": ("modeltimeoutexception", "model timeout"),
+        # clear non-retryables
+        "accessdeniedexception": ("accessdeniedexception",),
+        "validationexception": ("validationexception",),
+        "resourcenotfoundexception": ("resourcenotfoundexception",),
+    }
+
+    BEDROCK_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),
+        rate_limit_excs=(
+            ClientError,
+        ),  # classify by code extracted from message
+        network_excs=(
+            EndpointConnectionError,
+            ConnectTimeoutError,
+            ReadTimeoutError,
+            ConnectionClosedError,
+        ),
+        http_excs=(),  # no status_code attributes. We will rely on ClientError + markers
+        non_retryable_codes=frozenset(
+            {
+                "accessdeniedexception",
+                "validationexception",
+                "resourcenotfoundexception",
+            }
+        ),
+        message_markers=BEDROCK_MESSAGE_MARKERS,
+    )
+except Exception:  # botocore not present (aiobotocore optional)
+    BEDROCK_ERROR_POLICY = None
+
+
+####################
+# Anthropic Policy #
+####################
+
+try:
+    from anthropic import (
+        AuthenticationError,
+        RateLimitError,
+        APIConnectionError,
+        APITimeoutError,
+        APIStatusError,
+    )
+
+    ANTHROPIC_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(AuthenticationError,),
+        rate_limit_excs=(RateLimitError,),
+        network_excs=(APIConnectionError, APITimeoutError),
+        http_excs=(APIStatusError,),
+        non_retryable_codes=frozenset(),  # update if we learn of hard quota codes
+        message_markers={},
+    )
+except Exception:  # Anthropic optional
+    ANTHROPIC_ERROR_POLICY = None
+
+
+#####################
+# Google/Gemini Policy
+#####################
+# The google genai SDK raises google.genai.errors.*. Public docs and issues show:
+# - errors.ClientError for 4xx like 400/401/403/404/422/429
+# - errors.ServerError for 5xx
+# - errors.APIError is a common base that exposes `.code` and message text
+# The SDK doesn’t guarantee a `.status_code` attribute, but it commonly exposes `.code`,
+# so we treat ServerError as transient (network-like) to get 5xx retries.
+# For rate limiting (429 Resource Exhausted), we treat *ClientError* as rate limit class
+# and gate retries using message markers (code sniffing).
+# See: https://github.com/googleapis/python-genai?tab=readme-ov-file#error-handling
+try:
+    from google.genai import errors as gerrors
+
+    _HTTPX_NET_EXCS = _httpx_net_excs()
+    _REQUESTS_EXCS = _requests_net_excs()
+
+    GOOGLE_MESSAGE_MARKERS = {
+        # retryable rate limit
+        "429": ("429", "resource_exhausted", "rate limit"),
+        # clearly non-retryable client codes
+        "401": ("401", "unauthorized", "api key"),
+        "403": ("403", "permission denied", "forbidden"),
+        "404": ("404", "not found"),
+        "400": ("400", "invalid argument", "bad request"),
+        "422": ("422", "failed_precondition", "unprocessable"),
+    }
+
+    GOOGLE_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),  # we will classify 401/403 via markers below (see non-retryable codes)
+        rate_limit_excs=(
+            gerrors.ClientError,
+        ),  # includes 429; markers decide retry vs not
+        network_excs=(gerrors.ServerError,)
+        + _HTTPX_NET_EXCS
+        + _REQUESTS_EXCS,  # treat 5xx as transient
+        http_excs=(),  # no reliable .status_code on exceptions; handled above
+        # Non-retryable codes for *ClientError*. Anything else is retried.
+        non_retryable_codes=frozenset({"400", "401", "403", "404", "422"}),
+        message_markers=GOOGLE_MESSAGE_MARKERS,
+    )
+except Exception:
+    GOOGLE_ERROR_POLICY = None
+
+#################
+# Grok Policy   #
+#################
+# The xAI Python SDK (xai-sdk) uses gRPC. Errors raised are grpc.RpcError (sync)
+# and grpc.aio.AioRpcError (async). The SDK retries UNAVAILABLE by default with
+# backoff; you can disable via channel option ("grpc.enable_retries", 0) or
+# customize via "grpc.service_config". See xai-sdk docs.
+# Refs:
+# - https://github.com/xai-org/xai-sdk-python/blob/main/README.md#retries
+# - https://github.com/xai-org/xai-sdk-python/blob/main/README.md#error-codes
+try:
+    import grpc
+
+    try:
+        from grpc import aio as grpc_aio
+
+        _AioRpcError = getattr(grpc_aio, "AioRpcError", None)
+    except Exception:
+        _AioRpcError = None
+
+    _GRPC_EXCS = tuple(
+        c for c in (getattr(grpc, "RpcError", None), _AioRpcError) if c
+    )
+
+    # rely on extract_error_code reading e.code().name (lowercased).
+    GROK_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),  # handled via code() mapping below
+        rate_limit_excs=_GRPC_EXCS,  # gated by code() value
+        network_excs=(),  # gRPC code handles transience
+        http_excs=(),  # no .status_code on gRPC errors
+        non_retryable_codes=frozenset(
+            {
+                "invalid_argument",
+                "unauthenticated",
+                "permission_denied",
+                "not_found",
+                "resource_exhausted",
+                "failed_precondition",
+                "out_of_range",
+                "unimplemented",
+                "data_loss",
+            }
+        ),
+        message_markers={},
+    )
+except Exception:  # xai-sdk/grpc not present
+    GROK_ERROR_POLICY = None
+
+
+############
+# Lite LLM #
+############
+LITELLM_ERROR_POLICY = None  # TODO: LiteLLM is going to take some extra care. I will return to this task last
+
+
+#########################
+# Ollama (local server) #
+#########################
+
+try:
+    # Catch transport + timeout issues via base classes
+    _HTTPX_NET_EXCS = _httpx_net_excs()
+    _REQUESTS_EXCS = _requests_net_excs()
+
+    OLLAMA_ERROR_POLICY = ErrorPolicy(
+        auth_excs=(),
+        rate_limit_excs=(),  # no rate limiting semantics locally
+        network_excs=_HTTPX_NET_EXCS + _REQUESTS_EXCS,  # retry network/timeouts
+        http_excs=(),  # optionally add httpx.HTTPStatusError if you call raise_for_status()
+        non_retryable_codes=frozenset(),
+        message_markers={},
+    )
+except Exception:
+    OLLAMA_ERROR_POLICY = None
+
+
+# Map provider slugs to their policy objects.
+# It is OK if some are None, we'll treat that as no Error Policy / Tenacity
+_POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
+    PS.OPENAI.value: OPENAI_ERROR_POLICY,
+    PS.AZURE.value: AZURE_OPENAI_ERROR_POLICY,
+    PS.BEDROCK.value: BEDROCK_ERROR_POLICY,
+    PS.ANTHROPIC.value: ANTHROPIC_ERROR_POLICY,
+    PS.DEEPSEEK.value: DEEPSEEK_ERROR_POLICY,
+    PS.GOOGLE.value: GOOGLE_ERROR_POLICY,
+    PS.GROK.value: GROK_ERROR_POLICY,
+    PS.KIMI.value: KIMI_ERROR_POLICY,
+    PS.LITELLM.value: LITELLM_ERROR_POLICY,
+    PS.LOCAL.value: LOCAL_ERROR_POLICY,
+    PS.OLLAMA.value: OLLAMA_ERROR_POLICY,
+}
+
+
+def _opt_pred(
+    policy: Optional[ErrorPolicy],
+) -> Optional[Callable[[Exception], bool]]:
+    return make_is_transient(policy) if policy else None
+
+
+_STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
+    PS.OPENAI.value: _opt_pred(OPENAI_ERROR_POLICY),
+    PS.AZURE.value: _opt_pred(AZURE_OPENAI_ERROR_POLICY),
+    PS.BEDROCK.value: _opt_pred(BEDROCK_ERROR_POLICY),
+    PS.ANTHROPIC.value: _opt_pred(ANTHROPIC_ERROR_POLICY),
+    PS.DEEPSEEK.value: _opt_pred(DEEPSEEK_ERROR_POLICY),
+    PS.GOOGLE.value: _opt_pred(GOOGLE_ERROR_POLICY),
+    PS.GROK.value: _opt_pred(GROK_ERROR_POLICY),
+    PS.KIMI.value: _opt_pred(KIMI_ERROR_POLICY),
+    PS.LITELLM.value: _opt_pred(LITELLM_ERROR_POLICY),
+    PS.LOCAL.value: _opt_pred(LOCAL_ERROR_POLICY),
+    PS.OLLAMA.value: _opt_pred(OLLAMA_ERROR_POLICY),
+}
+
+
 __all__ = [
     "ErrorPolicy",
+    "get_retry_policy_for",
+    "create_retry_decorator",
+    "dynamic_retry",
     "extract_error_code",
     "make_is_transient",
-    "default_wait",
-    "default_stop",
+    "dynamic_stop",
+    "dynamic_wait",
     "retry_predicate",
+    "sdk_retries_for",
     "OPENAI_MESSAGE_MARKERS",
     "OPENAI_ERROR_POLICY",
+    "AZURE_OPENAI_ERROR_POLICY",
+    "BEDROCK_ERROR_POLICY",
+    "BEDROCK_MESSAGE_MARKERS",
+    "ANTHROPIC_ERROR_POLICY",
+    "DEEPSEEK_ERROR_POLICY",
+    "GOOGLE_ERROR_POLICY",
+    "GROK_ERROR_POLICY",
+    "LOCAL_ERROR_POLICY",
 ]

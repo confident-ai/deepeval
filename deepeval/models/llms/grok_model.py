@@ -1,10 +1,20 @@
-from typing import Optional, Tuple, Union, Dict
-from pydantic import BaseModel
 import os
 
+from typing import Optional, Tuple, Union, Dict
+from pydantic import BaseModel
+
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
+)
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.constants import ProviderSlug as PS
+
+
+# consistent retry rules
+retry_grok = create_retry_decorator(PS.GROK)
 
 
 structured_outputs_models = [
@@ -81,6 +91,7 @@ class GrokModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
+    @retry_grok
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -118,6 +129,7 @@ class GrokModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
+    @retry_grok
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -178,9 +190,9 @@ class GrokModel(DeepEvalBaseLLM):
             from xai_sdk import Client, AsyncClient
 
             if not async_mode:
-                return Client(api_key=self.api_key, **self.kwargs)
+                return self._build_client(Client)
             else:
-                return AsyncClient(api_key=self.api_key, **self.kwargs)
+                return self._build_client(AsyncClient)
         except ImportError:
             raise ImportError(
                 "xai_sdk is required to use GrokModel. Please install it with: pip install xai-sdk"
@@ -188,3 +200,38 @@ class GrokModel(DeepEvalBaseLLM):
 
     def get_model_name(self):
         return f"{self.model_name}"
+
+    def _client_kwargs(self) -> Dict:
+        """
+        If Tenacity is managing retries, disable gRPC channel retries to avoid double retry.
+        If the user opts into SDK retries for 'grok' via DEEPEVAL_SDK_RETRY_PROVIDERS,
+        leave channel options as is
+        """
+        kwargs = dict(self.kwargs or {})
+        opts = list(kwargs.get("channel_options", []))
+        if not sdk_retries_for(PS.GROK):
+            # remove any explicit enable flag, then disable retries
+            opts = [
+                option
+                for option in opts
+                if not (
+                    isinstance(option, (tuple, list))
+                    and option
+                    and option[0] == "grpc.enable_retries"
+                )
+            ]
+            opts.append(("grpc.enable_retries", 0))
+        if opts:
+            kwargs["channel_options"] = opts
+        return kwargs
+
+    def _build_client(self, cls):
+        kw = dict(api_key=self.api_key, **self._client_kwargs())
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # fallback: older SDK version might not accept channel_options
+            if "channel_options" in str(e):
+                kw.pop("channel_options", None)
+                return cls(**kw)
+            raise

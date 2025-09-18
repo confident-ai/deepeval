@@ -1,12 +1,20 @@
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
-
 from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ChatCompletion
 
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
+)
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
+from deepeval.constants import ProviderSlug as PS
+
+
+# consistent retry rules
+retry_local = create_retry_decorator(PS.LOCAL)
 
 
 class LocalModel(DeepEvalBaseLLM):
@@ -43,6 +51,7 @@ class LocalModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
+    @retry_local
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -61,6 +70,7 @@ class LocalModel(DeepEvalBaseLLM):
         else:
             return res_content, 0.0
 
+    @retry_local
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -91,14 +101,30 @@ class LocalModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return OpenAI(
-                api_key=self.local_model_api_key,
-                base_url=self.base_url,
-                **self.kwargs,
-            )
-        else:
-            return AsyncOpenAI(
-                api_key=self.local_model_api_key,
-                base_url=self.base_url,
-                **self.kwargs,
-            )
+            return self._build_client(OpenAI)
+        return self._build_client(AsyncOpenAI)
+
+    def _client_kwargs(self) -> Dict:
+        """
+        If Tenacity manages retries, turn off OpenAI SDK retries to avoid double retrying.
+        If users opt into SDK retries via DEEPEVAL_SDK_RETRY_PROVIDERS=local, leave them enabled.
+        """
+        kwargs = dict(self.kwargs or {})
+        if not sdk_retries_for(PS.LOCAL):
+            kwargs["max_retries"] = 0
+        return kwargs
+
+    def _build_client(self, cls):
+        kw = dict(
+            api_key=self.local_model_api_key,
+            base_url=self.base_url,
+            **self._client_kwargs(),
+        )
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # Older OpenAI SDKs may not accept max_retries; drop and retry once.
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise

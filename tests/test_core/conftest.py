@@ -1,5 +1,6 @@
 try:
-    import sys, pysqlite3 as sqlite3  # type: ignore
+    import sys
+    import pysqlite3 as sqlite3  # type: ignore
 
     sys.modules["sqlite3"] = sqlite3
     sys.modules["sqlite3.dbapi2"] = sqlite3.dbapi2
@@ -7,10 +8,9 @@ except Exception:
     pass
 
 import pytest
-import test
+import tenacity
 
 from pathlib import Path
-from typer.testing import CliRunner
 
 
 @pytest.fixture(autouse=True)
@@ -47,3 +47,8 @@ def hidden_store_dir(tmp_path: Path) -> Path:
     d = tmp_path / ".deepeval"
     d.mkdir(parents=True, exist_ok=True)
     return d
+
+
+@pytest.fixture(autouse=True)
+def no_sleep(monkeypatch):
+    monkeypatch.setattr(tenacity.nap, "sleep", lambda _: None, raising=True)

@@ -9,6 +9,7 @@ Central config for DeepEval.
   type coercion.
 """
 
+import logging
 import os
 import re
 
@@ -16,11 +17,17 @@ from dotenv import dotenv_values
 from pathlib import Path
 from pydantic import AnyUrl, SecretStr, field_validator, confloat
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Any, Dict, Optional, NamedTuple
+from typing import Any, Dict, List, Optional, NamedTuple
 
-from deepeval.config.utils import parse_bool
+from deepeval.config.utils import (
+    parse_bool,
+    coerce_to_list,
+    dedupe_preserve_order,
+)
+from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
 
+logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
 
 
@@ -265,6 +272,13 @@ class Settings(BaseSettings):
     LOCAL_EMBEDDING_BASE_URL: Optional[AnyUrl] = None
 
     #
+    # Retry Policy
+    #
+    DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = None
+    DEEPEVAL_RETRY_BEFORE_LOG_LEVEL: Optional[int] = None  # default -> INFO
+    DEEPEVAL_RETRY_AFTER_LOG_LEVEL: Optional[int] = None  # default -> ERROR
+
+    #
     # Telemetry and Debug
     #
     DEEPEVAL_TELEMETRY_OPT_OUT: Optional[bool] = None
@@ -282,6 +296,12 @@ class Settings(BaseSettings):
     CONFIDENT_TRACE_VERBOSE: Optional[bool] = True
     CONFIDENT_SAMPLE_RATE: Optional[float] = 1.0
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = None
+
+    #
+    # Network
+    #
+    MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
+    MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
 
     ##############
     # Validators #
@@ -400,6 +420,78 @@ class Settings(BaseSettings):
         if not s:
             return None
         return s.upper()
+
+    @field_validator("DEEPEVAL_SDK_RETRY_PROVIDERS", mode="before")
+    @classmethod
+    def _coerce_to_list(cls, v):
+        # works with JSON list, comma/space/semicolon separated, or real lists
+        return coerce_to_list(v, lower=True)
+
+    @field_validator("DEEPEVAL_SDK_RETRY_PROVIDERS", mode="after")
+    @classmethod
+    def _validate_sdk_provider_list(cls, v):
+        if v is None:
+            return None
+
+        normalized: list[str] = []
+        star = False
+
+        for item in v:
+            s = str(item).strip()
+            if not s:
+                continue
+            if s == "*":
+                star = True
+                continue
+            s = slugify(s)
+            if s in SUPPORTED_PROVIDER_SLUGS:
+                normalized.append(s)
+            else:
+                if cls.DEEPEVAL_VERBOSE_MODE:
+                    logger.warning("Unknown provider slug %r dropped", item)
+
+        if star:
+            return ["*"]
+
+        # It is important to dedup after normalization to catch variants
+        normalized = dedupe_preserve_order(normalized)
+        return normalized or None
+
+    @field_validator(
+        "DEEPEVAL_RETRY_BEFORE_LOG_LEVEL",
+        "DEEPEVAL_RETRY_AFTER_LOG_LEVEL",
+        mode="before",
+    )
+    @classmethod
+    def _coerce_log_level(cls, v):
+        if v is None:
+            return None
+        if isinstance(v, (int, float)):
+            return int(v)
+
+        s = str(v).strip().upper()
+        if not s:
+            return None
+
+        import logging
+
+        # Accept standard names or numeric strings
+        name_to_level = {
+            "CRITICAL": logging.CRITICAL,
+            "ERROR": logging.ERROR,
+            "WARNING": logging.WARNING,
+            "INFO": logging.INFO,
+            "DEBUG": logging.DEBUG,
+            "NOTSET": logging.NOTSET,
+        }
+        if s.isdigit() or (s.startswith("-") and s[1:].isdigit()):
+            return int(s)
+        if s in name_to_level:
+            return name_to_level[s]
+        raise ValueError(
+            "Retry log level must be one of DEBUG, INFO, WARNING, ERROR, "
+            "CRITICAL, NOTSET, or a numeric logging level."
+        )
 
     #######################
     # Persistence support #

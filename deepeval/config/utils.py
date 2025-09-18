@@ -1,8 +1,13 @@
+import json
 import os
-from typing import Any, Optional
+import re
+
+from typing import Any, Iterable, List, Optional
+
 
 _TRUTHY = frozenset({"1", "true", "t", "yes", "y", "on", "enable", "enabled"})
 _FALSY = frozenset({"0", "false", "f", "no", "n", "off", "disable", "disabled"})
+_LIST_SEP_RE = re.compile(r"[,\s;]+")
 
 
 def parse_bool(value: Any, default: bool = False) -> bool:
@@ -84,3 +89,51 @@ def set_env_bool(key: str, value: Optional[bool] = False) -> None:
         - Use `get_env_bool` to read back and parse the value safely.
     """
     os.environ[key] = bool_to_env_str(bool(value))
+
+
+def coerce_to_list(
+    v,
+    *,
+    lower: bool = False,
+    allow_json: bool = True,
+    sep_re: re.Pattern = _LIST_SEP_RE,
+) -> Optional[List[str]]:
+    """
+    Coerce None / str / list / tuple / set into a clean List[str].
+    - Accepts JSON arrays ("[...]"") or delimited strings (comma/space/semicolon).
+    - Strips whitespace, drops empties, optionally lowercases.
+    """
+    if v is None:
+        return None
+    if isinstance(v, (list, tuple, set)):
+        items = list(v)
+    else:
+        s = str(v).strip()
+        if not s:
+            return None
+        if allow_json and s.startswith("[") and s.endswith("]"):
+            try:
+                parsed = json.loads(s)
+                items = parsed if isinstance(parsed, list) else [s]
+            except Exception:
+                items = sep_re.split(s)
+        else:
+            items = sep_re.split(s)
+
+    out: List[str] = []
+    for item in items:
+        s = str(item).strip()
+        if not s:
+            continue
+        out.append(s.lower() if lower else s)
+    return out or None
+
+
+def dedupe_preserve_order(items: Iterable[str]) -> List[str]:
+    seen = set()
+    out: List[str] = []
+    for x in items:
+        if x not in seen:
+            seen.add(x)
+            out.append(x)
+    return out

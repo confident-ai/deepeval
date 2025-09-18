@@ -3,15 +3,7 @@ from openai import OpenAI, AsyncOpenAI
 from openai.types.chat import ParsedChatCompletion
 from pydantic import BaseModel
 from io import BytesIO
-import logging
-import openai
 import base64
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    wait_exponential_jitter,
-    RetryCallState,
-)
 
 from deepeval.models.llms.openai_model import (
     model_pricing,
@@ -21,21 +13,14 @@ from deepeval.models import DeepEvalBaseMLLM
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.test_case import MLLMImage
 from deepeval.models.utils import parse_model_name
-
-retryable_exceptions = (
-    openai.RateLimitError,
-    openai.APIConnectionError,
-    openai.APITimeoutError,
-    openai.LengthFinishReasonError,
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
 )
+from deepeval.constants import ProviderSlug as PS
 
 
-def log_retry_error(retry_state: RetryCallState):
-    exception = retry_state.outcome.exception()
-    logging.error(
-        f"OpenAI Error: {exception} Retrying: {retry_state.attempt_number} time(s)..."
-    )
-
+retry_openai = create_retry_decorator(PS.OPENAI)
 
 valid_multimodal_gpt_models = [
     "gpt-4o",
@@ -95,11 +80,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     # Generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_openai
     def generate(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
@@ -136,11 +117,7 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         else:
             return output, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_openai
     async def a_generate(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
@@ -181,17 +158,13 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
     # Other generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_openai
     def generate_raw_response(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
         top_logprobs: int = 5,
     ) -> Tuple[ParsedChatCompletion, float]:
-        client = OpenAI(api_key=self._openai_api_key)
+        client = self._client()
         prompt = self.generate_prompt(multimodal_input)
         messages = [{"role": "user", "content": prompt}]
         completion = client.chat.completions.create(
@@ -206,17 +179,13 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         cost = self.calculate_cost(input_tokens, output_tokens)
         return completion, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_openai
     async def a_generate_raw_response(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
         top_logprobs: int = 5,
     ) -> Tuple[ParsedChatCompletion, float]:
-        client = AsyncOpenAI(api_key=self._openai_api_key)
+        client = self._client(async_mode=True)
         prompt = self.generate_prompt(multimodal_input)
         messages = [{"role": "user", "content": prompt}]
         completion = await client.chat.completions.create(
@@ -277,6 +246,13 @@ class MultimodalOpenAIModel(DeepEvalBaseMLLM):
         image_bytes = image_buffer.getvalue()
         base64_encoded_image = base64.b64encode(image_bytes).decode("utf-8")
         return base64_encoded_image
+
+    def _client(self, async_mode: bool = False):
+        kw = {"api_key": self._openai_api_key}
+        if not sdk_retries_for(PS.OPENAI):
+            kw["max_retries"] = 0
+        Client = AsyncOpenAI if async_mode else OpenAI
+        return Client(**kw)
 
     def get_model_name(self):
         return self.model_name

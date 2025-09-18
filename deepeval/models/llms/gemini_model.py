@@ -3,10 +3,18 @@ from google.genai import types
 from typing import Optional, Dict
 from google import genai
 
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+)
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseLLM
+from deepeval.constants import ProviderSlug as PS
+
 
 default_gemini_model = "gemini-1.5-pro"
+
+# consistent retry rules
+retry_gemini = create_retry_decorator(PS.GOOGLE)
 
 
 class GeminiModel(DeepEvalBaseLLM):
@@ -145,6 +153,7 @@ class GeminiModel(DeepEvalBaseLLM):
         ]
         return self.client.models
 
+    @retry_gemini
     def generate(self, prompt: str, schema: Optional[BaseModel] = None) -> str:
         """Generates text from a prompt.
 
@@ -180,6 +189,7 @@ class GeminiModel(DeepEvalBaseLLM):
             )
             return response.text, 0
 
+    @retry_gemini
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> str:

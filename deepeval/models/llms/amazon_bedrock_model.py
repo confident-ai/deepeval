@@ -1,10 +1,16 @@
+import asyncio
+
 from typing import Optional, Tuple, Union, Dict
 from contextlib import AsyncExitStack
 from pydantic import BaseModel
-import asyncio
 
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.constants import ProviderSlug as PS
 
 # check aiobotocore availability
 try:
@@ -14,6 +20,9 @@ try:
     aiobotocore_available = True
 except ImportError:
     aiobotocore_available = False
+
+# define retry policy
+retry_bedrock = create_retry_decorator(PS.BEDROCK)
 
 
 def _check_aiobotocore_available():
@@ -53,11 +62,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
 
         # prepare aiobotocore session, config, and async exit stack
         self._session = get_session()
-        self._config = Config(retries={"max_attempts": 5, "mode": "adaptive"})
         self._exit_stack = AsyncExitStack()
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
         self._client = None
+        self._sdk_retry_mode: Optional[bool] = None
 
     ###############################################
     # Generate functions
@@ -68,6 +77,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         return asyncio.run(self.a_generate(prompt, schema))
 
+    @retry_bedrock
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -94,16 +104,33 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     async def _ensure_client(self):
-        if self._client is None:
+        use_sdk = sdk_retries_for(PS.BEDROCK)
+
+        # only rebuild if client is missing or the sdk retry mode changes
+        if self._client is None or self._sdk_retry_mode != use_sdk:
+            # Close any previous
+            if self._client is not None:
+                await self._exit_stack.aclose()
+                self._client = None
+
+            # create retry config for botocore
+            retries_config = {"max_attempts": (5 if use_sdk else 1)}
+            if use_sdk:
+                retries_config["mode"] = "adaptive"
+
+            config = Config(retries=retries_config)
+
             cm = self._session.create_client(
                 "bedrock-runtime",
                 region_name=self.region_name,
                 aws_access_key_id=self.aws_access_key_id,
                 aws_secret_access_key=self.aws_secret_access_key,
-                config=self._config,
+                config=config,
                 **self.kwargs,
             )
             self._client = await self._exit_stack.enter_async_context(cm)
+            self._sdk_retry_mode = use_sdk
+
         return self._client
 
     async def close(self):

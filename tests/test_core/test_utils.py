@@ -1,7 +1,9 @@
-from tenacity.wait import wait_exponential_jitter
-from tenacity.stop import stop_after_attempt
+import pytest
+from tenacity import Retrying, wait_fixed, retry_if_exception_type
+from tenacity.wait import wait_base
+from tenacity.stop import stop_after_attempt, stop_base
 from deepeval.utils import read_env_int, read_env_float
-from deepeval.models.retry_policy import default_wait, default_stop
+from deepeval.models.retry_policy import dynamic_wait, dynamic_stop
 
 
 def test_read_env_int_valid(monkeypatch):
@@ -34,44 +36,99 @@ def test_read_env_float_min(monkeypatch):
     assert read_env_float("X_FLOAT", 2.0, min_value=0.5) == 2.0
 
 
-def test_default_stop_env_override(monkeypatch):
+def test_dynamic_stop_env_override(monkeypatch):
     monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "3")
-    stop = default_stop()
-    assert isinstance(stop, stop_after_attempt)
-    assert stop.max_attempt_number == 3
+    stopper = dynamic_stop()
 
+    # It's our own strategy (subclass of stop_base), not stop_after_attempt
+    assert isinstance(stopper, stop_base)
 
-def test_default_wait_env_override(monkeypatch):
-    monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "0.5")
-    monkeypatch.setenv("DEEPEVAL_RETRY_EXP_BASE", "3")
-    monkeypatch.setenv("DEEPEVAL_RETRY_JITTER", "1.5")
-    monkeypatch.setenv("DEEPEVAL_RETRY_CAP_SECONDS", "9")
+    calls = {"n": 0}
 
-    w = default_wait()
-    assert isinstance(w, wait_exponential_jitter)
-    # Attributes exposed by tenacity's wait_exponential_jitter:
-    assert w.initial == 0.5
-    assert w.exp_base == 3
-    assert w.jitter == 1.5
-    assert w.max == 9
+    def boom():
+        calls["n"] += 1
+        raise ValueError("boom")
 
-
-def test_default_wait_ignores_invalid_env(monkeypatch):
-    monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "nope")
-    monkeypatch.setenv("DEEPEVAL_RETRY_EXP_BASE", "NaN")
-    monkeypatch.setenv("DEEPEVAL_RETRY_JITTER", "bad")
-    monkeypatch.setenv("DEEPEVAL_RETRY_CAP_SECONDS", "-1")
-    w = default_wait()
-    # falls back to defaults (1, 2, 2, 5)
-    assert (
-        w.initial == 1.0
-        and w.exp_base == 2.0
-        and w.jitter == 2.0
-        and w.max == 5.0
+    r = Retrying(
+        stop=stopper,
+        wait=wait_fixed(0),
+        retry=retry_if_exception_type(ValueError),
+        reraise=True,
     )
 
+    with pytest.raises(ValueError):
+        for attempt in r:
+            with attempt:
+                boom()
 
-def test_default_stop_invalid_env_falls_back(monkeypatch):
+    # 3 total attempts = 1 initial + 2 retries
+    assert calls["n"] == 3
+
+
+def test_dynamic_wait_env_override(monkeypatch):
+    # Deterministic (no jitter) + custom params
+    monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "0.5")
+    monkeypatch.setenv("DEEPEVAL_RETRY_EXP_BASE", "3")
+    monkeypatch.setenv("DEEPEVAL_RETRY_JITTER", "0")
+    monkeypatch.setenv("DEEPEVAL_RETRY_CAP_SECONDS", "9")
+
+    w = dynamic_wait()
+    assert isinstance(w, wait_base)  # return a Tenacity wait strategy
+
+    # Record sleeps Tenacity requests between attempts
+    sleeps = []
+
+    def fake_sleep(seconds: float):
+        sleeps.append(seconds)
+
+    calls = {"n": 0}
+
+    def boom():
+        calls["n"] += 1
+        raise ValueError("boom")
+
+    r = Retrying(
+        stop=stop_after_attempt(4),  # total attempts = 4
+        wait=w,  # dynamic wait from env
+        retry=retry_if_exception_type(
+            ValueError
+        ),  # keep retrying on ValueError
+        reraise=True,
+        sleep=fake_sleep,  # capture computed delays
+    )
+
+    with pytest.raises(ValueError):
+        r(boom)
+
+    # With initial=0.5, base=3, jitter=0, cap=9:
+    # waits between attempts:
+    # 1 -> [wait] -> 2, 2 -> [wait] -> 3, 3 -> [wait] -> 4
+    # should be: 0.5, 1.5, 4.5
+    assert sleeps == [0.5, 1.5, 4.5]
+    assert calls["n"] == 4  # attempted exactly 4 times
+
+
+def test_dynamic_stop_invalid_env_falls_back(monkeypatch):
+    # Invalid env should fall back to default attempts=2
     monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "zero?")
-    s = default_stop()
-    assert isinstance(s, stop_after_attempt) and s.max_attempt_number == 2
+    stopper = dynamic_stop()
+    assert isinstance(stopper, stop_base)
+
+    calls = {"n": 0}
+
+    def boom():
+        calls["n"] += 1
+        raise ValueError("boom")
+
+    r = Retrying(
+        stop=stopper,
+        wait=wait_fixed(0),
+        retry=retry_if_exception_type(ValueError),
+        reraise=True,
+    )
+
+    with pytest.raises(ValueError):
+        r(boom)
+
+    # default attempts == 2 means 1 initial try + 1 retry
+    assert calls["n"] == 2

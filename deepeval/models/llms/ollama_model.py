@@ -2,8 +2,16 @@ from ollama import Client, AsyncClient, ChatResponse
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
 
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+)
+
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
+from deepeval.constants import ProviderSlug as PS
+
+
+retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class OllamaModel(DeepEvalBaseLLM):
@@ -34,6 +42,7 @@ class OllamaModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
+    @retry_ollama
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -56,6 +65,7 @@ class OllamaModel(DeepEvalBaseLLM):
             0,
         )
 
+    @retry_ollama
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
@@ -84,9 +94,11 @@ class OllamaModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return Client(host=self.base_url, **self.kwargs)
-        else:
-            return AsyncClient(host=self.base_url, **self.kwargs)
+            return self._build_client(Client)
+        return self._build_client(AsyncClient)
+
+    def _build_client(self, cls):
+        return cls(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"

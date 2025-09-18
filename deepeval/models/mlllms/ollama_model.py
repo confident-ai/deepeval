@@ -5,23 +5,31 @@ import requests
 import base64
 import io
 
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+)
 from deepeval.key_handler import KEY_FILE_HANDLER, ModelKeyValues
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
+from deepeval.config.settings import get_settings
+from deepeval.constants import ProviderSlug as PS
+
+
+retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class MultimodalOllamaModel(DeepEvalBaseMLLM):
-    def __init__(
-        self,
-    ):
+    def __init__(self, **kwargs):
         model_name = KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.LOCAL_MODEL_NAME
         )
         self.base_url = KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.LOCAL_MODEL_BASE_URL
         )
+        self.kwargs = kwargs
         super().__init__(model_name)
 
+    @retry_ollama
     def generate(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
@@ -43,6 +51,7 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
             0,
         )
 
+    @retry_ollama
     async def a_generate(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
@@ -77,12 +86,14 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
                     }
                 )
             elif isinstance(ele, MLLMImage):
-                messages.append(
-                    {
-                        "role": "user",
-                        "images": [self.convert_to_base64(ele.url, ele.local)],
-                    }
-                )
+                img_b64 = self.convert_to_base64(ele.url, ele.local)
+                if img_b64 is not None:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "images": [img_b64],
+                        }
+                    )
         return messages
 
     ###############################################
@@ -92,9 +103,17 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
     def convert_to_base64(self, image_source: str, is_local: bool) -> str:
         from PIL import Image
 
+        settings = get_settings()
         try:
             if not is_local:
-                response = requests.get(image_source, stream=True)
+                response = requests.get(
+                    image_source,
+                    stream=True,
+                    timeout=(
+                        settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                        settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
+                    ),
+                )
                 response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
                 image = Image.open(io.BytesIO(response.content))
             else:
@@ -105,15 +124,21 @@ class MultimodalOllamaModel(DeepEvalBaseMLLM):
             img_str = base64.b64encode(buffered.getvalue()).decode()
             return img_str
 
+        except (requests.exceptions.RequestException, OSError) as e:
+            # Log, then rethrow so @retry_ollama can retry generate_messages() on network failures
+            print(f"Image fetch/encode failed: {e}")
+            raise
         except Exception as e:
             print(f"Error converting image to base64: {e}")
             return None
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return Client(host=self.base_url)
-        else:
-            return AsyncClient(host=self.base_url)
+            return self._build_client(Client)
+        return self._build_client(AsyncClient)
+
+    def _build_client(self, cls):
+        return cls(host=self.base_url, **self.kwargs)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"

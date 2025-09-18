@@ -1,12 +1,22 @@
+import warnings
+
 from typing import Optional, Tuple, Union, Dict
 from anthropic import Anthropic, AsyncAnthropic
 from pydantic import BaseModel
-import os
-import warnings
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
+)
 from deepeval.models.utils import parse_model_name
+from deepeval.config.settings import get_settings
+from deepeval.constants import ProviderSlug as PS
+
+
+# consistent retry rules
+retry_anthropic = create_retry_decorator(PS.ANTHROPIC)
 
 model_pricing = {
     "claude-opus-4-20250514": {"input": 15.00 / 1e6, "output": 75.00 / 1e6},
@@ -45,6 +55,7 @@ class AnthropicModel(DeepEvalBaseLLM):
     # Generate functions
     ###############################################
 
+    @retry_anthropic
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -70,6 +81,7 @@ class AnthropicModel(DeepEvalBaseLLM):
             json_output = trim_and_load_json(message.content[0].text)
             return schema.model_validate(json_output), cost
 
+    @retry_anthropic
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[str, float]:
@@ -128,17 +140,31 @@ class AnthropicModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return Anthropic(
-                api_key=os.environ.get("ANTHROPIC_API_KEY")
-                or self._anthropic_api_key,
-                **self.kwargs,
-            )
-        else:
-            return AsyncAnthropic(
-                api_key=os.environ.get("ANTHROPIC_API_KEY")
-                or self._anthropic_api_key,
-                **self.kwargs,
-            )
+            return self._build_client(Anthropic)
+        return self._build_client(AsyncAnthropic)
 
     def get_model_name(self):
         return f"{self.model_name}"
+
+    def _client_kwargs(self) -> Dict:
+        kwargs = dict(self.kwargs or {})
+        # If we are managing retries with Tenacity, force SDK retries off to avoid double retries.
+        # if the user opts into SDK retries via DEEPEVAL_SDK_RETRY_PROVIDERS, then honor their max_retries.
+        if not sdk_retries_for(PS.ANTHROPIC):
+            kwargs["max_retries"] = 0
+        return kwargs
+
+    def _build_client(self, cls):
+        settings = get_settings()
+        kw = dict(
+            api_key=settings.ANTHROPIC_API_KEY or self._anthropic_api_key,
+            **self._client_kwargs(),
+        )
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # in case older SDKs don’t accept max_retries, drop it and retry
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise

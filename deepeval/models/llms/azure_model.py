@@ -1,9 +1,7 @@
-from tenacity import retry, retry_if_exception_type, wait_exponential_jitter
 from openai.types.chat.chat_completion import ChatCompletion
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from typing import Optional, Tuple, Union, Dict
 from pydantic import BaseModel
-import openai
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
@@ -11,17 +9,18 @@ from deepeval.models.llms.openai_model import (
     structured_outputs_models,
     json_mode_models,
     model_pricing,
-    log_retry_error,
 )
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+    sdk_retries_for,
+)
+
 from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.utils import parse_model_name
+from deepeval.constants import ProviderSlug as PS
 
-retryable_exceptions = (
-    openai.RateLimitError,
-    openai.APIConnectionError,
-    openai.APITimeoutError,
-    openai.LengthFinishReasonError,
-)
+
+retry_azure = create_retry_decorator(PS.AZURE)
 
 
 class AzureOpenAIModel(DeepEvalBaseLLM):
@@ -67,11 +66,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
-        after=log_retry_error,
-    )
+    @retry_azure
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
@@ -130,11 +125,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         else:
             return output, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(openai.RateLimitError),
-        after=log_retry_error,
-    )
+    @retry_azure
     async def a_generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, BaseModel], float]:
@@ -199,11 +190,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_azure
     def generate_raw_response(
         self,
         prompt: str,
@@ -226,11 +213,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
         return completion, cost
 
-    @retry(
-        wait=wait_exponential_jitter(initial=1, exp_base=2, jitter=2, max=10),
-        retry=retry_if_exception_type(retryable_exceptions),
-        after=log_retry_error,
-    )
+    @retry_azure
     async def a_generate_raw_response(
         self,
         prompt: str,
@@ -272,17 +255,33 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     def load_model(self, async_mode: bool = False):
         if not async_mode:
-            return AzureOpenAI(
-                api_key=self.azure_openai_api_key,
-                api_version=self.openai_api_version,
-                azure_endpoint=self.azure_endpoint,
-                azure_deployment=self.deployment_name,
-                **self.kwargs,  # ← Keep this for client initialization
-            )
-        return AsyncAzureOpenAI(
+            return self._build_client(AzureOpenAI)
+        return self._build_client(AsyncAzureOpenAI)
+
+    def _client_kwargs(self) -> Dict:
+        """
+        If Tenacity is managing retries, force OpenAI SDK retries off to avoid double retries.
+        If the user opts into SDK retries for 'azure' via DEEPEVAL_SDK_RETRY_PROVIDERS,
+        leave their retry settings as is.
+        """
+        kwargs = dict(self.kwargs or {})
+        if not sdk_retries_for(PS.AZURE):
+            kwargs["max_retries"] = 0
+        return kwargs
+
+    def _build_client(self, cls):
+        kw = dict(
             api_key=self.azure_openai_api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
             azure_deployment=self.deployment_name,
-            **self.kwargs,  # ← Keep this for client initialization
+            **self._client_kwargs(),
         )
+        try:
+            return cls(**kw)
+        except TypeError as e:
+            # older OpenAI SDKs may not accept max_retries, in that case remove and retry once
+            if "max_retries" in str(e):
+                kw.pop("max_retries", None)
+                return cls(**kw)
+            raise

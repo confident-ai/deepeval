@@ -4,12 +4,19 @@ from pydantic import BaseModel
 from google.genai import types
 from google import genai
 
+from deepeval.models.retry_policy import (
+    create_retry_decorator,
+)
 from deepeval.key_handler import ModelKeyValues, KEY_FILE_HANDLER
 from deepeval.models.base_model import DeepEvalBaseMLLM
 from deepeval.test_case import MLLMImage
+from deepeval.config.settings import get_settings
+from deepeval.constants import ProviderSlug as PS
 
 
 default_multimodal_gemini_model = "gemini-1.5-pro"
+# consistent retry rules
+retry_gemini = create_retry_decorator(PS.GOOGLE)
 
 
 class MultimodalGeminiModel(DeepEvalBaseMLLM):
@@ -147,6 +154,8 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         self.model_temperature = 0.0
         return self.client.models
 
+    # TODO: Refactor genete prompt to minimize the work done on retry
+    @retry_gemini
     def generate_prompt(
         self, multimodal_input: List[Union[str, MLLMImage]] = []
     ) -> List[Union[str, MLLMImage]]:
@@ -162,6 +171,8 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             ValueError: If an invalid input type is provided
         """
         prompt = []
+        settings = get_settings()
+
         for ele in multimodal_input:
             if isinstance(ele, str):
                 prompt.append(ele)
@@ -170,9 +181,14 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                     with open(ele.url, "rb") as f:
                         image_data = f.read()
                 else:
-                    response = requests.get(ele.url)
-                    if response.status_code != 200:
-                        raise ValueError(f"Failed to download image: {ele.url}")
+                    response = requests.get(
+                        ele.url,
+                        timeout=(
+                            settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
+                            settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
+                        ),
+                    )
+                    response.raise_for_status()
                     image_data = response.content
 
                 image_part = types.Part.from_bytes(
@@ -183,6 +199,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 raise ValueError(f"Invalid input type: {type(ele)}")
         return prompt
 
+    @retry_gemini
     def generate(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
@@ -222,6 +239,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             )
             return response.text, 0
 
+    @retry_gemini
     async def a_generate(
         self,
         multimodal_input: List[Union[str, MLLMImage]],
