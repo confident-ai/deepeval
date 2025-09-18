@@ -570,7 +570,7 @@ class EvaluationDataset:
         ):
             if scenario:
                 self._multi_turn = True
-                parsed_turns = parse_turns(turns)
+                parsed_turns = parse_turns(turns) if turns else []
                 self.goldens.append(
                     ConversationalGolden(
                         scenario=scenario,
