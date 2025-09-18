@@ -1,6 +1,10 @@
 import os
-from deepeval.integrations.portkey import Portkey, instrument_portkey
-instrument_portkey()
+from deepeval.integrations.portkey import Portkey
+
+from deepeval.prompt import Prompt
+
+prompt = Prompt(alias="asd")
+prompt.pull(version="00.00.01")
 
 config = {
     "provider": 'openai',
@@ -10,12 +14,15 @@ config = {
 client = Portkey(config = config)
 
 def execute_chat_completion():
-    # Example: Send a chat completion request
     response = client.chat.completions.create(
-        messages=[{"role": "user", "content": "Hello, how are you?"}],
+        messages=[
+            # {"role": "system", "content": prompt.interpolate(name=)},
+            {"role": "user", "content": "Hello, how are you?"}
+        ],
         model="gpt-4o", 
-        metric_collection="test_collection_1"
+        metric_collection="test_collection_1",
+        prompt=prompt,
     )
     print(response.choices[0].message.content)
 
-execute_chat_completion()
+# execute_chat_completion()

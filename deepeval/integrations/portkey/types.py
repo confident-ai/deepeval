@@ -1,6 +1,7 @@
 from typing import Optional, List
 from deepeval.metrics.base_metric import BaseMetric
-from deepeval.tracing.tracing import Observer
+from deepeval.prompt import Prompt
+
 try: 
     from portkey_ai import Portkey
     from portkey_ai.api_resources.apis.chat_complete import Completions, ChatCompletion
@@ -20,9 +21,16 @@ class _DeepevalCompletions(Completions):
         *args,
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
+        prompt: Optional[Prompt] = None,
         **kwargs
     ):
-        return super().create(*args, metrics=metrics, metric_collection=metric_collection, **kwargs)
+        return super().create(
+            *args, 
+            metrics=metrics, 
+            metric_collection=metric_collection, 
+            prompt=prompt,
+            **kwargs
+        )
 
 class _DeepevalChatCompletion(ChatCompletion):
     completions: _DeepevalCompletions

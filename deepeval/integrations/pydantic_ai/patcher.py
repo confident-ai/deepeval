@@ -18,7 +18,7 @@ try:
     from pydantic_ai.messages import ModelResponse, ModelRequest, ModelResponsePart, TextPart, ToolCallPart, SystemPromptPart, ToolReturnPart, UserPromptPart
     pydantic_ai_installed = True
 except:
-    pydantic_ai_installed = True
+    pydantic_ai_installed = False
 
 def _patch_agent_tool_decorator():
     original_tool = Agent.tool

@@ -3,6 +3,7 @@ from deepeval.tracing.context import current_span_context
 from deepeval.tracing.tracing import Observer
 from typing import Optional, List
 from deepeval.metrics.base_metric import BaseMetric
+from deepeval.prompt import Prompt
 
 try:
     from portkey_ai.api_resources.apis.chat_complete import Completions
@@ -32,6 +33,7 @@ def _safe_patch_portkey_chat_completion_completions():
         *args,
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
+        prompt: Prompt,
         **kwargs
     ):
         with Observer(
@@ -43,7 +45,10 @@ def _safe_patch_portkey_chat_completion_completions():
         ) as observer:
             result = original_create(*args, **kwargs)
             observer.result = extract_llm_output_from_chat_completion_messages(result)
-            current_span_context.get().input = kwargs.get("messages")
+            _current_span_context= current_span_context.get()
+            _current_span_context.input = kwargs.get("messages")
+            _current_span_context.prompt = prompt
+
         return result
 
     new_create._deepeval_patched = True
