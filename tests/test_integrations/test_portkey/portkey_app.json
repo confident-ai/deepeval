@@ -1,12 +1,12 @@
 {
   "agentSpans": [],
   "baseSpans": [],
-  "endTime": "2025-09-14T14:32:55.155Z",
+  "endTime": "2025-09-18T13:43:56.107Z",
   "environment": "development",
   "input": {},
   "llmSpans": [
     {
-      "endTime": "2025-09-14T14:32:55.155Z",
+      "endTime": "2025-09-18T13:43:56.107Z",
       "input": [
         {
           "content": "Hello, how are you?",
@@ -22,8 +22,11 @@
           "role": "AI"
         }
       ],
-      "prompt": {},
-      "startTime": "2025-09-14T14:32:53.801Z",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "startTime": "2025-09-18T13:43:54.338Z",
       "status": "SUCCESS",
       "type": "llm",
       "uuid": "<is_present>"
@@ -37,7 +40,7 @@
     }
   ],
   "retrieverSpans": [],
-  "startTime": "2025-09-14T14:32:53.801Z",
+  "startTime": "2025-09-18T13:43:54.338Z",
   "status": "SUCCESS",
   "toolSpans": [],
   "uuid": "<is_present>"
