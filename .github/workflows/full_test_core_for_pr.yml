@@ -1,4 +1,4 @@
-name: Full Tests (maintainer only)
+name: Full Core Tests (maintainer only)
 
 on:
   workflow_dispatch:
@@ -80,8 +80,12 @@ jobs:
       # Run Core tests
       - name: Run core tests (with secrets)
         if: ${{ env.OPENAI_API_KEY != '' }}
+        env:
+          PYTHONFAULTHANDLER: "1"
+          PYTHONASYNCIODEBUG: "1"
         run: |
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys \
+            -o faulthandler_timeout=300 --durations=25 \
             tests/test_core/ \
             --ignore=tests/test_core/test_synthesizer/ \
             --ignore=tests/test_core/test_datasets/
