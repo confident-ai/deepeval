@@ -29,7 +29,7 @@ def test_everything(test_case: LLMTestCase):
             LLMTestCaseParams.ACTUAL_OUTPUT,
             LLMTestCaseParams.EXPECTED_OUTPUT,
         ],
-        strict=True,
+        strict_mode=True,
     )
     assert_test(test_case, [answer_relevancy_metric, correctness_metric])
 
