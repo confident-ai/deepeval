@@ -42,7 +42,6 @@ from deepeval.tracing.api import (
     BaseApiSpan,
 )
 from deepeval.dataset import Golden
-from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.utils import (
@@ -1719,10 +1718,6 @@ def execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
-        try:
-            global_evaluation_tasks.clear_tasks()
-        except Exception:
-            pass
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -2069,10 +2064,6 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
-        try:
-            global_evaluation_tasks.clear_tasks()
-        except Exception:
-            pass
 
 
 async def _a_evaluate_traces(

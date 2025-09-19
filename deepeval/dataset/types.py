@@ -23,6 +23,3 @@ class EvaluationTasks:
             if not t.done():
                 t.cancel()
         self._tasks.clear()
-
-
-global_evaluation_tasks = EvaluationTasks()
