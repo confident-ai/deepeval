@@ -45,13 +45,13 @@ class DeepEvalPydanticAIAgent(Agent):
     def __init__(
         self,
         *args,
-        name: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[dict] = None,
-        thread_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        metric_collection: Optional[str] = None,
-        metrics: Optional[List[BaseMetric]] = None, 
+        trace_name: Optional[str] = None,
+        trace_tags: Optional[List[str]] = None,
+        trace_metadata: Optional[dict] = None,
+        trace_thread_id: Optional[str] = None,
+        trace_user_id: Optional[str] = None,
+        trace_metric_collection: Optional[str] = None,
+        trace_metrics: Optional[List[BaseMetric]] = None, 
         llm_metric_collection: Optional[str] = None,
         llm_metrics: Optional[List[BaseMetric]] = None,
         llm_prompt: Optional[Prompt] = None,
@@ -61,13 +61,13 @@ class DeepEvalPydanticAIAgent(Agent):
     ):
         pydantic_ai_installed()
 
-        self.trace_name = name
-        self.trace_tags = tags
-        self.trace_metadata = metadata
-        self.trace_thread_id = thread_id
-        self.trace_user_id = user_id
-        self.trace_metric_collection = metric_collection
-        self.trace_metrics = metrics
+        self.trace_name = trace_name
+        self.trace_tags = trace_tags
+        self.trace_metadata = trace_metadata
+        self.trace_thread_id = trace_thread_id
+        self.trace_user_id = trace_user_id
+        self.trace_metric_collection = trace_metric_collection
+        self.trace_metrics = trace_metrics
         
         self.llm_metric_collection = llm_metric_collection
         self.llm_metrics = llm_metrics
@@ -84,13 +84,13 @@ class DeepEvalPydanticAIAgent(Agent):
     async def run(
         self,
         *args,
-        name: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        user_id: Optional[str] = None,
-        metadata: Optional[dict] = None,
-        thread_id: Optional[str] = None,
-        metrics: Optional[List[BaseMetric]] = None,
-        metric_collection: Optional[str] = None,
+        trace_name: Optional[str] = None,
+        trace_tags: Optional[List[str]] = None,
+        trace_user_id: Optional[str] = None,
+        trace_metadata: Optional[dict] = None,
+        trace_thread_id: Optional[str] = None,
+        trace_metrics: Optional[List[BaseMetric]] = None,
+        trace_metric_collection: Optional[str] = None,
         **kwargs
     ):
         sig = inspect.signature(super().run)
@@ -111,13 +111,13 @@ class DeepEvalPydanticAIAgent(Agent):
             observer.result = result.output
             update_trace_context(
                 
-                trace_name=name if name is not None else self.trace_name,
-                trace_tags=tags if tags is not None else self.trace_tags,
-                trace_metadata=metadata if metadata is not None else self.trace_metadata,
-                trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
-                trace_user_id=user_id if user_id is not None else self.trace_user_id,
-                trace_metric_collection=metric_collection if metric_collection is not None else self.trace_metric_collection,
-                trace_metrics=metrics if metrics is not None else self.trace_metrics,
+                trace_name=trace_name if trace_name is not None else self.trace_name,
+                trace_tags=trace_tags if trace_tags is not None else self.trace_tags,
+                trace_metadata=trace_metadata if trace_metadata is not None else self.trace_metadata,
+                trace_thread_id=trace_thread_id if trace_thread_id is not None else self.trace_thread_id,
+                trace_user_id=trace_user_id if trace_user_id is not None else self.trace_user_id,
+                trace_metric_collection=trace_metric_collection if trace_metric_collection is not None else self.trace_metric_collection,
+                trace_metrics=trace_metrics if trace_metrics is not None else self.trace_metrics,
                 
                 trace_input=input,
                 trace_output=result.output,
@@ -136,13 +136,13 @@ class DeepEvalPydanticAIAgent(Agent):
     def run_sync(
         self,
         *args,
-        name: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[dict] = None,
-        thread_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        metric_collection: Optional[str] = None,
-        metrics: Optional[List[BaseMetric]] = None,
+        trace_name: Optional[str] = None,
+        trace_tags: Optional[List[str]] = None,
+        trace_metadata: Optional[dict] = None,
+        trace_thread_id: Optional[str] = None,
+        trace_user_id: Optional[str] = None,
+        trace_metric_collection: Optional[str] = None,
+        trace_metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
         sig = inspect.signature(super().run_sync)
@@ -169,13 +169,13 @@ class DeepEvalPydanticAIAgent(Agent):
             observer.result = result.output
             update_trace_context(
                 
-                trace_name=name if name is not None else self.trace_name,
-                trace_tags=tags if tags is not None else self.trace_tags,
-                trace_metadata=metadata if metadata is not None else self.trace_metadata,
-                trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
-                trace_user_id=user_id if user_id is not None else self.trace_user_id,
-                trace_metric_collection=metric_collection if metric_collection is not None else self.trace_metric_collection,
-                trace_metrics=metrics if metrics is not None else self.trace_metrics,
+                trace_name=trace_name if trace_name is not None else self.trace_name,
+                trace_tags=trace_tags if trace_tags is not None else self.trace_tags,
+                trace_metadata=trace_metadata if trace_metadata is not None else self.trace_metadata,
+                trace_thread_id=trace_thread_id if trace_thread_id is not None else self.trace_thread_id,
+                trace_user_id=trace_user_id if trace_user_id is not None else self.trace_user_id,
+                trace_metric_collection=trace_metric_collection if trace_metric_collection is not None else self.trace_metric_collection,
+                trace_metrics=trace_metrics if trace_metrics is not None else self.trace_metrics,
                 
                 trace_input=input,
                 trace_output=result.output,
@@ -196,13 +196,13 @@ class DeepEvalPydanticAIAgent(Agent):
     async def run_stream(
         self,
         *args,
-        name: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[dict] = None,
-        thread_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        metric_collection: Optional[str] = None,
-        metrics: Optional[List[BaseMetric]] = None,
+        trace_name: Optional[str] = None,
+        trace_tags: Optional[List[str]] = None,
+        trace_metadata: Optional[dict] = None,
+        trace_thread_id: Optional[str] = None,
+        trace_user_id: Optional[str] = None,
+        trace_metric_collection: Optional[str] = None,
+        trace_metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
         sig = inspect.signature(super().run_stream)
@@ -233,13 +233,13 @@ class DeepEvalPydanticAIAgent(Agent):
                         pass
 
                     update_trace_context(
-                        trace_name=name if name is not None else self.trace_name,
-                        trace_tags=tags if tags is not None else self.trace_tags,
-                        trace_metadata=metadata if metadata is not None else self.trace_metadata,
-                        trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
-                        trace_user_id=user_id if user_id is not None else self.trace_user_id,
-                        trace_metric_collection=metric_collection if metric_collection is not None else self.trace_metric_collection,
-                        trace_metrics=metrics if metrics is not None else self.trace_metrics,
+                        trace_name=trace_name if trace_name is not None else self.trace_name,
+                        trace_tags=trace_tags if trace_tags is not None else self.trace_tags,
+                        trace_metadata=trace_metadata if trace_metadata is not None else self.trace_metadata,
+                        trace_thread_id=trace_thread_id if trace_thread_id is not None else self.trace_thread_id,
+                        trace_user_id=trace_user_id if trace_user_id is not None else self.trace_user_id,
+                        trace_metric_collection=trace_metric_collection if trace_metric_collection is not None else self.trace_metric_collection,
+                        trace_metrics=trace_metrics if trace_metrics is not None else self.trace_metrics,
                         trace_input=input,
                         trace_output=(final_result if final_result is not None else None),
                     )
