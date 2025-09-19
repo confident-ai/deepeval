@@ -969,13 +969,14 @@ def observe(
 
         # Async generator function
         if inspect.isasyncgenfunction(func):
+
             @functools.wraps(func)
             def asyncgen_wrapper(*args, **func_kwargs):
 
                 sig = inspect.signature(func)
                 bound = sig.bind(*args, **func_kwargs)
                 bound.apply_defaults()
-                
+
                 complete_kwargs = dict(bound.arguments)
                 if "self" in complete_kwargs:
                     complete_kwargs["self"] = replace_self_with_class_name(
@@ -995,6 +996,7 @@ def observe(
                 )
                 observer.__enter__()
                 agen = func(*args, **func_kwargs)
+
                 async def gen():
                     try:
                         async for chunk in agen:
@@ -1003,13 +1005,15 @@ def observe(
                     except Exception as e:
                         observer.__exit__(type(e), e, e.__traceback__)
                         raise
+
                 return gen()
-                
+
             setattr(asyncgen_wrapper, "_is_deepeval_observed", True)
             return asyncgen_wrapper
 
         # Sync generator function
         if inspect.isgeneratorfunction(func):
+
             @functools.wraps(func)
             def gen_wrapper(*args, **func_kwargs):
 
@@ -1026,7 +1030,7 @@ def observe(
                     "observe_kwargs": observe_kwargs,
                     "function_kwargs": make_json_serializable(complete_kwargs),
                 }
-                
+
                 observer = Observer(
                     type,
                     metrics=metrics,
@@ -1036,6 +1040,7 @@ def observe(
                 )
                 observer.__enter__()
                 original_gen = func(*args, **func_kwargs)
+
                 def gen():
                     try:
                         yield from original_gen
@@ -1043,6 +1048,7 @@ def observe(
                     except Exception as e:
                         observer.__exit__(type(e), e, e.__traceback__)
                         raise
+
                 return gen()
 
             setattr(gen_wrapper, "_is_deepeval_observed", True)
