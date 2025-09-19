@@ -8,13 +8,8 @@ from pydantic import BaseModel
 from pydantic_ai import RunContext
 from deepeval.integrations.pydantic_ai import Agent
 from deepeval.prompt import Prompt
-from deepeval.integrations.pydantic_ai import instrument_pydantic_ai
-# instrument_pydantic_ai()
-
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
-
-instrument_pydantic_ai()
 
 @dataclass
 class Deps:
@@ -87,11 +82,11 @@ async def run_agent(input_query: str):
             input_query,
             deps=deps,
             # metric_collection="test_collection_1",
-            # name="test_trace_1",
+            name="test_trace_2",
             # tags=["test_tag_1"],
             # metadata={"test_metadata_1": "test_metadata_1"},
             # thread_id="test_thread_id_1",
-            # user_id="test_user_id_1",
+            user_id="test_user_id_2",
         )
 
         return result.output

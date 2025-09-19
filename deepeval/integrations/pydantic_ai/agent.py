@@ -165,7 +165,7 @@ class DeepEvalPydanticAIAgent(Agent):
             update_trace_context(
                 
                 trace_name=name if name is not None else self.trace_name,
-                trace_tags=self.tags if self.tags else tags,
+                trace_tags=tags if tags is not None else self.trace_tags,
                 trace_metadata=metadata if metadata is not None else self.trace_metadata,
                 trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
                 trace_user_id=user_id if user_id is not None else self.trace_user_id,
