@@ -1,10 +1,10 @@
-from typing import List, Optional, Any
+import asyncio
+import inspect
 import json
 import re
 
+from typing import List, Optional, Any
 from opentelemetry.trace import Tracer
-from opentelemetry import trace
-from opentelemetry.trace import NoOpTracerProvider
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
@@ -174,3 +174,31 @@ def check_tracer(tracer: Optional[Tracer] = None) -> Tracer:
         )
 
     return GLOBAL_TEST_RUN_TRACER
+
+
+def coerce_to_task(obj: Any) -> asyncio.Future[Any]:
+    # already a Task so just return it
+    if isinstance(obj, asyncio.Task):
+        return obj
+
+    # If it is a future, it is already scheduled, so just return it
+    if asyncio.isfuture(obj):
+        # type: ignore[return-value]  # it is an awaitable, gather accepts it
+        return obj
+
+    # bare coroutine must be explicitly scheduled using create_task to bind to loop & track
+    if asyncio.iscoroutine(obj):
+        return asyncio.create_task(obj)
+
+    # generic awaitable (any object with __await__) will need to be wrapped so create_task accepts it
+    if inspect.isawaitable(obj):
+
+        async def _wrap(awaitable):
+            return await awaitable
+
+        return asyncio.create_task(_wrap(obj))
+
+    # not awaitable, so time to sound the alarm!
+    raise TypeError(
+        f"Expected Task/Future/coroutine/awaitable, got {type(obj).__name__}"
+    )

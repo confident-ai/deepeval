@@ -112,7 +112,7 @@ def execute_test_cases(
     _is_assert_test: bool = False,
 ) -> List[TestResult]:
     global_test_run_cache_manager.disable_write_cache = (
-        cache_config.write_cache == False
+        cache_config.write_cache is False
     )
 
     if test_run_manager is None:
@@ -357,7 +357,7 @@ async def a_execute_test_cases(
             return await func(*args, **kwargs)
 
     global_test_run_cache_manager.disable_write_cache = (
-        cache_config.write_cache == False
+        cache_config.write_cache is False
     )
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
@@ -1041,7 +1041,7 @@ def execute_agentic_test_cases(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Running Component-Level Evals (sync)",
+                "Running Component-Level Evals (sync)",
                 total=len(goldens) * 2,
             )
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
@@ -1551,7 +1551,7 @@ def execute_agentic_test_cases_from_loop(
                             tools_called=span.tools_called,
                             expected_tools=span.expected_tools,
                         )
-                    if span.metrics == None or llm_test_case == None:
+                    if span.metrics is None or llm_test_case is None:
                         return
 
                     has_task_completion = any(
@@ -1692,7 +1692,7 @@ def execute_agentic_test_cases_from_loop(
             with progress:
                 pbar_id = add_pbar(
                     progress,
-                    f"Running Component-Level Evals (sync)",
+                    "Running Component-Level Evals (sync)",
                     total=len(goldens) * 2,
                 )
                 yield from evaluate_test_cases(
@@ -1706,6 +1706,10 @@ def execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        try:
+            global_evaluation_tasks.clear_tasks()
+        except Exception:
+            pass
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -1742,7 +1746,15 @@ def a_execute_agentic_test_cases_from_loop(
         pbar_id: Optional[int] = None,
         pbar_callback_id: Optional[int] = None,
     ):
+        # Tasks we scheduled during this iterator run on this event loop.
+        # by gathering these tasks we can avoid re-awaiting coroutines which
+        # can cause cross loop mixups that trigger "future belongs to a different loop" errors
+        created_tasks: list[asyncio.Task] = []
+
         def create_callback_task(coro, **kwargs):
+            # Wrap the user coroutine in our semaphore runner and bind it to THIS loop.
+            # Keep the resulting Task so we can gather tasks (not raw coroutines) later,
+            # without touching tasks from other loops or already awaited coroutines.
             task = loop.create_task(execute_callback_with_semaphore(coro))
 
             def on_task_done(t: asyncio.Task):
@@ -1750,25 +1762,26 @@ def a_execute_agentic_test_cases_from_loop(
                 update_pbar(progress, pbar_id)
 
             task.add_done_callback(on_task_done)
+            created_tasks.append(task)
             return task
 
         asyncio.create_task = create_callback_task
 
         try:
             for golden in goldens:
+                prev_task_length = len(created_tasks)
                 yield golden
-                if global_evaluation_tasks.num_tasks() == 0:
+                # if this golden created no tasks, bump bars now
+                if len(created_tasks) == prev_task_length:
                     update_pbar(progress, pbar_callback_id)
                     update_pbar(progress, pbar_id)
         finally:
             asyncio.create_task = original_create_task
 
-        if global_evaluation_tasks.num_tasks() > 0:
-            loop.run_until_complete(
-                asyncio.gather(
-                    *global_evaluation_tasks.get_tasks(),
-                )
-            )
+        if created_tasks:
+            # Only await tasks we created on this loop in this run.
+            # This will prevent re-awaiting and avoids cross loop "future belongs to a different loop" errors
+            loop.run_until_complete(asyncio.gather(*created_tasks))
 
         # Evaluate traces
         asyncio.create_task = loop.create_task
@@ -1863,7 +1876,7 @@ def a_execute_agentic_test_cases_from_loop(
             with progress:
                 pbar_id = add_pbar(
                     progress,
-                    f"Running Component-Level Evals (async)",
+                    "Running Component-Level Evals (async)",
                     total=len(goldens) * 2,
                 )
                 pbar_callback_id = add_pbar(
@@ -1884,6 +1897,10 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        try:
+            global_evaluation_tasks.clear_tasks()
+        except Exception:
+            pass
 
 
 async def _a_evaluate_traces(
