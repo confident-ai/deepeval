@@ -49,7 +49,6 @@ from deepeval.utils import (
 from deepeval.test_run import (
     global_test_run_manager,
 )
-from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing import trace_manager
 from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
@@ -1238,7 +1237,7 @@ class EvaluationDataset:
                 )
 
     def evaluate(self, task: Task):
-        global_evaluation_tasks.append(coerce_to_task(task))
+        coerce_to_task(task)
 
     def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
         _tracer = check_tracer(tracer)
