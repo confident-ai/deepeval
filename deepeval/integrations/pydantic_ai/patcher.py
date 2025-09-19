@@ -37,7 +37,7 @@ try:
 
     pydantic_ai_installed = True
 except:
-    pydantic_ai_installed = True
+    pydantic_ai_installed = False
 
 _IN_RUN_SYNC = ContextVar("deepeval_in_run_sync", default=False)
 _INSTRUMENTED = False
