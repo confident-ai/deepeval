@@ -27,17 +27,19 @@ agent = Agent(
 )
 
 async def execute_agent_stream():
-    async with agent.run_stream("What is the weather in London?", trace_name="test_name_2") as result:
+    async with agent.run_stream("What is the weather in London?", name="test_name_2") as result:
         async for chunk in result.stream_text(delta=True):
             print(chunk, end="", flush=True)
         final = await result.get_output()
         print("\n\nFinal:", final)        
 
 async def execute_agent_run():
-    result = await agent.run("What is the weather in London?", trace_name="test_name_4")
+    result = await agent.run("What is the weather in London?", name="test_name_4")
     print(result.output)
 
 def execute_all():
     asyncio.run(execute_agent_stream())
-    agent.run_sync("What is the weather in London?", trace_name="test_name_3")
+    agent.run_sync("What is the weather in London?", name="test_name_3")
     asyncio.run(execute_agent_run())
+
+execute_all()

@@ -82,11 +82,11 @@ async def run_agent(input_query: str):
             input_query,
             deps=deps,
             # metric_collection="test_collection_1",
-            trace_name="test_trace_2",
+            name="test_trace_2",
             # tags=["test_tag_1"],
             # metadata={"test_metadata_1": "test_metadata_1"},
             # thread_id="test_thread_id_1",
-            trace_user_id="test_user_id_2",
+            user_id="test_user_id_2",
         )
 
         return result.output
@@ -95,3 +95,5 @@ async def run_agent(input_query: str):
 def execute_agent():
     output = asyncio.run(run_agent("What's the weather in Paris?"))
     return output
+
+execute_agent()
