@@ -967,6 +967,93 @@ def observe(
     def decorator(func):
         func_name = func.__name__  # Get func_name outside wrappers
 
+        # Async generator function
+        if inspect.isasyncgenfunction(func):
+
+            @functools.wraps(func)
+            def asyncgen_wrapper(*args, **func_kwargs):
+
+                sig = inspect.signature(func)
+                bound = sig.bind(*args, **func_kwargs)
+                bound.apply_defaults()
+
+                complete_kwargs = dict(bound.arguments)
+                if "self" in complete_kwargs:
+                    complete_kwargs["self"] = replace_self_with_class_name(
+                        complete_kwargs["self"]
+                    )
+                observer_kwargs = {
+                    "observe_kwargs": observe_kwargs,
+                    "function_kwargs": complete_kwargs,
+                }
+
+                observer = Observer(
+                    type,
+                    metrics=metrics,
+                    metric_collection=metric_collection,
+                    func_name=func_name,
+                    **observer_kwargs,
+                )
+                observer.__enter__()
+                agen = func(*args, **func_kwargs)
+
+                async def gen():
+                    try:
+                        async for chunk in agen:
+                            yield chunk
+                        observer.__exit__(None, None, None)
+                    except Exception as e:
+                        observer.__exit__(type(e), e, e.__traceback__)
+                        raise
+
+                return gen()
+
+            setattr(asyncgen_wrapper, "_is_deepeval_observed", True)
+            return asyncgen_wrapper
+
+        # Sync generator function
+        if inspect.isgeneratorfunction(func):
+
+            @functools.wraps(func)
+            def gen_wrapper(*args, **func_kwargs):
+
+                sig = inspect.signature(func)
+                bound = sig.bind(*args, **func_kwargs)
+                bound.apply_defaults()
+                complete_kwargs = dict(bound.arguments)
+
+                if "self" in complete_kwargs:
+                    complete_kwargs["self"] = replace_self_with_class_name(
+                        complete_kwargs["self"]
+                    )
+                observer_kwargs = {
+                    "observe_kwargs": observe_kwargs,
+                    "function_kwargs": make_json_serializable(complete_kwargs),
+                }
+
+                observer = Observer(
+                    type,
+                    metrics=metrics,
+                    metric_collection=metric_collection,
+                    func_name=func_name,
+                    **observer_kwargs,
+                )
+                observer.__enter__()
+                original_gen = func(*args, **func_kwargs)
+
+                def gen():
+                    try:
+                        yield from original_gen
+                        observer.__exit__(None, None, None)
+                    except Exception as e:
+                        observer.__exit__(type(e), e, e.__traceback__)
+                        raise
+
+                return gen()
+
+            setattr(gen_wrapper, "_is_deepeval_observed", True)
+            return gen_wrapper
+
         if asyncio.iscoroutinefunction(func):
 
             @functools.wraps(func)
