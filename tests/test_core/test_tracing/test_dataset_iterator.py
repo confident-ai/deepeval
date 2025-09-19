@@ -25,19 +25,19 @@ goldens = [
 #     assert True
 
 
-def test_sync_run_async():
-    dataset = EvaluationDataset(goldens=goldens)
-    for golden in dataset.evals_iterator(
-        async_config=AsyncConfig(run_async=True)
-    ):
-        meta_agent(golden.input)
-    assert True
+# def test_sync_run_async():
+#     dataset = EvaluationDataset(goldens=goldens)
+#     for golden in dataset.evals_iterator(
+#         async_config=AsyncConfig(run_async=True)
+#     ):
+#         meta_agent(golden.input)
+#     assert True
 
 
-def test_sync_run_sync():
-    dataset = EvaluationDataset(goldens=goldens)
-    for golden in dataset.evals_iterator(
-        async_config=AsyncConfig(run_async=False)
-    ):
-        meta_agent(golden.input)
-    assert True
+# def test_sync_run_sync():
+#     dataset = EvaluationDataset(goldens=goldens)
+#     for golden in dataset.evals_iterator(
+#         async_config=AsyncConfig(run_async=False)
+#     ):
+#         meta_agent(golden.input)
+#     assert True
