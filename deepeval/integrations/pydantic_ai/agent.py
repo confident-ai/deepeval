@@ -107,13 +107,15 @@ class DeepEvalPydanticAIAgent(Agent):
             result = await super().run(*args, **kwargs)
             observer.result = result.output
             update_trace_context(
-                trace_name=self.name if self.name else name,
-                trace_tags=self.trace_tags if self.trace_tags else tags,
-                trace_metadata=self.trace_metadata if self.trace_metadata else metadata,
-                trace_thread_id=self.trace_thread_id if self.trace_thread_id else thread_id,
-                trace_user_id=self.trace_user_id if self.trace_user_id else user_id,
-                trace_metric_collection=self.trace_metric_collection if self.trace_metric_collection else metric_collection,
-                trace_metrics=self.trace_metrics if self.trace_metrics else metrics,
+                
+                trace_name=name if name is not None else self.trace_name,
+                trace_tags=tags if tags is not None else self.trace_tags,
+                trace_metadata=metadata if metadata is not None else self.trace_metadata,
+                trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
+                trace_user_id=user_id if user_id is not None else self.trace_user_id,
+                trace_metric_collection=metric_collection if metric_collection is not None else self.trace_metric_collection,
+                trace_metrics=metrics if metrics is not None else self.trace_metrics,
+                
                 trace_input=input,
                 trace_output=result.output,
             )
@@ -161,13 +163,15 @@ class DeepEvalPydanticAIAgent(Agent):
 
             observer.result = result.output
             update_trace_context(
-                trace_name=self.name if self.name else name,
+                
+                trace_name=name if name is not None else self.trace_name,
                 trace_tags=self.tags if self.tags else tags,
-                trace_metadata=self.metadata if self.metadata else metadata,
-                trace_thread_id=self.thread_id if self.thread_id else thread_id,
-                trace_user_id=self.user_id if self.user_id else user_id,
-                trace_metric_collection=self.trace_metric_collection if self.trace_metric_collection else metric_collection,
-                trace_metrics=self.trace_metrics if self.trace_metrics else metrics,
+                trace_metadata=metadata if metadata is not None else self.trace_metadata,
+                trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
+                trace_user_id=user_id if user_id is not None else self.trace_user_id,
+                trace_metric_collection=metric_collection if metric_collection is not None else self.trace_metric_collection,
+                trace_metrics=metrics if metrics is not None else self.trace_metrics,
+                
                 trace_input=input,
                 trace_output=result.output,
             )
