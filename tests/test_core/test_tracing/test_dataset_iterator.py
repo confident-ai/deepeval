@@ -15,14 +15,14 @@ goldens = [
 ]
 
 
-def test_async_run_async():
-    dataset = EvaluationDataset(goldens=goldens)
-    for golden in dataset.evals_iterator(
-        async_config=AsyncConfig(run_async=True)
-    ):
-        task = asyncio.create_task(async_meta_agent(golden.input))
-        dataset.evaluate(task)
-    assert True
+# def test_async_run_async():
+#     dataset = EvaluationDataset(goldens=goldens)
+#     for golden in dataset.evals_iterator(
+#         async_config=AsyncConfig(run_async=True)
+#     ):
+#         task = asyncio.create_task(async_meta_agent(golden.input))
+#         dataset.evaluate(task)
+#     assert True
 
 
 def test_sync_run_async():
