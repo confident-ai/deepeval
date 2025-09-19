@@ -1,15 +1,17 @@
-from typing import Optional, List
 import inspect
+from typing import Optional, List
 from contextvars import ContextVar
 
-from deepeval.metrics.base_metric import BaseMetric
 from deepeval.prompt import Prompt
+from deepeval.tracing.types import AgentSpan
 from deepeval.tracing.tracing import Observer
+from deepeval.metrics.base_metric import BaseMetric
+from deepeval.tracing.context import current_span_context
+from deepeval.integrations.pydantic_ai.utils import extract_tools_called
 
 try:
     from pydantic_ai.agent import Agent
-    from deepeval.integrations.pydantic_ai.patcher import create_patched_tool
-    from deepeval.integrations.pydantic_ai.patcher import patch_llm_model, update_trace_context
+    from deepeval.integrations.pydantic_ai.utils import create_patched_tool, update_trace_context, patch_llm_model
     is_pydantic_ai_installed = True
 except:
     is_pydantic_ai_installed = False
@@ -24,16 +26,18 @@ _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
 
 class DeepEvalPydanticAIAgent(Agent):
 
-    name: Optional[str] = None
-    tags: Optional[List[str]] = None
-    metadata: Optional[dict] = None
-    thread_id: Optional[str] = None
-    user_id: Optional[str] = None
-    trace_metric_collection: Optional[str] = None # trace metric collection
-    trace_metrics: Optional[List[BaseMetric]] = None # trace metrics
+    trace_name: Optional[str] = None
+    trace_tags: Optional[List[str]] = None
+    trace_metadata: Optional[dict] = None
+    trace_thread_id: Optional[str] = None
+    trace_user_id: Optional[str] = None
+    trace_metric_collection: Optional[str] = None
+    trace_metrics: Optional[List[BaseMetric]] = None 
+    
     llm_prompt: Optional[Prompt] = None
     llm_metrics: Optional[List[BaseMetric]] = None
     llm_metric_collection: Optional[str] = None
+    
     agent_metrics: Optional[List[BaseMetric]] = None
     agent_metric_collection: Optional[str] = None
     
@@ -56,16 +60,18 @@ class DeepEvalPydanticAIAgent(Agent):
     ):
         pydantic_ai_installed()
 
-        self.name = name
-        self.tags = tags
-        self.metadata = metadata
-        self.thread_id = thread_id
-        self.user_id = user_id
+        self.trace_name = name
+        self.trace_tags = tags
+        self.trace_metadata = metadata
+        self.trace_thread_id = thread_id
+        self.trace_user_id = user_id
         self.trace_metric_collection = metric_collection
         self.trace_metrics = metrics
+        
         self.llm_metric_collection = llm_metric_collection
         self.llm_metrics = llm_metrics
         self.llm_prompt = llm_prompt
+        
         self.agent_metric_collection = agent_metric_collection
         self.agent_metrics = agent_metrics
         
@@ -102,15 +108,23 @@ class DeepEvalPydanticAIAgent(Agent):
             observer.result = result.output
             update_trace_context(
                 trace_name=self.name if self.name else name,
-                trace_tags=self.tags if self.tags else tags,
-                trace_metadata=self.metadata if self.metadata else metadata,
-                trace_thread_id=self.thread_id if self.thread_id else thread_id,
-                trace_user_id=self.user_id if self.user_id else user_id,
+                trace_tags=self.trace_tags if self.trace_tags else tags,
+                trace_metadata=self.trace_metadata if self.trace_metadata else metadata,
+                trace_thread_id=self.trace_thread_id if self.trace_thread_id else thread_id,
+                trace_user_id=self.trace_user_id if self.trace_user_id else user_id,
                 trace_metric_collection=self.trace_metric_collection if self.trace_metric_collection else metric_collection,
                 trace_metrics=self.trace_metrics if self.trace_metrics else metrics,
                 trace_input=input,
                 trace_output=result.output,
             )
+
+            agent_span: AgentSpan = current_span_context.get()
+            try: 
+                agent_span.tools_called = extract_tools_called(result)
+            except:
+                pass
+            # TODO: available tools 
+            # TODO: agent handoffs 
         
         return result
     
@@ -157,6 +171,15 @@ class DeepEvalPydanticAIAgent(Agent):
                 trace_input=input,
                 trace_output=result.output,
             )
+
+            agent_span: AgentSpan = current_span_context.get()
+            try: 
+                agent_span.tools_called = extract_tools_called(result)
+            except:
+                pass
+            
+            # TODO: available tools 
+            # TODO: agent handoffs 
         
         return result
         
