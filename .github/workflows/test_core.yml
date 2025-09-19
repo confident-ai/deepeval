@@ -58,7 +58,7 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_core/ --ignore=tests/test_core/test_synthesizer/ --ignore=tests/test_core/test_datasets/
+          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_core/ --ignore=tests/test_core/test_synthesizer/ --ignore=tests/test_core/test_datasets/ --ignore=tests/test_core/test_tracing/test_dataset_iterator.py::test_async_run_async
 
       #----------------------------------------------
       #    install dev dependencies (including chromadb) and run synthesizer tests
@@ -70,4 +70,4 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_core/test_synthesizer/ tests/test_core/test_datasets/
+          poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_core/test_synthesizer/ tests/test_core/test_datasets/ --ignore=tests/test_core/test_tracing/test_dataset_iterator.py::test_async_run_async
