@@ -1846,7 +1846,7 @@ def a_execute_agentic_test_cases_from_loop(
         asyncio.create_task = create_callback_task
         # DEBUG
         # Snapshot tasks that already exist on this loop so we can detect strays
-        # baseline_tasks = loop.run_until_complete(_snapshot_tasks())
+        baseline_tasks = loop.run_until_complete(_snapshot_tasks())
 
         try:
             for index, golden in enumerate(goldens):
@@ -1925,36 +1925,36 @@ def a_execute_agentic_test_cases_from_loop(
                 loop.run_until_complete(
                     asyncio.gather(*created_tasks, return_exceptions=True)
                 )
-            # finally:
-            #     if settings.DEEPEVAL_DEBUG_ASYNC:
-            #         # Find tasks that were created during this run but we didn’t track
-            #         current_tasks = loop.run_until_complete(_snapshot_tasks())
-            #         leftovers = [
-            #             t
-            #             for t in current_tasks
-            #             if t not in baseline_tasks
-            #             and t not in created_tasks
-            #             and not t.done()
-            #         ]
-            #         if leftovers:
-            #             logger.warning(
-            #                 "[deepeval] %d stray task(s) not tracked; cancelling…",
-            #                 len(leftovers),
-            #             )
-            #             for t in leftovers:
-            #                 meta = task_meta.get(t, {})
-            #                 # Use get_name() if available, else repr()
-            #                 name = (
-            #                     t.get_name()
-            #                     if hasattr(t, "get_name")
-            #                     else repr(t)
-            #                 )
-            #                 logger.warning("  - STRAY %s meta=%s", name, meta)
-            #                 t.cancel()
-            #             # Drain strays so they don’t leak into the next iteration
-            #             loop.run_until_complete(
-            #                 asyncio.gather(*leftovers, return_exceptions=True)
-            #             )
+            finally:
+                if settings.DEEPEVAL_DEBUG_ASYNC:
+                    # Find tasks that were created during this run but we didn’t track
+                    current_tasks = loop.run_until_complete(_snapshot_tasks())
+                    leftovers = [
+                        t
+                        for t in current_tasks
+                        if t not in baseline_tasks
+                        and t not in created_tasks
+                        and not t.done()
+                    ]
+                    if leftovers:
+                        logger.warning(
+                            "[deepeval] %d stray task(s) not tracked; cancelling…",
+                            len(leftovers),
+                        )
+                        for t in leftovers:
+                            meta = task_meta.get(t, {})
+                            # Use get_name() if available, else repr()
+                            name = (
+                                t.get_name()
+                                if hasattr(t, "get_name")
+                                else repr(t)
+                            )
+                            logger.warning("  - STRAY %s meta=%s", name, meta)
+                            t.cancel()
+                        # Drain strays so they don’t leak into the next iteration
+                        loop.run_until_complete(
+                            asyncio.gather(*leftovers, return_exceptions=True)
+                        )
 
         # Evaluate traces
         if trace_manager.traces_to_evaluate:
