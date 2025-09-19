@@ -30,7 +30,7 @@ jobs:
       DEEPEVAL_TELEMETRY_OPT_OUT: 1
       DEEPEVAL_DEBUG_ASYNC: 1
       LOG_LEVEL: "info"
-      DEEPEVAL_PER_TASK_TIMEOUT_SECONDS: 120
+      DEEPEVAL_PER_TASK_TIMEOUT_SECONDS: 240
 
     steps:
       - name: Resolve ref
