@@ -1,3 +1,5 @@
+from time import perf_counter
+from contextlib import asynccontextmanager
 import inspect
 import functools
 from typing import Any, Callable, List, Optional
@@ -11,7 +13,7 @@ from deepeval.prompt import Prompt
 from deepeval.tracing.tracing import Observer
 from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.tracing.types import AgentSpan, LlmOutput, LlmSpan, LlmToolCall
 
 # llm tools called
@@ -127,9 +129,47 @@ def patch_llm_model(
             )
             observer.result = result
             return result
-
+    
     model.request = wrapper
 
+    stream_original_func = model.request_stream
+    stream_sig = inspect.signature(stream_original_func)
+
+    @asynccontextmanager
+    async def stream_wrapper(*args, **kwargs):
+        bound = stream_sig.bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+        request = bound.arguments.get("messages", [])
+
+        with Observer(
+            span_type="llm",
+            func_name="LLM",
+            observe_kwargs={"model": model_name},
+            metrics=llm_metrics,
+            metric_collection=llm_metric_collection,
+        ) as observer:
+            llm_span: LlmSpan = current_span_context.get()
+            async with stream_original_func(*args, **kwargs) as streamed_response:
+                try:
+                    yield streamed_response
+                    print("streamed_response >>>>>")
+                    if not llm_span.token_intervals:
+                        llm_span.token_intervals = {perf_counter(): "NA"}
+                    else:
+                        llm_span.token_intervals[perf_counter()] = "NA"
+                finally:
+                    try:
+                        result = streamed_response.get()
+                        observer.update_span_properties = (
+                            lambda llm_span: set_llm_span_attributes(
+                                llm_span, request, result, llm_prompt
+                            )
+                        )
+                        observer.result = result
+                    except Exception:
+                        pass
+
+    model.request_stream = stream_wrapper
 
 def create_patched_tool(
     func: Callable,

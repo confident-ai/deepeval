@@ -1,6 +1,7 @@
 import inspect
 from typing import Optional, List
 from contextvars import ContextVar
+from contextlib import asynccontextmanager
 
 from deepeval.prompt import Prompt
 from deepeval.tracing.types import AgentSpan
@@ -96,10 +97,12 @@ class DeepEvalPydanticAIAgent(Agent):
         bound = sig.bind_partial(*args, **kwargs)
         bound.apply_defaults()
         input = bound.arguments.get("user_prompt", None)
+
+        agent_name = super().name if super().name is not None else "Agent"
         
         with Observer(
             span_type="agent" if not _IS_RUN_SYNC.get() else "custom",
-            func_name="Agent" if not _IS_RUN_SYNC.get() else "run",
+            func_name=agent_name if not _IS_RUN_SYNC.get() else "run",
             function_kwargs={"input": input},
             metrics=self.agent_metrics if not _IS_RUN_SYNC.get() else None,
             metric_collection=self.agent_metric_collection if not _IS_RUN_SYNC.get() else None,
@@ -149,9 +152,11 @@ class DeepEvalPydanticAIAgent(Agent):
         
         token = _IS_RUN_SYNC.set(True)
 
+        agent_name = super().name if super().name is not None else "Agent"
+
         with Observer(
             span_type="agent",
-            func_name="Agent",
+            func_name=agent_name,
             function_kwargs={"input": input},
             metrics=self.agent_metrics,
             metric_collection=self.agent_metric_collection,
@@ -187,7 +192,64 @@ class DeepEvalPydanticAIAgent(Agent):
         
         return result
         
-    
+    @asynccontextmanager
+    async def run_stream(
+        self,
+        *args,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[dict] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        metric_collection: Optional[str] = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        **kwargs
+    ):
+        sig = inspect.signature(super().run_stream)
+        super_params = sig.parameters
+        super_kwargs = {k: v for k, v in kwargs.items() if k in super_params}
+        bound = sig.bind_partial(*args, **super_kwargs)
+        bound.apply_defaults()
+        input = bound.arguments.get("user_prompt", None)
+
+        agent_name = super().name if super().name is not None else "Agent"
+
+        with Observer(
+            span_type="agent",
+            func_name=agent_name,
+            function_kwargs={"input": input},
+            metrics=self.agent_metrics,
+            metric_collection=self.agent_metric_collection,
+        ) as observer:
+            final_result = None
+            async with super().run_stream(*args, **super_kwargs) as result:
+                try:
+                    yield result
+                finally:
+                    try:
+                        final_result = await result.get_output()
+                        observer.result = final_result
+                    except Exception:
+                        pass
+
+                    update_trace_context(
+                        trace_name=name if name is not None else self.trace_name,
+                        trace_tags=tags if tags is not None else self.trace_tags,
+                        trace_metadata=metadata if metadata is not None else self.trace_metadata,
+                        trace_thread_id=thread_id if thread_id is not None else self.trace_thread_id,
+                        trace_user_id=user_id if user_id is not None else self.trace_user_id,
+                        trace_metric_collection=metric_collection if metric_collection is not None else self.trace_metric_collection,
+                        trace_metrics=metrics if metrics is not None else self.trace_metrics,
+                        trace_input=input,
+                        trace_output=(final_result if final_result is not None else None),
+                    )
+                    agent_span: AgentSpan = current_span_context.get()
+                    try:
+                        if final_result is not None:
+                            agent_span.tools_called = extract_tools_called(final_result)
+                    except:
+                        pass
+
     def tool(
         self,
         *args,
