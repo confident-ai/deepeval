@@ -53,9 +53,9 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
     Please deepeval.integrations.pydantic_ai.Agent to instrument instead.
     """
     warnings.warn(
-        "The 'instrument_pydantic_ai()' function is deprecated and will be removed in a future version.",
-        "Please use deepeval.integrations.pydantic_ai.Agent to instrument instead. Refer to the documenation [link]", #TODO: add the link,
-        DeprecationWarning,
+        "The 'instrument_pydantic_ai()' function is deprecated and will be removed in a future version. "
+        "Please use deepeval.integrations.pydantic_ai.Agent to instrument instead. Refer to the documentation [link]", #TODO: add the link,
+        UserWarning,
         stacklevel=2
     )
     

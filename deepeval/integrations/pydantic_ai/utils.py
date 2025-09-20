@@ -152,7 +152,6 @@ def patch_llm_model(
             async with stream_original_func(*args, **kwargs) as streamed_response:
                 try:
                     yield streamed_response
-                    print("streamed_response >>>>>")
                     if not llm_span.token_intervals:
                         llm_span.token_intervals = {perf_counter(): "NA"}
                     else:

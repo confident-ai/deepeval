@@ -1,5 +1,5 @@
 import inspect
-from typing import Optional, List
+from typing import Optional, List, Generic, TypeVar
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
 
@@ -12,6 +12,8 @@ from deepeval.integrations.pydantic_ai.utils import extract_tools_called
 
 try:
     from pydantic_ai.agent import Agent
+    from pydantic_ai.tools import AgentDepsT
+    from pydantic_ai.output import OutputDataT
     from deepeval.integrations.pydantic_ai.utils import create_patched_tool, update_trace_context, patch_llm_model
     is_pydantic_ai_installed = True
 except:
@@ -25,7 +27,7 @@ def pydantic_ai_installed():
 
 _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)   
 
-class DeepEvalPydanticAIAgent(Agent):
+class DeepEvalPydanticAIAgent(Agent[AgentDepsT, OutputDataT], Generic[AgentDepsT, OutputDataT]):
 
     trace_name: Optional[str] = None
     trace_tags: Optional[List[str]] = None
