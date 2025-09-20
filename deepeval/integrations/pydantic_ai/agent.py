@@ -19,11 +19,20 @@ try:
         EventStreamHandler,
         InstrumentationSettings,
     )
+    from pydantic_ai.agent.abstract import RunOutputDataT
+    from pydantic_ai import messages as _messages
+    from pydantic_ai import usage as _usage
     from pydantic_ai.tools import (
         AgentDepsT,
         Tool,
         ToolFuncEither,
         ToolsPrepareFunc,
+        DeferredToolResults,
+        ToolFuncContext,
+        ToolParams,
+        ToolPrepareFunc,
+        DocstringFormat,
+        GenerateToolJsonSchema,
     )
     from pydantic_ai.toolsets import AbstractToolset
     from pydantic_ai.toolsets._dynamic import ToolsetFunc
@@ -31,6 +40,7 @@ try:
     from pydantic_ai.builtin_tools import AbstractBuiltinTool
     from pydantic_ai import models, _system_prompt
     from pydantic_ai.output import OutputDataT, OutputSpec
+    from pydantic.json_schema import GenerateJsonSchema
     
     from deepeval.integrations.pydantic_ai.utils import create_patched_tool, update_trace_context, patch_llm_model
 
@@ -454,16 +464,36 @@ class DeepEvalPydanticAIAgent(Agent[AgentDepsT, OutputDataT]):
         metric_collection: Optional[str] = None,
     ):
         # Direct decoration: @agent.tool
-        if func and callable(func):
+        if func is not None and callable(func):
             patched_func = create_patched_tool(func, metrics, metric_collection)
-            new_args = (patched_func,) + args[1:]
             return super(DeepEvalPydanticAIAgent, self).tool(
-                *new_args, **kwargs
+                patched_func,
+                name=name,
+                retries=retries,
+                prepare=prepare,
+                docstring_format=docstring_format,
+                require_parameter_descriptions=require_parameter_descriptions,
+                schema_generator=schema_generator,
+                strict=strict,
+                sequential=sequential,
+                requires_approval=requires_approval,
+                metadata=metadata,
             )
         # Decoration with args: @agent.tool(...)
         super_tool = super(DeepEvalPydanticAIAgent, self).tool
 
-        def decorator(func):
-            patched_func = create_patched_tool(func, metrics, metric_collection)
-            return super_tool()(patched_func)
+        def decorator(func_: ToolFuncContext[AgentDepsT, ToolParams]):
+            patched_func = create_patched_tool(func_, metrics, metric_collection)
+            return super_tool(
+                name=name,
+                retries=retries,
+                prepare=prepare,
+                docstring_format=docstring_format,
+                require_parameter_descriptions=require_parameter_descriptions,
+                schema_generator=schema_generator,
+                strict=strict,
+                sequential=sequential,
+                requires_approval=requires_approval,
+                metadata=metadata,
+            )(patched_func)
         return decorator
