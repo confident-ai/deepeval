@@ -27,18 +27,11 @@ Task Completion analyzes your **agent's full trace** to determine task success, 
 To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `TaskCompletionMetric()` to your agent's `@observe` tag.
 
 ```python
-from deepeval.metrics import TaskCompletionMetric
 from deepeval.tracing import observe
-from deepeval.dataset import Golden
-from deepeval import evaluate
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import TaskCompletionMetric
 
-task_completion = TaskCompletionMetric(
-    threshold=0.7,
-    model="gpt-4o",
-    include_reason=True
-)
-
-@observe(metrics=[task_completion])
+@observe()
 def trip_planner_agent(input):
     destination = "Paris"
     days = 2
@@ -54,13 +47,18 @@ def trip_planner_agent(input):
     itinerary = itinerary_generator(destination, days)
     restaurants = restaurant_finder(destination)
 
-    output = []
-    for i in range(days):
-        output.append(f"{itinerary[i]} and eat at {restaurants[i]}")
+    return itinerary + restaurants
 
-    return ". ".join(output) + "."
 
-evaluate(observed_callback=trip_planner_agent, goldens=[Golden(input="Paris, 2")])
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="This is a test query")])
+
+# Initialize metric
+task_completion = TaskCompletionMetric(threshold=0.7, model="gpt-4o")
+
+# Loop through dataset
+for goldens in dataset.evals_iterator(metrics=[task_completion]):
+    trip_planner_agent(golden.input)
 ```
 
 There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
@@ -73,66 +71,7 @@ There are **SEVEN** optional parameters when creating a `TaskCompletionMetric`:
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 
-### End-to-End
-
-You can also run the `TaskCompletionMetric` for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation as a standalone, though this is not the recommended way to use it, since the full trace is required for thorough evaluation.
-
-```python
-from deepeval import evaluate
-from deepeval.test_case import LLMTestCase
-from deepeval.metrics import TaskCompletionMetric
-from deepeval.test_case import ToolCall
-
-metric = TaskCompletionMetric(
-    threshold=0.7,
-    model="gpt-4.1",
-    include_reason=True
-)
-test_case = LLMTestCase(
-    input="Plan a 3-day itinerary for Paris with cultural landmarks and local cuisine.",
-    actual_output=(
-        "Day 1: Eiffel Tower, dinner at Le Jules Verne. "
-        "Day 2: Louvre Museum, lunch at Angelina Paris. "
-        "Day 3: Montmartre, evening at a wine bar."
-    ),
-    tools_called=[
-        ToolCall(
-            name="Itinerary Generator",
-            description="Creates travel plans based on destination and duration.",
-            input_parameters={"destination": "Paris", "days": 3},
-            output=[
-                "Day 1: Eiffel Tower, Le Jules Verne.",
-                "Day 2: Louvre Museum, Angelina Paris.",
-                "Day 3: Montmartre, wine bar.",
-            ],
-        ),
-        ToolCall(
-            name="Restaurant Finder",
-            description="Finds top restaurants in a city.",
-            input_parameters={"city": "Paris"},
-            output=["Le Jules Verne", "Angelina Paris", "local wine bars"],
-        ),
-    ],
-)
-
-# To run metric as a standalone
-# metric.measure(test_case)
-# print(metric.score, metric.reason)
-
-evaluate(test_cases=[test_case], metrics=[metric])
-```
-
-To use the `TaskCompletionMetric` for end-to-end evaluation, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
-
-- `input`
-- `actual_output`
-- `tools_called`
-
-Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
-
-:::caution
-This is not recommended and will be deprecated soon as a test case does not represent the full execution of an agent.
-:::
+To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
 
 ## How Is It Calculated?
 
