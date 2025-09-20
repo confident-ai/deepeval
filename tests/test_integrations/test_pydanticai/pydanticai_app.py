@@ -8,8 +8,10 @@ from pydantic import BaseModel
 from pydantic_ai import RunContext
 from deepeval.integrations.pydantic_ai import Agent
 from deepeval.prompt import Prompt
+
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
+
 
 @dataclass
 class Deps:
@@ -24,7 +26,6 @@ weather_agent = Agent(
     instructions="Be concise, reply with one sentence.",
     deps_type=Deps,
     retries=2,
-    
     trace_name="test_trace_1",
     trace_tags=["test_tag_1"],
     trace_metadata={"test_metadata_1": "test_metadata_1"},

@@ -3,10 +3,12 @@ from deepeval.integrations.pydantic_ai import Agent
 from deepeval.tracing import observe
 import asyncio
 
+
 @observe(type="tool", metric_collection="test_collection_1")
 def get_weather(city: str) -> str:
     """Gets the weather for a given city."""
     return f"I don't know the weather for {city}."
+
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
@@ -26,16 +28,23 @@ agent = Agent(
     agent_metric_collection="test_collection_1",
 )
 
+
 async def execute_agent_stream():
-    async with agent.run_stream("What is the weather in London?", name="test_name_2") as result:
+    async with agent.run_stream(
+        "What is the weather in London?", name="test_name_2"
+    ) as result:
         async for chunk in result.stream_text(delta=True):
             print(chunk, end="", flush=True)
         final = await result.get_output()
-        print("\n\nFinal:", final)        
+        print("\n\nFinal:", final)
+
 
 async def execute_agent_run():
-    result = await agent.run("What is the weather in London?", name="test_name_4")
+    result = await agent.run(
+        "What is the weather in London?", name="test_name_4"
+    )
     print(result.output)
+
 
 def execute_all():
     asyncio.run(execute_agent_stream())

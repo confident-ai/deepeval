@@ -7,7 +7,16 @@ from typing import Any, Callable, List, Optional
 from pydantic_ai.models import Model
 from pydantic_ai.agent import AgentRunResult
 from pydantic_ai._run_context import RunContext
-from pydantic_ai.messages import ModelRequest, ModelResponse, ModelResponsePart, SystemPromptPart, TextPart, ToolCallPart, ToolReturnPart, UserPromptPart
+from pydantic_ai.messages import (
+    ModelRequest,
+    ModelResponse,
+    ModelResponsePart,
+    SystemPromptPart,
+    TextPart,
+    ToolCallPart,
+    ToolReturnPart,
+    UserPromptPart,
+)
 
 from deepeval.prompt import Prompt
 from deepeval.tracing.tracing import Observer
@@ -15,6 +24,7 @@ from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import current_trace_context, current_span_context
 from deepeval.tracing.types import AgentSpan, LlmOutput, LlmSpan, LlmToolCall
+
 
 # llm tools called
 def extract_tools_called_from_llm_response(
@@ -39,6 +49,7 @@ def extract_tools_called_from_llm_response(
             tool_calls.append(tool_call)
 
     return tool_calls
+
 
 # TODO: llm tools called (reposne is present next message)
 def extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
@@ -75,6 +86,7 @@ def extract_tools_called(result: AgentRunResult) -> List[ToolCall]:
 
     return tool_calls
 
+
 def sanitize_run_context(value):
     """
     Recursively replace pydantic-ai RunContext instances with '<RunContext>'.
@@ -93,6 +105,7 @@ def sanitize_run_context(value):
         return {sanitize_run_context(v) for v in value}
 
     return value
+
 
 def patch_llm_model(
     model: Model,
@@ -129,7 +142,7 @@ def patch_llm_model(
             )
             observer.result = result
             return result
-    
+
     model.request = wrapper
 
     stream_original_func = model.request_stream
@@ -149,7 +162,9 @@ def patch_llm_model(
             metric_collection=llm_metric_collection,
         ) as observer:
             llm_span: LlmSpan = current_span_context.get()
-            async with stream_original_func(*args, **kwargs) as streamed_response:
+            async with stream_original_func(
+                *args, **kwargs
+            ) as streamed_response:
                 try:
                     yield streamed_response
                     if not llm_span.token_intervals:
@@ -169,6 +184,7 @@ def patch_llm_model(
                         pass
 
     model.request_stream = stream_wrapper
+
 
 def create_patched_tool(
     func: Callable,
@@ -234,7 +250,7 @@ def update_trace_context(
 ):
 
     current_trace = current_trace_context.get()
-    
+
     if trace_name:
         current_trace.name = trace_name
     if trace_tags:
@@ -253,7 +269,6 @@ def update_trace_context(
         current_trace.input = trace_input
     if trace_output:
         current_trace.output = trace_output
-
 
 
 def set_llm_span_attributes(

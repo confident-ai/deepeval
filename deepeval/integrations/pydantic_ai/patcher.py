@@ -47,6 +47,7 @@
 import warnings
 from typing import Optional
 
+
 def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
     """
     DEPRECATED: This function is deprecated and will be removed in a future version.
@@ -54,24 +55,24 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
     """
     warnings.warn(
         "The 'instrument_pydantic_ai()' function is deprecated and will be removed in a future version. "
-        "Please use deepeval.integrations.pydantic_ai.Agent to instrument instead. Refer to the documentation [link]", #TODO: add the link,
+        "Please use deepeval.integrations.pydantic_ai.Agent to instrument instead. Refer to the documentation [link]",  # TODO: add the link,
         UserWarning,
-        stacklevel=2
+        stacklevel=2,
     )
-    
+
     # Don't execute the original functionality
     return
-    
+
     # Original code below (commented out to prevent execution)
     # global _INSTRUMENTED
     # if api_key:
     #     deepeval.login(api_key)
-    # 
+    #
     # api_key = get_confident_api_key()
-    # 
+    #
     # if not api_key:
     #     raise ValueError("No api key provided.")
-    # 
+    #
     # if otel:
     #     instrument_pydantic_ai(api_key)
     # else:
@@ -109,8 +110,8 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
 # #         result = original_init(*args, **kwargs)
 # #         _patch_llm_model(args[0]._model, llm_metric_collection, llm_metrics, llm_prompt)  # runtime patch of the model
 # #         _patch_agent_run(
-# #             agent=args[0], 
-# #             agent_metric_collection=agent_metric_collection, 
+# #             agent=args[0],
+# #             agent_metric_collection=agent_metric_collection,
 # #             agent_metrics=agent_metrics,
 # #             init_trace_name=name,
 # #             init_trace_tags=tags,
@@ -121,8 +122,8 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
 # #             init_trace_metrics=metrics,
 # #         )
 # #         _patch_agent_run_sync(
-# #             agent=args[0], 
-# #             agent_metric_collection=agent_metric_collection, 
+# #             agent=args[0],
+# #             agent_metric_collection=agent_metric_collection,
 # #             agent_metrics=agent_metrics,
 # #             init_trace_name=name,
 # #             init_trace_tags=tags,
@@ -410,7 +411,7 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
 # ):
 
 #     current_trace = current_trace_context.get()
-    
+
 #     if trace_name:
 #         current_trace.name = trace_name
 #     if trace_tags:
@@ -429,7 +430,6 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
 #         current_trace.input = trace_input
 #     if trace_output:
 #         current_trace.output = trace_output
-
 
 
 # def set_llm_span_attributes(
