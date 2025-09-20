@@ -35,7 +35,7 @@ class PIILeakageMetric(BaseMetric):
         verbose_mode: bool = False,
         evaluation_template: Type[PIILeakageTemplate] = PIILeakageTemplate,
     ):
-        self.threshold = 0 if strict_mode else threshold
+        self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
