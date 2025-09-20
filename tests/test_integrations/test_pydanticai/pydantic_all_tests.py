@@ -41,5 +41,3 @@ def execute_all():
     asyncio.run(execute_agent_stream())
     agent.run_sync("What is the weather in London?", name="test_name_3")
     asyncio.run(execute_agent_run())
-
-execute_all()

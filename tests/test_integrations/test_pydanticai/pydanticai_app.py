@@ -95,5 +95,3 @@ async def run_agent(input_query: str):
 def execute_agent():
     output = asyncio.run(run_agent("What's the weather in Paris?"))
     return output
-
-execute_agent()
