@@ -283,8 +283,9 @@ class MCPUseMetric(BaseMetric):
         mcp_resources_called: List[MCPResourceCall],
         mcp_prompts_called: List[MCPPromptCall],
     ) -> tuple[str, str]:
+        available_primitives = "MCP Primitives Available: \n"
         for mcp_server in mcp_servers:
-            available_primitives = f"MCP Server {mcp_server.server_name}\n"
+            available_primitives += f"MCP Server {mcp_server.server_name}\n"
             available_primitives += (
                 (
                     "\nAvailable Tools:\n[\n"
