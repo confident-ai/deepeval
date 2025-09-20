@@ -3,14 +3,14 @@
     {
       "agentHandoffs": [],
       "availableTools": [],
-      "endTime": "2025-09-16T15:17:49.883Z",
+      "endTime": "2025-09-19T20:23:11.180Z",
       "input": {
         "input": "What's the weather in Paris?"
       },
       "metricCollection": "test_collection_1",
-      "name": "Agent",
+      "name": "<is_present>",
       "output": "<is_present>",
-      "startTime": "2025-09-16T15:17:40.291Z",
+      "startTime": "2025-09-19T20:23:06.368Z",
       "status": "SUCCESS",
       "toolsCalled": [
         {
@@ -32,12 +32,12 @@
     }
   ],
   "baseSpans": [],
-  "endTime": "2025-09-16T15:17:49.883Z",
+  "endTime": "2025-09-19T20:23:11.180Z",
   "environment": "development",
   "input": "What's the weather in Paris?",
   "llmSpans": [
     {
-      "endTime": "2025-09-16T15:17:49.882Z",
+      "endTime": "2025-09-19T20:23:11.179Z",
       "input": [
         {
           "content": "What's the weather in Paris?",
@@ -77,14 +77,14 @@
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-16T15:17:48.033Z",
+      "startTime": "2025-09-19T20:23:10.351Z",
       "status": "SUCCESS",
       "toolsCalled": [],
       "type": "llm",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T15:17:47.876Z",
+      "endTime": "2025-09-19T20:23:09.504Z",
       "input": [
         {
           "content": "What's the weather in Paris?",
@@ -122,7 +122,7 @@
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-16T15:17:44.548Z",
+      "startTime": "2025-09-19T20:23:08.409Z",
       "status": "SUCCESS",
       "toolsCalled": [
         {
@@ -137,7 +137,7 @@
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T15:17:44.383Z",
+      "endTime": "2025-09-19T20:23:07.573Z",
       "input": [
         {
           "content": "What's the weather in Paris?",
@@ -164,7 +164,7 @@
         "alias": "asd",
         "version": "00.00.01"
       },
-      "startTime": "2025-09-16T15:17:40.292Z",
+      "startTime": "2025-09-19T20:23:06.369Z",
       "status": "SUCCESS",
       "toolsCalled": [
         {
@@ -182,10 +182,10 @@
     "test_metadata_1": "test_metadata_1"
   },
   "metricCollection": "test_collection_1",
-  "name": "test_trace_1",
+  "name": "test_trace_2",
   "output": "<is_present>",
   "retrieverSpans": [],
-  "startTime": "2025-09-16T15:17:40.291Z",
+  "startTime": "2025-09-19T20:23:06.368Z",
   "status": "SUCCESS",
   "tags": [
     "test_tag_1"
@@ -193,7 +193,7 @@
   "threadId": "test_thread_id_1",
   "toolSpans": [
     {
-      "endTime": "2025-09-16T15:17:48.033Z",
+      "endTime": "2025-09-19T20:23:10.350Z",
       "input": {
         "args": [
           "<RunContext>"
@@ -208,13 +208,13 @@
         "temperature": "<is_present>"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-16T15:17:47.876Z",
+      "startTime": "2025-09-19T20:23:09.504Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
     },
     {
-      "endTime": "2025-09-16T15:17:44.547Z",
+      "endTime": "2025-09-19T20:23:08.408Z",
       "input": {
         "args": [
           "<RunContext>"
@@ -228,12 +228,12 @@
         "lng": "<is_present>"
       },
       "parentUuid": "<is_present>",
-      "startTime": "2025-09-16T15:17:44.384Z",
+      "startTime": "2025-09-19T20:23:07.574Z",
       "status": "SUCCESS",
       "type": "tool",
       "uuid": "<is_present>"
     }
   ],
-  "userId": "test_user_id_1",
+  "userId": "test_user_id_2",
   "uuid": "<is_present>"
 }

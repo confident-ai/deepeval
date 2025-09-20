@@ -26,7 +26,6 @@ def is_opentelemetry_available():
 
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
-
 def instrument_pydantic_ai(api_key: Optional[str] = None):
     with capture_tracing_integration("pydantic_ai"):
         is_opentelemetry_available()
