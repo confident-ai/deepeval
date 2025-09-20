@@ -1,7 +1,8 @@
 import inspect
-from typing import Optional, List, Generic, TypeVar
+from typing import Optional, List, Any
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
+from collections.abc import Sequence
 
 from deepeval.prompt import Prompt
 from deepeval.tracing.types import AgentSpan
@@ -11,19 +12,33 @@ from deepeval.tracing.context import current_span_context
 from deepeval.integrations.pydantic_ai.utils import extract_tools_called
 
 try:
-    from pydantic_ai.agent import Agent
-    from pydantic_ai.tools import AgentDepsT
-    from pydantic_ai.output import OutputDataT
-    from deepeval.integrations.pydantic_ai.utils import (
-        create_patched_tool,
-        update_trace_context,
-        patch_llm_model,
+    from pydantic_ai.agent import (
+        Agent,
+        EndStrategy,
+        HistoryProcessor,
+        EventStreamHandler,
+        InstrumentationSettings,
     )
+    from pydantic_ai.tools import (
+        AgentDepsT,
+        Tool,
+        ToolFuncEither,
+        ToolsPrepareFunc,
+    )
+    from pydantic_ai.toolsets import AbstractToolset
+    from pydantic_ai.toolsets._dynamic import ToolsetFunc
+    from pydantic_ai.settings import ModelSettings
+    from pydantic_ai.builtin_tools import AbstractBuiltinTool
+    from pydantic_ai import models, _system_prompt
+    from pydantic_ai.output import OutputDataT, OutputSpec
+    
+    from deepeval.integrations.pydantic_ai.utils import create_patched_tool, update_trace_context, patch_llm_model
 
     is_pydantic_ai_installed = True
 except:
     is_pydantic_ai_installed = False
 
+NoneType = type(None)
 
 def pydantic_ai_installed():
     if not is_pydantic_ai_installed:
@@ -34,10 +49,7 @@ def pydantic_ai_installed():
 
 _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
 
-
-class DeepEvalPydanticAIAgent(
-    Agent[AgentDepsT, OutputDataT], Generic[AgentDepsT, OutputDataT]
-):
+class DeepEvalPydanticAIAgent(Agent[AgentDepsT, OutputDataT]):
 
     trace_name: Optional[str] = None
     trace_tags: Optional[List[str]] = None
@@ -56,7 +68,30 @@ class DeepEvalPydanticAIAgent(
 
     def __init__(
         self,
-        *args,
+        model: models.Model | models.KnownModelName | str | None = None,
+        *,
+        output_type: OutputSpec[OutputDataT] = str,
+        instructions: str
+        | _system_prompt.SystemPromptFunc[AgentDepsT]
+        | Sequence[str | _system_prompt.SystemPromptFunc[AgentDepsT]]
+        | None = None,
+        system_prompt: str | Sequence[str] = (),
+        deps_type: type[AgentDepsT] = NoneType,
+        name: str | None = None,
+        model_settings: ModelSettings | None = None,
+        retries: int = 1,
+        output_retries: int | None = None,
+        tools: Sequence[Tool[AgentDepsT] | ToolFuncEither[AgentDepsT, ...]] = (),
+        builtin_tools: Sequence[AbstractBuiltinTool] = (),
+        prepare_tools: ToolsPrepareFunc[AgentDepsT] | None = None,
+        prepare_output_tools: ToolsPrepareFunc[AgentDepsT] | None = None,
+        toolsets: Sequence[AbstractToolset[AgentDepsT] | ToolsetFunc[AgentDepsT]] | None = None,
+        defer_model_check: bool = False,
+        end_strategy: EndStrategy = 'early',
+        instrument: InstrumentationSettings | bool | None = None,
+        history_processors: Sequence[HistoryProcessor[AgentDepsT]] | None = None,
+        event_stream_handler: EventStreamHandler[AgentDepsT] | None = None,
+        
         trace_name: Optional[str] = None,
         trace_tags: Optional[List[str]] = None,
         trace_metadata: Optional[dict] = None,
@@ -69,7 +104,8 @@ class DeepEvalPydanticAIAgent(
         llm_prompt: Optional[Prompt] = None,
         agent_metric_collection: Optional[str] = None,
         agent_metrics: Optional[List[BaseMetric]] = None,
-        **kwargs
+
+        **_deprecated_kwargs: Any,
     ):
         pydantic_ai_installed()
 
@@ -87,16 +123,49 @@ class DeepEvalPydanticAIAgent(
 
         self.agent_metric_collection = agent_metric_collection
         self.agent_metrics = agent_metrics
-
-        super().__init__(*args, **kwargs)
-
-        patch_llm_model(
-            self._model, llm_metric_collection, llm_metrics, llm_prompt
-        )  # TODO: Add dual patch guards
+        
+        super().__init__(
+            name=name,
+            model=model,
+            output_type=output_type,
+            instructions=instructions,
+            system_prompt=system_prompt,
+            deps_type=deps_type,
+            model_settings=model_settings,
+            retries=retries,
+            output_retries=output_retries,
+            tools=tools,
+            builtin_tools=builtin_tools,
+            prepare_tools=prepare_tools,
+            prepare_output_tools=prepare_output_tools,
+            toolsets=toolsets,
+            defer_model_check=defer_model_check,
+            end_strategy=end_strategy,
+            instrument=instrument,
+            history_processors=history_processors,
+            event_stream_handler=event_stream_handler,
+            **_deprecated_kwargs,
+        )
+        
+        patch_llm_model(self._model, llm_metric_collection, llm_metrics, llm_prompt) #TODO: Add dual patch guards
+        
 
     async def run(
         self,
-        *args,
+        user_prompt: str | Sequence[_messages.UserContent] | None = None,
+        *,
+        output_type: OutputSpec[RunOutputDataT] | None = None,
+        message_history: list[_messages.ModelMessage] | None = None,
+        deferred_tool_results: DeferredToolResults | None = None,
+        model: models.Model | models.KnownModelName | str | None = None,
+        deps: AgentDepsT = None,
+        model_settings: ModelSettings | None = None,
+        usage_limits: _usage.UsageLimits | None = None,
+        usage: _usage.RunUsage | None = None,
+        infer_name: bool = True,
+        toolsets: Sequence[AbstractToolset[AgentDepsT]] | None = None,
+        event_stream_handler: EventStreamHandler[AgentDepsT] | None = None,
+        
         name: Optional[str] = None,
         tags: Optional[List[str]] = None,
         user_id: Optional[str] = None,
@@ -104,12 +173,8 @@ class DeepEvalPydanticAIAgent(
         thread_id: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
-        **kwargs
     ):
-        sig = inspect.signature(super().run)
-        bound = sig.bind_partial(*args, **kwargs)
-        bound.apply_defaults()
-        input = bound.arguments.get("user_prompt", None)
+        input = user_prompt
 
         agent_name = super().name if super().name is not None else "Agent"
 
@@ -122,7 +187,20 @@ class DeepEvalPydanticAIAgent(
                 self.agent_metric_collection if not _IS_RUN_SYNC.get() else None
             ),
         ) as observer:
-            result = await super().run(*args, **kwargs)
+            result = await super().run(
+                user_prompt=user_prompt,
+                output_type=output_type,
+                message_history=message_history,
+                deferred_tool_results=deferred_tool_results,
+                model=model,
+                deps=deps,
+                model_settings=model_settings,
+                usage_limits=usage_limits,
+                usage=usage,
+                infer_name=infer_name,
+                toolsets=toolsets,
+                event_stream_handler=event_stream_handler,
+            )
             observer.result = result.output
             update_trace_context(
                 trace_name=name if name is not None else self.trace_name,
@@ -159,8 +237,21 @@ class DeepEvalPydanticAIAgent(
         return result
 
     def run_sync(
-        self,
-        *args,
+        self,   
+        user_prompt: str | Sequence[_messages.UserContent] | None = None,
+        *,
+        output_type: OutputSpec[RunOutputDataT] | None = None,
+        message_history: list[_messages.ModelMessage] | None = None,
+        deferred_tool_results: DeferredToolResults | None = None,
+        model: models.Model | models.KnownModelName | str | None = None,
+        deps: AgentDepsT = None,
+        model_settings: ModelSettings | None = None,
+        usage_limits: _usage.UsageLimits | None = None,
+        usage: _usage.RunUsage | None = None,
+        infer_name: bool = True,
+        toolsets: Sequence[AbstractToolset[AgentDepsT]] | None = None,
+        event_stream_handler: EventStreamHandler[AgentDepsT] | None = None,
+        
         name: Optional[str] = None,
         tags: Optional[List[str]] = None,
         metadata: Optional[dict] = None,
@@ -170,11 +261,8 @@ class DeepEvalPydanticAIAgent(
         metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
-        sig = inspect.signature(super().run_sync)
-        bound = sig.bind_partial(*args, **kwargs)
-        bound.apply_defaults()
-        input = bound.arguments.get("user_prompt", None)
-
+        input = user_prompt
+        
         token = _IS_RUN_SYNC.set(True)
 
         agent_name = super().name if super().name is not None else "Agent"
@@ -187,7 +275,20 @@ class DeepEvalPydanticAIAgent(
             metric_collection=self.agent_metric_collection,
         ) as observer:
             try:
-                result = super().run_sync(*args, **kwargs)
+                result = super().run_sync(
+                    user_prompt=user_prompt,
+                    output_type=output_type,
+                    message_history=message_history,
+                    deferred_tool_results=deferred_tool_results,
+                    model=model,
+                    deps=deps,
+                    model_settings=model_settings,
+                    usage_limits=usage_limits,
+                    usage=usage,
+                    infer_name=infer_name,
+                    toolsets=toolsets,
+                    event_stream_handler=event_stream_handler,
+                )
             finally:
                 _IS_RUN_SYNC.reset(token)
 
@@ -230,7 +331,20 @@ class DeepEvalPydanticAIAgent(
     @asynccontextmanager
     async def run_stream(
         self,
-        *args,
+        user_prompt: str | Sequence[_messages.UserContent] | None = None,
+        *,
+        output_type: OutputSpec[RunOutputDataT] | None = None,
+        message_history: list[_messages.ModelMessage] | None = None,
+        deferred_tool_results: DeferredToolResults | None = None,
+        model: models.Model | models.KnownModelName | str | None = None,
+        deps: AgentDepsT = None,
+        model_settings: ModelSettings | None = None,
+        usage_limits: _usage.UsageLimits | None = None,
+        usage: _usage.RunUsage | None = None,
+        infer_name: bool = True,
+        toolsets: Sequence[AbstractToolset[AgentDepsT]] | None = None,
+        event_stream_handler: EventStreamHandler[AgentDepsT] | None = None,
+        
         name: Optional[str] = None,
         tags: Optional[List[str]] = None,
         metadata: Optional[dict] = None,
@@ -238,14 +352,8 @@ class DeepEvalPydanticAIAgent(
         user_id: Optional[str] = None,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
-        **kwargs
     ):
-        sig = inspect.signature(super().run_stream)
-        super_params = sig.parameters
-        super_kwargs = {k: v for k, v in kwargs.items() if k in super_params}
-        bound = sig.bind_partial(*args, **super_kwargs)
-        bound.apply_defaults()
-        input = bound.arguments.get("user_prompt", None)
+        input = user_prompt
 
         agent_name = super().name if super().name is not None else "Agent"
 
@@ -257,7 +365,20 @@ class DeepEvalPydanticAIAgent(
             metric_collection=self.agent_metric_collection,
         ) as observer:
             final_result = None
-            async with super().run_stream(*args, **super_kwargs) as result:
+            async with super().run_stream(
+                user_prompt=user_prompt,
+                output_type=output_type,
+                message_history=message_history,
+                deferred_tool_results=deferred_tool_results,
+                model=model,
+                deps=deps,
+                model_settings=model_settings,
+                usage_limits=usage_limits,
+                usage=usage,
+                infer_name=infer_name,
+                toolsets=toolsets,
+                event_stream_handler=event_stream_handler,
+            ) as result:
                 try:
                     yield result
                 finally:
@@ -315,16 +436,26 @@ class DeepEvalPydanticAIAgent(
 
     def tool(
         self,
-        *args,
+        func: ToolFuncContext[AgentDepsT, ToolParams] | None = None,
+        /,
+        *,
+        name: str | None = None,
+        retries: int | None = None,
+        prepare: ToolPrepareFunc[AgentDepsT] | None = None,
+        docstring_format: DocstringFormat = 'auto',
+        require_parameter_descriptions: bool = False,
+        schema_generator: type[GenerateJsonSchema] = GenerateToolJsonSchema,
+        strict: bool | None = None,
+        sequential: bool = False,
+        requires_approval: bool = False,
+        metadata: dict[str, Any] | None = None,
+       
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
-        **kwargs
     ):
         # Direct decoration: @agent.tool
-        if args and callable(args[0]):
-            patched_func = create_patched_tool(
-                args[0], metrics, metric_collection
-            )
+        if func and callable(func):
+            patched_func = create_patched_tool(func, metrics, metric_collection)
             new_args = (patched_func,) + args[1:]
             return super(DeepEvalPydanticAIAgent, self).tool(
                 *new_args, **kwargs
@@ -334,6 +465,5 @@ class DeepEvalPydanticAIAgent(
 
         def decorator(func):
             patched_func = create_patched_tool(func, metrics, metric_collection)
-            return super_tool(*args, **kwargs)(patched_func)
-
+            return super_tool()(patched_func)
         return decorator
