@@ -281,6 +281,7 @@ class Settings(BaseSettings):
     #
     # Telemetry and Debug
     #
+    DEEPEVAL_DEBUG_ASYNC: Optional[bool] = None
     DEEPEVAL_TELEMETRY_OPT_OUT: Optional[bool] = None
     DEEPEVAL_UPDATE_WARNING_OPT_IN: Optional[bool] = None
     DEEPEVAL_GRPC_LOGGING: Optional[bool] = None
@@ -302,6 +303,19 @@ class Settings(BaseSettings):
     #
     MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
     MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
+
+    #
+    # Async Task Configuration
+    #
+
+    # Maximum time allowed for a single task to complete
+    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS: int = (
+        300  # Set to float('inf') to disable timeout
+    )
+
+    # Buffer time for gathering results from all tasks, added to the longest task duration
+    # Increase if many tasks are running concurrently
+    DEEPEVAL_TASK_GATHER_BUFFER_SECONDS: int = 60
 
     ##############
     # Validators #

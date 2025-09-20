@@ -1,19 +1,17 @@
 from deepeval.metrics import TaskCompletionMetric, AnswerRelevancyMetric
-from deepeval.test_case import LLMTestCase
 from deepeval.tracing import (
     update_current_span,
     update_llm_span,
     update_retriever_span,
     observe,
 )
-import random
-import time
+import asyncio
 
 
 @observe(type="llm", model="gpt-4o")
 async def generate_text(prompt: str):
     generated_text = f"Generated text for: {prompt}"
-    time.sleep(1)
+    await asyncio.sleep(1)
     update_llm_span(
         input_token_count=len(prompt.split()),
         output_token_count=len(generated_text.split()),
@@ -43,7 +41,7 @@ async def custom_embed(text: str, model: str = "custom-model"):
 
 @observe("CustomRetriever", name="custom retriever")
 async def custom_retrieve(query: str, embedding_model: str = "custom-model"):
-    embedding = await custom_embed(query, embedding_model)
+    await custom_embed(query, embedding_model)
     documents = [
         f"Custom doc 1 about {query}",
         f"Custom doc 2 about {query}",
