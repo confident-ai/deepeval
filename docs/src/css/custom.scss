@@ -421,7 +421,7 @@ html[data-theme="light"] .sidebar-icon {
 }
 
 html[data-theme="dark"] .sidebar-icon {
-  color: black;
+  color: white;
   font-weight: 500;
 }
 
@@ -494,6 +494,13 @@ html[data-theme="dark"] .menu {
 
 .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible > .menu__link:first-of-type {
   color: black; // Example: orange text
+  font-weight: 600 !important;
+  font-size: 15px;
+}
+
+/* Dark mode */
+[data-theme='dark'] .theme-doc-sidebar-item-category-level-1 > .menu__list-item-collapsible > .menu__link:first-of-type {
+  color: white; // or any high-contrast color
   font-weight: 600 !important;
   font-size: 15px;
 }
