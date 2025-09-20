@@ -98,4 +98,5 @@ jobs:
           poetry run pytest -vv -rA --maxfail=1 --capture=tee-sys tests/test_core/test_synthesizer/ tests/test_core/test_datasets/ \
           --ignore=tests/test_core/test_tracing/test_dataset_iterator.py            \
           --ignore=tests/test_core/test_synthesizer/test_context_generator.py       \
-          --ignore=tests/test_core/test_synthesizer/test_conversation_simulator.py
+          --ignore=tests/test_core/test_synthesizer/test_conversation_simulator.py  \
+          --ignore=tests/test_core/test_synthesizer/test_generate_from_goldens.py

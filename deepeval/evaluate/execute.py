@@ -1952,10 +1952,7 @@ def a_execute_agentic_test_cases_from_loop(
                     )
                     for t in leftovers:
                         meta = task_meta.get(t, {})
-                        # Use get_name() if available, else repr()
-                        name = (
-                            t.get_name() if hasattr(t, "get_name") else repr(t)
-                        )
+                        name = t.get_name()
                         logger.warning("  - STRAY %s meta=%s", name, meta)
 
                 for t in leftovers:
