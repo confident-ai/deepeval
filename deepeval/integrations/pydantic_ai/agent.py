@@ -1,4 +1,4 @@
-from typing import Optional, List, Any
+from typing import Generic, Optional, List, Any
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
 from collections.abc import Sequence
@@ -58,7 +58,10 @@ def pydantic_ai_installed():
 
 _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
 
-class DeepEvalPydanticAIAgent(Agent[AgentDepsT, OutputDataT]):
+class DeepEvalPydanticAIAgent(
+    Agent[AgentDepsT, OutputDataT],
+    Generic[AgentDepsT, OutputDataT],  # make subclass generic
+):
 
     trace_name: Optional[str] = None
     trace_tags: Optional[List[str]] = None
