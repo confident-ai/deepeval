@@ -1,5 +1,6 @@
 import inspect
-from typing import Optional, List, Generic, TypeVar
+from typing import Optional, List, Generic, TypeVar, AsyncIterator
+from typing import Any
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
 
@@ -19,7 +20,8 @@ try:
         update_trace_context,
         patch_llm_model,
     )
-
+    from pydantic_ai.output import OutputSpec
+    from pydantic_ai.result import AgentRunResult, StreamedRunResult
     is_pydantic_ai_installed = True
 except:
     is_pydantic_ai_installed = False
@@ -35,10 +37,14 @@ def pydantic_ai_installed():
 _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
 
 
-class DeepEvalPydanticAIAgent(
-    Agent[AgentDepsT, OutputDataT], Generic[AgentDepsT, OutputDataT]
-):
+AgentDepsT = TypeVar('AgentDepsT', default=None, contravariant=True)
+OutputDataT = TypeVar('OutputDataT', default=str, covariant=True)
+NoneType = type(None)
 
+class DeepEvalPydanticAIAgent(Generic[AgentDepsT, OutputDataT]):
+    
+    agent: Agent
+    
     trace_name: Optional[str] = None
     trace_tags: Optional[List[str]] = None
     trace_metadata: Optional[dict] = None
@@ -57,6 +63,8 @@ class DeepEvalPydanticAIAgent(
     def __init__(
         self,
         *args,
+        output_type: OutputSpec[OutputDataT] = str,
+        deps_type: type[AgentDepsT] = NoneType,
         trace_name: Optional[str] = None,
         trace_tags: Optional[List[str]] = None,
         trace_metadata: Optional[dict] = None,
@@ -88,10 +96,15 @@ class DeepEvalPydanticAIAgent(
         self.agent_metric_collection = agent_metric_collection
         self.agent_metrics = agent_metrics
 
-        super().__init__(*args, **kwargs)
+        self.agent = Agent(
+            *args, 
+            output_type=output_type, 
+            deps_type=deps_type, 
+            **kwargs
+        )
 
         patch_llm_model(
-            self._model, llm_metric_collection, llm_metrics, llm_prompt
+            self.agent.model, llm_metric_collection, llm_metrics, llm_prompt
         )  # TODO: Add dual patch guards
 
     async def run(
@@ -105,13 +118,13 @@ class DeepEvalPydanticAIAgent(
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
         **kwargs
-    ):
-        sig = inspect.signature(super().run)
+    ) -> AgentRunResult[OutputDataT]:
+        sig = inspect.signature(self.agent.run)
         bound = sig.bind_partial(*args, **kwargs)
         bound.apply_defaults()
         input = bound.arguments.get("user_prompt", None)
 
-        agent_name = super().name if super().name is not None else "Agent"
+        agent_name = self.agent.name if self.agent.name is not None else "Agent"
 
         with Observer(
             span_type="agent" if not _IS_RUN_SYNC.get() else "custom",
@@ -122,7 +135,11 @@ class DeepEvalPydanticAIAgent(
                 self.agent_metric_collection if not _IS_RUN_SYNC.get() else None
             ),
         ) as observer:
-            result = await super().run(*args, **kwargs)
+            result = await self.agent.run(
+                *args, 
+                **kwargs
+            )
+
             observer.result = result.output
             update_trace_context(
                 trace_name=name if name is not None else self.trace_name,
@@ -169,15 +186,15 @@ class DeepEvalPydanticAIAgent(
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         **kwargs
-    ):
-        sig = inspect.signature(super().run_sync)
+    ) -> AgentRunResult[OutputDataT]:
+        sig = inspect.signature(self.agent.run_sync)
         bound = sig.bind_partial(*args, **kwargs)
         bound.apply_defaults()
         input = bound.arguments.get("user_prompt", None)
 
         token = _IS_RUN_SYNC.set(True)
 
-        agent_name = super().name if super().name is not None else "Agent"
+        agent_name = self.agent.name if self.agent.name is not None else "Agent"
 
         with Observer(
             span_type="agent",
@@ -187,7 +204,7 @@ class DeepEvalPydanticAIAgent(
             metric_collection=self.agent_metric_collection,
         ) as observer:
             try:
-                result = super().run_sync(*args, **kwargs)
+                result = self.agent.run_sync(*args, **kwargs)
             finally:
                 _IS_RUN_SYNC.reset(token)
 
@@ -239,15 +256,15 @@ class DeepEvalPydanticAIAgent(
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         **kwargs
-    ):
-        sig = inspect.signature(super().run_stream)
+    ) -> AsyncIterator[StreamedRunResult[AgentDepsT, OutputDataT]]:
+        sig = inspect.signature(self.agent.run_stream)
         super_params = sig.parameters
         super_kwargs = {k: v for k, v in kwargs.items() if k in super_params}
         bound = sig.bind_partial(*args, **super_kwargs)
         bound.apply_defaults()
         input = bound.arguments.get("user_prompt", None)
 
-        agent_name = super().name if super().name is not None else "Agent"
+        agent_name = self.agent.name if self.agent.name is not None else "Agent"
 
         with Observer(
             span_type="agent",
@@ -257,7 +274,7 @@ class DeepEvalPydanticAIAgent(
             metric_collection=self.agent_metric_collection,
         ) as observer:
             final_result = None
-            async with super().run_stream(*args, **super_kwargs) as result:
+            async with self.agent.run_stream(*args, **kwargs) as result:
                 try:
                     yield result
                 finally:
@@ -319,21 +336,19 @@ class DeepEvalPydanticAIAgent(
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
         **kwargs
-    ):
+    ) -> Any:
         # Direct decoration: @agent.tool
         if args and callable(args[0]):
             patched_func = create_patched_tool(
                 args[0], metrics, metric_collection
             )
             new_args = (patched_func,) + args[1:]
-            return super(DeepEvalPydanticAIAgent, self).tool(
+            return self.agent.tool(
                 *new_args, **kwargs
             )
-        # Decoration with args: @agent.tool(...)
-        super_tool = super(DeepEvalPydanticAIAgent, self).tool
 
         def decorator(func):
             patched_func = create_patched_tool(func, metrics, metric_collection)
-            return super_tool(*args, **kwargs)(patched_func)
+            return self.agent.tool(*args, **kwargs)(patched_func)
 
         return decorator
