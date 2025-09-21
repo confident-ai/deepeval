@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, Generic, Optional, List, Any
+from typing import AsyncIterator, Generic, Optional, List, Any
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
 from collections.abc import Sequence
@@ -41,6 +41,7 @@ try:
     from pydantic_ai import models, _system_prompt
     from pydantic_ai.output import OutputDataT, OutputSpec
     from pydantic.json_schema import GenerateJsonSchema
+    from pydantic_ai.result import StreamedRunResult
     
     from deepeval.integrations.pydantic_ai.utils import create_patched_tool, update_trace_context, patch_llm_model
 
@@ -59,8 +60,17 @@ def pydantic_ai_installed():
 
 _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
 
+try:
+    from typing import TypeVar
+    AgentDepsT = TypeVar('AgentDepsT', default=None, covariant=True)
+    OutputDataT = TypeVar('OutputDataT', default=str, covariant=True)
+except TypeError:
+    from typing_extensions import TypeVar
+    AgentDepsT = TypeVar('AgentDepsT', default=None, covariant=True)
+    OutputDataT = TypeVar('OutputDataT', default=str, covariant=True)
+
 class DeepEvalPydanticAIAgent(
-    Agent[AgentDepsT, OutputDataT],
+    Agent,
     Generic[AgentDepsT, OutputDataT],  # make subclass generic
 ):
 
@@ -186,7 +196,7 @@ class DeepEvalPydanticAIAgent(
         thread_id: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
-    ) -> AgentRunResult[Any]:
+    ) -> AgentRunResult[OutputDataT]:
         input = user_prompt
 
         agent_name = super().name if super().name is not None else "Agent"
@@ -272,7 +282,7 @@ class DeepEvalPydanticAIAgent(
         user_id: Optional[str] = None,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
-    ) -> AgentRunResult[Any]:
+    ) -> AgentRunResult[OutputDataT]:
         input = user_prompt
         
         token = _IS_RUN_SYNC.set(True)
@@ -364,7 +374,7 @@ class DeepEvalPydanticAIAgent(
         user_id: Optional[str] = None,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
-    ) -> AsyncGenerator[AgentRunResult[Any], None]:
+    ) -> AsyncIterator[StreamedRunResult[AgentDepsT, OutputDataT]]:
         input = user_prompt
 
         agent_name = super().name if super().name is not None else "Agent"
