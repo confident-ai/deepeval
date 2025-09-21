@@ -1,5 +1,5 @@
 import inspect
-from typing import Optional, List, Generic, TypeVar, AsyncIterator
+from typing import Optional, List, Generic, AsyncIterator
 from typing import Any
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
@@ -13,8 +13,6 @@ from deepeval.integrations.pydantic_ai.utils import extract_tools_called
 
 try:
     from pydantic_ai.agent import Agent
-    from pydantic_ai.tools import AgentDepsT
-    from pydantic_ai.output import OutputDataT
     from deepeval.integrations.pydantic_ai.utils import (
         create_patched_tool,
         update_trace_context,
@@ -36,9 +34,15 @@ def pydantic_ai_installed():
 
 _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
 
+try:
+    from typing import TypeVar
+    AgentDepsT = TypeVar('AgentDepsT', default=None, contravariant=True)
+    OutputDataT = TypeVar('OutputDataT', default=str, covariant=True)
+except TypeError:
+    from typing_extensions import TypeVar
+    AgentDepsT = TypeVar('AgentDepsT', default=None, contravariant=True)
+    OutputDataT = TypeVar('OutputDataT', default=str, covariant=True)
 
-AgentDepsT = TypeVar('AgentDepsT', default=None, contravariant=True)
-OutputDataT = TypeVar('OutputDataT', default=str, covariant=True)
 NoneType = type(None)
 
 class DeepEvalPydanticAIAgent(Generic[AgentDepsT, OutputDataT]):
