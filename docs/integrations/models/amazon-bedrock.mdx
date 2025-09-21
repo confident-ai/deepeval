@@ -37,10 +37,11 @@ model = AmazonBedrockModel(
 answer_relevancy = AnswerRelevancyMetric(model=model)
 ```
 
-There are **TWO** mandatory and **FIVE** optional parameters when creating an `AmazonBedrockModel`:
+There are **TWO** mandatory and **SIX** optional parameters when creating an `AmazonBedrockModel`:
 
 - `model_id`: A string specifying the bedrock model identifier to call (e.g. `anthropic.claude-3-opus-20240229-v1:0`).
 - `region_name`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`).
+- [Optional] `use_structured_outputs`: A boolean indicating whether to use structured outputs for response generation. Default value is False. Note that this option should only be used with models which support tool calling
 - [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. If omitted, falls back to the default AWS credentials chain.
 - [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. If omitted, falls back to the default AWS credentials chain.
 - [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
