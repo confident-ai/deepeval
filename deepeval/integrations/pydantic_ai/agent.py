@@ -1,4 +1,4 @@
-from typing import Generic, Optional, List, Any
+from typing import AsyncGenerator, Generic, Optional, List, Any
 from contextvars import ContextVar
 from contextlib import asynccontextmanager
 from collections.abc import Sequence
@@ -17,6 +17,7 @@ try:
         HistoryProcessor,
         EventStreamHandler,
         InstrumentationSettings,
+        AgentRunResult,
     )
     from pydantic_ai.agent.abstract import RunOutputDataT
     from pydantic_ai import messages as _messages
@@ -185,7 +186,7 @@ class DeepEvalPydanticAIAgent(
         thread_id: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
-    ):
+    ) -> AgentRunResult[Any]:
         input = user_prompt
 
         agent_name = super().name if super().name is not None else "Agent"
@@ -271,8 +272,7 @@ class DeepEvalPydanticAIAgent(
         user_id: Optional[str] = None,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
-        **kwargs
-    ):
+    ) -> AgentRunResult[Any]:
         input = user_prompt
         
         token = _IS_RUN_SYNC.set(True)
@@ -364,7 +364,7 @@ class DeepEvalPydanticAIAgent(
         user_id: Optional[str] = None,
         metric_collection: Optional[str] = None,
         metrics: Optional[List[BaseMetric]] = None,
-    ):
+    ) -> AsyncGenerator[AgentRunResult[Any], None]:
         input = user_prompt
 
         agent_name = super().name if super().name is not None else "Agent"
@@ -464,7 +464,7 @@ class DeepEvalPydanticAIAgent(
        
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
-    ):
+    ) -> Any:
         # Direct decoration: @agent.tool
         if func is not None and callable(func):
             patched_func = create_patched_tool(func, metrics, metric_collection)
