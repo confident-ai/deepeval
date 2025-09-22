@@ -182,8 +182,6 @@ class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     """
     A subclass of agents.Agent.
     """
-    agent_metric_collection: str | None = None
-    agent_metrics: List[BaseMetric] | None = None
     llm_metric_collection: str | None = None
     llm_metrics: List[BaseMetric] | None = None
     confident_prompt: Prompt | None = None
