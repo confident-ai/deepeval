@@ -35,7 +35,7 @@ def set_lm_studio():
         model_name=os.environ["LM_STUDIO_MODEL_NAME"],
         base_url="http://localhost:1234/v1/",
         api_key=os.environ["LM_STUDIO_API_KEY"],
-        format=None,
+        model_format=None,
     )
 
 
@@ -45,7 +45,7 @@ def set_vllm():
         model_name=os.environ["VLLM_MODEL_NAME"],
         base_url="http://localhost:8000/v1/",
         api_key=os.environ["VLLM_API_KEY"],
-        format=None,
+        model_format=None,
     )
 
 
