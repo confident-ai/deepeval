@@ -7,6 +7,9 @@ from deepeval.tracing import observe
 from deepeval.prompt import Prompt
 from deepeval.tracing.tracing import Observer
 from deepeval.metrics import BaseMetric
+from deepeval.tracing.utils import make_json_serializable
+from deepeval.tracing.types import LlmSpan
+from deepeval.tracing.context import current_span_context
 
 try:
     from agents.agent import Agent as BaseAgent
@@ -81,7 +84,6 @@ class _ObservedModel(Model):
             observe_kwargs={"model": model_name},
             metrics=self._llm_metrics,
             metric_collection=self._llm_metric_collection,
-            prompt=self._confident_prompt,
         ) as observer:
             result = await self._inner.get_response(
                 system_instructions,
@@ -96,8 +98,10 @@ class _ObservedModel(Model):
                 prompt=prompt,
                 **kwargs,
             )
+            llm_span: LlmSpan = current_span_context.get()
+            llm_span.prompt = self._confident_prompt
 
-            observer.result = result.output
+            observer.result = make_json_serializable(result.output)
         
         return result
 
@@ -136,8 +140,13 @@ class _ObservedModel(Model):
                     **kwargs,
                 },
                 observe_kwargs={"model": model_name},
+                metrics=self._llm_metrics,
+                metric_collection=self._llm_metric_collection,
             )
             observer.__enter__()
+
+            llm_span: LlmSpan = current_span_context.get()
+            llm_span.prompt = self._confident_prompt
 
             try:
                 async for event in self._inner.stream_response(
@@ -167,17 +176,6 @@ class _ObservedModel(Model):
                 observer.__exit__(None, None, None)
 
         return _gen()
-
-class _ObservedProvider(ModelProvider):
-    def __init__(
-        self,
-        base: ModelProvider,
-    ) -> None:
-        self._base = base
-
-    def get_model(self, model_name: str | None, **kwargs: Any) -> Model:
-        model = self._base.get_model(model_name, **kwargs)
-        return _ObservedModel(model)
 
 @dataclass
 class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):

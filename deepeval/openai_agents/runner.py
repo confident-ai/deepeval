@@ -15,21 +15,52 @@ from agents.items import TResponseInputItem
 from agents.lifecycle import RunHooks
 from agents.memory import Session
 from agents.run import DEFAULT_MAX_TURNS
+from agents.run import AgentRunner
 from agents.run_context import TContext
+from agents.models.interface import Model
+
 from deepeval.tracing.tracing import Observer
 from deepeval.tracing.context import current_span_context, current_trace_context
 
 # Import observed provider/model helpers from our agent module
-from deepeval.openai_agents.agent import _ObservedProvider
 from deepeval.metrics import BaseMetric
+from deepeval.openai_agents.agent import _ObservedModel
 
+_PATCHED_DEFAULT_GET_MODEL = False
+
+
+def _patch_default_agent_runner_get_model():
+    global _PATCHED_DEFAULT_GET_MODEL
+    if _PATCHED_DEFAULT_GET_MODEL:
+        return
+    
+    original_get_model = AgentRunner._get_model
+    
+    @classmethod
+    def patched_get_model(cls, agent: Agent[Any], run_config: RunConfig) -> Model:
+        model = original_get_model(agent, run_config)
+        
+        # Extract attributes from agent if it's a DeepEvalAgent
+        llm_metrics = getattr(agent, 'llm_metrics', None)
+        llm_metric_collection = getattr(agent, 'llm_metric_collection', None)
+        confident_prompt = getattr(agent, 'confident_prompt', None)
+        model = _ObservedModel(
+            inner=model,
+            llm_metric_collection=llm_metric_collection,
+            llm_metrics=llm_metrics,
+            confident_prompt=confident_prompt,
+        )
+        
+        return model
+    
+    # Replace the method
+    AgentRunner._get_model = patched_get_model
+    _PATCHED_DEFAULT_GET_MODEL = True
+
+
+_patch_default_agent_runner_get_model()
 
 class Runner(AgentsRunner):
-    """
-    Extends Runner to capture metric_collection/metrics at run entry for tracing
-    and ensure RunConfig.model_provider is wrapped to return observed Models
-    so string-based model lookups are also instrumented.
-    """
 
     @classmethod
     async def run(
@@ -54,17 +85,8 @@ class Runner(AgentsRunner):
         user_id: str | None = None,
         **kwargs, # backwards compatibility
     ) -> RunResult:
-        # Ensure the model provider is wrapped so _get_model(...) uses observed Models
-        if run_config is None:
-            run_config = RunConfig()
-
-        if run_config.model_provider is not None:
-            run_config.model_provider = _ObservedProvider(
-                run_config.model_provider,
-                # metrics=getattr(starting_agent, "llm_metrics", None),
-                # metric_collection=getattr(starting_agent, "llm_metric_collection", None),
-                # deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
-            )
+        
+        # _patch_default_agent_runner_get_model()
 
         with Observer(
             span_type="custom",
@@ -127,17 +149,6 @@ class Runner(AgentsRunner):
         user_id: str | None = None,
         **kwargs,
     ) -> RunResult:
-        if run_config is None:
-            run_config = RunConfig()
-
-        if run_config.model_provider is not None:
-            run_config.model_provider = _ObservedProvider(
-                run_config.model_provider,
-                metrics=getattr(starting_agent, "llm_metrics", None),
-                metric_collection=getattr(starting_agent, "llm_metric_collection", None),
-                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
-            )
-
         input_val = input
 
         update_trace_attributes(
@@ -202,17 +213,6 @@ class Runner(AgentsRunner):
         user_id: str | None = None,
         **kwargs, # backwards compatibility
     ) -> RunResultStreaming:
-
-        if run_config is None:
-            run_config = RunConfig()
-
-        if run_config.model_provider is not None:
-            run_config.model_provider = _ObservedProvider(
-                run_config.model_provider,
-                # metrics=getattr(starting_agent, "llm_metrics", None),
-                # metric_collection=getattr(starting_agent, "llm_metric_collection", None),
-                # deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
-            )
 
         # Manually enter observer; we'll exit when streaming finishes
         observer = Observer(
