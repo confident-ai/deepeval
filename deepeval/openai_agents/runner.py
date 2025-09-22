@@ -10,6 +10,7 @@ from agents import (
     Runner as AgentsRunner,
 )
 from agents.agent import Agent
+from agents.models.interface import ModelProvider
 from agents.items import TResponseInputItem
 from agents.lifecycle import RunHooks
 from agents.memory import Session
@@ -60,9 +61,9 @@ class Runner(AgentsRunner):
         if run_config.model_provider is not None:
             run_config.model_provider = _ObservedProvider(
                 run_config.model_provider,
-                metrics=getattr(starting_agent, "llm_metrics", None),
-                metric_collection=getattr(starting_agent, "llm_metric_collection", None),
-                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
+                # metrics=getattr(starting_agent, "llm_metrics", None),
+                # metric_collection=getattr(starting_agent, "llm_metric_collection", None),
+                # deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
             )
 
         with Observer(
@@ -208,9 +209,9 @@ class Runner(AgentsRunner):
         if run_config.model_provider is not None:
             run_config.model_provider = _ObservedProvider(
                 run_config.model_provider,
-                metrics=getattr(starting_agent, "llm_metrics", None),
-                metric_collection=getattr(starting_agent, "llm_metric_collection", None),
-                deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
+                # metrics=getattr(starting_agent, "llm_metrics", None),
+                # metric_collection=getattr(starting_agent, "llm_metric_collection", None),
+                # deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
             )
 
         # Manually enter observer; we'll exit when streaming finishes
@@ -270,7 +271,7 @@ class Runner(AgentsRunner):
         res.stream_events = _MethodType(_patched_stream_events, res)
 
         return res
-
+        
 
 def update_trace_attributes(
     input: Any | None = None,
