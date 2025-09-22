@@ -213,6 +213,16 @@ class Runner(AgentsRunner):
                 deepeval_prompt=getattr(starting_agent, "deepeval_prompt", None),
             )
 
+        # Manually enter observer; we'll exit when streaming finishes
+        observer = Observer(
+            span_type="custom",
+            metric_collection=metric_collection,
+            metrics=metrics,
+            func_name="run_streamed",
+            function_kwargs={"input": input},
+        )
+        observer.__enter__()
+
         update_trace_attributes(
             input=input,
             name=name,
@@ -224,22 +234,9 @@ class Runner(AgentsRunner):
             metrics=metrics,
         )
 
-        input_val = input
-
-        # Manually manage observer lifecycle so it only closes when streaming completes
-        observer = Observer(
-            span_type="custom",
-            metric_collection=metric_collection,
-            metrics=metrics,
-            func_name="run_streamed",
-            function_kwargs={"input": input_val},
-        )
-        observer.__enter__()
-
         current_span = current_span_context.get()
-        current_trace = current_trace_context.get()
         if current_span:
-            current_span.input = input_val
+            current_span.input = input
 
         res = super().run_streamed(
             starting_agent,
@@ -254,30 +251,26 @@ class Runner(AgentsRunner):
             **kwargs, # backwards compatibility
         )
 
-        # Defer setting trace output and closing observer until stream completes
-        class RunResultStreamingProxy:
-            def __init__(self, inner):
-                self._inner = inner
+        # Runtime-patch stream_events so the observer closes only after streaming completes
+        orig_stream_events = res.stream_events
 
-            def __getattr__(self, name):
-                return getattr(self._inner, name)
+        async def _patched_stream_events(self: RunResultStreaming):
+            try:
+                async for event in orig_stream_events():
+                    yield event
+                observer.result = str(self.final_output)
+                update_trace_attributes(output=str(self.final_output))
+            except Exception as e:
+                observer.__exit__(type(e), e, e.__traceback__)
+                raise
+            finally:
+                observer.__exit__(None, None, None)
 
-            def __str__(self):
-                return str(self._inner)
+        from types import MethodType as _MethodType
+        res.stream_events = _MethodType(_patched_stream_events, res)
 
-            async def stream_events(self):
-                try:
-                    async for event in self._inner.stream_events():
-                        yield event
-                    # normal completion
-                    update_trace_attributes(output=str(self._inner))
-                    observer.result = str(self._inner)
-                    observer.__exit__(None, None, None)
-                except Exception as e:
-                    observer.__exit__(type(e), e, e.__traceback__)
-                    raise
+        return res
 
-        return RunResultStreamingProxy(res)
 
 def update_trace_attributes(
     input: Any | None = None,
