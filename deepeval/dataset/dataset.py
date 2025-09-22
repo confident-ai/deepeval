@@ -1,5 +1,5 @@
 from asyncio import Task
-from typing import Iterator, List, Optional, Union, Literal
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from opentelemetry.trace import Tracer
 from opentelemetry.context import Context, attach, detach
@@ -7,7 +7,6 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
 import csv
-import webbrowser
 import os
 import datetime
 import time
@@ -17,6 +16,7 @@ from opentelemetry import baggage
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
+    coerce_to_task,
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
     convert_convo_goldens_to_convo_test_cases,
@@ -49,10 +49,17 @@ from deepeval.utils import (
 from deepeval.test_run import (
     global_test_run_manager,
 )
-from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing import trace_manager
 from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
+
+if TYPE_CHECKING:
+    from deepeval.evaluate.configs import (
+        AsyncConfig,
+        DisplayConfig,
+        CacheConfig,
+        ErrorConfig,
+    )
 
 
 valid_file_types = ["csv", "json", "jsonl"]
@@ -1230,7 +1237,7 @@ class EvaluationDataset:
                 )
 
     def evaluate(self, task: Task):
-        global_evaluation_tasks.append(task)
+        coerce_to_task(task)
 
     def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
         _tracer = check_tracer(tracer)
