@@ -273,32 +273,6 @@ def view():
             upload_and_open_link(_span=span)
 
 
-DEPRECATION_NOTE = (
-    "[bold yellow]DEPRECATION[/bold yellow]: "
-    "`deepeval enable-grpc-logging` is deprecated and will be removed in a future release.\n"
-    "Use: [bold]deepeval set-debug --grpc [--save dotenv:.env.local][/bold]"
-)
-
-
-@app.command(name="enable-grpc-logging")
-def enable_grpc_logging(save: Optional[str] = None):
-    """
-    Enable verbose gRPC logging for the current process.
-    Pass --save=dotenv[:path] to persist it (optional).
-    """
-    settings = get_settings()
-    with settings.edit(save=save) as edit_ctx:
-        settings.DEEPEVAL_GRPC_LOGGING = True
-
-    handled, path, _ = edit_ctx.result
-
-    if not handled and save is not None:
-        # invalid --save format (unsupported)
-        print("Unsupported --save option. Use --save=dotenv[:path].")
-    else:
-        print("gRPC logging enabled.")
-
-
 @app.command(name="set-debug")
 def set_debug(
     # Core verbosity
