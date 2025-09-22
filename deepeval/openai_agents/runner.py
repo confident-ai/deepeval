@@ -3,21 +3,32 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import List, Any
 
-from agents import (
-    RunConfig,
-    RunResult,
-    RunResultStreaming,
-    Runner as AgentsRunner,
-)
-from agents.agent import Agent
-from agents.models.interface import ModelProvider
-from agents.items import TResponseInputItem
-from agents.lifecycle import RunHooks
-from agents.memory import Session
-from agents.run import DEFAULT_MAX_TURNS
-from agents.run import AgentRunner
-from agents.run_context import TContext
-from agents.models.interface import Model
+try:
+    from agents import (
+        RunConfig,
+        RunResult,
+        RunResultStreaming,
+        Runner as AgentsRunner,
+    )
+    from agents.agent import Agent
+    from agents.models.interface import ModelProvider
+    from agents.items import TResponseInputItem
+    from agents.lifecycle import RunHooks
+    from agents.memory import Session
+    from agents.run import DEFAULT_MAX_TURNS
+    from agents.run import AgentRunner
+    from agents.run_context import TContext
+    from agents.models.interface import Model
+    agents_available = True
+except:
+    agents_available = False
+
+def is_agents_available():
+    if not agents_available:
+        raise ImportError(
+            "agents is required for this integration. Install it via your package manager"
+        )
+
 
 from deepeval.tracing.tracing import Observer
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -57,8 +68,8 @@ def _patch_default_agent_runner_get_model():
     AgentRunner._get_model = patched_get_model
     _PATCHED_DEFAULT_GET_MODEL = True
 
-
-_patch_default_agent_runner_get_model()
+if agents_available:
+    _patch_default_agent_runner_get_model()
 
 class Runner(AgentsRunner):
 
@@ -85,7 +96,7 @@ class Runner(AgentsRunner):
         user_id: str | None = None,
         **kwargs, # backwards compatibility
     ) -> RunResult:
-        
+        is_agents_available()
         # _patch_default_agent_runner_get_model()
 
         with Observer(
@@ -154,6 +165,7 @@ class Runner(AgentsRunner):
         user_id: str | None = None,
         **kwargs,
     ) -> RunResult:
+        is_agents_available()
         input_val = input
 
         update_trace_attributes(
@@ -223,7 +235,7 @@ class Runner(AgentsRunner):
         user_id: str | None = None,
         **kwargs, # backwards compatibility
     ) -> RunResultStreaming:
-
+        is_agents_available()
         # Manually enter observer; we'll exit when streaming finishes
         observer = Observer(
             span_type="custom",
