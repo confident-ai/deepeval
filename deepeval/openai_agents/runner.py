@@ -122,8 +122,13 @@ class Runner(AgentsRunner):
                 session=session,
                 **kwargs, # backwards compatibility
             )
-            update_trace_attributes(output=str(res))
-            observer.result = str(res)
+            _output = None
+            if thread_id:
+                _output = res.final_output
+            else:
+                _output = str(res)
+            observer.result = _output
+            update_trace_attributes(output=_output)
         return res
 
     @classmethod
@@ -185,8 +190,13 @@ class Runner(AgentsRunner):
                 session=session,
                 **kwargs, # backwards compatibility
             )
-            update_trace_attributes(output=str(res))
-            observer.result = str(res)
+            _output = None
+            if thread_id:
+                _output = res.final_output
+            else:
+                _output = str(res)
+            update_trace_attributes(output=_output)
+            observer.result = _output
 
         return res
     
@@ -259,8 +269,8 @@ class Runner(AgentsRunner):
             try:
                 async for event in orig_stream_events():
                     yield event
-                observer.result = str(self.final_output)
-                update_trace_attributes(output=str(self.final_output))
+                observer.result = self.final_output
+                update_trace_attributes(output=self.final_output)
             except Exception as e:
                 observer.__exit__(type(e), e, e.__traceback__)
                 raise
