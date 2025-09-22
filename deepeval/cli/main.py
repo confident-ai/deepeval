@@ -328,12 +328,15 @@ def set_debug(
     grpc_verbosity: Optional[str] = typer.Option(
         None,
         "--grpc-verbosity",
-        help="Set GRPC_VERBOSITY (DEBUG|INFO|WARNING|ERROR|CRITICAL|NOTSET).",
+        help="Set GRPC_VERBOSITY (DEBUG|INFO|ERROR|NONE).",
     ),
     grpc_trace: Optional[str] = typer.Option(
         None,
         "--grpc-trace",
-        help='Set GRPC_TRACE (e.g., "all" or comma-separated tags).',
+        help=(
+            "Set GRPC_TRACE to comma-separated tracer names or glob patterns "
+            "(e.g. 'tcp,http,secure_endpoint', '*' for all, 'list_tracers' to print available)."
+        ),
     ),
     # Confident tracing
     trace_verbose: Optional[bool] = typer.Option(
