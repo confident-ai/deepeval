@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import List, Any
+from typing import List, Any, Union, Optional
 
 try:
     from agents import (
@@ -77,23 +77,23 @@ class Runner(AgentsRunner):
     async def run(
         cls,
         starting_agent: Agent[TContext],
-        input: str | list[TResponseInputItem],
+        input: Union[str, list[TResponseInputItem]],
         *,
-        context: TContext | None = None,
+        context: Optional[TContext] = None,
         max_turns: int = DEFAULT_MAX_TURNS,
-        hooks: RunHooks[TContext] | None = None,
-        run_config: RunConfig | None = None,
-        previous_response_id: str | None = None,
-        conversation_id: str | None = None,
-        session: Session | None = None,
+        hooks: Optional[RunHooks[TContext]] = None,
+        run_config: Optional[RunConfig] = None,
+        previous_response_id: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        session: Optional[Session] = None,
 
-        metrics: List[BaseMetric] | None = None,
-        metric_collection: str | None = None,
-        name: str | None = None,
-        tags: List[str] | None = None,
-        metadata: dict | None = None,
-        thread_id: str | None = None,
-        user_id: str | None = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        metric_collection: Optional[str] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[dict] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         **kwargs, # backwards compatibility
     ) -> RunResult:
         is_agents_available()
@@ -146,23 +146,23 @@ class Runner(AgentsRunner):
     def run_sync(
         cls,
         starting_agent: Agent[TContext],
-        input: str | list[TResponseInputItem],
+        input: Union[str, list[TResponseInputItem]],
         *,
-        context: TContext | None = None,
+        context: Optional[TContext] = None,
         max_turns: int = DEFAULT_MAX_TURNS,
-        hooks: RunHooks[TContext] | None = None,
-        run_config: RunConfig | None = None,
-        previous_response_id: str | None = None,
-        conversation_id: str | None = None,
-        session: Session | None = None,
+        hooks: Optional[RunHooks[TContext]] = None,
+        run_config: Optional[RunConfig] = None,
+        previous_response_id: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        session: Optional[Session] = None,
 
-        metrics: List[BaseMetric] | None = None,
-        metric_collection: str | None = None,
-        name: str | None = None,
-        tags: List[str] | None = None,
-        metadata: dict | None = None,
-        thread_id: str | None = None,
-        user_id: str | None = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        metric_collection: Optional[str] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[dict] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         **kwargs,
     ) -> RunResult:
         is_agents_available()
@@ -216,23 +216,23 @@ class Runner(AgentsRunner):
     def run_streamed(
         cls,
         starting_agent: Agent[TContext],
-        input: str | list[TResponseInputItem],
+        input: Union[str, list[TResponseInputItem]],
         *,
-        context: TContext | None = None,
+        context: Optional[TContext] = None,
         max_turns: int = DEFAULT_MAX_TURNS,
-        hooks: RunHooks[TContext] | None = None,
-        run_config: RunConfig | None = None,
-        previous_response_id: str | None = None,
-        conversation_id: str | None = None,
-        session: Session | None = None,
+        hooks: Optional[RunHooks[TContext]] = None,
+        run_config: Optional[RunConfig] = None,
+        previous_response_id: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+        session: Optional[Session] = None,
 
-        metrics: List[BaseMetric] | None = None,
-        metric_collection: str | None = None,
-        name: str | None = None,
-        tags: List[str] | None = None,
-        metadata: dict | None = None,
-        thread_id: str | None = None,
-        user_id: str | None = None,
+        metrics: Optional[List[BaseMetric]] = None,
+        metric_collection: Optional[str] = None,
+        name: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+        metadata: Optional[dict] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
         **kwargs, # backwards compatibility
     ) -> RunResultStreaming:
         is_agents_available()
@@ -296,15 +296,15 @@ class Runner(AgentsRunner):
         
 
 def update_trace_attributes(
-    input: Any | None = None,
-    output: Any | None = None,
-    name: str | None = None,
-    tags: List[str] | None = None,
-    metadata: dict | None = None,
-    thread_id: str | None = None,
-    user_id: str | None = None,
-    metric_collection: str | None = None,
-    metrics: List[BaseMetric] | None = None,
+    input: Any = None,
+    output: Any = None,
+    name: str = None,
+    tags: List[str] = None,
+    metadata: dict = None,
+    thread_id: str = None,
+    user_id: str = None,
+    metric_collection: str = None,
+    metrics: List[BaseMetric] = None,
 ):
     current_trace = current_trace_context.get()
     if input:

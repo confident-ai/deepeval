@@ -26,9 +26,9 @@ class _ObservedModel(Model):
     def __init__(
         self,
         inner: Model,
-        llm_metric_collection: str | None = None,
-        llm_metrics: List[BaseMetric] | None = None,
-        confident_prompt: Prompt | None = None,
+        llm_metric_collection: str = None,
+        llm_metrics: List[BaseMetric] = None,
+        confident_prompt: Prompt = None,
     ) -> None:
         self._inner = inner
         self._llm_metric_collection = llm_metric_collection
@@ -182,9 +182,9 @@ class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     """
     A subclass of agents.Agent.
     """
-    llm_metric_collection: str | None = None
-    llm_metrics: List[BaseMetric] | None = None
-    confident_prompt: Prompt | None = None
+    llm_metric_collection: str = None
+    llm_metrics: List[BaseMetric] = None
+    confident_prompt: Prompt = None
 
     def __post_init__(self):
         super().__post_init__()
