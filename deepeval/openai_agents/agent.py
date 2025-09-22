@@ -10,6 +10,7 @@ from deepeval.tracing.tracing import Observer
 try:
     from agents.agent import Agent as BaseAgent
     from agents.models.interface import Model, ModelProvider
+    from openai.types.responses import ResponseCompletedEvent
 except Exception as e:
     raise RuntimeError(
         "openai-agents is required for this integration. Please install it."
@@ -108,12 +109,55 @@ class _ObservedModel(Model):
     ):
         model_name = self._get_model_name()
 
-        with Observer(
-            type="llm",
-            model=model_name,
-        ) as observer:
-            
-            pass
+        async def _gen():
+            observer = Observer(
+                span_type="llm",
+                func_name="LLM",
+                function_kwargs={
+                    "system_instructions": system_instructions,
+                    "input": input,
+                    "model_settings": model_settings,
+                    "tools": tools,
+                    "output_schema": output_schema,
+                    "handoffs": handoffs,
+                    # "tracing": tracing,
+                    # "previous_response_id": previous_response_id,
+                    # "conversation_id": conversation_id,
+                    "prompt": prompt,
+                    **kwargs,
+                },
+                observe_kwargs={"model": model_name},
+            )
+            observer.__enter__()
+
+            try:
+                async for event in self._inner.stream_response(
+                    system_instructions,
+                    input,
+                    model_settings,
+                    tools,
+                    output_schema,
+                    handoffs,
+                    tracing,
+                    previous_response_id=previous_response_id,
+                    conversation_id=conversation_id,
+                    prompt=prompt,
+                ):
+
+                    if isinstance(event, ResponseCompletedEvent):
+                        observer.result = event.response.output_text #TODO: support other response types
+
+                    yield event
+
+                observer.__exit__(None, None, None)
+            except Exception as e:
+                observer.__exit__(type(e), e, e.__traceback__)
+                raise
+            finally:
+
+                observer.__exit__(None, None, None)
+
+        return _gen()
 
 class _ObservedProvider(ModelProvider):
     def __init__(
