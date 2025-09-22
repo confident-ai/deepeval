@@ -27,6 +27,8 @@ triage_agent = Agent(
     instructions="Handoff to the appropriate agent based on the language of the request.",
     handoffs=[spanish_agent, english_agent],
 )
+
+
 async def main():
     # result = await Runner.run(
     #     triage_agent, input="Hola, ¿cómo estás?",
@@ -34,11 +36,17 @@ async def main():
     #     tags=["test"],
     #     thread_id="test",
     # )
-    
+
     runner = Runner()
-    result = runner.run_streamed(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
+    result = runner.run_streamed(
+        triage_agent,
+        "Hola, ¿cómo estás?",
+        metric_collection="test_collection_1",
+        thread_id="test",
+    )
     async for chunk in result.stream_events():
         print(chunk, end="", flush=True)
-        print("="*50)
+        print("=" * 50)
+
 
 # asyncio.run(main())

@@ -22,6 +22,7 @@ except Exception as e:
 
 TContext = TypeVar("TContext")
 
+
 class _ObservedModel(Model):
     def __init__(
         self,
@@ -69,12 +70,12 @@ class _ObservedModel(Model):
             span_type="llm",
             func_name="LLM",
             function_kwargs={
-                "system_instructions": system_instructions, 
-                "input": input, 
-                "model_settings": model_settings, 
-                "tools": tools, 
-                "output_schema": output_schema, 
-                "handoffs": handoffs, 
+                "system_instructions": system_instructions,
+                "input": input,
+                "model_settings": model_settings,
+                "tools": tools,
+                "output_schema": output_schema,
+                "handoffs": handoffs,
                 # "tracing": tracing, # not important for llm spans
                 # "previous_response_id": previous_response_id, # not important for llm spans
                 # "conversation_id": conversation_id, # not important for llm spans
@@ -102,7 +103,7 @@ class _ObservedModel(Model):
             llm_span.prompt = self._confident_prompt
 
             observer.result = make_json_serializable(result.output)
-        
+
         return result
 
     def stream_response(
@@ -163,7 +164,9 @@ class _ObservedModel(Model):
                 ):
 
                     if isinstance(event, ResponseCompletedEvent):
-                        observer.result = event.response.output_text #TODO: support other response types
+                        observer.result = (
+                            event.response.output_text
+                        )  # TODO: support other response types
 
                     yield event
 
@@ -177,15 +180,16 @@ class _ObservedModel(Model):
 
         return _gen()
 
+
 @dataclass
 class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     """
     A subclass of agents.Agent.
     """
+
     llm_metric_collection: str = None
     llm_metrics: List[BaseMetric] = None
     confident_prompt: Prompt = None
 
     def __post_init__(self):
         super().__post_init__()
-

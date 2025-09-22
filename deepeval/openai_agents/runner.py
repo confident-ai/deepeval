@@ -19,9 +19,11 @@ try:
     from agents.run import AgentRunner
     from agents.run_context import TContext
     from agents.models.interface import Model
+
     agents_available = True
 except:
     agents_available = False
+
 
 def is_agents_available():
     if not agents_available:
@@ -44,32 +46,36 @@ def _patch_default_agent_runner_get_model():
     global _PATCHED_DEFAULT_GET_MODEL
     if _PATCHED_DEFAULT_GET_MODEL:
         return
-    
+
     original_get_model = AgentRunner._get_model
-    
+
     @classmethod
-    def patched_get_model(cls, agent: Agent[Any], run_config: RunConfig) -> Model:
+    def patched_get_model(
+        cls, agent: Agent[Any], run_config: RunConfig
+    ) -> Model:
         model = original_get_model(agent, run_config)
-        
+
         # Extract attributes from agent if it's a DeepEvalAgent
-        llm_metrics = getattr(agent, 'llm_metrics', None)
-        llm_metric_collection = getattr(agent, 'llm_metric_collection', None)
-        confident_prompt = getattr(agent, 'confident_prompt', None)
+        llm_metrics = getattr(agent, "llm_metrics", None)
+        llm_metric_collection = getattr(agent, "llm_metric_collection", None)
+        confident_prompt = getattr(agent, "confident_prompt", None)
         model = _ObservedModel(
             inner=model,
             llm_metric_collection=llm_metric_collection,
             llm_metrics=llm_metrics,
             confident_prompt=confident_prompt,
         )
-        
+
         return model
-    
+
     # Replace the method
     AgentRunner._get_model = patched_get_model
     _PATCHED_DEFAULT_GET_MODEL = True
 
+
 if agents_available:
     _patch_default_agent_runner_get_model()
+
 
 class Runner(AgentsRunner):
 
@@ -86,7 +92,6 @@ class Runner(AgentsRunner):
         previous_response_id: Optional[str] = None,
         conversation_id: Optional[str] = None,
         session: Optional[Session] = None,
-
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
         name: Optional[str] = None,
@@ -94,7 +99,7 @@ class Runner(AgentsRunner):
         metadata: Optional[dict] = None,
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
-        **kwargs, # backwards compatibility
+        **kwargs,  # backwards compatibility
     ) -> RunResult:
         is_agents_available()
         # _patch_default_agent_runner_get_model()
@@ -131,7 +136,7 @@ class Runner(AgentsRunner):
                 previous_response_id=previous_response_id,
                 conversation_id=conversation_id,
                 session=session,
-                **kwargs, # backwards compatibility
+                **kwargs,  # backwards compatibility
             )
             _output = None
             if thread_id:
@@ -155,7 +160,6 @@ class Runner(AgentsRunner):
         previous_response_id: Optional[str] = None,
         conversation_id: Optional[str] = None,
         session: Optional[Session] = None,
-
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
         name: Optional[str] = None,
@@ -200,7 +204,7 @@ class Runner(AgentsRunner):
                 previous_response_id=previous_response_id,
                 conversation_id=conversation_id,
                 session=session,
-                **kwargs, # backwards compatibility
+                **kwargs,  # backwards compatibility
             )
             _output = None
             if thread_id:
@@ -211,7 +215,7 @@ class Runner(AgentsRunner):
             observer.result = _output
 
         return res
-    
+
     @classmethod
     def run_streamed(
         cls,
@@ -225,7 +229,6 @@ class Runner(AgentsRunner):
         previous_response_id: Optional[str] = None,
         conversation_id: Optional[str] = None,
         session: Optional[Session] = None,
-
         metrics: Optional[List[BaseMetric]] = None,
         metric_collection: Optional[str] = None,
         name: Optional[str] = None,
@@ -233,7 +236,7 @@ class Runner(AgentsRunner):
         metadata: Optional[dict] = None,
         thread_id: Optional[str] = None,
         user_id: Optional[str] = None,
-        **kwargs, # backwards compatibility
+        **kwargs,  # backwards compatibility
     ) -> RunResultStreaming:
         is_agents_available()
         # Manually enter observer; we'll exit when streaming finishes
@@ -271,7 +274,7 @@ class Runner(AgentsRunner):
             previous_response_id=previous_response_id,
             conversation_id=conversation_id,
             session=session,
-            **kwargs, # backwards compatibility
+            **kwargs,  # backwards compatibility
         )
 
         # Runtime-patch stream_events so the observer closes only after streaming completes
@@ -290,10 +293,11 @@ class Runner(AgentsRunner):
                 observer.__exit__(None, None, None)
 
         from types import MethodType as _MethodType
+
         res.stream_events = _MethodType(_patched_stream_events, res)
 
         return res
-        
+
 
 def update_trace_attributes(
     input: Any = None,

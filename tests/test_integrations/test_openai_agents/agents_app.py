@@ -14,6 +14,7 @@ add_trace_processor(DeepEvalTracingProcessor())
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
+
 @function_tool(metric_collection="test_collection_1")
 def get_current_weather(latitude: float, longitude: float) -> dict:
     """
@@ -94,9 +95,9 @@ async def run_weather_agent(user_input: str):
     """Run the weather agent with user input"""
     runner = Runner()
     result = await runner.run(
-        weather_agent, 
+        weather_agent,
         user_input,
-        metric_collection="test_collection_1", 
+        metric_collection="test_collection_1",
         name="test_name_1",
         user_id="test_user_id_1",
         thread_id="test_thread_id_1",
@@ -115,5 +116,6 @@ async def main():
 
 def execute_agent():
     return asyncio.run(main())
+
 
 execute_agent()
