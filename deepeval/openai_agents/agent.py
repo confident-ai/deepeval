@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import Any, Optional, Awaitable, Callable, Generic, TypeVar
+from typing import Any, Optional, Awaitable, Callable, Generic, TypeVar, List
 
 from deepeval.tracing import observe
 from deepeval.prompt import Prompt
 from deepeval.tracing.tracing import Observer
+from deepeval.metrics import BaseMetric
 
 try:
     from agents.agent import Agent as BaseAgent
@@ -22,8 +23,14 @@ class _ObservedModel(Model):
     def __init__(
         self,
         inner: Model,
+        llm_metric_collection: str | None = None,
+        llm_metrics: List[BaseMetric] | None = None,
+        confident_prompt: Prompt | None = None,
     ) -> None:
         self._inner = inner
+        self._llm_metric_collection = llm_metric_collection
+        self._llm_metrics = llm_metrics
+        self._confident_prompt = confident_prompt
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
@@ -72,7 +79,9 @@ class _ObservedModel(Model):
                 **kwargs,
             },
             observe_kwargs={"model": model_name},
-
+            metrics=self._llm_metrics,
+            metric_collection=self._llm_metric_collection,
+            prompt=self._confident_prompt,
         ) as observer:
             result = await self._inner.get_response(
                 system_instructions,
@@ -170,22 +179,17 @@ class _ObservedProvider(ModelProvider):
         model = self._base.get_model(model_name, **kwargs)
         return _ObservedModel(model)
 
-
 @dataclass
 class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     """
     A subclass of agents.Agent.
     """
+    agent_metric_collection: str | None = None
+    agent_metrics: List[BaseMetric] | None = None
+    llm_metric_collection: str | None = None
+    llm_metrics: List[BaseMetric] | None = None
+    confident_prompt: Prompt | None = None
 
     def __post_init__(self):
         super().__post_init__()
-        if self.model is not None and not isinstance(self.model, str):
-            try:
-                from agents.models.interface import (
-                    Model as _Model,
-                ) 
 
-                if isinstance(self.model, _Model):
-                    self.model = _ObservedModel(self.model)
-            except Exception:
-                pass

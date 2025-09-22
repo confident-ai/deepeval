@@ -46,17 +46,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if not span.started_at:
             return
         span_type = self.get_span_kind(span.span_data)
-        if span_type == "agent":
-            if isinstance(span.span_data, AgentSpanData):
-                current_trace = current_trace_context.get()
-                if current_trace:
-                    current_trace.name = span.span_data.name
-
-        if span_type == "tool":
-            return
-        elif span_type == "llm":
-            return
-        else:
+        if span_type and span_type == "agent":
             observer = Observer(span_type=span_type, func_name="NA")
             observer.update_span_properties = (
                 lambda base_span: update_span_properties(
@@ -68,13 +58,13 @@ class DeepEvalTracingProcessor(TracingProcessor):
 
     def on_span_end(self, span: "Span") -> None:
         span_type = self.get_span_kind(span.span_data)
-        if span_type == "llm":
+        if span_type and span_type == "agent":
             current_span = current_span_context.get()
             if current_span:
                 update_span_properties(current_span, span.span_data)
-        observer = self.span_observers.pop(span.span_id, None)
-        if observer:
-            observer.__exit__(None, None, None)
+            observer = self.span_observers.pop(span.span_id, None)
+            if observer:
+                observer.__exit__(None, None, None)
 
     def force_flush(self) -> None:
         pass
@@ -85,18 +75,19 @@ class DeepEvalTracingProcessor(TracingProcessor):
     def get_span_kind(self, span_data: "SpanData") -> str:
         if isinstance(span_data, AgentSpanData):
             return "agent"
-        if isinstance(span_data, FunctionSpanData):
-            return "tool"
-        if isinstance(span_data, MCPListToolsSpanData):
-            return "tool"
-        if isinstance(span_data, GenerationSpanData):
-            return "llm"
-        if isinstance(span_data, ResponseSpanData):
-            return "llm"
-        if isinstance(span_data, HandoffSpanData):
-            return "custom"
-        if isinstance(span_data, CustomSpanData):
-            return "base"
-        if isinstance(span_data, GuardrailSpanData):
-            return "base"
-        return "base"
+        # if isinstance(span_data, FunctionSpanData):
+        #     return "tool"
+        # if isinstance(span_data, MCPListToolsSpanData):
+        #     return "tool"
+        # if isinstance(span_data, GenerationSpanData):
+        #     return "llm"
+        # if isinstance(span_data, ResponseSpanData):
+        #     return "llm"
+        # if isinstance(span_data, HandoffSpanData):
+        #     return "custom"
+        # if isinstance(span_data, CustomSpanData):
+        #     return "base"
+        # if isinstance(span_data, GuardrailSpanData):
+        #     return "base"
+        # return "base"
+        return None
