@@ -7,6 +7,7 @@ from deepeval.openai_agents import (
     DeepEvalTracingProcessor,
 )
 
+from deepeval.tracing.context import update_current_trace
 from deepeval.prompt import Prompt
 
 add_trace_processor(DeepEvalTracingProcessor())
@@ -112,14 +113,16 @@ from multi_agents import triage_agent
 async def main1():
     with trace(workflow_name="test_workflow_1", group_id="test_group_id_1", metadata={"test_metadata_1": "test_metadata_1"}):
         user_query = "What's the weather like in London today?"
-        response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
         response_1 = await Runner.run(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
+        response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
+        update_current_trace(input="initial input", output="final output")
 
 # without trace (group_id and metadata not present)
 async def main2():
     user_query = "What's the weather like in London today?"
-    response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
     response_1 = await Runner.run(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
+    response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
+    
 
 async def main3():
     user_query = "What's the weather like in London today?"
@@ -141,10 +144,10 @@ async def main4():
             print("=" * 50)
 
 def execute_agent():
-    # asyncio.run(main1())
+    asyncio.run(main1())
     # asyncio.run(main2())
     # asyncio.run(main3())
-    asyncio.run(main4())
+    # asyncio.run(main4())
 
 
 # execute_agent()
