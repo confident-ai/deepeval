@@ -1,14 +1,40 @@
 import asyncio
+import contextvars
 import inspect
 import json
 import re
 
-from typing import List, Optional, Any
+from collections.abc import Coroutine
+from typing import Any, Callable, List, Optional
 from opentelemetry.trace import Tracer
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, Turn
+
+
+_task_scheduler: contextvars.ContextVar[
+    Optional[Callable[[Coroutine[Any, Any, Any]], asyncio.Task]]
+] = contextvars.ContextVar("_task_scheduler", default=None)
+
+
+def set_task_scheduler(
+    sched: Callable[[Coroutine[Any, Any, Any]], asyncio.Task]
+):
+    """Install a scheduler used by `coerce_to_task` to create Tasks in the current context.
+
+    The given `sched(coro) -> Task` will be invoked whenever `coerce_to_task`
+    needs to schedule a coroutine/awaitable.
+
+    Returns:
+        A ContextVar token that can be passed to `reset_task_scheduler`.
+    """
+    return _task_scheduler.set(sched)
+
+
+def reset_task_scheduler(token):
+    """Restore the previous scheduler installed via `set_task_scheduler`."""
+    _task_scheduler.reset(token)
 
 
 def convert_test_cases_to_goldens(
@@ -186,9 +212,12 @@ def coerce_to_task(obj: Any) -> asyncio.Future[Any]:
         # type: ignore[return-value]  # it is an awaitable, gather accepts it
         return obj
 
+    loop = asyncio.get_running_loop()
+    scheduler = _task_scheduler.get() or loop.create_task
+
     # bare coroutine must be explicitly scheduled using create_task to bind to loop & track
     if asyncio.iscoroutine(obj):
-        return asyncio.create_task(obj)
+        return scheduler(obj)
 
     # generic awaitable (any object with __await__) will need to be wrapped so create_task accepts it
     if inspect.isawaitable(obj):
@@ -196,7 +225,7 @@ def coerce_to_task(obj: Any) -> asyncio.Future[Any]:
         async def _wrap(awaitable):
             return await awaitable
 
-        return asyncio.create_task(_wrap(obj))
+        return scheduler(_wrap(obj))
 
     # not awaitable, so time to sound the alarm!
     raise TypeError(
