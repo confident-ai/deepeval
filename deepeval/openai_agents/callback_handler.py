@@ -47,7 +47,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         _trace_metadata = trace_dict.get("metadata")
 
         if _thread_id or _trace_metadata:
-            _trace = trace_manager.start_new_trace(trace_uuid=_trace_uuid)
+            _trace = trace_manager.start_new_trace(trace_uuid=str(_trace_uuid))
             _trace.thread_id = str(_thread_id)
             _trace.name = str(_trace_name)
             _trace.metadata = make_json_serializable(_trace_metadata)
@@ -64,6 +64,10 @@ class DeepEvalTracingProcessor(TracingProcessor):
                     children=[],
                 )
             )
+        else:
+            current_trace = current_trace_context.get()
+            if current_trace:
+                current_trace.name = str(_trace_name)
 
     def on_trace_end(self, trace: "Trace") -> None:
         trace_dict = trace.export()
