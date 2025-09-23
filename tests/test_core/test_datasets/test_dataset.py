@@ -29,7 +29,9 @@ class TestSaveAndLoad:
         assert all(golden.input is not None for golden in dataset_json.goldens)
         assert all(golden.input is not None for golden in dataset_csv.goldens)
         assert all(golden.name is not None for golden in dataset_json.goldens)
-        assert all(golden.comments is not None for golden in dataset_csv.goldens)
+        assert all(
+            golden.comments is not None for golden in dataset_csv.goldens
+        )
 
     def test_dataset_save_load_conversational_goldens(self):
         """Load ConversationalGoldens from both CSV and JSON and check their count and a sample field."""
@@ -51,13 +53,10 @@ class TestSaveAndLoad:
         assert all(
             golden.scenario is not None for golden in dataset_csv.goldens
         )
-        assert all(
-            golden.name is not None for golden in dataset_json.goldens
-        )
+        assert all(golden.name is not None for golden in dataset_json.goldens)
         assert all(
             golden.comments is not None for golden in dataset_csv.goldens
         )
-
 
     def test_save_as_creates_valid_json_and_csv(self):
         """Test saving goldens as JSON and CSV to temp files."""
@@ -70,7 +69,7 @@ class TestSaveAndLoad:
                 context=["test"],
                 source_file="source.txt",
                 name="Name",
-                comments="Comment"
+                comments="Comment",
             )
         ]
         dataset = EvaluationDataset(goldens)
@@ -113,7 +112,7 @@ class TestSaveAndLoad:
                     ),
                 ],
                 name="Name",
-                comments="Comment"
+                comments="Comment",
             )
         ]
 
@@ -157,7 +156,7 @@ class TestSaveAndLoad:
             context=["test"],
             retrieval_context=["ctx"],
             name="Name",
-            comments="Comment"
+            comments="Comment",
         )
         dataset = EvaluationDataset()
         dataset.add_test_case(test_case)
@@ -179,7 +178,7 @@ class TestSaveAndLoad:
                 Turn(role="assistant", content="assistant content"),
             ],
             name="Name",
-            comments="Comment"
+            comments="Comment",
         )
         dataset = EvaluationDataset()
         dataset._multi_turn = True
