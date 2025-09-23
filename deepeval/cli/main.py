@@ -28,8 +28,6 @@ import typer
 from enum import Enum
 from pydantic import SecretStr
 from deepeval.key_handler import (
-    KEY_FILE_HANDLER,
-    KeyValues,
     EmbeddingKeyValues,
     ModelKeyValues,
 )
@@ -46,16 +44,9 @@ from deepeval.cli.utils import (
     render_login_message,
     upload_and_open_link,
     PROD,
-    resolve_save_target,
-    save_environ_to_store,
-    unset_environ_in_store,
-    switch_model_provider,
 )
 from deepeval.confident.api import (
-    get_confident_api_key,
     is_confident,
-    set_confident_api_key,
-    CONFIDENT_API_KEY_ENV_VAR,
 )
 
 app = typer.Typer(name="deepeval")
@@ -109,7 +100,7 @@ def set_confident_region_command(
     # Add flag emojis based on region
     flag = "🇺🇸" if region == Regions.US else "🇪🇺"
 
-    setting = get_settings()
+    settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
         settings.CONFIDENT_REGION = region.value
 
@@ -282,23 +273,196 @@ def view():
             upload_and_open_link(_span=span)
 
 
-@app.command(name="enable-grpc-logging")
-def enable_grpc_logging(save: Optional[str] = None):
+@app.command(name="set-debug")
+def set_debug(
+    # Core verbosity
+    log_level: Optional[str] = typer.Option(
+        None,
+        "--log-level",
+        help="Global LOG_LEVEL (DEBUG|INFO|WARNING|ERROR|CRITICAL|NOTSET).",
+    ),
+    verbose: Optional[bool] = typer.Option(
+        None, "--verbose/--no-verbose", help="Toggle DEEPEVAL_VERBOSE_MODE."
+    ),
+    # Retry logging dials
+    retry_before_level: Optional[str] = typer.Option(
+        None,
+        "--retry-before-level",
+        help="Log level before a retry attempt (DEBUG|INFO|WARNING|ERROR|CRITICAL|NOTSET or numeric).",
+    ),
+    retry_after_level: Optional[str] = typer.Option(
+        None,
+        "--retry-after-level",
+        help="Log level after a retry attempt (DEBUG|INFO|WARNING|ERROR|CRITICAL|NOTSET or numeric).",
+    ),
+    # gRPC visibility
+    grpc: Optional[bool] = typer.Option(
+        None, "--grpc/--no-grpc", help="Toggle DEEPEVAL_GRPC_LOGGING."
+    ),
+    grpc_verbosity: Optional[str] = typer.Option(
+        None,
+        "--grpc-verbosity",
+        help="Set GRPC_VERBOSITY (DEBUG|INFO|ERROR|NONE).",
+    ),
+    grpc_trace: Optional[str] = typer.Option(
+        None,
+        "--grpc-trace",
+        help=(
+            "Set GRPC_TRACE to comma-separated tracer names or glob patterns "
+            "(e.g. 'tcp,http,secure_endpoint', '*' for all, 'list_tracers' to print available)."
+        ),
+    ),
+    # Confident tracing
+    trace_verbose: Optional[bool] = typer.Option(
+        None,
+        "--trace-verbose/--no-trace-verbose",
+        help="Enable / disable CONFIDENT_TRACE_VERBOSE.",
+    ),
+    trace_env: Optional[str] = typer.Option(
+        None,
+        "--trace-env",
+        help='Set CONFIDENT_TRACE_ENVIRONMENT ("development", "staging", "production", etc).',
+    ),
+    trace_flush: Optional[bool] = typer.Option(
+        None,
+        "--trace-flush/--no-trace-flush",
+        help="Enable / disable  CONFIDENT_TRACE_FLUSH.",
+    ),
+    # Advanced / potentially surprising
+    error_reporting: Optional[bool] = typer.Option(
+        None,
+        "--error-reporting/--no-error-reporting",
+        help="Enable / disable ERROR_REPORTING.",
+    ),
+    ignore_errors: Optional[bool] = typer.Option(
+        None,
+        "--ignore-errors/--no-ignore-errors",
+        help="Enable / disable IGNORE_DEEPEVAL_ERRORS (not recommended in normal debugging).",
+    ),
+    # Persistence
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
     """
-    Enable verbose gRPC logging for the current process.
-    Pass --save=dotenv[:path] to persist it (optional).
+    Configure verbose debug behavior for DeepEval.
+
+    This command lets you mix-and-match verbosity flags (global LOG_LEVEL, verbose mode),
+    retry logger levels, gRPC wire logging, and Confident trace toggles. Values apply
+    immediately to the current process and can be persisted to a dotenv file with --save.
+
+    Examples:
+        deepeval set-debug --log-level DEBUG --verbose --grpc --retry-before-level DEBUG --retry-after-level INFO
+        deepeval set-debug --trace-verbose --trace-env staging --save dotenv:.env.local
     """
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        settings.DEEPEVAL_GRPC_LOGGING = True
+        # Core verbosity
+        if log_level is not None:
+            settings.LOG_LEVEL = log_level
+        if verbose is not None:
+            settings.DEEPEVAL_VERBOSE_MODE = verbose
+
+        # Retry logging
+        if retry_before_level is not None:
+            settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = retry_before_level
+        if retry_after_level is not None:
+            settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = retry_after_level
+
+        # gRPC
+        if grpc is not None:
+            settings.DEEPEVAL_GRPC_LOGGING = grpc
+        if grpc_verbosity is not None:
+            settings.GRPC_VERBOSITY = grpc_verbosity
+        if grpc_trace is not None:
+            settings.GRPC_TRACE = grpc_trace
+
+        # Confident tracing
+        if trace_verbose is not None:
+            settings.CONFIDENT_TRACE_VERBOSE = trace_verbose
+        if trace_env is not None:
+            settings.CONFIDENT_TRACE_ENVIRONMENT = trace_env
+        if trace_flush is not None:
+            settings.CONFIDENT_TRACE_FLUSH = trace_flush
+
+        # Advanced
+        if error_reporting is not None:
+            settings.ERROR_REPORTING = error_reporting
+        if ignore_errors is not None:
+            settings.IGNORE_DEEPEVAL_ERRORS = ignore_errors
+
+    handled, path, updated = edit_ctx.result
+
+    if not updated:
+        # no changes were made, so there is nothing to do.
+        return
+
+    if not handled and save is not None:
+        print("Unsupported --save option. Use --save=dotenv[:path].")
+    elif path:
+        print(
+            f"Saved environment variables to {path} (ensure it's git-ignored)."
+        )
+    else:
+        print(
+            "Settings updated for this session. To persist, use --save=dotenv[:path] "
+            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
+    print(":loud_sound: Debug options updated.")
+
+
+@app.command(name="unset-debug")
+def unset_debug(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the debug-related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
+    """
+    Restore default behavior by unsetting debug related variables.
+
+    Behavior:
+    - Resets LOG_LEVEL back to 'info'.
+    - Unsets DEEPEVAL_VERBOSE_MODE, retry log-level overrides, gRPC and Confident trace flags.
+    - If --save is provided (or DEEPEVAL_DEFAULT_SAVE is set), removes these keys from the target dotenv file.
+    """
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        # Back to normal global level
+        settings.LOG_LEVEL = "info"
+        settings.CONFIDENT_TRACE_ENVIRONMENT = "development"
+        settings.CONFIDENT_TRACE_VERBOSE = True
+
+        # Clear optional toggles/overrides
+        settings.DEEPEVAL_VERBOSE_MODE = None
+        settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = None
+        settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = None
+
+        settings.DEEPEVAL_GRPC_LOGGING = None
+        settings.GRPC_VERBOSITY = None
+        settings.GRPC_TRACE = None
+
+        settings.CONFIDENT_TRACE_FLUSH = None
+
+        settings.ERROR_REPORTING = None
+        settings.IGNORE_DEEPEVAL_ERRORS = None
 
     handled, path, _ = edit_ctx.result
 
     if not handled and save is not None:
-        # invalid --save format (unsupported)
         print("Unsupported --save option. Use --save=dotenv[:path].")
+    elif path:
+        print(f"Removed debug-related environment variables from {path}.")
     else:
-        print("gRPC logging enabled.")
+        print("Debug settings reverted to defaults for this session.")
+
+    print(":mute: Debug options unset.")
 
 
 #############################################
@@ -1336,7 +1500,7 @@ def set_gemini_model_env(
         )
     else:
         print(
-            f":raising_hands: Congratulations! You're now using Gemini's model for all evals that require an LLM."
+            ":raising_hands: Congratulations! You're now using Gemini's model for all evals that require an LLM."
         )
 
 
