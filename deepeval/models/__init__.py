@@ -29,6 +29,13 @@ from deepeval.models.embedding_models import (
     OllamaEmbeddingModel,
 )
 
+from deepeval.models.answer_relevancy_model import (
+    AnswerRelevancyModel,
+    CrossEncoderAnswerRelevancyModel,
+)
+
+from deepeval.models.summac_model import SummaCModels
+
 __all__ = [
     "DeepEvalBaseModel",
     "DeepEvalBaseLLM",
@@ -52,4 +59,7 @@ __all__ = [
     "AzureOpenAIEmbeddingModel",
     "LocalEmbeddingModel",
     "OllamaEmbeddingModel",
+    "AnswerRelevancyModel",
+    "SummaCModels",
+    "CrossEncoderAnswerRelevancyModel"
 ]
