@@ -138,8 +138,9 @@ class Runner(AgentsRunner):
                 session=session,
                 **kwargs,  # backwards compatibility
             )
+            current_trace_thread_id = current_trace_context.get().thread_id
             _output = None
-            if thread_id:
+            if current_trace_thread_id:
                 _output = res.final_output
             else:
                 _output = str(res)
@@ -206,8 +207,9 @@ class Runner(AgentsRunner):
                 session=session,
                 **kwargs,  # backwards compatibility
             )
+            current_trace_thread_id = current_trace_context.get().thread_id
             _output = None
-            if thread_id:
+            if current_trace_thread_id:
                 _output = res.final_output
             else:
                 _output = str(res)
