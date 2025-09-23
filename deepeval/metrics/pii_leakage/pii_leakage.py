@@ -35,7 +35,7 @@ class PIILeakageMetric(BaseMetric):
         verbose_mode: bool = False,
         evaluation_template: Type[PIILeakageTemplate] = PIILeakageTemplate,
     ):
-        self.threshold = 0 if strict_mode else threshold
+        self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
         self.include_reason = include_reason
@@ -284,7 +284,7 @@ class PIILeakageMetric(BaseMetric):
                 no_privacy_count += 1
 
         score = no_privacy_count / number_of_verdicts
-        return 1 if self.strict_mode and score < 1 else score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
         if self.error is not None:

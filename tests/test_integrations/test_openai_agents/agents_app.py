@@ -40,7 +40,7 @@ def get_current_weather(latitude: float, longitude: float) -> dict:
     }
 
 
-@function_tool
+@function_tool(metric_collection="test_collection_1")
 def get_location_coordinates(city_name: str) -> dict:
     """
     Get latitude and longitude for a city name.
@@ -85,8 +85,9 @@ weather_agent = Agent(
     """,
     tools=[get_location_coordinates, get_current_weather],
     tool_use_behavior="run_llm_again",
-    metric_collection="test_collection_1",
-    deepeval_prompt=prompt,
+    # agent_metric_collection="test_collection_1",
+    llm_metric_collection="test_collection_1",
+    confident_prompt=prompt,
 )
 
 
@@ -94,7 +95,14 @@ async def run_weather_agent(user_input: str):
     """Run the weather agent with user input"""
     runner = Runner()
     result = await runner.run(
-        weather_agent, user_input, metric_collection="test_collection_1"
+        weather_agent,
+        user_input,
+        metric_collection="test_collection_1",
+        name="test_name_1",
+        user_id="test_user_id_1",
+        thread_id="test_thread_id_1",
+        tags=["test_tag_1"],
+        metadata={"test_metadata_1": "test_metadata_1"},
     )
     return result.final_output
 
@@ -108,3 +116,6 @@ async def main():
 
 def execute_agent():
     return asyncio.run(main())
+
+
+execute_agent()

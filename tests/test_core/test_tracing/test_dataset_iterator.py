@@ -5,7 +5,6 @@ from tests.test_core.test_tracing.sync_app import meta_agent
 
 from deepeval.evaluate.configs import AsyncConfig
 from deepeval.dataset import EvaluationDataset, Golden
-import asyncio
 
 
 # Define golden inputs
@@ -20,8 +19,7 @@ def test_async_run_async():
     for golden in dataset.evals_iterator(
         async_config=AsyncConfig(run_async=True)
     ):
-        task = asyncio.create_task(async_meta_agent(golden.input))
-        dataset.evaluate(task)
+        dataset.evaluate(async_meta_agent(golden.input))
     assert True
 
 
