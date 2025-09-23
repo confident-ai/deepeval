@@ -109,10 +109,9 @@ class Runner(AgentsRunner):
             metric_collection=metric_collection,
             metrics=metrics,
             func_name="run",
-            function_kwargs={"input": input},
+            function_kwargs={"input": input}, # also set below
         ) as observer:
             update_trace_attributes(
-                input=input,
                 name=name,
                 tags=tags,
                 metadata=metadata,
@@ -123,7 +122,8 @@ class Runner(AgentsRunner):
             )
             current_span = current_span_context.get()
             current_trace = current_trace_context.get()
-            current_trace.input = input
+            if not current_trace.input:
+                current_trace.input = input
             if current_span:
                 current_span.input = input
             res = await super().run(
@@ -171,30 +171,30 @@ class Runner(AgentsRunner):
         **kwargs,
     ) -> RunResult:
         is_agents_available()
-        input_val = input
-
-        update_trace_attributes(
-            input=input_val,
-            name=name,
-            tags=tags,
-            metadata=metadata,
-            thread_id=thread_id,
-            user_id=user_id,
-            metric_collection=metric_collection,
-            metrics=metrics,
-        )
 
         with Observer(
             span_type="custom",
             metric_collection=metric_collection,
             metrics=metrics,
             func_name="run_sync",
-            function_kwargs={"input": input_val},
+            function_kwargs={"input": input}, # also set below
         ) as observer:
+            update_trace_attributes(
+                name=name,
+                tags=tags,
+                metadata=metadata,
+                thread_id=thread_id,
+                user_id=user_id,
+                metric_collection=metric_collection,
+                metrics=metrics,
+            )
+
             current_span = current_span_context.get()
             current_trace = current_trace_context.get()
+            if not current_trace.input:
+                current_trace.input = input
             if current_span:
-                current_span.input = input_val
+                current_span.input = input
             res = super().run_sync(
                 starting_agent,
                 input,
@@ -252,7 +252,6 @@ class Runner(AgentsRunner):
         observer.__enter__()
 
         update_trace_attributes(
-            input=input,
             name=name,
             tags=tags,
             metadata=metadata,
@@ -261,7 +260,10 @@ class Runner(AgentsRunner):
             metric_collection=metric_collection,
             metrics=metrics,
         )
-
+        current_trace = current_trace_context.get()
+        if not current_trace.input:
+            current_trace.input = input
+            
         current_span = current_span_context.get()
         if current_span:
             current_span.input = input
