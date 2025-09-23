@@ -78,10 +78,8 @@ class DeepEvalTracingProcessor(TracingProcessor):
 
         if _thread_id or _trace_metadata:
             trace_manager.remove_span(_trace_uuid) # removing the dummy root span
-            # sort root spans by start time
-            # adding i/o in docs and first input and last run output
-            # thread id should change the output of the riun span
             trace_manager.end_trace(_trace_uuid)
+            current_trace_context.set(None)
 
     def on_span_start(self, span: "Span") -> None:
         if not span.started_at:
