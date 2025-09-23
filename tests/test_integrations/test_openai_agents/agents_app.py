@@ -98,24 +98,40 @@ async def run_weather_agent(user_input: str):
         weather_agent,
         user_input,
         metric_collection="test_collection_1",
-        name="test_name_1",
-        user_id="test_user_id_1",
-        thread_id="test_thread_id_1",
-        tags=["test_tag_1"],
-        metadata={"test_metadata_1": "test_metadata_1"},
+        # name="test_name_1",
+        # user_id="test_user_id_1",
+        # thread_id="test_thread_id_1",
+        # tags=["test_tag_1"],
+        # metadata={"test_metadata_1": "test_metadata_1"},
     )
     return result.final_output
 
+from agents import trace
+from multi_agents import triage_agent
+# with trace (group_id and metadata)
+async def main1():
+    with trace(workflow_name="test_workflow_1", group_id="test_group_id_1", metadata={"test_metadata_1": "test_metadata_1"}):
+        user_query = "What's the weather like in London today?"
+        response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
+        response_1 = await Runner.run(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
 
-# Usage example
-async def main():
+# without trace (group_id and metadata not present)
+async def main2():
     user_query = "What's the weather like in London today?"
-    response = await run_weather_agent(user_query)
-    print(f"Agent Response: {response}")
+    response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
+    response_1 = await Runner.run(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
 
+async def main3():
+    user_query = "What's the weather like in London today?"
+    with trace(workflow_name="test_workflow_1", group_id="test_group_id_1", metadata={"test_metadata_1": "test_metadata_1"}):
+        response_2 = await Runner.run(weather_agent, user_query, metric_collection="test_collection_1")
+    with trace(workflow_name="test_workflow_2", group_id="test_group_id_2", metadata={"test_metadata_2": "test_metadata_2"}):
+        response_1 = await Runner.run(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
 
 def execute_agent():
-    return asyncio.run(main())
+    asyncio.run(main1())
+    asyncio.run(main2())
+    asyncio.run(main3())
 
 
-execute_agent()
+# execute_agent()

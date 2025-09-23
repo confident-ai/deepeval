@@ -1,11 +1,11 @@
 import asyncio
 from deepeval.openai_agents import Agent, Runner
 from deepeval.prompt import Prompt
-from deepeval.openai_agents import DeepEvalTracingProcessor
+# from deepeval.openai_agents import DeepEvalTracingProcessor
 
-from agents import add_trace_processor
+# from agents import add_trace_processor
 
-add_trace_processor(DeepEvalTracingProcessor())
+# add_trace_processor(DeepEvalTracingProcessor())
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
