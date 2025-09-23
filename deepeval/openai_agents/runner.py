@@ -109,7 +109,7 @@ class Runner(AgentsRunner):
             metric_collection=metric_collection,
             metrics=metrics,
             func_name="run",
-            function_kwargs={"input": input}, # also set below
+            function_kwargs={"input": input},  # also set below
         ) as observer:
             update_trace_attributes(
                 name=name,
@@ -177,7 +177,7 @@ class Runner(AgentsRunner):
             metric_collection=metric_collection,
             metrics=metrics,
             func_name="run_sync",
-            function_kwargs={"input": input}, # also set below
+            function_kwargs={"input": input},  # also set below
         ) as observer:
             update_trace_attributes(
                 name=name,
@@ -263,7 +263,7 @@ class Runner(AgentsRunner):
         current_trace = current_trace_context.get()
         if not current_trace.input:
             current_trace.input = input
-            
+
         current_span = current_span_context.get()
         if current_span:
             current_span.input = input

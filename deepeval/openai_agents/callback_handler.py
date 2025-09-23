@@ -53,7 +53,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
             _trace.metadata = make_json_serializable(_trace_metadata)
             current_trace_context.set(_trace)
 
-            trace_manager.add_span( # adds a dummy root span
+            trace_manager.add_span(  # adds a dummy root span
                 BaseSpan(
                     uuid=_trace_uuid,
                     trace_uuid=_trace_uuid,
@@ -77,7 +77,9 @@ class DeepEvalTracingProcessor(TracingProcessor):
         _trace_metadata = trace_dict.get("metadata")
 
         if _thread_id or _trace_metadata:
-            trace_manager.remove_span(_trace_uuid) # removing the dummy root span
+            trace_manager.remove_span(
+                _trace_uuid
+            )  # removing the dummy root span
             trace_manager.end_trace(_trace_uuid)
             current_trace_context.set(None)
 
