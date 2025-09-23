@@ -128,10 +128,23 @@ async def main3():
     with trace(workflow_name="test_workflow_2", group_id="test_group_id_2", metadata={"test_metadata_2": "test_metadata_2"}):
         response_1 = await Runner.run(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
 
+async def main4():
+    user_query = "What's the weather like in London today?"
+    with trace(workflow_name="test_workflow_1", group_id="test_group_id_1", metadata={"test_metadata_1": "test_metadata_1"}):
+        run_streamed_1 = Runner.run_streamed(weather_agent, user_query, metric_collection="test_collection_1")
+        async for chunk in run_streamed_1.stream_events():
+            print(chunk, end="", flush=True)
+            print("=" * 50)
+        run_streamed_2 = Runner.run_streamed(triage_agent, "Hola, ¿cómo estás?", metric_collection="test_collection_1", thread_id="test")
+        async for chunk in run_streamed_2.stream_events():
+            print(chunk, end="", flush=True)
+            print("=" * 50)
+
 def execute_agent():
-    asyncio.run(main1())
-    asyncio.run(main2())
-    asyncio.run(main3())
+    # asyncio.run(main1())
+    # asyncio.run(main2())
+    # asyncio.run(main3())
+    asyncio.run(main4())
 
 
 # execute_agent()
