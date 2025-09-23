@@ -1207,12 +1207,12 @@ async def _a_execute_agentic_test_case(
 
     test_case = LLMTestCase(
         input=golden.input,
-        actual_output=str(trace.output) if trace.output is not None else None,
-        expected_output=trace.expected_output,
-        context=trace.context,
-        retrieval_context=trace.retrieval_context,
-        tools_called=trace.tools_called,
-        expected_tools=trace.expected_tools,
+        actual_output=str(current_trace.output) if current_trace.output is not None else None,
+        expected_output=current_trace.expected_output,
+        context=current_trace.context,
+        retrieval_context=current_trace.retrieval_context,
+        tools_called=current_trace.tools_called,
+        expected_tools=current_trace.expected_tools,
         additional_metadata=golden.additional_metadata,
         comments=golden.comments,
         name=golden.name,
