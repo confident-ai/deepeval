@@ -69,7 +69,9 @@ class MyMMTemplate(MultimodalGEvalTemplate):
 
 
 @pytest.mark.skipif(
-    os.getenv("OPENAI_API_KEY") is None, reason="needs OPENAI_API_KEY"
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
 )
 @pytest.mark.parametrize("strict_mode", [False, True])
 def test_multimodal_geval_uses_custom_evaluation_template(strict_mode):
