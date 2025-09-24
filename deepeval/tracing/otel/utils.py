@@ -306,25 +306,13 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
 
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
-def check_for_integrations_input(span: ReadableSpan):
-    # pydantic agent input
-    try:
-        if span.attributes.get("confident.span.type") == "agent":
-            pydantic_ai_all_messages = span.attributes.get("pydantic_ai.all_messages")
-            if pydantic_ai_all_messages:
-                input_list = json.loads(pydantic_ai_all_messages)
-                if input_list and isinstance(input_list, list):
-                    input_list = input_list[:-1]
-                    return input_list
-    except Exception as e:
-        pass
-            
-    return None
 
 def check_for_integrations_output(span: ReadableSpan):
     try:
         if span.attributes.get("confident.span.type") == "agent":
-            return span.attributes.get("final_result")
+            pydantic_ai_all_messages = span.attributes.get("pydantic_ai.all_messages")
+            if pydantic_ai_all_messages:
+                return json.loads(pydantic_ai_all_messages)
     except Exception as e:
         pass
             
