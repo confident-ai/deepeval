@@ -35,6 +35,7 @@ module.exports = {
               collapsed: true,
             },
             "evaluation-datasets",
+            "evaluation-prompts",
             "evaluation-mcp",
             "evaluation-llm-tracing",
           ],

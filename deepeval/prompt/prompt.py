@@ -20,7 +20,6 @@ from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
 from deepeval.utils import (
-    get_or_create_event_loop,
     get_or_create_general_event_loop,
 )
 
