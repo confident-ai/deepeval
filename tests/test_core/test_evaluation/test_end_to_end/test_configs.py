@@ -1,12 +1,12 @@
 import pytest
-import asyncio
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate.configs import AsyncConfig, ErrorConfig
 from deepeval.test_case import LLMTestCase
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.dataset.utils import coerce_to_task
 from deepeval.metrics import FaithfulnessMetric, AnswerRelevancyMetric
 from deepeval.evaluate import evaluate
-from deepeval.tracing import observe, update_current_trace, trace_manager
+from deepeval.tracing import observe, update_current_trace
 
 
 @observe()
@@ -37,7 +37,7 @@ class TestEvaluate:
             metrics=[FaithfulnessMetric()],
             error_config=error_config,
         )
-        assert evaluation_result.test_results[0].success == True
+        assert evaluation_result.test_results[0].success
         assert len(evaluation_result.test_results) == 1
 
         async_config = AsyncConfig(run_async=False)
@@ -49,7 +49,7 @@ class TestEvaluate:
         )
 
         assert len(evaluation_result.test_results) == 1
-        assert evaluation_result.test_results[0].success == True
+        assert evaluation_result.test_results[0].success
 
     def test_error_on_missing_params(self):
         error_config = ErrorConfig(skip_on_missing_params=False)
@@ -91,7 +91,7 @@ class TestEvalsIterator:
             metrics=[AnswerRelevancyMetric()],
             async_config=AsyncConfig(run_async=True),
         ):
-            task = asyncio.create_task(a_llm_app(golden.input))
+            task = coerce_to_task(a_llm_app(golden.input))
             dataset.evaluate(task)
         assert True
 

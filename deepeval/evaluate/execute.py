@@ -89,6 +89,11 @@ from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
+from deepeval.dataset.utils import (
+    coerce_to_task,
+    set_task_scheduler,
+    reset_task_scheduler,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -440,7 +445,8 @@ async def a_execute_test_cases(
                             progress=progress,
                             pbar_id=pbar_id,
                         )
-                        tasks.append(asyncio.create_task(task))
+
+                        tasks.append(coerce_to_task(task))
 
                     elif isinstance(test_case, MLLMTestCase):
                         mllm_test_case_counter += 1
@@ -462,7 +468,7 @@ async def a_execute_test_cases(
                             progress=progress,
                             pbar_id=pbar_id,
                         )
-                        tasks.append(asyncio.create_task(task))
+                        tasks.append(coerce_to_task(task))
 
                     elif isinstance(test_case, ConversationalTestCase):
                         conversational_test_case_counter += 1
@@ -482,7 +488,7 @@ async def a_execute_test_cases(
                             progress=progress,
                             pbar_id=pbar_id,
                         )
-                        tasks.append(asyncio.create_task(task))
+                        tasks.append(coerce_to_task(task))
 
                     await asyncio.sleep(async_config.throttle_value)
             await asyncio.gather(*tasks)
@@ -512,7 +518,7 @@ async def a_execute_test_cases(
                         _is_assert_test=_is_assert_test,
                         show_indicator=display_config.show_indicator,
                     )
-                    tasks.append(asyncio.create_task((task)))
+                    tasks.append(coerce_to_task(task))
 
                 elif isinstance(test_case, ConversationalTestCase):
                     conversational_test_case_counter += 1
@@ -535,7 +541,7 @@ async def a_execute_test_cases(
                         _is_assert_test=_is_assert_test,
                         show_indicator=display_config.show_indicator,
                     )
-                    tasks.append(asyncio.create_task((task)))
+                    tasks.append(coerce_to_task(task))
 
                 elif isinstance(test_case, MLLMTestCase):
                     mllm_test_case_counter += 1
@@ -555,7 +561,7 @@ async def a_execute_test_cases(
                         _is_assert_test=_is_assert_test,
                         show_indicator=display_config.show_indicator,
                     )
-                    tasks.append(asyncio.create_task(task))
+                    tasks.append(coerce_to_task(task))
 
                 await asyncio.sleep(async_config.throttle_value)
         await asyncio.gather(*tasks)
@@ -1125,7 +1131,7 @@ async def a_execute_agentic_test_cases(
                         progress=progress,
                         pbar_id=pbar_id,
                     )
-                    tasks.append(asyncio.create_task(task))
+                    tasks.append(coerce_to_task(task))
                     await asyncio.sleep(async_config.throttle_value)
 
             await asyncio.gather(*tasks)
@@ -1147,7 +1153,7 @@ async def a_execute_agentic_test_cases(
                     _use_bar_indicator=_use_bar_indicator,
                     _is_assert_test=_is_assert_test,
                 )
-                tasks.append(asyncio.create_task(task))
+                tasks.append(coerce_to_task(task))
                 await asyncio.sleep(async_config.throttle_value)
         await asyncio.gather(*tasks)
     local_trace_manager.evaluating = False
@@ -1744,7 +1750,6 @@ def a_execute_agentic_test_cases_from_loop(
     )
 
     semaphore = asyncio.Semaphore(async_config.max_concurrent)
-    original_create_task = asyncio.create_task
 
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = cache_config.write_cache
@@ -1842,9 +1847,10 @@ def a_execute_agentic_test_cases_from_loop(
             created_tasks.append(task)
             return task
 
-        asyncio.create_task = create_callback_task
-        # DEBUG
-        # Snapshot tasks that already exist on this loop so we can detect strays
+        # Route all task creation via coerce_to_task to our callback for this run
+        token = set_task_scheduler(create_callback_task)
+
+        # DEBUG: Snapshot tasks that already exist on this loop so we can detect strays
         baseline_tasks = loop.run_until_complete(_snapshot_tasks())
 
         try:
@@ -1863,7 +1869,8 @@ def a_execute_agentic_test_cases_from_loop(
                     update_pbar(progress, pbar_callback_id)
                     update_pbar(progress, pbar_id)
         finally:
-            asyncio.create_task = original_create_task
+            # always restore the scheduler hook
+            reset_task_scheduler(token)
 
         if created_tasks:
             # Only await tasks we created on this loop in this run.
@@ -2112,6 +2119,17 @@ async def _a_evaluate_traces(
         async with semaphore:
             return await func(*args, **kwargs)
 
+    # light weight scheduler: no wrapping since execute_evals_with_semaphore already wraps
+    def _eval_scheduler(coro):
+        loop = asyncio.get_running_loop()
+        t = loop.create_task(coro)
+        try:
+            t.set_name(f"eval[{len(eval_tasks)}]")
+        except Exception:
+            pass
+        return t
+
+    token = set_task_scheduler(_eval_scheduler)
     eval_tasks = []
     for count, trace in enumerate(traces_to_evaluate):
         golden = goldens[count]
@@ -2133,9 +2151,12 @@ async def _a_evaluate_traces(
                 pbar_id=pbar_id,
                 trace_metrics=trace_metrics,
             )
-            eval_tasks.append(asyncio.create_task(task))
+            eval_tasks.append(coerce_to_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*eval_tasks)
+    try:
+        await asyncio.gather(*eval_tasks)
+    finally:
+        reset_task_scheduler(token)
 
 
 async def _evaluate_test_case_pairs(
@@ -2189,7 +2210,7 @@ async def _evaluate_test_case_pairs(
                 progress=progress,
                 pbar_id=pbar_id,
             )
-            tasks.append(asyncio.create_task(task))
+            tasks.append(coerce_to_task(task))
             await asyncio.sleep(throttle_value)
     await asyncio.gather(*tasks)
 
