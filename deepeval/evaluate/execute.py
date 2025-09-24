@@ -42,6 +42,7 @@ from deepeval.tracing.api import (
     BaseApiSpan,
 )
 from deepeval.dataset import Golden
+from deepeval.dataset.context import set_current_golden, reset_current_golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.utils import (
@@ -1480,6 +1481,7 @@ def execute_agentic_test_cases_from_loop(
         )
 
         for golden in goldens:
+            token = set_current_golden(golden)
             with capture_evaluation_run("golden"):
                 # yield golden
                 count += 1
@@ -1492,8 +1494,14 @@ def execute_agentic_test_cases_from_loop(
                     _progress=progress,
                     _pbar_callback_id=pbar_tags_id,
                 ):
-                    yield golden
-                    current_trace: Trace = current_trace_context.get()
+                    try:
+                        # yield golden to user code
+                        yield golden
+                        # control has returned from user code without error, capture trace now
+                        current_trace: Trace = current_trace_context.get()
+                    finally:
+                        # after user code returns control, always reset the context
+                        reset_current_golden(token)
 
                 update_pbar(progress, pbar_tags_id)
                 update_pbar(progress, pbar_id)
@@ -1849,6 +1857,7 @@ def a_execute_agentic_test_cases_from_loop(
 
         try:
             for index, golden in enumerate(goldens):
+                token = set_current_golden(golden)
                 current_golden_ctx.update(
                     {
                         "index": index,
@@ -1857,7 +1866,10 @@ def a_execute_agentic_test_cases_from_loop(
                     }
                 )
                 prev_task_length = len(created_tasks)
-                yield golden
+                try:
+                    yield golden
+                finally:
+                    reset_current_golden(token)
                 # if this golden created no tasks, bump bars now
                 if len(created_tasks) == prev_task_length:
                     update_pbar(progress, pbar_callback_id)

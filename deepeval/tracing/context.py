@@ -1,6 +1,8 @@
 from typing import Any, Dict, List, Optional
 from contextvars import ContextVar
 
+from deepeval.utils import is_missing
+from deepeval.dataset.context import get_current_golden
 from deepeval.tracing.types import BaseSpan, Trace
 from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
@@ -13,6 +15,19 @@ current_span_context: ContextVar[Optional[BaseSpan]] = ContextVar(
 current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
     "current_trace", default=None
 )
+
+
+def _resolve_expected_output_from_context(
+    current_value: Optional[str],
+) -> Optional[str]:
+    """If current_value is falsy/empty, try to pull expected_output from the active Golden."""
+    if not is_missing(current_value):
+        return current_value
+    golden = get_current_golden()
+    if not golden:
+        return current_value
+    exp = getattr(golden, "expected_output", None)
+    return exp if not is_missing(exp) else current_value
 
 
 def update_current_span(
@@ -31,6 +46,11 @@ def update_current_span(
     if not current_span:
         return
     if test_case:
+        # attempt to retrieve expected_output from the active Golden if caller omitted it.
+        test_case.expected_output = _resolve_expected_output_from_context(
+            test_case.expected_output
+        )
+
         current_span.input = test_case.input
         current_span.output = test_case.actual_output
         current_span.expected_output = test_case.expected_output
@@ -50,6 +70,11 @@ def update_current_span(
         current_span.context = context
     if expected_output:
         current_span.expected_output = expected_output
+    elif not getattr(current_span, "expected_output", None):
+        # if still missing, attempt to resolve from context
+        current_span.expected_output = _resolve_expected_output_from_context(
+            None
+        )
     if tools_called:
         current_span.tools_called = tools_called
     if expected_tools:
@@ -77,6 +102,11 @@ def update_current_trace(
     if not current_trace:
         return
     if test_case:
+        # resolve expected_output for the trace if caller omitted it.
+        test_case.expected_output = _resolve_expected_output_from_context(
+            test_case.expected_output
+        )
+
         current_trace.input = test_case.input
         current_trace.output = test_case.actual_output
         current_trace.expected_output = test_case.expected_output
@@ -104,6 +134,10 @@ def update_current_trace(
         current_trace.context = context
     if expected_output:
         current_trace.expected_output = expected_output
+    elif not getattr(current_trace, "expected_output", None):
+        current_trace.expected_output = _resolve_expected_output_from_context(
+            None
+        )
     if tools_called:
         current_trace.tools_called = tools_called
     if expected_tools:
