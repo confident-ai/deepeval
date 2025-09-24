@@ -482,3 +482,67 @@ def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
 
 # def set_agent_span_attributes(agent_span: AgentSpan, result: AgentRunResult):
 #     agent_span.tools_called = extract_tools_called(result)
+
+import inspect
+import functools
+
+from pydantic_ai.agent import Agent
+from pydantic_ai.models.instrumented import InstrumentationSettings
+
+from opentelemetry.sdk.trace import Tracer
+
+_PATCHED_AGENT_RUN = False
+
+def _get_self(func, args, kwargs, default=None):
+    # Fast path: bound method calls always pass instance/class first
+    if args:
+        return args[0]
+    # Robust path: support keyword-passed self/cls and different first-arg names
+    try:
+        sig = inspect.signature(func)
+        bound = sig.bind_partial(*args, **kwargs)
+        for p in sig.parameters.values():
+            if p.kind in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD):
+                return bound.arguments.get(p.name, default)
+    except Exception:
+        pass
+    # Fallback: conventional kw name
+    return kwargs.get('self', default)
+
+
+def patch_agent_run():
+    global _PATCHED_AGENT_RUN
+    
+    if _PATCHED_AGENT_RUN:
+        return
+    
+    original_run = Agent.run
+
+    @functools.wraps(original_run)
+    async def wrapper(*args, **kwargs):
+        self_obj: Agent = _get_self(original_run, args, kwargs)
+        instrumentation_settings: InstrumentationSettings = self_obj.instrument
+        tracer: Tracer = instrumentation_settings.tracer
+        with tracer.start_as_current_span("Run") as span:
+            result = await original_run(*args, **kwargs)
+            thread_id = getattr(instrumentation_settings, "thread_id", None)
+            if thread_id:
+                span.set_attribute("confident.trace.thread_id", thread_id)
+            user_id = getattr(instrumentation_settings, "user_id", None)
+            if user_id:
+                span.set_attribute("confident.trace.user_id", user_id)
+            metadata = getattr(instrumentation_settings, "metadata", None)
+            if metadata:
+                span.set_attribute("confident.trace.metadata", metadata)
+            tags = getattr(instrumentation_settings, "tags", None)
+            if tags:
+                span.set_attribute("confident.trace.tags", tags)
+            metric_collection = getattr(instrumentation_settings, "metric_collection", None)
+            if metric_collection:
+                span.set_attribute("confident.trace.metric_collection", metric_collection)
+            metrics = getattr(instrumentation_settings, "metrics", None)
+            if metrics:
+                span.set_attribute("confident.trace.metrics", metrics)
+        return result
+
+    Agent.run = wrapper
