@@ -212,12 +212,14 @@ def coerce_to_task(obj: Any) -> asyncio.Future[Any]:
         # type: ignore[return-value]  # it is an awaitable, gather accepts it
         return obj
 
-    loop = asyncio.get_running_loop()
-    scheduler = _task_scheduler.get() or loop.create_task
+    scheduler = _task_scheduler.get()
 
     # bare coroutine must be explicitly scheduled using create_task to bind to loop & track
     if asyncio.iscoroutine(obj):
-        return scheduler(obj)
+        if scheduler is not None:
+            return scheduler(obj)
+        loop = asyncio.get_running_loop()
+        return loop.create_task(obj)
 
     # generic awaitable (any object with __await__) will need to be wrapped so create_task accepts it
     if inspect.isawaitable(obj):
@@ -225,7 +227,10 @@ def coerce_to_task(obj: Any) -> asyncio.Future[Any]:
         async def _wrap(awaitable):
             return await awaitable
 
-        return scheduler(_wrap(obj))
+        if scheduler is not None:
+            return scheduler(_wrap(obj))
+        loop = asyncio.get_running_loop()
+        return loop.create_task(_wrap(obj))
 
     # not awaitable, so time to sound the alarm!
     raise TypeError(
