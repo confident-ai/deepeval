@@ -100,16 +100,14 @@ def check_llm_input_from_gen_ai_attributes(
     span: ReadableSpan,
 ) -> Tuple[Optional[list], Optional[dict]]:
     try:
-        input = json.loads(span.attributes.get("events"))
-        if input and isinstance(input, list):
-            # check if the last event is a genai choice
-            last_event = input.pop()
-            if last_event and last_event.get("event.name") == "gen_ai.choice":
-                return input, last_event
+        input = json.loads(span.attributes.get("gen_ai.input.messages"))
     except Exception as e:
-        pass
-
-    return None, None
+        input = None
+    try:
+        output = json.loads(span.attributes.get("gen_ai.output.messages"))
+    except Exception as e:
+        output = None
+    return input, output
 
 
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
