@@ -30,6 +30,8 @@ class SpanInterceptor(SpanProcessor):
             span.set_attribute("confident.trace.environment", self.settings.environment)
         if self.settings.name:
             span.set_attribute("confident.trace.name", self.settings.name)
+        if span.attributes.get("agent_name"):
+            span.set_attribute("confident.span.type", "agent")
     
     def on_end(self, span):
         pass

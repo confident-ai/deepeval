@@ -21,6 +21,8 @@ from deepeval.tracing.types import (
     ToolSpan,
 )
 from deepeval.tracing.otel.utils import (
+    check_for_integrations_input,
+    check_for_integrations_output,
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
     check_model_from_gen_ai_attributes,
@@ -85,6 +87,11 @@ class ConfidentSpanExporter(SpanExporter):
         _test_run_id: Optional[str] = None,
     ) -> SpanExportResult:
         # build forest of spans
+        # for span in spans:
+        #     print("--------------------------------")
+        #     print(span.to_json())
+        #     print("--------------------------------")
+        # return SpanExportResult.SUCCESS
         forest = self._build_span_forest(spans)
 
         # convert forest of spans to forest of base span wrappers
@@ -281,7 +288,11 @@ class ConfidentSpanExporter(SpanExporter):
 
         # Extract Span Attributes
         span_input = span.attributes.get("confident.span.input")
+        if not span_input:
+            span_input = check_for_integrations_input(span)
         span_output = span.attributes.get("confident.span.output")
+        if not span_output:
+            span_output = check_for_integrations_output(span)
         span_name = span.attributes.get("confident.span.name")
 
         raw_span_metric_collection = span.attributes.get(
