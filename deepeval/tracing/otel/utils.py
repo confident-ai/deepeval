@@ -317,3 +317,10 @@ def check_for_integrations_output(span: ReadableSpan):
         pass
             
     return None
+
+def check_tool_output(span: ReadableSpan):
+    try:
+        return span.attributes.get("tool_response")
+    except Exception as e:
+        pass
+    return None

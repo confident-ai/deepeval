@@ -7,6 +7,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
 from deepeval.confident.api import get_confident_api_key
+from deepeval.prompt import Prompt
 
 OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 
@@ -30,6 +31,12 @@ class SpanInterceptor(SpanProcessor):
             span.set_attribute("confident.trace.environment", self.settings.environment)
         if self.settings.name:
             span.set_attribute("confident.trace.name", self.settings.name)
+        if self.settings.confident_prompt:
+            span.set_attribute(
+                "confident.span.prompt",
+                json.dumps({"alias": self.settings.confident_prompt.alias, "version": self.settings.confident_prompt.version})
+            )
+        
         if span.attributes.get("agent_name"):
             span.set_attribute("confident.span.type", "agent")
     
@@ -46,9 +53,29 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     tags: Optional[List[str]] = None
     environment: Literal["production", "staging", "development", "testing"] = None
     metric_collection: Optional[str] = None
+    confident_prompt: Optional[Prompt] = None
 
-    def __init__(self, api_key: Optional[str] = None):
-        
+    def __init__(
+        self, 
+        api_key: Optional[str] = None,
+        name: Optional[str] = None,
+        thread_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        metadata: Optional[dict] = None,
+        tags: Optional[List[str]] = None,
+        environment: Literal["production", "staging", "development", "testing"] = None,
+        metric_collection: Optional[str] = None,
+        confident_prompt: Optional[Prompt] = None
+    ):
+        self.name = name
+        self.thread_id = thread_id
+        self.user_id = user_id
+        self.metadata = metadata
+        self.tags = tags
+        self.environment = environment
+        self.metric_collection = metric_collection
+        self.confident_prompt = confident_prompt
+
         if not api_key:
             api_key = get_confident_api_key()
             if not api_key:
@@ -70,27 +97,3 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         )
         super().__init__(tracer_provider=trace_provider)
     
-    def set_trace_attributes(
-        self,
-        thread_id: Optional[str] = None,
-        user_id: Optional[str] = None,
-        metadata: Optional[dict] = None,
-        tags: Optional[List[str]] = None,
-        metric_collection: Optional[str] = None,
-        environment: Literal["production", "staging", "development", "testing"] = None,
-        name: Optional[str] = None,
-    ):
-        if thread_id:   
-            self.thread_id = thread_id
-        if user_id:
-            self.user_id = user_id
-        if metadata:
-            self.metadata = metadata
-        if tags:
-            self.tags = tags
-        if metric_collection:
-            self.metric_collection = metric_collection
-        if environment:
-            self.environment = environment
-        if name:
-            self.name = name

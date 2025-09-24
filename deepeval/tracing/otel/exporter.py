@@ -10,6 +10,7 @@ from collections import defaultdict
 import typing
 import json
 
+from deepeval.prompt.prompt import Prompt
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
@@ -27,6 +28,7 @@ from deepeval.tracing.otel.utils import (
     check_model_from_gen_ai_attributes,
     check_llm_input_from_gen_ai_attributes,
     check_tool_name_from_gen_ai_attributes,
+    check_tool_output,
     set_trace_time,
     to_hex_string,
     parse_string,
@@ -455,7 +457,7 @@ class ConfidentSpanExporter(SpanExporter):
             model = span.attributes.get("confident.llm.model")
             if not model:
                 model = check_model_from_gen_ai_attributes(span)
-            prompt = span.attributes.get("confident.llm.prompt")
+            # prompt = span.attributes.get("confident.llm.prompt")
             input_token_count = span.attributes.get(
                 "confident.llm.input_token_count"
             )
@@ -481,6 +483,16 @@ class ConfidentSpanExporter(SpanExporter):
                     output = [json.loads(o) for o in output]
                 except Exception:
                     pass
+            prompt = span.attributes.get("confident.span.prompt")
+            confident_prompt = None
+            if prompt and isinstance(prompt, str):
+                prompt = json.loads(prompt)
+                try:
+                    confident_prompt = Prompt(alias=prompt["alias"])
+                    confident_prompt.version = prompt["version"]
+                except Exception:
+                    pass
+            
             llm_span = LlmSpan(
                 uuid=uuid,
                 status=status,
@@ -493,11 +505,12 @@ class ConfidentSpanExporter(SpanExporter):
                 model=model,
                 cost_per_input_token=cost_per_input_token,
                 cost_per_output_token=cost_per_output_token,
-                prompt=prompt,
+                # prompt=prompt,
                 input_token_count=input_token_count,
                 output_token_count=output_token_count,
                 input=input,
                 output=output,
+                prompt=confident_prompt,
             )
             return llm_span
 
@@ -575,6 +588,7 @@ class ConfidentSpanExporter(SpanExporter):
                 name = check_tool_name_from_gen_ai_attributes(span)
             description = span.attributes.get("confident.tool.description")
             input = check_tool_input_parameters_from_gen_ai_attributes(span)
+            output = check_tool_output(span)
 
             tool_span = ToolSpan(
                 uuid=uuid,
@@ -588,6 +602,7 @@ class ConfidentSpanExporter(SpanExporter):
                 name=name if name else "",
                 description=description,
                 input=input,
+                output=output,
             )
             return tool_span
 
