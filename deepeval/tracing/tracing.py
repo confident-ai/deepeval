@@ -184,7 +184,7 @@ class TraceManager:
                 trace.status = TraceSpanStatus.SUCCESS
 
             mode = get_deepeval_trace_mode()
-            if mode == "gen":
+            if True:
                 body = self.create_trace_api(trace).model_dump(
                     by_alias=True, exclude_none=True
                 )

@@ -213,6 +213,32 @@ def dump_body_to_json_file(
         dst_path = os.path.join(dir_path, f"{base_name}.json")
 
     actual_body = make_json_serializable(body)
+
+    # Ensure directory exists
+    try:
+        os.makedirs(os.path.dirname(dst_path) or ".", exist_ok=True)
+    except Exception:
+        pass
+
+    # Load existing content (if any) and append
+    existing = None
+    if os.path.exists(dst_path):
+        try:
+            with open(dst_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    existing = json.loads(content)
+        except Exception:
+            existing = None
+
+    if existing is None:
+        to_write = [actual_body]
+    elif isinstance(existing, list):
+        existing.append(actual_body)
+        to_write = existing
+    else:
+        to_write = [existing, actual_body]
+
     with open(dst_path, "w", encoding="utf-8") as f:
-        json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
+        json.dump(to_write, f, ensure_ascii=False, indent=2, sort_keys=True)
     return dst_path
