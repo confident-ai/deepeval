@@ -42,7 +42,7 @@ from deepeval.tracing.api import (
     BaseApiSpan,
 )
 from deepeval.dataset import Golden
-from deepeval.dataset.context import set_current_golden, reset_current_golden
+from deepeval.contextvars import set_current_golden, reset_current_golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.utils import (

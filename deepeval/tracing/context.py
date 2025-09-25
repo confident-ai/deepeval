@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 from contextvars import ContextVar
 
 from deepeval.utils import is_missing
-from deepeval.dataset.context import get_current_golden
+from deepeval.contextvars import get_current_golden
 from deepeval.tracing.types import BaseSpan, Trace
 from deepeval.test_case.llm_test_case import ToolCall, LLMTestCase
 from deepeval.tracing.types import LlmSpan, RetrieverSpan
