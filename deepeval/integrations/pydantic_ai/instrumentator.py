@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Literal, Optional, List
 from pydantic_ai.models.instrumented import InstrumentationSettings
 from opentelemetry.sdk.trace import SpanProcessor, TracerProvider, Tracer
@@ -47,6 +48,13 @@ class SpanInterceptor(SpanProcessor):
         if span.attributes.get("gen_ai.operation.name") in ["chat", "generate_content", "text_completion"]:
             if self.settings.llm_metric_collection:
                 span.set_attribute("confident.span.metric_collection", self.settings.llm_metric_collection)
+        
+        # set tool metric collection
+        tool_name = span.attributes.get("gen_ai.tool.name")
+        if tool_name:
+            tool_metric_collection = self.settings.tool_metric_collection_map.get(tool_name)
+            if tool_metric_collection:
+                span.set_attribute("confident.span.metric_collection", str(tool_metric_collection))
     
     def on_end(self, span):
         pass
@@ -64,6 +72,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     confident_prompt: Optional[Prompt] = None
     llm_metric_collection: Optional[str] = None
     agent_metric_collection: Optional[str] = None
+    tool_metric_collection_map: dict = {}
 
     def __init__(
         self, 
@@ -77,13 +86,20 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         confident_prompt: Optional[Prompt] = None,
         llm_metric_collection: Optional[str] = None,
         agent_metric_collection: Optional[str] = None,
+        tool_metric_collection_map: dict = {},
     ):
+        _environment = os.getenv("ENVIRONMENT", "development")
+        if _environment and _environment in ["production", "staging", "development", "testing"]:
+            self.environment = _environment
+        else:
+            self.environment = "development"
+            
+        self.tool_metric_collection_map = tool_metric_collection_map
         self.name = name
         self.thread_id = thread_id
         self.user_id = user_id
         self.metadata = metadata
         self.tags = tags
-        # self.environment = os.getenv("ENVIRONMENT", "development")
         self.metric_collection = metric_collection
         self.confident_prompt = confident_prompt
         self.llm_metric_collection = llm_metric_collection
