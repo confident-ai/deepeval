@@ -1,208 +1,3512 @@
-{
-  "agentSpans": [
-    {
-      "agentHandoffs": [],
-      "availableTools": [
-        "get_location_coordinates",
-        "get_current_weather"
-      ],
-      "endTime": "<is_present>",
-      "input": {},
-      "metadata": {
-        "output_type": "str"
+[
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:40:34.917Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:27.043Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:40:34.917Z",
+        "input": "What's the weather in London?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:27.042Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:40:34.917Z",
+    "environment": "development",
+    "input": "What's the weather in London?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:40:34.916Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:30.939Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
       },
-      "name": "Weather Specialist Agent",
-      "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "agent",
-      "uuid": "<is_present>"
-    }
-  ],
-  "baseSpans": [
-    {
-      "endTime": "<is_present>",
-      "input": "What's the weather like in London today?",
-      "metricCollection": "test_collection_1",
-      "name": "run",
-      "output": "<is_present>",
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "base",
-      "uuid": "<is_present>"
-    }
-  ],
-  "endTime": "<is_present>",
-  "environment": "development",
-  "input": "What's the weather like in London today?",
-  "llmSpans": [
-    {
-      "endTime": "<is_present>",
-      "input": [
-        {
-          "content": "What's the weather like in London today?",
-          "role": "user",
-          "type": "message"
+      {
+        "endTime": "2025-09-24T09:40:30.937Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
         },
-        {
-          "arguments": "{\"city_name\":\"London\"}",
-          "call_id": "<is_present>",
-          "name": "get_location_coordinates"
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_current_weather",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
         },
-        {
-          "call_id": "<is_present>",
-          "output": "{'lat': 51.5074, 'lng': -0.1278}",
-          "role": "tool"
-        },
-        {
-          "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
-          "call_id": "<is_present>",
-          "name": "get_current_weather"
-        },
-        {
-          "call_id": "<is_present>",
-          "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
-          "role": "tool"
-        }
-      ],
-      "inputTokenCount": 419.0,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0
+        "startTime": "2025-09-24T09:40:29.085Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
       },
-      "metricCollection": "test_collection_1",
-      "model": "gpt-4.1-2025-04-14",
-      "name": "LLM Generation",
-      "output": "<is_present>",
-      "outputTokenCount": "<is_present>",
-      "parentUuid": "<is_present>",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
-      },
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "llm",
-      "uuid": "<is_present>"
+      {
+        "endTime": "2025-09-24T09:40:29.082Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"city_name\":\"London\"}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_location_coordinates",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:27.043Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_1": "test_metadata_1"
     },
-    {
-      "endTime": "<is_present>",
-      "input": [
-        {
-          "content": "What's the weather like in London today?",
-          "role": "user",
-          "type": "message"
+    "metricCollection": "test_collection_1",
+    "name": "Agent workflow",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:40:27.042Z",
+    "status": "SUCCESS",
+    "tags": [
+      "test_tag_1"
+    ],
+    "threadId": "test_thread_id_1",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:40:30.938Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
         },
-        {
-          "arguments": "{\"city_name\":\"London\"}",
-          "call_id": "<is_present>",
-          "name": "get_location_coordinates"
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
         },
-        {
-          "call_id": "<is_present>",
-          "output": "{'lat': 51.5074, 'lng': -0.1278}",
-          "role": "tool"
-        }
-      ],
-      "inputTokenCount": 312.0,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:30.938Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
       },
-      "metricCollection": "test_collection_1",
-      "model": "gpt-4.1-2025-04-14",
-      "name": "LLM Generation",
-      "output": "<is_present>",
-      "outputTokenCount": 27.0,
-      "parentUuid": "<is_present>",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:40:29.083Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:29.083Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "userId": "test_user_id_1",
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:40:41.978Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:34.921Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:40:41.978Z",
+        "input": "What's the weather in London?",
+        "metricCollection": "test_collection_1",
+        "name": "run_streamed",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:34.921Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:40:41.978Z",
+    "environment": "development",
+    "input": "What's the weather in London?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:40:41.977Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "<is_present>",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:38.641Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
       },
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "llm",
-      "uuid": "<is_present>"
+      {
+        "endTime": "2025-09-24T09:40:38.638Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:36.746Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:36.744Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:34.922Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_1": "test_metadata_1"
     },
-    {
-      "endTime": "<is_present>",
-      "input": [
-        {
-          "content": "What's the weather like in London today?",
-          "role": "user",
-          "type": "message"
-        }
-      ],
-      "inputTokenCount": 268.0,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0
+    "metricCollection": "test_collection_1",
+    "name": "Agent workflow",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:40:34.921Z",
+    "status": "SUCCESS",
+    "tags": [
+      "test_tag_1"
+    ],
+    "threadId": "test_thread_id_1",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:40:38.640Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:38.640Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
       },
-      "metricCollection": "test_collection_1",
-      "model": "gpt-4.1-2025-04-14",
-      "name": "LLM Generation",
-      "output": "<is_present>",
-      "outputTokenCount": 17.0,
-      "parentUuid": "<is_present>",
-      "prompt": {
-        "alias": "asd",
-        "version": "00.00.01"
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:40:36.745Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:36.745Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "userId": "test_user_id_1",
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:40:50.119Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:44.144Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
       },
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "llm",
-      "uuid": "<is_present>"
-    }
-  ],
-  "metricCollection": "test_collection_1",
-  "name": "Weather Specialist Agent",
-  "output": "<is_present>",
-  "retrieverSpans": [],
-  "startTime": "<is_present>",
-  "status": "SUCCESS",
-  "toolSpans": [
-    {
-      "description": "Fetches weather data for a given location using the Open-Meteo API.",
-      "endTime": "<is_present>",
-      "input": {
-        "latitude": 51.5074,
-        "longitude": -0.1278
+      {
+        "agentHandoffs": [],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:40:44.143Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Spanish agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:43.164Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
       },
-      "metricCollection": "test_collection_1",
-      "name": "get_current_weather",
-      "output": {
-        "apparent_temperature": 21.0,
-        "dummy": true,
-        "humidity": 55,
-        "precipitation": 0.0,
-        "temperature_2m": 22.5,
-        "weather_code": 1,
-        "wind_direction_10m": 180,
-        "wind_speed_10m": 5.2
+      {
+        "agentHandoffs": [
+          "Spanish agent",
+          "English agent"
+        ],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:40:43.164Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Triage agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:41.984Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:40:50.119Z",
+        "input": "What's the weather like in London today?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:44.143Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
       },
-      "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "tool",
-      "uuid": "<is_present>"
+      {
+        "endTime": "2025-09-24T09:40:44.143Z",
+        "input": "Hola, ¿cómo estás?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:41.983Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:40:50.119Z",
+    "environment": "development",
+    "input": "Hola, ¿cómo estás?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:40:50.119Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:46.774Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:46.773Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_current_weather",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:45.384Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:45.383Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"city_name\":\"London\"}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_location_coordinates",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:44.144Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:44.142Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            },
+            {
+              "arguments": "{}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "transfer_to_spanish_agent",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{\"assistant\": \"Spanish agent\"}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "You only speak Spanish.",
+          "tools": []
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:43.164Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:43.163Z",
+        "input": {
+          "handoffs": [
+            {
+              "agent_name": "Spanish agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the Spanish agent agent to handle the request. ",
+              "tool_name": "transfer_to_spanish_agent"
+            },
+            {
+              "agent_name": "English agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the English agent agent to handle the request. ",
+              "tool_name": "transfer_to_english_agent"
+            }
+          ],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "Handoff to the appropriate agent based on the language of the request.",
+          "tools": []
+        },
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "transfer_to_spanish_agent",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {},
+        "startTime": "2025-09-24T09:40:41.985Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_1": "test_metadata_1"
     },
-    {
-      "description": "Get latitude and longitude for a city name.",
-      "endTime": "<is_present>",
-      "input": {
-        "city_name": "London"
+    "metricCollection": "test_collection_1",
+    "name": "test_workflow_1",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:40:41.983Z",
+    "status": "SUCCESS",
+    "threadId": "test_group_id_1",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:40:46.773Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:46.773Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
       },
-      "name": "get_location_coordinates",
-      "output": {
-        "lat": 51.5074,
-        "lng": -0.1278
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:40:45.384Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:45.384Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:40:52.289Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Spanish agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:51.174Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
       },
-      "parentUuid": "<is_present>",
-      "startTime": "<is_present>",
-      "status": "SUCCESS",
-      "type": "tool",
-      "uuid": "<is_present>"
-    }
-  ],
-  "uuid": "<is_present>"
-}
+      {
+        "agentHandoffs": [
+          "Spanish agent",
+          "English agent"
+        ],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:40:51.174Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Triage agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:50.121Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:40:52.289Z",
+        "input": "Hola, ¿cómo estás?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:50.121Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:40:52.289Z",
+    "environment": "development",
+    "input": "Hola, ¿cómo estás?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:40:52.288Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            },
+            {
+              "arguments": "{}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "transfer_to_spanish_agent",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{\"assistant\": \"Spanish agent\"}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "You only speak Spanish.",
+          "tools": []
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:51.174Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:51.174Z",
+        "input": {
+          "handoffs": [
+            {
+              "agent_name": "Spanish agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the Spanish agent agent to handle the request. ",
+              "tool_name": "transfer_to_spanish_agent"
+            },
+            {
+              "agent_name": "English agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the English agent agent to handle the request. ",
+              "tool_name": "transfer_to_english_agent"
+            }
+          ],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "Handoff to the appropriate agent based on the language of the request.",
+          "tools": []
+        },
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "transfer_to_spanish_agent",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {},
+        "startTime": "2025-09-24T09:40:50.122Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metricCollection": "test_collection_1",
+    "name": "Agent workflow",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:40:50.121Z",
+    "status": "SUCCESS",
+    "threadId": "test",
+    "toolSpans": [],
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:40:58.433Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:52.291Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:40:58.433Z",
+        "input": "What's the weather like in London today?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:52.291Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:40:58.433Z",
+    "environment": "development",
+    "input": "What's the weather like in London today?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:40:58.432Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:55.722Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:55.717Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_current_weather",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:53.990Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:53.989Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"city_name\":\"London\"}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_location_coordinates",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:52.291Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metricCollection": "test_collection_1",
+    "name": "Agent workflow",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:40:52.291Z",
+    "status": "SUCCESS",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:40:55.721Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:55.721Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      },
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:40:53.990Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:53.990Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:41:07.275Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:58.442Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:41:07.275Z",
+        "input": "What's the weather like in London today?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:40:58.441Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:41:07.275Z",
+    "environment": "development",
+    "input": "initial input",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:41:07.274Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:01.062Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:01.061Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_current_weather",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:59.480Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:40:59.478Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"city_name\":\"London\"}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_location_coordinates",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:40:58.442Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_1": "test_metadata_1"
+    },
+    "metricCollection": "test_collection_1",
+    "name": "test_workflow_1",
+    "output": "final output",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:40:58.441Z",
+    "status": "SUCCESS",
+    "threadId": "test_group_id_1",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:41:01.061Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:01.061Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      },
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:40:59.479Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:40:59.479Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:41:10.418Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Spanish agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:08.593Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      },
+      {
+        "agentHandoffs": [
+          "Spanish agent",
+          "English agent"
+        ],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:41:08.592Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Triage agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:07.284Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:41:10.418Z",
+        "input": "Hola, ¿cómo estás?",
+        "metricCollection": "test_collection_1",
+        "name": "run",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:41:07.284Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:41:10.418Z",
+    "environment": "development",
+    "input": "Hola, ¿cómo estás?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:41:10.417Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            },
+            {
+              "arguments": "{}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "transfer_to_spanish_agent",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{\"assistant\": \"Spanish agent\"}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "You only speak Spanish.",
+          "tools": []
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:08.593Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:08.592Z",
+        "input": {
+          "handoffs": [
+            {
+              "agent_name": "Spanish agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the Spanish agent agent to handle the request. ",
+              "tool_name": "transfer_to_spanish_agent"
+            },
+            {
+              "agent_name": "English agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the English agent agent to handle the request. ",
+              "tool_name": "transfer_to_english_agent"
+            }
+          ],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "Handoff to the appropriate agent based on the language of the request.",
+          "tools": []
+        },
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "transfer_to_spanish_agent",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {},
+        "startTime": "2025-09-24T09:41:07.285Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_2": "test_metadata_2"
+    },
+    "metricCollection": "test_collection_1",
+    "name": "test_workflow_2",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:41:07.284Z",
+    "status": "SUCCESS",
+    "threadId": "test",
+    "toolSpans": [],
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:41:21.300Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Spanish agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:19.352Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      },
+      {
+        "agentHandoffs": [
+          "Spanish agent",
+          "English agent"
+        ],
+        "availableTools": [],
+        "endTime": "2025-09-24T09:41:19.352Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Triage agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:18.141Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      },
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:41:18.140Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:10.430Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:41:21.300Z",
+        "input": "Hola, ¿cómo estás?",
+        "metricCollection": "test_collection_1",
+        "name": "run_streamed",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:41:18.140Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:18.140Z",
+        "input": "What's the weather like in London today?",
+        "metricCollection": "test_collection_1",
+        "name": "run_streamed",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:41:10.429Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:41:21.300Z",
+    "environment": "development",
+    "input": "What's the weather like in London today?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:41:21.298Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            },
+            {
+              "arguments": "{}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "transfer_to_spanish_agent",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{\"assistant\": \"Spanish agent\"}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "You only speak Spanish.",
+          "tools": []
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "<is_present>",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:19.353Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:19.350Z",
+        "input": {
+          "handoffs": [
+            {
+              "agent_name": "Spanish agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the Spanish agent agent to handle the request. ",
+              "tool_name": "transfer_to_spanish_agent"
+            },
+            {
+              "agent_name": "English agent",
+              "input_filter": null,
+              "input_json_schema": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+              },
+              "is_enabled": true,
+              "on_invoke_handoff": {},
+              "strict_json_schema": true,
+              "tool_description": "Handoff to the English agent agent to handle the request. ",
+              "tool_name": "transfer_to_english_agent"
+            }
+          ],
+          "input": [
+            {
+              "content": "Hola, ¿cómo estás?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "Handoff to the appropriate agent based on the language of the request.",
+          "tools": []
+        },
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "",
+        "parentUuid": "<is_present>",
+        "prompt": {},
+        "startTime": "2025-09-24T09:41:18.142Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:18.138Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "<is_present>",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:13.572Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:13.569Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:11.715Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:11.713Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather like in London today?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": "",
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:10.431Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_1": "test_metadata_1"
+    },
+    "metricCollection": "test_collection_1",
+    "name": "test_workflow_1",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:41:10.429Z",
+    "status": "SUCCESS",
+    "threadId": "test",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:41:13.571Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:13.571Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      },
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:41:11.714Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:11.714Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "uuid": "<is_present>"
+  },
+  {
+    "agentSpans": [
+      {
+        "agentHandoffs": [],
+        "availableTools": [
+          "get_location_coordinates",
+          "get_current_weather"
+        ],
+        "endTime": "2025-09-24T09:41:27.339Z",
+        "input": {},
+        "metadata": {
+          "output_type": "str"
+        },
+        "name": "Weather Specialist Agent",
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:21.313Z",
+        "status": "SUCCESS",
+        "type": "agent",
+        "uuid": "<is_present>"
+      }
+    ],
+    "baseSpans": [
+      {
+        "endTime": "2025-09-24T09:41:27.339Z",
+        "input": "What's the weather in London?",
+        "metricCollection": "test_collection_1",
+        "name": "run_sync",
+        "output": "<is_present>",
+        "startTime": "2025-09-24T09:41:21.312Z",
+        "status": "SUCCESS",
+        "type": "base",
+        "uuid": "<is_present>"
+      }
+    ],
+    "endTime": "2025-09-24T09:41:27.339Z",
+    "environment": "development",
+    "input": "What's the weather in London?",
+    "llmSpans": [
+      {
+        "endTime": "2025-09-24T09:41:27.338Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            },
+            {
+              "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_current_weather",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": {},
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "content": [
+              {
+                "annotations": [],
+                "logprobs": [],
+                "text": "<is_present>",
+                "type": "output_text"
+              }
+            ],
+            "id": "<is_present>",
+            "role": "assistant",
+            "status": "completed",
+            "type": "message"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:24.785Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:24.784Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            },
+            {
+              "arguments": "{\"city_name\":\"London\"}",
+              "call_id": "<is_present>",
+              "id": "<is_present>",
+              "name": "get_location_coordinates",
+              "status": "completed",
+              "type": "function_call"
+            },
+            {
+              "call_id": "<is_present>",
+              "output": "{'lat': 51.5074, 'lng': -0.1278}",
+              "type": "function_call_output"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_current_weather",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:22.534Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      },
+      {
+        "endTime": "2025-09-24T09:41:22.532Z",
+        "input": {
+          "handoffs": [],
+          "input": [
+            {
+              "content": "What's the weather in London?",
+              "role": "user"
+            }
+          ],
+          "model_settings": {},
+          "output_schema": null,
+          "prompt": null,
+          "system_instructions": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    ",
+          "tools": [
+            {
+              "description": "Get latitude and longitude for a city name.",
+              "is_enabled": true,
+              "name": "get_location_coordinates",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            },
+            {
+              "description": "Fetches weather data for a given location using the Open-Meteo API.",
+              "is_enabled": true,
+              "name": "get_current_weather",
+              "on_invoke_tool": "<circular>",
+              "params_json_schema": {
+                "additionalProperties": false,
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object"
+              },
+              "strict_json_schema": true
+            }
+          ]
+        },
+        "metricCollection": "test_collection_1",
+        "model": "gpt-4.1",
+        "name": "LLM",
+        "output": [
+          {
+            "arguments": "{\"city_name\":\"London\"}",
+            "call_id": "<is_present>",
+            "id": "<is_present>",
+            "name": "get_location_coordinates",
+            "status": "completed",
+            "type": "function_call"
+          }
+        ],
+        "parentUuid": "<is_present>",
+        "prompt": {
+          "alias": "asd",
+          "version": "00.00.01"
+        },
+        "startTime": "2025-09-24T09:41:21.313Z",
+        "status": "SUCCESS",
+        "type": "llm",
+        "uuid": "<is_present>"
+      }
+    ],
+    "metadata": {
+      "test_metadata_1": "test_metadata_1"
+    },
+    "metricCollection": "test_collection_1",
+    "name": "Agent workflow",
+    "output": "<is_present>",
+    "retrieverSpans": [],
+    "startTime": "2025-09-24T09:41:21.312Z",
+    "status": "SUCCESS",
+    "tags": [
+      "test_tag_1"
+    ],
+    "threadId": "test_thread_id_1",
+    "toolSpans": [
+      {
+        "description": "Fetches weather data for a given location using the Open-Meteo API.",
+        "endTime": "2025-09-24T09:41:24.784Z",
+        "input": {
+          "latitude": 51.5074,
+          "longitude": -0.1278
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_current_weather",
+        "output": {
+          "apparent_temperature": 21.0,
+          "dummy": true,
+          "humidity": 55,
+          "precipitation": 0.0,
+          "temperature_2m": 22.5,
+          "weather_code": 1,
+          "wind_direction_10m": 180,
+          "wind_speed_10m": 5.2
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:24.784Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      },
+      {
+        "description": "Get latitude and longitude for a city name.",
+        "endTime": "2025-09-24T09:41:22.533Z",
+        "input": {
+          "city_name": "London"
+        },
+        "metricCollection": "test_collection_1",
+        "name": "get_location_coordinates",
+        "output": {
+          "lat": 51.5074,
+          "lng": -0.1278
+        },
+        "parentUuid": "<is_present>",
+        "startTime": "2025-09-24T09:41:22.532Z",
+        "status": "SUCCESS",
+        "type": "tool",
+        "uuid": "<is_present>"
+      }
+    ],
+    "userId": "test_user_id_1",
+    "uuid": "<is_present>"
+  }
+]
