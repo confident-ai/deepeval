@@ -220,23 +220,24 @@ class GPTModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = None
-        model = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.OPENAI_MODEL_NAME
+        values = KEY_FILE_HANDLER.fetch_multiple_keys(
+            [
+                ModelKeyValues.OPENAI_MODEL_NAME,
+                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN,
+                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN,
+            ]
         )
+        model_name = None
+        model = model or values[ModelKeyValues.OPENAI_MODEL_NAME]
         cost_per_input_token = (
             cost_per_input_token
             if cost_per_input_token is not None
-            else KEY_FILE_HANDLER.fetch_data(
-                ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN
-            )
+            else values[ModelKeyValues.OPENAI_COST_PER_INPUT_TOKEN]
         )
         cost_per_output_token = (
             cost_per_output_token
             if cost_per_output_token is not None
-            else KEY_FILE_HANDLER.fetch_data(
-                ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
-            )
+            else values[ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN]
         )
 
         if isinstance(model, str):

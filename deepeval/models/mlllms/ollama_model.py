@@ -20,12 +20,13 @@ retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 class MultimodalOllamaModel(DeepEvalBaseMLLM):
     def __init__(self, **kwargs):
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
-        )
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_BASE_URL
-        )
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            ModelKeyValues.LOCAL_MODEL_NAME,
+            ModelKeyValues.LOCAL_MODEL_BASE_URL,
+        ])
+        
+        model_name = values[ModelKeyValues.LOCAL_MODEL_NAME]
+        self.base_url = values[ModelKeyValues.LOCAL_MODEL_BASE_URL]
         self.kwargs = kwargs
         super().__init__(model_name)
 
