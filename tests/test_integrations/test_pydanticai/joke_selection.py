@@ -5,12 +5,6 @@ import httpx
 from pydantic_ai import Agent, RunContext
 from deepeval.integrations.pydantic_ai.instrumentator import ConfidentInstrumentationSettings
 
-confident_instrumentation_settings = ConfidentInstrumentationSettings()
-
-Agent.instrument_all(
-    instrument=confident_instrumentation_settings,
-)
-
 @dataclass
 class ClientAndKey:  
     http_client: httpx.AsyncClient
@@ -24,6 +18,11 @@ joke_selection_agent = Agent(
         'Use the `joke_factory` tool to generate some jokes on the given subject, '
         'then choose the best. You must return just a single joke.'
     ),
+    instrument=ConfidentInstrumentationSettings(
+        thread_id="test_thread_id_1",
+        agent_metric_collection="test_collection_1",
+        llm_metric_collection="test_collection_1",
+    )
 )
 joke_generation_agent = Agent(
     'openai:gpt-4o',
@@ -33,6 +32,9 @@ joke_generation_agent = Agent(
         'Use the "get_jokes" tool to get some jokes on the given subject, '
         'then extract each joke into a list.'
     ),
+    instrument=ConfidentInstrumentationSettings(
+        # thread_id="test_thread_id_2",
+    )
 )
 
 
@@ -66,4 +68,4 @@ async def main():
         print(result.usage())  
         #> RunUsage(input_tokens=309, output_tokens=32, requests=4, tool_calls=2)
 
-# asyncio.run(main())
+asyncio.run(main())

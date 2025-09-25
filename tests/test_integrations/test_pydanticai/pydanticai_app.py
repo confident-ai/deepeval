@@ -12,12 +12,6 @@ from deepeval.integrations.pydantic_ai.instrumentator import ConfidentInstrument
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
-confident_instrumentation_settings = ConfidentInstrumentationSettings(
-    confident_prompt=prompt
-)
-
-Agent.instrument_all(instrument=confident_instrumentation_settings)
-
 @dataclass
 class Deps:
     client: AsyncClient
@@ -27,7 +21,14 @@ weather_agent = Agent(
     "openai:gpt-4o-mini",
     instructions="Be concise, reply with one sentence.",
     deps_type=Deps,
-    retries=2
+    retries=2, 
+    instrument=ConfidentInstrumentationSettings(
+        confident_prompt=prompt,
+        thread_id="test_thread_id_1",
+        agent_metric_collection="test_collection_1",
+        llm_metric_collection="test_collection_1",
+        tool_metric_collection_map={"get_lat_lng": "test_collection_1"},
+    )
 )
 
 
@@ -87,4 +88,4 @@ def execute_agent():
     output = asyncio.run(run_agent("What's the weather in Paris?"))
     return output
 
-# execute_agent()
+execute_agent()

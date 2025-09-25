@@ -1,12 +1,19 @@
 import json
 import os
 from typing import Literal, Optional, List
-from pydantic_ai.models.instrumented import InstrumentationSettings
-from opentelemetry.sdk.trace import SpanProcessor, TracerProvider, Tracer
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter,
-)
+
+try:
+    from pydantic_ai.models.instrumented import InstrumentationSettings
+    from opentelemetry.sdk.trace import SpanProcessor, TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter,
+    )
+    dependency_installed = True
+except:
+    dependency_installed = False
+
+
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
 

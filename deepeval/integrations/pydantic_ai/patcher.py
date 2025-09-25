@@ -44,44 +44,44 @@
 # # _INSTRUMENTED = False
 
 
-import warnings
-from typing import Optional
+# import warnings
+# from typing import Optional
 
 
-def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
-    """
-    DEPRECATED: This function is deprecated and will be removed in a future version.
-    Please deepeval.integrations.pydantic_ai.Agent to instrument instead.
-    """
-    warnings.warn(
-        "The 'instrument_pydantic_ai()' function is deprecated and will be removed in a future version. "
-        "Please use deepeval.integrations.pydantic_ai.Agent to instrument instead. Refer to the documentation [link]",  # TODO: add the link,
-        UserWarning,
-        stacklevel=2,
-    )
+# def instrument(otel: Optional[bool] = False, api_key: Optional[str] = None):
+#     """
+#     DEPRECATED: This function is deprecated and will be removed in a future version.
+#     Please deepeval.integrations.pydantic_ai.Agent to instrument instead.
+#     """
+#     warnings.warn(
+#         "The 'instrument_pydantic_ai()' function is deprecated and will be removed in a future version. "
+#         "Please use deepeval.integrations.pydantic_ai.Agent to instrument instead. Refer to the documentation [link]",  # TODO: add the link,
+#         UserWarning,
+#         stacklevel=2,
+#     )
 
-    # Don't execute the original functionality
-    return
+#     # Don't execute the original functionality
+#     return
 
-    # Original code below (commented out to prevent execution)
-    # global _INSTRUMENTED
-    # if api_key:
-    #     deepeval.login(api_key)
-    #
-    # api_key = get_confident_api_key()
-    #
-    # if not api_key:
-    #     raise ValueError("No api key provided.")
-    #
-    # if otel:
-    #     instrument_pydantic_ai(api_key)
-    # else:
-    #     with capture_tracing_integration("pydantic_ai"):
-    #         if _INSTRUMENTED:
-    #             return
-    #         _patch_agent_init()
-    #         _patch_agent_tool_decorator()
-    #         _INSTRUMENTED = True
+#     # Original code below (commented out to prevent execution)
+#     # global _INSTRUMENTED
+#     # if api_key:
+#     #     deepeval.login(api_key)
+#     #
+#     # api_key = get_confident_api_key()
+#     #
+#     # if not api_key:
+#     #     raise ValueError("No api key provided.")
+#     #
+#     # if otel:
+#     #     instrument_pydantic_ai(api_key)
+#     # else:
+#     #     with capture_tracing_integration("pydantic_ai"):
+#     #         if _INSTRUMENTED:
+#     #             return
+#     #         _patch_agent_init()
+#     #         _patch_agent_tool_decorator()
+#     #         _INSTRUMENTED = True
 
 
 # ################### Init Patches ###################
