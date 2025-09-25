@@ -1,6 +1,6 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Optional, List, Tuple, Union
+from typing import Optional, List, Tuple, Type, Union
 from deepeval.models import DeepEvalBaseMLLM
 from deepeval.metrics import BaseMultimodalMetric
 from deepeval.test_case import (
@@ -10,7 +10,10 @@ from deepeval.test_case import (
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import (
     MultimodalGEvalTemplate,
 )
-from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import *
+from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import (
+    Steps,
+    ReasonScore,
+)
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -49,6 +52,9 @@ class MultimodalGEval(BaseMultimodalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            MultimodalGEvalTemplate
+        ] = MultimodalGEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
         validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
@@ -65,6 +71,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
         self._include_g_eval_suffix = _include_g_eval_suffix
+        self.evaluation_template = evaluation_template
 
     def measure(
         self,
@@ -167,7 +174,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
+        prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -190,7 +197,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         g_eval_params_str = construct_g_eval_params_string(
             self.evaluation_params
         )
-        prompt = MultimodalGEvalTemplate.generate_evaluation_steps(
+        prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -218,7 +225,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = MultimodalGEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_list=test_case_list,
                 parameters=g_eval_params_str,
@@ -227,11 +234,15 @@ class MultimodalGEval(BaseMultimodalMetric):
                 _additional_context=_additional_context,
             )
         else:
-            prompt = MultimodalGEvalTemplate.generate_strict_evaluation_results(
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_list=test_case_list,
-                parameters=g_eval_params_str,
-                _additional_context=_additional_context,
+            prompt = (
+                self.evaluation_template.generate_strict_evaluation_results(
+                    evaluation_steps=number_evaluation_steps(
+                        self.evaluation_steps
+                    ),
+                    test_case_list=test_case_list,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                )
             )
         try:
             # don't use log probabilities for unsupported gpt models
@@ -256,7 +267,7 @@ class MultimodalGEval(BaseMultimodalMetric):
                     score, res
                 )
                 return weighted_summed_score, reason
-            except:
+            except Exception:
                 return score, reason
         except (
             AttributeError
@@ -289,7 +300,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = MultimodalGEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=number_evaluation_steps(self.evaluation_steps),
                 test_case_list=test_case_list,
                 parameters=g_eval_params_str,
@@ -298,11 +309,15 @@ class MultimodalGEval(BaseMultimodalMetric):
                 _additional_context=_additional_context,
             )
         else:
-            prompt = MultimodalGEvalTemplate.generate_strict_evaluation_results(
-                evaluation_steps=number_evaluation_steps(self.evaluation_steps),
-                test_case_list=test_case_list,
-                parameters=g_eval_params_str,
-                _additional_context=_additional_context,
+            prompt = (
+                self.evaluation_template.generate_strict_evaluation_results(
+                    evaluation_steps=number_evaluation_steps(
+                        self.evaluation_steps
+                    ),
+                    test_case_list=test_case_list,
+                    parameters=g_eval_params_str,
+                    _additional_context=_additional_context,
+                )
             )
 
         try:
@@ -326,7 +341,7 @@ class MultimodalGEval(BaseMultimodalMetric):
                     score, res
                 )
                 return weighted_summed_score, reason
-            except:
+            except Exception:
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
@@ -352,7 +367,7 @@ class MultimodalGEval(BaseMultimodalMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except Exception:
                 self.success = False
         return self.success
 
