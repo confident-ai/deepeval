@@ -46,10 +46,14 @@ class LiteLLMModel(DeepEvalBaseLLM):
     ):
         from litellm import completion, acompletion, get_llm_provider
 
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            ModelKeyValues.LITELLM_MODEL_NAME,
+            ModelKeyValues.LITELLM_API_KEY,
+            ModelKeyValues.LITELLM_API_BASE,
+        ])
+
         # Get model name from parameter or key file
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LITELLM_MODEL_NAME
-        )
+        model_name = model or values[ModelKeyValues.LITELLM_MODEL_NAME]
         if not model_name:
             raise ValueError(
                 "Model name must be provided either through parameter or set-litellm command"
@@ -58,7 +62,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         # Get API key from parameter, key file, or environment variable
         self.api_key = (
             api_key
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_KEY)
+            or values[ModelKeyValues.LITELLM_API_KEY]
             or os.getenv("LITELLM_PROXY_API_KEY")
             or os.getenv("OPENAI_API_KEY")
             or os.getenv("ANTHROPIC_API_KEY")
@@ -68,7 +72,7 @@ class LiteLLMModel(DeepEvalBaseLLM):
         # Get API base from parameter, key file, or environment variable
         self.api_base = (
             api_base
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LITELLM_API_BASE)
+            or values[ModelKeyValues.LITELLM_API_BASE]
             or os.getenv("LITELLM_API_BASE")
             or os.getenv("LITELLM_PROXY_API_BASE")
         )

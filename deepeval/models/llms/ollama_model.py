@@ -23,12 +23,17 @@ class OllamaModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.LOCAL_MODEL_NAME
+        values = KEY_FILE_HANDLER.fetch_multiple_keys(
+            [
+                ModelKeyValues.LOCAL_MODEL_NAME,
+                ModelKeyValues.LOCAL_MODEL_BASE_URL,
+            ]
         )
+
+        model_name = model or values[ModelKeyValues.LOCAL_MODEL_NAME]
         self.base_url = (
             base_url
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.LOCAL_MODEL_BASE_URL)
+            or values[ModelKeyValues.LOCAL_MODEL_BASE_URL]
             or "http://localhost:11434"
         )
         if temperature < 0:

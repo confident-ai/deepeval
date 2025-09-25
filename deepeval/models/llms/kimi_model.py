@@ -79,25 +79,27 @@ class KimiModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.MOONSHOT_MODEL_NAME
+        values = KEY_FILE_HANDLER.fetch_multiple_keys(
+            [
+                ModelKeyValues.MOONSHOT_MODEL_NAME,
+                ModelKeyValues.MOONSHOT_API_KEY,
+                ModelKeyValues.TEMPERATURE,
+            ]
         )
+
+        model_name = model or values[ModelKeyValues.MOONSHOT_MODEL_NAME]
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available Moonshot models: {', '.join(model_pricing.keys())}"
             )
-        temperature_from_key = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.TEMPERATURE
-        )
+        temperature_from_key = values[ModelKeyValues.TEMPERATURE]
         if temperature_from_key is None:
             self.temperature = temperature
         else:
             self.temperature = float(temperature_from_key)
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
-        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.MOONSHOT_API_KEY
-        )
+        self.api_key = api_key or values[ModelKeyValues.MOONSHOT_API_KEY]
         self.base_url = "https://api.moonshot.cn/v1"
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
