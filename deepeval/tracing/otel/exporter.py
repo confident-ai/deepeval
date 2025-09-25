@@ -406,11 +406,15 @@ class ConfidentSpanExporter(SpanExporter):
                 trace_environment = environment
 
         pydantic_trace_input, pydantic_trace_output = check_pydantic_ai_trace_input_output(span)
+        if not trace_input and pydantic_trace_input:
+            trace_input = pydantic_trace_input
+        if not trace_output and pydantic_trace_output:
+            trace_output = pydantic_trace_output
         
         return BaseSpanWrapper(
             base_span=base_span,
-            trace_input=trace_input if trace_input else pydantic_trace_input,
-            trace_output=trace_output if trace_output else pydantic_trace_output,
+            trace_input=trace_input,
+            trace_output=trace_output,
             trace_name=trace_name,
             trace_tags=trace_tags,
             trace_metadata=trace_metadata,
