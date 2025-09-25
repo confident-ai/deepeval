@@ -8,6 +8,7 @@ class PromptInterpolationType(Enum):
     MUSTACHE_WITH_SPACE = "MUSTACHE_WITH_SPACE"
     FSTRING = "FSTRING"
     DOLLAR_BRACKETS = "DOLLAR_BRACKETS"
+    JINJA = "JINJA"
 
 
 class PromptMessage(BaseModel):

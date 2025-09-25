@@ -64,6 +64,10 @@ class Prompt:
             raise TypeError(
                 "Unable to create Prompt where 'alias' and 'template' are both None. Please provide at least one to continue."
             )
+        if template and messages_template:
+            raise TypeError(
+                "Unable to create Prompt where 'template' and 'messages_template' are both provided. Please provide only one to continue."
+            )
 
         self.alias = alias
         self._text_template = template
@@ -71,6 +75,10 @@ class Prompt:
         self._version = None
         self._polling_tasks: Dict[str, asyncio.Task] = {}
         self._refresh_map: Dict[str, int] = {}
+        if template:
+            self._type = PromptType.TEXT
+        elif messages_template:
+            self._type = PromptType.LIST
 
     @property
     def version(self):
