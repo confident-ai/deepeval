@@ -26,7 +26,8 @@ def _silence_confident_trace(monkeypatch):
 
 
 class GoldenStub:
-    def __init__(self, expected_output=None):
+    def __init__(self, golden_input=None, expected_output=None):
+        self.input = golden_input
         self.expected_output = expected_output
 
 
@@ -206,3 +207,65 @@ def test_noop_when_no_active_trace_or_span():
     update_current_trace(test_case=LLMTestCase(input="x", actual_output="y"))
     update_current_span(test_case=LLMTestCase(input="x", actual_output="y"))
     # nothing to assert! success == no exception
+
+
+def test_trace_does_not_inherit_expected_output_on_input_mismatch():
+    # golden with input "china" and an expected_output
+    token = set_current_golden(
+        GoldenStub(golden_input="china", expected_output="beijing, 1000")
+    )
+    try:
+        # child span uses a *different* input ("beijing") than the golden's input ("china")
+        with Observer("llm", func_name="mismatch"):
+            update_current_trace(
+                test_case=LLMTestCase(
+                    input="beijing",  # <- the input is intentionally different from golden.input
+                    actual_output="some text",
+                    expected_output=None,  # <- no expected_output, so resolver will try to pull from golden
+                )
+            )
+
+            trace, _ = _get_active_trace_and_span()
+            assert trace.expected_output is None
+    finally:
+        reset_current_golden(token)
+
+
+def test_span_does_not_inherit_expected_output_on_input_mismatch():
+    # golden with input "china" and an expected_output
+    token = set_current_golden(
+        GoldenStub(golden_input="china", expected_output="beijing, 1000")
+    )
+    try:
+        # child span uses a *different* input ("beijing") than the golden's input ("china")
+        with Observer("llm", func_name="mismatch"):
+            update_current_span(
+                test_case=LLMTestCase(
+                    input="beijing",  # <- the input is intentionally different from golden.input
+                    actual_output="some text",
+                    expected_output=None,  # <- no expected_output, so resolver will try to pull from golden
+                )
+            )
+
+            _, span = _get_active_trace_and_span()
+            assert span.expected_output is None
+    finally:
+        reset_current_golden(token)
+
+
+def test_inherits_expected_output_on_input_match_ignoring_case_and_space():
+
+    token = set_current_golden(
+        GoldenStub(golden_input="  China ", expected_output="beijing, 1000")
+    )
+    try:
+        with Observer("llm", func_name="match"):
+            update_current_trace(
+                test_case=LLMTestCase(
+                    input="china", actual_output="ok", expected_output=None
+                )
+            )
+            trace, _ = _get_active_trace_and_span()
+            assert trace.expected_output == "beijing, 1000"
+    finally:
+        reset_current_golden(token)

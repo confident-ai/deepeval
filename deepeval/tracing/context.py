@@ -17,8 +17,13 @@ current_trace_context: ContextVar[Optional[Trace]] = ContextVar(
 )
 
 
+def _normalize(s: Optional[str]) -> Optional[str]:
+    return None if s is None else str(s).strip().casefold()
+
+
 def _resolve_expected_output_from_context(
     current_value: Optional[str],
+    candidate_input: Optional[str] = None,
 ) -> Optional[str]:
     """If current_value is falsy/empty, try to pull expected_output from the active Golden."""
     if not is_missing(current_value):
@@ -26,6 +31,11 @@ def _resolve_expected_output_from_context(
     golden = get_current_golden()
     if not golden:
         return current_value
+
+    golden_input = getattr(golden, "input", None)
+    if golden_input is not None and candidate_input is not None:
+        if _normalize(str(golden_input)) != _normalize(str(candidate_input)):
+            return current_value
     exp = getattr(golden, "expected_output", None)
     return exp if not is_missing(exp) else current_value
 
@@ -48,7 +58,7 @@ def update_current_span(
     if test_case:
         # attempt to retrieve expected_output from the active Golden if caller omitted it.
         test_case.expected_output = _resolve_expected_output_from_context(
-            test_case.expected_output
+            test_case.expected_output, candidate_input=test_case.input
         )
 
         current_span.input = test_case.input
@@ -73,7 +83,8 @@ def update_current_span(
     elif not getattr(current_span, "expected_output", None):
         # if still missing, attempt to resolve from context
         current_span.expected_output = _resolve_expected_output_from_context(
-            None
+            None,
+            candidate_input=getattr(current_span, "input", None),
         )
     if tools_called:
         current_span.tools_called = tools_called
@@ -104,7 +115,7 @@ def update_current_trace(
     if test_case:
         # resolve expected_output for the trace if caller omitted it.
         test_case.expected_output = _resolve_expected_output_from_context(
-            test_case.expected_output
+            test_case.expected_output, candidate_input=test_case.input
         )
 
         current_trace.input = test_case.input
@@ -136,7 +147,8 @@ def update_current_trace(
         current_trace.expected_output = expected_output
     elif not getattr(current_trace, "expected_output", None):
         current_trace.expected_output = _resolve_expected_output_from_context(
-            None
+            None,
+            candidate_input=getattr(current_trace, "input", None),
         )
     if tools_called:
         current_trace.tools_called = tools_called
