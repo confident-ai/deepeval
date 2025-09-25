@@ -14,6 +14,14 @@ except:
     dependency_installed = False
 
 
+def is_dependency_installed():
+    if not dependency_installed:
+        raise ImportError(
+            "Dependencies are not installed. Please install it with `pip install pydantic-ai opentelemetry-sdk opentelemetry-exporter-otlp-proto-http`."
+        )
+    return True
+
+
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
 
@@ -95,11 +103,11 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: dict = {},
     ):
-        _environment = os.getenv("ENVIRONMENT", "development")
+        is_dependency_installed()
+        
+        _environment = os.getenv("CONFIDENT_TRACE_ENVIRONMENT", "development")
         if _environment and _environment in ["production", "staging", "development", "testing"]:
             self.environment = _environment
-        else:
-            self.environment = "development"
             
         self.tool_metric_collection_map = tool_metric_collection_map
         self.name = name
