@@ -165,12 +165,11 @@ class _ObservedModel(Model):
 
                     if isinstance(event, ResponseCompletedEvent):
                         observer.result = (
-                            event.response.output_text
+                            make_json_serializable(event.response.output)
                         )  # TODO: support other response types
 
                     yield event
 
-                observer.__exit__(None, None, None)
             except Exception as e:
                 observer.__exit__(type(e), e, e.__traceback__)
                 raise
