@@ -99,14 +99,28 @@ def validate_llm_test_case_data(
 def check_llm_input_from_gen_ai_attributes(
     span: ReadableSpan,
 ) -> Tuple[Optional[list], Optional[dict]]:
+    input = None
+    output = None
     try:
         input = json.loads(span.attributes.get("gen_ai.input.messages"))
     except Exception as e:
-        input = None
+        pass
     try:
         output = json.loads(span.attributes.get("gen_ai.output.messages"))
     except Exception as e:
-        output = None
+        pass
+    
+    if input is None and output is None: 
+        try:
+            input = json.loads(span.attributes.get("events"))
+            if input and isinstance(input, list):
+                # check if the last event is a genai choice
+                last_event = input.pop()
+                if last_event and last_event.get("event.name") == "gen_ai.choice":
+                    output = last_event
+        except Exception as e:
+            pass
+    
     return input, output
 
 
