@@ -306,56 +306,51 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
 
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
-def check_for_integrations_input(span: ReadableSpan):
+def check_pydantic_ai_agent_input_output(span: ReadableSpan) -> Tuple[Optional[Any], Optional[Any]]:
+    input_val: Optional[Any] = None
+    output_val: Optional[Any] = None
+
+    # Input (pydantic_ai.all_messages) - slice up to and including the first 'user' message
     try:
         raw = span.attributes.get("pydantic_ai.all_messages")
-        if not raw:
-            return None
+        if raw:
+            messages = raw
+            if isinstance(messages, str):
+                messages = json.loads(messages)
+            elif isinstance(messages, tuple):
+                messages = list(messages)
 
-        # Accept string, tuple, list
-        messages = raw
-        if isinstance(messages, str):
-            messages = json.loads(messages)
-        elif isinstance(messages, tuple):
-            messages = list(messages)
+            if isinstance(messages, list):
+                normalized = []
+                for m in messages:
+                    if isinstance(m, str):
+                        try:
+                            m = json.loads(m)
+                        except Exception:
+                            pass
+                    normalized.append(m)
 
-        if not isinstance(messages, list):
-            return None
+                first_user_idx = None
+                for i, m in enumerate(normalized):
+                    role = None
+                    if isinstance(m, dict):
+                        role = m.get("role") or m.get("author")
+                    if role == "user":
+                        first_user_idx = i
+                        break
 
-        # Normalize any string items to dicts if possible
-        normalized = []
-        for m in messages:
-            if isinstance(m, str):
-                try:
-                    m = json.loads(m)
-                except Exception:
-                    pass
-            normalized.append(m)
-
-        # Slice up to and including the first 'user' message
-        first_user_idx = None
-        for i, m in enumerate(normalized):
-            role = None
-            if isinstance(m, dict):
-                role = m.get("role") or m.get("author")
-            if role == "user":
-                first_user_idx = i
-                break
-
-        if first_user_idx is None:
-            return normalized
-        return normalized[: first_user_idx + 1]
+                input_val = normalized if first_user_idx is None else normalized[: first_user_idx + 1]
     except Exception:
-        return None
+        pass
 
-def check_for_integrations_output(span: ReadableSpan):
+    # Output (agent final_result)
     try:
         if span.attributes.get("confident.span.type") == "agent":
-            return span.attributes.get("final_result")
-    except Exception as e:
+            output_val = span.attributes.get("final_result")
+    except Exception:
         pass
-            
-    return None
+
+    return input_val, output_val
 
 def check_tool_output(span: ReadableSpan):
     try:
