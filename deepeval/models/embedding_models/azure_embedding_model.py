@@ -18,18 +18,18 @@ retry_azure = create_retry_decorator(PS.AZURE)
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(self, **kwargs):
-        self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_API_KEY
-        )
-        self.openai_api_version = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.OPENAI_API_VERSION
-        )
-        self.azure_embedding_deployment = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
-        )
-        self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT
-        )
+        # Fetch all required keys at once (single file read)
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            ModelKeyValues.AZURE_OPENAI_API_KEY,
+            ModelKeyValues.OPENAI_API_VERSION,
+            EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
+            ModelKeyValues.AZURE_OPENAI_ENDPOINT,
+        ])
+
+        self.azure_openai_api_key = values[ModelKeyValues.AZURE_OPENAI_API_KEY]
+        self.openai_api_version = values[ModelKeyValues.OPENAI_API_VERSION]
+        self.azure_embedding_deployment = values[EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME]
+        self.azure_endpoint = values[ModelKeyValues.AZURE_OPENAI_ENDPOINT]
         self.model_name = self.azure_embedding_deployment
         self.kwargs = kwargs
 

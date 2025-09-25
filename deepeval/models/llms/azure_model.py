@@ -36,23 +36,19 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         **kwargs,
     ):
         # fetch Azure deployment parameters
-        model_name = model_name or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_MODEL_NAME
-        )
-        self.deployment_name = deployment_name or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_DEPLOYMENT_NAME
-        )
-        self.azure_openai_api_key = (
-            azure_openai_api_key
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.AZURE_OPENAI_API_KEY)
-        )
-        self.openai_api_version = (
-            openai_api_version
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
-        )
-        self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT
-        )
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            ModelKeyValues.AZURE_MODEL_NAME,
+            ModelKeyValues.AZURE_DEPLOYMENT_NAME,
+            ModelKeyValues.AZURE_OPENAI_API_KEY,
+            ModelKeyValues.OPENAI_API_VERSION,
+            ModelKeyValues.AZURE_OPENAI_ENDPOINT,
+        ])
+
+        model_name = model_name or values[ModelKeyValues.AZURE_MODEL_NAME]
+        self.deployment_name = deployment_name or values[ModelKeyValues.AZURE_DEPLOYMENT_NAME]
+        self.azure_openai_api_key = azure_openai_api_key or values[ModelKeyValues.AZURE_OPENAI_API_KEY]
+        self.openai_api_version = openai_api_version or values[ModelKeyValues.OPENAI_API_VERSION]
+        self.azure_endpoint = azure_endpoint or values[ModelKeyValues.AZURE_OPENAI_ENDPOINT]
         if temperature < 0:
             raise ValueError("Temperature must be >= 0.")
         self.temperature = temperature

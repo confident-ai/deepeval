@@ -14,16 +14,16 @@ retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(self, *args, **kwargs):
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
-        )
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
-        )
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL,
+            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME,
+            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY,
+        ])
+
+        self.base_url = values[EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL]
+        model_name = values[EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME]
         # TODO: This is not being used. Clean it up in consistency PR
-        self.api_key = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
-        )
+        self.api_key = values[EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY]
         self.args = args
         self.kwargs = kwargs
         super().__init__(model_name)

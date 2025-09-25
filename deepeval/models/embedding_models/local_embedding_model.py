@@ -16,15 +16,15 @@ retry_local = create_retry_decorator(PS.LOCAL)
 
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(self, **kwargs):
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
-        )
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
-        )
-        self.api_key = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
-        )
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL,
+            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME,
+            EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY,
+        ])
+
+        self.base_url = values[EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL]
+        model_name = values[EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME]
+        self.api_key = values[EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY]
         self.kwargs = kwargs
         super().__init__(model_name)
 
