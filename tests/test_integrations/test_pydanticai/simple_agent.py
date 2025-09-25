@@ -12,7 +12,6 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
     metadata={"test_metadata_key": "test_metadata_value"},
     tags=["test_tag_1", "test_tag_2"],
     metric_collection="test_metric_collection_1",
-    environment="testing",
     name="test_name_1",
     confident_prompt=prompt,
 )
@@ -24,8 +23,7 @@ agent = Agent(
     name="test_agent",
 )
     
-async def run_agent():
-    result = await agent.run("What are the LLMs?")
+def execute_simple_agent():
+    result = asyncio.run(agent.run("What are the LLMs?"))
+    print("===============Simple agent output:===============")
     print(result)
-
-asyncio.run(run_agent())

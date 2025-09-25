@@ -33,7 +33,6 @@ joke_generation_agent = Agent(
         'then extract each joke into a list.'
     ),
     instrument=ConfidentInstrumentationSettings(
-        # thread_id="test_thread_id_2",
     )
 )
 
@@ -59,13 +58,12 @@ async def get_jokes(ctx: RunContext[ClientAndKey], count: int) -> str:
     return response.text
 
 
-async def main():
+async def _execute_joke_selection_agent():
     async with httpx.AsyncClient() as client:
         deps = ClientAndKey(client, 'foobar')
         result = await joke_selection_agent.run('Tell me a joke.', deps=deps)
+        print("===============Joke selection agent output:===============")
         print(result.output)
-        #> Did you hear about the toothpaste scandal? They called it Colgate.
-        print(result.usage())  
-        #> RunUsage(input_tokens=309, output_tokens=32, requests=4, tool_calls=2)
 
-asyncio.run(main())
+def execute_joke_selection_agent():
+    asyncio.run(_execute_joke_selection_agent())
