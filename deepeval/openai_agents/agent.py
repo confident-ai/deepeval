@@ -164,7 +164,9 @@ class _ObservedModel(Model):
                 ):
 
                     if isinstance(event, ResponseCompletedEvent):
-                        observer.result = make_json_serializable(event.response.output) 
+                        observer.result = make_json_serializable(
+                            event.response.output
+                        )
 
                     yield event
 
