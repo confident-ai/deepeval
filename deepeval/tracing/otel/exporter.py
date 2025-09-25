@@ -23,6 +23,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.otel.utils import (
     check_pydantic_ai_agent_input_output,
+    check_pydantic_ai_trace_input_output,
     check_tool_input_parameters_from_gen_ai_attributes,
     check_span_type_from_gen_ai_attributes,
     check_model_from_gen_ai_attributes,
@@ -404,10 +405,12 @@ class ConfidentSpanExporter(SpanExporter):
             if environment and isinstance(environment, str):
                 trace_environment = environment
 
+        pydantic_trace_input, pydantic_trace_output = check_pydantic_ai_trace_input_output(span)
+        
         return BaseSpanWrapper(
             base_span=base_span,
-            trace_input=trace_input,
-            trace_output=trace_output,
+            trace_input=trace_input if trace_input else pydantic_trace_input,
+            trace_output=trace_output if trace_output else pydantic_trace_output,
             trace_name=trace_name,
             trace_tags=trace_tags,
             trace_metadata=trace_metadata,

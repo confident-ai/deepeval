@@ -372,3 +372,12 @@ def check_tool_output(span: ReadableSpan):
     except Exception as e:
         pass
     return None
+
+def check_pydantic_ai_trace_input_output(span: ReadableSpan) -> Tuple[Optional[Any], Optional[Any]]:
+    input_val: Optional[Any] = None
+    output_val: Optional[Any] = None
+
+    if not span.parent:
+        input_val, output_val = check_pydantic_ai_agent_input_output(span)
+
+    return input_val, output_val
