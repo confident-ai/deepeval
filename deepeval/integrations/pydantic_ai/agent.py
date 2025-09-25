@@ -1,14 +1,17 @@
-import inspect
-from typing import Optional, List, Generic, TypeVar
-from contextvars import ContextVar
-from contextlib import asynccontextmanager
+# import inspect
+# from typing import Optional, List, Generic, TypeVar
+# from contextvars import ContextVar
+# from contextlib import asynccontextmanager
 
-from deepeval.prompt import Prompt
-from deepeval.tracing.types import AgentSpan
-from deepeval.tracing.tracing import Observer
-from deepeval.metrics.base_metric import BaseMetric
-from deepeval.tracing.context import current_span_context
-from deepeval.integrations.pydantic_ai.utils import extract_tools_called
+# from deepeval.prompt import Prompt
+# from deepeval.tracing.types import AgentSpan
+# from deepeval.tracing.tracing import Observer
+# from deepeval.metrics.base_metric import BaseMetric
+# from deepeval.tracing.context import current_span_context
+# from deepeval.integrations.pydantic_ai.utils import extract_tools_called
+
+import warnings
+
 
 try:
     from pydantic_ai.agent import Agent
@@ -25,11 +28,11 @@ except:
      is_pydantic_ai_installed = False
 
 
-def pydantic_ai_installed():
-    if not is_pydantic_ai_installed:
-        raise ImportError(
-            "Pydantic AI is not installed. Please install it with `pip install pydantic-ai`."
-        )
+# def pydantic_ai_installed():
+#     if not is_pydantic_ai_installed:
+#         raise ImportError(
+#             "Pydantic AI is not installed. Please install it with `pip install pydantic-ai`."
+#         )
 
 
 # _IS_RUN_SYNC = ContextVar("deepeval_is_run_sync", default=False)
@@ -69,6 +72,13 @@ class DeepEvalPydanticAIAgent(Agent):
         # agent_metrics: Optional[List[BaseMetric]] = None,
         **kwargs
     ):
+        warnings.warn(
+            "instrument_pydantic_ai is deprecated and will be removed in a future version. "
+            "Please use the new ConfidentInstrumentationSettings instead. Docs: https://www.confident-ai.com/docs/integrations/third-party/pydantic-ai",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         super().__init__(*args, **kwargs)
     #     pydantic_ai_installed()
 
