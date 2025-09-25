@@ -39,6 +39,14 @@ class SpanInterceptor(SpanProcessor):
         
         if span.attributes.get("agent_name"):
             span.set_attribute("confident.span.type", "agent")
+            span.set_attribute("confident.span.name", span.attributes.get("agent_name"))
+            if self.settings.agent_metric_collection:
+                span.set_attribute("confident.span.metric_collection", self.settings.agent_metric_collection)
+        
+        # set llm metric collection
+        if span.attributes.get("gen_ai.operation.name") in ["chat", "generate_content", "text_completion"]:
+            if self.settings.llm_metric_collection:
+                span.set_attribute("confident.span.metric_collection", self.settings.llm_metric_collection)
     
     def on_end(self, span):
         pass
@@ -54,6 +62,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     environment: Literal["production", "staging", "development", "testing"] = None
     metric_collection: Optional[str] = None
     confident_prompt: Optional[Prompt] = None
+    llm_metric_collection: Optional[str] = None
+    agent_metric_collection: Optional[str] = None
 
     def __init__(
         self, 
@@ -63,18 +73,21 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         user_id: Optional[str] = None,
         metadata: Optional[dict] = None,
         tags: Optional[List[str]] = None,
-        environment: Literal["production", "staging", "development", "testing"] = None,
         metric_collection: Optional[str] = None,
-        confident_prompt: Optional[Prompt] = None
+        confident_prompt: Optional[Prompt] = None,
+        llm_metric_collection: Optional[str] = None,
+        agent_metric_collection: Optional[str] = None,
     ):
         self.name = name
         self.thread_id = thread_id
         self.user_id = user_id
         self.metadata = metadata
         self.tags = tags
-        self.environment = environment
+        # self.environment = os.getenv("ENVIRONMENT", "development")
         self.metric_collection = metric_collection
         self.confident_prompt = confident_prompt
+        self.llm_metric_collection = llm_metric_collection
+        self.agent_metric_collection = agent_metric_collection
 
         if not api_key:
             api_key = get_confident_api_key()
