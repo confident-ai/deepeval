@@ -14,6 +14,7 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
     metric_collection="test_metric_collection_1",
     name="test_name_1",
     confident_prompt=prompt,
+    trace_metric_collection="test_collection_1",
 )
 
 agent = Agent(
