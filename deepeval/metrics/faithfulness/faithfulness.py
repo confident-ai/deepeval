@@ -63,8 +63,6 @@ class FaithfulnessMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
-
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -79,6 +77,7 @@ class FaithfulnessMetric(BaseMetric):
                     )
                 )
             else:
+                check_llm_test_case_params(test_case, self._required_params, self)
                 self.truths = self._generate_truths(test_case.retrieval_context)
                 self.claims = self._generate_claims(test_case.actual_output)
                 self.verdicts = self._generate_verdicts()

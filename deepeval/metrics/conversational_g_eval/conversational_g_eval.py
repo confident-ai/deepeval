@@ -93,10 +93,7 @@ class ConversationalGEval(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case, self.evaluation_params, self
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -111,6 +108,10 @@ class ConversationalGEval(BaseConversationalMetric):
                     )
                 )
             else:
+                check_conversational_test_case_params(
+                    test_case, self.evaluation_params, self
+                )
+
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )

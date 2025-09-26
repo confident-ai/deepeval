@@ -73,7 +73,6 @@ class GEval(BaseMetric):
         _in_component: bool = False,
         _additional_context: Optional[str] = None,
     ) -> float:
-        check_llm_test_case_params(test_case, self.evaluation_params, self)
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
@@ -90,6 +89,7 @@ class GEval(BaseMetric):
                     )
                 )
             else:
+                check_llm_test_case_params(test_case, self.evaluation_params, self)
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )

@@ -54,8 +54,6 @@ class PromptAlignmentMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
-
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -70,6 +68,7 @@ class PromptAlignmentMetric(BaseMetric):
                     )
                 )
             else:
+                check_llm_test_case_params(test_case, self._required_params, self)
                 self.verdicts: Verdicts = self._generate_verdicts(
                     test_case.input, test_case.actual_output
                 )
