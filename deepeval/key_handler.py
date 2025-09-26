@@ -113,6 +113,19 @@ class KeyFileHandler:
     def _ensure_dir(self):
         os.makedirs(HIDDEN_DIR, exist_ok=True)
 
+    def _load_data(self):
+        """Load JSON data from the key file, handling missing or corrupted files."""
+        try:
+            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
+                try:
+                    self.data = json.load(f)
+                except json.JSONDecodeError:
+                    # Handle corrupted JSON file
+                    self.data = {}
+        except FileNotFoundError:
+            # If file doesn't exist, start with an empty dictionary
+            self.data = {}
+
     def write_key(
         self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues], value
     ):
@@ -124,18 +137,8 @@ class KeyFileHandler:
                 f"{key} is blacklisted, refusing to persist. Keep your secrets in .env or .env.local instead"
             )
             return
-
-        try:
-            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
-                # Load existing data
-                try:
-                    self.data = json.load(f)
-                except json.JSONDecodeError:
-                    # Handle corrupted JSON file
-                    self.data = {}
-        except FileNotFoundError:
-            # If file doesn't exist, start with an empty dictionary
-            self.data = {}
+        
+        self._load_data()
 
         # Update the data with the new key-value pair
         self.data[key.value] = value
@@ -150,16 +153,7 @@ class KeyFileHandler:
     ):
         """Fetches the data from the hidden file.
         NOTE: secrets in this file are deprecated; prefer env/.env."""
-        try:
-            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
-                try:
-                    self.data = json.load(f)
-                except json.JSONDecodeError:
-                    # Handle corrupted JSON file
-                    self.data = {}
-        except FileNotFoundError:
-            # Handle the case when the file doesn't exist
-            self.data = {}
+        self._load_data()
 
         value = self.data.get(key.value)
 
@@ -179,17 +173,38 @@ class KeyFileHandler:
 
         return value
 
+    def fetch_multiple_keys(self, keys: list[Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]]):
+        """Fetch multiple keys at once, reading file only once."""
+        self._load_data()
+        
+        results = {}
+        for key in keys:
+            value = self.data.get(key.value)
+            results[key] = value
+
+            # warn if needed
+            if (
+                value is not None
+                and key.value in SECRET_KEYS
+                and key.value not in _WARNED_SECRET_KEYS
+            ):
+                logger.warning(
+                    f"Reading secret '{key.value}' from legacy {HIDDEN_DIR}/{KEY_FILE}. "
+                    "Persisting API keys in plaintext is deprecated. "
+                    "Move this to your environment (.env / .env.local). "
+                    "This fallback will be removed in a future release."
+                )
+                _WARNED_SECRET_KEYS.add(key.value)
+        
+        return results
+
+
     def remove_key(
         self, key: Union[KeyValues, ModelKeyValues, EmbeddingKeyValues]
     ):
         """Removes the specified key from the data."""
         try:
-            with open(f"{HIDDEN_DIR}/{KEY_FILE}", "r") as f:
-                try:
-                    self.data = json.load(f)
-                except json.JSONDecodeError:
-                    # Handle corrupted JSON file
-                    self.data = {}
+            self._load_data()
             self.data.pop(key.value, None)  # Remove the key if it exists
             self._ensure_dir()
             with open(f"{HIDDEN_DIR}/{KEY_FILE}", "w") as f:

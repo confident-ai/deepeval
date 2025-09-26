@@ -60,25 +60,20 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
         *args,
         **kwargs,
     ):
-        model_name = (
-            model_name
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.GEMINI_MODEL_NAME)
-            or default_multimodal_gemini_model
-        )
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            ModelKeyValues.GEMINI_MODEL_NAME,
+            ModelKeyValues.GOOGLE_API_KEY,
+            ModelKeyValues.GOOGLE_CLOUD_PROJECT,
+            ModelKeyValues.GOOGLE_CLOUD_LOCATION,
+            ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI,
+        ])
 
+        model_name = model_name or values[ModelKeyValues.GEMINI_MODEL_NAME] or default_multimodal_gemini_model
         # Get API key from key handler if not provided
-        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.GOOGLE_API_KEY
-        )
-        self.project = project or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.GOOGLE_CLOUD_PROJECT
-        )
-        self.location = location or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.GOOGLE_CLOUD_LOCATION
-        )
-        self.use_vertexai = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI
-        )
+        self.api_key = api_key or values[ModelKeyValues.GOOGLE_API_KEY]
+        self.project = project or values[ModelKeyValues.GOOGLE_CLOUD_PROJECT]
+        self.location = location or values[ModelKeyValues.GOOGLE_CLOUD_LOCATION]
+        self.use_vertexai = values[ModelKeyValues.GOOGLE_GENAI_USE_VERTEXAI]
 
         super().__init__(model_name, *args, **kwargs)
         self.model = self.load_model(*args, **kwargs)

@@ -36,25 +36,26 @@ class DeepSeekModel(DeepEvalBaseLLM):
         generation_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        model_name = model or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.DEEPSEEK_MODEL_NAME
-        )
+        values = KEY_FILE_HANDLER.fetch_multiple_keys([
+            ModelKeyValues.DEEPSEEK_API_KEY,
+            ModelKeyValues.TEMPERATURE,
+            ModelKeyValues.DEEPSEEK_API_KEY
+        ])
+
+        model_name = model or values[ModelKeyValues.DEEPSEEK_MODEL_NAME]
+        self.api_key = api_key or values[ModelKeyValues.DEEPSEEK_API_KEY]
+        temperature_from_key = values[ModelKeyValues.TEMPERATURE]
+
         if model_name not in model_pricing:
             raise ValueError(
                 f"Invalid model. Available DeepSeek models: {', '.join(model_pricing.keys())}"
             )
-        temperature_from_key = KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.TEMPERATURE
-        )
         if temperature_from_key is None:
             self.temperature = temperature
         else:
             self.temperature = float(temperature_from_key)
         if self.temperature < 0:
             raise ValueError("Temperature must be >= 0.")
-        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.DEEPSEEK_API_KEY
-        )
         self.base_url = "https://api.deepseek.com"
         self.kwargs = kwargs
         self.generation_kwargs = generation_kwargs or {}
