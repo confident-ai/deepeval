@@ -50,10 +50,7 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -68,6 +65,9 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
                     )
                 )
             else:
+                check_mllm_test_case_params(
+                    test_case, self._required_params, None, None, self
+                )
                 self.verdicts_list: List[ContextualRelevancyVerdicts] = [
                     (self._generate_verdicts(test_case.input, context))
                     for context in test_case.retrieval_context

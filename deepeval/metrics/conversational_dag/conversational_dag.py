@@ -60,12 +60,7 @@ class ConversationalDAGMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case,
-            extract_required_params(self.dag.root_nodes, multiturn=True),
-            self,
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -80,6 +75,11 @@ class ConversationalDAGMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                check_conversational_test_case_params(
+                    test_case,
+                    extract_required_params(self.dag.root_nodes, multiturn=True),
+                    self,
+                )
                 self.dag._execute(metric=self, test_case=test_case)
                 self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(

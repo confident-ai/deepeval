@@ -48,10 +48,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -66,6 +63,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                check_conversational_test_case_params(
+                    test_case, self._required_test_case_params, self
+                )
+                
                 self.knowledges: List[Union[Knowledge, None]] = (
                     self._generate_knowledges(test_case.turns)
                 )

@@ -51,8 +51,6 @@ class PIILeakageMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(test_case, self._required_params, self)
-
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -67,6 +65,8 @@ class PIILeakageMetric(BaseMetric):
                     )
                 )
             else:
+                check_llm_test_case_params(test_case, self._required_params, self)
+
                 self.extracted_pii: List[str] = self._extract_pii(
                     test_case.actual_output
                 )

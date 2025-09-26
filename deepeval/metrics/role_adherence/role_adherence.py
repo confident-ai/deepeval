@@ -45,13 +45,7 @@ class RoleAdherenceMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            require_chatbot_role=True,
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -66,6 +60,13 @@ class RoleAdherenceMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                check_conversational_test_case_params(
+                    test_case,
+                    self._required_test_case_params,
+                    self,
+                    require_chatbot_role=True,
+                )
+                
                 self.out_of_character_verdicts: (
                     OutOfCharacterResponseVerdicts
                 ) = self._extract_out_of_character_verdicts(
