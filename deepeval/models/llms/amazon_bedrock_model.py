@@ -10,6 +10,9 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.amazon_bedrock_utils import (
+    convert_pydantic_to_tool_spec,
+)
 from deepeval.constants import ProviderSlug as PS
 
 # check aiobotocore availability
@@ -38,6 +41,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self,
         model_id: str,
         region_name: str,
+        use_structured_outputs: bool = False,
         aws_access_key_id: Optional[str] = None,
         aws_secret_access_key: Optional[str] = None,
         temperature: float = 0,
@@ -67,6 +71,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self.generation_kwargs = generation_kwargs or {}
         self._client = None
         self._sdk_retry_mode: Optional[bool] = None
+        self.use_structured_outputs = use_structured_outputs
 
     ###############################################
     # Generate functions
@@ -83,6 +88,30 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ) -> Tuple[Union[str, Dict], float]:
         payload = self.get_converse_request_body(prompt)
         client = await self._ensure_client()
+
+        # Handle structured outputs with tool calls
+        if self.use_structured_outputs and schema is not None:
+            tool_spec = convert_pydantic_to_tool_spec(schema)
+            toolConfig = {
+                "tools": [{"toolSpec": tool_spec}],
+                "toolChoice": {"tool": {"name": tool_spec["name"]}},
+            }
+            response = await client.converse(
+                modelId=self.model_id,
+                messages=payload["messages"],
+                inferenceConfig=payload["inferenceConfig"],
+                toolConfig=toolConfig,
+            )
+            message = response["output"]["message"]["content"][0]["toolUse"][
+                "input"
+            ]
+            cost = self.calculate_cost(
+                response["usage"]["inputTokens"],
+                response["usage"]["outputTokens"],
+            )
+            return schema.model_validate(message), cost
+
+        # Handle regular text responses
         response = await client.converse(
             modelId=self.model_id,
             messages=payload["messages"],
@@ -90,14 +119,14 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         )
         message = response["output"]["message"]["content"][0]["text"]
         cost = self.calculate_cost(
-            response["usage"]["inputTokens"],
-            response["usage"]["outputTokens"],
+            response["usage"]["inputTokens"], response["usage"]["outputTokens"]
         )
+
         if schema is None:
             return message, cost
-        else:
-            json_output = trim_and_load_json(message)
-            return schema.model_validate(json_output), cost
+
+        json_output = trim_and_load_json(message)
+        return schema.model_validate(json_output), cost
 
     ###############################################
     # Client management
@@ -150,20 +179,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             "stop_sequences": "stopSequences",
         }
 
-        # Start with defaults for required parameters
-        translated_kwargs = {
-            "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
-            "topP": self.generation_kwargs.get("top_p", 0),
-        }
+        translated_kwargs = {}
 
-        # Add any other parameters from generation_kwargs
         for key, value in self.generation_kwargs.items():
-            if key not in [
-                "max_tokens",
-                "top_p",
-            ]:  # Skip already handled defaults
-                aws_key = param_mapping.get(key, key)
-                translated_kwargs[aws_key] = value
+            aws_key = param_mapping.get(key, key)
+            translated_kwargs[aws_key] = value
 
         return {
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
