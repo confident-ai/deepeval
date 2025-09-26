@@ -14,6 +14,7 @@ from deepeval.prompt.prompt import Prompt
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
+    Trace,
     TraceSpanStatus,
     RetrieverSpan,
     AgentSpan,
@@ -94,25 +95,26 @@ class ConfidentSpanExporter(SpanExporter):
         #     print(span.to_json())
         #     print("--------------------------------")
         # return SpanExportResult.SUCCESS
+
+        ################ Build Forest of Spans ################
         forest = self._build_span_forest(spans)
 
-        # convert forest of spans to forest of base span wrappers
+        ################ Convert Forest of Spans to Forest of Base Span Wrappers ################
         spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
+        
         for span_list in forest:
             spans_wrappers_list: List[BaseSpanWrapper] = []
             for span in span_list:
-
-                base_span_wrapper = self._convert_readable_span_to_base_span(
-                    span
-                )
+                base_span_wrapper = self._convert_readable_span_to_base_span(span)
 
                 spans_wrappers_list.append(base_span_wrapper)
             spans_wrappers_forest.append(spans_wrappers_list)
 
-        # add spans to trace manager
+        ################ Add Spans to Trace Manager ################
         for spans_wrappers_list in spans_wrappers_forest:
             for base_span_wrapper in spans_wrappers_list:
-
+                
+                # get current trace
                 current_trace = trace_manager.get_trace_by_uuid(
                     base_span_wrapper.base_span.trace_uuid
                 )
@@ -120,119 +122,17 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace = trace_manager.start_new_trace(
                         trace_uuid=base_span_wrapper.base_span.trace_uuid
                     )
-
+            
+                # set confident api key
                 if api_key:
                     current_trace.confident_api_key = api_key
 
-                # error trace if root span is errored
-                if base_span_wrapper.base_span.parent_uuid is None:
-                    if (
-                        base_span_wrapper.base_span.status
-                        == TraceSpanStatus.ERRORED
-                    ):
-                        current_trace.status = TraceSpanStatus.ERRORED
+                ################ Set Trace Attributes from  ################
+                self._set_current_trace_attributes_from_base_span_wrapper(current_trace, base_span_wrapper)
 
-                # set the trace attributes (to be deprecated)
-                if base_span_wrapper.trace_attributes:
-
-                    if base_span_wrapper.trace_attributes.name:
-                        current_trace.name = (
-                            base_span_wrapper.trace_attributes.name
-                        )
-
-                    if base_span_wrapper.trace_attributes.tags:
-                        current_trace.tags = (
-                            base_span_wrapper.trace_attributes.tags
-                        )
-
-                    if base_span_wrapper.trace_attributes.thread_id:
-                        current_trace.thread_id = (
-                            base_span_wrapper.trace_attributes.thread_id
-                        )
-
-                    if base_span_wrapper.trace_attributes.user_id:
-                        current_trace.user_id = (
-                            base_span_wrapper.trace_attributes.user_id
-                        )
-
-                    if base_span_wrapper.trace_attributes.metadata:
-                        current_trace.metadata = (
-                            base_span_wrapper.trace_attributes.metadata
-                        )
-
-                # set the trace attributes
-                if base_span_wrapper.trace_name and isinstance(
-                    base_span_wrapper.trace_name, str
-                ):
-                    current_trace.name = base_span_wrapper.trace_name
-
-                if base_span_wrapper.trace_tags and isinstance(
-                    base_span_wrapper.trace_tags, list
-                ):
-                    try:
-                        current_trace.tags = [
-                            str(tag) for tag in base_span_wrapper.trace_tags
-                        ]
-                    except Exception:
-                        pass
-
-                if base_span_wrapper.trace_metadata and isinstance(
-                    base_span_wrapper.trace_metadata, dict
-                ):
-                    try:
-                        current_trace.metadata = (
-                            base_span_wrapper.trace_metadata
-                        )
-                    except Exception:
-                        pass
-
-                if base_span_wrapper.trace_thread_id and isinstance(
-                    base_span_wrapper.trace_thread_id, str
-                ):
-                    current_trace.thread_id = base_span_wrapper.trace_thread_id
-
-                if base_span_wrapper.trace_user_id and isinstance(
-                    base_span_wrapper.trace_user_id, str
-                ):
-                    current_trace.user_id = base_span_wrapper.trace_user_id
-
-                # set the trace input and output
-                if base_span_wrapper.trace_input:
-                    current_trace.input = base_span_wrapper.trace_input
-                if base_span_wrapper.trace_output:
-                    current_trace.output = base_span_wrapper.trace_output
-
-                # set the trace environment
-                if base_span_wrapper.trace_environment:
-                    current_trace.environment = (
-                        base_span_wrapper.trace_environment
-                    )
-
-                # set the trace test case parameters
-                if base_span_wrapper.trace_retrieval_context:
-                    current_trace.retrieval_context = (
-                        base_span_wrapper.trace_retrieval_context
-                    )
-                if base_span_wrapper.trace_context:
-                    current_trace.context = base_span_wrapper.trace_context
-                if base_span_wrapper.trace_tools_called:
-                    current_trace.tools_called = (
-                        base_span_wrapper.trace_tools_called
-                    )
-                if base_span_wrapper.trace_expected_tools:
-                    current_trace.expected_tools = (
-                        base_span_wrapper.trace_expected_tools
-                    )
-
-                # set the trace metric collection
-                if base_span_wrapper.trace_metric_collection:
-                    current_trace.metric_collection = (
-                        base_span_wrapper.trace_metric_collection
-                    )
-
+                # no removing span because it can be parent of other spans
                 trace_manager.add_span(base_span_wrapper.base_span)
                 trace_manager.add_span_to_trace(base_span_wrapper.base_span)
-                # no removing span because it can be parent of other spans
 
         # safely end all active traces or return them for test runs
         active_traces_keys = list(trace_manager.active_traces.keys())
@@ -253,22 +153,124 @@ class ConfidentSpanExporter(SpanExporter):
             trace_manager.clear_traces()
             return SpanExportResult.SUCCESS
 
+    def _set_current_trace_attributes_from_base_span_wrapper(self, current_trace: Trace, base_span_wrapper: BaseSpanWrapper):
+        # error trace if root span is errored
+        if base_span_wrapper.base_span.parent_uuid is None:
+            if (
+                base_span_wrapper.base_span.status
+                == TraceSpanStatus.ERRORED
+            ):
+                current_trace.status = TraceSpanStatus.ERRORED
+
+        # set the trace attributes (to be deprecated)
+        if base_span_wrapper.trace_attributes:
+
+            if base_span_wrapper.trace_attributes.name:
+                current_trace.name = (
+                    base_span_wrapper.trace_attributes.name
+                )
+
+            if base_span_wrapper.trace_attributes.tags:
+                current_trace.tags = (
+                    base_span_wrapper.trace_attributes.tags
+                )
+
+            if base_span_wrapper.trace_attributes.thread_id:
+                current_trace.thread_id = (
+                    base_span_wrapper.trace_attributes.thread_id
+                )
+
+            if base_span_wrapper.trace_attributes.user_id:
+                current_trace.user_id = (
+                    base_span_wrapper.trace_attributes.user_id
+                )
+
+            if base_span_wrapper.trace_attributes.metadata:
+                current_trace.metadata = (
+                    base_span_wrapper.trace_attributes.metadata
+                )
+
+        # set the trace attributes
+        if base_span_wrapper.trace_name and isinstance(
+            base_span_wrapper.trace_name, str
+        ):
+            current_trace.name = base_span_wrapper.trace_name
+
+        if base_span_wrapper.trace_tags and isinstance(
+            base_span_wrapper.trace_tags, list
+        ):
+            try:
+                current_trace.tags = [
+                    str(tag) for tag in base_span_wrapper.trace_tags
+                ]
+            except Exception:
+                pass
+
+        if base_span_wrapper.trace_metadata and isinstance(
+            base_span_wrapper.trace_metadata, dict
+        ):
+            try:
+                current_trace.metadata = (
+                    base_span_wrapper.trace_metadata
+                )
+            except Exception:
+                pass
+
+        if base_span_wrapper.trace_thread_id and isinstance(
+            base_span_wrapper.trace_thread_id, str
+        ):
+            current_trace.thread_id = base_span_wrapper.trace_thread_id
+
+        if base_span_wrapper.trace_user_id and isinstance(
+            base_span_wrapper.trace_user_id, str
+        ):
+            current_trace.user_id = base_span_wrapper.trace_user_id
+
+        # set the trace input and output
+        if base_span_wrapper.trace_input:
+            current_trace.input = base_span_wrapper.trace_input
+        if base_span_wrapper.trace_output:
+            current_trace.output = base_span_wrapper.trace_output
+
+        # set the trace environment
+        if base_span_wrapper.trace_environment:
+            current_trace.environment = (
+                base_span_wrapper.trace_environment
+            )
+
+        # set the trace test case parameters
+        if base_span_wrapper.trace_retrieval_context:
+            current_trace.retrieval_context = (
+                base_span_wrapper.trace_retrieval_context
+            )
+        if base_span_wrapper.trace_context:
+            current_trace.context = base_span_wrapper.trace_context
+        if base_span_wrapper.trace_tools_called:
+            current_trace.tools_called = (
+                base_span_wrapper.trace_tools_called
+            )
+        if base_span_wrapper.trace_expected_tools:
+            current_trace.expected_tools = (
+                base_span_wrapper.trace_expected_tools
+            )
+
+        # set the trace metric collection
+        if base_span_wrapper.trace_metric_collection:
+            current_trace.metric_collection = (
+                base_span_wrapper.trace_metric_collection
+            )
+
     def _convert_readable_span_to_base_span(
         self, span: ReadableSpan
     ) -> BaseSpanWrapper:
 
-        # Create typed spans
         base_span = None
         try:
-            base_span = self._prepare_boilerplate_base_span(span)
+            base_span = self.__prepare_boilerplate_base_span(span)
         except Exception:
             pass
-
-        # Creaete base span if no typed span
-        parent_uuid = (
-            to_hex_string(span.parent.span_id, 16) if span.parent else None
-        )
-
+        
+        parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
         base_span_status = TraceSpanStatus.SUCCESS
         base_span_error = None
 
@@ -287,36 +289,30 @@ class ConfidentSpanExporter(SpanExporter):
                 start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
                 end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
             )
-
-        # Extract Span Attributes
-        span_input = span.attributes.get("confident.span.input")
-        span_output = span.attributes.get("confident.span.output")
         
-        span_name = span.attributes.get("confident.span.name")
+        #NOTE: Confident Span is reffered as base span in this codebase
+        self.__set_base_span_attributes(base_span, span, base_span_status, base_span_error)
+        
+        base_span_wrapper = BaseSpanWrapper(base_span=base_span)
+        
+        self.__set_trace_attributes(base_span_wrapper, span)
 
-        raw_span_metric_collection = span.attributes.get(
-            "confident.span.metric_collection"
-        )
-        raw_span_context = span.attributes.get("confident.span.context")
-        raw_span_retrieval_context = span.attributes.get(
-            "confident.span.retrieval_context"
-        )
-        raw_span_tools_called = span.attributes.get(
-            "confident.span.tools_called"
-        )
-        if raw_span_tools_called and isinstance(raw_span_tools_called, tuple):
-            raw_span_tools_called = list(raw_span_tools_called)
+        ################ Set Custom attributes from different integrations ################
+        self.__set_custom_trace_input_output(base_span_wrapper, span)
+        
+        return base_span_wrapper
+    
+    def __set_custom_trace_input_output(self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan):
+        
+        # check for pydantic ai trace input and output
+        pydantic_trace_input, pydantic_trace_output = check_pydantic_ai_trace_input_output(span)
 
-        raw_span_expected_tools = span.attributes.get(
-            "confident.span.expected_tools"
-        )
-        if raw_span_expected_tools and isinstance(
-            raw_span_expected_tools, tuple
-        ):
-            raw_span_expected_tools = list(raw_span_expected_tools)
+        if not base_span_wrapper.trace_input and pydantic_trace_input:
+            base_span_wrapper.trace_input = pydantic_trace_input
+        if not base_span_wrapper.trace_output and pydantic_trace_output:
+            base_span_wrapper.trace_output = pydantic_trace_output
 
-        raw_span_metadata = span.attributes.get("confident.span.metadata")
-
+    def __set_trace_attributes(self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan):
         # Extract Trace Attributes
         trace_name = span.attributes.get("confident.trace.name")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
@@ -350,16 +346,6 @@ class ConfidentSpanExporter(SpanExporter):
             "confident.trace.metric_collection"
         )
 
-        # Validate Span Attributes
-        span_retrieval_context = parse_list_of_strings(
-            raw_span_retrieval_context
-        )
-        span_context = parse_list_of_strings(raw_span_context)
-        span_tools_called = self._parse_list_of_tools(raw_span_tools_called)
-        span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
-        span_metadata = self._parse_json_string(raw_span_metadata)
-        span_metric_collection = parse_string(raw_span_metric_collection)
-
         # Validate Trace Attributes
         trace_tags = parse_list_of_strings(raw_trace_tags)
         trace_retrieval_context = parse_list_of_strings(
@@ -373,6 +359,66 @@ class ConfidentSpanExporter(SpanExporter):
         trace_metadata = self._parse_json_string(raw_trace_metadata)
         trace_metric_collection = parse_string(raw_trace_metric_collection)
 
+        base_span_wrapper.trace_input = trace_input
+        base_span_wrapper.trace_output = trace_output
+        base_span_wrapper.trace_name = trace_name
+        base_span_wrapper.trace_tags = trace_tags
+        base_span_wrapper.trace_metadata = trace_metadata
+        base_span_wrapper.trace_thread_id = trace_thread_id
+        base_span_wrapper.trace_user_id = trace_user_id
+        base_span_wrapper.trace_retrieval_context = trace_retrieval_context
+        base_span_wrapper.trace_context = trace_context
+        base_span_wrapper.trace_tools_called = trace_tools_called
+        base_span_wrapper.trace_expected_tools = trace_expected_tools
+        base_span_wrapper.trace_metric_collection = trace_metric_collection
+        base_span_wrapper.trace_environment = trace_environment
+
+        # Resource attributes
+        resource_attributes = span.resource.attributes
+        if resource_attributes:
+            environment = resource_attributes.get("confident.trace.environment")
+            if environment and isinstance(environment, str):
+                base_span_wrapper.trace_environment = environment
+
+    def __set_base_span_attributes(self, base_span: BaseSpan, span: ReadableSpan, base_span_status: TraceSpanStatus, base_span_error: Optional[str]):
+        span_input = span.attributes.get("confident.span.input")
+        span_output = span.attributes.get("confident.span.output")
+        
+        span_name = span.attributes.get("confident.span.name")
+
+        raw_span_metric_collection = span.attributes.get(
+            "confident.span.metric_collection"
+        )
+        raw_span_context = span.attributes.get("confident.span.context")
+        raw_span_retrieval_context = span.attributes.get(
+            "confident.span.retrieval_context"
+        )
+        raw_span_tools_called = span.attributes.get(
+            "confident.span.tools_called"
+        )
+        if raw_span_tools_called and isinstance(raw_span_tools_called, tuple):
+            raw_span_tools_called = list(raw_span_tools_called)
+
+        raw_span_expected_tools = span.attributes.get(
+            "confident.span.expected_tools"
+        )
+        if raw_span_expected_tools and isinstance(
+            raw_span_expected_tools, tuple
+        ):
+            raw_span_expected_tools = list(raw_span_expected_tools)
+
+        raw_span_metadata = span.attributes.get("confident.span.metadata")
+
+        # Validate Span Attributes
+        span_retrieval_context = parse_list_of_strings(
+            raw_span_retrieval_context
+        )
+        span_context = parse_list_of_strings(raw_span_context)
+        span_tools_called = self._parse_list_of_tools(raw_span_tools_called)
+        span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
+        span_metadata = self._parse_json_string(raw_span_metadata)
+        span_metric_collection = parse_string(raw_span_metric_collection)
+        
         # Set Span Attributes
         base_span.parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
@@ -398,44 +444,16 @@ class ConfidentSpanExporter(SpanExporter):
         if span_output:
             base_span.output = span_output
 
-        # Resource attributes
-        resource_attributes = span.resource.attributes
-        if resource_attributes:
-            environment = resource_attributes.get("confident.trace.environment")
-            if environment and isinstance(environment, str):
-                trace_environment = environment
-
-        pydantic_trace_input, pydantic_trace_output = check_pydantic_ai_trace_input_output(span)
-        if not trace_input and pydantic_trace_input:
-            trace_input = pydantic_trace_input
-        if not trace_output and pydantic_trace_output:
-            trace_output = pydantic_trace_output
-        
-        return BaseSpanWrapper(
-            base_span=base_span,
-            trace_input=trace_input,
-            trace_output=trace_output,
-            trace_name=trace_name,
-            trace_tags=trace_tags,
-            trace_metadata=trace_metadata,
-            trace_thread_id=trace_thread_id,
-            trace_user_id=trace_user_id,
-            trace_retrieval_context=trace_retrieval_context,
-            trace_context=trace_context,
-            trace_tools_called=trace_tools_called,
-            trace_expected_tools=trace_expected_tools,
-            trace_metric_collection=trace_metric_collection,
-            trace_environment=trace_environment,
-        )
-
-    def _prepare_boilerplate_base_span(
+    def __prepare_boilerplate_base_span(
         self, span: ReadableSpan
     ) -> Optional[BaseSpan]:
+        
+        ################ Get Span Type ################
         span_type = span.attributes.get("confident.span.type")
         if not span_type:
             span_type = check_span_type_from_gen_ai_attributes(span)
 
-        # required fields
+        ################ Get Required Fields ################
         uuid = to_hex_string(span.context.span_id, 16)
         status = (
             TraceSpanStatus.ERRORED
@@ -449,6 +467,8 @@ class ConfidentSpanExporter(SpanExporter):
         )
         start_time = peb.epoch_nanos_to_perf_seconds(span.start_time)
         end_time = peb.epoch_nanos_to_perf_seconds(span.end_time)
+
+        ################ Populate Spans ################
 
         #######################################################
         ### LLM Span
