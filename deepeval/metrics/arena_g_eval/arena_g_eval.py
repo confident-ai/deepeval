@@ -58,7 +58,7 @@ class ArenaGEval(BaseArenaMetric):
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
     ) -> str:
-        check_arena_test_case_params(test_case, self.evaluation_params, self)
+        
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
@@ -71,6 +71,8 @@ class ArenaGEval(BaseArenaMetric):
                     )
                 )
             else:
+                check_arena_test_case_params(test_case, self.evaluation_params, self)
+                
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
