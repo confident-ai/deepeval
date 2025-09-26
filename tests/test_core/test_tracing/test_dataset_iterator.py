@@ -5,7 +5,6 @@ from tests.test_core.test_tracing.sync_app import meta_agent
 
 from deepeval.evaluate.configs import AsyncConfig
 from deepeval.dataset import EvaluationDataset, Golden
-import asyncio
 
 
 # Define golden inputs
@@ -15,29 +14,28 @@ goldens = [
 ]
 
 
-# def test_async_run_async():
-#     dataset = EvaluationDataset(goldens=goldens)
-#     for golden in dataset.evals_iterator(
-#         async_config=AsyncConfig(run_async=True)
-#     ):
-#         task = asyncio.create_task(async_meta_agent(golden.input))
-#         dataset.evaluate(task)
-#     assert True
+def test_async_run_async():
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator(
+        async_config=AsyncConfig(run_async=True)
+    ):
+        dataset.evaluate(async_meta_agent(golden.input))
+    assert True
 
 
-# def test_sync_run_async():
-#     dataset = EvaluationDataset(goldens=goldens)
-#     for golden in dataset.evals_iterator(
-#         async_config=AsyncConfig(run_async=True)
-#     ):
-#         meta_agent(golden.input)
-#     assert True
+def test_sync_run_async():
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator(
+        async_config=AsyncConfig(run_async=True)
+    ):
+        meta_agent(golden.input)
+    assert True
 
 
-# def test_sync_run_sync():
-#     dataset = EvaluationDataset(goldens=goldens)
-#     for golden in dataset.evals_iterator(
-#         async_config=AsyncConfig(run_async=False)
-#     ):
-#         meta_agent(golden.input)
-#     assert True
+def test_sync_run_sync():
+    dataset = EvaluationDataset(goldens=goldens)
+    for golden in dataset.evals_iterator(
+        async_config=AsyncConfig(run_async=False)
+    ):
+        meta_agent(golden.input)
+    assert True

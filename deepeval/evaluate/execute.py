@@ -1,3 +1,5 @@
+import logging
+
 from rich.progress import (
     Progress,
     TextColumn,
@@ -40,7 +42,6 @@ from deepeval.tracing.api import (
     BaseApiSpan,
 )
 from deepeval.dataset import Golden
-from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
 from deepeval.utils import (
@@ -87,6 +88,17 @@ from deepeval.evaluate.utils import (
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing.types import TestCaseMetricPair
+from deepeval.config.settings import get_settings
+
+
+logger = logging.getLogger(__name__)
+settings = get_settings()
+
+
+async def _snapshot_tasks():
+    cur = asyncio.current_task()
+    # `all_tasks` returns tasks for the current running loop only
+    return {t for t in asyncio.all_tasks() if t is not cur}
 
 
 ###########################################
@@ -112,7 +124,7 @@ def execute_test_cases(
     _is_assert_test: bool = False,
 ) -> List[TestResult]:
     global_test_run_cache_manager.disable_write_cache = (
-        cache_config.write_cache == False
+        cache_config.write_cache is False
     )
 
     if test_run_manager is None:
@@ -357,7 +369,7 @@ async def a_execute_test_cases(
             return await func(*args, **kwargs)
 
     global_test_run_cache_manager.disable_write_cache = (
-        cache_config.write_cache == False
+        cache_config.write_cache is False
     )
     if test_run_manager is None:
         test_run_manager = global_test_run_manager
@@ -1041,7 +1053,7 @@ def execute_agentic_test_cases(
         with progress:
             pbar_id = add_pbar(
                 progress,
-                f"Running Component-Level Evals (sync)",
+                "Running Component-Level Evals (sync)",
                 total=len(goldens) * 2,
             )
             evaluate_test_cases(progress=progress, pbar_id=pbar_id)
@@ -1207,12 +1219,16 @@ async def _a_execute_agentic_test_case(
 
     test_case = LLMTestCase(
         input=golden.input,
-        actual_output=str(trace.output) if trace.output is not None else None,
-        expected_output=trace.expected_output,
-        context=trace.context,
-        retrieval_context=trace.retrieval_context,
-        tools_called=trace.tools_called,
-        expected_tools=trace.expected_tools,
+        actual_output=(
+            str(current_trace.output)
+            if current_trace.output is not None
+            else None
+        ),
+        expected_output=current_trace.expected_output,
+        context=current_trace.context,
+        retrieval_context=current_trace.retrieval_context,
+        tools_called=current_trace.tools_called,
+        expected_tools=current_trace.expected_tools,
         additional_metadata=golden.additional_metadata,
         comments=golden.comments,
         name=golden.name,
@@ -1551,7 +1567,7 @@ def execute_agentic_test_cases_from_loop(
                             tools_called=span.tools_called,
                             expected_tools=span.expected_tools,
                         )
-                    if span.metrics == None or llm_test_case == None:
+                    if span.metrics is None or llm_test_case is None:
                         return
 
                     has_task_completion = any(
@@ -1692,7 +1708,7 @@ def execute_agentic_test_cases_from_loop(
             with progress:
                 pbar_id = add_pbar(
                     progress,
-                    f"Running Component-Level Evals (sync)",
+                    "Running Component-Level Evals (sync)",
                     total=len(goldens) * 2,
                 )
                 yield from evaluate_test_cases(
@@ -1722,6 +1738,11 @@ def a_execute_agentic_test_cases_from_loop(
     _is_assert_test: bool = False,
 ) -> Iterator[TestResult]:
 
+    GATHER_TIMEOUT_SECONDS = (
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+        + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
+    )
+
     semaphore = asyncio.Semaphore(async_config.max_concurrent)
     original_create_task = asyncio.create_task
 
@@ -1735,43 +1756,225 @@ def a_execute_agentic_test_cases_from_loop(
 
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
-            return await coroutine
+            return await asyncio.wait_for(
+                coroutine, timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+            )
 
     def evaluate_test_cases(
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
         pbar_callback_id: Optional[int] = None,
     ):
+        # Tasks we scheduled during this iterator run on this event loop.
+        # by gathering these tasks we can avoid re-awaiting coroutines which
+        # can cause cross loop mixups that trigger "future belongs to a different loop" errors
+        created_tasks: list[asyncio.Task] = []
+        task_meta: dict[asyncio.Task, dict] = {}
+        current_golden_ctx = {"index": -1, "name": None, "input": None}
+
         def create_callback_task(coro, **kwargs):
-            task = loop.create_task(execute_callback_with_semaphore(coro))
+            # build a descriptive task name for tracking
+            coro_desc = repr(coro)
+            task_name = f"callback[{current_golden_ctx['index']}]:{coro_desc.split()[1] if ' ' in coro_desc else coro_desc}"
+
+            # Wrap the user coroutine in our semaphore runner and bind it to THIS loop.
+            # Keep the resulting Task so we can gather tasks (not raw coroutines) later,
+            # without touching tasks from other loops or already awaited coroutines.
+            task = loop.create_task(
+                execute_callback_with_semaphore(coro), name=task_name
+            )
+
+            # record metadata for debugging
+            MAX_META_INPUT_LENGTH = 120
+            started = time.perf_counter()
+            short_input = current_golden_ctx["input"]
+            if (
+                isinstance(short_input, str)
+                and len(short_input) > MAX_META_INPUT_LENGTH
+            ):
+                short_input = short_input[:MAX_META_INPUT_LENGTH] + "…"
+            task_meta[task] = {
+                "golden_index": current_golden_ctx["index"],
+                "golden_name": current_golden_ctx["name"],
+                "input": short_input,
+                "coro": coro_desc,
+                "started": started,
+            }
 
             def on_task_done(t: asyncio.Task):
+                if settings.DEEPEVAL_DEBUG_ASYNC:
+                    # Using info level here to make it easy to spot these logs.
+                    # We are gated by DEEPEVAL_DEBUG_ASYNC
+                    meta = task_meta.get(t, {})
+                    duration = time.perf_counter() - meta.get(
+                        "started", started
+                    )
+
+                    if t.cancelled():
+                        logger.info(
+                            "[deepeval] task CANCELLED %s after %.2fs meta=%r",
+                            t.get_name(),
+                            duration,
+                            meta,
+                        )
+                    else:
+                        exc = t.exception()
+                        if exc is not None:
+                            logger.error(
+                                "[deepeval] task ERROR %s after %.2fs meta=%r",
+                                t.get_name(),
+                                duration,
+                                meta,
+                                exc_info=(type(exc), exc, exc.__traceback__),
+                            )
+                        else:
+                            logger.info(
+                                "[deepeval] task OK %s after %.2fs meta={'golden_index': %r}",
+                                t.get_name(),
+                                duration,
+                                meta.get("golden_index"),
+                            )
+
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
 
             task.add_done_callback(on_task_done)
+            created_tasks.append(task)
             return task
 
         asyncio.create_task = create_callback_task
+        # DEBUG
+        # Snapshot tasks that already exist on this loop so we can detect strays
+        baseline_tasks = loop.run_until_complete(_snapshot_tasks())
 
         try:
-            for golden in goldens:
+            for index, golden in enumerate(goldens):
+                current_golden_ctx.update(
+                    {
+                        "index": index,
+                        "name": getattr(golden, "name", None),
+                        "input": getattr(golden, "input", None),
+                    }
+                )
+                prev_task_length = len(created_tasks)
                 yield golden
-                if global_evaluation_tasks.num_tasks() == 0:
+                # if this golden created no tasks, bump bars now
+                if len(created_tasks) == prev_task_length:
                     update_pbar(progress, pbar_callback_id)
                     update_pbar(progress, pbar_id)
         finally:
             asyncio.create_task = original_create_task
 
-        if global_evaluation_tasks.num_tasks() > 0:
-            loop.run_until_complete(
-                asyncio.gather(
-                    *global_evaluation_tasks.get_tasks(),
+        if created_tasks:
+            # Only await tasks we created on this loop in this run.
+            # This will prevent re-awaiting and avoids cross loop "future belongs to a different loop" errors
+            try:
+                loop.run_until_complete(
+                    asyncio.wait_for(
+                        asyncio.gather(*created_tasks, return_exceptions=True),
+                        timeout=GATHER_TIMEOUT_SECONDS,
+                    )
                 )
-            )
+            except asyncio.TimeoutError:
+                import traceback
+
+                pending = [t for t in created_tasks if not t.done()]
+
+                # Log the elapsed time for each task that was pending
+                for t in pending:
+                    meta = task_meta.get(t, {})
+                    start_time = meta.get("started", time.perf_counter())
+                    elapsed_time = time.perf_counter() - start_time
+
+                    # Determine if it was a per task or gather timeout based on task's elapsed time
+                    if (
+                        elapsed_time
+                        >= settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+                    ):
+                        timeout_type = "per-task"
+                    else:
+                        timeout_type = "gather"
+
+                    logger.warning(
+                        f"[deepeval] gather TIMEOUT after {GATHER_TIMEOUT_SECONDS}s; "
+                        f"pending={len(pending)} tasks. Timeout type: {timeout_type}. "
+                        f"To give tasks more time, consider increasing "
+                        f"DEEPEVAL_PER_TASK_TIMEOUT_SECONDS for longer task completion time or "
+                        f"DEEPEVAL_TASK_GATHER_BUFFER_SECONDS to allow more time for gathering results."
+                    )
+
+                    # Log pending tasks and their stack traces
+                    logger.info(
+                        "  - PENDING %s elapsed_time=%.2fs meta=%s",
+                        t.get_name(),
+                        elapsed_time,
+                        meta,
+                    )
+                    if loop.get_debug() and settings.DEEPEVAL_DEBUG_ASYNC:
+                        frames = t.get_stack(limit=6)
+                        if frames:
+                            logger.info("    stack:")
+                            for fr in frames:
+                                for line in traceback.format_stack(fr):
+                                    logger.info("      " + line.rstrip())
+
+                # Cancel and drain the tasks
+                for t in pending:
+                    t.cancel()
+                loop.run_until_complete(
+                    asyncio.gather(*created_tasks, return_exceptions=True)
+                )
+            finally:
+
+                # if it is already closed, we are done
+                if loop.is_closed():
+                    return
+
+                try:
+                    # Find tasks that were created during this run but we didn’t track
+                    current_tasks = loop.run_until_complete(_snapshot_tasks())
+                except RuntimeError:
+                    # this might happen if the loop is already closing
+                    # nothing we can do
+                    return
+
+                leftovers = [
+                    t
+                    for t in current_tasks
+                    if t not in baseline_tasks
+                    and t not in created_tasks
+                    and not t.done()
+                ]
+
+                if not leftovers:
+                    return
+
+                if settings.DEEPEVAL_DEBUG_ASYNC:
+                    logger.warning(
+                        "[deepeval] %d stray task(s) not tracked; cancelling…",
+                        len(leftovers),
+                    )
+                    for t in leftovers:
+                        meta = task_meta.get(t, {})
+                        name = t.get_name()
+                        logger.warning("  - STRAY %s meta=%s", name, meta)
+
+                for t in leftovers:
+                    t.cancel()
+
+                # Drain strays so they don’t leak into the next iteration
+                try:
+                    loop.run_until_complete(
+                        asyncio.gather(*leftovers, return_exceptions=True)
+                    )
+                except RuntimeError:
+                    # If the loop is closing here, just continue
+                    if settings.DEEPEVAL_DEBUG_ASYNC:
+                        logger.warning(
+                            "[deepeval] failed to drain stray tasks because loop is closing"
+                        )
 
         # Evaluate traces
-        asyncio.create_task = loop.create_task
         if trace_manager.traces_to_evaluate:
             loop.run_until_complete(
                 _a_evaluate_traces(
@@ -1863,7 +2066,7 @@ def a_execute_agentic_test_cases_from_loop(
             with progress:
                 pbar_id = add_pbar(
                     progress,
-                    f"Running Component-Level Evals (async)",
+                    "Running Component-Level Evals (async)",
                     total=len(goldens) * 2,
                 )
                 pbar_callback_id = add_pbar(

@@ -1,7 +1,9 @@
+import re
+from jinja2 import Template
+
 from deepeval.prompt.api import PromptInterpolationType
 from pydantic import BaseModel, create_model
 from typing import Any, Dict, Type, Optional, List
-import re
 
 
 def interpolate_mustache(text: str, **kwargs) -> str:
@@ -27,6 +29,11 @@ def interpolate_dollar_brackets(text: str, **kwargs) -> str:
     return formatted_template.format(**kwargs)
 
 
+def interpolate_jinja(text: str, **kwargs) -> str:
+    template = Template(text)
+    return template.render(**kwargs)
+
+
 def interpolate_text(
     interpolation_type: PromptInterpolationType, text: str, **kwargs
 ) -> str:
@@ -39,6 +46,8 @@ def interpolate_text(
         return interpolate_fstring(text, **kwargs)
     elif interpolation_type == PromptInterpolationType.DOLLAR_BRACKETS:
         return interpolate_dollar_brackets(text, **kwargs)
+    elif interpolation_type == PromptInterpolationType.JINJA:
+        return interpolate_jinja(text, **kwargs)
 
     raise ValueError(f"Unsupported interpolation type: {interpolation_type}")
 

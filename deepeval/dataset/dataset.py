@@ -1,5 +1,5 @@
 from asyncio import Task
-from typing import Iterator, List, Optional, Union, Literal
+from typing import TYPE_CHECKING, Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
 from opentelemetry.trace import Tracer
 from opentelemetry.context import Context, attach, detach
@@ -7,7 +7,6 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
 import csv
-import webbrowser
 import os
 import datetime
 import time
@@ -17,6 +16,7 @@ from opentelemetry import baggage
 
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
+    coerce_to_task,
     convert_test_cases_to_goldens,
     convert_goldens_to_test_cases,
     convert_convo_goldens_to_convo_test_cases,
@@ -49,10 +49,17 @@ from deepeval.utils import (
 from deepeval.test_run import (
     global_test_run_manager,
 )
-from deepeval.dataset.types import global_evaluation_tasks
 from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing import trace_manager
 from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
+
+if TYPE_CHECKING:
+    from deepeval.evaluate.configs import (
+        AsyncConfig,
+        DisplayConfig,
+        CacheConfig,
+        ErrorConfig,
+    )
 
 
 valid_file_types = ["csv", "json", "jsonl"]
@@ -451,6 +458,8 @@ class EvaluationDataset:
         tools_called_col_delimiter: str = ";",
         expected_tools_col_name: Optional[str] = "expected_tools",
         expected_tools_col_delimiter: str = ";",
+        comments_key_name: str = "comments",
+        name_key_name: str = "name",
         source_file_col_name: Optional[str] = None,
         additional_metadata_col_name: Optional[str] = None,
         scenario_col_name: Optional[str] = "scenario",
@@ -519,6 +528,8 @@ class EvaluationDataset:
                 df, expected_tools_col_name, default=""
             )
         ]
+        comments = get_column_data(df, comments_key_name)
+        name = get_column_data(df, name_key_name)
         source_files = get_column_data(df, source_file_col_name)
         additional_metadatas = [
             ast.literal_eval(metadata) if metadata else None
@@ -539,6 +550,8 @@ class EvaluationDataset:
             retrieval_context,
             tools_called,
             expected_tools,
+            comments,
+            name,
             source_file,
             additional_metadata,
             scenario,
@@ -553,6 +566,8 @@ class EvaluationDataset:
             retrieval_contexts,
             tools_called,
             expected_tools,
+            comments,
+            name,
             source_files,
             additional_metadatas,
             scenarios,
@@ -562,7 +577,7 @@ class EvaluationDataset:
         ):
             if scenario:
                 self._multi_turn = True
-                parsed_turns = parse_turns(turns)
+                parsed_turns = parse_turns(turns) if turns else []
                 self.goldens.append(
                     ConversationalGolden(
                         scenario=scenario,
@@ -570,6 +585,8 @@ class EvaluationDataset:
                         expected_outcome=expected_outcome,
                         user_description=user_description,
                         context=context,
+                        comments=comments,
+                        name=name,
                     )
                 )
             else:
@@ -585,6 +602,8 @@ class EvaluationDataset:
                         expected_tools=expected_tools,
                         additional_metadata=additional_metadata,
                         source_file=source_file,
+                        comments=comments,
+                        name=name,
                     )
                 )
 
@@ -598,6 +617,8 @@ class EvaluationDataset:
         retrieval_context_key_name: Optional[str] = "retrieval_context",
         tools_called_key_name: Optional[str] = "tools_called",
         expected_tools_key_name: Optional[str] = "expected_tools",
+        comments_key_name: str = "comments",
+        name_key_name: str = "name",
         source_file_key_name: Optional[str] = "source_file",
         additional_metadata_key_name: Optional[str] = "additional_metadata",
         scenario_key_name: Optional[str] = "scenario",
@@ -621,7 +642,8 @@ class EvaluationDataset:
                 expected_outcome = json_obj.get(expected_outcome_key_name)
                 user_description = json_obj.get(user_description_key_name)
                 context = json_obj.get(context_key_name)
-
+                comments = json_obj.get(comments_key_name)
+                name = json_obj.get(name_key_name)
                 parsed_turns = parse_turns(turns) if turns else []
 
                 self._multi_turn = True
@@ -632,6 +654,8 @@ class EvaluationDataset:
                         expected_outcome=expected_outcome,
                         user_description=user_description,
                         context=context,
+                        comments=comments,
+                        name=name,
                     )
                 )
             else:
@@ -642,6 +666,8 @@ class EvaluationDataset:
                 retrieval_context = json_obj.get(retrieval_context_key_name)
                 tools_called = json_obj.get(tools_called_key_name)
                 expected_tools = json_obj.get(expected_tools_key_name)
+                comments = json_obj.get(comments_key_name)
+                name = json_obj.get(name_key_name)
                 source_file = json_obj.get(source_file_key_name)
                 additional_metadata = json_obj.get(additional_metadata_key_name)
 
@@ -656,6 +682,8 @@ class EvaluationDataset:
                         tools_called=tools_called,
                         expected_tools=expected_tools,
                         additional_metadata=additional_metadata,
+                        comments=comments,
+                        name=name,
                         source_file=source_file,
                     )
                 )
@@ -921,6 +949,8 @@ class EvaluationDataset:
                     expected_outcome=golden.expected_outcome,
                     user_description=golden.user_description,
                     context=golden.context,
+                    name=golden.name,
+                    comments=golden.comments,
                 )
                 for golden in self.goldens
             ]
@@ -932,6 +962,8 @@ class EvaluationDataset:
                     actual_output=golden.actual_output,
                     retrieval_context=golden.retrieval_context,
                     context=golden.context,
+                    name=golden.name,
+                    comments=golden.comments,
                     source_file=golden.source_file,
                 )
                 for golden in self.goldens
@@ -974,6 +1006,8 @@ class EvaluationDataset:
                             "expected_outcome": golden.expected_outcome,
                             "user_description": golden.user_description,
                             "context": golden.context,
+                            "name": golden.name,
+                            "comments": golden.comments,
                         }
                         for golden in goldens
                     ]
@@ -985,6 +1019,8 @@ class EvaluationDataset:
                             "expected_output": golden.expected_output,
                             "retrieval_context": golden.retrieval_context,
                             "context": golden.context,
+                            "name": golden.name,
+                            "comments": golden.comments,
                             "source_file": golden.source_file,
                         }
                         for golden in goldens
@@ -1003,6 +1039,8 @@ class EvaluationDataset:
                             "expected_outcome",
                             "user_description",
                             "context",
+                            "name",
+                            "comments",
                         ]
                     )
                     for golden in goldens:
@@ -1023,6 +1061,8 @@ class EvaluationDataset:
                                 golden.expected_outcome,
                                 golden.user_description,
                                 context,
+                                golden.name,
+                                golden.comments,
                             ]
                         )
                 else:
@@ -1033,6 +1073,8 @@ class EvaluationDataset:
                             "expected_output",
                             "retrieval_context",
                             "context",
+                            "name",
+                            "comments",
                             "source_file",
                         ]
                     )
@@ -1054,6 +1096,8 @@ class EvaluationDataset:
                                 golden.expected_output,
                                 retrieval_context,
                                 context,
+                                golden.name,
+                                golden.comments,
                                 golden.source_file,
                             ]
                         )
@@ -1230,7 +1274,7 @@ class EvaluationDataset:
                 )
 
     def evaluate(self, task: Task):
-        global_evaluation_tasks.append(task)
+        coerce_to_task(task)
 
     def _start_otel_test_run(self, tracer: Optional[Tracer] = None) -> Context:
         _tracer = check_tracer(tracer)

@@ -223,7 +223,7 @@ class Scorer:
         Right now we are using score_one method under the hood. Instead of scoring multiple predictions for faithfulness.
         """
         try:
-            from deepeval.models import SummaCModels
+            from deepeval.models.summac_model import SummaCModels
         except Exception as e:
             print(f"SummaCZS model can not be loaded.\n{e}")
 
@@ -326,7 +326,7 @@ class Scorer:
         from sentence_transformers import util
 
         try:
-            from deepeval.models import (
+            from deepeval.models.answer_relevancy_model import (
                 AnswerRelevancyModel,
                 CrossEncoderAnswerRelevancyModel,
             )

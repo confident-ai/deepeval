@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Union
 
 KEY_FILE: str = ".deepeval"
 HIDDEN_DIR: str = ".deepeval"
@@ -29,7 +30,7 @@ class ProviderSlug(str, Enum):
     OLLAMA = "ollama"
 
 
-def slugify(value: str | ProviderSlug) -> str:
+def slugify(value: Union[str, ProviderSlug]) -> str:
     return (
         value.value
         if isinstance(value, ProviderSlug)

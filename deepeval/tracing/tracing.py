@@ -8,9 +8,6 @@ import random
 import atexit
 import queue
 import uuid
-import os
-import json
-import time
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -496,6 +493,7 @@ class TraceManager:
                     asyncio.gather(*pending, return_exceptions=True)
                 )
             self.flush_traces(remaining_trace_request_bodies)
+            loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
 
     def flush_traces(

@@ -7,7 +7,9 @@
         "context": [
             "Weather",
             "Paris"
-        ]
+        ],
+        "name": "Name 1",
+        "comments": "Comment 1"
     },
     {
         "scenario": "User asks for a reminder to take medicine",
@@ -17,7 +19,9 @@
         "context": [
             "Health",
             "Medication"
-        ]
+        ],
+        "name": "Name 2",
+        "comments": "Comment 2"
     },
     {
         "scenario": "User translates a phrase from English to Japanese",
@@ -27,7 +31,9 @@
         "context": [
             "Translation",
             "English to Japanese"
-        ]
+        ],
+        "name": "Name 3",
+        "comments": "Comment 3"
     },
     {
         "scenario": "User books a restaurant reservation",
@@ -37,7 +43,9 @@
         "context": [
             "Restaurants",
             "Booking"
-        ]
+        ],
+        "name": "Name 4",
+        "comments": "Comment 4"
     },
     {
         "scenario": "User asks for the latest sports scores",
@@ -47,7 +55,9 @@
         "context": [
             "Sports",
             "Football"
-        ]
+        ],
+        "name": "Name 5",
+        "comments": "Comment 5"
     },
     {
         "scenario": "User asks for a movie recommendation",
@@ -57,7 +67,9 @@
         "context": [
             "Entertainment",
             "Movies"
-        ]
+        ],
+        "name": "Name 6",
+        "comments": "Comment 6"
     },
     {
         "scenario": "User checks their bank account balance",
@@ -67,7 +79,9 @@
         "context": [
             "Finance",
             "Banking"
-        ]
+        ],
+        "name": "Name 7",
+        "comments": "Comment 7"
     },
     {
         "scenario": "User checks the flight status for their flight",
@@ -77,7 +91,9 @@
         "context": [
             "Travel",
             "Flights"
-        ]
+        ],
+        "name": "Name 8",
+        "comments": "Comment 8"
     },
     {
         "scenario": "User asks for a health tip",
@@ -87,7 +103,9 @@
         "context": [
             "Health",
             "Wellness"
-        ]
+        ],
+        "name": "Name 9",
+        "comments": "Comment 9"
     },
     {
         "scenario": "User asks for a nearby restaurant recommendation",
@@ -97,7 +115,9 @@
         "context": [
             "Food",
             "Restaurant"
-        ]
+        ],
+        "name": "Name 10",
+        "comments": "Comment 10"
     },
     {
         "scenario": "User checks the weather for a different city",
@@ -107,7 +127,9 @@
         "context": [
             "Weather",
             "Weather Forecast"
-        ]
+        ],
+        "name": "Name 11",
+        "comments": "Comment 11"
     },
     {
         "scenario": "User asks for help with setting an alarm",
@@ -117,7 +139,9 @@
         "context": [
             "Productivity",
             "Alarm"
-        ]
+        ],
+        "name": "Name 12",
+        "comments": "Comment 12"
     },
     {
         "scenario": "User asks for the time in a different timezone",
@@ -127,7 +151,9 @@
         "context": [
             "Time",
             "Timezone"
-        ]
+        ],
+        "name": "Name 13",
+        "comments": "Comment 13"
     },
     {
         "scenario": "User asks for a nearby gym recommendation",
@@ -137,7 +163,9 @@
         "context": [
             "Fitness",
             "Gym"
-        ]
+        ],
+        "name": "Name 14",
+        "comments": "Comment 14"
     },
     {
         "scenario": "User asks for a quick recipe",
@@ -147,6 +175,8 @@
         "context": [
             "Cooking",
             "Recipes"
-        ]
+        ],
+        "name": "Name 15",
+        "comments": "Comment 15"
     }
 ]

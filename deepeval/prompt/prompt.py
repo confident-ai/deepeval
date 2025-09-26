@@ -65,6 +65,11 @@ class Prompt:
         template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
     ):
+        if template and messages_template:
+            raise TypeError(
+                "Unable to create Prompt where 'template' and 'messages_template' are both provided. Please provide only one to continue."
+            )
+
         self.alias = alias
         self._text_template = template
         self._messages_template = messages_template
@@ -73,6 +78,10 @@ class Prompt:
         self._refresh_map: Dict[str, int] = {}
         self._model_settings: Optional[ModelSettings] = None
         self._output_schema: Optional[OutputSchema] = None
+        if template:
+            self._type = PromptType.TEXT
+        elif messages_template:
+            self._type = PromptType.LIST
 
     @property
     def version(self):
