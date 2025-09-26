@@ -21,12 +21,9 @@ from rich.progress import Progress
 from rich.console import Console, Theme
 
 from deepeval.confident.api import set_confident_api_key
-from deepeval.constants import CONFIDENT_OPEN_BROWSER
 from deepeval.config.settings import get_settings
 from deepeval.config.utils import (
-    parse_bool,
     get_env_bool,
-    bool_to_env_str,
     set_env_bool,
 )
 
@@ -416,6 +413,10 @@ def normalize_text(text: str) -> str:
         return text.lower()
 
     return white_space_fix(remove_articles(remove_punc(lower(text))))
+
+
+def is_missing(s: Optional[str]) -> bool:
+    return s is None or (isinstance(s, str) and s.strip() == "")
 
 
 ###############################################

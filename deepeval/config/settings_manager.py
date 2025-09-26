@@ -15,7 +15,7 @@ from enum import Enum
 from pydantic import SecretStr
 from deepeval.config.settings import get_settings, _SAVE_RE
 from deepeval.cli.dotenv_handler import DotenvHandler
-from deepeval.utils import bool_to_env_str
+from deepeval.config.utils import bool_to_env_str
 
 logger = logging.getLogger(__name__)
 StrOrEnum = Union[str, Enum]

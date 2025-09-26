@@ -796,6 +796,9 @@ class Observer:
         # Now create the span instance with the correct trace_uuid and parent_uuid
         span_instance = self.create_span_instance()
 
+        # stash call arguments so they are available during the span lifetime
+        setattr(span_instance, "_function_kwargs", self.function_kwargs)
+
         # Add the span to active spans and to its trace
         trace_manager.add_span(span_instance)
         trace_manager.add_span_to_trace(span_instance)
