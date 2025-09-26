@@ -109,18 +109,21 @@ def check_llm_input_from_gen_ai_attributes(
         output = json.loads(span.attributes.get("gen_ai.output.messages"))
     except Exception as e:
         pass
-    
-    if input is None and output is None: 
+
+    if input is None and output is None:
         try:
             input = json.loads(span.attributes.get("events"))
             if input and isinstance(input, list):
                 # check if the last event is a genai choice
                 last_event = input.pop()
-                if last_event and last_event.get("event.name") == "gen_ai.choice":
+                if (
+                    last_event
+                    and last_event.get("event.name") == "gen_ai.choice"
+                ):
                     output = last_event
         except Exception as e:
             pass
-    
+
     return input, output
 
 
@@ -320,7 +323,10 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
 
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
-def check_pydantic_ai_agent_input_output(span: ReadableSpan) -> Tuple[Optional[Any], Optional[Any]]:
+
+def check_pydantic_ai_agent_input_output(
+    span: ReadableSpan,
+) -> Tuple[Optional[Any], Optional[Any]]:
     input_val: Optional[Any] = None
     output_val: Optional[Any] = None
 
@@ -353,7 +359,11 @@ def check_pydantic_ai_agent_input_output(span: ReadableSpan) -> Tuple[Optional[A
                         first_user_idx = i
                         break
 
-                input_val = normalized if first_user_idx is None else normalized[: first_user_idx + 1]
+                input_val = (
+                    normalized
+                    if first_user_idx is None
+                    else normalized[: first_user_idx + 1]
+                )
     except Exception:
         pass
 
@@ -366,6 +376,7 @@ def check_pydantic_ai_agent_input_output(span: ReadableSpan) -> Tuple[Optional[A
 
     return input_val, output_val
 
+
 def check_tool_output(span: ReadableSpan):
     try:
         return span.attributes.get("tool_response")
@@ -373,7 +384,10 @@ def check_tool_output(span: ReadableSpan):
         pass
     return None
 
-def check_pydantic_ai_trace_input_output(span: ReadableSpan) -> Tuple[Optional[Any], Optional[Any]]:
+
+def check_pydantic_ai_trace_input_output(
+    span: ReadableSpan,
+) -> Tuple[Optional[Any], Optional[Any]]:
     input_val: Optional[Any] = None
     output_val: Optional[Any] = None
 

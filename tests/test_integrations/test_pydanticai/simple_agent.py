@@ -1,6 +1,8 @@
 import asyncio
 from pydantic_ai import Agent
-from deepeval.integrations.pydantic_ai.instrumentator import ConfidentInstrumentationSettings
+from deepeval.integrations.pydantic_ai.instrumentator import (
+    ConfidentInstrumentationSettings,
+)
 from deepeval.prompt import Prompt
 
 prompt = Prompt(alias="asd")
@@ -23,7 +25,8 @@ agent = Agent(
     instrument=confident_instrumentation_settings,
     name="test_agent",
 )
-    
+
+
 def execute_simple_agent():
     result = asyncio.run(agent.run("What are the LLMs?"))
     print("===============Simple agent output:===============")

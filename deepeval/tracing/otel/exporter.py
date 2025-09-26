@@ -101,11 +101,13 @@ class ConfidentSpanExporter(SpanExporter):
 
         ################ Convert Forest of Spans to Forest of Base Span Wrappers ################
         spans_wrappers_forest: List[List[BaseSpanWrapper]] = []
-        
+
         for span_list in forest:
             spans_wrappers_list: List[BaseSpanWrapper] = []
             for span in span_list:
-                base_span_wrapper = self._convert_readable_span_to_base_span(span)
+                base_span_wrapper = self._convert_readable_span_to_base_span(
+                    span
+                )
 
                 spans_wrappers_list.append(base_span_wrapper)
             spans_wrappers_forest.append(spans_wrappers_list)
@@ -113,7 +115,7 @@ class ConfidentSpanExporter(SpanExporter):
         ################ Add Spans to Trace Manager ################
         for spans_wrappers_list in spans_wrappers_forest:
             for base_span_wrapper in spans_wrappers_list:
-                
+
                 # get current trace
                 current_trace = trace_manager.get_trace_by_uuid(
                     base_span_wrapper.base_span.trace_uuid
@@ -122,13 +124,15 @@ class ConfidentSpanExporter(SpanExporter):
                     current_trace = trace_manager.start_new_trace(
                         trace_uuid=base_span_wrapper.base_span.trace_uuid
                     )
-            
+
                 # set confident api key
                 if api_key:
                     current_trace.confident_api_key = api_key
 
                 ################ Set Trace Attributes from  ################
-                self._set_current_trace_attributes_from_base_span_wrapper(current_trace, base_span_wrapper)
+                self._set_current_trace_attributes_from_base_span_wrapper(
+                    current_trace, base_span_wrapper
+                )
 
                 # no removing span because it can be parent of other spans
                 trace_manager.add_span(base_span_wrapper.base_span)
@@ -153,27 +157,22 @@ class ConfidentSpanExporter(SpanExporter):
             trace_manager.clear_traces()
             return SpanExportResult.SUCCESS
 
-    def _set_current_trace_attributes_from_base_span_wrapper(self, current_trace: Trace, base_span_wrapper: BaseSpanWrapper):
+    def _set_current_trace_attributes_from_base_span_wrapper(
+        self, current_trace: Trace, base_span_wrapper: BaseSpanWrapper
+    ):
         # error trace if root span is errored
         if base_span_wrapper.base_span.parent_uuid is None:
-            if (
-                base_span_wrapper.base_span.status
-                == TraceSpanStatus.ERRORED
-            ):
+            if base_span_wrapper.base_span.status == TraceSpanStatus.ERRORED:
                 current_trace.status = TraceSpanStatus.ERRORED
 
         # set the trace attributes (to be deprecated)
         if base_span_wrapper.trace_attributes:
 
             if base_span_wrapper.trace_attributes.name:
-                current_trace.name = (
-                    base_span_wrapper.trace_attributes.name
-                )
+                current_trace.name = base_span_wrapper.trace_attributes.name
 
             if base_span_wrapper.trace_attributes.tags:
-                current_trace.tags = (
-                    base_span_wrapper.trace_attributes.tags
-                )
+                current_trace.tags = base_span_wrapper.trace_attributes.tags
 
             if base_span_wrapper.trace_attributes.thread_id:
                 current_trace.thread_id = (
@@ -210,9 +209,7 @@ class ConfidentSpanExporter(SpanExporter):
             base_span_wrapper.trace_metadata, dict
         ):
             try:
-                current_trace.metadata = (
-                    base_span_wrapper.trace_metadata
-                )
+                current_trace.metadata = base_span_wrapper.trace_metadata
             except Exception:
                 pass
 
@@ -234,9 +231,7 @@ class ConfidentSpanExporter(SpanExporter):
 
         # set the trace environment
         if base_span_wrapper.trace_environment:
-            current_trace.environment = (
-                base_span_wrapper.trace_environment
-            )
+            current_trace.environment = base_span_wrapper.trace_environment
 
         # set the trace test case parameters
         if base_span_wrapper.trace_retrieval_context:
@@ -246,9 +241,7 @@ class ConfidentSpanExporter(SpanExporter):
         if base_span_wrapper.trace_context:
             current_trace.context = base_span_wrapper.trace_context
         if base_span_wrapper.trace_tools_called:
-            current_trace.tools_called = (
-                base_span_wrapper.trace_tools_called
-            )
+            current_trace.tools_called = base_span_wrapper.trace_tools_called
         if base_span_wrapper.trace_expected_tools:
             current_trace.expected_tools = (
                 base_span_wrapper.trace_expected_tools
@@ -269,8 +262,10 @@ class ConfidentSpanExporter(SpanExporter):
             base_span = self.__prepare_boilerplate_base_span(span)
         except Exception:
             pass
-        
-        parent_uuid = to_hex_string(span.parent.span_id, 16) if span.parent else None
+
+        parent_uuid = (
+            to_hex_string(span.parent.span_id, 16) if span.parent else None
+        )
         base_span_status = TraceSpanStatus.SUCCESS
         base_span_error = None
 
@@ -289,30 +284,38 @@ class ConfidentSpanExporter(SpanExporter):
                 start_time=peb.epoch_nanos_to_perf_seconds(span.start_time),
                 end_time=peb.epoch_nanos_to_perf_seconds(span.end_time),
             )
-        
-        #NOTE: Confident Span is reffered as base span in this codebase
-        self.__set_base_span_attributes(base_span, span, base_span_status, base_span_error)
-        
+
+        # NOTE: Confident Span is reffered as base span in this codebase
+        self.__set_base_span_attributes(
+            base_span, span, base_span_status, base_span_error
+        )
+
         base_span_wrapper = BaseSpanWrapper(base_span=base_span)
-        
+
         self.__set_trace_attributes(base_span_wrapper, span)
 
         ################ Set Custom attributes from different integrations ################
         self.__set_custom_trace_input_output(base_span_wrapper, span)
-        
+
         return base_span_wrapper
-    
-    def __set_custom_trace_input_output(self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan):
-        
+
+    def __set_custom_trace_input_output(
+        self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan
+    ):
+
         # check for pydantic ai trace input and output
-        pydantic_trace_input, pydantic_trace_output = check_pydantic_ai_trace_input_output(span)
+        pydantic_trace_input, pydantic_trace_output = (
+            check_pydantic_ai_trace_input_output(span)
+        )
 
         if not base_span_wrapper.trace_input and pydantic_trace_input:
             base_span_wrapper.trace_input = pydantic_trace_input
         if not base_span_wrapper.trace_output and pydantic_trace_output:
             base_span_wrapper.trace_output = pydantic_trace_output
 
-    def __set_trace_attributes(self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan):
+    def __set_trace_attributes(
+        self, base_span_wrapper: BaseSpanWrapper, span: ReadableSpan
+    ):
         # Extract Trace Attributes
         trace_name = span.attributes.get("confident.trace.name")
         trace_thread_id = span.attributes.get("confident.trace.thread_id")
@@ -380,10 +383,16 @@ class ConfidentSpanExporter(SpanExporter):
             if environment and isinstance(environment, str):
                 base_span_wrapper.trace_environment = environment
 
-    def __set_base_span_attributes(self, base_span: BaseSpan, span: ReadableSpan, base_span_status: TraceSpanStatus, base_span_error: Optional[str]):
+    def __set_base_span_attributes(
+        self,
+        base_span: BaseSpan,
+        span: ReadableSpan,
+        base_span_status: TraceSpanStatus,
+        base_span_error: Optional[str],
+    ):
         span_input = span.attributes.get("confident.span.input")
         span_output = span.attributes.get("confident.span.output")
-        
+
         span_name = span.attributes.get("confident.span.name")
 
         raw_span_metric_collection = span.attributes.get(
@@ -418,7 +427,7 @@ class ConfidentSpanExporter(SpanExporter):
         span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
         span_metadata = self._parse_json_string(raw_span_metadata)
         span_metric_collection = parse_string(raw_span_metric_collection)
-        
+
         # Set Span Attributes
         base_span.parent_uuid = (
             to_hex_string(span.parent.span_id, 16) if span.parent else None
@@ -447,7 +456,7 @@ class ConfidentSpanExporter(SpanExporter):
     def __prepare_boilerplate_base_span(
         self, span: ReadableSpan
     ) -> Optional[BaseSpan]:
-        
+
         ################ Get Span Type ################
         span_type = span.attributes.get("confident.span.type")
         if not span_type:
@@ -513,7 +522,7 @@ class ConfidentSpanExporter(SpanExporter):
                     confident_prompt.version = prompt["version"]
                 except Exception:
                     pass
-            
+
             llm_span = LlmSpan(
                 uuid=uuid,
                 status=status,
@@ -561,7 +570,7 @@ class ConfidentSpanExporter(SpanExporter):
                         agent_handoffs.append(str(handoff))
                 except Exception:
                     pass
-            
+
             input, output = check_pydantic_ai_agent_input_output(span)
             agent_span = AgentSpan(
                 uuid=uuid,

@@ -7,10 +7,13 @@ from httpx import AsyncClient
 from pydantic import BaseModel
 from pydantic_ai import RunContext, Agent
 from deepeval.prompt import Prompt
-from deepeval.integrations.pydantic_ai.instrumentator import ConfidentInstrumentationSettings
+from deepeval.integrations.pydantic_ai.instrumentator import (
+    ConfidentInstrumentationSettings,
+)
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
+
 
 @dataclass
 class Deps:
@@ -21,14 +24,14 @@ weather_agent = Agent(
     "openai:gpt-4o-mini",
     instructions="Be concise, reply with one sentence.",
     deps_type=Deps,
-    retries=2, 
+    retries=2,
     instrument=ConfidentInstrumentationSettings(
         confident_prompt=prompt,
         thread_id="test_thread_id_1",
         agent_metric_collection="test_collection_1",
         llm_metric_collection="test_collection_1",
         tool_metric_collection_map={"get_lat_lng": "test_collection_1"},
-    )
+    ),
 )
 
 

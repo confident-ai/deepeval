@@ -31,9 +31,9 @@ def instrument_pydantic_ai(api_key: Optional[str] = None):
         "instrument_pydantic_ai is deprecated and will be removed in a future version. "
         "Please use the new ConfidentInstrumentationSettings instead. Docs: https://www.confident-ai.com/docs/integrations/third-party/pydantic-ai",
         DeprecationWarning,
-        stacklevel=2
+        stacklevel=2,
     )
-    
+
     with capture_tracing_integration("pydantic_ai"):
         is_opentelemetry_available()
 
