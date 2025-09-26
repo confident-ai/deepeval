@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional
 from contextvars import ContextVar
+from collections.abc import Mapping
 
 from deepeval.utils import is_missing
 from deepeval.contextvars import get_current_golden
@@ -21,11 +22,51 @@ def _normalize(s: Optional[str]) -> Optional[str]:
     return None if s is None else str(s).strip().casefold()
 
 
+def _pick_candidate_input(explicit: Optional[str]) -> Optional[str]:
+    """Choose the best input string to compare against the active Golden.
+
+    Precedence:
+      1. The explicit `explicit` argument, if it exists.
+      2. The current span's `input`, if it exists.
+      3. The current observer's call-args (span._function_kwargs) using the first
+         presence of: "input", "query", "prompt", "text".
+      4. The current trace's `input`.
+
+    Returns the chosen input or None if none are available.
+    """
+
+    if not is_missing(explicit):
+        return explicit
+
+    span = current_span_context.get()
+    if span:
+        si = getattr(span, "input", None)
+        if not is_missing(si):
+            return si
+        fk = getattr(span, "_function_kwargs", None)
+        if isinstance(fk, Mapping):
+            for key in ("input", "query", "prompt", "text"):
+                val = fk.get(key)
+                if not is_missing(val):
+                    return val
+
+    trace = current_trace_context.get()
+    if trace and not is_missing(getattr(trace, "input", None)):
+        return trace.input
+    return None
+
+
 def _resolve_expected_output_from_context(
     current_value: Optional[str],
     candidate_input: Optional[str] = None,
 ) -> Optional[str]:
-    """If current_value is falsy/empty, try to pull expected_output from the active Golden."""
+    """Resolve `expected_output` from the active Golden only when appropriate.
+
+    If `current_value` is present, it is returned unchanged.
+    Otherwise, try to read the active Golden's `expected_output`, but only when
+    the Golden's `input` (case/space-insensitive) matches `candidate_input`.
+    Returns the resolved value or the original `current_value` when no match.
+    """
     if not is_missing(current_value):
         return current_value
     golden = get_current_golden()
@@ -58,7 +99,8 @@ def update_current_span(
     if test_case:
         # attempt to retrieve expected_output from the active Golden if caller omitted it.
         test_case.expected_output = _resolve_expected_output_from_context(
-            test_case.expected_output, candidate_input=test_case.input
+            test_case.expected_output,
+            candidate_input=_pick_candidate_input(test_case.input),
         )
 
         current_span.input = test_case.input
@@ -84,7 +126,9 @@ def update_current_span(
         # if still missing, attempt to resolve from context
         current_span.expected_output = _resolve_expected_output_from_context(
             None,
-            candidate_input=getattr(current_span, "input", None),
+            candidate_input=_pick_candidate_input(
+                getattr(current_span, "input", None)
+            ),
         )
     if tools_called:
         current_span.tools_called = tools_called
@@ -115,7 +159,8 @@ def update_current_trace(
     if test_case:
         # resolve expected_output for the trace if caller omitted it.
         test_case.expected_output = _resolve_expected_output_from_context(
-            test_case.expected_output, candidate_input=test_case.input
+            test_case.expected_output,
+            candidate_input=_pick_candidate_input(test_case.input),
         )
 
         current_trace.input = test_case.input
@@ -148,7 +193,9 @@ def update_current_trace(
     elif not getattr(current_trace, "expected_output", None):
         current_trace.expected_output = _resolve_expected_output_from_context(
             None,
-            candidate_input=getattr(current_trace, "input", None),
+            candidate_input=_pick_candidate_input(
+                getattr(current_trace, "input", None)
+            ),
         )
     if tools_called:
         current_trace.tools_called = tools_called

@@ -12,6 +12,7 @@ from deepeval.tracing.tracing import Observer, trace_manager
 from deepeval.test_case.llm_test_case import LLMTestCase
 from deepeval.evaluate.configs import DisplayConfig, CacheConfig, ErrorConfig
 from deepeval.evaluate import execute as exec_mod
+from .helpers import get_active_trace_and_span
 
 
 @pytest.fixture(autouse=True)
@@ -29,16 +30,6 @@ class GoldenStub:
     def __init__(self, golden_input=None, expected_output=None):
         self.input = golden_input
         self.expected_output = expected_output
-
-
-def _get_active_trace_and_span():
-    # helper to peek at current trace/span via the observer context
-    from deepeval.tracing.context import (
-        current_trace_context,
-        current_span_context,
-    )
-
-    return current_trace_context.get(), current_span_context.get()
 
 
 def test_execute_propagates_expected_output(monkeypatch):
@@ -107,7 +98,7 @@ def test_trace_uses_test_case_expected_output_when_present():
                 input="x", actual_output="y", expected_output="tc_exp"
             )
         )
-        trace, _ = _get_active_trace_and_span()
+        trace, _ = get_active_trace_and_span()
         assert trace.expected_output == "tc_exp"
 
 
@@ -123,7 +114,7 @@ def test_trace_kwarg_expected_output_overrides_test_case_and_golden():
             )
             # but explicit kwarg should win
             update_current_trace(expected_output="kw_exp")
-            trace, _ = _get_active_trace_and_span()
+            trace, _ = get_active_trace_and_span()
             assert trace.expected_output == "kw_exp"
     finally:
         reset_current_golden(tok)
@@ -139,7 +130,7 @@ def test_trace_resolves_from_golden_when_missing_or_blank():
                     input="x", actual_output="y", expected_output=None
                 )
             )
-            trace, _ = _get_active_trace_and_span()
+            trace, _ = get_active_trace_and_span()
             assert trace.expected_output == "golden_exp"
 
         # Also cover "blank string" -> treated as missing
@@ -151,7 +142,7 @@ def test_trace_resolves_from_golden_when_missing_or_blank():
                     expected_output="   ",  # white space is treated as empty / not set
                 )
             )
-            trace, _ = _get_active_trace_and_span()
+            trace, _ = get_active_trace_and_span()
             assert trace.expected_output == "golden_exp"
     finally:
         reset_current_golden(tok)
@@ -164,7 +155,7 @@ def test_trace_stays_none_when_missing_and_no_golden():
                 input="x", actual_output="y", expected_output=None
             )
         )
-        trace, _ = _get_active_trace_and_span()
+        trace, _ = get_active_trace_and_span()
         assert trace.expected_output is None
 
 
@@ -178,13 +169,13 @@ def test_span_kwarg_expected_output_overrides_everything():
                     input="x", actual_output="y", expected_output=None
                 )
             )
-            _, span = _get_active_trace_and_span()
+            _, span = get_active_trace_and_span()
             # resolve from golden
             assert span.expected_output == "golden_exp"
 
             # now explicit kwarg should override
             update_current_span(expected_output="span_kw")
-            _, span = _get_active_trace_and_span()
+            _, span = get_active_trace_and_span()
             assert span.expected_output == "span_kw"
     finally:
         reset_current_golden(tok)
@@ -197,7 +188,7 @@ def test_span_stays_none_when_missing_and_no_golden():
                 input="x", actual_output="y", expected_output=None
             )
         )
-        _, span = _get_active_trace_and_span()
+        _, span = get_active_trace_and_span()
         assert span.expected_output is None
 
 
@@ -225,7 +216,7 @@ def test_trace_does_not_inherit_expected_output_on_input_mismatch():
                 )
             )
 
-            trace, _ = _get_active_trace_and_span()
+            trace, _ = get_active_trace_and_span()
             assert trace.expected_output is None
     finally:
         reset_current_golden(token)
@@ -247,7 +238,7 @@ def test_span_does_not_inherit_expected_output_on_input_mismatch():
                 )
             )
 
-            _, span = _get_active_trace_and_span()
+            _, span = get_active_trace_and_span()
             assert span.expected_output is None
     finally:
         reset_current_golden(token)
@@ -265,7 +256,7 @@ def test_inherits_expected_output_on_input_match_ignoring_case_and_space():
                     input="china", actual_output="ok", expected_output=None
                 )
             )
-            trace, _ = _get_active_trace_and_span()
+            trace, _ = get_active_trace_and_span()
             assert trace.expected_output == "beijing, 1000"
     finally:
         reset_current_golden(token)
