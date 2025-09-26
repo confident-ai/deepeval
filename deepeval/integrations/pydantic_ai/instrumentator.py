@@ -34,6 +34,8 @@ class SpanInterceptor(SpanProcessor):
         self.settings: ConfidentInstrumentationSettings = settings_instance
 
     def on_start(self, span, parent_context):
+        
+        # set trace attributes
         if self.settings.thread_id:
             span.set_attribute("confident.trace.thread_id", self.settings.thread_id)
         if self.settings.user_id:
@@ -54,6 +56,11 @@ class SpanInterceptor(SpanProcessor):
                 json.dumps({"alias": self.settings.confident_prompt.alias, "version": self.settings.confident_prompt.version})
             )
         
+        # set trace metric collection
+        if self.settings.trace_metric_collection:
+            span.set_attribute("confident.trace.metric_collection", self.settings.trace_metric_collection)
+        
+        # set agent name and metric collection
         if span.attributes.get("agent_name"):
             span.set_attribute("confident.span.type", "agent")
             span.set_attribute("confident.span.name", span.attributes.get("agent_name"))
@@ -89,6 +96,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     llm_metric_collection: Optional[str] = None
     agent_metric_collection: Optional[str] = None
     tool_metric_collection_map: dict = {}
+    trace_metric_collection: Optional[str] = None
 
     def __init__(
         self, 
@@ -103,6 +111,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         llm_metric_collection: Optional[str] = None,
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: dict = {},
+        trace_metric_collection: Optional[str] = None,
     ):
         is_dependency_installed()
         
@@ -120,7 +129,8 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         self.confident_prompt = confident_prompt
         self.llm_metric_collection = llm_metric_collection
         self.agent_metric_collection = agent_metric_collection
-
+        self.trace_metric_collection = trace_metric_collection
+        
         if not api_key:
             api_key = get_confident_api_key()
             if not api_key:
