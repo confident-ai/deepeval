@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "3.5.6"
+version = "3.5.8"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -48,6 +48,7 @@ pyfiglet = "*"
 python-dotenv = "^1.1.1"
 pydantic = "^2.11.7"
 pydantic-settings = "^2.10.1"
+jinja2 = "*"
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
