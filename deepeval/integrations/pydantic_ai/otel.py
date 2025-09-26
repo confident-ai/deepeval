@@ -1,8 +1,6 @@
-from typing import Optional
 import warnings
-import deepeval
+from typing import Optional
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.confident.api import get_confident_api_key
 
 try:
     from opentelemetry import trace
