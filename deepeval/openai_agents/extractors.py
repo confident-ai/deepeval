@@ -191,8 +191,6 @@ def update_span_properties_from_agent_span_data(
     if agent_span_data.output_type:
         metadata["output_type"] = agent_span_data.output_type
     span.metadata = metadata
-    span.input = None
-    span.output = None
 
 
 ########################################################
