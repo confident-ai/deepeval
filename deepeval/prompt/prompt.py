@@ -5,9 +5,10 @@ from rich.console import Console
 import time
 import json
 import os
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import asyncio
 
+from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.prompt.api import (
     PromptHttpResponse,
     PromptMessage,
@@ -15,6 +16,9 @@ from deepeval.prompt.api import (
     PromptInterpolationType,
     PromptPushRequest,
     PromptVersionsHttpResponse,
+    PromptMessageList,
+    ModelSettings,
+    OutputSchema,
 )
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
@@ -24,6 +28,8 @@ from deepeval.utils import (
 )
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
+
+
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -59,17 +65,14 @@ class Prompt:
         template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
     ):
-        if alias is None and template is None:
-            raise TypeError(
-                "Unable to create Prompt where 'alias' and 'template' are both None. Please provide at least one to continue."
-            )
-
         self.alias = alias
         self._text_template = template
         self._messages_template = messages_template
         self._version = None
         self._polling_tasks: Dict[str, asyncio.Task] = {}
         self._refresh_map: Dict[str, int] = {}
+        self._model_settings: Optional[ModelSettings] = None
+        self._output_schema: Optional[OutputSchema] = None
 
     @property
     def version(self):
@@ -259,12 +262,16 @@ class Prompt:
                         "versionId": version or "latest",
                     },
                 )
+                print(data)
                 response = PromptHttpResponse(
                     id=data["id"],
                     text=data.get("text", None),
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
+                    model_settings=data.get("modelSettings", None),
+                    output_type=data.get("outputType", None),
+                    output_schema=data.get("outputSchema", None),
                 )
             except:
                 try:
@@ -363,6 +370,43 @@ class Prompt:
                 "✅ Prompt successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"
             )
+
+    def load(self, file_path: str, messages_key: Optional[str] = None):
+        _, ext = os.path.splitext(file_path)
+        if ext != ".json" and ext != ".txt":
+            raise ValueError("Only .json and .txt files are supported")
+
+        file_name = os.path.basename(file_path).split(".")[0]
+        self.alias = file_name
+        with open(file_path, "r") as f:
+            content = f.read()
+        try:
+            data = json.loads(content)
+        except:
+            self._text_template = content
+            return content
+
+        text_template = None
+        messages_template = None
+        try:
+            if isinstance(data, list):
+                messages_template = PromptMessageList.validate_python(data)
+            elif isinstance(data, dict):
+                if messages_key is None:
+                    raise ValueError(
+                        "messages `key` must be provided if file is a dictionary"
+                    )
+                messages = data[messages_key]
+                messages_template = PromptMessageList.validate_python(messages)
+            else:
+                text_template = content
+        except ValidationError:
+            text_template = content
+        
+        self._text_template = text_template
+        self._messages_template = messages_template
+        return text_template or messages_template
+        
 
     ############################################
     ### Polling
