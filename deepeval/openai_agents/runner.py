@@ -40,7 +40,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.openai_agents.agent import _ObservedModel
 
 _PATCHED_DEFAULT_GET_MODEL = False
-
+_PATCHED_DEFAULT_RUN_SINGLE_TURN = False
 
 def _patch_default_agent_runner_get_model():
     global _PATCHED_DEFAULT_GET_MODEL
@@ -73,7 +73,24 @@ def _patch_default_agent_runner_get_model():
     _PATCHED_DEFAULT_GET_MODEL = True
 
 
+def _patch_default_agent_run_single_turn():
+    global _PATCHED_DEFAULT_RUN_SINGLE_TURN
+    if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
+        return
+
+    original_run_single_turn = AgentRunner._run_single_turn
+
+    @classmethod
+    async def patched_run_single_turn(cls, *args, **kwargs):
+        res = await original_run_single_turn.__func__(cls, *args, **kwargs)
+        # wite code 
+        return res
+
+    AgentRunner._run_single_turn = patched_run_single_turn
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True    
+
 if agents_available:
+    _patch_default_agent_run_single_turn()
     _patch_default_agent_runner_get_model()
 
 
