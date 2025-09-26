@@ -51,10 +51,7 @@ class TaskCompletionMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        has_trace: bool = isinstance(test_case._trace_dict, Dict)
-        if not has_trace:
-            check_llm_test_case_params(test_case, self._required_params, self)
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -69,6 +66,10 @@ class TaskCompletionMetric(BaseMetric):
                     )
                 )
             else:
+                has_trace: bool = isinstance(test_case._trace_dict, Dict)
+                if not has_trace:
+                    check_llm_test_case_params(test_case, self._required_params, self)
+
                 task, self.outcome = self._extract_task_and_outcome(test_case)
                 self.task = task if self.task is None else self.task
                 self.verdict, self.reason = self._generate_verdicts()

@@ -81,10 +81,6 @@ class MultimodalGEval(BaseMultimodalMetric):
         _additional_context: Optional[str] = None,
     ) -> float:
 
-        check_mllm_test_case_params(
-            test_case, self.evaluation_params, None, None, self
-        )
-
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -100,6 +96,9 @@ class MultimodalGEval(BaseMultimodalMetric):
                     )
                 )
             else:
+                check_mllm_test_case_params(
+                    test_case, self.evaluation_params, None, None, self
+                )
                 self.evaluation_steps: List[str] = (
                     self._generate_evaluation_steps()
                 )
