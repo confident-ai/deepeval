@@ -312,7 +312,7 @@ class ConversationalTaskNode(ConversationalBaseNode):
     def __post_init__(self):
         for child in self.children:
             if isinstance(child, ConversationalVerdictNode):
-                raise ValueError(
+                raise TypeError(
                     "A ConversationalTaskNode must not have a ConversationalVerdictNode as one of their 'children'."
                 )
 
@@ -489,7 +489,7 @@ class ConversationalBinaryJudgementNode(ConversationalBaseNode):
                 )
 
             if not isinstance(child.verdict, bool):
-                raise ValueError(
+                raise TypeError(
                     "All children of ConversationalBinaryJudgementNode must have a boolean verdict."
                 )
 
@@ -675,13 +675,13 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
 
             # Check if the verdict attribute of each child is a string
             if not isinstance(child.verdict, str):
-                raise ValueError(
+                raise TypeError(
                     "The verdict attribute of all children must be a string."
                 )
 
             # Check for duplicate verdicts
             if child.verdict in verdicts_set:
-                raise ValueError(
+                raise TypeError(
                     f"Duplicate verdict found: {child.verdict} in children of ConversationalNonBinaryJudgementNode."
                 )
             verdicts_set.add(child.verdict)
