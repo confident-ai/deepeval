@@ -266,7 +266,7 @@ def check_arena_test_case_params(
     metric: BaseArenaMetric,
 ):
     if not isinstance(arena_test_case, ArenaTestCase):
-        raise ValueError(
+        raise TypeError(
             f"Expected ArenaTestCase, got {type(arena_test_case).__name__}"
         )
 

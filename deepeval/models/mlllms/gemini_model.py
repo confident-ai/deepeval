@@ -196,7 +196,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
                 )
                 prompt.append(image_part)
             else:
-                raise ValueError(f"Invalid input type: {type(ele)}")
+                raise TypeError(f"Invalid input type: {type(ele)}")
         return prompt
 
     @retry_gemini
