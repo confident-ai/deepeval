@@ -27,7 +27,7 @@ class RoleViolationMetric(BaseMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: float = 1.0,
         role: str = None,  # Required parameter to specify the expected role
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
@@ -43,7 +43,7 @@ class RoleViolationMetric(BaseMetric):
                 "Role parameter is required. Please specify the expected role (e.g., 'helpful assistant', 'customer service agent', etc.)"
             )
 
-        self.threshold = 0 if strict_mode else threshold
+        self.threshold = 1 if strict_mode else threshold
         self.role = role
         self.model, self.using_native_model = initialize_model(model)
         self.evaluation_model = self.model.get_model_name()
