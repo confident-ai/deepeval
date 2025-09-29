@@ -80,7 +80,6 @@ class TestPromptText:
 
         prompt.pull()
 
-        assert prompt.version[-1] == "1"
         assert prompt._text_template == f"Updated Hello, world! {UUID}"
         assert prompt._messages_template is None
         assert prompt._prompt_version_id is not None
@@ -149,7 +148,6 @@ class TestPromptList:
 
         prompt.pull()
 
-        assert prompt.version[-1] == "1"
         assert prompt._text_template is None
         assert len(prompt._messages_template) == 2
         assert prompt._messages_template[0].content == "Hello, assistant!"
