@@ -18,6 +18,7 @@ try:
     from agents.run import AgentRunner
     from agents.run import SingleStepResult
     from agents.models.interface import Model
+    from agents import Agent
 except Exception:
     pass
 
@@ -210,6 +211,7 @@ def patch_default_agent_run_single_turn():
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
+                    _set_agent_metrics(kwargs.get("agent", None), agent_span)
                     if agent_span.input is None:
                         _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
                         agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
@@ -235,6 +237,7 @@ def patch_default_agent_run_single_turn_streamed():
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
+                    _set_agent_metrics(kwargs.get("agent", None), agent_span)
                     if agent_span.input is None:
                         _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
                         agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
@@ -283,3 +286,18 @@ def patch_default_agent_runner_get_model():
 
     AgentRunner._get_model = classmethod(patched_get_model)
     _PATCHED_DEFAULT_GET_MODEL = True
+
+def _set_agent_metrics(agent: Agent, agent_span: AgentSpan) -> None:
+    try:
+        if agent is None or agent_span is None:
+            return
+        agent_metrics = getattr(agent, "agent_metrics", None)
+        agent_metric_collection = getattr(agent, "agent_metric_collection", None)
+
+        if agent_metrics is not None:
+            agent_span.metrics = agent_metrics
+        if agent_metric_collection is not None:
+            agent_span.metric_collection = agent_metric_collection
+    except Exception:
+        # Be conservative: never break the run on metrics propagation
+        pass 
