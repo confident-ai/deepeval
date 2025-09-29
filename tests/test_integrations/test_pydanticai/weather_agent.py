@@ -5,9 +5,11 @@ from typing import Any
 
 from httpx import AsyncClient
 from pydantic import BaseModel
-from pydantic_ai import RunContext
-from deepeval.integrations.pydantic_ai import Agent
+from pydantic_ai import RunContext, Agent
 from deepeval.prompt import Prompt
+from deepeval.integrations.pydantic_ai.instrumentator import (
+    ConfidentInstrumentationSettings,
+)
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
@@ -20,18 +22,16 @@ class Deps:
 
 weather_agent = Agent(
     "openai:gpt-4o-mini",
-    llm_metric_collection="test_collection_1",
-    llm_prompt=prompt,
-    agent_metric_collection="test_collection_1",
     instructions="Be concise, reply with one sentence.",
     deps_type=Deps,
     retries=2,
-    trace_name="test_trace_1",
-    trace_tags=["test_tag_1"],
-    trace_metadata={"test_metadata_1": "test_metadata_1"},
-    trace_thread_id="test_thread_id_1",
-    trace_user_id="test_user_id_1",
-    trace_metric_collection="test_collection_1",
+    instrument=ConfidentInstrumentationSettings(
+        confident_prompt=prompt,
+        thread_id="test_thread_id_1",
+        agent_metric_collection="test_collection_1",
+        llm_metric_collection="test_collection_1",
+        tool_metric_collection_map={"get_lat_lng": "test_collection_1"},
+    ),
 )
 
 
@@ -40,7 +40,7 @@ class LatLng(BaseModel):
     lng: float
 
 
-@weather_agent.tool(metric_collection="test_collection_1")
+@weather_agent.tool()
 async def get_lat_lng(
     ctx: RunContext[Deps], location_description: str
 ) -> LatLng:
@@ -53,7 +53,7 @@ async def get_lat_lng(
     return LatLng.model_validate_json(r.content)
 
 
-@weather_agent.tool(metric_collection="test_collection_1")
+@weather_agent.tool()
 async def get_weather(
     ctx: RunContext[Deps], lat: float, lng: float
 ) -> dict[str, Any]:
@@ -82,17 +82,12 @@ async def run_agent(input_query: str):
         result = await weather_agent.run(
             input_query,
             deps=deps,
-            # metric_collection="test_collection_1",
-            name="test_trace_2",
-            # tags=["test_tag_1"],
-            # metadata={"test_metadata_1": "test_metadata_1"},
-            # thread_id="test_thread_id_1",
-            user_id="test_user_id_2",
         )
 
         return result.output
 
 
-def execute_agent():
+def execute_weather_agent():
     output = asyncio.run(run_agent("What's the weather in Paris?"))
-    return output
+    print("===============Weather agent output:===============")
+    print(output)
