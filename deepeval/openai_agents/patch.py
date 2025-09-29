@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import inspect
 from typing import Any, Callable, Optional
-
+from deepeval.tracing.context import current_span_context
+from deepeval.tracing.types import AgentSpan
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing import observe
 
 try:
     from agents import function_tool as _agents_function_tool  # type: ignore
     from agents.function_schema import function_schema as _agents_function_schema  # type: ignore
+    from agents.run import AgentRunner
+    from agents.run import SingleStepResult
 except Exception:
     _agents_function_tool = None  # type: ignore
     _agents_function_schema = None  # type: ignore
@@ -113,3 +117,52 @@ def function_tool(
         return _agents_function_tool(wrapped, *args, **kwargs)
 
     return decorator
+
+_PATCHED_DEFAULT_RUN_SINGLE_TURN = False
+_PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = False
+
+def patch_default_agent_run_single_turn():
+    global _PATCHED_DEFAULT_RUN_SINGLE_TURN
+    if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
+        return
+
+    original_run_single_turn = AgentRunner._run_single_turn
+
+    @classmethod
+    async def patched_run_single_turn(cls, *args, **kwargs):
+        res: SingleStepResult = await original_run_single_turn.__func__(cls, *args, **kwargs)
+
+        if isinstance(res, SingleStepResult):
+            agent_span = current_span_context.get()
+            if isinstance(agent_span, AgentSpan):
+                if agent_span.input is None:
+                    _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
+                    agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
+                agent_span.output = make_json_serializable(res.model_response.output)
+        return res
+
+    AgentRunner._run_single_turn = patched_run_single_turn
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True  # type: ignore
+
+def patch_default_agent_run_single_turn_streamed():
+    global _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED
+    if _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED:
+        return
+
+    original_run_single_turn_streamed = AgentRunner._run_single_turn_streamed
+    @classmethod
+    async def patched_run_single_turn_streamed(cls, *args, **kwargs):
+        
+        res: SingleStepResult = await original_run_single_turn_streamed.__func__(cls, *args, **kwargs)
+
+        if isinstance(res, SingleStepResult):
+            agent_span = current_span_context.get()
+            if isinstance(agent_span, AgentSpan):
+                if agent_span.input is None:
+                    _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
+                    agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
+                agent_span.output = make_json_serializable(res.model_response.output)
+        return res
+
+    AgentRunner._run_single_turn_streamed = patched_run_single_turn_streamed
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = True  # type: ignore
