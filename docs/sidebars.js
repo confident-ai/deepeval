@@ -11,6 +11,7 @@ module.exports = {
         "getting-started-rag",
         "getting-started-mcp",
         "getting-started-llm-arena",
+        "command-line-interface",
       ],
       collapsed: false,
     },
