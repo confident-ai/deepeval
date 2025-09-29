@@ -8,7 +8,6 @@ from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.utils import make_json_serializable
 from time import perf_counter
 from deepeval.tracing.types import TraceSpanStatus
-from deepeval.openai_agents.runner import patch_default_agent_runner_get_model, patch_default_agent_run_single_turn
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
@@ -22,6 +21,7 @@ try:
         ResponseSpanData,
         SpanData,
     )
+    from deepeval.openai_agents.patch import patch_default_agent_run_single_turn, patch_default_agent_run_single_turn_streamed
 
     openai_agents_available = True
 except ImportError:
@@ -38,8 +38,8 @@ def _check_openai_agents_available():
 class DeepEvalTracingProcessor(TracingProcessor):
     def __init__(self) -> None:
         _check_openai_agents_available()
-        patch_default_agent_runner_get_model()
         patch_default_agent_run_single_turn()
+        patch_default_agent_run_single_turn_streamed()
         self.span_observers: dict[str, Observer] = {}
 
     def on_trace_start(self, trace: "Trace") -> None:
@@ -90,25 +90,21 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if not span.started_at:
             return
         span_type = self.get_span_kind(span.span_data)
-        if span_type and span_type == "agent":
-            observer = Observer(span_type=span_type, func_name="NA")
-            observer.update_span_properties = (
-                lambda base_span: update_span_properties(
-                    base_span, span.span_data
-                )
-            )
-            self.span_observers[span.span_id] = observer
-            observer.__enter__()
+        observer = Observer(span_type=span_type, func_name="NA")
+        if span_type == "llm":
+            observer.observe_kwargs["model"] = "temporary model"
+        observer.update_span_properties = (
+            lambda span_type: update_span_properties(span_type, span.span_data)
+        )
+        self.span_observers[span.span_id] = observer
+        observer.__enter__()
 
     def on_span_end(self, span: "Span") -> None:
-        span_type = self.get_span_kind(span.span_data)
-        if span_type and span_type == "agent":
-            current_span = current_span_context.get()
-            if current_span:
-                update_span_properties(current_span, span.span_data)
-            observer = self.span_observers.pop(span.span_id, None)
-            if observer:
-                observer.__exit__(None, None, None)
+        observer = self.span_observers.pop(span.span_id, None)
+        update_trace_properties_from_span_data(current_trace_context.get(), span.span_data)
+        
+        if observer:
+            observer.__exit__(None, None, None)
 
     def force_flush(self) -> None:
         pass
@@ -123,15 +119,14 @@ class DeepEvalTracingProcessor(TracingProcessor):
             return "tool"
         if isinstance(span_data, MCPListToolsSpanData):
             return "tool"
-        # if isinstance(span_data, GenerationSpanData):
-        #     return "llm"
-        # if isinstance(span_data, ResponseSpanData):
-        #     return "llm"
-        # if isinstance(span_data, HandoffSpanData):
-        #     return "custom"
-        # if isinstance(span_data, CustomSpanData):
-        #     return "base"
-        # if isinstance(span_data, GuardrailSpanData):
-        #     return "base"
-        # return "base"
-        return None
+        if isinstance(span_data, GenerationSpanData):
+            return "llm"
+        if isinstance(span_data, ResponseSpanData):
+            return "llm"
+        if isinstance(span_data, HandoffSpanData):
+            return "custom"
+        if isinstance(span_data, CustomSpanData):
+            return "base"
+        if isinstance(span_data, GuardrailSpanData):
+            return "base"
+        return "base"
