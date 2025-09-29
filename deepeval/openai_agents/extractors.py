@@ -4,7 +4,7 @@ from openai.types.responses.response_input_item_param import (
     Message,
 )
 from openai.types.responses.response_output_message_param import Content
-from typing import Union, List
+from typing import Union, List, Optional
 from openai.types.responses import (
     ResponseFunctionToolCallParam,
     ResponseOutputMessageParam,
@@ -96,7 +96,7 @@ def update_span_properties_from_response_span_data(
         cached_input_tokens = usage.input_tokens_details.cached_tokens
         ouptut_reasoning_tokens = usage.output_tokens_details.reasoning_tokens
     # Get input and output
-    input = parse_response_input(span_data.input)
+    input = parse_response_input(span_data.input, span_data.response.instructions)
     raw_output = parse_response_output(response.output)
     output = (
         raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
@@ -237,10 +237,20 @@ def update_span_properties_from_guardrail_span_data(
 ########################################################
 
 
-def parse_response_input(input: Union[str, List[ResponseInputItemParam]]):
-    if isinstance(input, str):
-        return input
+def parse_response_input(input: Union[str, List[ResponseInputItemParam]], instructions: Optional[Union[str, List[ResponseInputItemParam]]] = None):
+    
     processed_input = []
+
+    if isinstance(input, str) and isinstance(instructions, str):
+        return [{"type": "message", "role": "system", "content": instructions}, {"type": "message", "role": "user", "content": input}]
+    elif isinstance(input, list) and isinstance(instructions, list):
+        input = instructions + input 
+    elif isinstance(input, list) and isinstance(instructions, str):
+        processed_input += [{"type": "message", "role": "system", "content": instructions}]
+    elif isinstance(input, str) and isinstance(instructions, list):
+        processed_input += [{"type": "message", "role": "user", "content": input}]
+        input = instructions
+
     for item in input:
         if "type" not in item:
             if "role" in item and "content" in item:
@@ -371,7 +381,7 @@ def update_trace_properties_from_span_data(
 ):
     if isinstance(span_data, ResponseSpanData):
         if not trace.input:
-            trace.input = parse_response_input(span_data.input)
+            trace.input = parse_response_input(span_data.input, span_data.response.instructions)
         raw_output = parse_response_output(span_data.response.output)
         output = (
             raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
