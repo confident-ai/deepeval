@@ -16,11 +16,9 @@ from deepeval.prompt.api import (
     PromptPushRequest,
     PromptVersionsHttpResponse,
     PromptMessageList,
+    PromptUpdateRequest,
     ModelSettings,
     OutputSchema,
-    ReasoningEffort,
-    Verbosity,
-    ModelProvider,
     OutputType,
 )
 from deepeval.prompt.utils import (
@@ -61,34 +59,41 @@ class CachedPrompt(BaseModel):
 
 
 class Prompt:
-    _prompt_version_id: Optional[str] = None
-    _type: Optional[PromptType] = None
-    _interpolation_type: Optional[PromptInterpolationType] = None
 
     def __init__(
         self,
         alias: Optional[str] = None,
         template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[Type[BaseModel]] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
     ):
         if template and messages_template:
             raise TypeError(
                 "Unable to create Prompt where 'template' and 'messages_template' are both provided. Please provide only one to continue."
             )
-
         self.alias = alias
         self._text_template = template
         self._messages_template = messages_template
+        self._model_settings: Optional[ModelSettings] = model_settings
+        self._output_type: Optional[OutputType] = output_type
+        self._output_schema: Optional[Type[BaseModel]] = output_schema
+        self._interpolation_type: Optional[PromptInterpolationType] = (
+            interpolation_type
+        )
+
         self._version = None
-        self._polling_tasks: Dict[str, asyncio.Task] = {}
-        self._refresh_map: Dict[str, int] = {}
-        self._model_settings: Optional[ModelSettings] = ModelSettings()
-        self._output_schema: Optional[Type[BaseModel]] = None
-        self._output_type: Optional[OutputType] = None
+        self._prompt_version_id: Optional[str] = None
+        self._type: Optional[PromptType] = None
         if template:
             self._type = PromptType.TEXT
         elif messages_template:
             self._type = PromptType.LIST
+
+        self._polling_tasks: Dict[str, asyncio.Task] = {}
+        self._refresh_map: Dict[str, int] = {}      
 
     @property
     def version(self):
@@ -103,6 +108,42 @@ class Prompt:
     @version.setter
     def version(self, value):
         self._version = value
+
+    def load(self, file_path: str, messages_key: Optional[str] = None):
+        _, ext = os.path.splitext(file_path)
+        if ext != ".json" and ext != ".txt":
+            raise ValueError("Only .json and .txt files are supported")
+
+        file_name = os.path.basename(file_path).split(".")[0]
+        self.alias = file_name
+        with open(file_path, "r") as f:
+            content = f.read()
+        try:
+            data = json.loads(content)
+        except:
+            self._text_template = content
+            return content
+
+        text_template = None
+        messages_template = None
+        try:
+            if isinstance(data, list):
+                messages_template = PromptMessageList.validate_python(data)
+            elif isinstance(data, dict):
+                if messages_key is None:
+                    raise ValueError(
+                        "messages `key` must be provided if file is a dictionary"
+                    )
+                messages = data[messages_key]
+                messages_template = PromptMessageList.validate_python(messages)
+            else:
+                text_template = content
+        except ValidationError:
+            text_template = content
+
+        self._text_template = text_template
+        self._messages_template = messages_template
+        return text_template or messages_template
 
     def interpolate(self, **kwargs):
         if self._type == PromptType.TEXT:
@@ -133,96 +174,9 @@ class Prompt:
         else:
             raise ValueError(f"Unsupported prompt type: {self._type}")
 
-    def _get_versions(self) -> List:
-        if self.alias is None:
-            raise ValueError(
-                "Prompt alias is not set. Please set an alias to continue."
-            )
-        api = Api()
-        data, _ = api.send_request(
-            method=HttpMethods.GET,
-            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
-            url_params={"alias": self.alias},
-        )
-        versions = PromptVersionsHttpResponse(**data)
-        return versions.text_versions or versions.messages_versions or []
-
-    def _read_from_cache(
-        self, alias: str, version: Optional[str] = None
-    ) -> Optional[CachedPrompt]:
-        if not os.path.exists(CACHE_FILE_NAME):
-            raise Exception("No Prompt cache file found")
-
-        try:
-            with open(CACHE_FILE_NAME, "r") as f:
-                cache_data = json.load(f)
-
-            if alias in cache_data:
-                if version:
-                    if version in cache_data[alias]:
-                        return CachedPrompt(**cache_data[alias][version])
-                    else:
-                        raise Exception(
-                            f"Unable to find Prompt version: '{version}' for alias: '{alias}' in cache"
-                        )
-                else:
-                    raise Exception(
-                        f"Unable to load Prompt with alias: '{alias}' from cache when no version is specified "
-                    )
-            else:
-                raise Exception(
-                    f"Unable to find Prompt with alias: '{alias}' in cache"
-                )
-        except Exception as e:
-            raise Exception(f"Error reading Prompt cache from disk: {e}")
-
-    def _write_to_cache(
-        self,
-        version: Optional[str] = None,
-        text_template: Optional[str] = None,
-        messages_template: Optional[List[PromptMessage]] = None,
-        prompt_version_id: Optional[str] = None,
-        type: Optional[PromptType] = None,
-        interpolation_type: Optional[PromptInterpolationType] = None,
-        model_settings: Optional[ModelSettings] = None,
-        output_type: Optional[OutputType] = None,
-        output_schema: Optional[OutputSchema] = None,
-    ):
-        if not self.alias or not version:
-            return
-
-        cache_data = {}
-        if os.path.exists(CACHE_FILE_NAME):
-            try:
-                with open(CACHE_FILE_NAME, "r") as f:
-                    cache_data = json.load(f)
-            except Exception:
-                cache_data = {}
-
-        # Ensure the cache structure is initialized properly
-        if self.alias not in cache_data:
-            cache_data[self.alias] = {}
-
-        # Cache the prompt
-        cache_data[self.alias][version] = {
-            "alias": self.alias,
-            "version": version,
-            "template": text_template,
-            "messages_template": messages_template,
-            "prompt_version_id": prompt_version_id,
-            "type": type,
-            "interpolation_type": interpolation_type,
-            "model_settings": model_settings,
-            "output_type": output_type,
-            "output_schema": output_schema,
-        }
-
-        # Ensure directory exists
-        os.makedirs(HIDDEN_DIR, exist_ok=True)
-
-        # Write back to cache file
-        with open(CACHE_FILE_NAME, "w") as f:
-            json.dump(cache_data, f, cls=CustomEncoder)
+    ############################################
+    ### Pull, Push, Update
+    ############################################
 
     def pull(
         self,
@@ -383,10 +337,8 @@ class Prompt:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-
         if text is None and messages is None:
             raise ValueError("Either text or messages must be provided")
-
         if text is not None and messages is not None:
             raise ValueError("Only one of text or messages can be provided")
 
@@ -411,89 +363,73 @@ class Prompt:
             endpoint=Endpoints.PROMPTS_ENDPOINT,
             body=body,
         )
-
         if link:
+            self._text_template = text
+            self._messages_template = messages
+            self._interpolation_type = interpolation_type
+            self._model_settings = model_settings
+            self._output_type = output_type
+            self._output_schema = output_schema
+            self.type = PromptType.TEXT if text else PromptType.LIST
             console = Console()
             console.print(
                 "✅ Prompt successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"
             )
 
-    def load(self, file_path: str, messages_key: Optional[str] = None):
-        _, ext = os.path.splitext(file_path)
-        if ext != ".json" and ext != ".txt":
-            raise ValueError("Only .json and .txt files are supported")
-
-        file_name = os.path.basename(file_path).split(".")[0]
-        self.alias = file_name
-        with open(file_path, "r") as f:
-            content = f.read()
-        try:
-            data = json.loads(content)
-        except:
-            self._text_template = content
-            return content
-
-        text_template = None
-        messages_template = None
-        try:
-            if isinstance(data, list):
-                messages_template = PromptMessageList.validate_python(data)
-            elif isinstance(data, dict):
-                if messages_key is None:
-                    raise ValueError(
-                        "messages `key` must be provided if file is a dictionary"
-                    )
-                messages = data[messages_key]
-                messages_template = PromptMessageList.validate_python(messages)
-            else:
-                text_template = content
-        except ValidationError:
-            text_template = content
-
-        self._text_template = text_template
-        self._messages_template = messages_template
-        return text_template or messages_template
-
     def update(
         self,
-        provider: Optional[ModelProvider] = None,
-        name: Optional[str] = None,
-        temperature: Optional[float] = None,
-        max_tokens: Optional[int] = None,
-        top_p: Optional[float] = None,
-        frequency_penalty: Optional[float] = None,
-        presence_penalty: Optional[float] = None,
-        stop_sequence: Optional[List[str]] = None,
-        reasoning_effort: Optional[ReasoningEffort] = None,
-        verbosity: Optional[Verbosity] = None,
+        version: str,
+        text: Optional[str] = None,
+        messages: Optional[List[PromptMessage]] = None,
+        interpolation_type: Optional[
+            PromptInterpolationType
+        ] = PromptInterpolationType.FSTRING,
+        model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
     ):
-        if output_type is not None:
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        body = PromptUpdateRequest(
+            text=text,
+            messages=messages,
+            interpolation_type=interpolation_type,
+            model_settings=model_settings,
+            output_type=output_type,
+            output_schema=construct_output_schema(output_schema),
+        )
+        try:
+            body = body.model_dump(by_alias=True, exclude_none=True)
+        except AttributeError:
+            body = body.dict(by_alias=True, exclude_none=True)
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.PUT,
+            endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
+            url_params={
+                "alias": self.alias,
+                "versionId": version,
+            },
+            body=body,
+        )
+        if data:
+            self._prompt_version_id = data["id"]
+            self.version = version
+            self._text_template = text
+            self._messages_template = messages
+            self._prompt_version_id = version
+            self._type = PromptType.TEXT
+            self._interpolation_type = interpolation_type
+            self._model_settings = model_settings
             self._output_type = output_type
-        if output_schema is not None:
             self._output_schema = output_schema
-        if provider is not None:
-            self._model_settings.provider = provider
-        if name is not None:
-            self._model_settings.name = name
-        if temperature is not None:
-            self._model_settings.temperature = temperature
-        if max_tokens is not None:
-            self._model_settings.max_tokens = max_tokens
-        if top_p is not None:
-            self._model_settings.top_p = top_p
-        if frequency_penalty is not None:
-            self._model_settings.frequency_penalty = frequency_penalty
-        if presence_penalty is not None:
-            self._model_settings.presence_penalty = presence_penalty
-        if stop_sequence is not None:
-            self._model_settings.stop_sequence = stop_sequence
-        if reasoning_effort is not None:
-            self._model_settings.reasoning_effort = reasoning_effort
-        if verbosity is not None:
-            self._model_settings.verbosity = verbosity
+            self.type = PromptType.TEXT if text else PromptType.LIST
+            console = Console()
+            console.print("✅ Prompt successfully updated on Confident AI!")
 
     ############################################
     ### Polling
@@ -554,3 +490,98 @@ class Prompt:
                 pass
 
             await asyncio.sleep(self._refresh_map[version])
+
+    ############################################
+    ### Utils
+    ############################################
+
+    def _read_from_cache(
+        self, alias: str, version: Optional[str] = None
+    ) -> Optional[CachedPrompt]:
+        if not os.path.exists(CACHE_FILE_NAME):
+            raise Exception("No Prompt cache file found")
+
+        try:
+            with open(CACHE_FILE_NAME, "r") as f:
+                cache_data = json.load(f)
+
+            if alias in cache_data:
+                if version:
+                    if version in cache_data[alias]:
+                        return CachedPrompt(**cache_data[alias][version])
+                    else:
+                        raise Exception(
+                            f"Unable to find Prompt version: '{version}' for alias: '{alias}' in cache"
+                        )
+                else:
+                    raise Exception(
+                        f"Unable to load Prompt with alias: '{alias}' from cache when no version is specified "
+                    )
+            else:
+                raise Exception(
+                    f"Unable to find Prompt with alias: '{alias}' in cache"
+                )
+        except Exception as e:
+            raise Exception(f"Error reading Prompt cache from disk: {e}")
+
+    def _write_to_cache(
+        self,
+        version: Optional[str] = None,
+        text_template: Optional[str] = None,
+        messages_template: Optional[List[PromptMessage]] = None,
+        prompt_version_id: Optional[str] = None,
+        type: Optional[PromptType] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[OutputSchema] = None,
+    ):
+        if not self.alias or not version:
+            return
+
+        cache_data = {}
+        if os.path.exists(CACHE_FILE_NAME):
+            try:
+                with open(CACHE_FILE_NAME, "r") as f:
+                    cache_data = json.load(f)
+            except Exception:
+                cache_data = {}
+
+        # Ensure the cache structure is initialized properly
+        if self.alias not in cache_data:
+            cache_data[self.alias] = {}
+
+        # Cache the prompt
+        cache_data[self.alias][version] = {
+            "alias": self.alias,
+            "version": version,
+            "template": text_template,
+            "messages_template": messages_template,
+            "prompt_version_id": prompt_version_id,
+            "type": type,
+            "interpolation_type": interpolation_type,
+            "model_settings": model_settings,
+            "output_type": output_type,
+            "output_schema": output_schema,
+        }
+
+        # Ensure directory exists
+        os.makedirs(HIDDEN_DIR, exist_ok=True)
+
+        # Write back to cache file
+        with open(CACHE_FILE_NAME, "w") as f:
+            json.dump(cache_data, f, cls=CustomEncoder)
+
+    def _get_versions(self) -> List:
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
+            url_params={"alias": self.alias},
+        )
+        versions = PromptVersionsHttpResponse(**data)
+        return versions.text_versions or versions.messages_versions or []

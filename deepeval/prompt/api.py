@@ -135,9 +135,21 @@ class PromptHttpResponse(BaseModel):
         serialization_alias="interpolationType"
     )
     type: PromptType
-    model_settings: Optional[ModelSettings] = None
-    output_type: Optional[OutputType] = None
-    output_schema: Optional[OutputSchema] = None
+    model_settings: Optional[ModelSettings] = Field(
+        default=None,
+        serialization_alias="modelSettings",
+        validation_alias=AliasChoices("model_settings", "modelSettings"),
+    )
+    output_type: Optional[OutputType] = Field(
+        default=None,
+        serialization_alias="outputType",
+        validation_alias=AliasChoices("output_type", "outputType"),
+    )
+    output_schema: Optional[OutputSchema] = Field(
+        default=None,
+        serialization_alias="outputSchema",
+        validation_alias=AliasChoices("output_schema", "outputSchema"),
+    )
 
 
 class PromptPushRequest(BaseModel):
@@ -147,9 +159,35 @@ class PromptPushRequest(BaseModel):
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
-    model_settings: Optional[ModelSettings] = None
-    output_schema: Optional[OutputSchema] = None
-    output_type: Optional[OutputType] = None
+    model_settings: Optional[ModelSettings] = Field(
+        default=None, serialization_alias="modelSettings"
+    )
+    output_schema: Optional[OutputSchema] = Field(
+        default=None, serialization_alias="outputSchema"
+    )
+    output_type: Optional[OutputType] = Field(
+        default=None, serialization_alias="outputType"
+    )
+
+    class Config:
+        use_enum_values = True
+
+
+class PromptUpdateRequest(BaseModel):
+    text: Optional[str] = None
+    messages: Optional[List[PromptMessage]] = None
+    interpolation_type: PromptInterpolationType = Field(
+        serialization_alias="interpolationType"
+    )
+    model_settings: Optional[ModelSettings] = Field(
+        default=None, serialization_alias="modelSettings"
+    )
+    output_schema: Optional[OutputSchema] = Field(
+        default=None, serialization_alias="outputSchema"
+    )
+    output_type: Optional[OutputType] = Field(
+        default=None, serialization_alias="outputType"
+    )
 
     class Config:
         use_enum_values = True
