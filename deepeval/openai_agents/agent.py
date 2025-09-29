@@ -27,6 +27,8 @@ class DeepEvalAgent(BaseAgent[TContext], Generic[TContext]):
     llm_metric_collection: str = None
     llm_metrics: List[BaseMetric] = None
     confident_prompt: Prompt = None
+    agent_metrics: List[BaseMetric] = None
+    agent_metric_collection: str = None
 
     def __post_init__(self):
         patch_default_agent_runner_get_model()
