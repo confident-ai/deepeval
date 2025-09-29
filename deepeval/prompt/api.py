@@ -22,7 +22,7 @@ class Verbosity(Enum):
 
 
 class ModelProvider(Enum):
-    OPENAI = "OPENAI"
+    OPEN_AI = "OPEN_AI"
     ANTHROPIC = "ANTHROPIC"
     GEMINI = "GEMINI"
     X_AI = "X_AI"

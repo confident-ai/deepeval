@@ -94,7 +94,9 @@ def construct_nested_base_model(
     return create_model(model_name, **child_fields)
 
 
-def construct_base_model(schema: OutputSchema) -> Type[BaseModel]:
+def construct_base_model(schema: Optional[OutputSchema] = None) -> Type[BaseModel]:
+    if not schema:
+        return None
     if not schema.fields:
         return create_model(schema.name)
 
