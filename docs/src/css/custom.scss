@@ -71,6 +71,12 @@ html[data-theme="dark"] {
   --ifm-background-surface-color: #13171e;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 
+  .alert--info {
+    --ifm-alert-background-color: #1e293b !important;  /* deep navy */
+    --ifm-alert-border-color: #3b82f6 !important;      /* vivid blue border */
+    color: #dbeafe !important;                         /* light blue text */
+  }
+
   .alert--success {
     --ifm-alert-background-color: #022c22 !important;
     --ifm-alert-border-color: #12be84 !important;
