@@ -1,45 +1,48 @@
 ---
+id: command-line-interface
 title: Command-line interface (CLI)
-description: Configure DeepEval from the terminal — providers, credentials, debug, and more.
-sidebar_position: 30
+description: Configure deepeval from the terminal
+sidebar_label: CLI
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# DeepEval CLI
+## Quick Summary
 
-DeepEval ships a typed CLI for common tasks:
+Deepeval provides a CLI for managing common tasks directly from the terminal. You can:
+
 - logging in/out and viewing test runs
 - enabling/disabling debug
 - selecting an LLM/embeddings provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, LiteLLM, local/Ollama)
 - setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
+- Save settings and secrets persistently to `.env` files
 
-The CLI supports optional persistence to `.env` files.
+The CLI supports easy configuration of providers, model selections, and debug settings for seamless integration with your projects.
 
-## Install / update
+## Install & Update
 
 ```bash
 pip install -U deepeval
 ```
 
-Then:
+To review available commands consult the CLI built in help:
 ```bash
 deepeval --help
 ```
 
 ---
 
-## Where settings are read/written
+## Read & Write Settings
 
-* **Dotenv**: DeepEval loads `.env` / `.env.local` from the current working directory.
+* **Dotenv**: deepeval loads `.env` / `.env.local` from the current working directory.
   You can point dotenv loading to another folder via `ENV_DIR_PATH=/path/to/project`.
 * **Hidden keystore**: Non-secret settings are stored in `.deepeval/.deepeval` under the current working directory (no override env var yet).
   A future UX pass will make these locations configurable and consistent.
 
 ---
 
-## Persistence & secrets: how it works
+## Persistence & Secrets
 
 All `set-*` / `unset-*` commands follow the same rules:
 
@@ -50,39 +53,15 @@ All `set-*` / `unset-*` commands follow the same rules:
 * If `--save` is omitted, only the in-process environment and JSON store are updated.
 * Unsetting one provider only removes that provider’s keys. If another provider’s credentials remain, such as `OPENAI_API_KEY`, it may still be selected by default.
 
-> Tip: you can set a default save target via `DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local` so you don’t have to pass `--save` each time.
+:::tip
+You can set a default save target via `DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local` so you don’t have to pass `--save` each time.
+:::
 
 ---
 
-## Quick start
+## Core Commands
 
-```bash
-# 1. Log in auto persists to .env.local unless you override --save
-deepeval login --confident-api-key YOUR_KEY
-
-# 2. Pick a provider and model
-deepeval set-openai --model gpt-4o-mini --save=dotenv
-
-# 3. (Optional) Turn on richer logs for troubleshooting
-deepeval set-debug --log-level DEBUG --verbose
-
-# 4. Run tests as usual (Python), then view the latest run:
-deepeval view
-```
-
-To undo:
-
-```bash
-deepeval unset-openai --save=dotenv
-deepeval unset-debug --save=dotenv
-deepeval logout --save=dotenv
-```
-
----
-
-## Core commands
-
-### `login` / `logout`
+### `login` & `logout`
 
 * `deepeval login [--confident-api-key ...] [--save=dotenv[:path]]`
   Interactive or flag-based login. Writes keys to dotenv (defaults to `.env.local` unless overridden).
@@ -96,7 +75,7 @@ deepeval logout --save=dotenv
 
 ---
 
-## Debug controls
+## Debug Controls
 
 Use these to turn on structured logs, gRPC wire tracing, and Confident tracing (all optional).
 
@@ -122,7 +101,7 @@ To restore defaults and clean persisted values:
 deepeval unset-debug --save=dotenv
 ```
 
-**Flags (summary):**
+**Optional Flags**
 
 * Logs: `--log-level`, `--verbose/--no-verbose`
 * Retry log levels: `--retry-before-level`, `--retry-after-level` (accepts names `DEBUG|INFO|WARNING|ERROR|CRITICAL|NOTSET` or numbers)
@@ -133,7 +112,7 @@ deepeval unset-debug --save=dotenv
 
 ---
 
-## Provider configuration: the pattern
+## Provider configuration Pattern
 
 All provider commands come in pairs:
 
@@ -169,7 +148,9 @@ When you **set** a provider, the CLI enables that provider’s `USE_<PROVIDER>_M
 | Local (HTTP)          | `set-local-embeddings`       | `unset-local-embeddings`       | `--model-name`, `--base-url`, optional `--api-key` |
 | Ollama                | `set-ollama-embeddings`      | `unset-ollama-embeddings`      | `model_name` (arg), optional `--base-url`          |
 
-> **Consistency note**: Flags vary a bit today (some use positional args vs. options). We will converge them in a future release. To avoid churn, this page documents the pattern and points to `--help` for exact flags.
+:::note
+Flags vary a bit today (some use positional args vs. options). We will converge them in a future release. To avoid churn, this page documents the pattern and points to `--help` for exact flags.
+:::
 
 ### Common examples
 
@@ -222,18 +203,18 @@ deepeval unset-ollama-embeddings --save=dotenv
 
 ---
 
-## Retry policy (where CLI meets settings)
+## Retry Policy
 
 The CLI "debug" options include **retry log levels**:
 
 * `--retry-before-level` (default **INFO**)
 * `--retry-after-level` (default **ERROR**)
 
-DeepEval’s retry behavior is controlled by environment settings which you can place in `.env.local`:
+deepeval’s retry behavior is controlled by environment settings which you can place in `.env.local`:
 
 ```bash
-# Providers whose own SDK should handle retries. Retries for these providers will not be managed by DeepEval
-# Default: empty list (DeepEval manages retries where supported)
+# Providers whose own SDK should handle retries. Retries for these providers will not be managed by deepeval
+# Default: empty list (deepeval manages retries where supported)
 DEEPEVAL_SDK_RETRY_PROVIDERS="['azure']"   # or "['*']"
 
 # Log levels (validator accepts names or numeric)
@@ -271,11 +252,11 @@ deepeval test <command> --help
 
 * **Nothing printed?** For `set-*` / `unset-*` / `set-debug`, a clean no-output exit often means indicates **no changes** were detected.
 * **Provider still active after unsetting?** Unsetting turns off target provider `USE_*` flags; if a provider remains enabled and properly configured it will become the active provider. If no provider is enabled, but OpenAI credentials are present, OpenAI may be used as a fallback. To force a provider, run the corresponding `set-<provider>` command.
-* **Dotenv edits not picked up?** DeepEval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your Python process runs in that context.
+* **Dotenv edits not picked up?** deepeval loads dotenv files from the current working directory by default, or `ENV_DIR_PATH` if set. Ensure your Python process runs in that context.
 
 ---
 
-## See also
+## See Also
 
 * Python API quickstart (evaluations)
 * Metrics & templates
