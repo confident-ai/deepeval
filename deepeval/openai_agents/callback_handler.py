@@ -81,6 +81,10 @@ class DeepEvalTracingProcessor(TracingProcessor):
     def on_span_start(self, span: "Span") -> None:
         if not span.started_at:
             return
+        current_span = current_span_context.get()
+        if current_span and isinstance(current_span, LlmSpan):
+            return
+        
         span_type = self.get_span_kind(span.span_data)
         observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
@@ -92,9 +96,12 @@ class DeepEvalTracingProcessor(TracingProcessor):
         observer.__enter__()
 
     def on_span_end(self, span: "Span") -> None:
+        current_span = current_span_context.get()
+        if current_span and isinstance(current_span, LlmSpan):
+            update_span_properties(current_span, span.span_data)
+            return
         observer = self.span_observers.pop(span.span_id, None)
         update_trace_properties_from_span_data(current_trace_context.get(), span.span_data)
-        
         if observer:
             observer.__exit__(None, None, None)
 
