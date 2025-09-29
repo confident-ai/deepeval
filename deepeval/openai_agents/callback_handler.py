@@ -8,6 +8,7 @@ from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.utils import make_json_serializable
 from time import perf_counter
 from deepeval.tracing.types import TraceSpanStatus
+from deepeval.openai_agents.runner import patch_default_agent_runner_get_model, patch_default_agent_run_single_turn
 
 try:
     from agents.tracing import Span, Trace, TracingProcessor
@@ -37,6 +38,8 @@ def _check_openai_agents_available():
 class DeepEvalTracingProcessor(TracingProcessor):
     def __init__(self) -> None:
         _check_openai_agents_available()
+        patch_default_agent_runner_get_model()
+        patch_default_agent_run_single_turn()
         self.span_observers: dict[str, Observer] = {}
 
     def on_trace_start(self, trace: "Trace") -> None:
@@ -116,10 +119,10 @@ class DeepEvalTracingProcessor(TracingProcessor):
     def get_span_kind(self, span_data: "SpanData") -> str:
         if isinstance(span_data, AgentSpanData):
             return "agent"
-        # if isinstance(span_data, FunctionSpanData):
-        #     return "tool"
-        # if isinstance(span_data, MCPListToolsSpanData):
-        #     return "tool"
+        if isinstance(span_data, FunctionSpanData):
+            return "tool"
+        if isinstance(span_data, MCPListToolsSpanData):
+            return "tool"
         # if isinstance(span_data, GenerationSpanData):
         #     return "llm"
         # if isinstance(span_data, ResponseSpanData):

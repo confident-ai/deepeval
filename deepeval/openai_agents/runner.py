@@ -19,6 +19,7 @@ try:
     from agents.run import AgentRunner
     from agents.run_context import TContext
     from agents.models.interface import Model
+    from agents.run import SingleStepResult
 
     agents_available = True
 except:
@@ -34,47 +35,87 @@ def is_agents_available():
 
 from deepeval.tracing.tracing import Observer
 from deepeval.tracing.context import current_span_context, current_trace_context
+from deepeval.tracing.utils import make_json_serializable
+from deepeval.tracing.types import AgentSpan
 
 # Import observed provider/model helpers from our agent module
 from deepeval.metrics import BaseMetric
 from deepeval.openai_agents.agent import _ObservedModel
 
 _PATCHED_DEFAULT_GET_MODEL = False
+_PATCHED_DEFAULT_RUN_SINGLE_TURN = False
 
-
-def _patch_default_agent_runner_get_model():
+def patch_default_agent_runner_get_model():
     global _PATCHED_DEFAULT_GET_MODEL
     if _PATCHED_DEFAULT_GET_MODEL:
         return
 
-    original_get_model = AgentRunner._get_model
+    original_get_model_cm = AgentRunner._get_model
+    try:
+        original_get_model = original_get_model_cm.__func__
+    except AttributeError:
+        original_get_model = original_get_model_cm  # fallback (non-classmethod edge case)
 
-    @classmethod
-    def patched_get_model(
-        cls, agent: Agent[Any], run_config: RunConfig
-    ) -> Model:
-        model = original_get_model(agent, run_config)
+    def patched_get_model(cls, *args, **kwargs) -> Model:
+        model = original_get_model(cls, *args, **kwargs)
 
-        # Extract attributes from agent if it's a DeepEvalAgent
+        agent = kwargs.get("agent") if "agent" in kwargs else (args[0] if args else None)
+        if agent is None:
+            return model
+
+        if isinstance(model, _ObservedModel):
+            return model
+
         llm_metrics = getattr(agent, "llm_metrics", None)
         llm_metric_collection = getattr(agent, "llm_metric_collection", None)
         confident_prompt = getattr(agent, "confident_prompt", None)
-        model = _ObservedModel(
+        return _ObservedModel(
             inner=model,
             llm_metric_collection=llm_metric_collection,
             llm_metrics=llm_metrics,
             confident_prompt=confident_prompt,
         )
 
-        return model
+    # Preserve basic metadata and mark as patched
+    patched_get_model.__name__ = original_get_model.__name__
+    patched_get_model.__doc__ = original_get_model.__doc__
 
-    # Replace the method
-    AgentRunner._get_model = patched_get_model
+    AgentRunner._get_model = classmethod(patched_get_model)
     _PATCHED_DEFAULT_GET_MODEL = True
 
 
+def patch_default_agent_run_single_turn():
+    global _PATCHED_DEFAULT_RUN_SINGLE_TURN
+    if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
+        return
+
+    original_run_single_turn = AgentRunner._run_single_turn
+
+    @classmethod
+    async def patched_run_single_turn(cls, *args, **kwargs):
+        res: SingleStepResult = await original_run_single_turn.__func__(cls, *args, **kwargs)
+
+        if isinstance(res, SingleStepResult):
+            agent_span = current_span_context.get()
+            if isinstance(agent_span, AgentSpan):
+                if agent_span.input is None:
+                    _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
+                    print(make_json_serializable(res.original_input))
+                    agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
+                agent_span.output = make_json_serializable(res.model_response.output)
+        return res
+
+    AgentRunner._run_single_turn = patched_run_single_turn
+    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True    
+
 if agents_available:
-    _patch_default_agent_runner_get_model()
+    patch_default_agent_run_single_turn()
+    patch_default_agent_runner_get_model()
+
+
+if agents_available:
+    patch_default_agent_runner_get_model()
+    patch_default_agent_run_single_turn()
 
 
 class Runner(AgentsRunner):
