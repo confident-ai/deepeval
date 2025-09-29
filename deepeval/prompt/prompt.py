@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Type
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 import time
@@ -8,7 +8,6 @@ import os
 from pydantic import BaseModel, ValidationError
 import asyncio
 
-from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.prompt.api import (
     PromptHttpResponse,
     PromptMessage,
@@ -19,17 +18,21 @@ from deepeval.prompt.api import (
     PromptMessageList,
     ModelSettings,
     OutputSchema,
+    ReasoningEffort,
+    Verbosity,
+    ModelProvider,
+    OutputType,
 )
-from deepeval.prompt.utils import interpolate_text
+from deepeval.prompt.utils import (
+    interpolate_text,
+    construct_base_model,
+    construct_output_schema,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
-from deepeval.utils import (
-    get_or_create_general_event_loop,
-)
+from deepeval.utils import get_or_create_general_event_loop
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
-
-
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -49,6 +52,9 @@ class CachedPrompt(BaseModel):
     prompt_version_id: str
     type: PromptType
     interpolation_type: PromptInterpolationType
+    model_settings: Optional[ModelSettings]
+    output_type: Optional[OutputType]
+    output_schema: Optional[OutputSchema]
 
     class Config:
         use_enum_values = True
@@ -76,8 +82,9 @@ class Prompt:
         self._version = None
         self._polling_tasks: Dict[str, asyncio.Task] = {}
         self._refresh_map: Dict[str, int] = {}
-        self._model_settings: Optional[ModelSettings] = None
-        self._output_schema: Optional[OutputSchema] = None
+        self._model_settings: Optional[ModelSettings] = ModelSettings()
+        self._output_schema: Optional[Type[BaseModel]] = None
+        self._output_type: Optional[OutputType] = None
         if template:
             self._type = PromptType.TEXT
         elif messages_template:
@@ -177,6 +184,9 @@ class Prompt:
         prompt_version_id: Optional[str] = None,
         type: Optional[PromptType] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[OutputSchema] = None,
     ):
         if not self.alias or not version:
             return
@@ -202,6 +212,9 @@ class Prompt:
             "prompt_version_id": prompt_version_id,
             "type": type,
             "interpolation_type": interpolation_type,
+            "model_settings": model_settings,
+            "output_type": output_type,
+            "output_schema": output_schema,
         }
 
         # Ensure directory exists
@@ -228,11 +241,14 @@ class Prompt:
             )
 
         # Manage background prompt polling
-        loop = get_or_create_general_event_loop()
-        if loop.is_running():
-            loop.create_task(self.create_polling_task(version, refresh))
-        else:
-            loop.run_until_complete(self.create_polling_task(version, refresh))
+        if refresh:
+            loop = get_or_create_general_event_loop()
+            if loop.is_running():
+                loop.create_task(self.create_polling_task(version, refresh))
+            else:
+                loop.run_until_complete(
+                    self.create_polling_task(version, refresh)
+                )
 
         if default_to_cache:
             try:
@@ -245,6 +261,11 @@ class Prompt:
                     self._type = PromptType(cached_prompt.type)
                     self._interpolation_type = PromptInterpolationType(
                         cached_prompt.interpolation_type
+                    )
+                    self._model_settings = cached_prompt.model_settings
+                    self._output_type = OutputType(cached_prompt.output_type)
+                    self._output_schema = construct_base_model(
+                        cached_prompt.output_schema
                     )
                     return
             except:
@@ -271,7 +292,6 @@ class Prompt:
                         "versionId": version or "latest",
                     },
                 )
-                print(data)
                 response = PromptHttpResponse(
                     id=data["id"],
                     text=data.get("text", None),
@@ -301,6 +321,13 @@ class Prompt:
                             self._interpolation_type = PromptInterpolationType(
                                 cached_prompt.interpolation_type
                             )
+                            self._model_settings = cached_prompt.model_settings
+                            self._output_type = OutputType(
+                                cached_prompt.output_type
+                            )
+                            self._output_schema = construct_base_model(
+                                cached_prompt.output_schema
+                            )
 
                             end_time = time.perf_counter()
                             time_taken = format(end_time - start_time, ".2f")
@@ -318,6 +345,9 @@ class Prompt:
             self._prompt_version_id = response.id
             self._type = response.type
             self._interpolation_type = response.interpolation_type
+            self._model_settings = response.model_settings
+            self._output_type = response.output_type
+            self._output_schema = construct_base_model(response.output_schema)
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -333,6 +363,9 @@ class Prompt:
                     prompt_version_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
+                    model_settings=response.model_settings,
+                    output_type=response.output_type,
+                    output_schema=response.output_schema,
                 )
 
     def push(
@@ -342,6 +375,9 @@ class Prompt:
         interpolation_type: Optional[
             PromptInterpolationType
         ] = PromptInterpolationType.FSTRING,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[Type[BaseModel]] = None,
     ):
         if self.alias is None:
             raise ValueError(
@@ -359,6 +395,9 @@ class Prompt:
             text=text,
             messages=messages,
             interpolation_type=interpolation_type,
+            model_settings=model_settings,
+            output_type=output_type,
+            output_schema=construct_output_schema(output_schema),
         )
         try:
             body = body.model_dump(by_alias=True, exclude_none=True)
@@ -411,11 +450,50 @@ class Prompt:
                 text_template = content
         except ValidationError:
             text_template = content
-        
+
         self._text_template = text_template
         self._messages_template = messages_template
         return text_template or messages_template
-        
+
+    def update(
+        self,
+        provider: Optional[ModelProvider] = None,
+        name: Optional[str] = None,
+        temperature: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        top_p: Optional[float] = None,
+        frequency_penalty: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        stop_sequence: Optional[List[str]] = None,
+        reasoning_effort: Optional[ReasoningEffort] = None,
+        verbosity: Optional[Verbosity] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[Type[BaseModel]] = None,
+    ):
+        if output_type is not None:
+            self._output_type = output_type
+        if output_schema is not None:
+            self._output_schema = output_schema
+        if provider is not None:
+            self._model_settings.provider = provider
+        if name is not None:
+            self._model_settings.name = name
+        if temperature is not None:
+            self._model_settings.temperature = temperature
+        if max_tokens is not None:
+            self._model_settings.max_tokens = max_tokens
+        if top_p is not None:
+            self._model_settings.top_p = top_p
+        if frequency_penalty is not None:
+            self._model_settings.frequency_penalty = frequency_penalty
+        if presence_penalty is not None:
+            self._model_settings.presence_penalty = presence_penalty
+        if stop_sequence is not None:
+            self._model_settings.stop_sequence = stop_sequence
+        if reasoning_effort is not None:
+            self._model_settings.reasoning_effort = reasoning_effort
+        if verbosity is not None:
+            self._model_settings.verbosity = verbosity
 
     ############################################
     ### Polling

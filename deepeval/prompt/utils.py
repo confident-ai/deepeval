@@ -1,9 +1,19 @@
 import re
+import uuid
 from jinja2 import Template
-
-from deepeval.prompt.api import PromptInterpolationType
-from pydantic import BaseModel, create_model
 from typing import Any, Dict, Type, Optional, List
+from pydantic import BaseModel, create_model
+
+from deepeval.prompt.api import (
+    PromptInterpolationType,
+    OutputSchema,
+    SchemaDataType,
+    OutputSchemaField,
+)
+
+###################################
+# Interpolation
+###################################
 
 
 def interpolate_mustache(text: str, **kwargs) -> str:
@@ -52,100 +62,121 @@ def interpolate_text(
     raise ValueError(f"Unsupported interpolation type: {interpolation_type}")
 
 
-def reconstruct_basemodel_from_schema(output_schema: Dict[str, Any], model_name: str = "DynamicModel") -> Type[BaseModel]:
-    """
-    Reconstruct a Pydantic BaseModel from a JSON schema.
-    
-    Args:
-        output_schema: JSON schema dictionary
-        model_name: Name for the dynamically created model
-        
-    Returns:
-        Dynamically created Pydantic BaseModel class
-    """
-    if not output_schema or not isinstance(output_schema, dict):
-        raise ValueError("output_schema must be a non-empty dictionary")
-    
-    # Handle different schema formats
-    properties = output_schema.get("properties", {})
-    required_fields = set(output_schema.get("required", []))
-    
-    # If no properties found, try to extract from other common schema formats
-    if not properties and "type" in output_schema:
-        if output_schema["type"] == "object":
-            properties = output_schema.get("properties", {})
-        else:
-            # Simple type schema
-            return create_model(model_name, value=(Any, ...))
-    
-    if not properties:
-        raise ValueError("No properties found in schema")
-    
-    # Build field definitions for create_model
-    field_definitions = {}
-    
-    for field_name, field_schema in properties.items():
-        field_type = _schema_type_to_python_type(field_schema)
-        
-        # Determine if field is required
-        if field_name in required_fields:
-            field_definitions[field_name] = (field_type, ...)
-        else:
-            field_definitions[field_name] = (Optional[field_type], None)
-    
-    # Create the dynamic model
-    return create_model(model_name, **field_definitions)
+###################################
+# Output Schema Deconstruction
+###################################
+
+schema_type_map: Dict[SchemaDataType, Any] = {
+    SchemaDataType.STRING: str,
+    SchemaDataType.INTEGER: int,
+    SchemaDataType.FLOAT: float,
+    SchemaDataType.BOOLEAN: bool,
+    SchemaDataType.NULL: type(None),
+    SchemaDataType.OBJECT: dict,  # overridden with a nested base model
+}
 
 
-def _schema_type_to_python_type(field_schema: Dict[str, Any]) -> Type:
-    """
-    Convert JSON schema type to Python type.
-    
-    Args:
-        field_schema: Field schema dictionary
-        
-    Returns:
-        Python type
-    """
-    schema_type = field_schema.get("type", "string")
-    
-    type_mapping = {
-        "string": str,
-        "integer": int,
-        "number": float,
-        "boolean": bool,
-        "array": List,
-        "object": Dict,
-        "null": type(None)
-    }
-    
-    base_type = type_mapping.get(schema_type, str)
-    
-    # Handle array types
-    if schema_type == "array":
-        items_schema = field_schema.get("items", {})
-        if items_schema:
-            item_type = _schema_type_to_python_type(items_schema)
-            return List[item_type]
-        return List[Any]
-    
-    # Handle object types
-    if schema_type == "object":
-        properties = field_schema.get("properties", {})
-        if properties:
-            # Create nested model for complex objects
-            nested_model = reconstruct_basemodel_from_schema(field_schema, "NestedModel")
-            return nested_model
-        return Dict[str, Any]
-    
-    # Handle enum types
-    if "enum" in field_schema:
-        enum_values = field_schema["enum"]
-        if all(isinstance(v, str) for v in enum_values):
-            return str
-        elif all(isinstance(v, int) for v in enum_values):
-            return int
+def construct_nested_base_model(
+    parent: OutputSchemaField,
+    parent_id_map: Dict[Optional[str], List[OutputSchemaField]],
+    model_name: str,
+) -> Type[BaseModel]:
+    child_fields: Dict[str, tuple] = {}
+    for child in parent_id_map.get(parent.id, []):
+        if child.type == SchemaDataType.OBJECT:
+            python_type = construct_nested_base_model(
+                child, parent_id_map, child.name
+            )
         else:
-            return Any
-    
-    return base_type
+            python_type = schema_type_map.get(child.type, Any)
+        default = ... if child.required else None
+        child_fields[child.name or child.id] = (python_type, default)
+    return create_model(model_name, **child_fields)
+
+
+def construct_base_model(schema: OutputSchema) -> Type[BaseModel]:
+    if not schema.fields:
+        return create_model(schema.name)
+
+    parent_id_map: Dict[Optional[str], List[OutputSchemaField]] = {}
+    for field in schema.fields:
+        parent_id = field.parent_id or None
+        if parent_id_map.get(parent_id) is None:
+            parent_id_map[parent_id] = []
+        parent_id_map[parent_id].append(field)
+
+    root_fields: Dict[str, tuple] = {}
+    for field in parent_id_map.get(None):
+        if field.type == SchemaDataType.OBJECT:
+            continue
+        else:
+            python_type = schema_type_map.get(field.type)
+            default = ... if field.required else None
+            root_fields[field.name] = (python_type, default)
+
+    return create_model(schema.name, **root_fields)
+
+
+###################################
+# Output Schema Construction
+###################################
+
+
+def _process_model(
+    model_class: Type[BaseModel],
+    parent_id: Optional[str] = None,
+) -> List[OutputSchemaField]:
+    fields = []
+    model_fields = model_class.model_fields
+    for field_name, field_info in model_fields.items():
+        field_id = str(uuid.uuid4())
+        annotation = field_info.annotation
+        field_type = "STRING"
+        if annotation == str:
+            field_type = "STRING"
+        elif annotation == int:
+            field_type = "INTEGER"
+        elif annotation == float:
+            field_type = "FLOAT"
+        elif annotation == bool:
+            field_type = "BOOLEAN"
+        elif annotation == list:
+            raise ValueError("Unsupported structured output: list")
+        elif annotation == dict:
+            raise ValueError("Unsupported structured output: dict")
+        elif (
+            hasattr(annotation, "__bases__")
+            and BaseModel in annotation.__bases__
+        ):
+            field_type = "OBJECT"
+            parent_field = OutputSchemaField(
+                id=field_id,
+                name=field_name,
+                type=field_type,
+                required=field_info.default is ...,
+                parent_id=parent_id,
+            )
+            fields.append(parent_field)
+            nested_fields = _process_model(annotation, field_id)
+            fields.extend(nested_fields)
+            continue
+        required = field_info.default is ...
+        fields.append(
+            OutputSchemaField(
+                id=field_id,
+                name=field_name,
+                type=field_type,
+                required=required,
+                parent_id=parent_id,
+            )
+        )
+    return fields
+
+
+def construct_output_schema(
+    base_model_class: Optional[Type[BaseModel]] = None,
+) -> Optional[OutputSchema]:
+    if not base_model_class:
+        return None
+    all_fields = _process_model(base_model_class)
+    return OutputSchema(fields=all_fields, name=base_model_class.__name__)

@@ -4,8 +4,9 @@ from typing import List, Optional
 from pydantic import TypeAdapter
 
 ###################################
-# Model and Output Settings
+# Model Settings
 ###################################
+
 
 class ReasoningEffort(Enum):
     MINIMAL = "MINIMAL"
@@ -13,10 +14,12 @@ class ReasoningEffort(Enum):
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
 
+
 class Verbosity(Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+
 
 class ModelProvider(Enum):
     OPENAI = "OPENAI"
@@ -26,10 +29,6 @@ class ModelProvider(Enum):
     DEEPSEEK = "DEEPSEEK"
     BEDROCK = "BEDROCK"
 
-class OutputType(Enum):
-    TEXT = "TEXT"
-    JSON = "JSON"
-    SCHEMA = "SCHEMA"
 
 class ModelSettings(BaseModel):
     provider: Optional[ModelProvider] = None
@@ -47,18 +46,43 @@ class ModelSettings(BaseModel):
         use_enum_values = True
 
 
+###################################
+# Output Settings
+###################################
+
+
+class OutputType(Enum):
+    TEXT = "TEXT"
+    JSON = "JSON"
+    SCHEMA = "SCHEMA"
+
+
+class SchemaDataType(Enum):
+    OBJECT = "OBJECT"
+    STRING = "STRING"
+    FLOAT = "FLOAT"
+    INTEGER = "INTEGER"
+    BOOLEAN = "BOOLEAN"
+    NULL = "NULL"
+
+
 class OutputSchemaField(BaseModel):
     id: str
-    type: str
-    name: Optional[str] = None
-    required :Optional[bool] = False
+    type: SchemaDataType
+    name: str
+    required: Optional[bool] = False
     parent_id: Optional[str] = None
+
 
 class OutputSchema(BaseModel):
     fields: Optional[List[OutputSchemaField]] = None
-    name: Optional[str] = None
-    
+    name: str
+
+
 ###################################
+# Prompt
+###################################
+
 
 class PromptInterpolationType(Enum):
     MUSTACHE = "MUSTACHE"
@@ -72,11 +96,14 @@ class PromptMessage(BaseModel):
     role: str
     content: str
 
+
 PromptMessageList = TypeAdapter(List[PromptMessage])
-    
+
+
 class PromptType(Enum):
     TEXT = "TEXT"
     LIST = "LIST"
+
 
 class PromptVersion(BaseModel):
     id: str
@@ -108,7 +135,7 @@ class PromptHttpResponse(BaseModel):
         serialization_alias="interpolationType"
     )
     type: PromptType
-    model_settings: Optional[ModelSettings] = None 
+    model_settings: Optional[ModelSettings] = None
     output_type: Optional[OutputType] = None
     output_schema: Optional[OutputSchema] = None
 
@@ -120,8 +147,9 @@ class PromptPushRequest(BaseModel):
     interpolation_type: PromptInterpolationType = Field(
         serialization_alias="interpolationType"
     )
-    model_settings: Optional[ModelSettings] = None 
+    model_settings: Optional[ModelSettings] = None
     output_schema: Optional[OutputSchema] = None
+    output_type: Optional[OutputType] = None
 
     class Config:
         use_enum_values = True
