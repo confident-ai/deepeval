@@ -1,3 +1,4 @@
+from deepeval.tracing.types import Trace
 from openai.types.responses.response_input_item_param import (
     FunctionCallOutput,
     Message,
@@ -363,3 +364,26 @@ def parse_function_call(
         "name": function_call.name,
         "arguments": function_call.arguments,
     }
+
+def update_trace_properties_from_span_data(
+    trace: Trace,
+    span_data: Union["ResponseSpanData", "GenerationSpanData"],
+):
+    if isinstance(span_data, ResponseSpanData):
+        if not trace.input:
+            trace.input = parse_response_input(span_data.input)
+        raw_output = parse_response_output(span_data.response.output)
+        output = (
+            raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
+        )
+        trace.output = output
+
+    elif isinstance(span_data, GenerationSpanData):
+        if not trace.input:
+            trace.input = span_data.input
+        raw_output = span_data.output
+        output = (
+            raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
+        )
+        trace.output = output
+    
