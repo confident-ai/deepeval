@@ -84,38 +84,11 @@ def patch_default_agent_runner_get_model():
     _PATCHED_DEFAULT_GET_MODEL = True
 
 
-def patch_default_agent_run_single_turn():
-    global _PATCHED_DEFAULT_RUN_SINGLE_TURN
-    if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
-        return
-
-    original_run_single_turn = AgentRunner._run_single_turn
-
-    @classmethod
-    async def patched_run_single_turn(cls, *args, **kwargs):
-        res: SingleStepResult = await original_run_single_turn.__func__(cls, *args, **kwargs)
-
-        if isinstance(res, SingleStepResult):
-            agent_span = current_span_context.get()
-            if isinstance(agent_span, AgentSpan):
-                if agent_span.input is None:
-                    _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
-                    print(make_json_serializable(res.original_input))
-                    agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
-                agent_span.output = make_json_serializable(res.model_response.output)
-        return res
-
-    AgentRunner._run_single_turn = patched_run_single_turn
-    _PATCHED_DEFAULT_RUN_SINGLE_TURN = True    
 
 if agents_available:
-    patch_default_agent_run_single_turn()
+    # patch_default_agent_run_single_turn()
+    # patch_single_turn_streamed()
     patch_default_agent_runner_get_model()
-
-
-if agents_available:
-    patch_default_agent_runner_get_model()
-    patch_default_agent_run_single_turn()
 
 
 class Runner(AgentsRunner):
