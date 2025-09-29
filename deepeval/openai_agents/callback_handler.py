@@ -49,42 +49,34 @@ class DeepEvalTracingProcessor(TracingProcessor):
         _trace_name = trace_dict.get("workflow_name")
         _trace_metadata = trace_dict.get("metadata")
 
-        if _thread_id or _trace_metadata:
-            _trace = trace_manager.start_new_trace(trace_uuid=str(_trace_uuid))
-            _trace.thread_id = str(_thread_id)
-            _trace.name = str(_trace_name)
-            _trace.metadata = make_json_serializable(_trace_metadata)
-            current_trace_context.set(_trace)
+        _trace = trace_manager.start_new_trace(trace_uuid=str(_trace_uuid))
+        _trace.thread_id = str(_thread_id)
+        _trace.name = str(_trace_name)
+        _trace.metadata = make_json_serializable(_trace_metadata)
+        current_trace_context.set(_trace)
 
-            trace_manager.add_span(  # adds a dummy root span
-                BaseSpan(
-                    uuid=_trace_uuid,
-                    trace_uuid=_trace_uuid,
-                    parent_uuid=None,
-                    start_time=perf_counter(),
-                    name=_trace_name,
-                    status=TraceSpanStatus.IN_PROGRESS,
-                    children=[],
-                )
+        trace_manager.add_span(  # adds a dummy root span
+            BaseSpan(
+                uuid=_trace_uuid,
+                trace_uuid=_trace_uuid,
+                parent_uuid=None,
+                start_time=perf_counter(),
+                name=_trace_name,
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
             )
-        else:
-            current_trace = current_trace_context.get()
-            if current_trace:
-                current_trace.name = str(_trace_name)
+        )
 
     def on_trace_end(self, trace: "Trace") -> None:
         trace_dict = trace.export()
         _trace_uuid = trace_dict.get("id")
-        _thread_id = trace_dict.get("group_id")
         _trace_name = trace_dict.get("workflow_name")
-        _trace_metadata = trace_dict.get("metadata")
 
-        if _thread_id or _trace_metadata:
-            trace_manager.remove_span(
-                _trace_uuid
-            )  # removing the dummy root span
-            trace_manager.end_trace(_trace_uuid)
-            current_trace_context.set(None)
+        trace_manager.remove_span(
+            _trace_uuid
+        )  # removing the dummy root span
+        trace_manager.end_trace(_trace_uuid)
+        current_trace_context.set(None)
 
     def on_span_start(self, span: "Span") -> None:
         if not span.started_at:

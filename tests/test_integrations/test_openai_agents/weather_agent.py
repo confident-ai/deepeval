@@ -1,11 +1,4 @@
-from agents import add_trace_processor
-import asyncio
-from agents import Runner, Agent, function_tool
-
-from deepeval.openai_agents import DeepEvalTracingProcessor
-from deepeval.tracing.context import update_current_trace
-
-add_trace_processor(DeepEvalTracingProcessor())
+from agents import Agent, function_tool, Runner
 
 @function_tool
 def get_current_weather(latitude: float, longitude: float) -> dict:
@@ -55,7 +48,6 @@ def get_location_coordinates(city_name: str) -> dict:
         return locations[city_lower]
     return {"error": f"Location not found: {city_name}"}
 
-
 # Create the weather specialist agent
 weather_agent = Agent(
     name="Weather Specialist Agent",
@@ -78,27 +70,12 @@ weather_agent = Agent(
     tools=[get_location_coordinates, get_current_weather],
     tool_use_behavior="run_llm_again",
 )
-from agents import trace
 
-async def main4():
-    user_query = "What's the weather like in London today?"
-    with trace(
-        workflow_name="test_workflow_1",
-        group_id="test_group_id_1",
-        metadata={"test_metadata_1": "test_metadata_1"},
-    ):
-        await Runner.run(
-            weather_agent, user_query
-        )
-        # run_streamed_1 = Runner.run_streamed(
-        #     weather_agent, user_query
-        # )
-        # async for chunk in run_streamed_1.stream_events():
-        #     print("=" * 50)
-
-
-def execute_agent():
-    asyncio.run(main4())
-
-
-execute_agent()
+async def run_weather_agent(user_input: str):
+    """Run the weather agent with user input"""
+    runner = Runner()
+    result = await runner.run(
+        weather_agent,
+        user_input
+    )
+    return result.final_output
