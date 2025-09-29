@@ -2,8 +2,6 @@ import pytest
 
 from deepeval.contextvars import (
     get_current_golden,
-    set_current_golden,
-    reset_current_golden,
 )
 from deepeval.dataset.golden import Golden
 from deepeval.evaluate.execute import execute_agentic_test_cases_from_loop
@@ -24,12 +22,6 @@ def _silence_confident_trace(monkeypatch):
     monkeypatch.setattr(
         trace_manager, "post_trace", lambda *a, **k: None, raising=True
     )
-
-
-class GoldenStub:
-    def __init__(self, golden_input=None, expected_output=None):
-        self.input = golden_input
-        self.expected_output = expected_output
 
 
 def test_execute_propagates_expected_output(monkeypatch):
@@ -66,15 +58,24 @@ def test_execute_propagates_expected_output(monkeypatch):
     golden = next(gen)
     assert golden.input == "china"
 
-    # simulate user code: create a child span and set actual_output,
-    # leaving expected_output empty so it’s resolved from CURRENT_GOLDEN.
+    # simulate user code: create a child span & trace and set actual_output,
+    # explicitly passing expected_output from the CURRENT_GOLDEN.
     with Observer("llm", func_name="user"):
+        current_golden = get_current_golden()
         update_current_span(
-            test_case=LLMTestCase(input="china", actual_output="beijing, 900")
+            test_case=LLMTestCase(
+                input="china",
+                actual_output="beijing, 900",
+                expected_output=current_golden.expected_output,
+            )
         )
         # executor reads from current_trace, not the span
         update_current_trace(
-            test_case=LLMTestCase(input="china", actual_output="beijing, 900")
+            test_case=LLMTestCase(
+                input="china",
+                actual_output="beijing, 900",
+                expected_output=current_golden.expected_output,
+            )
         )
 
     # resume executor so it builds the test case and hits our spy
@@ -102,53 +103,21 @@ def test_trace_uses_test_case_expected_output_when_present():
         assert trace.expected_output == "tc_exp"
 
 
-def test_trace_kwarg_expected_output_overrides_test_case_and_golden():
-    tok = set_current_golden(GoldenStub(expected_output="golden_exp"))
-    try:
-        with Observer("llm", func_name="t2"):
-            # test_case provides one value
-            update_current_trace(
-                test_case=LLMTestCase(
-                    input="x", actual_output="y", expected_output="tc_exp"
-                )
+def test_trace_kwarg_expected_output_overrides_test_case():
+    with Observer("llm", func_name="t2"):
+        # test_case provides one value
+        update_current_trace(
+            test_case=LLMTestCase(
+                input="x", actual_output="y", expected_output="tc_exp"
             )
-            # but explicit kwarg should win
-            update_current_trace(expected_output="kw_exp")
-            trace, _ = get_active_trace_and_span()
-            assert trace.expected_output == "kw_exp"
-    finally:
-        reset_current_golden(tok)
+        )
+        # but explicit kwarg should win
+        update_current_trace(expected_output="kw_exp")
+        trace, _ = get_active_trace_and_span()
+        assert trace.expected_output == "kw_exp"
 
 
-def test_trace_resolves_from_golden_when_missing_or_blank():
-    # Golden exists with an expected_output, let the test_case omit it
-    tok = set_current_golden(GoldenStub(expected_output="golden_exp"))
-    try:
-        with Observer("llm", func_name="t3"):
-            update_current_trace(
-                test_case=LLMTestCase(
-                    input="x", actual_output="y", expected_output=None
-                )
-            )
-            trace, _ = get_active_trace_and_span()
-            assert trace.expected_output == "golden_exp"
-
-        # Also cover "blank string" -> treated as missing
-        with Observer("llm", func_name="t3b"):
-            update_current_trace(
-                test_case=LLMTestCase(
-                    input="x",
-                    actual_output="y",
-                    expected_output="   ",  # white space is treated as empty / not set
-                )
-            )
-            trace, _ = get_active_trace_and_span()
-            assert trace.expected_output == "golden_exp"
-    finally:
-        reset_current_golden(tok)
-
-
-def test_trace_stays_none_when_missing_and_no_golden():
+def test_trace_expected_output_remains_none_when_unset():
     with Observer("llm", func_name="t4"):
         update_current_trace(
             test_case=LLMTestCase(
@@ -159,29 +128,25 @@ def test_trace_stays_none_when_missing_and_no_golden():
         assert trace.expected_output is None
 
 
-def test_span_kwarg_expected_output_overrides_everything():
-    tok = set_current_golden(GoldenStub(expected_output="golden_exp"))
-    try:
-        with Observer("llm", func_name="s1"):
-            # first set from test_case, which should resolve from golden
-            update_current_span(
-                test_case=LLMTestCase(
-                    input="x", actual_output="y", expected_output=None
-                )
+def test_span_kwarg_expected_output_overrides_test_case():
+
+    with Observer("llm", func_name="s1"):
+        # first set from test_case
+        update_current_span(
+            test_case=LLMTestCase(
+                input="x", actual_output="y", expected_output="from_testcase"
             )
-            _, span = get_active_trace_and_span()
-            # resolve from golden
-            assert span.expected_output == "golden_exp"
+        )
+        _, span = get_active_trace_and_span()
+        assert span.expected_output == "from_testcase"
 
-            # now explicit kwarg should override
-            update_current_span(expected_output="span_kw")
-            _, span = get_active_trace_and_span()
-            assert span.expected_output == "span_kw"
-    finally:
-        reset_current_golden(tok)
+        # now explicit kwarg should override
+        update_current_span(expected_output="span_kw")
+        _, span = get_active_trace_and_span()
+        assert span.expected_output == "span_kw"
 
 
-def test_span_stays_none_when_missing_and_no_golden():
+def test_span_expected_output_remains_none_when_unset():
     with Observer("llm", func_name="s2"):
         update_current_span(
             test_case=LLMTestCase(
@@ -198,65 +163,3 @@ def test_noop_when_no_active_trace_or_span():
     update_current_trace(test_case=LLMTestCase(input="x", actual_output="y"))
     update_current_span(test_case=LLMTestCase(input="x", actual_output="y"))
     # nothing to assert! success == no exception
-
-
-def test_trace_does_not_inherit_expected_output_on_input_mismatch():
-    # golden with input "china" and an expected_output
-    token = set_current_golden(
-        GoldenStub(golden_input="china", expected_output="beijing, 1000")
-    )
-    try:
-        # child span uses a *different* input ("beijing") than the golden's input ("china")
-        with Observer("llm", func_name="mismatch"):
-            update_current_trace(
-                test_case=LLMTestCase(
-                    input="beijing",  # <- the input is intentionally different from golden.input
-                    actual_output="some text",
-                    expected_output=None,  # <- no expected_output, so resolver will try to pull from golden
-                )
-            )
-
-            trace, _ = get_active_trace_and_span()
-            assert trace.expected_output is None
-    finally:
-        reset_current_golden(token)
-
-
-def test_span_does_not_inherit_expected_output_on_input_mismatch():
-    # golden with input "china" and an expected_output
-    token = set_current_golden(
-        GoldenStub(golden_input="china", expected_output="beijing, 1000")
-    )
-    try:
-        # child span uses a *different* input ("beijing") than the golden's input ("china")
-        with Observer("llm", func_name="mismatch"):
-            update_current_span(
-                test_case=LLMTestCase(
-                    input="beijing",  # <- the input is intentionally different from golden.input
-                    actual_output="some text",
-                    expected_output=None,  # <- no expected_output, so resolver will try to pull from golden
-                )
-            )
-
-            _, span = get_active_trace_and_span()
-            assert span.expected_output is None
-    finally:
-        reset_current_golden(token)
-
-
-def test_inherits_expected_output_on_input_match_ignoring_case_and_space():
-
-    token = set_current_golden(
-        GoldenStub(golden_input="  China ", expected_output="beijing, 1000")
-    )
-    try:
-        with Observer("llm", func_name="match"):
-            update_current_trace(
-                test_case=LLMTestCase(
-                    input="china", actual_output="ok", expected_output=None
-                )
-            )
-            trace, _ = get_active_trace_and_span()
-            assert trace.expected_output == "beijing, 1000"
-    finally:
-        reset_current_golden(token)
