@@ -63,35 +63,33 @@ class Prompt:
     def __init__(
         self,
         alias: Optional[str] = None,
-        template: Optional[str] = None,
+        text_template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
     ):
-        if template and messages_template:
+        if text_template and messages_template:
             raise TypeError(
-                "Unable to create Prompt where 'template' and 'messages_template' are both provided. Please provide only one to continue."
+                "Unable to create Prompt where 'text_template' and 'messages_template' are both provided. Please provide only one to continue."
             )
         self.alias = alias
-        self._text_template = template
-        self._messages_template = messages_template
-        self._model_settings: Optional[ModelSettings] = model_settings
-        self._output_type: Optional[OutputType] = output_type
-        self._output_schema: Optional[Type[BaseModel]] = output_schema
-        self._interpolation_type: Optional[PromptInterpolationType] = (
-            interpolation_type
-        )
+        self.text_template = text_template
+        self.messages_template = messages_template
+        self.model_settings: Optional[ModelSettings] = model_settings
+        self.output_type: Optional[OutputType] = output_type
+        self.output_schema: Optional[Type[BaseModel]] = output_schema
+        self.interpolation_type: Optional[PromptInterpolationType] = interpolation_type
+
+        self.type: Optional[PromptType] = None
+        if text_template:
+            self.type = PromptType.TEXT
+        elif messages_template:
+            self.type = PromptType.LIST
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
-        self._type: Optional[PromptType] = None
-        if template:
-            self._type = PromptType.TEXT
-        elif messages_template:
-            self._type = PromptType.LIST
-
         self._polling_tasks: Dict[str, asyncio.Task] = {}
         self._refresh_map: Dict[str, int] = {}
 
@@ -121,7 +119,7 @@ class Prompt:
         try:
             data = json.loads(content)
         except:
-            self._text_template = content
+            self.template = content
             return content
 
         text_template = None
@@ -141,38 +139,38 @@ class Prompt:
         except ValidationError:
             text_template = content
 
-        self._text_template = text_template
-        self._messages_template = messages_template
+        self.template = text_template
+        self.messages_template = messages_template
         return text_template or messages_template
 
     def interpolate(self, **kwargs):
-        if self._type == PromptType.TEXT:
-            if self._text_template is None:
+        if self.type == PromptType.TEXT:
+            if self.template is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
             return interpolate_text(
-                self._interpolation_type, self._text_template, **kwargs
+                self.interpolation_type, self.text_template, **kwargs
             )
 
-        elif self._type == PromptType.LIST:
-            if self._messages_template is None:
+        elif self.type == PromptType.LIST:
+            if self.messages_template is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template messages. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
             interpolated_messages = []
-            for message in self._messages_template:
+            for message in self.messages_template:
                 interpolated_content = interpolate_text(
-                    self._interpolation_type, message.content, **kwargs
+                    self.interpolation_type, message.content, **kwargs
                 )
                 interpolated_messages.append(
                     {"role": message.role, "content": interpolated_content}
                 )
             return interpolated_messages
         else:
-            raise ValueError(f"Unsupported prompt type: {self._type}")
+            raise ValueError(f"Unsupported prompt type: {self.type}")
 
     ############################################
     ### Pull, Push, Update
@@ -208,17 +206,17 @@ class Prompt:
             try:
                 cached_prompt = self._read_from_cache(self.alias, version)
                 if cached_prompt:
-                    self.version = cached_prompt.version
-                    self._text_template = cached_prompt.template
-                    self._messages_template = cached_prompt.messages_template
+                    self._version = cached_prompt.version
+                    self.text_template = cached_prompt.template
+                    self.messages_template = cached_prompt.messages_template
                     self._prompt_version_id = cached_prompt.prompt_version_id
-                    self._type = PromptType(cached_prompt.type)
-                    self._interpolation_type = PromptInterpolationType(
+                    self.type = PromptType(cached_prompt.type)
+                    self.interpolation_type = PromptInterpolationType(
                         cached_prompt.interpolation_type
                     )
-                    self._model_settings = cached_prompt.model_settings
-                    self._output_type = OutputType(cached_prompt.output_type)
-                    self._output_schema = construct_base_model(
+                    self.model_settings = cached_prompt.model_settings
+                    self.output_type = OutputType(cached_prompt.output_type)
+                    self.output_schema = construct_base_model(
                         cached_prompt.output_schema
                     )
                     return
@@ -263,23 +261,23 @@ class Prompt:
                             self.alias, version
                         )
                         if cached_prompt:
-                            self.version = cached_prompt.version
-                            self._text_template = cached_prompt.template
-                            self._messages_template = (
+                            self._version = cached_prompt.version
+                            self.text_template = cached_prompt.template
+                            self.messages_template = (
                                 cached_prompt.messages_template
                             )
                             self._prompt_version_id = (
                                 cached_prompt.prompt_version_id
                             )
-                            self._type = PromptType(cached_prompt.type)
-                            self._interpolation_type = PromptInterpolationType(
+                            self.type = PromptType(cached_prompt.type)
+                            self.interpolation_type = PromptInterpolationType(
                                 cached_prompt.interpolation_type
                             )
-                            self._model_settings = cached_prompt.model_settings
-                            self._output_type = OutputType(
+                            self.model_settings = cached_prompt.model_settings
+                            self.output_type = OutputType(
                                 cached_prompt.output_type
                             )
-                            self._output_schema = construct_base_model(
+                            self.output_schema = construct_base_model(
                                 cached_prompt.output_schema
                             )
 
@@ -293,15 +291,15 @@ class Prompt:
                 except:
                     raise
 
-            self.version = version or "latest"
-            self._text_template = response.text
-            self._messages_template = response.messages
+            self._version = version or "latest"
+            self.text_template = response.text
+            self.messages_template = response.messages
             self._prompt_version_id = response.id
-            self._type = response.type
-            self._interpolation_type = response.interpolation_type
-            self._model_settings = response.model_settings
-            self._output_type = response.output_type
-            self._output_schema = construct_base_model(response.output_schema)
+            self.type = response.type
+            self.interpolation_type = response.interpolation_type
+            self.model_settings = response.model_settings
+            self.output_type = response.output_type
+            self.output_schema = construct_base_model(response.output_schema)
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -364,12 +362,12 @@ class Prompt:
             body=body,
         )
         if link:
-            self._text_template = text
-            self._messages_template = messages
-            self._interpolation_type = interpolation_type
-            self._model_settings = model_settings
-            self._output_type = output_type
-            self._output_schema = output_schema
+            self.text_template = text
+            self.messages_template = messages
+            self.interpolation_type = interpolation_type
+            self.model_settings = model_settings
+            self.output_type = output_type
+            self.output_schema = output_schema
             self.type = PromptType.TEXT if text else PromptType.LIST
             console = Console()
             console.print(
@@ -418,15 +416,14 @@ class Prompt:
         )
         if data:
             self._prompt_version_id = data["id"]
-            self.version = version
-            self._text_template = text
-            self._messages_template = messages
-            self._prompt_version_id = version
-            self._type = PromptType.TEXT
-            self._interpolation_type = interpolation_type
-            self._model_settings = model_settings
-            self._output_type = output_type
-            self._output_schema = output_schema
+            self._version = version
+            self.text_template = text
+            self.messages_template = messages
+            self.type = PromptType.TEXT
+            self.interpolation_type = interpolation_type
+            self.model_settings = model_settings
+            self.output_type = output_type
+            self.output_schema = output_schema
             self.type = PromptType.TEXT if text else PromptType.LIST
             console = Console()
             console.print("✅ Prompt successfully updated on Confident AI!")

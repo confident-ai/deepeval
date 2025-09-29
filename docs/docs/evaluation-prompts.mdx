@@ -20,8 +20,6 @@ This means you can evaluate prompts **end-to-end** or on the **component-level**
 
 [End-to-end testing](#end-to-end) is useful when you want to evaluate the prompt's impact on the entire LLM application, since metrics in end-to-end tests are calculated on the final output. On the other hand, [component-level testing](#component-level) is useful when you want to evaluate prompts for specific LLM generation processes, since metrics in component-level tests are calculated on the component-level.
 
-[...insert diagram here...]
-
 ## Evaluating Prompts
 
 ### End-to-End
@@ -35,18 +33,18 @@ To evaluate a prompt when running end-to-end evals, run the `evaluate` function 
 
 ```python title="main.py" showLineNumbers={true} {18}
 from somewhere import your_llm_app
-from deepeval.prompt import Prompt
+from deepeval.prompt import Prompt, PromptMessage
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval import evaluate
 
 prompt = Prompt(
     alias="First Prompt",
-    messages=[{"role": "system", "content": "You are a helpful assistant."}]
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
 )
 
 input = "What is the capital of France?"
-actual_output = your_llm_app(input, prompt.messages)
+actual_output = your_llm_app(input, prompt.messages_template)
 
 evaluate(
     test_case=LLMTestCase(input=input, actual_output=actual_output),
@@ -73,19 +71,19 @@ To evaluate a prompt when running end-to-end evals in the CI/CD pipeline, run th
 ```python title="main.py" showLineNumbers={true} {21}
 import pytest
 from somewhere import your_llm_app
-from deepeval.prompt import Prompt
+from deepeval.prompt import Prompt, PromptMessage
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.test_case import LLMTestCase
 from deepeval import assert_test
 
 prompt = Prompt(
     alias="First Prompt",
-    messages=[{"role": "system", "content": "You are a helpful assistant."}]
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
 )
 
 def test_llm_app():
     input = "What is the capital of France?"
-    actual_output = your_llm_app(input, prompt.messages)
+    actual_output = your_llm_app(input, prompt.messages_template)
     test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
 
@@ -117,27 +115,30 @@ To be determined
 
 Based on the metric scores of the test run, you can try different prompts to see which one scores the highest, or make the necessary adjustments to improve the prompt.
 
-### Component-level
+### Component-Level
 
 `deepeval` also lets you evaluate prompts on the component-level to evaluate specific LLM generations instead of the entire app. To do this, you'll want to first [set up tracing](/docs/evaluation-llm-tracing), then call `update_llm_span` with the prompts you want to evaluate for each llm span. You can also need to supply the metrics you want to evaluate for each llm span in the `@observe` decorator.
 
-```python title="main.py" showLineNumbers={true} {11,17}
+```python title="main.py" showLineNumbers={true} {13,20}
 from openai import OpenAI
 from deepeval.tracing import observe, update_llm_span
-from deepeval.prompt import Prompt
+from deepeval.prompt import Prompt, PromptMessage
+from deepeval.metrics import AnswerRelevancyMetric
 
-prompt_1 = Prompt(alias="First",  messages=[{"role":"system","content":"You are helpful."}])
-prompt_2 = Prompt(alias="Second", messages=[{"role":"system","content":"You are helpful."}])
+prompt_1 = Prompt(alias="First",  messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")])
+prompt_2 = Prompt(alias="Second", messages_template=[PromptMessage(role="system", content="You are an incredibly helpful assistant.")])
 
 @observe(type="llm", metrics=[AnswerRelevancyMetric()])
 def gen1(input: str):
-    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_1.messages+[{"role":"user","content":input}])
+    prompt_template = [{"role": msg.role, "content": msg.content} for msg in prompt_1.messages_template]
+    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_template+[{"role":"user","content":input}])
     update_llm_span(prompt=prompt_1)
     return res.choices[0].message.content
 
 @observe(type="llm", metrics=[AnswerRelevancyMetric()])
 def gen2(input: str):
-    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_2.messages+[{"role":"user","content":input}])
+    prompt_template = [{"role": msg.role, "content": msg.content} for msg in prompt_2.messages_template]
+    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_template+[{"role":"user","content":input}])
     update_llm_span(prompt=prompt_2)
     return res.choices[0].message.content
 
@@ -152,9 +153,10 @@ Since `update_llm_span` can only be called inside an llm span, you can only eval
 Then run the `evals_iterator` to evaluate the prompts you've set up for each llm span.
 
 ```python title="main.py" showLineNumbers={true} {17,25}
-from deepeval.dataset import EvaluationDataset
+from deepeval.dataset import EvaluationDataset, Golden
 ...
 
+dataset = EvaluationDataset([Golden(input="Hello")])
 for golden in dataset.evals_iterator():
     your_llm_app(golden.input)
 ```
@@ -236,7 +238,7 @@ prompt.pull(version="00.00.01")
 </Tabs>
 
 :::caution
-When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary when oing end-to-end vals, and beore you call `update_llm_span` when running component-level evals.
+When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary when doing end-to-end evals, and before you call `update_llm_span` when running component-level evals.
 :::
 
 ### From Scratch
@@ -247,11 +249,11 @@ You can create a prompt in code by instantiating a `Prompt` object with the `ali
 <TabItem value="Messages" label="Messages">
 
 ```python title="main.py" showLineNumbers={true} {5}
-from deepeval.prompt import Prompt
+from deepeval.prompt import Prompt, PromptMessage
 
 prompt = Prompt(
     alias="First Prompt",
-    messages=[{"role":"system","content":"You are helpful assistant."}]
+    messages_template=[PromptMessage(role="system", content="You are helpful assistant.")]
 )
 ```
 
@@ -263,7 +265,7 @@ from deepeval.prompt import Prompt
 
 prompt = Prompt(
     alias="First Prompt",
-    text="You are helpful assistant."
+    text_template="You are helpful assistant."
 )
 ```
 
@@ -279,18 +281,21 @@ In addition to the attributes mentioned above, you can also associate model and 
 Model settings include the model alias as well as the generation settings such as temperature:
 
 ```python title="main.py" showLineNumbers={true}
-...
+from deepeval.prompt import Prompt, ModelSettings, ModelProvider
 
-prompt.update(
-    model="gpt-3.5-turbo",
+model_settings=ModelSettings(
+    provider=ModelProvider.OPEN_AI,
+    name="gpt-3.5-turbo",
     max_tokens=100,
     temperature=0.7
 )
+prompt = Prompt(..., model_settings=model_settings)
 ```
 
 There are **NINE** model settings you can associate with a prompt:
 
-- `model`: The string specifying the model to use for generation.
+- `provider`: An `ModelProvider` enum specifying the model provider to use for generation.
+- `name`: The string specifying the model name to use for generation.
 - `temperature`: A float between 0.0 and 2.0 specifying the randomness of the generated response.
 - `top_p`: A float between 0.0 and 1.0 specifying the nucleus sampling parameter.
 - `frequency_penalty`: A float between -2.0 and 2.0 specifying the frequency penalty.
@@ -314,7 +319,7 @@ class Output(BaseModel):
     age: int
     city: str
 
-prompt.update(output_type=OutputType.JSON, output_schema=Output)
+prompt = Prompt(..., output_type=OutputType.SCHEMA, output_schema=Output)
 ```
 
 There are **TWO** output settings you can associate with a prompt:
