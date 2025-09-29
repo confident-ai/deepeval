@@ -93,7 +93,7 @@ class Prompt:
             self._type = PromptType.LIST
 
         self._polling_tasks: Dict[str, asyncio.Task] = {}
-        self._refresh_map: Dict[str, int] = {}      
+        self._refresh_map: Dict[str, int] = {}
 
     @property
     def version(self):

@@ -34,13 +34,25 @@ class ModelSettings(BaseModel):
     provider: Optional[ModelProvider] = None
     name: Optional[str] = None
     temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
-    top_p: Optional[float] = None
-    frequency_penalty: Optional[float] = None
-    presence_penalty: Optional[float] = None
-    stop_sequence: Optional[List[str]] = None
-    reasoning_effort: Optional[ReasoningEffort] = None
-    verbosity: Optional[Verbosity] = None
+    max_tokens: Optional[int] = Field(
+        default=None, serialization_alias="maxTokens"
+    )
+    top_p: Optional[float] = Field(default=None, serialization_alias="topP")
+    frequency_penalty: Optional[float] = Field(
+        default=None, serialization_alias="frequencyPenalty"
+    )
+    presence_penalty: Optional[float] = Field(
+        default=None, serialization_alias="presencePenalty"
+    )
+    stop_sequence: Optional[List[str]] = Field(
+        default=None, serialization_alias="stopSequence"
+    )
+    reasoning_effort: Optional[ReasoningEffort] = Field(
+        default=None, serialization_alias="reasoningEffort"
+    )
+    verbosity: Optional[Verbosity] = Field(
+        default=None, serialization_alias="verbosity"
+    )
 
     class Config:
         use_enum_values = True
@@ -72,6 +84,9 @@ class OutputSchemaField(BaseModel):
     name: str
     required: Optional[bool] = False
     parent_id: Optional[str] = None
+
+    class Config:
+        use_enum_values = True
 
 
 class OutputSchema(BaseModel):

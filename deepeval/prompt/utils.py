@@ -94,7 +94,9 @@ def construct_nested_base_model(
     return create_model(model_name, **child_fields)
 
 
-def construct_base_model(schema: Optional[OutputSchema] = None) -> Type[BaseModel]:
+def construct_base_model(
+    schema: Optional[OutputSchema] = None,
+) -> Type[BaseModel]:
     if not schema:
         return None
     if not schema.fields:
@@ -178,7 +180,8 @@ def _process_model(
 def construct_output_schema(
     base_model_class: Optional[Type[BaseModel]] = None,
 ) -> Optional[OutputSchema]:
-    if not base_model_class:
+    print(base_model_class)
+    if base_model_class is None:
         return None
     all_fields = _process_model(base_model_class)
     return OutputSchema(fields=all_fields, name=base_model_class.__name__)
