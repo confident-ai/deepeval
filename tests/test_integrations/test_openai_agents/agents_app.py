@@ -10,21 +10,22 @@ from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 
 set_trace_processors([DeepEvalTracingProcessor()])
 
+
 async def main1():
     # with trace (group_id and metadata)
     with trace(
-        workflow_name="test_workflow_1", # name of the trace,
-        group_id="test_group_id_1", # thread_id of the trace,
-        metadata={"test_metadata_1": "test_metadata_1"}, # metadata of the trace,
+        workflow_name="test_workflow_1",  # name of the trace,
+        group_id="test_group_id_1",  # thread_id of the trace,
+        metadata={
+            "test_metadata_1": "test_metadata_1"
+        },  # metadata of the trace,
     ):
         user_query = "What's the weather like in London today?"
-        response_1 = await Runner.run( # since thread id is present, input should not contain unwanted information.
+        response_1 = await Runner.run(  # since thread id is present, input should not contain unwanted information.
             triage_agent,
             "Hola, ¿cómo estás?",
         )
-        response_2 = await Runner.run(
-            weather_agent, user_query
-        )
+        response_2 = await Runner.run(weather_agent, user_query)
         # the input is of the first run and the output is of the second run.
 
 
@@ -34,10 +35,10 @@ async def main2():
     response_1 = await Runner.run(
         triage_agent,
         "Hola, ¿cómo estás?",
-    ) # cleaned output
+    )  # cleaned output
     response_2 = await Runner.run(
         weather_agent, user_query
-    ) # ouput will contain some unwanted information.
+    )  # ouput will contain some unwanted information.
 
 
 async def main3():
@@ -49,7 +50,7 @@ async def main3():
     ):
         response_2 = await Runner.run(weather_agent, user_query)
         update_current_trace(input="initial input", output="final output")
-    
+
     with trace(
         workflow_name="test_workflow_2",
         group_id="test_group_id_2",
@@ -68,18 +69,17 @@ async def main4():
         group_id="test_group_id_1",
         metadata={"test_metadata_1": "test_metadata_1"},
     ):
-        run_streamed_1 = Runner.run_streamed(
-            weather_agent, user_query
-        )
+        run_streamed_1 = Runner.run_streamed(weather_agent, user_query)
         async for chunk in run_streamed_1.stream_events():
             continue
-        
+
         run_streamed_2 = Runner.run_streamed(
             triage_agent,
             "Hola, ¿cómo estás?",
         )
         async for chunk in run_streamed_2.stream_events():
             continue
+
 
 async def main5():
     with trace(
@@ -108,6 +108,6 @@ async def execute_agent():
     # await main4()
     await main5()
 
+
 if __name__ == "__main__":
     asyncio.run(execute_agent())
-

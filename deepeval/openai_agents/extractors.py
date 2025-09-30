@@ -100,7 +100,9 @@ def update_span_properties_from_response_span_data(
         cached_input_tokens = usage.input_tokens_details.cached_tokens
         ouptut_reasoning_tokens = usage.output_tokens_details.reasoning_tokens
     # Get input and output
-    input = parse_response_input(span_data.input, span_data.response.instructions)
+    input = parse_response_input(
+        span_data.input, span_data.response.instructions
+    )
     raw_output = parse_response_output(response.output)
     output = (
         raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
@@ -118,7 +120,7 @@ def update_span_properties_from_response_span_data(
     span.output = output
     span.name = "LLM Generation"
     response_dict = response.model_dump(exclude_none=True, mode="json")
-    span.metadata['invocation_params'] = {
+    span.metadata["invocation_params"] = {
         k: v
         for k, v in response_dict.items()
         if k
@@ -158,8 +160,10 @@ def update_span_properties_from_generation_span_data(
     span.input = input
     span.output = output
     span.name = "LLM Generation"
-    span.metadata['invocation_params'] = {
-        "model_config": make_json_serializable(generation_span_data.model_config),
+    span.metadata["invocation_params"] = {
+        "model_config": make_json_serializable(
+            generation_span_data.model_config
+        ),
     }
 
 
@@ -261,18 +265,28 @@ def update_span_properties_from_guardrail_span_data(
 ########################################################
 
 
-def parse_response_input(input: Union[str, List[ResponseInputItemParam]], instructions: Optional[Union[str, List[ResponseInputItemParam]]] = None):
-    
+def parse_response_input(
+    input: Union[str, List[ResponseInputItemParam]],
+    instructions: Optional[Union[str, List[ResponseInputItemParam]]] = None,
+):
+
     processed_input = []
 
     if isinstance(input, str) and isinstance(instructions, str):
-        return [{"type": "message", "role": "system", "content": instructions}, {"type": "message", "role": "user", "content": input}]
+        return [
+            {"type": "message", "role": "system", "content": instructions},
+            {"type": "message", "role": "user", "content": input},
+        ]
     elif isinstance(input, list) and isinstance(instructions, list):
-        input = instructions + input 
+        input = instructions + input
     elif isinstance(input, list) and isinstance(instructions, str):
-        processed_input += [{"type": "message", "role": "system", "content": instructions}]
+        processed_input += [
+            {"type": "message", "role": "system", "content": instructions}
+        ]
     elif isinstance(input, str) and isinstance(instructions, list):
-        processed_input += [{"type": "message", "role": "user", "content": input}]
+        processed_input += [
+            {"type": "message", "role": "user", "content": input}
+        ]
         input = instructions
 
     for item in input:
@@ -399,16 +413,21 @@ def parse_function_call(
         "arguments": function_call.arguments,
     }
 
+
 def update_trace_properties_from_span_data(
     trace: Trace,
     span_data: Union["ResponseSpanData", "GenerationSpanData"],
 ):
     if isinstance(span_data, ResponseSpanData):
         if not trace.input:
-            trace.input = parse_response_input(span_data.input, span_data.response.instructions)
+            trace.input = parse_response_input(
+                span_data.input, span_data.response.instructions
+            )
         raw_output = parse_response_output(span_data.response.output)
         output = (
-            raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
+            raw_output
+            if isinstance(raw_output, str)
+            else json.dumps(raw_output)
         )
         trace.output = output
 
@@ -417,7 +436,8 @@ def update_trace_properties_from_span_data(
             trace.input = span_data.input
         raw_output = span_data.output
         output = (
-            raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
+            raw_output
+            if isinstance(raw_output, str)
+            else json.dumps(raw_output)
         )
         trace.output = output
-    

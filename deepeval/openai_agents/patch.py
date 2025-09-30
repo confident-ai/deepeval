@@ -22,6 +22,7 @@ try:
 except Exception:
     pass
 
+
 def _wrap_with_observe(
     func: Callable[..., Any],
     metrics: Optional[str] = None,
@@ -31,6 +32,7 @@ def _wrap_with_observe(
         return func
 
     if inspect.iscoroutinefunction(func):
+
         @wraps(func)
         async def observed(*args: Any, **kwargs: Any) -> Any:
             current_span = current_span_context.get()
@@ -38,7 +40,9 @@ def _wrap_with_observe(
                 current_span.metrics = metrics
                 current_span.metric_collection = metric_collection
             return await func(*args, **kwargs)
+
     else:
+
         @wraps(func)
         def observed(*args: Any, **kwargs: Any) -> Any:
             current_span = current_span_context.get()
@@ -54,6 +58,7 @@ def _wrap_with_observe(
         pass
     return observed
 
+
 def function_tool(
     func: Optional[Callable[..., Any]] = None, /, *args: Any, **kwargs: Any
 ) -> Any:
@@ -64,7 +69,6 @@ def function_tool(
         raise RuntimeError(
             "agents.function_tool is not available. Please install agents via your package manager"
         )
-
 
     if callable(func):
 
@@ -86,9 +90,11 @@ def function_tool(
 
     return decorator
 
+
 _PATCHED_DEFAULT_RUN_SINGLE_TURN = False
 _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = False
 _PATCHED_DEFAULT_GET_MODEL = False
+
 
 class _ObservedModel(Model):
     def __init__(
@@ -160,6 +166,7 @@ class _ObservedModel(Model):
 
         return _gen()
 
+
 def patch_default_agent_run_single_turn():
     global _PATCHED_DEFAULT_RUN_SINGLE_TURN
     if _PATCHED_DEFAULT_RUN_SINGLE_TURN:
@@ -169,16 +176,26 @@ def patch_default_agent_run_single_turn():
 
     @classmethod
     async def patched_run_single_turn(cls, *args, **kwargs):
-        res: SingleStepResult = await original_run_single_turn.__func__(cls, *args, **kwargs)
+        res: SingleStepResult = await original_run_single_turn.__func__(
+            cls, *args, **kwargs
+        )
         try:
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
                     _set_agent_metrics(kwargs.get("agent", None), agent_span)
                     if agent_span.input is None:
-                        _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
-                        agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
-                    agent_span.output = parse_response_output(res.model_response.output)
+                        _pre_step_items_raw_list = [
+                            item.raw_item for item in res.pre_step_items
+                        ]
+                        agent_span.input = (
+                            make_json_serializable(_pre_step_items_raw_list)
+                            if _pre_step_items_raw_list
+                            else make_json_serializable(res.original_input)
+                        )
+                    agent_span.output = parse_response_output(
+                        res.model_response.output
+                    )
         except Exception:
             pass
         return res
@@ -186,31 +203,48 @@ def patch_default_agent_run_single_turn():
     AgentRunner._run_single_turn = patched_run_single_turn
     _PATCHED_DEFAULT_RUN_SINGLE_TURN = True  # type: ignore
 
+
 def patch_default_agent_run_single_turn_streamed():
     global _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED
     if _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED:
         return
 
     original_run_single_turn_streamed = AgentRunner._run_single_turn_streamed
+
     @classmethod
     async def patched_run_single_turn_streamed(cls, *args, **kwargs):
-                
-        res: SingleStepResult = await original_run_single_turn_streamed.__func__(cls, *args, **kwargs)
+
+        res: SingleStepResult = (
+            await original_run_single_turn_streamed.__func__(
+                cls, *args, **kwargs
+            )
+        )
         try:
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
-                    _set_agent_metrics(kwargs.get("agent", None), agent_span) # TODO: getting no agent
+                    _set_agent_metrics(
+                        kwargs.get("agent", None), agent_span
+                    )  # TODO: getting no agent
                     if agent_span.input is None:
-                        _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
-                        agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
-                    agent_span.output = parse_response_output(res.model_response.output)
+                        _pre_step_items_raw_list = [
+                            item.raw_item for item in res.pre_step_items
+                        ]
+                        agent_span.input = (
+                            make_json_serializable(_pre_step_items_raw_list)
+                            if _pre_step_items_raw_list
+                            else make_json_serializable(res.original_input)
+                        )
+                    agent_span.output = parse_response_output(
+                        res.model_response.output
+                    )
         except Exception:
             pass
         return res
 
     AgentRunner._run_single_turn_streamed = patched_run_single_turn_streamed
     _PATCHED_DEFAULT_RUN_SINGLE_TURN_STREAMED = True  # type: ignore
+
 
 def patch_default_agent_runner_get_model():
     global _PATCHED_DEFAULT_GET_MODEL
@@ -221,12 +255,18 @@ def patch_default_agent_runner_get_model():
     try:
         original_get_model = original_get_model_cm.__func__
     except AttributeError:
-        original_get_model = original_get_model_cm  # fallback (non-classmethod edge case)
+        original_get_model = (
+            original_get_model_cm  # fallback (non-classmethod edge case)
+        )
 
     def patched_get_model(cls, *args, **kwargs) -> Model:
         model = original_get_model(cls, *args, **kwargs)
 
-        agent = kwargs.get("agent") if "agent" in kwargs else (args[0] if args else None)
+        agent = (
+            kwargs.get("agent")
+            if "agent" in kwargs
+            else (args[0] if args else None)
+        )
         if agent is None:
             return model
 
@@ -250,12 +290,15 @@ def patch_default_agent_runner_get_model():
     AgentRunner._get_model = classmethod(patched_get_model)
     _PATCHED_DEFAULT_GET_MODEL = True
 
+
 def _set_agent_metrics(agent: Agent, agent_span: AgentSpan) -> None:
     try:
         if agent is None or agent_span is None:
             return
         agent_metrics = getattr(agent, "agent_metrics", None)
-        agent_metric_collection = getattr(agent, "agent_metric_collection", None)
+        agent_metric_collection = getattr(
+            agent, "agent_metric_collection", None
+        )
 
         if agent_metrics is not None:
             agent_span.metrics = agent_metrics
@@ -263,4 +306,4 @@ def _set_agent_metrics(agent: Agent, agent_span: AgentSpan) -> None:
             agent_span.metric_collection = agent_metric_collection
     except Exception:
         # Be conservative: never break the run on metrics propagation
-        pass 
+        pass

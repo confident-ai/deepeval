@@ -84,7 +84,6 @@
 #     _PATCHED_DEFAULT_GET_MODEL = True
 
 
-
 # # if agents_available:
 #     # patch_default_agent_run_single_turn()
 #     # patch_single_turn_streamed()

@@ -21,7 +21,10 @@ try:
         ResponseSpanData,
         SpanData,
     )
-    from deepeval.openai_agents.patch import patch_default_agent_run_single_turn, patch_default_agent_run_single_turn_streamed
+    from deepeval.openai_agents.patch import (
+        patch_default_agent_run_single_turn,
+        patch_default_agent_run_single_turn_streamed,
+    )
 
     openai_agents_available = True
 except ImportError:
@@ -72,9 +75,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         _trace_uuid = trace_dict.get("id")
         _trace_name = trace_dict.get("workflow_name")
 
-        trace_manager.remove_span(
-            _trace_uuid
-        )  # removing the dummy root span
+        trace_manager.remove_span(_trace_uuid)  # removing the dummy root span
         trace_manager.end_trace(_trace_uuid)
         current_trace_context.set(None)
 
@@ -84,7 +85,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         current_span = current_span_context.get()
         if current_span and isinstance(current_span, LlmSpan):
             return
-        
+
         span_type = self.get_span_kind(span.span_data)
         observer = Observer(span_type=span_type, func_name="NA")
         if span_type == "llm":
@@ -96,8 +97,10 @@ class DeepEvalTracingProcessor(TracingProcessor):
         observer.__enter__()
 
     def on_span_end(self, span: "Span") -> None:
-        update_trace_properties_from_span_data(current_trace_context.get(), span.span_data)
-        
+        update_trace_properties_from_span_data(
+            current_trace_context.get(), span.span_data
+        )
+
         current_span = current_span_context.get()
         if current_span and isinstance(current_span, LlmSpan):
             update_span_properties(current_span, span.span_data)

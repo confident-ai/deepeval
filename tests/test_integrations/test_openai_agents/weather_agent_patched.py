@@ -6,6 +6,7 @@ from deepeval.openai_agents.patch import function_tool
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
+
 @function_tool(metric_collection="test_collection_1")
 def get_current_weather(latitude: float, longitude: float) -> dict:
     """
@@ -54,6 +55,7 @@ def get_location_coordinates(city_name: str) -> dict:
         return locations[city_lower]
     return {"error": f"Location not found: {city_name}"}
 
+
 # Create the weather specialist agent
 weather_agent_patched = DeepEvalAgent(
     name="Weather Specialist Agent",
@@ -77,14 +79,12 @@ weather_agent_patched = DeepEvalAgent(
     tool_use_behavior="run_llm_again",
     confident_prompt=prompt,
     llm_metric_collection="test_collection_1",
-    agent_metric_collection="test_collection_1"
+    agent_metric_collection="test_collection_1",
 )
+
 
 async def run_weather_agent(user_input: str):
     """Run the weather agent with user input"""
     runner = Runner()
-    result = await runner.run(
-        weather_agent,
-        user_input
-    )
+    result = await runner.run(weather_agent, user_input)
     return result.final_output

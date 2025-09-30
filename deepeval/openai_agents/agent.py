@@ -9,7 +9,9 @@ from deepeval.tracing.types import LlmSpan
 
 try:
     from agents.agent import Agent as BaseAgent
-    from deepeval.openai_agents.patch import patch_default_agent_runner_get_model
+    from deepeval.openai_agents.patch import (
+        patch_default_agent_runner_get_model,
+    )
 except Exception as e:
     raise RuntimeError(
         "openai-agents is required for this integration. Please install it."
