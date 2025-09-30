@@ -68,13 +68,15 @@ def test_write_test_result_to_file_conversational(tmp_path: Path):
 
     write_test_result_to_file(tr, RunResultDisplay.ALL, str(tmp_path))
 
-    # Find the file that was written and assert content
-    files = list(tmp_path.iterdir())
-    assert files, "No file written by write_test_result_to_file"
-
+    # look only at files (skip .deepeval/ and any other dirs)
     text = None
-    for f in files:
-        content = f.read_text()
+    for f in tmp_path.iterdir():
+        if not f.is_file():
+            continue
+        try:
+            content = f.read_text()
+        except UnicodeDecodeError:
+            continue  # skip any non-text files, just in case
         if "For conversational test case:" in content:
             text = content
             break
