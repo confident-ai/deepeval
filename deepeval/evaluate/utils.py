@@ -1,9 +1,10 @@
 import ast
 import inspect
-from typing import Optional, List, Callable, Union, Dict
-import os, time
+from typing import Optional, List, Callable, Union
+import os
+import time
 
-
+from deepeval.utils import shorten
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -32,6 +33,30 @@ from deepeval.tracing.utils import (
     perf_counter_to_datetime,
     to_zod_compatible_iso,
 )
+
+
+def _is_metric_successful(metric_data) -> bool:
+    """
+    Robustly determine success for a metric row.
+
+    Rationale:
+    - If the metric recorded an error, treat as failure.
+    - Try/except guards against custom metrics that may omit or mistyped `success`.
+    - Be defensive: missing/None/non-bool -> False (failure).
+    """
+    if getattr(metric_data, "error", None):
+        return False
+
+    s = getattr(metric_data, "success", None)
+    if isinstance(s, bool):
+        return s
+    if s is None:
+        return False
+    if isinstance(s, (int, float)):
+        return bool(s)
+    if isinstance(s, str):
+        return s.strip().lower() in {"true", "t", "1", "yes", "y"}
+    return False
 
 
 def create_metric_data(metric: BaseMetric) -> MetricData:
@@ -75,6 +100,7 @@ def create_test_result(
             metrics_data=api_test_case.metrics_data,
             conversational=True,
             additional_metadata=api_test_case.additional_metadata,
+            turns=api_test_case.turns,
         )
     else:
         multimodal = (
@@ -372,17 +398,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
     print("Metrics Summary\n")
 
     for metric_data in test_result.metrics_data:
-        successful = True
-        if metric_data.error is not None:
-            successful = False
-        else:
-            # This try block is for user defined custom metrics,
-            # which might not handle the score == undefined case elegantly
-            try:
-                if not metric_data.success:
-                    successful = False
-            except:
-                successful = False
+        successful = _is_metric_successful(metric_data)
 
         if not successful:
             print(
@@ -401,9 +417,17 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
 
     elif test_result.conversational:
         print("For conversational test case:\n")
-        print(
-            f"  - Unable to print conversational test case. Run 'deepeval login' to view conversational evaluations in full."
-        )
+        if test_result.turns:
+            print("  Turns:")
+            turns = sorted(test_result.turns, key=lambda t: t.order)
+            for t in turns:
+                tool_names = ", ".join(tc.name for tc in (t.tools_called or []))
+                tools = f"  | tools: {tool_names}" if tool_names else ""
+                content = shorten(t.content)
+                print(f"    {t.order:>2}. {t.role:<9} {content}{tools}")
+        else:
+            print("  - No turns recorded in this test case.")
+
     else:
         print("For test case:\n")
         print(f"  - input: {test_result.input}")
@@ -470,15 +494,7 @@ def write_test_result_to_file(
         file.write("Metrics Summary\n\n")
 
         for metric_data in test_result.metrics_data:
-            successful = True
-            if metric_data.error is not None:
-                successful = False
-            else:
-                try:
-                    if not metric_data.success:
-                        successful = False
-                except:
-                    successful = False
+            successful = _is_metric_successful(metric_data)
 
             if not successful:
                 file.write(
@@ -500,9 +516,21 @@ def write_test_result_to_file(
             file.write(f"  - actual output: {test_result.actual_output}\n")
         elif test_result.conversational:
             file.write("For conversational test case:\n\n")
-            file.write(
-                "  - Unable to print conversational test case. Run 'deepeval login' to view conversational evaluations in full.\n"
-            )
+            if test_result.turns:
+                file.write("  Turns:\n")
+                turns = sorted(test_result.turns, key=lambda t: t.order)
+                for t in turns:
+                    tool_names = ", ".join(
+                        tc.name for tc in (t.tools_called or [])
+                    )
+                    tools = f"  | tools: {tool_names}" if tool_names else ""
+                    # keep lines readable in logs:
+                    content = shorten(t.content)
+                    file.write(
+                        f"    {t.order:>2}. {t.role:<9} {content}{tools}\n"
+                    )
+            else:
+                file.write("  - No turns recorded in this test case.\n")
         else:
             file.write("For test case:\n\n")
             file.write(f"  - input: {test_result.input}\n")
