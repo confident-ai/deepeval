@@ -345,7 +345,7 @@ class TestConversationalDeepAcyclicGraph:
     def test_invalid_non_binary(self):
         verdict1 = ConversationalVerdictNode(verdict=True, score=10)
         verdict2 = ConversationalVerdictNode(verdict=False, score=0)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             ConversationalNonBinaryJudgementNode(
                 criteria="Should have strings in verdics",
                 children=[verdict1, verdict2],
