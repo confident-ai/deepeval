@@ -92,16 +92,21 @@ async def main5():
             "What's the weather in London?",
         )
         async for chunk in stream_run.stream_events():
-            print("----------------------------")
+            # print("----------------------------")
             continue
+
+        # await Runner.run(
+        #     weather_agent_patched,
+        #     "What's the weather in London?",
+        # )
 
 
 async def execute_agent():
     # await main1()
-    await main2()
+    # await main2()
     # await main3()
     # await main4()
-    # await main5()
+    await main5()
 
 if __name__ == "__main__":
     asyncio.run(execute_agent())
