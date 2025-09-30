@@ -1,12 +1,14 @@
 import asyncio
-from agents import Runner, add_trace_processor
+from agents import Runner, set_trace_processors
 from deepeval.tracing import update_current_trace
 from agents import trace
 from multi_agents import triage_agent
 from weather_agent import weather_agent
+from weather_agent_patched import weather_agent_patched
+
 from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 
-add_trace_processor(DeepEvalTracingProcessor())
+set_trace_processors([DeepEvalTracingProcessor()])
 
 async def main1():
     # with trace (group_id and metadata)
@@ -79,12 +81,19 @@ async def main4():
         async for chunk in run_streamed_2.stream_events():
             continue
 
+async def main5():
+    await Runner.run(
+        weather_agent_patched,
+        "What's the weather in London?",
+    )
+
 
 async def execute_agent():
-    await main1()
-    await main2()
-    await main3()
-    await main4()
+    # await main1()
+    # await main2()
+    # await main3()
+    # await main4()
+    await main5()
 
-# if __name__ == "__main__":
-#     asyncio.run(execute_agent())
+if __name__ == "__main__":
+    asyncio.run(execute_agent())
