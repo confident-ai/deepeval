@@ -200,7 +200,7 @@ def patch_default_agent_run_single_turn_streamed():
             if isinstance(res, SingleStepResult):
                 agent_span = current_span_context.get()
                 if isinstance(agent_span, AgentSpan):
-                    _set_agent_metrics(kwargs.get("agent", None), agent_span)
+                    _set_agent_metrics(kwargs.get("agent", None), agent_span) # TODO: getting no agent
                     if agent_span.input is None:
                         _pre_step_items_raw_list = [item.raw_item for item in res.pre_step_items]
                         agent_span.input = make_json_serializable(_pre_step_items_raw_list) if _pre_step_items_raw_list else make_json_serializable(res.original_input)
