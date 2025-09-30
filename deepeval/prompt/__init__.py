@@ -5,6 +5,17 @@ from .api import (
     ModelProvider,
     Verbosity,
     ReasoningEffort,
+    OutputType,
+    PromptInterpolationType,
 )
 
-__all__ = ["Prompt", "PromptMessage", "ModelSettings", "ModelProvider", "Verbosity", "ReasoningEffort"]
+__all__ = [
+    "Prompt",
+    "PromptMessage",
+    "ModelSettings",
+    "ModelProvider",
+    "Verbosity",
+    "ReasoningEffort",
+    "OutputType",
+    "PromptInterpolationType",
+]
