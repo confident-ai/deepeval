@@ -82,18 +82,26 @@ async def main4():
             continue
 
 async def main5():
-    await Runner.run(
-        weather_agent_patched,
-        "What's the weather in London?",
-    )
+    with trace(
+        workflow_name="test_workflow_1",
+        group_id="test_group_id_1",
+        metadata={"test_metadata_1": "test_metadata_1"},
+    ):
+        stream_run = Runner.run_streamed(
+            weather_agent_patched,
+            "What's the weather in London?",
+        )
+        async for chunk in stream_run.stream_events():
+            print("----------------------------")
+            continue
 
 
 async def execute_agent():
     # await main1()
-    # await main2()
+    await main2()
     # await main3()
     # await main4()
-    await main5()
+    # await main5()
 
 if __name__ == "__main__":
     asyncio.run(execute_agent())
