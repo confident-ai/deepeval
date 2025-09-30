@@ -681,7 +681,7 @@ class ConversationalNonBinaryJudgementNode(ConversationalBaseNode):
 
             # Check for duplicate verdicts
             if child.verdict in verdicts_set:
-                raise TypeError(
+                raise ValueError(
                     f"Duplicate verdict found: {child.verdict} in children of ConversationalNonBinaryJudgementNode."
                 )
             verdicts_set.add(child.verdict)

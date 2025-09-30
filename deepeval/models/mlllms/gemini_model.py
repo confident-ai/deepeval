@@ -168,7 +168,7 @@ class MultimodalGeminiModel(DeepEvalBaseMLLM):
             List of strings and PIL Image objects ready for model input
 
         Raises:
-            ValueError: If an invalid input type is provided
+            TypeError: If an invalid input type is provided
         """
         prompt = []
         settings = get_settings()

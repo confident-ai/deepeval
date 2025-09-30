@@ -90,7 +90,7 @@ class TestDeepAcyclicGraph:
     def test_invalid_non_binary(self):
         verdict1 = VerdictNode(verdict=True, score=10)
         verdict2 = VerdictNode(verdict=False, score=0)
-        with pytest.raises(ValueError):
+        with pytest.raises(TypeError):
             NonBinaryJudgementNode(
                 criteria="Should have strings in verdics",
                 children=[verdict1, verdict2],

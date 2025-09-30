@@ -254,5 +254,5 @@ class TestMultimodalGeminiModel:
             {"url": "test.jpg"},  # Invalid type
         ]
 
-        with pytest.raises(ValueError, match="Invalid input type"):
+        with pytest.raises(TypeError, match="Invalid input type"):
             model.generate_prompt(multimodal_input)
