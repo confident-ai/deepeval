@@ -26,6 +26,8 @@ from deepeval.tracing.types import (
 )
 import json
 
+from deepeval.tracing.utils import make_json_serializable
+
 try:
     from agents import MCPListToolsSpanData
     from agents.tracing.span_data import (
@@ -90,6 +92,8 @@ def update_span_properties_from_response_span_data(
         return
     # Extract usage tokens
     usage = response.usage
+    cached_input_tokens = None
+    ouptut_reasoning_tokens = None
     if usage:
         output_tokens = usage.output_tokens
         input_tokens = usage.input_tokens
@@ -113,6 +117,23 @@ def update_span_properties_from_response_span_data(
     span.input = input
     span.output = output
     span.name = "LLM Generation"
+    response_dict = response.model_dump(exclude_none=True, mode="json")
+    span.metadata['invocation_params'] = {
+        k: v
+        for k, v in response_dict.items()
+        if k
+        in (
+            "max_output_tokens",
+            "parallel_tool_calls",
+            "reasoning",
+            "temperature",
+            "text",
+            "tool_choice",
+            "tools",
+            "top_p",
+            "truncation",
+        )
+    }
 
 
 def update_span_properties_from_generation_span_data(
@@ -137,6 +158,9 @@ def update_span_properties_from_generation_span_data(
     span.input = input
     span.output = output
     span.name = "LLM Generation"
+    span.metadata['invocation_params'] = {
+        "model_config": make_json_serializable(generation_span_data.model_config),
+    }
 
 
 ########################################################
