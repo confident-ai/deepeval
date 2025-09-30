@@ -45,9 +45,7 @@ from deepeval.dataset import Golden
 from deepeval.contextvars import set_current_golden, reset_current_golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
-from deepeval.utils import (
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop, shorten
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
@@ -1804,12 +1802,10 @@ def a_execute_agentic_test_cases_from_loop(
             # record metadata for debugging
             MAX_META_INPUT_LENGTH = 120
             started = time.perf_counter()
-            short_input = current_golden_ctx["input"]
-            if (
-                isinstance(short_input, str)
-                and len(short_input) > MAX_META_INPUT_LENGTH
-            ):
-                short_input = short_input[:MAX_META_INPUT_LENGTH] + "…"
+            short_input = current_golden_ctx.get("input")
+            if isinstance(short_input, str):
+                short_input = shorten(short_input, MAX_META_INPUT_LENGTH)
+
             task_meta[task] = {
                 "golden_index": current_golden_ctx["index"],
                 "golden_name": current_golden_ctx["name"],
@@ -1972,7 +1968,7 @@ def a_execute_agentic_test_cases_from_loop(
 
                 if settings.DEEPEVAL_DEBUG_ASYNC:
                     logger.warning(
-                        "[deepeval] %d stray task(s) not tracked; cancelling…",
+                        "[deepeval] %d stray task(s) not tracked; cancelling...",
                         len(leftovers),
                     )
                     for t in leftovers:
