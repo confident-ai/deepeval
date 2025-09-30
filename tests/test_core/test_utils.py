@@ -146,7 +146,7 @@ def test_dynamic_stop_invalid_env_falls_back(monkeypatch):
     [
         ("hello", 10, "hello"),  # no truncation
         ("hello", 5, "hello"),  # exact boundary
-        ("helloworld", 5, "hell…"),  # truncation with default suffix
+        ("helloworld", 5, "he..."),  # truncation with default suffix
         ("", 5, ""),  # empty string
         (None, 5, ""),  # None -> ""
     ],
@@ -165,7 +165,7 @@ def test_shorten_suffix_longer_than_max():
 
 
 def test_shorten_non_string_input():
-    assert shorten(12345, 3) == "12…"
+    assert shorten(12345, 3) == "..."
 
 
 ###############################################

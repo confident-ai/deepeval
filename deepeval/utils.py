@@ -420,7 +420,7 @@ def is_missing(s: Optional[str]) -> bool:
 
 
 def shorten(
-    text: Optional[object], max_len: int = 240, suffix: str = "…"
+    text: Optional[object], max_len: int = 240, suffix: str = "..."
 ) -> str:
     """
     Truncate text to max_len characters, appending `suffix` if truncated.
