@@ -44,6 +44,7 @@ module.exports = {
         "evaluation-component-level-llm-evals",
         "evaluation-unit-testing-in-ci-cd",
         "evaluation-flags-and-configs",
+        "command-line-interface",
       ],
       collapsed: false,
     },
