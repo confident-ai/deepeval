@@ -419,6 +419,27 @@ def is_missing(s: Optional[str]) -> bool:
     return s is None or (isinstance(s, str) and s.strip() == "")
 
 
+def shorten(
+    text: Optional[object], max_len: int = 240, suffix: str = "…"
+) -> str:
+    """
+    Truncate text to max_len characters, appending `suffix` if truncated.
+    - Accepts None and returns "", or any object is returned as str().
+    - Safe when max_len <= len(suffix).
+    """
+    if text is None:
+        return ""
+    s = str(text)
+    if max_len <= 0:
+        return ""
+    if len(s) <= max_len:
+        return s
+    cut = max_len - len(suffix)
+    if cut <= 0:
+        return suffix[:max_len]
+    return s[:cut] + suffix
+
+
 ###############################################
 # Source: https://github.com/tingofurro/summac
 ###############################################
