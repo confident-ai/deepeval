@@ -18,11 +18,11 @@ An LLM trace is made up of multiple individual spans. A **span** is a flexible, 
 
 ![LLM Trace](https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png)
 
-Tracing allows you to run both [end-to-end](https://www.deepeval.com/docs/evaluation-end-to-end-llm-evals) and [component level](https://www.deepeval.com/docs/evaluation-component-level-llm-evals) evals which you'll learn about in this guide.
+Tracing allows you to run both [end-to-end](https://www.deepeval.com/docs/evaluation-end-to-end-llm-evals) and [component-level](https://www.deepeval.com/docs/evaluation-component-level-llm-evals) evals which you'll learn about in this guide.
 
 <details>
 
-<summary>Learn how DeepEval's tracing is non-intrusive</summary>
+<summary>Learn how deepeval's tracing is non-intrusive</summary>
 
 `deepeval`'s tracing is **non-intrusive**, it requires **minimal code changes** and **doesn't add latency** to your LLM application. It also:
 
@@ -122,7 +122,7 @@ def get_res(query: str):
     return response
 ```
 
-You can either supply the `LLMTestCase` or its parameters in the `update_current_span` to create a component level test case. Learn more [here](#update-current-span).
+You can either supply the `LLMTestCase` or its parameters in the `update_current_span` to create a component-level test case. Learn more [here](#update-current-span).
 
 </TimelineItem>
 <TimelineItem title="Get your traces">
@@ -159,7 +159,7 @@ deepeval login
 
 ### Observe
 
-The `@observe` decorator is a non-intrusive python decorator that you can use on top of any component as you wish. It tracks the usage of the component whenever it is invoked to create a span.
+The `@observe` decorator is a non-intrusive Python decorator that you can use on top of any component as you wish. It tracks the usage of the component whenever it is invoked to create a span.
 
 A span can contain many child spans, forming a tree structure—just like how different components of your LLM application interact
 
@@ -200,9 +200,13 @@ To learn more about the different spans `type`s, or to run LLM evaluations with 
 
 </details>
 
+:::note Goldens and context
+`deepeval` uses Python context variables during evaluation so your code can access the active golden for each test case. You can retrieve it with `get_current_golden()` and pass its `expected_output` when you update a span or trace.
+:::
+
 ### Update Current Span
 
-The `update_current_span` method can be used to create a test case for the corresponding span. This is especially useful for doing component level evals or debugging your application.
+The `update_current_span` method can be used to create a test case for the corresponding span. This is especially useful for doing component-level evals or debugging your application.
 
 ```python showLineNumbers {1,9-13,20}
 from deepeval.tracing import observe, update_current_span
@@ -291,48 +295,21 @@ You can use the individual `LLMTestCase` params in the `update_current_trace` fu
 
 ---
 
-### Working with Goldens
+### Using goldens
 
-In Deepeval, a **Golden** represents a reference test case. It contains the input, the expected output(s), and optional metadata such as context, tool calls, and comments. During evaluation, your application’s outputs are compared against the Golden to determine correctness.
-
-The **current golden** is tracked using Python [context variables](https://docs.python.org/3/library/contextvars.html), which makes it safe for async code and ensures each task or span sees the correct reference.
-
-### Get & set the current Golden
-
-You can set the active golden with `set_current_golden` and retrieve it with `get_current_golden`. Always reset the context afterward using the token returned by `set_current_golden()`:
+In `deepeval`, a **golden** is the reference test case used by your metrics, for example, to compare actual and expected outputs. During evaluation, you can read the active golden and pass its `expected_output` to spans or traces.
 
 ```python
-from deepeval.contextvars import set_current_golden, get_current_golden, reset_current_golden
-from deepeval.dataset.golden import Golden
-
-golden = Golden(input="china", expected_output="beijing, 1000")
-
-# Set and remember previous value
-token = set_current_golden(golden)
-try:
-    current = get_current_golden()
-    print(current.expected_output)  # Outputs: beijing, 1000
-finally:
-    # Always restore the previous value
-    reset_current_golden(token)
-````
-
-### Passing `expected_output` from the Golden
-
-You can read the active golden set by the evaluator and pass its `expected_output` into your span or trace:
-
-```python
+from deepeval.dataset import get_current_golden
 from deepeval.tracing import observe, update_current_span, update_current_trace
 from deepeval.test_case import LLMTestCase
-from deepeval.contextvars import get_current_golden
 
 @observe()
 def tool(input: str):
     # produce your model or tool output
     result = ...  # <- your code here
 
-    # Retrieve the active golden and its expected output
-    golden = get_current_golden()
+    golden = get_current_golden()          # active golden for this test
     expected = golden.expected_output if golden else None
 
     # Option A: pass via LLMTestCase to the span
@@ -355,69 +332,10 @@ def tool(input: str):
     return result
 ```
 
-You can also set it with keyword arguments, which can be useful if you already set other fields separately:
-
-```python
-golden = get_current_golden()
-update_current_span(expected_output=golden.expected_output if golden else None)
-update_current_trace(expected_output=golden.expected_output if golden else None)
-```
-
-### Managing Multiple Goldens
-
-You can manage multiple goldens in the same run by setting and resetting the current golden around each operation. Because contextvars are local to each task, this also works safely in async code:
-
-```python
-from deepeval.contextvars import set_current_golden, reset_current_golden, get_current_golden
-from deepeval.dataset.golden import Golden
-
-def run_with_golden(golden: Golden):
-    token = set_current_golden(golden)
-    try:
-        print(get_current_golden().expected_output)
-        # ... do work with this golden active ...
-    finally:
-        reset_current_golden(token)
-```
-
-Async example:
-
-```python
-import asyncio
-from deepeval.contextvars import set_current_golden, reset_current_golden, get_current_golden
-from deepeval.dataset.golden import Golden
-
-async def task_for(golden):
-    token = set_current_golden(golden)
-    try:
-        print(get_current_golden().expected_output)
-        await asyncio.sleep(0.1)
-    finally:
-        reset_current_golden(token)
-
-await asyncio.gather(
-    task_for(Golden(input="A", expected_output="outA")),
-    task_for(Golden(input="B", expected_output="outB")),
-)
-```
-
-### Evaluating test cases
-
-When test cases are passed to `evaluate`, Deepeval **automatically sets and resets** the current golden during execution while yielding each test case to your code.
-
-Inside that flow:
-
-* **Do not call** `set_current_golden()` or `reset_current_golden()` yourself.
-* Use `get_current_golden()` in **read-only mode** to fetch the expected output.
-* Pass the expected value explicitly to `update_current_span` or `update_current_trace`.
-
-Manually overriding the golden during evaluation can cause incorrect test results.
-
-### Notes
+**Notes**
 
 * **`expected_output`** may be provided via `LLMTestCase` or `expected_output=`.
 * If you don’t want to use the dataset’s `expected_output`, pass your own string.
-* When managing goldens manually, always restore with `reset_current_golden(token)` to avoid leaks between tasks or spans.
 
 ---
 
@@ -432,7 +350,7 @@ CONFIDENT_TRACE_FLUSH=0
 
 ## Next Steps
 
-Now that you have your traces, you can run either end-to-end or component level evals.
+Now that you have your traces, you can run either end-to-end or component-level evals.
 
 <NavigationCards
   items={[
