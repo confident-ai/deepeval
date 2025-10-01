@@ -30,7 +30,7 @@ class HallucinationMetric(BaseMetric):
         threshold: float = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         include_reason: bool = True,
-        async_mode: bool = False,
+        async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
         evaluation_template: Type[
