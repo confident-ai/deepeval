@@ -1,0 +1,328 @@
+---
+id: evaluation-prompts
+title: Prompts
+sidebar_label: Prompts
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval` lets you evaluate prompts by associating them with test runs. A `Prompt` in `deepeval` contains the prompt template and optional model setting parameters. By linking a `Prompt` to a test run, you can attribute metric scores to that prompt, helping you select the best prompts for your application.
+
+## Quick summary
+
+There are two types of evaluations in `deepeval`:
+
+- End-to-End Testing
+- Component-level Testing
+
+This means you can evaluate prompts **end-to-end** or on the **component-level**.
+
+[End-to-end testing](#end-to-end) is useful when you want to evaluate the prompt's impact on the entire LLM application, since metrics in end-to-end tests are calculated on the final output. On the other hand, [component-level testing](#component-level) is useful when you want to evaluate prompts for specific LLM generation processes, since metrics in component-level tests are calculated on the component-level.
+
+## Evaluating Prompts
+
+### End-to-End
+
+You can evaluate prompts end-to-end by running the `evaluate` in python or `assert_test` in CI/CD.
+
+<Tabs>
+<TabItem value="python" label="In Python">
+
+To evaluate a prompt when running end-to-end evals, run the `evaluate` function with your test cases and metrics, and supply the prompt object in the `hyperparameters` dictionary using any key.
+
+```python title="main.py" showLineNumbers={true} {18}
+from somewhere import your_llm_app
+from deepeval.prompt import Prompt, PromptMessage
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import evaluate
+
+prompt = Prompt(
+    alias="First Prompt",
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
+)
+
+input = "What is the capital of France?"
+actual_output = your_llm_app(input, prompt.messages_template)
+
+evaluate(
+    test_case=LLMTestCase(input=input, actual_output=actual_output),
+    metrics=[AnswerRelevancyMetric()],
+    hyperparameters={"prompt": prompt}
+)
+```
+
+:::tip
+You can log multiple prompts in the `hyperparameters` dictionary if your llm app consists of many llm generations.
+
+```python
+evaluate(..., hyperparameters={"prompt_1": prompt_1, "prompt_2": prompt_2})
+```
+
+:::
+
+</TabItem>
+
+<TabItem value="ci" label="In CI/CD">
+
+To evaluate a prompt when running end-to-end evals in the CI/CD pipeline, run the `assert_test` function with your test cases and metrics, and supply the prompt object to the hyperparameters dictionary.
+
+```python title="main.py" showLineNumbers={true} {21}
+import pytest
+from somewhere import your_llm_app
+from deepeval.prompt import Prompt, PromptMessage
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.test_case import LLMTestCase
+from deepeval import assert_test
+
+prompt = Prompt(
+    alias="First Prompt",
+    messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")]
+)
+
+def test_llm_app():
+    input = "What is the capital of France?"
+    actual_output = your_llm_app(input, prompt.messages_template)
+    test_case = LLMTestCase(input=input, actual_output=actual_output)
+    assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
+
+@deepeval.log_hyperparameters()
+def hyperparameters():
+    return {"prompt": prompt}
+```
+
+:::tip
+You can log multiple prompts in the `hyperparameters` dictionary if your llm app consist of many llm generations.
+
+```python
+@deepeval.log_hyperparameters()
+def hyperparameters():
+    return {"prompt_1": prompt_1, "prompt_2": prompt_2}
+```
+
+:::
+
+</TabItem>
+
+</Tabs>
+
+✅ If successful, you should see a confirmation log like the one below in your CLI:
+
+```bash
+To be determined
+```
+
+Based on the metric scores of the test run, you can try different prompts to see which one scores the highest, or make the necessary adjustments to improve the prompt.
+
+### Component-Level
+
+`deepeval` also lets you evaluate prompts on the component-level to evaluate specific LLM generations instead of the entire app. To do this, you'll want to first [set up tracing](/docs/evaluation-llm-tracing), then call `update_llm_span` with the prompts you want to evaluate for each llm span. You can also need to supply the metrics you want to evaluate for each llm span in the `@observe` decorator.
+
+```python title="main.py" showLineNumbers={true} {13,20}
+from openai import OpenAI
+from deepeval.tracing import observe, update_llm_span
+from deepeval.prompt import Prompt, PromptMessage
+from deepeval.metrics import AnswerRelevancyMetric
+
+prompt_1 = Prompt(alias="First",  messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")])
+prompt_2 = Prompt(alias="Second", messages_template=[PromptMessage(role="system", content="You are an incredibly helpful assistant.")])
+
+@observe(type="llm", metrics=[AnswerRelevancyMetric()])
+def gen1(input: str):
+    prompt_template = [{"role": msg.role, "content": msg.content} for msg in prompt_1.messages_template]
+    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_template+[{"role":"user","content":input}])
+    update_llm_span(prompt=prompt_1)
+    return res.choices[0].message.content
+
+@observe(type="llm", metrics=[AnswerRelevancyMetric()])
+def gen2(input: str):
+    prompt_template = [{"role": msg.role, "content": msg.content} for msg in prompt_2.messages_template]
+    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_template+[{"role":"user","content":input}])
+    update_llm_span(prompt=prompt_2)
+    return res.choices[0].message.content
+
+def your_llm_app(input: str):
+    return gen1(input) + " " + gen2(input)
+```
+
+:::note
+Since `update_llm_span` can only be called inside an llm span, you can only evaluate prompts for llm spans.
+:::
+
+Then run the `evals_iterator` to evaluate the prompts you've set up for each llm span.
+
+```python title="main.py" showLineNumbers={true} {17,25}
+from deepeval.dataset import EvaluationDataset, Golden
+...
+
+dataset = EvaluationDataset([Golden(input="Hello")])
+for golden in dataset.evals_iterator():
+    your_llm_app(golden.input)
+```
+
+✅ If successful, you should see a confirmation log like the one below in your CLI:
+
+```bash
+To be determined
+```
+
+## Creating Prompts
+
+### Loading Prompts
+
+<Tabs>
+
+<TabItem value="from-json" label="From JSON">
+
+When loading prompts from `.json` files, the file name is automatically taken as the alias, if unspecified.
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.prompt import Prompt
+
+prompt = Prompt()
+prompt.load(file_path="example.json")
+```
+
+<details>
+  <summary>Click to see <code>example.json</code></summary>
+
+```json title="example.json"
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    }
+  ]
+}
+```
+
+</details>
+
+</TabItem>
+
+<TabItem value="from-txt" label="From TXT">
+
+When loading prompts from `.txt` files, the file name is automatically taken as the alias, if unspecified.
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.prompt import Prompt
+
+prompt = Prompt()
+prompt.load(file_path="example.txt")
+```
+
+<details>
+  <summary>Click to see <code>example.txt</code></summary>
+
+```txt title="example.txt"
+You are a helpful assistant.
+```
+
+</details>
+
+</TabItem>
+
+<TabItem value="confident-ai" label="Confident AI">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.prompt import Prompt
+
+prompt = Prompt(alias="First Prompt")
+prompt.pull(version="00.00.01")
+```
+
+</TabItem>
+
+</Tabs>
+
+:::caution
+When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary when doing end-to-end evals, and before you call `update_llm_span` when running component-level evals.
+:::
+
+### From Scratch
+
+You can create a prompt in code by instantiating a `Prompt` object with the `alias`. You can either supply a list of messages to create a message-based prompt, or a string of text to create a text-based prompt.
+
+<Tabs>
+<TabItem value="Messages" label="Messages">
+
+```python title="main.py" showLineNumbers={true} {5}
+from deepeval.prompt import Prompt, PromptMessage
+
+prompt = Prompt(
+    alias="First Prompt",
+    messages_template=[PromptMessage(role="system", content="You are helpful assistant.")]
+)
+```
+
+</TabItem>
+<TabItem value="Text" label="Text">
+
+```python title="main.py" showLineNumbers={true} {5}
+from deepeval.prompt import Prompt
+
+prompt = Prompt(
+    alias="First Prompt",
+    text_template="You are helpful assistant."
+)
+```
+
+</TabItem>
+</Tabs>
+
+## Additional Attributes
+
+In addition to the attributes mentioned above, you can also associate model and output settings with a `Prompt`.
+
+### Model Settings
+
+Model settings include the model alias as well as the generation settings such as temperature:
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.prompt import Prompt, ModelSettings, ModelProvider
+
+model_settings=ModelSettings(
+    provider=ModelProvider.OPEN_AI,
+    name="gpt-3.5-turbo",
+    max_tokens=100,
+    temperature=0.7
+)
+prompt = Prompt(..., model_settings=model_settings)
+```
+
+There are **NINE** model settings you can associate with a prompt:
+
+- `provider`: An `ModelProvider` enum specifying the model provider to use for generation.
+- `name`: The string specifying the model name to use for generation.
+- `temperature`: A float between 0.0 and 2.0 specifying the randomness of the generated response.
+- `top_p`: A float between 0.0 and 1.0 specifying the nucleus sampling parameter.
+- `frequency_penalty`: A float between -2.0 and 2.0 specifying the frequency penalty.
+- `presence_penalty`: A float between -2.0 and 2.0 specifying the presence penalty.
+- `max_tokens`: An integer specifying the maximum number of tokens to generate.
+- `verbosity`: A `Verbosity` enum specifying the response detail level.
+- `reasoning_effort`: An `ReasoningEffort` enum specifying the thinking depth for reasoning models.
+- `stop_sequences`: A list of strings specifying custom stop tokens.
+
+### Output Settings
+
+The output settings include the output type and optionally the output schema, if the output type is `OutputType.SCHEMA`.
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.prompt import OutputType
+from pydantic import BaseModel
+...
+
+class Output(BaseModel):
+    name: str
+    age: int
+    city: str
+
+prompt = Prompt(..., output_type=OutputType.SCHEMA, output_schema=Output)
+```
+
+There are **TWO** output settings you can associate with a prompt:
+
+- `output_type`: The string specifying the model to use for generation.
+- `output_schema`: The schema of type `BaseModel` of the output, if `output_type` is `OutputType.SCHEMA`.
