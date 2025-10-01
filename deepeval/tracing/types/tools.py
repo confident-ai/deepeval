@@ -5,7 +5,7 @@ class BaseTool(BaseModel):
     name: str
     description: Optional[str] = None
 
-class ToolCallInput(BaseTool):
+class InputTool(BaseTool):
     parameters: Any
 
 class ToolCallOutput(BaseTool):
