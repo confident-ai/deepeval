@@ -270,7 +270,7 @@ class TaskNode(BaseNode):
     def __post_init__(self):
         for child in self.children:
             if isinstance(child, VerdictNode):
-                raise ValueError(
+                raise TypeError(
                     "A TaskNode must not have a VerdictNode as one of their 'children'."
                 )
 
@@ -418,7 +418,7 @@ class BinaryJudgementNode(BaseNode):
                 raise TypeError("All children must be of type VerdictNode.")
 
             if not isinstance(child.verdict, bool):
-                raise ValueError(
+                raise TypeError(
                     "All children BinaryJudgementNode must have a boolean verdict."
                 )
 
@@ -569,7 +569,7 @@ class NonBinaryJudgementNode(BaseNode):
 
             # Check if the verdict attribute of each child is a string
             if not isinstance(child.verdict, str):
-                raise ValueError(
+                raise TypeError(
                     "The verdict attribute of all children must be a string."
                 )
 

@@ -337,20 +337,20 @@ def validate_evaluate_inputs(
                 if isinstance(test_case, LLMTestCase) and not isinstance(
                     metric, BaseMetric
                 ):
-                    raise ValueError(
+                    raise TypeError(
                         f"Metric {metric.__name__} is not a valid metric for LLMTestCase."
                     )
                 if isinstance(
                     test_case, ConversationalTestCase
                 ) and not isinstance(metric, BaseConversationalMetric):
                     print(type(metric))
-                    raise ValueError(
+                    raise TypeError(
                         f"Metric {metric.__name__} is not a valid metric for ConversationalTestCase."
                     )
                 if isinstance(test_case, MLLMTestCase) and not isinstance(
                     metric, BaseMultimodalMetric
                 ):
-                    raise ValueError(
+                    raise TypeError(
                         f"Metric {metric.__name__} is not a valid metric for MLLMTestCase."
                     )
 
