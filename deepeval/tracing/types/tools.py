@@ -1,12 +1,15 @@
-from typing import Any
+from typing import Any, Optional
 from pydantic import BaseModel
 
 class BaseTool(BaseModel):
     name: str
-    description: str
+    description: Optional[str] = None
 
-class ToolCall(BaseTool):
+class ToolCallInput(BaseTool):
     parameters: Any
 
 class ToolCallOutput(BaseTool):
     args: Any
+
+class ToolOutput(BaseTool):
+    output: Any
