@@ -9,7 +9,7 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 
 # check aiobotocore availability
@@ -75,7 +75,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        return asyncio.run(self.a_generate(prompt, schema))
+        return safe_asyncio_run(self.a_generate(prompt, schema))
 
     @retry_bedrock
     async def a_generate(
