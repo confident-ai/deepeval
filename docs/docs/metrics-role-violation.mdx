@@ -40,7 +40,7 @@ from deepeval import evaluate
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import RoleViolationMetric
 
-metric = RoleViolationMetric(role="helpful customer service agent", threshold=0.5)
+metric = RoleViolationMetric(role="helpful customer service agent", threshold=1.0)
 test_case = LLMTestCase(
     input="I'm frustrated with your service!",
     # Replace this with the actual output from your LLM application
@@ -57,16 +57,16 @@ evaluate(test_cases=[test_case], metrics=[metric])
 There are **ONE** required and **SEVEN** optional parameters when creating a `RoleViolationMetric`:
 
 - **[Required]** `role`: a string specifying the expected role or character (e.g., "helpful assistant", "customer service agent", "educational tutor").
-- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 0 for perfection, 1 otherwise. It also overrides the current threshold and sets it to 0. Defaulted to `False`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. For `RoleViolationMetric`, the metric is already binary with a default threshold of 1, so `strict_mode` has no additional effect.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `evaluation_template`: a template class for customizing prompt templates used for evaluation. Defaulted to `RoleViolationTemplate`.
 
 :::note
-Similar to other safety metrics like `BiasMetric`, the `threshold` in role violation is a minimum threshold (higher scores are better).
+Unlike other safety metrics such as `BiasMetric`, `RoleViolationMetric` is strictly binary: it returns **1** when no violation occurs and **0** otherwise. The default `threshold` is fixed at **1** so there is no reason to adjust it.
 :::
 
 ### Within components
