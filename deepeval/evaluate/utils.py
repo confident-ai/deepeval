@@ -4,7 +4,7 @@ from typing import Optional, List, Callable, Union
 import os
 import time
 
-from deepeval.utils import shorten
+from deepeval.utils import format_turn
 from deepeval.test_case.conversational_test_case import Turn
 from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
@@ -138,6 +138,7 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
     return TurnApi(
         role=turn.role,
         content=turn.content,
+        user_id=turn.user_id,
         retrievalContext=turn.retrieval_context,
         toolsCalled=turn.tools_called,
         additionalMetadata=turn.additional_metadata,
@@ -421,10 +422,7 @@ def print_test_result(test_result: TestResult, display: TestRunResultDisplay):
             print("  Turns:")
             turns = sorted(test_result.turns, key=lambda t: t.order)
             for t in turns:
-                tool_names = ", ".join(tc.name for tc in (t.tools_called or []))
-                tools = f"  | tools: {tool_names}" if tool_names else ""
-                content = shorten(t.content)
-                print(f"    {t.order:>2}. {t.role:<9} {content}{tools}")
+                print(format_turn(t))
         else:
             print("  - No turns recorded in this test case.")
 
@@ -520,15 +518,7 @@ def write_test_result_to_file(
                 file.write("  Turns:\n")
                 turns = sorted(test_result.turns, key=lambda t: t.order)
                 for t in turns:
-                    tool_names = ", ".join(
-                        tc.name for tc in (t.tools_called or [])
-                    )
-                    tools = f"  | tools: {tool_names}" if tool_names else ""
-                    # keep lines readable in logs:
-                    content = shorten(t.content)
-                    file.write(
-                        f"    {t.order:>2}. {t.role:<9} {content}{tools}\n"
-                    )
+                    file.write(format_turn(t) + "\n")
             else:
                 file.write("  - No turns recorded in this test case.\n")
         else:

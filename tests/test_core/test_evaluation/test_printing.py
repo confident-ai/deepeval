@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from deepeval.evaluate.utils import print_test_result, write_test_result_to_file
 from deepeval.evaluate.types import TestResult as EvalTestResult
@@ -44,7 +45,9 @@ def test_print_test_result_conversational_turns_are_sorted_and_prefixed(capsys):
     # we only expect tool printing on the turn that had tools
     # it’s the order=2 line
     assert "  | tools: a, b" in out
-    assert "  0." in out and "  1." in out and "  2." in out
+    assert re.search(r"\n\s*0\.", out)
+    assert re.search(r"\n\s*1\.", out)
+    assert re.search(r"\n\s*2\.", out)
 
 
 def test_write_test_result_to_file_conversational(tmp_path: Path):
