@@ -1,9 +1,10 @@
+from deepeval.tracing.types import Trace
 from openai.types.responses.response_input_item_param import (
     FunctionCallOutput,
     Message,
 )
 from openai.types.responses.response_output_message_param import Content
-from typing import Union, List
+from typing import Union, List, Optional
 from openai.types.responses import (
     ResponseFunctionToolCallParam,
     ResponseOutputMessageParam,
@@ -24,6 +25,8 @@ from deepeval.tracing.types import (
     LlmSpan,
 )
 import json
+
+from deepeval.tracing.utils import make_json_serializable
 
 try:
     from agents import MCPListToolsSpanData
@@ -89,13 +92,17 @@ def update_span_properties_from_response_span_data(
         return
     # Extract usage tokens
     usage = response.usage
+    cached_input_tokens = None
+    ouptut_reasoning_tokens = None
     if usage:
         output_tokens = usage.output_tokens
         input_tokens = usage.input_tokens
         cached_input_tokens = usage.input_tokens_details.cached_tokens
         ouptut_reasoning_tokens = usage.output_tokens_details.reasoning_tokens
     # Get input and output
-    input = parse_response_input(span_data.input)
+    input = parse_response_input(
+        span_data.input, span_data.response.instructions
+    )
     raw_output = parse_response_output(response.output)
     output = (
         raw_output if isinstance(raw_output, str) else json.dumps(raw_output)
@@ -112,6 +119,23 @@ def update_span_properties_from_response_span_data(
     span.input = input
     span.output = output
     span.name = "LLM Generation"
+    response_dict = response.model_dump(exclude_none=True, mode="json")
+    span.metadata["invocation_params"] = {
+        k: v
+        for k, v in response_dict.items()
+        if k
+        in (
+            "max_output_tokens",
+            "parallel_tool_calls",
+            "reasoning",
+            "temperature",
+            "text",
+            "tool_choice",
+            "tools",
+            "top_p",
+            "truncation",
+        )
+    }
 
 
 def update_span_properties_from_generation_span_data(
@@ -136,6 +160,11 @@ def update_span_properties_from_generation_span_data(
     span.input = input
     span.output = output
     span.name = "LLM Generation"
+    span.metadata["invocation_params"] = {
+        "model_config": make_json_serializable(
+            generation_span_data.model_config
+        ),
+    }
 
 
 ########################################################
@@ -191,8 +220,6 @@ def update_span_properties_from_agent_span_data(
     if agent_span_data.output_type:
         metadata["output_type"] = agent_span_data.output_type
     span.metadata = metadata
-    span.input = None
-    span.output = None
 
 
 ########################################################
@@ -238,10 +265,30 @@ def update_span_properties_from_guardrail_span_data(
 ########################################################
 
 
-def parse_response_input(input: Union[str, List[ResponseInputItemParam]]):
-    if isinstance(input, str):
-        return input
+def parse_response_input(
+    input: Union[str, List[ResponseInputItemParam]],
+    instructions: Optional[Union[str, List[ResponseInputItemParam]]] = None,
+):
+
     processed_input = []
+
+    if isinstance(input, str) and isinstance(instructions, str):
+        return [
+            {"type": "message", "role": "system", "content": instructions},
+            {"type": "message", "role": "user", "content": input},
+        ]
+    elif isinstance(input, list) and isinstance(instructions, list):
+        input = instructions + input
+    elif isinstance(input, list) and isinstance(instructions, str):
+        processed_input += [
+            {"type": "message", "role": "system", "content": instructions}
+        ]
+    elif isinstance(input, str) and isinstance(instructions, list):
+        processed_input += [
+            {"type": "message", "role": "user", "content": input}
+        ]
+        input = instructions
+
     for item in input:
         if "type" not in item:
             if "role" in item and "content" in item:
@@ -365,3 +412,32 @@ def parse_function_call(
         "name": function_call.name,
         "arguments": function_call.arguments,
     }
+
+
+def update_trace_properties_from_span_data(
+    trace: Trace,
+    span_data: Union["ResponseSpanData", "GenerationSpanData"],
+):
+    if isinstance(span_data, ResponseSpanData):
+        if not trace.input:
+            trace.input = parse_response_input(
+                span_data.input, span_data.response.instructions
+            )
+        raw_output = parse_response_output(span_data.response.output)
+        output = (
+            raw_output
+            if isinstance(raw_output, str)
+            else json.dumps(raw_output)
+        )
+        trace.output = output
+
+    elif isinstance(span_data, GenerationSpanData):
+        if not trace.input:
+            trace.input = span_data.input
+        raw_output = span_data.output
+        output = (
+            raw_output
+            if isinstance(raw_output, str)
+            else json.dumps(raw_output)
+        )
+        trace.output = output

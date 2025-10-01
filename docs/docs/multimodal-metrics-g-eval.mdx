@@ -14,7 +14,7 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 The multimodal G-Eval is an adopted version of `deepeval`'s popular [`GEval` metric](/docs/metrics-llm-evals) but for evaluating multimodality LLM interactions instead.
 
-It is currently the best way to define custom criteria to evaluate text + images in `deepeval`. By defining a custom `MultimodalGEval`, you can easily determine how well your MLLMs are generating, editing, and referncing images for example.
+It is currently the best way to define custom criteria to evaluate text + images in `deepeval`. By defining a custom `MultimodalGEval`, you can easily determine how well your MLLMs are generating, editing, and referencing images for example.
 
 ## Required Arguments
 
@@ -26,12 +26,12 @@ To use the `MultimodalGEval`, you'll have to provide the following arguments whe
 You'll also need to supply any additional arguments such as `expected_output` and `context` if your evaluation criteria depends on these parameters.
 
 :::tip
-The `input`s and `actual_output`s of an `MLLMTestCase` is a list of strings and/or `MLLMImage` objects.
+The `input`s and `actual_output`s of an `MLLMTestCase` are lists of strings and/or `MLLMImage` objects.
 :::
 
 ## Usage
 
-To create a custom metric that uses MLLMs for evaluation, simply instantiate an `MultimodalGEval` class and **define an evaluation criteria in everyday language**:
+To create a custom metric that uses MLLMs for evaluation, simply instantiate a `MultimodalGEval` class and **define an evaluation criteria in everyday language**:
 
 ```python
 from deepeval.metrics import MultimodalGEval
@@ -49,14 +49,14 @@ m_test_case = MLLMTestCase(
 )
 text_image_coherence = MultimodalGEval(
     name="Text-Image Coherence",
-    criteria="Determine whether the images and text is coherence in the actual output.",
+    criteria="Determine whether the images and text are coherent in the actual output.",
     evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
 )
 
 evaluate(test_cases=[m_test_case], metrics=[text_image_coherence])
 ```
 
-There are **THREE** mandatory and **SEVEN** optional parameters required when instantiating an `MultimodalGEval` class:
+There are **THREE** mandatory and **EIGHT** optional parameters required when instantiating an `MultimodalGEval` class:
 
 - `name`: name of custom metric.
 - `criteria`: a description outlining the specific evaluation aspects for each test case.
@@ -65,6 +65,11 @@ There are **THREE** mandatory and **SEVEN** optional parameters required when in
 - [Optional] `rubric`: a list of `Rubric`s that allows you to [confine the range](/docs/metrics-llm-evals#rubric) of the final metric score.
 - [Optional] `threshold`: the passing threshold, defaulted to 0.5.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `evaluation_template`: a **class** typed as `Type[MultimodalGEvalTemplate]` that controls how prompts/messages are generated for this metric. Defaults to `MultimodalGEvalTemplate`. It is used by:
+  - `generate_evaluation_steps`
+  - `generate_evaluation_results`
+  - `generate_strict_evaluation_results`
+
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
@@ -85,10 +90,103 @@ text_image_coherence = MultimodalGEval(
     evaluation_steps=[
         "Evaluate whether the images and the accompanying text in the actual output logically match and support each other.",
         "Check if the visual elements (images) enhance or contradict the meaning conveyed by the text.",
-        "If there is a lack of coherence, identify where and how the text and images diverge or create confusion.,
+        "If there is a lack of coherence, identify where and how the text and images diverge or create confusion.",
     ],
     evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT],
 )
+```
+
+
+### Custom evaluation templates (`evaluation_template`)
+
+`MultimodalGEval` now accepts an `evaluation_template` parameter so you can customize how prompts are generated for both
+evaluation steps and scoring prompts, without forking the metric.
+
+- Pass a **class**, not an instance: `evaluation_template: Type[MultimodalGEvalTemplate]`.
+- Default is `MultimodalGEvalTemplate`.
+- Runtime behavior:
+  - **Non‑strict** mode: uses `evaluation_template.generate_evaluation_results` (optionally includes your rubric).
+  - **Strict** mode: uses `evaluation_template.generate_strict_evaluation_results`.
+  - The "explain the steps" helper uses `evaluation_template.generate_evaluation_steps`.
+
+**Return shapes:** The default template returns a string for `generate_evaluation_steps` and a list of prompt segments/messages
+(strings and/or message dicts, depending on the model adapter) for the `generate_*_evaluation_results` methods. Custom templates
+should follow the same shapes unless your selected model requires a different input format.
+
+**JSON contract (default template):**
+
+- `generate_evaluation_steps` prompts the model to return JSON like:
+  ```json
+  { "steps": ["..."] }
+  ```
+- `generate_evaluation_results` prompts for:
+  ```json
+  { "score": <int>, "reason": "<concise, grounded explanation without quoting the score>" }
+  ```
+  The default score range is `(0, 10)`; the rubric (if provided) guides how to pick a value.
+- `generate_strict_evaluation_results` requests a binary score (0 or 1):
+  ```json
+  { "score": 0 | 1, "reason": "<very concise justification without quoting the score>" }
+  ```
+
+If you override the template, keep the JSON fields consistent so downstream parsing and scoring continue to work.
+
+#### Minimal example
+
+```python
+import os
+from deepeval import assert_test
+from deepeval.test_case import MLLMTestCase, MLLMTestCaseParams, MLLMImage
+from deepeval.metrics.multimodal_metrics.multimodal_g_eval.multimodal_g_eval import MultimodalGEval
+from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import MultimodalGEvalTemplate
+
+class MyMMTemplate(MultimodalGEvalTemplate):
+    @staticmethod
+    def generate_evaluation_steps(parameters: str, criteria: str):
+        base = MultimodalGEvalTemplate.generate_evaluation_steps(criteria=criteria, parameters=parameters)
+        return "[MyMMTemplate]\n" + base  # string
+
+    @staticmethod
+    def generate_evaluation_results(*, evaluation_steps, test_case_list, parameters, rubric, score_range, _additional_context):
+        base = MultimodalGEvalTemplate.generate_evaluation_results(
+            evaluation_steps=evaluation_steps,
+            test_case_list=test_case_list,
+            parameters=parameters,
+            rubric=rubric,
+            score_range=score_range,
+            _additional_context=_additional_context,
+        )
+        # Prepend a system message; return list of prompt segments/messages
+        return [{"role": "system", "content": "[MyMMTemplate]"}] + list(base)
+
+    @staticmethod
+    def generate_strict_evaluation_results(*, evaluation_steps, test_case_list, parameters, _additional_context):
+        base = MultimodalGEvalTemplate.generate_strict_evaluation_results(
+            evaluation_steps=evaluation_steps,
+            test_case_list=test_case_list,
+            parameters=parameters,
+            _additional_context=_additional_context,
+        )
+        return [{"role": "system", "content": "[MyMMTemplate]"}] + list(base)
+
+metric = MultimodalGEval(
+    name="MM Correctness (custom template)",
+    criteria="Decide if the actual output correctly answers the question given the image.",
+    evaluation_params=[MLLMTestCaseParams.ACTUAL_OUTPUT, MLLMTestCaseParams.EXPECTED_OUTPUT],
+    model="gpt-4o-mini",
+    strict_mode=False,  # set True to exercise generate_strict_evaluation_results
+    evaluation_template=MyMMTemplate,  # <-- pass the CLASS
+)
+
+# Simple test case: requires internet access for the image
+tc = MLLMTestCase(
+    input=["What fruit is shown in the image?", MLLMImage(url="https://upload.wikimedia.org/wikipedia/commons/8/8a/Banana-Single.jpg")],
+    actual_output=["A banana."],
+    expected_output=["A banana."],
+)
+
+assert_test(tc, [metric])
+
 ```
 
 ### Rubric

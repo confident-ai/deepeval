@@ -1,7 +1,6 @@
+import warnings
 from typing import Optional
-import deepeval
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.confident.api import get_confident_api_key
 
 try:
     from opentelemetry import trace
@@ -28,6 +27,13 @@ OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
 
 def instrument_pydantic_ai(api_key: Optional[str] = None):
+    warnings.warn(
+        "instrument_pydantic_ai is deprecated and will be removed in a future version. "
+        "Please use the new ConfidentInstrumentationSettings instead. Docs: https://www.confident-ai.com/docs/integrations/third-party/pydantic-ai",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+
     with capture_tracing_integration("pydantic_ai"):
         is_opentelemetry_available()
 

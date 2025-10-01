@@ -18,13 +18,13 @@ An LLM trace is made up of multiple individual spans. A **span** is a flexible, 
 
 ![LLM Trace](https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png)
 
-Tracing allows you run both [end-to-end](https://www.deepeval.com/docs/evaluation-end-to-end-llm-evals) and [component level](https://www.deepeval.com/docs/evaluation-component-level-llm-evals) evals which you'll learn about in the later sections.
+Tracing allows you to run both [end-to-end](https://www.deepeval.com/docs/evaluation-end-to-end-llm-evals) and [component-level](https://www.deepeval.com/docs/evaluation-component-level-llm-evals) evals which you'll learn about in this guide.
 
 <details>
 
-<summary>Learn how DeepEval's tracing is non-instrusive</summary>
+<summary>Learn how deepeval's tracing is non-intrusive</summary>
 
-`deepeval`'s tracing is **non-intrusive**, it requires **minimal code change** and **doesn't add latency** to your LLM application. It also:
+`deepeval`'s tracing is **non-intrusive**, it requires **minimal code changes** and **doesn't add latency** to your LLM application. It also:
 
 - **Uses concepts you already know**: Tracing a component in your LLM app takes on average 3 lines of code, which uses the same `LLMTestCase`s and [metrics](/docs/metrics-introduction) that you're already familiar with.
 
@@ -74,7 +74,7 @@ To set up tracing in your LLM app, you need to understand two key concepts:
 - **Trace**: The full execution of your app, made up of one or more spans.
 - **Span**: A specific component or unit of work—like an LLM call, tool invocation, or document retrieval.
 
-The [`@observe`](#observe) decorator is the primary way to setup tracing for your LLM application.
+The [`@observe`](#observe) decorator is the primary way to set up tracing for your LLM application.
 
 <Timeline>
 <TimelineItem title="Decorate your components">
@@ -122,7 +122,7 @@ def get_res(query: str):
     return response
 ```
 
-You can either supply the `LLMTestCase` or its parameters in the `update_current_span` to create a component level test case. Learn more [here](#update-current-span).
+You can either supply the `LLMTestCase` or its parameters in the `update_current_span` to create a component-level test case. Learn more [here](#update-current-span).
 
 </TimelineItem>
 <TimelineItem title="Get your traces">
@@ -159,7 +159,7 @@ deepeval login
 
 ### Observe
 
-The `@observe` decorator is a non-intrusive python decorator that you can use on top of any component as you wish. It tracks the usage of the component whenever it is evoked to create a span.
+The `@observe` decorator is a non-intrusive Python decorator that you can use on top of any component as you wish. It tracks the usage of the component whenever it is invoked to create a span.
 
 A span can contain many child spans, forming a tree structure—just like how different components of your LLM application interact
 
@@ -196,13 +196,17 @@ For simplicity, we always recommend **custom spans** unless needed otherwise, si
 - This information becomes extremely useful for analysis and visualization if you're using `deepeval` together with **Confident AI** (highly recommended).
 - Otherwise, for local evaluation purposes, span `type` makes **no difference** — evaluation still works the same way.
 
-To learn more about the different spans `type`s, or to run LLM evaluations with tracing with an UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
+To learn more about the different spans `type`s, or to run LLM evaluations with tracing with a UI for visualization and debugging, visiting the [official Confident AI docs on LLM tracing.](https://www.confident-ai.com/docs/llm-tracing/introduction)
 
 </details>
 
+:::note Goldens and context
+`deepeval` uses Python context variables during evaluation so your code can access the active golden for each test case. You can retrieve it with `get_current_golden()` and pass its `expected_output` when you update a span or trace.
+:::
+
 ### Update Current Span
 
-The `update_current_span` method can be used to create a test case for the corresponding span. This is especially useful for doing component level evals or debugging your application.
+The `update_current_span` method can be used to create a test case for the corresponding span. This is especially useful for doing component-level evals or debugging your application.
 
 ```python showLineNumbers {1,9-13,20}
 from deepeval.tracing import observe, update_current_span
@@ -289,6 +293,52 @@ There are **TWO** ways to create test cases when using the `update_current_trace
 You can use the individual `LLMTestCase` params in the `update_current_trace` function to override the values of the `test_case` you passed.
 :::
 
+---
+
+### Using goldens
+
+In `deepeval`, a **golden** is the reference test case used by your metrics, for example, to compare actual and expected outputs. During evaluation, you can read the active golden and pass its `expected_output` to spans or traces.
+
+```python
+from deepeval.dataset import get_current_golden
+from deepeval.tracing import observe, update_current_span, update_current_trace
+from deepeval.test_case import LLMTestCase
+
+@observe()
+def tool(input: str):
+    # produce your model or tool output
+    result = ...  # <- your code here
+
+    golden = get_current_golden()          # active golden for this test
+    expected = golden.expected_output if golden else None
+
+    # Option A: pass via LLMTestCase to the span
+    update_current_span(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=result,
+            expected_output=expected,
+        )
+    )
+
+    # Option B: set it on the trace
+    update_current_trace(
+        test_case=LLMTestCase(
+            input=input,
+            actual_output=result,
+            expected_output=expected,
+        )
+    )
+    return result
+```
+
+**Notes**
+
+* **`expected_output`** may be provided via `LLMTestCase` or `expected_output=`.
+* If you don’t want to use the dataset’s `expected_output`, pass your own string.
+
+---
+
 ## Environment Variables
 
 If you run your `@observe` decorated LLM application outside of `evaluate()` or `assert_test()`, you'll notice some logs appearing in your console. To disable them completely, just set the following environment variables:
@@ -300,7 +350,7 @@ CONFIDENT_TRACE_FLUSH=0
 
 ## Next Steps
 
-Now that you have your traces, you can run either end-to-end or component level evals.
+Now that you have your traces, you can run either end-to-end or component-level evals.
 
 <NavigationCards
   items={[

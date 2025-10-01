@@ -15,7 +15,7 @@ In this section, we're going to create our **meeting summarization agent** using
 We will implement our summarizer with variables of **model and summary prompt** in a `MeetingSummarizer` class. This will be helpful for future evaluations and iterations on our summarizer.
 
 :::tip
-If you already have an LLM-based summarization agent that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](tutorial-summarization-evaluation).
+If you already have an LLM-based summarization agent that you want to evaluate, feel free to skip to the [**evaluation section of this tutorial**](evaluation).
 :::
 
 ## Creating Meeting Summarizer
@@ -494,4 +494,4 @@ Finally, they discussed UI strategies for low-confidence responses, agreeing tha
 
 We now have a summarization agent that generates responses in our desired format. Now it's time to evaluate how good this agent works. Many developers stop at a quick glance of the output and assume it's good enough. But **LLMs are probabilistic and prone to inconsistency** — eyeballing results won't catch subtle regressions, logical errors, or hallucinated action items. That's why rigorous evaluation is essential.
 
-In the next section we are going to see [how to evaluate your summarization agent](tutorial-summarization-evaluation) using `deepeval`.
+In the next section we are going to see [how to evaluate your summarization agent](evaluation) using `deepeval`.
