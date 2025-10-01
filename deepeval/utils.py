@@ -435,34 +435,71 @@ def is_missing(s: Optional[str]) -> bool:
     return s is None or (isinstance(s, str) and s.strip() == "")
 
 
+def len_tiny() -> int:
+    value = get_settings().DEEPEVAL_MAXLEN_TINY
+    return value if (isinstance(value, int) and value > 0) else 40
+
+
+def len_short() -> int:
+    value = get_settings().DEEPEVAL_MAXLEN_SHORT
+    return value if (isinstance(value, int) and value > 0) else 60
+
+
+def len_medium() -> int:
+    value = get_settings().DEEPEVAL_MAXLEN_MEDIUM
+    return value if (isinstance(value, int) and value > 0) else 120
+
+
+def len_long() -> int:
+    value = get_settings().DEEPEVAL_MAXLEN_LONG
+    return value if (isinstance(value, int) and value > 0) else 240
+
+
 def shorten(
-    text: Optional[object], max_len: int = 240, suffix: str = "..."
+    text: Optional[object],
+    max_len: Optional[int] = None,
+    suffix: Optional[str] = None,
 ) -> str:
     """
     Truncate text to max_len characters, appending `suffix` if truncated.
     - Accepts None and returns "", or any object is returned as str().
     - Safe when max_len <= len(suffix).
     """
+    settings = get_settings()
+
+    if max_len is None:
+        max_len = (
+            settings.DEEPEVAL_SHORTEN_DEFAULT_MAXLEN
+            if settings.DEEPEVAL_SHORTEN_DEFAULT_MAXLEN is not None
+            else len_long()
+        )
+    if suffix is None:
+        suffix = (
+            settings.DEEPEVAL_SHORTEN_SUFFIX
+            if settings.DEEPEVAL_SHORTEN_SUFFIX is not None
+            else "..."
+        )
+
     if text is None:
         return ""
-    s = str(text)
+    stext = str(text)
     if max_len <= 0:
         return ""
-    if len(s) <= max_len:
-        return s
+    if len(stext) <= max_len:
+        return stext
     cut = max_len - len(suffix)
     if cut <= 0:
         return suffix[:max_len]
-    return s[:cut] + suffix
+    return stext[:cut] + suffix
 
 
 def format_turn(
     turn: TurnLike,
     *,
-    content_len: int = 240,
-    ctx_items: int = 2,
-    ctx_len: int = 120,
-    meta_len: int = 120,
+    content_length: Optional[int] = None,
+    max_context_items: Optional[int] = None,
+    context_length: Optional[int] = None,
+    meta_length: Optional[int] = None,
     include_tools_in_header: bool = True,
     include_order_role_in_header: bool = True,
 ) -> str:
@@ -470,9 +507,18 @@ def format_turn(
     Build a multi-line, human-readable summary for a conversational turn.
     Safe against missing fields and overly long content.
     """
+    if content_length is None:
+        content_length = len_long()
+    if max_context_items is None:
+        max_context_items = 2
+    if context_length is None:
+        context_length = len_medium()
+    if meta_length is None:
+        meta_length = len_medium()
+
     tools = turn.tools_called or []
     tool_names = ", ".join(getattr(tc, "name", str(tc)) for tc in tools)
-    content = shorten(turn.content, content_len)
+    content = shorten(turn.content, content_length)
 
     lines = []
 
@@ -481,7 +527,7 @@ def format_turn(
         if include_tools_in_header and tool_names:
             header += f"  | tools: {tool_names}"
         if turn.user_id:
-            header += f"  | user: {shorten(turn.user_id, 40)}"
+            header += f"  | user: {shorten(turn.user_id, len_tiny())}"
         lines.append(header)
         indent = "      "
     else:
@@ -489,22 +535,22 @@ def format_turn(
         # keep tools out of header as well.
         first = content
         if turn.user_id:
-            first += f"  | user: {shorten(turn.user_id, 40)}"
+            first += f"  | user: {shorten(turn.user_id, len_tiny())}"
         lines.append(first)
         indent = "      "  # ctx and meta indent
 
     rctx = list(turn.retrieval_context or [])
     if rctx:
-        show = rctx[:ctx_items]
+        show = rctx[:max_context_items]
         for i, item in enumerate(show):
-            lines.append(f"{indent}↳ ctx[{i}]: {shorten(item, ctx_len)}")
+            lines.append(f"{indent}↳ ctx[{i}]: {shorten(item, context_length)}")
         hidden = max(0, len(rctx) - len(show))
         if hidden:
             lines.append(f"{indent}↳ ctx: (+{hidden} more)")
 
     if turn.comments:
         lines.append(
-            f"{indent}↳ comment: {shorten(str(turn.comments), meta_len)}"
+            f"{indent}↳ comment: {shorten(str(turn.comments), meta_length)}"
         )
 
     meta = turn.additional_metadata or {}
@@ -514,7 +560,9 @@ def format_turn(
                 continue
             v = meta.get(k)
             if v is not None:
-                lines.append(f"{indent}↳ meta.{k}: {shorten(str(v), meta_len)}")
+                lines.append(
+                    f"{indent}↳ meta.{k}: {shorten(str(v), meta_length)}"
+                )
 
     return "\n".join(lines)
 

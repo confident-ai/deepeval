@@ -28,6 +28,7 @@ from deepeval.utils import (
     open_browser,
     shorten,
     format_turn,
+    len_short,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
@@ -682,7 +683,7 @@ class TestRunManager:
                         str(t.order),
                         t.role,
                         details,
-                        shorten(tool_names, 60),
+                        shorten(tool_names, len_short()),
                     )
 
                 console.print(turns_table)
