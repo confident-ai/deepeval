@@ -11,7 +11,7 @@ prompt.pull(version="00.00.01")
 confident_instrumentation_settings = ConfidentInstrumentationSettings(
     thread_id="test_thread_id_1",
     user_id="test_user_id_1",
-    metadata={"test_metadata_key": "test_metadata_value"},
+    metadata={"streaming": True, "prompt_version": "00.00.11"},
     tags=["test_tag_1", "test_tag_2"],
     metric_collection="test_metric_collection_1",
     name="test_name_1",
@@ -20,7 +20,7 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
 )
 
 agent = Agent(
-    "openai:gpt-4o-mini",
+    "openai:gpt-5",
     system_prompt="Be concise, reply with one sentence.",
     instrument=confident_instrumentation_settings,
     name="test_agent",

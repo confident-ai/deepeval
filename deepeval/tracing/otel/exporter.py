@@ -42,6 +42,7 @@ from deepeval.tracing.types import TraceAttributes
 from deepeval.test_case import ToolCall
 from dataclasses import dataclass
 import deepeval
+from deepeval.tracing.utils import make_json_serializable_for_metadata
 
 
 @dataclass
@@ -360,6 +361,8 @@ class ConfidentSpanExporter(SpanExporter):
             raw_trace_expected_tools
         )
         trace_metadata = self._parse_json_string(raw_trace_metadata)
+        if trace_metadata:
+            trace_metadata = make_json_serializable_for_metadata(trace_metadata)
         trace_metric_collection = parse_string(raw_trace_metric_collection)
 
         base_span_wrapper.trace_input = trace_input
@@ -426,6 +429,9 @@ class ConfidentSpanExporter(SpanExporter):
         span_tools_called = self._parse_list_of_tools(raw_span_tools_called)
         span_expected_tools = self._parse_list_of_tools(raw_span_expected_tools)
         span_metadata = self._parse_json_string(raw_span_metadata)
+        if span_metadata:
+            span_metadata = make_json_serializable_for_metadata(span_metadata)
+
         span_metric_collection = parse_string(raw_span_metric_collection)
 
         # Set Span Attributes
