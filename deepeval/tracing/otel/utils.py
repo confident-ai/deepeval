@@ -4,6 +4,8 @@ from deepeval.tracing import trace_manager, BaseSpan
 from opentelemetry.sdk.trace.export import ReadableSpan
 import json
 
+from deepeval.tracing.utils import make_json_serializable
+
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
 
 
@@ -130,75 +132,35 @@ def check_llm_input_from_gen_ai_attributes(
     return input, output
 
 
-def _flatten_input(input: dict) -> list:
-    try:
-        result: List[dict] = []
-
-        def process_message(msg: Any):
-            role = None
-            if isinstance(msg, dict):
-                role = msg.get("role")
-            if not role:
-                role = "assistant"
-
-            parts = None
-            if isinstance(msg, dict):
-                parts = msg.get("parts")
-
-            if isinstance(parts, list) and parts:
-                for part in parts:
-                    if isinstance(part, dict):
-                        ptype = part.get("type")
-                        # If it's a text-like part, keep content as text
-                        if (
-                            ptype == "text"
-                            or isinstance(part.get("content"), str)
-                            or isinstance(part.get("text"), str)
-                        ):
-                            content = part.get("content")
-                            if content is None:
-                                content = part.get("text")
-                            if content is None:
-                                content = json.dumps(part, ensure_ascii=False)
-                            result.append({"role": role, "content": content})
-                        else:
-                            # Non-text parts → stringify the part dict
-                            result.append(
-                                {
-                                    "role": role,
-                                    "content": json.dumps(
-                                        part, ensure_ascii=False
-                                    ),
-                                }
-                            )
-                    else:
-                        # Primitive part → stringify
-                        result.append({"role": role, "content": str(part)})
-            else:
-                # No parts; normalize to {role, content}
-                if isinstance(msg, dict):
-                    content = msg.get("content")
-                    if content is None:
-                        content = msg.get("text")
-                    if isinstance(content, (dict, list)):
-                        content = json.dumps(content, ensure_ascii=False)
-                    if content is None:
-                        content = json.dumps(msg, ensure_ascii=False)
-                    result.append({"role": role, "content": content})
-                else:
-                    result.append({"role": role, "content": str(msg)})
-
-        if isinstance(input, list):
+def _flatten_input(input: list) -> list:
+    if input and isinstance(input, list):
+        try:
+            result: List[dict] = []
             for m in input:
-                process_message(m)
-        elif isinstance(input, dict):
-            process_message(input)
-        else:
-            result.append({"role": "assistant", "content": str(input)})
-
-        return result
-    except Exception:
-        return input
+                if isinstance(m, dict):
+                    role = m.get("role")
+                    if not role:
+                        role = "assistant"
+                    parts = m.get("parts")
+                    if parts:
+                        for part in parts:
+                            if isinstance(part, dict):
+                                ptype = part.get("type")
+                                if ptype == "text":
+                                    result.append({"role": role, "content": part.get("content")})
+                                else:
+                                    result.append({"role": role, "content": make_json_serializable(part)})
+                            else:
+                                result.append({"role": role, "content": make_json_serializable(part)})
+                    else:
+                        result.append({"role": role, "content": m.get("content")}) # no parts
+                else:
+                    result.append({"role": "assistant", "content": make_json_serializable(m)})
+            return result
+        except Exception as e:
+            return input
+    
+    return input    
 
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
     try:
@@ -447,6 +409,8 @@ def check_pydantic_ai_agent_input_output(
     except Exception:
         pass
 
+    input_val = _flatten_input(input_val)
+    output_val = _flatten_input(output_val)
     return input_val, output_val
 
 
