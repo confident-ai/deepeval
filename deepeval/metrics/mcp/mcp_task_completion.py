@@ -47,10 +47,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case, self._required_test_case_params, self
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -65,6 +62,10 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                check_conversational_test_case_params(
+                    test_case, self._required_test_case_params, self
+                )
+                
                 if not test_case.mcp_servers:
                     error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MCPTaskCompletionMetric' metric."
                     self.error = error_str

@@ -54,10 +54,7 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(
-            test_case, self._required_params, None, None, self
-        )
-
+        
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
             self,
@@ -74,6 +71,9 @@ class MultimodalFaithfulnessMetric(BaseMultimodalMetric):
                     )
                 )
             else:
+                check_mllm_test_case_params(
+                    test_case, self._required_params, None, None, self
+                )
                 self.truths = self._generate_truths(test_case.retrieval_context)
                 self.claims = self._generate_claims(test_case.actual_output)
                 self.verdicts = self._generate_verdicts()
