@@ -27,6 +27,7 @@ from deepeval.utils import (
     get_is_running_deepeval,
     open_browser,
     shorten,
+    format_turn,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
@@ -633,35 +634,60 @@ class TestRunManager:
 
             if conversational_test_case.turns:
                 turns_table = Table(
-                    title=f"Conversation — {conversational_test_case_name}",
+                    title=f"Conversation - {conversational_test_case_name}",
                     show_header=True,
                     header_style="bold",
                 )
                 turns_table.add_column("#", justify="right", width=3)
                 turns_table.add_column("Role", justify="left", width=10)
-                turns_table.add_column("Content", justify="left")
-                turns_table.add_column("Tools", justify="left", no_wrap=True)
 
-                # sort by order just in case
+                # subtract fixed widths + borders and padding.
+                # ~20 as a safe buffer
+                details_max_width = max(
+                    48, min(120, console.width - 3 - 10 - 20)
+                )
+                turns_table.add_column(
+                    "Details",
+                    justify="left",
+                    overflow="fold",
+                    max_width=details_max_width,
+                )
+
+                # truncate when too long
+                tools_max_width = min(60, max(24, console.width // 3))
+                turns_table.add_column(
+                    "Tools",
+                    justify="left",
+                    no_wrap=True,
+                    overflow="ellipsis",
+                    max_width=tools_max_width,
+                )
+
                 sorted_turns = sorted(
                     conversational_test_case.turns, key=lambda t: t.order
                 )
 
                 for t in sorted_turns:
-                    tool_names = ", ".join(
-                        tc.name for tc in (t.tools_called or [])
+                    tools = t.tools_called or []
+                    tool_names = ", ".join(tc.name for tc in tools)
+
+                    # omit order, role and tools since we show them in a separate columns.
+                    details = format_turn(
+                        t,
+                        include_tools_in_header=False,
+                        include_order_role_in_header=False,
                     )
 
                     turns_table.add_row(
                         str(t.order),
                         t.role,
-                        shorten(t.content),
+                        details,
                         shorten(tool_names, 60),
                     )
 
                 console.print(turns_table)
             else:
-                print(
+                console.print(
                     f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
                 )
 

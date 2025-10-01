@@ -13,7 +13,7 @@ import math
 
 from contextvars import ContextVar
 from enum import Enum
-from typing import Any, Optional, Dict, List, Union
+from typing import Any, Dict, List, Optional, Protocol, Sequence, Union
 from collections.abc import Iterable
 from dataclasses import asdict, is_dataclass
 from pydantic import BaseModel
@@ -26,6 +26,22 @@ from deepeval.config.utils import (
     get_env_bool,
     set_env_bool,
 )
+
+
+###############
+# Local Types #
+###############
+
+
+class TurnLike(Protocol):
+    order: int
+    role: str
+    content: str
+    user_id: Optional[str]
+    retrieval_context: Optional[Sequence[str]]
+    tools_called: Optional[Sequence[Any]]
+    additional_metadata: Optional[Dict[str, Any]]
+    comments: Optional[str]
 
 
 def get_lcs(seq1, seq2):
@@ -438,6 +454,69 @@ def shorten(
     if cut <= 0:
         return suffix[:max_len]
     return s[:cut] + suffix
+
+
+def format_turn(
+    turn: TurnLike,
+    *,
+    content_len: int = 240,
+    ctx_items: int = 2,
+    ctx_len: int = 120,
+    meta_len: int = 120,
+    include_tools_in_header: bool = True,
+    include_order_role_in_header: bool = True,
+) -> str:
+    """
+    Build a multi-line, human-readable summary for a conversational turn.
+    Safe against missing fields and overly long content.
+    """
+    tools = turn.tools_called or []
+    tool_names = ", ".join(getattr(tc, "name", str(tc)) for tc in tools)
+    content = shorten(turn.content, content_len)
+
+    lines = []
+
+    if include_order_role_in_header:
+        header = f"{turn.order:>2}. {turn.role:<9} {content}"
+        if include_tools_in_header and tool_names:
+            header += f"  | tools: {tool_names}"
+        if turn.user_id:
+            header += f"  | user: {shorten(turn.user_id, 40)}"
+        lines.append(header)
+        indent = "      "
+    else:
+        # No order or role prefix in this mode
+        # keep tools out of header as well.
+        first = content
+        if turn.user_id:
+            first += f"  | user: {shorten(turn.user_id, 40)}"
+        lines.append(first)
+        indent = "      "  # ctx and meta indent
+
+    rctx = list(turn.retrieval_context or [])
+    if rctx:
+        show = rctx[:ctx_items]
+        for i, item in enumerate(show):
+            lines.append(f"{indent}↳ ctx[{i}]: {shorten(item, ctx_len)}")
+        hidden = max(0, len(rctx) - len(show))
+        if hidden:
+            lines.append(f"{indent}↳ ctx: (+{hidden} more)")
+
+    if turn.comments:
+        lines.append(
+            f"{indent}↳ comment: {shorten(str(turn.comments), meta_len)}"
+        )
+
+    meta = turn.additional_metadata or {}
+    if isinstance(meta, dict):
+        for k in list(meta.keys())[:3]:
+            if k in {"user_id", "userId"}:
+                continue
+            v = meta.get(k)
+            if v is not None:
+                lines.append(f"{indent}↳ meta.{k}: {shorten(str(v), meta_len)}")
+
+    return "\n".join(lines)
 
 
 ###############################################
