@@ -129,6 +129,11 @@ module.exports = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+	  docs: {
+      sidebar: {
+        hideable: true,
+      },
+     },
       image: "img/social_card.png",
       navbar: {
         logo: {
