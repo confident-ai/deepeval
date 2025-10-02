@@ -3,8 +3,7 @@ from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
-from deepeval.tracing.types.tools import InputTool, ToolCallOutput, ToolOutput
-from deepeval.tracing.types.messages import Message
+from deepeval.tracing.message_types import InputTool, ToolCallOutput, ToolOutput, Message
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
