@@ -83,7 +83,7 @@ class DeepEvalTracingProcessor(TracingProcessor):
         if not span.started_at:
             return
         current_span = current_span_context.get()
-        if current_span and isinstance(current_span, LlmSpan):
+        if current_span and isinstance(current_span, LlmSpan): # llm span started by
             return
 
         span_type = self.get_span_kind(span.span_data)
@@ -101,10 +101,11 @@ class DeepEvalTracingProcessor(TracingProcessor):
             current_trace_context.get(), span.span_data
         )
 
+        span_type = self.get_span_kind(span.span_data)
         current_span = current_span_context.get()
-        if current_span and isinstance(current_span, LlmSpan):
+        if current_span and isinstance(current_span, LlmSpan) and span_type == "llm": # addtional check if the span kind data is llm too
             update_span_properties(current_span, span.span_data)
-            return
+
         observer = self.span_observers.pop(span.span_id, None)
         if observer:
             observer.__exit__(None, None, None)
