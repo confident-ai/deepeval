@@ -842,6 +842,7 @@ def execute_agentic_test_cases(
                                 coro,
                                 timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
                             )
+                        )
                     else:
                         observed_callback(golden.input)
                     current_trace: Trace = current_trace_context.get()
