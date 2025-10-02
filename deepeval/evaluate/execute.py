@@ -836,7 +836,12 @@ def execute_agentic_test_cases(
                 ):
                     if asyncio.iscoroutinefunction(observed_callback):
                         loop = get_or_create_event_loop()
-                        loop.run_until_complete(observed_callback(golden.input))
+                        coro = observed_callback(golden.input)
+                        loop.run_until_complete(
+                            asyncio.wait_for(
+                                coro,
+                                timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                            )
                     else:
                         observed_callback(golden.input)
                     current_trace: Trace = current_trace_context.get()
@@ -1190,7 +1195,10 @@ async def _a_execute_agentic_test_case(
             _pbar_callback_id=pbar_tags_id,
         ):
             if asyncio.iscoroutinefunction(observed_callback):
-                await observed_callback(golden.input)
+                await asyncio.wait_for(
+                    observed_callback(golden.input),
+                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                )
             else:
                 observed_callback(golden.input)
             current_trace: Trace = current_trace_context.get()
