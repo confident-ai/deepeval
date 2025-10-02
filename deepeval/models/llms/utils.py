@@ -22,6 +22,7 @@ def trim_and_load_json(
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
 
+
 def safe_asyncio_run(coro):
     """
     Run an async coroutine safely.
