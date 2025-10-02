@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 from pydantic import BaseModel
 
 class BaseTool(BaseModel):
@@ -6,10 +6,10 @@ class BaseTool(BaseModel):
     description: Optional[str] = None
 
 class InputTool(BaseTool):
-    parameters: Any
+    parameters: Dict[str, Any]
 
 class ToolCallOutput(BaseTool):
-    args: Any
+    args: Dict[str, Any]
 
 class ToolOutput(BaseTool):
     output: Any
