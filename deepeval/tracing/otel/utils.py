@@ -4,6 +4,8 @@ from deepeval.tracing import trace_manager, BaseSpan
 from opentelemetry.sdk.trace.export import ReadableSpan
 import json
 
+from deepeval.tracing.utils import make_json_serializable
+
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
 
 
@@ -103,10 +105,13 @@ def check_llm_input_from_gen_ai_attributes(
     output = None
     try:
         input = json.loads(span.attributes.get("gen_ai.input.messages"))
+        input = _flatten_input(input)
+        
     except Exception as e:
         pass
     try:
         output = json.loads(span.attributes.get("gen_ai.output.messages"))
+        output = _flatten_input(output)
     except Exception as e:
         pass
 
@@ -126,6 +131,36 @@ def check_llm_input_from_gen_ai_attributes(
 
     return input, output
 
+
+def _flatten_input(input: list) -> list:
+    if input and isinstance(input, list):
+        try:
+            result: List[dict] = []
+            for m in input:
+                if isinstance(m, dict):
+                    role = m.get("role")
+                    if not role:
+                        role = "assistant"
+                    parts = m.get("parts")
+                    if parts:
+                        for part in parts:
+                            if isinstance(part, dict):
+                                ptype = part.get("type")
+                                if ptype == "text":
+                                    result.append({"role": role, "content": part.get("content")})
+                                else:
+                                    result.append({"role": role, "content": make_json_serializable(part)})
+                            else:
+                                result.append({"role": role, "content": make_json_serializable(part)})
+                    else:
+                        result.append({"role": role, "content": m.get("content")}) # no parts
+                else:
+                    result.append({"role": "assistant", "content": make_json_serializable(m)})
+            return result
+        except Exception as e:
+            return input
+    
+    return input    
 
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
     try:
@@ -374,6 +409,8 @@ def check_pydantic_ai_agent_input_output(
     except Exception:
         pass
 
+    input_val = _flatten_input(input_val)
+    output_val = _flatten_input(output_val)
     return input_val, output_val
 
 
