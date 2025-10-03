@@ -1,0 +1,401 @@
+{
+  "uuid": "trace_41963a7669504cd994948a74d33ffd2a",
+  "baseSpans": [],
+  "agentSpans": [
+    {
+      "uuid": "33b4fccc-c39c-4ee6-b4dc-e9c6c81479ed",
+      "name": "Weather Specialist Agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2025-10-03T11:08:26.815Z",
+      "endTime": "2025-10-03T11:08:33.130Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "What's the weather in London?",
+      "output": "Weather Summary:\n- London is currently experiencing clear and sunny conditions with a temperature of 22.5\u00b0C. There is no precipitation, humidity is moderate at 55%, and there is a gentle breeze from the south at 5.2 km/h.\n\nSuggestions:\n- This is a great day to be outdoors, whether for exercise or leisure. Light, comfortable clothing is recommended.\n- Don't forget sunscreen and sunglasses if you\u2019ll be out for extended periods, as clear skies can increase UV exposure.\n- Stay hydrated, especially if you\u2019re active, due to moderate humidity and warm temperatures.\n- No severe weather conditions are present, so normal outdoor plans are safe to continue.",
+      "availableTools": [
+        "get_location_coordinates",
+        "get_current_weather"
+      ],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "c8458e26-cf76-444b-ad08-f4f76d92c37a",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "33b4fccc-c39c-4ee6-b4dc-e9c6c81479ed",
+      "startTime": "2025-10-03T11:08:29.611Z",
+      "endTime": "2025-10-03T11:08:33.129Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_location_coordinates",
+              "parameters": {
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Get latitude and longitude for a city name."
+            },
+            {
+              "name": "get_current_weather",
+              "parameters": {
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Fetches weather data for a given location using the Open-Meteo API."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    "
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "What's the weather in London?"
+        },
+        {
+          "call_id": "call_89pSSaYuzhoiqXseY8iz6N9a",
+          "name": "get_location_coordinates",
+          "arguments": "{\"city_name\":\"London\"}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_89pSSaYuzhoiqXseY8iz6N9a",
+          "output": "{'lat': 51.5074, 'lng': -0.1278}"
+        },
+        {
+          "call_id": "call_4MvVvxKmbq7oenfXb4plMLzm",
+          "name": "get_current_weather",
+          "arguments": "{\"latitude\":51.5074,\"longitude\":-0.1278}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_4MvVvxKmbq7oenfXb4plMLzm",
+          "output": "{'temperature_2m': 22.5, 'humidity': 55, 'apparent_temperature': 21.0, 'precipitation': 0.0, 'weather_code': 1, 'wind_speed_10m': 5.2, 'wind_direction_10m': 180, 'dummy': True}"
+        }
+      ],
+      "output": "Weather Summary:\n- London is currently experiencing clear and sunny conditions with a temperature of 22.5\u00b0C. There is no precipitation, humidity is moderate at 55%, and there is a gentle breeze from the south at 5.2 km/h.\n\nSuggestions:\n- This is a great day to be outdoors, whether for exercise or leisure. Light, comfortable clothing is recommended.\n- Don't forget sunscreen and sunglasses if you\u2019ll be out for extended periods, as clear skies can increase UV exposure.\n- Stay hydrated, especially if you\u2019re active, due to moderate humidity and warm temperatures.\n- No severe weather conditions are present, so normal outdoor plans are safe to continue.",
+      "model": "gpt-4.1-2025-04-14",
+      "prompt": {},
+      "inputTokenCount": 417.0,
+      "outputTokenCount": 136.0
+    },
+    {
+      "uuid": "1af4df7f-410f-43a4-a00e-27a815647601",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "33b4fccc-c39c-4ee6-b4dc-e9c6c81479ed",
+      "startTime": "2025-10-03T11:08:28.439Z",
+      "endTime": "2025-10-03T11:08:29.609Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_location_coordinates",
+              "parameters": {
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Get latitude and longitude for a city name."
+            },
+            {
+              "name": "get_current_weather",
+              "parameters": {
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Fetches weather data for a given location using the Open-Meteo API."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    "
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "What's the weather in London?"
+        },
+        {
+          "call_id": "call_89pSSaYuzhoiqXseY8iz6N9a",
+          "name": "get_location_coordinates",
+          "arguments": "{\"city_name\":\"London\"}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_89pSSaYuzhoiqXseY8iz6N9a",
+          "output": "{'lat': 51.5074, 'lng': -0.1278}"
+        }
+      ],
+      "output": "{\"call_id\": \"call_4MvVvxKmbq7oenfXb4plMLzm\", \"name\": \"get_current_weather\", \"arguments\": \"{\\\"latitude\\\":51.5074,\\\"longitude\\\":-0.1278}\"}",
+      "model": "gpt-4.1-2025-04-14",
+      "prompt": {},
+      "inputTokenCount": 310.0,
+      "outputTokenCount": 27.0
+    },
+    {
+      "uuid": "173ea463-6942-4386-93fb-e3251805e391",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "33b4fccc-c39c-4ee6-b4dc-e9c6c81479ed",
+      "startTime": "2025-10-03T11:08:26.820Z",
+      "endTime": "2025-10-03T11:08:28.438Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "get_location_coordinates",
+              "parameters": {
+                "properties": {
+                  "city_name": {
+                    "description": "Name of the city",
+                    "title": "City Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "city_name"
+                ],
+                "title": "get_location_coordinates_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Get latitude and longitude for a city name."
+            },
+            {
+              "name": "get_current_weather",
+              "parameters": {
+                "properties": {
+                  "latitude": {
+                    "description": "The latitude of the location.",
+                    "title": "Latitude",
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "description": "The longitude of the location.",
+                    "title": "Longitude",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "latitude",
+                  "longitude"
+                ],
+                "title": "get_current_weather_args",
+                "type": "object",
+                "additionalProperties": false
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Fetches weather data for a given location using the Open-Meteo API."
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    "
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "What's the weather in London?"
+        }
+      ],
+      "output": "{\"call_id\": \"call_89pSSaYuzhoiqXseY8iz6N9a\", \"name\": \"get_location_coordinates\", \"arguments\": \"{\\\"city_name\\\":\\\"London\\\"}\"}",
+      "model": "gpt-4.1-2025-04-14",
+      "prompt": {},
+      "inputTokenCount": 266.0,
+      "outputTokenCount": 17.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "b6ced9f3-cace-41e1-b810-efcec647e8b0",
+      "name": "Function tool: get_current_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "33b4fccc-c39c-4ee6-b4dc-e9c6c81479ed",
+      "startTime": "2025-10-03T11:08:29.610Z",
+      "endTime": "2025-10-03T11:08:29.610Z",
+      "input": {
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "output": {
+        "temperature_2m": 22.5,
+        "humidity": 55,
+        "apparent_temperature": 21.0,
+        "precipitation": 0.0,
+        "weather_code": 1,
+        "wind_speed_10m": 5.2,
+        "wind_direction_10m": 180,
+        "dummy": true
+      },
+      "description": "Function tool"
+    },
+    {
+      "uuid": "75512ee8-b4ef-4076-bcbc-f9b567cba4f2",
+      "name": "Function tool: get_location_coordinates",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "33b4fccc-c39c-4ee6-b4dc-e9c6c81479ed",
+      "startTime": "2025-10-03T11:08:28.439Z",
+      "endTime": "2025-10-03T11:08:28.439Z",
+      "input": {
+        "city_name": "London"
+      },
+      "output": {
+        "lat": 51.5074,
+        "lng": -0.1278
+      },
+      "description": "Function tool"
+    }
+  ],
+  "startTime": "2025-10-03T11:08:26.815Z",
+  "endTime": "2025-10-03T11:08:33.131Z",
+  "name": "Agent workflow",
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "\n    You are a weather agent. When providing current weather information \n    (including temperature, humidity, wind speed/direction, precipitation, and weather codes), provide:\n    \n    1. A clear and concise summary of the weather conditions.\n    2. Practical suggestions or precautions for outdoor activities, health, or clothing based on the weather.\n    3. If severe weather is detected (e.g., heavy rain, thunderstorms, extreme temperatures), \n       highlight necessary safety measures.\n    \n    Format your response in two sections:\n    Weather Summary:\n    - Briefly describe the weather in plain language.\n    \n    Suggestions:\n    - Offer actionable advice relevant to the weather conditions.\n    "
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "What's the weather in London?"
+    }
+  ],
+  "output": "Weather Summary:\n- London is currently experiencing clear and sunny conditions with a temperature of 22.5\u00b0C. There is no precipitation, humidity is moderate at 55%, and there is a gentle breeze from the south at 5.2 km/h.\n\nSuggestions:\n- This is a great day to be outdoors, whether for exercise or leisure. Light, comfortable clothing is recommended.\n- Don't forget sunscreen and sunglasses if you\u2019ll be out for extended periods, as clear skies can increase UV exposure.\n- Stay hydrated, especially if you\u2019re active, due to moderate humidity and warm temperatures.\n- No severe weather conditions are present, so normal outdoor plans are safe to continue.",
+  "status": "SUCCESS"
+}
