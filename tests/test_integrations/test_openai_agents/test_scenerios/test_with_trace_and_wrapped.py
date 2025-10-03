@@ -142,4 +142,4 @@ async def generate_actual_json_dump():
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
 
-asyncio.run(generate_actual_json_dump())
+# asyncio.run(generate_actual_json_dump())
