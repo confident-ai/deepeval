@@ -5,7 +5,7 @@ import json
 
 from agents import Agent, Runner, add_trace_processor
 from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
-from tests.test_integrations.utils import assert_json_object_structure
+from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 from tests.test_integrations.manager import trace_testing_manager
 
 add_trace_processor(DeepEvalTracingProcessor())
@@ -32,28 +32,8 @@ async def run():
 
 ################################ TESTING CODE #################################
 
-file_name = 'multi_agents.json'
-
-async def generate_actual_json_dump():
-    try:
-        trace_testing_manager.test_name = file_name
-        await run()
-        actual_dict = await trace_testing_manager.wait_for_test_dict()
-
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        json_path = os.path.join(current_dir, file_name)
-        with open(json_path, 'w') as f:
-            json.dump(actual_dict, f)
-    finally:
-        trace_testing_manager.test_name = None
-        trace_testing_manager.test_dict = None
-
-def load_trace_data(filename=file_name):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    json_path = os.path.join(current_dir, filename)
-    
-    with open(json_path, 'r') as file:
-        return json.load(file)
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, 'multi_agents.json')
 
 @pytest.mark.asyncio
 async def test_json_schema():
@@ -61,15 +41,28 @@ async def test_json_schema():
     Test the json schema of the trace. Raises an exception if the schema is invalid.
     """
     try:
-        trace_testing_manager.test_name = file_name
+        trace_testing_manager.test_name = json_path
         await run()
         actual_dict = await trace_testing_manager.wait_for_test_dict()
-        expected_dict = load_trace_data(file_name)
+        expected_dict = load_trace_data(json_path)
         
         assert assert_json_object_structure(expected_dict, actual_dict)
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
 
+################################ Generate Actual JSON Dump Code #################################
+
+async def generate_actual_json_dump():
+    try:
+        trace_testing_manager.test_name = json_path
+        await run()
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        with open(json_path, 'w') as f:
+            json.dump(actual_dict, f)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
 
 # asyncio.run(generate_actual_json_dump())
