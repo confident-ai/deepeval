@@ -8,7 +8,7 @@ from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 from tests.test_integrations.manager import trace_testing_manager
 
-add_trace_processor(DeepEvalTracingProcessor())
+# add_trace_processor(DeepEvalTracingProcessor())
 
 spanish_agent = Agent(
     name="Spanish agent",
