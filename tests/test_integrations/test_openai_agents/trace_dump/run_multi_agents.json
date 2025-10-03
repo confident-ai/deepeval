@@ -1,0 +1,220 @@
+{
+  "uuid": "trace_cb10f2301da1484cab245fe01bf93fb8",
+  "baseSpans": [
+    {
+      "uuid": "459dc794-2eb0-4c93-8f86-c76b0d975ced",
+      "name": "Handoff \u2192 Spanish agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "4562376c-7b3e-46bc-8fb8-a8ee5ea441ce",
+      "startTime": "2025-10-03T11:18:57.166Z",
+      "endTime": "2025-10-03T11:18:57.166Z",
+      "metadata": {
+        "from_agent": "Triage agent",
+        "to_agent": "Spanish agent"
+      },
+      "input": {}
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "e16ee1b9-b791-4bc2-a60e-33033538b550",
+      "name": "Spanish agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2025-10-03T11:18:57.167Z",
+      "endTime": "2025-10-03T11:18:59.330Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": [
+        {
+          "arguments": "{}",
+          "call_id": "call_xE0O0h8YC07PIJtI9ZBJeBqh",
+          "name": "transfer_to_spanish_agent",
+          "type": "function_call",
+          "id": "fc_0ac37fa95b1b89720068dfb120711c81959461f39794657b70",
+          "status": "completed"
+        },
+        {
+          "call_id": "call_xE0O0h8YC07PIJtI9ZBJeBqh",
+          "output": "{\"assistant\": \"Spanish agent\"}",
+          "type": "function_call_output"
+        }
+      ],
+      "output": "\u00a1Hola! Estoy muy bien, gracias. \u00bfY t\u00fa? \u00bfEn qu\u00e9 puedo ayudarte hoy?",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "4562376c-7b3e-46bc-8fb8-a8ee5ea441ce",
+      "name": "Triage agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2025-10-03T11:18:53.974Z",
+      "endTime": "2025-10-03T11:18:57.166Z",
+      "metadata": {
+        "output_type": "str"
+      },
+      "input": "Hola, \u00bfc\u00f3mo est\u00e1s?",
+      "output": {
+        "call_id": "call_xE0O0h8YC07PIJtI9ZBJeBqh",
+        "name": "transfer_to_spanish_agent",
+        "arguments": "{}"
+      },
+      "availableTools": [],
+      "agentHandoffs": [
+        "Spanish agent",
+        "English agent"
+      ]
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "bdd40e9a-ba1b-4427-8a35-38cf7337b6f8",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "e16ee1b9-b791-4bc2-a60e-33033538b550",
+      "startTime": "2025-10-03T11:18:57.167Z",
+      "endTime": "2025-10-03T11:18:59.329Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "You only speak Spanish."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hola, \u00bfc\u00f3mo est\u00e1s?"
+        },
+        {
+          "call_id": "call_xE0O0h8YC07PIJtI9ZBJeBqh",
+          "name": "transfer_to_spanish_agent",
+          "arguments": "{}"
+        },
+        {
+          "role": "tool",
+          "call_id": "call_xE0O0h8YC07PIJtI9ZBJeBqh",
+          "output": "{\"assistant\": \"Spanish agent\"}"
+        }
+      ],
+      "output": "\u00a1Hola! Estoy muy bien, gracias. \u00bfY t\u00fa? \u00bfEn qu\u00e9 puedo ayudarte hoy?",
+      "model": "gpt-4.1-2025-04-14",
+      "prompt": {},
+      "inputTokenCount": 54.0,
+      "outputTokenCount": 21.0
+    },
+    {
+      "uuid": "4850b91a-708c-4592-9efd-5e3f486ca193",
+      "name": "LLM Generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "4562376c-7b3e-46bc-8fb8-a8ee5ea441ce",
+      "startTime": "2025-10-03T11:18:53.979Z",
+      "endTime": "2025-10-03T11:18:57.166Z",
+      "metadata": {
+        "cached_input_tokens": 0,
+        "ouptut_reasoning_tokens": 0,
+        "invocation_params": {
+          "parallel_tool_calls": true,
+          "temperature": 1.0,
+          "tool_choice": "auto",
+          "tools": [
+            {
+              "name": "transfer_to_spanish_agent",
+              "parameters": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Handoff to the Spanish agent agent to handle the request. "
+            },
+            {
+              "name": "transfer_to_english_agent",
+              "parameters": {
+                "additionalProperties": false,
+                "type": "object",
+                "properties": {},
+                "required": []
+              },
+              "strict": true,
+              "type": "function",
+              "description": "Handoff to the English agent agent to handle the request. "
+            }
+          ],
+          "top_p": 1.0,
+          "reasoning": {},
+          "text": {
+            "format": {
+              "type": "text"
+            },
+            "verbosity": "medium"
+          },
+          "truncation": "disabled"
+        }
+      },
+      "input": [
+        {
+          "type": "message",
+          "role": "system",
+          "content": "Handoff to the appropriate agent based on the language of the request."
+        },
+        {
+          "type": "message",
+          "role": "user",
+          "content": "Hola, \u00bfc\u00f3mo est\u00e1s?"
+        }
+      ],
+      "output": "{\"call_id\": \"call_xE0O0h8YC07PIJtI9ZBJeBqh\", \"name\": \"transfer_to_spanish_agent\", \"arguments\": \"{}\"}",
+      "model": "gpt-4.1-2025-04-14",
+      "prompt": {},
+      "inputTokenCount": 87.0,
+      "outputTokenCount": 14.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-03T11:18:53.974Z",
+  "endTime": "2025-10-03T11:18:59.331Z",
+  "name": "Agent workflow",
+  "environment": "development",
+  "threadId": "None",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "Handoff to the appropriate agent based on the language of the request."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": "Hola, \u00bfc\u00f3mo est\u00e1s?"
+    }
+  ],
+  "output": "\u00a1Hola! Estoy muy bien, gracias. \u00bfY t\u00fa? \u00bfEn qu\u00e9 puedo ayudarte hoy?",
+  "status": "SUCCESS"
+}
