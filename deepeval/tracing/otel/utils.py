@@ -106,7 +106,7 @@ def check_llm_input_from_gen_ai_attributes(
     try:
         input = json.loads(span.attributes.get("gen_ai.input.messages"))
         input = _flatten_input(input)
-        
+
     except Exception as e:
         pass
     try:
@@ -147,20 +147,45 @@ def _flatten_input(input: list) -> list:
                             if isinstance(part, dict):
                                 ptype = part.get("type")
                                 if ptype == "text":
-                                    result.append({"role": role, "content": part.get("content")})
+                                    result.append(
+                                        {
+                                            "role": role,
+                                            "content": part.get("content"),
+                                        }
+                                    )
                                 else:
-                                    result.append({"role": role, "content": make_json_serializable(part)})
+                                    result.append(
+                                        {
+                                            "role": role,
+                                            "content": make_json_serializable(
+                                                part
+                                            ),
+                                        }
+                                    )
                             else:
-                                result.append({"role": role, "content": make_json_serializable(part)})
+                                result.append(
+                                    {
+                                        "role": role,
+                                        "content": make_json_serializable(part),
+                                    }
+                                )
                     else:
-                        result.append({"role": role, "content": m.get("content")}) # no parts
+                        result.append(
+                            {"role": role, "content": m.get("content")}
+                        )  # no parts
                 else:
-                    result.append({"role": "assistant", "content": make_json_serializable(m)})
+                    result.append(
+                        {
+                            "role": "assistant",
+                            "content": make_json_serializable(m),
+                        }
+                    )
             return result
         except Exception as e:
             return input
-    
-    return input    
+
+    return input
+
 
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
     try:
