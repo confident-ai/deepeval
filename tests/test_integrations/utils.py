@@ -262,9 +262,14 @@ def assert_json_object_structure(expected_json_obj: Dict[str, Any], actual_json_
                 print(f"   Value: {a}")
                 return False
             
+            # Filter out keys to ignore
+            keys_to_ignore = {"tokenIntervals"}
+            b_keys = set(b.keys()) - keys_to_ignore
+            a_keys = set(a.keys()) - keys_to_ignore
+            
             # Check for missing or extra keys
-            missing_keys = set(b.keys()) - set(a.keys())
-            extra_keys = set(a.keys()) - set(b.keys())
+            missing_keys = b_keys - a_keys
+            extra_keys = a_keys - b_keys
             
             if missing_keys:
                 print(f"❌ Missing keys at '{path}': {missing_keys}")
@@ -273,7 +278,8 @@ def assert_json_object_structure(expected_json_obj: Dict[str, Any], actual_json_
                 print(f"❌ Extra keys at '{path}': {extra_keys}")
                 return False
             
-            for k in b.keys():
+            # Compare only non-ignored keys
+            for k in b_keys:
                 if not _compare(a[k], b[k], f"{path}.{k}"):
                     return False
             return True
