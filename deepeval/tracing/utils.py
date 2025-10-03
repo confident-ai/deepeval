@@ -226,7 +226,7 @@ def dump_body_to_json_file(
     
 
 
-def check_the_structure_of_dict_with_json_file(expected_file_path: str, actual_file_path: str) -> bool:
+def assert_json_file_structure(expected_file_path: str, actual_file_path: str) -> bool:
     """
     Validate that `actual_json_obj` matches the structure and data types of the JSON at `expected_file_path`.
 
