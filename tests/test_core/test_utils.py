@@ -1,8 +1,10 @@
 import pytest
+from types import SimpleNamespace
 from tenacity import Retrying, wait_fixed, retry_if_exception_type
 from tenacity.wait import wait_base
 from tenacity.stop import stop_after_attempt, stop_base
-from deepeval.utils import read_env_int, read_env_float
+from deepeval.utils import read_env_int, read_env_float, shorten
+from deepeval.evaluate.utils import _is_metric_successful
 from deepeval.models.retry_policy import dynamic_wait, dynamic_stop
 
 
@@ -132,3 +134,67 @@ def test_dynamic_stop_invalid_env_falls_back(monkeypatch):
 
     # default attempts == 2 means 1 initial try + 1 retry
     assert calls["n"] == 2
+
+
+################
+# Test shorten #
+################
+
+
+@pytest.mark.parametrize(
+    "text,max_len,expected",
+    [
+        ("hello", 10, "hello"),  # no truncation
+        ("hello", 5, "hello"),  # exact boundary
+        ("helloworld", 5, "he..."),  # truncation with default suffix
+        ("", 5, ""),  # empty string
+        (None, 5, ""),  # None -> ""
+    ],
+)
+def test_shorten_basic(text, max_len, expected):
+    assert shorten(text, max_len) == expected
+
+
+def test_shorten_zero_len():
+    assert shorten("abc", 0) == ""
+
+
+def test_shorten_suffix_longer_than_max():
+    # max_len < len(suffix) -> suffix is trimmed
+    assert shorten("abcdef", 2, suffix="***") == "**"
+
+
+def test_shorten_non_string_input():
+    assert shorten(12345, 3) == "..."
+
+
+###############################################
+# Test evaluate utils - _is_metric_successful #
+###############################################
+
+
+def md(**kw):
+    return SimpleNamespace(**kw)
+
+
+def test_is_metric_successful_priority_error_over_success():
+    assert _is_metric_successful(md(error="boom", success=True)) is False
+
+
+def test_is_metric_successful_bool():
+    assert _is_metric_successful(md(error=None, success=True)) is True
+    assert _is_metric_successful(md(error=None, success=False)) is False
+
+
+def test_is_metric_successful_none_and_missing():
+    assert _is_metric_successful(md(error=None, success=None)) is False
+    assert _is_metric_successful(md(error=None)) is False  # missing attr
+
+
+def test_is_metric_successful_numeric_and_string():
+    assert _is_metric_successful(md(error=None, success=1)) is True
+    assert _is_metric_successful(md(error=None, success=0)) is False
+    assert _is_metric_successful(md(error=None, success="true")) is True
+    assert _is_metric_successful(md(error=None, success="False")) is False
+    assert _is_metric_successful(md(error=None, success="YES")) is True
+    assert _is_metric_successful(md(error=None, success="no")) is False
