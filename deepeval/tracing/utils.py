@@ -9,9 +9,7 @@ from enum import Enum
 from time import perf_counter
 import time
 from collections import deque
-from typing import Any, Dict, Optional, Sequence, Callable
-from to_json_schema.to_json_schema import SchemaBuilder
-import jsonschema
+from typing import Any, Dict, Optional
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
 
