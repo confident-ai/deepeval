@@ -36,7 +36,7 @@ dataset = EvaluationDataset(
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_example(test_case: LLMTestCase):
     metric = AnswerRelevancyMetric(threshold=0.5)
