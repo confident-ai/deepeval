@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
 from time import perf_counter
 import threading
@@ -48,7 +49,6 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
     dump_body_to_json_file,
-    get_deepeval_trace_mode,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
@@ -183,13 +183,12 @@ class TraceManager:
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
 
-            mode = get_deepeval_trace_mode()
-            if mode == "gen":
-                body = self.create_trace_api(trace).model_dump(
-                    by_alias=True, exclude_none=True
-                )
-                dump_body_to_json_file(body)
-            # Post the trace to the server before removing it
+            dump_path = os.getenv("DEEPEVAL_TRACING_TEST_PATH") # TODO: if this is the correct way to check of env variable is set
+            if dump_path:
+                body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
+                dump_body_to_json_file(body, dump_path)
+                
+            #  Post the trace to the server before removing it
             elif not self.evaluating:
                 self.post_trace(trace)
             else:
