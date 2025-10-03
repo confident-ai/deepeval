@@ -153,6 +153,7 @@ def make_json_serializable_for_metadata(obj):
 
     return _serialize(obj)
 
+
 def to_zod_compatible_iso(
     dt: datetime, microsecond_precision: bool = False
 ) -> str:
