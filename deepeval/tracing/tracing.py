@@ -54,6 +54,7 @@ from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
+from tests.test_integrations.manager import trace_testing_manager
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
@@ -182,11 +183,10 @@ class TraceManager:
             # Users can manually set the status to ERROR if needed
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
-
-            dump_path = os.getenv("DEEPEVAL_TRACING_TEST_PATH") # TODO: if this is the correct way to check of env variable is set
-            if dump_path:
+            
+            if trace_testing_manager.test_name:
                 body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
-                dump_body_to_json_file(body, dump_path)
+                trace_testing_manager.test_dict = body
                 
             #  Post the trace to the server before removing it
             elif not self.evaluating:
