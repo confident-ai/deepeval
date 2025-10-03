@@ -6,8 +6,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 from collections import deque
-from typing import Any, Dict, Optional
-
+from typing import Any, Dict, Optional, Sequence, Callable
+from to_json_schema.to_json_schema import SchemaBuilder
+import jsonschema
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
 
@@ -214,56 +215,97 @@ def get_deepeval_trace_mode() -> Optional[str]:
 
 
 def dump_body_to_json_file(
-    body: Dict[str, Any], file_path: Optional[str] = None
-) -> str:
-    entry_file = None
+    body: Dict[str, Any], file_path: str
+):
+    """
+    Dumps a dictionary to a JSON file at the specified path.
+    """
+    
+    with open(file_path, 'w') as f:
+        json.dump(body, f, indent=2)
+    
+
+
+def check_the_structure_of_dict_with_json_file(expected_file_path: str, actual_file_path: str) -> bool:
+    """
+    Validate that `actual_json_obj` matches the structure and data types of the JSON at `expected_file_path`.
+
+    Rules:
+    - Dicts: keys must match exactly on both sides; values are validated recursively.
+    - Lists: both must be lists; elements are compared pairwise (same length required).
+    - Primitives: types must match exactly. Int/float are treated as interchangeable numeric types.
+    - Returns False if the file cannot be read or the JSON is invalid.
+    """
     try:
-        cmd0 = sys.argv[0] if sys.argv else None
-        if cmd0 and cmd0.endswith(".py"):
-            entry_file = cmd0
-        else:
-            for frame_info in reversed(inspect.stack()):
-                fp = frame_info.filename
-                if (
-                    fp
-                    and fp.endswith(".py")
-                    and "deepeval/tracing" not in fp
-                    and "site-packages" not in fp
-                ):
-                    entry_file = fp
-                    break
-    except Exception:
-        entry_file = None
+        with open(expected_file_path, 'r') as f:
+            try:
+                expected_json_obj = json.load(f)
+            except json.JSONDecodeError:
+                return False
 
-    if not entry_file:
-        entry_file = "unknown.py"
+        with open(actual_file_path, 'r') as f:
+            try:
+                actual_json_obj = json.load(f)
+            except json.JSONDecodeError:
+                return False
+    except OSError:
+        return False
 
-    abs_entry = os.path.abspath(entry_file)
-    dir_path = os.path.dirname(abs_entry)
+    def _compare(a: Any, b: Any, path: str = "root") -> bool:
+        # Dict vs Dict
+        if isinstance(b, dict):
+            if not isinstance(a, dict):
+                print(f"❌ Type mismatch at '{path}':")
+                print(f"   Expected: dict")
+                print(f"   Got: {type(a).__name__}")
+                print(f"   Value: {a}")
+                return False
+            
+            # Check for missing or extra keys
+            missing_keys = set(b.keys()) - set(a.keys())
+            extra_keys = set(a.keys()) - set(b.keys())
+            
+            if missing_keys:
+                print(f"❌ Missing keys at '{path}': {missing_keys}")
+                return False
+            if extra_keys:
+                print(f"❌ Extra keys at '{path}': {extra_keys}")
+                return False
+            
+            for k in b.keys():
+                if not _compare(a[k], b[k], f"{path}.{k}"):
+                    return False
+            return True
 
-    file_arg = None
-    try:
-        for idx, arg in enumerate(sys.argv):
-            if isinstance(arg, str) and arg.startswith(
-                "--deepeval-trace-file-name="
-            ):
-                file_arg = arg.split("=", 1)[1].strip().strip('"').strip("'")
-                break
-            if arg == "--deepeval-trace-file-name" and idx + 1 < len(sys.argv):
-                file_arg = str(sys.argv[idx + 1]).strip().strip('"').strip("'")
-                break
-    except Exception:
-        file_arg = None
+        # List vs List (pairwise compare)
+        if isinstance(b, list):
+            if not isinstance(a, list):
+                print(f"❌ Type mismatch at '{path}':")
+                print(f"   Expected: list")
+                print(f"   Got: {type(a).__name__}")
+                print(f"   Value: {a}")
+                return False
+            if len(a) != len(b):
+                print(f"❌ Length mismatch at '{path}': expected {len(b)}, got {len(a)}")
+                return False
+            for idx, (ae, be) in enumerate(zip(a, b)):
+                if not _compare(ae, be, f"{path}[{idx}]"):
+                    return False
+            return True
 
-    if file_path:
-        dst_path = os.path.abspath(file_path)
-    elif file_arg:
-        dst_path = os.path.abspath(file_arg)
-    else:
-        base_name = os.path.splitext(os.path.basename(abs_entry))[0]
-        dst_path = os.path.join(dir_path, f"{base_name}.json")
+        # Primitives: exact type match, except int/float interchangeable (bool is not numeric here)
+        number_types = (int, float)
+        if type(b) in number_types and type(a) in number_types and not isinstance(a, bool) and not isinstance(b, bool):
+            return True
+        
+        if type(a) is not type(b):
+            print(f"❌ Type mismatch at '{path}':")
+            print(f"   Expected: {type(b).__name__}")
+            print(f"   Got: {type(a).__name__}")
+            print(f"   Expected value: {b}")
+            print(f"   Actual value: {a}")
+            return False
+        
+        return True
 
-    actual_body = make_json_serializable(body)
-    with open(dst_path, "w", encoding="utf-8") as f:
-        json.dump(actual_body, f, ensure_ascii=False, indent=2, sort_keys=True)
-    return dst_path
+    return _compare(actual_json_obj, expected_json_obj)
