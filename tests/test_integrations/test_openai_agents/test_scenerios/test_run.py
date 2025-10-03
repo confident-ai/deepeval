@@ -1,13 +1,15 @@
-from agents import Agent, Runner
-from deepeval.openai_agents.agent import DeepEvalAgent
-from deepeval.prompt import Prompt
-from deepeval.openai_agents.patch import function_tool
+import os
+import json
+import asyncio
+from agents import Runner, add_trace_processor, Agent, function_tool
+from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
+import pytest
+from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.manager import trace_testing_manager
 
-prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+# add_trace_processor(DeepEvalTracingProcessor())
 
-
-@function_tool(metric_collection="test_collection_1")
+@function_tool
 def get_current_weather(latitude: float, longitude: float) -> dict:
     """
     Fetches weather data for a given location using the Open-Meteo API.
@@ -57,7 +59,7 @@ def get_location_coordinates(city_name: str) -> dict:
 
 
 # Create the weather specialist agent
-weather_agent_patched = DeepEvalAgent(
+weather_agent = Agent(
     name="Weather Specialist Agent",
     instructions="""
     You are a weather agent. When providing current weather information 
@@ -77,14 +79,47 @@ weather_agent_patched = DeepEvalAgent(
     """,
     tools=[get_location_coordinates, get_current_weather],
     tool_use_behavior="run_llm_again",
-    confident_prompt=prompt,
-    llm_metric_collection="test_collection_1",
-    agent_metric_collection="test_collection_1",
 )
 
+async def run():
+    await Runner.run(
+        weather_agent,
+        "What's the weather in London?",
+    )
 
-async def run_weather_agent(user_input: str):
-    """Run the weather agent with user input"""
-    runner = Runner()
-    result = await runner.run(weather_agent, user_input)
-    return result.final_output
+################################ TESTING CODE #################################
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, 'run.json')
+
+@pytest.mark.asyncio
+async def test_json_schema():
+    """
+    Test the json schema of the trace. Raises an exception if the schema is invalid.
+    """
+    try:
+        trace_testing_manager.test_name = json_path
+        await run()
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+        expected_dict = load_trace_data(json_path)
+        
+        assert assert_json_object_structure(expected_dict, actual_dict)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+################################ Generate Actual JSON Dump Code #################################
+
+async def generate_actual_json_dump():
+    try:
+        trace_testing_manager.test_name = json_path
+        await run()
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        with open(json_path, 'w') as f:
+            json.dump(actual_dict, f)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+# asyncio.run(generate_actual_json_dump())
