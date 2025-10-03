@@ -1,15 +1,12 @@
 import os
-import time
 import inspect
 import json
 import sys
-import difflib
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-import time
 from collections import deque
-from typing import Any, Dict, Optional, Sequence, Callable
+from typing import Any, Dict, Optional
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
@@ -189,8 +186,8 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
-    except:
-        return f"<self>"
+    except Exception:
+        return "<self>"
 
 
 def get_deepeval_trace_mode() -> Optional[str]:
