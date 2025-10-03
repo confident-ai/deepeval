@@ -1,12 +1,16 @@
 import os
-import asyncio
 import pytest
-from agents import Runner
+import asyncio
 
-from deepeval.openai_agents.agent import DeepEvalAgent
+from agents import Runner, add_trace_processor
+
+from deepeval.openai_agents import Agent, function_tool, DeepEvalTracingProcessor
+
 from deepeval.prompt import Prompt
-from deepeval.openai_agents.patch import function_tool
+
 from deepeval.tracing.utils import assert_json_file_structure
+
+add_trace_processor(DeepEvalTracingProcessor())
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
@@ -62,7 +66,7 @@ def get_location_coordinates(city_name: str) -> dict:
 
 
 # Create the weather specialist agent
-weather_agent_patched = DeepEvalAgent(
+weather_agent_patched = Agent(
     name="Weather Specialist Agent",
     instructions="""
     You are a weather agent. When providing current weather information 
@@ -86,7 +90,6 @@ weather_agent_patched = DeepEvalAgent(
     llm_metric_collection="test_collection_1",
     agent_metric_collection="test_collection_1",
 )
-
 
 async def run_weather_agent(user_input: str):
     """Run the weather agent with user input"""
@@ -138,4 +141,4 @@ async def test_json_schema():
             os.remove(expected_temp_path)
 
 
-# generate_actual_json_dump()
+generate_actual_json_dump()
