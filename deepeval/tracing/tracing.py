@@ -208,7 +208,13 @@ class TraceManager:
                 else:
                     # print(f"Ending trace: {trace.root_spans}")
                     self.environment = Environment.TESTING
-                    trace.root_spans = [trace.root_spans[0].children[0]]
+                    if (
+                        trace.root_spans
+                        and len(trace.root_spans) > 0
+                        and trace.root_spans[0].children
+                        and len(trace.root_spans[0].children) > 0
+                    ):
+                        trace.root_spans = [trace.root_spans[0].children[0]]
                     for root_span in trace.root_spans:
                         root_span.parent_uuid = None
 
