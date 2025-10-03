@@ -1,8 +1,10 @@
+import json
 from agents import Runner, add_trace_processor, Agent, function_tool
 from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 import pytest
 import os
-from deepeval.tracing.utils import assert_json_file_structure
+from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.manager import trace_testing_manager
 
 add_trace_processor(DeepEvalTracingProcessor())
 
@@ -84,45 +86,40 @@ def run_sync():
         "What's the weather in London?",
     )
 
+################################ TESTING CODE #################################
 
-def generate_actual_json_dump():
-    """
-    Generate a json dump of the trace.
-    """
-    try:
-        actual_path = '../trace_dump/run_sync.json'
-        original_value = os.environ.get('DEEPEVAL_TRACING_TEST_PATH')
-        os.environ['DEEPEVAL_TRACING_TEST_PATH'] = actual_path
-        run_sync()
-    finally:
-        if original_value is not None:
-            os.environ['DEEPEVAL_TRACING_TEST_PATH'] = original_value
-        else:
-            os.environ.pop('DEEPEVAL_TRACING_TEST_PATH', None)
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, 'run_sync.json')
 
-def test_json_schema():
+@pytest.mark.asyncio
+async def test_json_schema():
     """
     Test the json schema of the trace. Raises an exception if the schema is invalid.
     """
-    expected_temp_path = '../trace_dump/temp_run_sync.json'
-    actual_temp_path = '../trace_dump/run_sync.json'
-    
-    original_value = os.environ.get('DEEPEVAL_TRACING_TEST_PATH')
-    
     try:
-        os.environ['DEEPEVAL_TRACING_TEST_PATH'] = expected_temp_path
-        # This will raise an exception if there are any schema validation errors
+        trace_testing_manager.test_name = json_path
         run_sync()
-        assert assert_json_file_structure(expected_temp_path, actual_temp_path)
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+        expected_dict = load_trace_data(json_path)
         
+        assert assert_json_object_structure(expected_dict, actual_dict)
     finally:
-        if original_value is not None:
-            os.environ['DEEPEVAL_TRACING_TEST_PATH'] = original_value
-        else:
-            os.environ.pop('DEEPEVAL_TRACING_TEST_PATH', None)
-        
-        # Delete the expected temp file
-        if os.path.exists(expected_temp_path):
-            os.remove(expected_temp_path)
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
 
-# generate_actual_json_dump()
+################################ Generate Actual JSON Dump Code #################################
+
+async def generate_actual_json_dump():
+    try:
+        trace_testing_manager.test_name = json_path
+        run_sync()
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        with open(json_path, 'w') as f:
+            json.dump(actual_dict, f)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+# import asyncio
+# asyncio.run(generate_actual_json_dump())
