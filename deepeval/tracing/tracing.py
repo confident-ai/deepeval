@@ -183,11 +183,10 @@ class TraceManager:
             # Users can manually set the status to ERROR if needed
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
-            
             if trace_testing_manager.test_name:
                 body = self.create_trace_api(trace).model_dump(by_alias=True, exclude_none=True)
-                trace_testing_manager.test_dict = body
-                
+                trace_testing_manager.test_dict = make_json_serializable(body)
+
             #  Post the trace to the server before removing it
             elif not self.evaluating:
                 self.post_trace(trace)
