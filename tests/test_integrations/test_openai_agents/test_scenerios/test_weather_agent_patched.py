@@ -1,14 +1,15 @@
 import os
 import pytest
 import asyncio
-
+import json
 from agents import Runner, add_trace_processor
 
 from deepeval.openai_agents import Agent, function_tool, DeepEvalTracingProcessor
 
 from deepeval.prompt import Prompt
 
-from deepeval.tracing.utils import assert_json_file_structure
+from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.manager import trace_testing_manager
 
 add_trace_processor(DeepEvalTracingProcessor())
 
@@ -91,54 +92,45 @@ weather_agent_patched = Agent(
     agent_metric_collection="test_collection_1",
 )
 
-async def run_weather_agent(user_input: str):
+async def run_weather_agent(input: str):
     """Run the weather agent with user input"""
     runner = Runner()
-    result = await runner.run(weather_agent_patched, user_input)
+    result = await runner.run(weather_agent_patched, input)
     return result.final_output
 
+################################ TESTING CODE #################################
 
-def generate_actual_json_dump():
-    """
-    Generate a json dump of the trace.
-    """
-    try:
-        actual_path = '../trace_dump/run_weather_agent_patched.json'
-        original_value = os.environ.get('DEEPEVAL_TRACING_TEST_PATH')
-        os.environ['DEEPEVAL_TRACING_TEST_PATH'] = actual_path
-        asyncio.run(run_weather_agent("What's the weather in London?"))
-    finally:
-        if original_value is not None:
-            os.environ['DEEPEVAL_TRACING_TEST_PATH'] = original_value
-        else:
-            os.environ.pop('DEEPEVAL_TRACING_TEST_PATH', None)
-
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, 'weather_agent_patched.json')
 
 @pytest.mark.asyncio
 async def test_json_schema():
     """
     Test the json schema of the trace. Raises an exception if the schema is invalid.
     """
-    expected_temp_path = '../trace_dump/temp_run_weather_agent_patched.json'
-    actual_temp_path = '../trace_dump/run_weather_agent_patched.json'
-    
-    original_value = os.environ.get('DEEPEVAL_TRACING_TEST_PATH')
-    
     try:
-        os.environ['DEEPEVAL_TRACING_TEST_PATH'] = expected_temp_path
-        # This will raise an exception if there are any schema validation errors
-        await run_weather_agent("What's the weather in London?")
-        assert assert_json_file_structure(expected_temp_path, actual_temp_path)
-    
-    finally:
-        if original_value is not None:
-            os.environ['DEEPEVAL_TRACING_TEST_PATH'] = original_value
-        else:
-            os.environ.pop('DEEPEVAL_TRACING_TEST_PATH', None)
+        trace_testing_manager.test_name = json_path
+        await run_weather_agent(input="What's the weather in London?")
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+        expected_dict = load_trace_data(json_path)
         
-        # Delete the expected temp file
-        if os.path.exists(expected_temp_path):
-            os.remove(expected_temp_path)
+        assert assert_json_object_structure(expected_dict, actual_dict)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
 
+################################ Generate Actual JSON Dump Code #################################
 
-generate_actual_json_dump()
+async def generate_actual_json_dump():
+    try:
+        trace_testing_manager.test_name = json_path
+        await run_weather_agent(input="What's the weather in London?")
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        with open(json_path, 'w') as f:
+            json.dump(actual_dict, f)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+# asyncio.run(generate_actual_json_dump())
