@@ -1,4 +1,3 @@
-import time
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from deepeval.integrations.langchain import tool
@@ -66,7 +65,6 @@ async def test_json_schema():
     try:
         trace_testing_manager.test_name = json_path
         execute_agent()
-        time.sleep(10)
         actual_dict = await trace_testing_manager.wait_for_test_dict()
         expected_dict = load_trace_data(json_path)
         
@@ -81,7 +79,6 @@ async def generate_actual_json_dump():
     try:
         trace_testing_manager.test_name = json_path
         execute_agent()
-        time.sleep(10)
         actual_dict = await trace_testing_manager.wait_for_test_dict()
 
         with open(json_path, 'w') as f:

@@ -16,9 +16,9 @@ try:
     from crewai.utilities.events.base_event_listener import BaseEventListener
     from crewai.task import Task
     from crewai.agents.crew_agent_executor import CrewAgentExecutor
-    from crewai.utilities.events import ToolUsageFinishedEvent
+    from crewai.events.types.tool_usage_events import ToolUsageFinishedEvent
     from crewai.tools.tool_usage import ToolUsage
-    from crewai.utilities.events import LLMCallCompletedEvent
+    from crewai.events.types.llm_events import LLMCallCompletedEvent
     from crewai.memory.contextual.contextual_memory import ContextualMemory
 
     crewai_installed = True

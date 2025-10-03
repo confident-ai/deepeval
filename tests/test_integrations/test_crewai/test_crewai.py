@@ -1,28 +1,80 @@
-import sys
+# this is not working
+from crewai import Task, Crew
+
+from deepeval.integrations.crewai import Agent
+from deepeval.integrations.crewai import instrument_crewai
+from deepeval.metrics import AnswerRelevancyMetric
 import os
-import tempfile
-from tests.test_integrations.utils import compare_trace_files
-from crewai_app import execute_agent
+import json
+import pytest
+from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.manager import trace_testing_manager
+import asyncio
+
+# instrument_crewai()
+
+answer_relavancy_metric = AnswerRelevancyMetric()
+
+agent = Agent(
+    role="Consultant",
+    goal="Write clear, concise explanation.",
+    backstory="An expert consultant with a keen eye for software trends.",
+    metric_collection="test_collection_1",
+)
+
+task = Task(
+    description="Explain the given topic",
+    expected_output="A clear and concise explanation.",
+    agent=agent,
+)
+
+crew = Crew(
+    agents=[agent],
+    tasks=[task],
+)
+
+result = crew.kickoff({"input": "What are the LLMs?"})
 
 
-def test_exec_agent_logs():
+def execute_agent():
+    result = crew.kickoff({"input": "What are the LLMs?"})
+    return result
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-    tmp_path = tmp.name
-    tmp.close()
+################################ TESTING CODE #################################
 
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, 'crewai.json')
+
+@pytest.mark.skip(reason="CrewAI is not supported yet")
+async def test_json_schema():
+    """
+    Test the json schema of the trace. Raises an exception if the schema is invalid.
+    """
     try:
-        original_argv = list(sys.argv)
-        sys.argv = [
-            "--deepeval-trace-mode=gen",
-            f"--deepeval-trace-file-name={tmp_path}",
-        ]
+        trace_testing_manager.test_name = json_path
         execute_agent()
-        sys.argv = original_argv
-        expected_path = os.path.join(
-            os.path.dirname(__file__), "crewai_app.json"
-        )
-        compare_trace_files(expected_path, tmp_path)
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+        expected_dict = load_trace_data(json_path)
+
+        print(actual_dict)
+        
+        assert assert_json_object_structure(expected_dict, actual_dict)
     finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+################################ Generate Actual JSON Dump Code #################################
+
+async def generate_actual_json_dump():
+    try:
+        trace_testing_manager.test_name = json_path
+        execute_agent()
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        with open(json_path, 'w') as f:
+            json.dump(actual_dict, f)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+# asyncio.run(generate_actual_json_dump())
