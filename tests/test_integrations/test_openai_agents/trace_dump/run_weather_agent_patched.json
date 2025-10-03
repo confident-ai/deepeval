@@ -1,0 +1,30 @@
+{
+  "uuid": "f9f8e1c5-2ed8-476f-b8cb-ddb181e16b38",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "e5cd77d6-2cf2-4eb4-a7ba-470ce5d61a51",
+      "name": "LLM",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-03T11:25:00.731Z",
+      "endTime": "2025-10-03T11:25:04.425Z",
+      "input": {},
+      "model": "temp_model",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "metricCollection": "test_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-03T11:25:00.731Z",
+  "endTime": "2025-10-03T11:25:04.425Z",
+  "environment": "development",
+  "input": {},
+  "status": "SUCCESS",
+  "metricCollection": "test_collection_1"
+}
