@@ -310,3 +310,8 @@ def assert_json_object_structure(expected_json_obj: Dict[str, Any], actual_json_
         return True
 
     return _compare(actual_json_obj, expected_json_obj)
+
+
+def load_trace_data(file_path: str):
+    with open(file_path, 'r') as file:
+        return json.load(file)
