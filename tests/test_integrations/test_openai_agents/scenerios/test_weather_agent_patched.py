@@ -1,7 +1,12 @@
-from agents import Agent, Runner
+import os
+import asyncio
+import pytest
+from agents import Runner
+
 from deepeval.openai_agents.agent import DeepEvalAgent
 from deepeval.prompt import Prompt
 from deepeval.openai_agents.patch import function_tool
+from deepeval.tracing.utils import assert_json_file_structure
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
@@ -86,5 +91,51 @@ weather_agent_patched = DeepEvalAgent(
 async def run_weather_agent(user_input: str):
     """Run the weather agent with user input"""
     runner = Runner()
-    result = await runner.run(weather_agent, user_input)
+    result = await runner.run(weather_agent_patched, user_input)
     return result.final_output
+
+
+def generate_actual_json_dump():
+    """
+    Generate a json dump of the trace.
+    """
+    try:
+        actual_path = '../trace_dump/run_weather_agent_patched.json'
+        original_value = os.environ.get('DEEPEVAL_TRACING_TEST_PATH')
+        os.environ['DEEPEVAL_TRACING_TEST_PATH'] = actual_path
+        asyncio.run(run_weather_agent("What's the weather in London?"))
+    finally:
+        if original_value is not None:
+            os.environ['DEEPEVAL_TRACING_TEST_PATH'] = original_value
+        else:
+            os.environ.pop('DEEPEVAL_TRACING_TEST_PATH', None)
+
+
+@pytest.mark.asyncio
+async def test_json_schema():
+    """
+    Test the json schema of the trace. Raises an exception if the schema is invalid.
+    """
+    expected_temp_path = '../trace_dump/temp_run_weather_agent_patched.json'
+    actual_temp_path = '../trace_dump/run_weather_agent_patched.json'
+    
+    original_value = os.environ.get('DEEPEVAL_TRACING_TEST_PATH')
+    
+    try:
+        os.environ['DEEPEVAL_TRACING_TEST_PATH'] = expected_temp_path
+        # This will raise an exception if there are any schema validation errors
+        await run_weather_agent("What's the weather in London?")
+        assert assert_json_file_structure(expected_temp_path, actual_temp_path)
+    
+    finally:
+        if original_value is not None:
+            os.environ['DEEPEVAL_TRACING_TEST_PATH'] = original_value
+        else:
+            os.environ.pop('DEEPEVAL_TRACING_TEST_PATH', None)
+        
+        # Delete the expected temp file
+        if os.path.exists(expected_temp_path):
+            os.remove(expected_temp_path)
+
+
+# generate_actual_json_dump()
