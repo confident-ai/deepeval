@@ -12,7 +12,7 @@ from deepeval.prompt import Prompt
 from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 from tests.test_integrations.manager import trace_testing_manager
 
-add_trace_processor(DeepEvalTracingProcessor())
+# add_trace_processor(DeepEvalTracingProcessor())
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
