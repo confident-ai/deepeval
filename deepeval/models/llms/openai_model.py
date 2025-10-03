@@ -204,7 +204,6 @@ models_requiring_temperature_1 = [
     "gpt-5-mini-2025-08-07",
     "gpt-5-nano",
     "gpt-5-nano-2025-08-07",
-    "gpt-5-chat-latest",
 ]
 
 
