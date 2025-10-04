@@ -14,8 +14,8 @@ from deepeval.constants import ProviderSlug as PS
 
 # check aiobotocore availability
 try:
-    from aiobotocore.session import get_session
-    from botocore.config import Config
+    from aiobotocore.session import get_session  # type: ignore
+    from botocore.config import Config  # type: ignore
 
     aiobotocore_available = True
 except ImportError:
@@ -29,7 +29,8 @@ def _check_aiobotocore_available():
     if not aiobotocore_available:
         raise ImportError(
             "aiobotocore and botocore are required for this functionality. "
-            "Install them via your package manager (e.g. pip install aiobotocore botocore)"
+            "Install them via your package manager "
+            "(e.g. pip install aiobotocore botocore)"
         )
 
 
@@ -167,13 +168,13 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         # Handle temperature and top_p compatibility for Claude Sonnet 4.5
         # Claude Sonnet 4.5 doesn't support both temperature and top_p simultaneously
         inference_config = {"maxTokens": translated_kwargs["maxTokens"]}
-        
+
         # Check if this is Claude Sonnet 4.5
         is_claude_sonnet_4_5 = "claude-sonnet-4-5" in self.model_id.lower()
-        
+
         if is_claude_sonnet_4_5:
             # For Claude Sonnet 4.5, prioritize temperature over top_p
-            # Only use top_p if temperature is 0 and top_p is explicitly provided and > 0
+            # Only use top_p if temperature is 0 and top_p is explicitly provided
             top_p_value = (
                 self.generation_kwargs.get("top_p")
                 or self.generation_kwargs.get("topP")
@@ -188,14 +189,22 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         else:
             # For other models, include both parameters as before
             inference_config["temperature"] = self.temperature
+            # Only include topP if explicitly provided (avoid defaulting to 0)
             if "topP" in translated_kwargs:
                 inference_config["topP"] = translated_kwargs["topP"]
-            elif self.generation_kwargs.get("top_p", 0) > 0:
-                inference_config["topP"] = self.generation_kwargs.get("top_p", 0)
+            elif self.generation_kwargs.get("top_p") is not None:
+                inference_config["topP"] = self.generation_kwargs["top_p"]
 
         # Add any other translated parameters (excluding already handled ones)
+        skip_keys = {"maxTokens", "topP"}
+
+        # If we are in the Claude 4.5 + topP-only path, make sure we don't
+        # accidentally reintroduce 'temperature' from generation_kwargs.
+        if is_claude_sonnet_4_5 and "topP" in inference_config:
+            skip_keys.add("temperature")
+
         for key, value in translated_kwargs.items():
-            if key not in ["maxTokens", "topP"]:
+            if key not in skip_keys:
                 inference_config[key] = value
 
         return {

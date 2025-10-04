@@ -6,9 +6,15 @@ import pytest
 from deepeval.models.llms.amazon_bedrock_model import AmazonBedrockModel
 
 
-def _mk_model(gen_kwargs: Optional[Dict[str, Any]], temperature: float = 0.5):
+def _mk_model(
+    gen_kwargs: Optional[Dict[str, Any]],
+    temperature: float = 0.5,
+    model_id: str = "anthropic.claude-3-5-sonnet-20241022-v2:0",
+):
     # avoid network/client setup: bypass __init__ and set only what we need
     m = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    # Set required attributes that would normally be set in __init__
+    m.model_id = model_id
     m.temperature = temperature
     m.generation_kwargs = gen_kwargs or {}
     return m
@@ -80,25 +86,31 @@ def test_max_tokens_defaults_and_precedence(gen_kwargs, expected_max_tokens):
 
 
 @pytest.mark.parametrize(
-    "gen_kwargs,expected_top_p",
+    "gen_kwargs,expected_top_p,should_have_top_p",
     [
-        ({}, 0),  # default
-        ({"top_p": 0.2}, 0.2),
-        ({"topP": 0.3}, 0.3),
-        ({"top_p": 0.1, "topP": 0.9}, 0.9),  # camel should win
+        ({}, None, False),  # no topP when not provided (safer behavior)
+        ({"top_p": 0.2}, 0.2, True),
+        ({"topP": 0.3}, 0.3, True),
+        ({"top_p": 0.1, "topP": 0.9}, 0.9, True),  # camel should win
     ],
 )
-def test_top_p_defaults_and_precedence(gen_kwargs, expected_top_p):
-    """Check that `topP` defaults to 0 if not supplied,
+def test_top_p_defaults_and_precedence(
+    gen_kwargs, expected_top_p, should_have_top_p
+):
+    """Check that `topP` is only included when explicitly provided (safer behavior),
     and that precedence rules are correct:
-    - snake_case overrides default,
+    - snake_case is included when provided,
     - camelCase overrides snake_case,
     - no duplicate keys remain.
     """
     model = _mk_model(gen_kwargs)
     cfg = model.get_converse_request_body("hi")["inferenceConfig"]
-    assert cfg["topP"] == expected_top_p
-    assert "top_p" not in cfg
+
+    if should_have_top_p:
+        assert cfg["topP"] == expected_top_p
+        assert "top_p" not in cfg
+    else:
+        assert "topP" not in cfg
 
 
 @pytest.mark.parametrize(
@@ -180,10 +192,10 @@ def test_claude_sonnet_4_5_temperature_top_p_compatibility():
     model.model_id = "anthropic.claude-sonnet-4-5-20250929-v1:0"
     model.temperature = 0.7
     model.generation_kwargs = {"top_p": 0.8}
-    
+
     body = model.get_converse_request_body("hi")
     cfg = body["inferenceConfig"]
-    
+
     # Should have temperature but not topP
     assert "temperature" in cfg
     assert cfg["temperature"] == 0.7
@@ -196,14 +208,14 @@ def test_claude_sonnet_4_5_top_p_only():
     model.model_id = "anthropic.claude-sonnet-4-5-20250929-v1:0"
     model.temperature = 0
     model.generation_kwargs = {"top_p": 0.9}
-    
+
     body = model.get_converse_request_body("hi")
     cfg = body["inferenceConfig"]
-    
+
     # Should have topP but not temperature (since temp is 0)
     assert "topP" in cfg
     assert cfg["topP"] == 0.9
-    assert "temperature" in cfg  # Still included but as 0
+    assert "temperature" not in cfg
 
 
 def test_claude_sonnet_4_5_prioritizes_temperature():
@@ -212,10 +224,10 @@ def test_claude_sonnet_4_5_prioritizes_temperature():
     model.model_id = "anthropic.claude-sonnet-4-5-20250929-v1:0"
     model.temperature = 0.5
     model.generation_kwargs = {"top_p": 0.9}
-    
+
     body = model.get_converse_request_body("hi")
     cfg = body["inferenceConfig"]
-    
+
     # Should have temperature but not topP (temperature takes priority)
     assert "temperature" in cfg
     assert cfg["temperature"] == 0.5
@@ -228,10 +240,10 @@ def test_non_claude_sonnet_4_5_gets_both_parameters():
     model.model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
     model.temperature = 0.5
     model.generation_kwargs = {"top_p": 0.9}
-    
+
     body = model.get_converse_request_body("hi")
     cfg = body["inferenceConfig"]
-    
+
     # Should have both parameters for non-Sonnet 4.5 models
     assert "temperature" in cfg
     assert cfg["temperature"] == 0.5
@@ -245,10 +257,10 @@ def test_claude_sonnet_4_5_case_insensitive():
     model.model_id = "ANTHROPIC.CLAUDE-SONNET-4-5-20250929-V1:0"
     model.temperature = 0.7
     model.generation_kwargs = {"top_p": 0.8}
-    
+
     body = model.get_converse_request_body("hi")
     cfg = body["inferenceConfig"]
-    
+
     # Should still detect as Claude Sonnet 4.5 despite case
     assert "temperature" in cfg
     assert cfg["temperature"] == 0.7
