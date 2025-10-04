@@ -169,3 +169,87 @@ def test_temperature_source_of_truth_is_documented_behavior():
     model = _mk_model({"temperature": 0.9}, temperature=0.2)
     cfg = model.get_converse_request_body("hi")["inferenceConfig"]
     assert cfg["temperature"] == 0.9
+
+
+def test_claude_sonnet_4_5_temperature_top_p_compatibility():
+    """Test that Claude Sonnet 4.5 only gets one of temperature or top_p,
+    never both, to avoid ValidationException.
+    """
+    # Create a model with Claude Sonnet 4.5 model ID
+    model = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    model.model_id = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    model.temperature = 0.7
+    model.generation_kwargs = {"top_p": 0.8}
+    
+    body = model.get_converse_request_body("hi")
+    cfg = body["inferenceConfig"]
+    
+    # Should have temperature but not topP
+    assert "temperature" in cfg
+    assert cfg["temperature"] == 0.7
+    assert "topP" not in cfg
+
+
+def test_claude_sonnet_4_5_top_p_only():
+    """Test that Claude Sonnet 4.5 gets top_p when temperature is 0."""
+    model = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    model.model_id = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    model.temperature = 0
+    model.generation_kwargs = {"top_p": 0.9}
+    
+    body = model.get_converse_request_body("hi")
+    cfg = body["inferenceConfig"]
+    
+    # Should have topP but not temperature (since temp is 0)
+    assert "topP" in cfg
+    assert cfg["topP"] == 0.9
+    assert "temperature" in cfg  # Still included but as 0
+
+
+def test_claude_sonnet_4_5_prioritizes_temperature():
+    """Test that Claude Sonnet 4.5 prioritizes temperature over top_p when both are > 0."""
+    model = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    model.model_id = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    model.temperature = 0.5
+    model.generation_kwargs = {"top_p": 0.9}
+    
+    body = model.get_converse_request_body("hi")
+    cfg = body["inferenceConfig"]
+    
+    # Should have temperature but not topP (temperature takes priority)
+    assert "temperature" in cfg
+    assert cfg["temperature"] == 0.5
+    assert "topP" not in cfg
+
+
+def test_non_claude_sonnet_4_5_gets_both_parameters():
+    """Test that non-Claude Sonnet 4.5 models still get both temperature and top_p."""
+    model = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    model.model_id = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    model.temperature = 0.5
+    model.generation_kwargs = {"top_p": 0.9}
+    
+    body = model.get_converse_request_body("hi")
+    cfg = body["inferenceConfig"]
+    
+    # Should have both parameters for non-Sonnet 4.5 models
+    assert "temperature" in cfg
+    assert cfg["temperature"] == 0.5
+    assert "topP" in cfg
+    assert cfg["topP"] == 0.9
+
+
+def test_claude_sonnet_4_5_case_insensitive():
+    """Test that Claude Sonnet 4.5 detection is case insensitive."""
+    model = AmazonBedrockModel.__new__(AmazonBedrockModel)
+    model.model_id = "ANTHROPIC.CLAUDE-SONNET-4-5-20250929-V1:0"
+    model.temperature = 0.7
+    model.generation_kwargs = {"top_p": 0.8}
+    
+    body = model.get_converse_request_body("hi")
+    cfg = body["inferenceConfig"]
+    
+    # Should still detect as Claude Sonnet 4.5 despite case
+    assert "temperature" in cfg
+    assert cfg["temperature"] == 0.7
+    assert "topP" not in cfg

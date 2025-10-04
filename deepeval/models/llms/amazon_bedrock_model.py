@@ -153,7 +153,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         # Start with defaults for required parameters
         translated_kwargs = {
             "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
-            "topP": self.generation_kwargs.get("top_p", 0),
         }
 
         # Add any other parameters from generation_kwargs
@@ -165,12 +164,43 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
                 aws_key = param_mapping.get(key, key)
                 translated_kwargs[aws_key] = value
 
+        # Handle temperature and top_p compatibility for Claude Sonnet 4.5
+        # Claude Sonnet 4.5 doesn't support both temperature and top_p simultaneously
+        inference_config = {"maxTokens": translated_kwargs["maxTokens"]}
+        
+        # Check if this is Claude Sonnet 4.5
+        is_claude_sonnet_4_5 = "claude-sonnet-4-5" in self.model_id.lower()
+        
+        if is_claude_sonnet_4_5:
+            # For Claude Sonnet 4.5, prioritize temperature over top_p
+            # Only use top_p if temperature is 0 and top_p is explicitly provided and > 0
+            top_p_value = (
+                self.generation_kwargs.get("top_p")
+                or self.generation_kwargs.get("topP")
+                or 0
+            )
+            if self.temperature == 0 and top_p_value > 0:
+                inference_config["topP"] = top_p_value
+                # Don't include temperature when using top_p
+            else:
+                # Default to temperature (including when temperature is 0)
+                inference_config["temperature"] = self.temperature
+        else:
+            # For other models, include both parameters as before
+            inference_config["temperature"] = self.temperature
+            if "topP" in translated_kwargs:
+                inference_config["topP"] = translated_kwargs["topP"]
+            elif self.generation_kwargs.get("top_p", 0) > 0:
+                inference_config["topP"] = self.generation_kwargs.get("top_p", 0)
+
+        # Add any other translated parameters (excluding already handled ones)
+        for key, value in translated_kwargs.items():
+            if key not in ["maxTokens", "topP"]:
+                inference_config[key] = value
+
         return {
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
-            "inferenceConfig": {
-                "temperature": self.temperature,
-                **translated_kwargs,
-            },
+            "inferenceConfig": inference_config,
         }
 
     def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
