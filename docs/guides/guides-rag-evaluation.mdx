@@ -307,7 +307,7 @@ for goldens in dataset.goldens:
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_rag(test_case: LLMTestCase):
     # metrics is the list of RAG metrics as shown in previous sections

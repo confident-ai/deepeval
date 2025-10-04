@@ -538,7 +538,7 @@ metrics = [
 ]
 
 # 5. Use pytest.mark.parametrize to iterate over the dataset and run tests
-@pytest.mark.parametrize("test_case", dataset.test_case)
+@pytest.mark.parametrize("test_case", dataset.test_cases)
 def test_rag_application_performance(test_case: LLMTestCase):
     # Use assert_test to run all specified metrics on the test_case
     # If any metric fails its threshold, assert_test will raise an AssertionError
