@@ -42,23 +42,19 @@ class CustomGPT(DeepEvalBaseLLM):
 
     def load_model(self):
         if self.should_use_azure_openai():
-            openai_api_key = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_OPENAI_API_KEY
-            )
+            values = KEY_FILE_HANDLER.fetch_multiple_keys([
+                ModelKeyValues.AZURE_OPENAI_API_KEY,
+                ModelKeyValues.OPENAI_API_VERSION,
+                ModelKeyValues.AZURE_DEPLOYMENT_NAME,
+                ModelKeyValues.AZURE_OPENAI_ENDPOINT,
+                ModelKeyValues.AZURE_MODEL_VERSION,
+            ])
 
-            openai_api_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.OPENAI_API_VERSION
-            )
-            azure_deployment = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_DEPLOYMENT_NAME
-            )
-            azure_endpoint = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_OPENAI_ENDPOINT
-            )
-
-            model_version = KEY_FILE_HANDLER.fetch_data(
-                KeyValues.AZURE_MODEL_VERSION
-            )
+            openai_api_key = values[ModelKeyValues.AZURE_OPENAI_API_KEY]
+            openai_api_version = values[ModelKeyValues.OPENAI_API_VERSION]
+            azure_deployment = values[ModelKeyValues.AZURE_DEPLOYMENT_NAME]
+            azure_endpoint = values[ModelKeyValues.AZURE_OPENAI_ENDPOINT]
+            model_version = values[ModelKeyValues.AZURE_MODEL_VERSION] or ""
 
             if model_version is None:
                 model_version = ""
