@@ -1,4 +1,5 @@
 from pydantic import (
+    ConfigDict,
     Field,
     BaseModel,
     model_validator,
@@ -151,6 +152,8 @@ class ToolCall(BaseModel):
 
 
 class LLMTestCase(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     input: str
     actual_output: Optional[str] = Field(
         default=None,

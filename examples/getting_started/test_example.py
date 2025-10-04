@@ -12,7 +12,7 @@ dataset = EvaluationDataset(alias="My dataset", test_cases=[])
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_everything(test_case: LLMTestCase):
     test_case = LLMTestCase(
