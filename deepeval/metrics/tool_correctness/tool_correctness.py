@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import List, Dict
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -152,14 +152,19 @@ class ToolCorrectnessMetric(BaseMetric):
 
     # Calculate score
     def _calculate_score(self):
-        # Fix: handle empty expected_tools to avoid ZeroDivisionError
-        if len(self.expected_tools) == 0:
-            score = 1.0 if len(self.tools_called) == 0 else 0.0
-        elif self.should_exact_match:
+        if self.should_exact_match:
             score = self._calculate_exact_match_score()
         elif self.should_consider_ordering:
             _, weighted_length = self._compute_weighted_lcs()
-            score = weighted_length / len(self.expected_tools)
+            if (
+                len(self.tools_called) == len(self.expected_tools)
+                and len(self.expected_tools) == 0
+            ):
+                score = 1.0
+            elif len(self.expected_tools) == 0:
+                score = 0.0
+            else:
+                score = weighted_length / len(self.expected_tools)
         else:
             score = self._calculate_non_exact_match_score()
         return 0 if self.strict_mode and score < self.threshold else score
@@ -294,7 +299,7 @@ class ToolCorrectnessMetric(BaseMetric):
     def is_successful(self) -> bool:
         try:
             self.success = self.score >= self.threshold
-        except:
+        except (AttributeError, TypeError):
             self.success = False
         return self.success
 
