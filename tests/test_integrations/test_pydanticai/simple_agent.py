@@ -35,3 +35,5 @@ def execute_simple_agent():
 
 if __name__ == "__main__":
     execute_simple_agent()
+
+execute_simple_agent()
