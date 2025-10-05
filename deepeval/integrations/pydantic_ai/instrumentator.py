@@ -25,6 +25,7 @@ def is_dependency_installed():
 
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
+from deepeval.tracing.otel.utils import to_hex_string
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
@@ -36,6 +37,9 @@ class SpanInterceptor(SpanProcessor):
         self.settings: ConfidentInstrumentationSettings = settings_instance
 
     def on_start(self, span, parent_context):
+
+        # populate the trace id
+        self.settings.trace_id = to_hex_string(span.get_span_context().trace_id, 32)
 
         # set trace attributes
         if self.settings.thread_id:
@@ -135,7 +139,12 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     agent_metric_collection: Optional[str] = None
     tool_metric_collection_map: dict = {}
     trace_metric_collection: Optional[str] = None
+    
+    trace_id: Optional[str] = None # to be populated by the trace interceptor on-start
+    # This can be used to send annotations to the trace after the Agent Run ends 
+    # Pydantic AI does not have any callback for trace id, this is a workaround to send annotations to the trace after the Agent Run ends 
 
+    
     def __init__(
         self,
         api_key: Optional[str] = None,
