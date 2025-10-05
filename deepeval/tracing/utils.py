@@ -1,12 +1,8 @@
 import os
-import inspect
-import json
-import sys
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
 from collections import deque
-from typing import Any, Dict, Optional
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
 
@@ -185,40 +181,5 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
-    except Exception:
-        return "<self>"
-
-
-def get_deepeval_trace_mode() -> Optional[str]:
-    deepeval_trace_mode = None
-    try:
-        args = sys.argv
-        for idx, arg in enumerate(args):
-            if isinstance(arg, str) and arg.startswith(
-                "--deepeval-trace-mode="
-            ):
-                deepeval_trace_mode = (
-                    arg.split("=", 1)[1].strip().strip('"').strip("'").lower()
-                )
-                break
-            if arg == "--deepeval-trace-mode" and idx + 1 < len(args):
-                deepeval_trace_mode = (
-                    str(args[idx + 1]).strip().strip('"').strip("'").lower()
-                )
-                break
-    except Exception:
-        deepeval_trace_mode = None
-
-    return deepeval_trace_mode
-
-
-def dump_body_to_json_file(
-    body: Dict[str, Any], file_path: str
-):
-    """
-    Dumps a dictionary to a JSON file at the specified path.
-    """
-    
-    with open(file_path, 'w') as f:
-        json.dump(body, f, indent=2)
-    
+    except:
+        return f"<self>"
