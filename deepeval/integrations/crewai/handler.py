@@ -121,12 +121,18 @@ def instrument_crewai(api_key: Optional[str] = None):
 
         from deepeval.integrations.crewai.wrapper import (
             wrap_crew_kickoff, 
+            wrap_crew_kickoff_for_each,
+            wrap_crew_kickoff_async,
+            wrap_crew_kickoff_for_each_async,
             wrap_llm_call, 
             wrap_agent_execute_task, 
-            wrap_tool_decorator
+            # wrap_tool_decorator
         )
 
         wrap_crew_kickoff()
+        wrap_crew_kickoff_for_each()
+        wrap_crew_kickoff_async()
+        wrap_crew_kickoff_for_each_async()
         wrap_llm_call()
         wrap_agent_execute_task()
         # wrap_tool_decorator() #TODO: sort this out later

@@ -18,6 +18,38 @@ def wrap_crew_kickoff():
         return result
     Crew.kickoff = wrapper 
 
+def wrap_crew_kickoff_for_each():
+    original_kickoff_for_each = Crew.kickoff_for_each
+    
+    @wraps(original_kickoff_for_each)
+    def wrapper(self, *args, **kwargs):
+        with Observer(span_type="crew", func_name="kickoff_for_each"):
+            result = original_kickoff_for_each(self, *args, **kwargs)
+        
+        return result
+    Crew.kickoff_for_each = wrapper
+
+def wrap_crew_kickoff_async():
+    original_kickoff_async = Crew.kickoff_async
+    
+    @wraps(original_kickoff_async)
+    async def wrapper(self, *args, **kwargs):
+        with Observer(span_type="crew", func_name="kickoff_async"):
+            result = await original_kickoff_async(self, *args, **kwargs)
+        
+        return result
+    Crew.kickoff_async = wrapper
+
+def wrap_crew_kickoff_for_each_async():
+    original_kickoff_for_each_async = Crew.kickoff_for_each_async
+    
+    @wraps(original_kickoff_for_each_async)
+    async def wrapper(self, *args, **kwargs):
+        with Observer(span_type="crew", func_name="kickoff_for_each_async"):
+            result = await original_kickoff_for_each_async(self, *args, **kwargs)
+        
+        return result
+    Crew.kickoff_for_each_async = wrapper
 
 def wrap_llm_call():
     original_llm_call = LLM.call
