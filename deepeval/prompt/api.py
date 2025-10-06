@@ -83,7 +83,11 @@ class OutputSchemaField(BaseModel):
     type: SchemaDataType
     name: str
     required: Optional[bool] = False
-    parent_id: Optional[str] = None
+    parent_id: Optional[str] = Field(
+        default=None,
+        serialization_alias="parentId",
+        validation_alias=AliasChoices("parent_id", "parentId"),
+    )
 
     class Config:
         use_enum_values = True

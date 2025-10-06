@@ -59,20 +59,18 @@ def interpolate_text(
     elif interpolation_type == PromptInterpolationType.JINJA:
         return interpolate_jinja(text, **kwargs)
 
-    raise ValueError(f"Unsupported interpolation type: {interpolation_type}")
-
 
 ###################################
 # Output Schema Deconstruction
 ###################################
 
-schema_type_map: Dict[SchemaDataType, Any] = {
-    SchemaDataType.STRING: str,
-    SchemaDataType.INTEGER: int,
-    SchemaDataType.FLOAT: float,
-    SchemaDataType.BOOLEAN: bool,
-    SchemaDataType.NULL: type(None),
-    SchemaDataType.OBJECT: dict,  # overridden with a nested base model
+schema_type_map: Dict[str, Any] = {
+    SchemaDataType.STRING.value: str,
+    SchemaDataType.INTEGER.value: int,
+    SchemaDataType.FLOAT.value: float,
+    SchemaDataType.BOOLEAN.value: bool,
+    SchemaDataType.NULL.value: type(None),
+    SchemaDataType.OBJECT.value: dict,
 }
 
 
@@ -83,12 +81,15 @@ def construct_nested_base_model(
 ) -> Type[BaseModel]:
     child_fields: Dict[str, tuple] = {}
     for child in parent_id_map.get(parent.id, []):
-        if child.type == SchemaDataType.OBJECT:
+        child_type = (
+            child.type.value if hasattr(child.type, "value") else child.type
+        )
+        if child_type == SchemaDataType.OBJECT.value:
             python_type = construct_nested_base_model(
                 child, parent_id_map, child.name
             )
         else:
-            python_type = schema_type_map.get(child.type, Any)
+            python_type = schema_type_map.get(child_type, Any)
         default = ... if child.required else None
         child_fields[child.name or child.id] = (python_type, default)
     return create_model(model_name, **child_fields)
@@ -110,13 +111,18 @@ def construct_base_model(
         parent_id_map[parent_id].append(field)
 
     root_fields: Dict[str, tuple] = {}
-    for field in parent_id_map.get(None):
-        if field.type == SchemaDataType.OBJECT:
-            continue
+    for field in parent_id_map.get(None, []):
+        field_type = (
+            field.type.value if hasattr(field.type, "value") else field.type
+        )
+        if field_type == SchemaDataType.OBJECT.value:
+            python_type = construct_nested_base_model(
+                field, parent_id_map, field.name
+            )
         else:
-            python_type = schema_type_map.get(field.type)
-            default = ... if field.required else None
-            root_fields[field.name] = (python_type, default)
+            python_type = schema_type_map.get(field_type, Any)
+        default = ... if field.required else None
+        root_fields[field.name] = (python_type, default)
 
     return create_model(schema.name, **root_fields)
 
@@ -180,7 +186,6 @@ def _process_model(
 def construct_output_schema(
     base_model_class: Optional[Type[BaseModel]] = None,
 ) -> Optional[OutputSchema]:
-    print(base_model_class)
     if base_model_class is None:
         return None
     all_fields = _process_model(base_model_class)

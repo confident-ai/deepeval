@@ -8,6 +8,7 @@ from .test_run import (
     LLMApiTestCase,
     ConversationalApiTestCase,
     TestRunManager,
+    PromptData,
 )
 
 from .hooks import on_test_run_end, invoke_test_run_end_hook

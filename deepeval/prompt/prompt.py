@@ -20,6 +20,7 @@ from deepeval.prompt.api import (
     ModelSettings,
     OutputSchema,
     OutputType,
+    PromptVersion,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -80,7 +81,9 @@ class Prompt:
         self.model_settings: Optional[ModelSettings] = model_settings
         self.output_type: Optional[OutputType] = output_type
         self.output_schema: Optional[Type[BaseModel]] = output_schema
-        self.interpolation_type: Optional[PromptInterpolationType] = interpolation_type
+        self.interpolation_type: Optional[PromptInterpolationType] = (
+            interpolation_type
+        )
 
         self.type: Optional[PromptType] = None
         if text_template:
@@ -330,24 +333,28 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
+        _verbose: Optional[bool] = False,
     ):
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-        if text is None and messages is None:
+        text_template = text or self.text_template
+        messages_template = messages or self.messages_template
+        if text_template is None and messages_template is None:
             raise ValueError("Either text or messages must be provided")
-        if text is not None and messages is not None:
+        if text_template is not None and messages_template is not None:
             raise ValueError("Only one of text or messages can be provided")
 
         body = PromptPushRequest(
             alias=self.alias,
-            text=text,
-            messages=messages,
-            interpolation_type=interpolation_type,
-            model_settings=model_settings,
-            output_type=output_type,
-            output_schema=construct_output_schema(output_schema),
+            text=text_template,
+            messages=messages_template,
+            interpolation_type=interpolation_type or self.interpolation_type,
+            model_settings=model_settings or self.model_settings,
+            output_type=output_type or self.output_type,
+            output_schema=construct_output_schema(output_schema)
+            or construct_output_schema(self.output_schema),
         )
         try:
             body = body.model_dump(by_alias=True, exclude_none=True)
@@ -361,19 +368,25 @@ class Prompt:
             endpoint=Endpoints.PROMPTS_ENDPOINT,
             body=body,
         )
-        if link:
-            self.text_template = text
-            self.messages_template = messages
-            self.interpolation_type = interpolation_type
-            self.model_settings = model_settings
-            self.output_type = output_type
-            self.output_schema = output_schema
-            self.type = PromptType.TEXT if text else PromptType.LIST
-            console = Console()
-            console.print(
-                "✅ Prompt successfully pushed to Confident AI! View at "
-                f"[link={link}]{link}[/link]"
+        versions = self._get_versions()
+
+        if link and versions:
+            self._prompt_version_id = versions[-1].id
+            self.text_template = text_template
+            self.messages_template = messages_template
+            self.interpolation_type = (
+                interpolation_type or self.interpolation_type
             )
+            self.model_settings = model_settings or self.model_settings
+            self.output_type = output_type or self.output_type
+            self.output_schema = output_schema or self.output_schema
+            self.type = PromptType.TEXT if text_template else PromptType.LIST
+            if _verbose:
+                console = Console()
+                console.print(
+                    "✅ Prompt successfully pushed to Confident AI! View at "
+                    f"[link={link}]{link}[/link]"
+                )
 
     def update(
         self,
@@ -415,7 +428,6 @@ class Prompt:
             body=body,
         )
         if data:
-            self._prompt_version_id = data["id"]
             self._version = version
             self.text_template = text
             self.messages_template = messages
@@ -569,7 +581,7 @@ class Prompt:
         with open(CACHE_FILE_NAME, "w") as f:
             json.dump(cache_data, f, cls=CustomEncoder)
 
-    def _get_versions(self) -> List:
+    def _get_versions(self) -> List[PromptVersion]:
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
