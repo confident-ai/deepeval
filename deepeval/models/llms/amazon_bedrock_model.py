@@ -55,9 +55,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self.input_token_cost = input_token_cost
         self.output_token_cost = output_token_cost
 
-        if self.temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
-
         # prepare aiobotocore session, config, and async exit stack
         self._session = get_session()
         self._exit_stack = AsyncExitStack()
