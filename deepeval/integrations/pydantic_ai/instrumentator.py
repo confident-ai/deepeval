@@ -1,7 +1,7 @@
 import json
 import os
 from typing import Literal, Optional, List
-import contextvars
+from contextvars import ContextVar
 
 try:
     from pydantic_ai.models.instrumented import InstrumentationSettings
@@ -31,10 +31,7 @@ from deepeval.tracing.otel.utils import to_hex_string
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
-
-# This is a context variable to store the trace id. 
-# It is populated by the trace interceptor on-start and can accessed by ConfidentInstrumentationSettings
-_trace_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("trace_uuid", default=None)
+trace_uuid: ContextVar[Optional[str]] = ContextVar("trace_uuid", default=None)
 
 class SpanInterceptor(SpanProcessor):
     def __init__(self, settings_instance):
@@ -42,9 +39,10 @@ class SpanInterceptor(SpanProcessor):
         self.settings: ConfidentInstrumentationSettings = settings_instance
 
     def on_start(self, span, parent_context):
-
+        
         # populate the trace id
-        self.settings._set_trace_id(to_hex_string(span.get_span_context().trace_id, 32))
+        trace_uuid_str = to_hex_string(span.get_span_context().trace_id, 32)
+        self.settings._set_trace_id(trace_uuid_str)
 
         # set trace attributes
         if self.settings.thread_id:
@@ -206,14 +204,10 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         super().__init__(tracer_provider=trace_provider)
     
     def get_trace_id(self) -> Optional[str]:
-        """
-        Get the trace id from the context variable.
-        """
-        return _trace_var.get()
+        return trace_uuid.get()
     
     def _set_trace_id(self, trace_id: str) -> None:
-        """
-        Set the trace id in the context variable. It is used by the trace interceptor to populate the trace id.
+        """Set the trace id in the context variable. It is used by the trace interceptor to populate the trace id.
         It is not meant to be used by the user.
         """
-        _trace_var.set(trace_id)
+        trace_uuid.set(trace_id)
