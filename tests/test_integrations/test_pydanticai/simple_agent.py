@@ -31,3 +31,7 @@ def execute_simple_agent():
     result = asyncio.run(agent.run("What are the LLMs?"))
     print("===============Simple agent output:===============")
     print(result)
+
+
+if __name__ == "__main__":
+    execute_simple_agent()
