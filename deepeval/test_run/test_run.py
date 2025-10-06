@@ -533,12 +533,29 @@ class TestRunManager:
     def display_results_table(
         self, test_run: TestRun, display: TestRunResultDisplay
     ):
+        def _fmt(parts):
+            if not parts:
+                return "N/A"
+            return " ".join(
+                p if isinstance(p, str) else f"[Image: {p.url}]" for p in parts
+            )
+
         table = Table(title="Test Results")
-        table.add_column("Test case", justify="left")
-        table.add_column("Metric", justify="left")
-        table.add_column("Score", justify="left")
-        table.add_column("Status", justify="left")
-        table.add_column("Overall Success Rate", justify="left")
+        table.add_column(
+            "Test case", justify="left", max_width=40, no_wrap=False
+        )
+        table.add_column("Metric", justify="left", max_width=40, no_wrap=False)
+        table.add_column("Score", justify="left", max_width=40, no_wrap=False)
+        table.add_column("Status", justify="left", max_width=40, no_wrap=False)
+        table.add_column(
+            "Overall Success Rate", justify="left", max_width=40, no_wrap=False
+        )
+        table.add_column(
+            "Actual Output", justify="left", max_width=40, no_wrap=False
+        )
+        table.add_column(
+            "Expected Output", justify="left", max_width=40, no_wrap=False
+        )
 
         for index, test_case in enumerate(test_run.test_cases):
             if test_case.metrics_data is None:
@@ -566,6 +583,13 @@ class TestRunManager:
                 else:
                     fail_count += 1
 
+            actual_output = test_case.actual_output or "N/A"
+            expected_output = test_case.expected_output or "N/A"
+
+            if test_case.multimodal_input:
+                actual_output = _fmt(test_case.multimodal_input_actual_output)
+                expected_output = _fmt(test_case.multimodal_expected_output)
+
             success_rate = (
                 round((100 * pass_count) / (pass_count + fail_count), 2)
                 if pass_count + fail_count > 0
@@ -577,6 +601,8 @@ class TestRunManager:
                 "",
                 "",
                 f"{success_rate}%",
+                actual_output,
+                expected_output,
             )
 
             for metric_data in test_case.metrics_data:
@@ -611,6 +637,8 @@ class TestRunManager:
                     "",
                     "",
                     "",
+                    "",
+                    "",
                 )
 
         for index, conversational_test_case in enumerate(
@@ -630,6 +658,14 @@ class TestRunManager:
             pass_count = 0
             fail_count = 0
             conversational_test_case_name = conversational_test_case.name
+            actual_output = (
+                "\n".join(
+                    f"{turn.role}: {turn.content}"
+                    for turn in conversational_test_case.turns
+                )
+                or "N/A"
+            )
+            expected_output = conversational_test_case.expected_outcome or "N/A"
 
             if conversational_test_case.metrics_data is not None:
                 for metric_data in conversational_test_case.metrics_data:
@@ -643,6 +679,8 @@ class TestRunManager:
                     "",
                     "",
                     f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
+                    actual_output,
+                    expected_output,
                 )
 
             if conversational_test_case.metrics_data is not None:
@@ -678,6 +716,8 @@ class TestRunManager:
                     "",
                     "",
                     "",
+                    "",
+                    "",
                 )
 
             if index is not len(self.test_run.test_cases) - 1:
@@ -687,10 +727,14 @@ class TestRunManager:
                     "",
                     "",
                     "",
+                    "",
+                    "",
                 )
 
         table.add_row(
             "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
+            "",
+            "",
             "",
             "",
             "",
