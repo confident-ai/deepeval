@@ -383,53 +383,70 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
     # return test_run_manager.post_test_run(test_run) TODO: add after test run with metric collection is implemented
 
 
+def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
+    try:
+        raw = span.attributes.get("pydantic_ai.all_messages")
+        if not raw:
+            return None
+            
+        messages = raw
+        if isinstance(messages, str):
+            messages = json.loads(messages)
+        elif isinstance(messages, tuple):
+            messages = list(messages)
+
+        if isinstance(messages, list):
+            normalized = []
+            for m in messages:
+                if isinstance(m, str):
+                    try:
+                        m = json.loads(m)
+                    except Exception:
+                        pass
+                normalized.append(m)
+            return normalized
+    except Exception:
+        pass
+    
+    return None
+
+
 def check_pydantic_ai_agent_input_output(
     span: ReadableSpan,
 ) -> Tuple[Optional[Any], Optional[Any]]:
     input_val: Optional[Any] = None
     output_val: Optional[Any] = None
 
+    # Get normalized messages once
+    normalized = _normalize_pydantic_ai_messages(span)
+
     # Input (pydantic_ai.all_messages) - slice up to and including the first 'user' message
-    try:
-        raw = span.attributes.get("pydantic_ai.all_messages")
-        if raw:
-            messages = raw
-            if isinstance(messages, str):
-                messages = json.loads(messages)
-            elif isinstance(messages, tuple):
-                messages = list(messages)
+    if normalized:
+        try:
+            first_user_idx = None
+            for i, m in enumerate(normalized):
+                role = None
+                if isinstance(m, dict):
+                    role = m.get("role") or m.get("author")
+                if role == "user":
+                    first_user_idx = i
+                    break
 
-            if isinstance(messages, list):
-                normalized = []
-                for m in messages:
-                    if isinstance(m, str):
-                        try:
-                            m = json.loads(m)
-                        except Exception:
-                            pass
-                    normalized.append(m)
-
-                first_user_idx = None
-                for i, m in enumerate(normalized):
-                    role = None
-                    if isinstance(m, dict):
-                        role = m.get("role") or m.get("author")
-                    if role == "user":
-                        first_user_idx = i
-                        break
-
-                input_val = (
-                    normalized
-                    if first_user_idx is None
-                    else normalized[: first_user_idx + 1]
-                )
-    except Exception:
-        pass
+            input_val = (
+                normalized
+                if first_user_idx is None
+                else normalized[: first_user_idx + 1]
+            )
+        except Exception:
+            pass
 
     # Output (agent final_result)
     try:
         if span.attributes.get("confident.span.type") == "agent":
             output_val = span.attributes.get("final_result")
+            if not output_val and normalized:
+                # Extract the last message if no final_result is available
+                output_val = normalized[-1]
     except Exception:
         pass
 
