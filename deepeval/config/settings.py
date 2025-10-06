@@ -10,12 +10,20 @@ Central config for DeepEval.
 """
 
 import logging
+import math
 import os
 import re
 
 from dotenv import dotenv_values
 from pathlib import Path
-from pydantic import AnyUrl, SecretStr, field_validator, confloat
+from pydantic import (
+    AnyUrl,
+    computed_field,
+    confloat,
+    conint,
+    field_validator,
+    SecretStr,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Any, Dict, List, Optional, NamedTuple
 
@@ -155,7 +163,7 @@ class Settings(BaseSettings):
     #
 
     APP_ENV: str = "dev"
-    LOG_LEVEL: str = "info"
+    LOG_LEVEL: Optional[int] = None
     PYTHONPATH: str = "."
     CONFIDENT_REGION: Optional[str] = None
     CONFIDENT_OPEN_BROWSER: Optional[bool] = True
@@ -274,9 +282,33 @@ class Settings(BaseSettings):
     #
     # Retry Policy
     #
-    DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = None
-    DEEPEVAL_RETRY_BEFORE_LOG_LEVEL: Optional[int] = None  # default -> INFO
+    # Controls how Tenacity retries provider calls when the SDK isn't doing its own retries.
+    # Key concepts:
+    # - attempts count includes the first call. e.g. 1 = no retries, 2 = one retry.
+    # - backoff sleeps follow exponential growth with a cap, plus jitter. Expected jitter
+    #   contribution is ~ JITTER/2 per sleep.
+    # - logging levels are looked up dynamically each attempt, so if you change LOG_LEVEL at runtime,
+    #   the retry loggers will honor it without restart.
+    DEEPEVAL_SDK_RETRY_PROVIDERS: Optional[List[str]] = (
+        None  # ["*"] to delegate all retries to SDKs
+    )
+    DEEPEVAL_RETRY_BEFORE_LOG_LEVEL: Optional[int] = (
+        None  # default is LOG_LEVEL if set, else INFO
+    )
     DEEPEVAL_RETRY_AFTER_LOG_LEVEL: Optional[int] = None  # default -> ERROR
+    DEEPEVAL_RETRY_MAX_ATTEMPTS: conint(ge=1) = (
+        2  # attempts = first try + retries
+    )
+    DEEPEVAL_RETRY_INITIAL_SECONDS: confloat(ge=0) = (
+        1.0  # first sleep before retry, if any
+    )
+    DEEPEVAL_RETRY_EXP_BASE: confloat(ge=1) = (
+        2.0  # exponential growth factor for sleeps
+    )
+    DEEPEVAL_RETRY_JITTER: confloat(ge=0) = 2.0  # uniform jitter
+    DEEPEVAL_RETRY_CAP_SECONDS: confloat(ge=0) = (
+        5.0  # cap for each backoff sleep
+    )
 
     #
     # Telemetry and Debug
@@ -303,19 +335,87 @@ class Settings(BaseSettings):
     #
     MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
     MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
+    # DEEPEVAL_HTTP_TIMEOUT_SECONDS: per-attempt timeout for provider calls enforced by our retry decorator.
+    # This timeout interacts with retry policy and the task level budget (DEEPEVAL_PER_TASK_TIMEOUT_SECONDS) below.
+    # If you leave this at 0/None, the computed outer budget defaults to 180s.
+    DEEPEVAL_HTTP_TIMEOUT_SECONDS: Optional[confloat(ge=0)] = (
+        None  # per-attempt timeout. Set 0/None to disable
+    )
 
     #
     # Async Task Configuration
     #
-
-    # Maximum time allowed for a single task to complete
-    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS: int = (
-        300  # Set to float('inf') to disable timeout
-    )
+    DEEPEVAL_TIMEOUT_THREAD_LIMIT: conint(ge=1) = 128
+    DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS: confloat(ge=0) = 5.0
+    # DEEPEVAL_PER_TASK_TIMEOUT_SECONDS is the outer time budget for one metric/task.
+    # It is computed from per-attempt timeout + retries/backoff unless you explicitly override it.
+    # - OVERRIDE = None or 0 -> auto compute as:
+    #     attempts * per_attempt_timeout + sum(backoff_sleeps) + ~jitter/2 per sleep + 1s safety
+    #   (If per_attempt_timeout is 0/None, the auto outer budget defaults to 180s.)
+    # - OVERRIDE > 0         -> use that exact value. A warning is logged if it is likely too small
+    #   to permit the configured attempts/backoff.
+    #
+    # Tip:
+    #   Most users only need to set DEEPEVAL_HTTP_TIMEOUT_SECONDS and DEEPEVAL_RETRY_MAX_ATTEMPTS.
+    #   Leave the outer budget on auto unless you have very strict SLAs.
+    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: Optional[conint(ge=0)] = None
 
     # Buffer time for gathering results from all tasks, added to the longest task duration
     # Increase if many tasks are running concurrently
-    DEEPEVAL_TASK_GATHER_BUFFER_SECONDS: int = 60
+    DEEPEVAL_TASK_GATHER_BUFFER_SECONDS: confloat(ge=0) = 60
+
+    ###################
+    # Computed Fields #
+    ###################
+
+    def _calc_auto_outer_timeout(self) -> int:
+        """Compute outer budget from per-attempt timeout + retries/backoff.
+        Never reference the computed property itself here.
+        """
+        attempts = self.DEEPEVAL_RETRY_MAX_ATTEMPTS or 1
+        timeout_seconds = float(self.DEEPEVAL_HTTP_TIMEOUT_SECONDS or 0)
+        if timeout_seconds <= 0:
+            # No per-attempt timeout set -> default outer budget
+            return 180
+
+        sleeps = max(0, attempts - 1)
+        cur = float(self.DEEPEVAL_RETRY_INITIAL_SECONDS)
+        cap = float(self.DEEPEVAL_RETRY_CAP_SECONDS)
+        base = float(self.DEEPEVAL_RETRY_EXP_BASE)
+        jitter = float(self.DEEPEVAL_RETRY_JITTER)
+
+        backoff = 0.0
+        for _ in range(sleeps):
+            backoff += min(cap, cur)
+            cur *= base
+        backoff += sleeps * (jitter / 2.0)  # expected jitter
+
+        safety_overhead = 1.0
+        return int(
+            math.ceil(attempts * timeout_seconds + backoff + safety_overhead)
+        )
+
+    @computed_field
+    @property
+    def DEEPEVAL_PER_TASK_TIMEOUT_SECONDS(self) -> int:
+        """If OVERRIDE is set (nonzero), return it; else return the derived budget."""
+        outer = self.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE
+        if outer not in (None, 0):
+            # Warn if user-provided outer is likely to truncate retries
+            if (self.DEEPEVAL_HTTP_TIMEOUT_SECONDS or 0) > 0:
+                min_needed = self._calc_auto_outer_timeout()
+                if int(outer) < min_needed:
+                    if self.DEEPEVAL_VERBOSE_MODE:
+                        logger.warning(
+                            "Metric timeout (outer=%ss) is less than attempts × per-attempt "
+                            "timeout + backoff (≈%ss). Retries may be cut short.",
+                            int(outer),
+                            min_needed,
+                        )
+            return int(outer)
+
+        # Auto mode
+        return self._calc_auto_outer_timeout()
 
     ##############
     # Validators #
@@ -461,7 +561,9 @@ class Settings(BaseSettings):
             if s in SUPPORTED_PROVIDER_SLUGS:
                 normalized.append(s)
             else:
-                if cls.DEEPEVAL_VERBOSE_MODE:
+                if parse_bool(
+                    os.getenv("DEEPEVAL_VERBOSE_MODE"), default=False
+                ):
                     logger.warning("Unknown provider slug %r dropped", item)
 
         if star:
@@ -474,6 +576,7 @@ class Settings(BaseSettings):
     @field_validator(
         "DEEPEVAL_RETRY_BEFORE_LOG_LEVEL",
         "DEEPEVAL_RETRY_AFTER_LOG_LEVEL",
+        "LOG_LEVEL",
         mode="before",
     )
     @classmethod
@@ -511,6 +614,10 @@ class Settings(BaseSettings):
     # Persistence support #
     #######################
     class _SettingsEditCtx:
+        COMPUTED_FIELDS: frozenset[str] = frozenset(
+            {"DEEPEVAL_PER_TASK_TIMEOUT_SECONDS"}
+        )
+
         def __init__(
             self,
             settings: "Settings",
@@ -546,8 +653,11 @@ class Settings(BaseSettings):
             # lazy import legacy JSON store deps
             from deepeval.key_handler import KEY_FILE_HANDLER
 
+            model_fields = type(self._s).model_fields
+            # Exclude computed fields from persistence
+
             # compute diff of changed fields
-            after = {k: getattr(self._s, k) for k in type(self._s).model_fields}
+            after = {k: getattr(self._s, k) for k in model_fields}
 
             before_norm = {
                 k: _normalize_for_env(v) for k, v in self._before.items()
@@ -557,11 +667,20 @@ class Settings(BaseSettings):
             changed_keys = {
                 k for k in after_norm if after_norm[k] != before_norm.get(k)
             }
+            changed_keys -= self.COMPUTED_FIELDS
+
             if not changed_keys:
                 self.result = PersistResult(False, None, {})
                 return False
 
             updates = {k: after[k] for k in changed_keys}
+
+            if "LOG_LEVEL" in updates:
+                from deepeval.config.logging import (
+                    apply_deepeval_log_level,
+                )
+
+                apply_deepeval_log_level()
 
             #
             # .deepeval JSON support
@@ -668,4 +787,27 @@ def get_settings() -> Settings:
     global _settings_singleton
     if _settings_singleton is None:
         _settings_singleton = Settings()
+        from deepeval.config.logging import apply_deepeval_log_level
+
+        apply_deepeval_log_level()
     return _settings_singleton
+
+
+def reset_settings(*, reload_dotenv: bool = False) -> Settings:
+    """
+    Drop the cached Settings singleton and rebuild it from the current process
+    environment.
+
+    Args:
+        reload_dotenv: When True, call `autoload_dotenv()` before re-instantiating,
+                       which merges .env values into os.environ (never overwriting
+                       existing process env vars).
+
+    Returns:
+        The fresh Settings instance.
+    """
+    global _settings_singleton
+    if reload_dotenv:
+        autoload_dotenv()
+    _settings_singleton = None
+    return get_settings()

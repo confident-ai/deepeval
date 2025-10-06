@@ -93,13 +93,24 @@ from deepeval.config.settings import get_settings
 
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 async def _snapshot_tasks():
     cur = asyncio.current_task()
     # `all_tasks` returns tasks for the current running loop only
     return {t for t in asyncio.all_tasks() if t is not cur}
+
+
+def _per_task_timeout() -> float:
+    return get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+
+
+def _gather_timeout() -> float:
+    s = get_settings()
+    return (
+        s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+        + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
+    )
 
 
 ###########################################
@@ -840,7 +851,7 @@ def execute_agentic_test_cases(
                         loop.run_until_complete(
                             asyncio.wait_for(
                                 coro,
-                                timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                                timeout=_per_task_timeout(),
                             )
                         )
                     else:
@@ -1198,7 +1209,7 @@ async def _a_execute_agentic_test_case(
             if asyncio.iscoroutinefunction(observed_callback):
                 await asyncio.wait_for(
                     observed_callback(golden.input),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                    timeout=_per_task_timeout(),
                 )
             else:
                 observed_callback(golden.input)
@@ -1755,11 +1766,6 @@ def a_execute_agentic_test_cases_from_loop(
     _is_assert_test: bool = False,
 ) -> Iterator[TestResult]:
 
-    GATHER_TIMEOUT_SECONDS = (
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-    )
-
     semaphore = asyncio.Semaphore(async_config.max_concurrent)
     original_create_task = asyncio.create_task
 
@@ -1774,7 +1780,7 @@ def a_execute_agentic_test_cases_from_loop(
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
             return await asyncio.wait_for(
-                coroutine, timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+                coroutine, timeout=_per_task_timeout()
             )
 
     def evaluate_test_cases(
@@ -1819,7 +1825,7 @@ def a_execute_agentic_test_cases_from_loop(
             }
 
             def on_task_done(t: asyncio.Task):
-                if settings.DEEPEVAL_DEBUG_ASYNC:
+                if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     # Using info level here to make it easy to spot these logs.
                     # We are gated by DEEPEVAL_DEBUG_ASYNC
                     meta = task_meta.get(t, {})
@@ -1893,7 +1899,7 @@ def a_execute_agentic_test_cases_from_loop(
                 loop.run_until_complete(
                     asyncio.wait_for(
                         asyncio.gather(*created_tasks, return_exceptions=True),
-                        timeout=GATHER_TIMEOUT_SECONDS,
+                        timeout=_gather_timeout(),
                     )
                 )
             except asyncio.TimeoutError:
@@ -1908,16 +1914,13 @@ def a_execute_agentic_test_cases_from_loop(
                     elapsed_time = time.perf_counter() - start_time
 
                     # Determine if it was a per task or gather timeout based on task's elapsed time
-                    if (
-                        elapsed_time
-                        >= settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                    ):
+                    if elapsed_time >= _per_task_timeout():
                         timeout_type = "per-task"
                     else:
                         timeout_type = "gather"
 
                     logger.warning(
-                        f"[deepeval] gather TIMEOUT after {GATHER_TIMEOUT_SECONDS}s; "
+                        f"[deepeval] gather TIMEOUT after {_gather_timeout()}s; "
                         f"pending={len(pending)} tasks. Timeout type: {timeout_type}. "
                         f"To give tasks more time, consider increasing "
                         f"DEEPEVAL_PER_TASK_TIMEOUT_SECONDS for longer task completion time or "
@@ -1931,7 +1934,7 @@ def a_execute_agentic_test_cases_from_loop(
                         elapsed_time,
                         meta,
                     )
-                    if loop.get_debug() and settings.DEEPEVAL_DEBUG_ASYNC:
+                    if loop.get_debug() and get_settings().DEEPEVAL_DEBUG_ASYNC:
                         frames = t.get_stack(limit=6)
                         if frames:
                             logger.info("    stack:")
@@ -1970,7 +1973,7 @@ def a_execute_agentic_test_cases_from_loop(
                 if not leftovers:
                     return
 
-                if settings.DEEPEVAL_DEBUG_ASYNC:
+                if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     logger.warning(
                         "[deepeval] %d stray task(s) not tracked; cancelling…",
                         len(leftovers),
@@ -1990,7 +1993,7 @@ def a_execute_agentic_test_cases_from_loop(
                     )
                 except RuntimeError:
                     # If the loop is closing here, just continue
-                    if settings.DEEPEVAL_DEBUG_ASYNC:
+                    if get_settings().DEEPEVAL_DEBUG_ASYNC:
                         logger.warning(
                             "[deepeval] failed to drain stray tasks because loop is closing"
                         )

@@ -1,9 +1,10 @@
+import logging
 import pytest
 import tenacity
-import logging
+import time
+
 
 from deepeval.models import retry_policy as rp
-from deepeval.config.settings import get_settings
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     dynamic_wait,
@@ -293,8 +294,10 @@ def test_dynamic_wait_callable(monkeypatch):
     assert callable(w)
 
 
-def test_dynamic_wait_zeros_with_env(monkeypatch):
-    monkeypatch.setenv("DEEPEVAL_RETRY_CAP_SECONDS", "0")
+def test_dynamic_wait_zeros_with_env(monkeypatch, settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_CAP_SECONDS = 0
+
     w = dynamic_wait()
 
     class RS:  # minimal retry state shape
@@ -313,7 +316,7 @@ def test_dynamic_stop_callable():
 ##############################################
 
 
-def test_retry_respects_max_attempts_env(monkeypatch, policy):
+def test_retry_respects_max_attempts_env(monkeypatch, policy, settings):
     slug = "max_attempts"
     monkeypatch.setitem(rp._POLICY_BY_SLUG, slug, policy)
     monkeypatch.setitem(
@@ -333,15 +336,20 @@ def test_retry_respects_max_attempts_env(monkeypatch, policy):
             raise NetTimeout()
         return "ok"
 
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "2")
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 2
+
     with pytest.raises(tenacity.RetryError):
         flaky_twice_then_ok()
     assert calls["n"] == 2  # stopped at the cap
 
     # Case 2
     # allow 3 attempts, now it can succeed on the 3rd call because cap was increased
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
+
     calls["n"] = 0
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "3")
+
     assert flaky_twice_then_ok() == "ok"
     assert calls["n"] == 3
 
@@ -422,11 +430,10 @@ def test_get_retry_policy_for_respects_sdk_retries_for(monkeypatch, policy):
     assert get_retry_policy_for(slug) is None
 
 
-def test_sdk_retries_for_wildcard(monkeypatch):
-    settings = get_settings()
-    monkeypatch.setattr(
-        settings, "DEEPEVAL_SDK_RETRY_PROVIDERS", ["*"], raising=False
-    )
+def test_sdk_retries_for_wildcard(monkeypatch, settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_SDK_RETRY_PROVIDERS = ["*"]
+
     assert sdk_retries_for("anything") is True
     assert sdk_retries_for("azure") is True
 
@@ -511,12 +518,77 @@ def test_dynamic_retry_does_not_call_static_predicate_when_sdk_on(
     assert calls["seen"] == 0  # never consulted
 
 
+def test_sync_timeout_is_retryable_and_capped(monkeypatch, policy, settings):
+    slug = "openai"
+    monkeypatch.setitem(rp._POLICY_BY_SLUG, slug, policy)
+    monkeypatch.setitem(
+        rp._STATIC_PRED_BY_SLUG, slug, make_is_transient(policy)
+    )
+
+    calls = {"n": 0}
+
+    @create_retry_decorator(slug)
+    def slow():
+        calls["n"] += 1
+        time.sleep(0.05)  # longer than per-attempt timeout
+
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_HTTP_TIMEOUT_SECONDS = (
+            0.01  # force per-attempt timeout
+        )
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
+        settings.DEEPEVAL_RETRY_CAP_SECONDS = 0  # keep the test fast
+
+    with pytest.raises(tenacity.RetryError):
+        slow()
+
+    # We should have hit the cap: 1 initial + (max_attempts-1) retries => attempts == 3
+    assert calls["n"] == 3
+
+
+def test_dynamic_toggle_sdk_retries_runtime(monkeypatch, policy, settings):
+    slug = "openai"
+    # register policy + static predicate
+    monkeypatch.setitem(rp._POLICY_BY_SLUG, slug, policy)
+    monkeypatch.setitem(
+        rp._STATIC_PRED_BY_SLUG, slug, make_is_transient(policy)
+    )
+
+    calls = {"n": 0}
+
+    @create_retry_decorator(slug)
+    def flaky():
+        calls["n"] += 1
+        raise NetTimeout()
+
+    # SDK off -> Tenacity should retry up to cap
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_SDK_RETRY_PROVIDERS = []
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
+        settings.DEEPEVAL_RETRY_CAP_SECONDS = 0
+
+    with pytest.raises(tenacity.RetryError):
+        flaky()
+    assert calls["n"] == 3
+
+    # SDK on -> no retries; same wrapped function
+    calls["n"] = 0
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_SDK_RETRY_PROVIDERS = ["openai"]  # on for this slug
+
+    with pytest.raises(NetTimeout):
+        flaky()
+    assert calls["n"] == 1
+
+
 ###############
 # Diagnostics #
 ###############
 
 
-def test_retry_logging_levels_change_at_runtime(monkeypatch, caplog, policy):
+def test_retry_logging_levels_change_at_runtime(
+    monkeypatch, caplog, policy, settings
+):
     slug = "log_levels"
     monkeypatch.setitem(rp._POLICY_BY_SLUG, slug, policy)
     monkeypatch.setitem(
@@ -527,8 +599,6 @@ def test_retry_logging_levels_change_at_runtime(monkeypatch, caplog, policy):
     @create_retry_decorator(slug)
     def boom():
         raise NetTimeout()
-
-    settings = get_settings()
 
     # Before: WARNING for before-sleep, ERROR for after
     with settings.edit(persist=False):
@@ -568,9 +638,3 @@ def test_retry_logging_levels_change_at_runtime(monkeypatch, caplog, policy):
     assert not any(r.levelno >= logging.ERROR for r in caplog.records)
     assert not any(r.levelno == logging.WARNING for r in caplog.records)
     assert all(r.exc_info is None for r in caplog.records)
-
-    # turn the logging back down.
-    # TODO remove this once we can properly reset settings in tests
-    with settings.edit(persist=False):
-        settings.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL = logging.WARNING
-        settings.DEEPEVAL_RETRY_AFTER_LOG_LEVEL = logging.ERROR
