@@ -34,7 +34,6 @@ def process_hyperparameters(
 
         if isinstance(value, Prompt):
             prompt_key = f"{value.alias}_{value.version}"
-            print(prompt_key)
             if value._prompt_version_id is not None and value.type is not None:
                 processed_hyperparameters[key] = PromptApi(
                     id=value._prompt_version_id,

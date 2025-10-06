@@ -7,7 +7,7 @@ sidebar_label: Prompts
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-`deepeval` lets you evaluate prompts by associating them with test runs. A `Prompt` in `deepeval` contains the prompt template and optional model setting parameters. By linking a `Prompt` to a test run, you can attribute metric scores to that prompt, helping you select the best prompts for your application.
+`deepeval` lets you evaluate prompts by associating them with test runs. A `Prompt` in `deepeval` contains the prompt template and model parameters used for generation. By linking a `Prompt` to a test run, you can attribute metric scores to specific prompts, enabling metrics-driven prompt selection and optimization for your LLM application.
 
 ## Quick summary
 
@@ -18,18 +18,18 @@ There are two types of evaluations in `deepeval`:
 
 This means you can evaluate prompts **end-to-end** or on the **component-level**.
 
-[End-to-end testing](#end-to-end) is useful when you want to evaluate the prompt's impact on the entire LLM application, since metrics in end-to-end tests are calculated on the final output. On the other hand, [component-level testing](#component-level) is useful when you want to evaluate prompts for specific LLM generation processes, since metrics in component-level tests are calculated on the component-level.
+[End-to-end testing](#end-to-end) is useful when you want to evaluate the prompt's impact on the entire LLM application, since metric scores in end-to-end tests are calculated on the final output. [Component-level testing](#component-level) is useful when you want to evaluate prompts for specific LLM generation processes, since metric scores in component-level tests are calculated on the component-level.
 
 ## Evaluating Prompts
 
 ### End-to-End
 
-You can evaluate prompts end-to-end by running the `evaluate` in python or `assert_test` in CI/CD.
+You can evaluate prompts end-to-end by running the `evaluate` function in Python or `assert_test` in CI/CD pipelines.
 
 <Tabs>
 <TabItem value="python" label="In Python">
 
-To evaluate a prompt when running end-to-end evals, run the `evaluate` function with your test cases and metrics, and supply the prompt object in the `hyperparameters` dictionary using any key.
+To evaluate a prompt during end-to-end evaluation, pass your test cases and metrics to the `evaluate` function, and include the prompt object in the `hyperparameters` dictionary with any string key.
 
 ```python title="main.py" showLineNumbers={true} {18}
 from somewhere import your_llm_app
@@ -47,14 +47,14 @@ input = "What is the capital of France?"
 actual_output = your_llm_app(input, prompt.messages_template)
 
 evaluate(
-    test_case=LLMTestCase(input=input, actual_output=actual_output),
+    test_cases=[LLMTestCase(input=input, actual_output=actual_output)],
     metrics=[AnswerRelevancyMetric()],
     hyperparameters={"prompt": prompt}
 )
 ```
 
 :::tip
-You can log multiple prompts in the `hyperparameters` dictionary if your llm app consists of many llm generations.
+You can log multiple prompts in the `hyperparameters` dictionary if your LLM application uses multiple prompts.
 
 ```python
 evaluate(..., hyperparameters={"prompt_1": prompt_1, "prompt_2": prompt_2})
@@ -66,7 +66,7 @@ evaluate(..., hyperparameters={"prompt_1": prompt_1, "prompt_2": prompt_2})
 
 <TabItem value="ci" label="In CI/CD">
 
-To evaluate a prompt when running end-to-end evals in the CI/CD pipeline, run the `assert_test` function with your test cases and metrics, and supply the prompt object to the hyperparameters dictionary.
+To evaluate a prompt during end-to-end evaluation in CI/CD pipelines, use the `assert_test` function with your test cases and metrics, and include the prompt object in the hyperparameters dictionary.
 
 ```python title="main.py" showLineNumbers={true} {21}
 import pytest
@@ -93,7 +93,7 @@ def hyperparameters():
 ```
 
 :::tip
-You can log multiple prompts in the `hyperparameters` dictionary if your llm app consist of many llm generations.
+You can log multiple prompts in the `hyperparameters` dictionary if your LLM application uses multiple prompts.
 
 ```python
 @deepeval.log_hyperparameters()
@@ -107,17 +107,40 @@ def hyperparameters():
 
 </Tabs>
 
-✅ If successful, you should see a confirmation log like the one below in your CLI:
+<details>
+<summary>✅ If successful, you should see a confirmation log like the one below in your CLI.</summary>
 
 ```bash
-To be determined
+✓ Prompts Logged
+
+╭─ Message Prompt (v00.00.20) ──────────────────────────────╮
+│                                                           │
+│  type: messages                                           │
+│  output_type: OutputType.SCHEMA                           │
+│  interpolation_type: PromptInterpolationType.FSTRING      │
+│                                                           │
+│  Model Settings:                                          │
+│    – provider: OPEN_AI                                    │
+│    – name: gpt-4o                                         │
+│    – temperature: 0.7                                     │
+│    – max_tokens: None                                     │
+│    – top_p: None                                          │
+│    – frequency_penalty: None                              │
+│    – presence_penalty: None                               │
+│    – stop_sequence: None                                  │
+│    – reasoning_effort: None                               │
+│    – verbosity: LOW                                       │
+│                                                           │
+╰───────────────────────────────────────────────────────────╯
 ```
 
-Based on the metric scores of the test run, you can try different prompts to see which one scores the highest, or make the necessary adjustments to improve the prompt.
+</details>
+
+Based on the metric scores, you can iterate on different prompts to identify the highest-performing version and optimize your LLM application accordingly.
 
 ### Component-Level
 
-`deepeval` also lets you evaluate prompts on the component-level to evaluate specific LLM generations instead of the entire app. To do this, you'll want to first [set up tracing](/docs/evaluation-llm-tracing), then call `update_llm_span` with the prompts you want to evaluate for each llm span. You can also need to supply the metrics you want to evaluate for each llm span in the `@observe` decorator.
+`deepeval` also supports component-level prompt evaluation to assess specific LLM generations within your application. To enable this, first [set up tracing](/docs/evaluation-llm-tracing), then call `update_llm_span` with the prompts you want to evaluate for each LLM span. Additionally, supply the metrics you want to use in the `@observe` decorator for each span.
 
 ```python title="main.py" showLineNumbers={true} {13,20}
 from openai import OpenAI
@@ -126,7 +149,6 @@ from deepeval.prompt import Prompt, PromptMessage
 from deepeval.metrics import AnswerRelevancyMetric
 
 prompt_1 = Prompt(alias="First",  messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")])
-prompt_2 = Prompt(alias="Second", messages_template=[PromptMessage(role="system", content="You are an incredibly helpful assistant.")])
 
 @observe(type="llm", metrics=[AnswerRelevancyMetric()])
 def gen1(input: str):
@@ -135,22 +157,16 @@ def gen1(input: str):
     update_llm_span(prompt=prompt_1)
     return res.choices[0].message.content
 
-@observe(type="llm", metrics=[AnswerRelevancyMetric()])
-def gen2(input: str):
-    prompt_template = [{"role": msg.role, "content": msg.content} for msg in prompt_2.messages_template]
-    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_template+[{"role":"user","content":input}])
-    update_llm_span(prompt=prompt_2)
-    return res.choices[0].message.content
-
+@observe()
 def your_llm_app(input: str):
-    return gen1(input) + " " + gen2(input)
+    return gen1(input)
 ```
 
 :::note
-Since `update_llm_span` can only be called inside an llm span, you can only evaluate prompts for llm spans.
+Since `update_llm_span` can only be called inside an LLM span, prompt evaluation is limited to LLM spans only.
 :::
 
-Then run the `evals_iterator` to evaluate the prompts you've set up for each llm span.
+Then run the `evals_iterator` to evaluate the prompts configured for each LLM span.
 
 ```python title="main.py" showLineNumbers={true} {17,25}
 from deepeval.dataset import EvaluationDataset, Golden
@@ -161,11 +177,34 @@ for golden in dataset.evals_iterator():
     your_llm_app(golden.input)
 ```
 
-✅ If successful, you should see a confirmation log like the one below in your CLI:
+<details>
+<summary>✅ If successful, you should see a confirmation log like the one above in your CLI.</summary>
 
 ```bash
-To be determined
+✓ Prompts Logged
+
+╭─ Message Prompt (v00.00.20) ──────────────────────────────╮
+│                                                           │
+│  type: messages                                           │
+│  output_type: OutputType.SCHEMA                           │
+│  interpolation_type: PromptInterpolationType.FSTRING      │
+│                                                           │
+│  Model Settings:                                          │
+│    – provider: OPEN_AI                                    │
+│    – name: gpt-4o                                         │
+│    – temperature: 0.7                                     │
+│    – max_tokens: None                                     │
+│    – top_p: None                                          │
+│    – frequency_penalty: None                              │
+│    – presence_penalty: None                               │
+│    – stop_sequence: None                                  │
+│    – reasoning_effort: None                               │
+│    – verbosity: LOW                                       │
+│                                                           │
+╰───────────────────────────────────────────────────────────╯
 ```
+
+</details>
 
 ## Creating Prompts
 
@@ -238,12 +277,12 @@ prompt.pull(version="00.00.01")
 </Tabs>
 
 :::caution
-When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary when doing end-to-end evals, and before you call `update_llm_span` when running component-level evals.
+When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary for end-to-end evaluation, and before calling `update_llm_span` for component-level evaluations.
 :::
 
 ### From Scratch
 
-You can create a prompt in code by instantiating a `Prompt` object with the `alias`. You can either supply a list of messages to create a message-based prompt, or a string of text to create a text-based prompt.
+You can create a prompt in code by instantiating a `Prompt` object with an `alias`. Supply either a list of messages for a message-based prompt, or a text string for a text-based prompt.
 
 <Tabs>
 <TabItem value="Messages" label="Messages">
@@ -274,11 +313,11 @@ prompt = Prompt(
 
 ## Additional Attributes
 
-In addition to the attributes mentioned above, you can also associate model and output settings with a `Prompt`.
+In addition to prompt templates, you can associate model and output settings with a `Prompt`.
 
 ### Model Settings
 
-Model settings include the model alias as well as the generation settings such as temperature:
+Model settings include the model provider and name, as well as generation parameters such as temperature:
 
 ```python title="main.py" showLineNumbers={true}
 from deepeval.prompt import Prompt, ModelSettings, ModelProvider
@@ -292,7 +331,7 @@ model_settings=ModelSettings(
 prompt = Prompt(..., model_settings=model_settings)
 ```
 
-There are **NINE** model settings you can associate with a prompt:
+You can configure the following **nine** model settings for a prompt:
 
 - `provider`: An `ModelProvider` enum specifying the model provider to use for generation.
 - `name`: The string specifying the model name to use for generation.
