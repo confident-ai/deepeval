@@ -1,5 +1,6 @@
 from crewai.llm import LLM
 from crewai.crew import Crew
+from crewai.agent import Agent
 from functools import wraps
 from deepeval.tracing.tracing import Observer
 
@@ -24,3 +25,13 @@ def wrap_llm_call():
             result = original_llm_call(self, *args, **kwargs)
         return result
     LLM.call = wrapper
+
+def wrap_agent_execute_task():
+    original_execute_task = Agent.execute_task
+    
+    @wraps(original_execute_task)
+    def wrapper(self, *args, **kwargs):
+        with Observer(span_type="agent", func_name="execute_task"):
+            result = original_execute_task(self, *args, **kwargs)
+        return result
+    Agent.execute_task = wrapper
