@@ -26,8 +26,8 @@ def is_dependency_installed():
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
 
-# OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
-OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
+OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
+# OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
 
 class SpanInterceptor(SpanProcessor):
