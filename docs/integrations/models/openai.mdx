@@ -83,6 +83,10 @@ There are **ONE** mandatory and **ONE** optional parameters when creating a `GPT
 - [Optional] `cost_per_output_token`: A float specifying the cost for each output token for the provided model.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
 
+:::info
+You can use custom providers by setting `_openai_api_key` and `base_url` with your custom provider's details.
+:::
+
 :::tip
 Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
 :::
