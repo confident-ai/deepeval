@@ -6,25 +6,21 @@ import pytest
 from deepeval.models.llms.amazon_bedrock_model import AmazonBedrockModel
 
 
-def _mk_model(gen_kwargs: Optional[Dict[str, Any]], temperature: float = 0.5):
+def _mk_model(gen_kwargs: Optional[Dict[str, Any]]):
     # bypass __init__, set only needed attributes for tests
     m = AmazonBedrockModel.__new__(AmazonBedrockModel)
-    m.temperature = temperature
     m.generation_kwargs = gen_kwargs or {}
     return m
 
 
 def test_get_converse_request_body_contains_temperature_and_kwargs():
-    gen_kwargs = {"maxTokens": 1234, "stopSequences": ["END", "STOP"]}
-    temp = 0.7
-    model = _mk_model(gen_kwargs, temperature=temp)
+    gen_kwargs = {"maxTokens": 1234, "stopSequences": ["END", "STOP"], "temperature": 0.7}
+    model = _mk_model(gen_kwargs)
     body = model.get_converse_request_body("hello")
 
     assert body["messages"][0]["content"][0]["text"] == "hello"
     inf_cfg = body["inferenceConfig"]
-    # temperature should be included directly from model.temperature
-    assert inf_cfg["temperature"] == temp
-    # generation_kwargs should be passed verbatim
+    assert inf_cfg["temperature"] == 0.7
     assert inf_cfg["maxTokens"] == 1234
     assert inf_cfg["stopSequences"] == ["END", "STOP"]
 
@@ -39,20 +35,14 @@ def test_generation_kwargs_not_mutated():
     assert original == snapshot, "generation_kwargs should not be mutated"
 
 
-def test_temperature_is_not_overridden_by_generation_kwargs():
-    # generation_kwargs takes precedence over model.temperature
-    model = _mk_model({"temperature": 0.9}, temperature=0.2)
-    body = model.get_converse_request_body("hi")
-    assert body["inferenceConfig"]["temperature"] == 0.9
-
-
 @pytest.mark.parametrize(
     "gen_kwargs",
     [
         {},
         {"maxTokens": 1000},
         {"stopSequences": ["STOP"]},
-        {"maxTokens": 1000, "stopSequences": ["STOP"], "topP": 0.5},
+        {"temperature": 0.5},
+        {"maxTokens": 1000, "stopSequences": ["STOP"], "topP": 0.5, "temperature": 0.5},
     ],
 )
 def test_various_generation_kwargs_passed_through(gen_kwargs):
