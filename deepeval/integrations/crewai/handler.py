@@ -1,7 +1,7 @@
 import deepeval
 from typing import Optional, cast
 from deepeval.telemetry import capture_tracing_integration
-from deepeval.tracing.context import current_span_context
+from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.tracing import Observer
 from deepeval.tracing.types import LlmSpan
 
@@ -44,13 +44,24 @@ class CrewAIEventsListener(BaseEventListener):
             if current_span:
                 current_span.input = event.inputs
 
+            # set trace input
+            current_trace = current_trace_context.get()
+            if current_trace:
+                current_trace.input = event.inputs
+
         @crewai_event_bus.on(CrewKickoffCompletedEvent)
         def on_crew_completed(source, event: CrewKickoffCompletedEvent):
             # Assuming that this event is called in the crew.kickoff method
             current_span = current_span_context.get()
+            
             # set the output
             if current_span:
-                current_span.output = event.output
+                current_span.output = str(event.output)
+            
+            # set trace output
+            current_trace = current_trace_context.get()
+            if current_trace:
+                current_trace.output = str(event.output)
 
         @crewai_event_bus.on(LLMCallStartedEvent)
         def on_llm_started(source, event: LLMCallStartedEvent):
