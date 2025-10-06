@@ -2304,5 +2304,5 @@ def log_prompt(
             new_prompt_key = f"{new_prompt.alias}_{new_prompt.version}"
             if new_prompt_key not in existing_prompt_keys:
                 test_run.prompts.append(new_prompt)
-    
+
     global_test_run_manager.save_test_run(TEMP_FILE_PATH)

@@ -78,7 +78,7 @@ def log_hyperparameters(func):
 
 
 def process_prompts(
-    hyperparameters: Dict[str, Union[str, int, float, Prompt]]
+    hyperparameters: Dict[str, Union[str, int, float, Prompt]],
 ) -> List[PromptData]:
     prompts = []
     if not hyperparameters:
