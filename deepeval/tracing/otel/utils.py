@@ -1,8 +1,15 @@
+import json
+
 from typing import List, Optional, Tuple, Any
+from opentelemetry.sdk.trace.export import ReadableSpan
+
+from deepeval.evaluate.utils import create_api_test_case
+from deepeval.test_run.api import LLMApiTestCase
+from deepeval.test_run.test_run import global_test_run_manager
 from deepeval.tracing.types import Trace, LLMTestCase, ToolCall
 from deepeval.tracing import trace_manager, BaseSpan
-from opentelemetry.sdk.trace.export import ReadableSpan
-import json
+from deepeval.tracing.utils import make_json_serializable
+
 
 GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
 
@@ -103,11 +110,14 @@ def check_llm_input_from_gen_ai_attributes(
     output = None
     try:
         input = json.loads(span.attributes.get("gen_ai.input.messages"))
-    except Exception as e:
+        input = _flatten_input(input)
+
+    except Exception:
         pass
     try:
         output = json.loads(span.attributes.get("gen_ai.output.messages"))
-    except Exception as e:
+        output = _flatten_input(output)
+    except Exception:
         pass
 
     if input is None and output is None:
@@ -121,10 +131,65 @@ def check_llm_input_from_gen_ai_attributes(
                     and last_event.get("event.name") == "gen_ai.choice"
                 ):
                     output = last_event
-        except Exception as e:
+        except Exception:
             pass
 
     return input, output
+
+
+def _flatten_input(input: list) -> list:
+    if input and isinstance(input, list):
+        try:
+            result: List[dict] = []
+            for m in input:
+                if isinstance(m, dict):
+                    role = m.get("role")
+                    if not role:
+                        role = "assistant"
+                    parts = m.get("parts")
+                    if parts:
+                        for part in parts:
+                            if isinstance(part, dict):
+                                ptype = part.get("type")
+                                if ptype == "text":
+                                    result.append(
+                                        {
+                                            "role": role,
+                                            "content": part.get("content"),
+                                        }
+                                    )
+                                else:
+                                    result.append(
+                                        {
+                                            "role": role,
+                                            "content": make_json_serializable(
+                                                part
+                                            ),
+                                        }
+                                    )
+                            else:
+                                result.append(
+                                    {
+                                        "role": role,
+                                        "content": make_json_serializable(part),
+                                    }
+                                )
+                    else:
+                        result.append(
+                            {"role": role, "content": m.get("content")}
+                        )  # no parts
+                else:
+                    result.append(
+                        {
+                            "role": "assistant",
+                            "content": make_json_serializable(m),
+                        }
+                    )
+            return result
+        except Exception:
+            return input
+
+    return input
 
 
 def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
@@ -132,7 +197,7 @@ def check_tool_name_from_gen_ai_attributes(span: ReadableSpan) -> Optional[str]:
         gen_ai_tool_name = span.attributes.get("gen_ai.tool.name")
         if gen_ai_tool_name:
             return gen_ai_tool_name
-    except Exception as e:
+    except Exception:
         pass
 
     return None
@@ -145,7 +210,7 @@ def check_tool_input_parameters_from_gen_ai_attributes(
         tool_arguments = span.attributes.get("tool_arguments")
         if tool_arguments:
             return json.loads(tool_arguments)
-    except Exception as e:
+    except Exception:
         pass
 
     return None
@@ -164,7 +229,7 @@ def check_span_type_from_gen_ai_attributes(span: ReadableSpan):
 
         elif gen_ai_tool_name:
             return "tool"
-    except Exception as e:
+    except Exception:
         pass
 
     return "base"
@@ -175,7 +240,7 @@ def check_model_from_gen_ai_attributes(span: ReadableSpan):
         gen_ai_request_model_name = span.attributes.get("gen_ai.request.model")
         if gen_ai_request_model_name:
             return gen_ai_request_model_name
-    except Exception as e:
+    except Exception:
         pass
 
     return None
@@ -226,7 +291,7 @@ def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
                     tools_called.append(
                         ToolCall.model_validate_json(tool_call_json_str)
                     )
-                except Exception as e:
+                except Exception:
                     pass
 
     _expected_tools = span.attributes.get(
@@ -239,7 +304,7 @@ def prepare_trace_llm_test_case(span: ReadableSpan) -> Optional[LLMTestCase]:
                     expected_tools.append(
                         ToolCall.model_validate_json(tool_call_json_str)
                     )
-                except Exception as e:
+                except Exception:
                     pass
 
     test_case.tools_called = tools_called
@@ -266,12 +331,6 @@ def parse_list_of_strings(context: List[str]) -> List[str]:
             else:
                 parsed_context.append(context_str)
     return parsed_context
-
-
-from deepeval.evaluate.utils import create_api_test_case
-from deepeval.test_run.api import LLMApiTestCase
-from deepeval.test_run.test_run import global_test_run_manager
-from typing import Optional
 
 
 def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
@@ -374,13 +433,15 @@ def check_pydantic_ai_agent_input_output(
     except Exception:
         pass
 
+    input_val = _flatten_input(input_val)
+    output_val = _flatten_input(output_val)
     return input_val, output_val
 
 
 def check_tool_output(span: ReadableSpan):
     try:
         return span.attributes.get("tool_response")
-    except Exception as e:
+    except Exception:
         pass
     return None
 

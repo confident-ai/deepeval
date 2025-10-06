@@ -208,7 +208,13 @@ class TraceManager:
                 else:
                     # print(f"Ending trace: {trace.root_spans}")
                     self.environment = Environment.TESTING
-                    trace.root_spans = [trace.root_spans[0].children[0]]
+                    if (
+                        trace.root_spans
+                        and len(trace.root_spans) > 0
+                        and trace.root_spans[0].children
+                        and len(trace.root_spans[0].children) > 0
+                    ):
+                        trace.root_spans = [trace.root_spans[0].children[0]]
                     for root_span in trace.root_spans:
                         root_span.parent_uuid = None
 
@@ -795,6 +801,9 @@ class Observer:
 
         # Now create the span instance with the correct trace_uuid and parent_uuid
         span_instance = self.create_span_instance()
+
+        # stash call arguments so they are available during the span lifetime
+        setattr(span_instance, "_function_kwargs", self.function_kwargs)
 
         # Add the span to active spans and to its trace
         trace_manager.add_span(span_instance)

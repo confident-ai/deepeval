@@ -1,15 +1,12 @@
 import os
-import time
 import inspect
 import json
 import sys
-import difflib
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
-import time
 from collections import deque
-from typing import Any, Dict, Optional, Sequence, Callable
+from typing import Any, Dict, Optional
 
 from deepeval.constants import CONFIDENT_TRACING_ENABLED
 
@@ -100,6 +97,60 @@ def make_json_serializable(obj):
     return _serialize(obj)
 
 
+def make_json_serializable_for_metadata(obj):
+    """
+    Recursively converts an object to a JSON‐serializable form,
+    replacing circular references with "<circular>".
+    """
+    seen = set()  # Store `id` of objects we've visited
+
+    def _serialize(o):
+        oid = id(o)
+
+        # strip Nulls
+        if isinstance(o, str):
+            return _strip_nul(o)
+
+        # Primitive types are already serializable
+        if isinstance(o, (str, int, float, bool)) or o is None:
+            return str(o)
+
+        # Detect circular reference
+        if oid in seen:
+            return "<circular>"
+
+        # Mark current object as seen
+        seen.add(oid)
+
+        # Handle containers
+        if isinstance(o, (list, tuple, set, deque)):  # TODO: check if more
+            serialized = []
+            for item in o:
+                serialized.append(_serialize(item))
+
+            return serialized
+
+        if isinstance(o, dict):
+            result = {}
+            for key, value in o.items():
+                # Convert key to string (JSON only allows string keys)
+                result[str(key)] = _serialize(value)
+            return result
+
+        # Handle objects with __dict__
+        if hasattr(o, "__dict__"):
+            result = {}
+            for key, value in vars(o).items():
+                if not key.startswith("_"):
+                    result[key] = _serialize(value)
+            return result
+
+        # Fallback: convert to string
+        return _strip_nul(str(o))
+
+    return _serialize(obj)
+
+
 def to_zod_compatible_iso(
     dt: datetime, microsecond_precision: bool = False
 ) -> str:
@@ -135,8 +186,8 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
-    except:
-        return f"<self>"
+    except Exception:
+        return "<self>"
 
 
 def get_deepeval_trace_mode() -> Optional[str]:

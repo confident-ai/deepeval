@@ -1,4 +1,4 @@
-from typing import List, Union, Dict
+from typing import List, Dict
 
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -299,7 +299,7 @@ class ToolCorrectnessMetric(BaseMetric):
     def is_successful(self) -> bool:
         try:
             self.success = self.score >= self.threshold
-        except:
+        except (AttributeError, TypeError):
             self.success = False
         return self.success
 

@@ -238,7 +238,7 @@ module.exports = {
       type: "category",
       label: "Others",
       className: "sidebar-item-icon-others",
-      items: ["data-privacy", "miscellaneous"],
+      items: ["command-line-interface", "data-privacy", "miscellaneous"],
       collapsed: false,
     },
   ],
