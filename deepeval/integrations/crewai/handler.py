@@ -34,6 +34,17 @@ class CrewAIEventsListener(BaseEventListener):
         super().__init__()
         self.span_observers: dict[str, Observer] = {}
 
+    @staticmethod
+    def get_tool_execution_id(source, event) -> str:
+        source_id = id(source)
+        task_id = getattr(event, 'task_id', 'unknown')
+        agent_id = getattr(event, 'agent_id', 'unknown')
+        tool_name = getattr(event, 'tool_name', 'unknown')
+        execution_id = f"tool_{source_id}_{task_id}_{agent_id}_{tool_name}"
+        
+        return execution_id
+
+
     def setup_listeners(self, crewai_event_bus):
         @crewai_event_bus.on(CrewKickoffStartedEvent)
         def on_crew_started(source, event: CrewKickoffStartedEvent):
@@ -105,11 +116,19 @@ class CrewAIEventsListener(BaseEventListener):
         
         @crewai_event_bus.on(ToolUsageStartedEvent)
         def on_tool_started(source, event: ToolUsageStartedEvent):
-            pass
+            observer = Observer(span_type="tool", func_name=event.tool_name, function_kwargs=event.tool_args)
+            self.span_observers[self.get_tool_execution_id(source, event)] = observer
+            observer.__enter__()
+
 
         @crewai_event_bus.on(ToolUsageFinishedEvent)
         def on_tool_completed(source, event: ToolUsageFinishedEvent):
-            pass
+            observer = self.span_observers.pop(self.get_tool_execution_id(source, event))
+            if observer:
+                current_span = current_span_context.get()
+                if current_span:
+                    current_span.output = event.output
+                observer.__exit__(None, None, None)
 
 
 
@@ -126,7 +145,6 @@ def instrument_crewai(api_key: Optional[str] = None):
             wrap_crew_kickoff_for_each_async,
             wrap_llm_call, 
             wrap_agent_execute_task, 
-            # wrap_tool_decorator
         )
 
         wrap_crew_kickoff()
@@ -135,8 +153,4 @@ def instrument_crewai(api_key: Optional[str] = None):
         wrap_crew_kickoff_for_each_async()
         wrap_llm_call()
         wrap_agent_execute_task()
-        # wrap_tool_decorator() #TODO: sort this out later
-        # CrewAgentExecutor.invoke = observe(CrewAgentExecutor.invoke)
-        # ToolUsage.use = observe(ToolUsage.use, type="tool")
-        # patch_build_context_for_task()
         CrewAIEventsListener()

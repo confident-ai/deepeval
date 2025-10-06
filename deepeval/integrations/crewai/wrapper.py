@@ -70,15 +70,3 @@ def wrap_agent_execute_task():
             result = original_execute_task(self, *args, **kwargs)
         return result
     Agent.execute_task = wrapper
-
-def wrap_tool_decorator():
-    from crewai import tools
-    original_tool_decorator = tools.tool
-    
-    @wraps(original_tool_decorator)
-    def wrapper(*args, **kwargs):
-        print(args[0])
-        if isinstance(args[0], Callable):
-            args[0] = observe(args[0], type="tool")
-    
-    tools.tool = wrapper
