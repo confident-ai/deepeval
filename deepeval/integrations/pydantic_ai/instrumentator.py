@@ -48,6 +48,10 @@ def is_dependency_installed():
     return True
 
 
+from deepeval.confident.api import get_confident_api_key
+from deepeval.prompt import Prompt
+from deepeval.tracing.otel.test_exporter import test_exporter
+
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
@@ -178,6 +182,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         agent_metric_collection: Optional[str] = None,
         tool_metric_collection_map: Optional[dict] = None,
         trace_metric_collection: Optional[str] = None,
+        is_test_mode: Optional[bool] = False,
     ):
         is_dependency_installed()
 
@@ -213,12 +218,17 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         span_interceptor = SpanInterceptor(self)
         trace_provider.add_span_processor(span_interceptor)
 
-        trace_provider.add_span_processor(
-            BatchSpanProcessor(
-                OTLPSpanExporter(
-                    endpoint=OTLP_ENDPOINT,
-                    headers={"x-confident-api-key": api_key},
+        if is_test_mode:
+            trace_provider.add_span_processor(
+                BatchSpanProcessor(test_exporter)
+            )
+        else:
+            trace_provider.add_span_processor(
+                BatchSpanProcessor(
+                    OTLPSpanExporter(
+                        endpoint=OTLP_ENDPOINT,
+                        headers={"x-confident-api-key": api_key},
+                    )
                 )
             )
-        )
         super().__init__(tracer_provider=trace_provider)
