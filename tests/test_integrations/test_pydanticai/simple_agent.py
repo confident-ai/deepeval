@@ -27,8 +27,8 @@ agent = Agent(
 )
 
 
-def execute_simple_agent():
-    result = asyncio.run(agent.run("What are the LLMs?"))
+async def execute_simple_agent():
+    result = await agent.run("What are the LLMs?")
     print("===============Simple agent output:===============")
     print(result)
 

@@ -1,6 +1,7 @@
 import json
 import os
 from typing import Literal, Optional, List
+import contextvars
 
 try:
     from pydantic_ai.models.instrumented import InstrumentationSettings
@@ -31,6 +32,10 @@ from deepeval.tracing.otel.utils import to_hex_string
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
 
 
+# This is a context variable to store the trace id. 
+# It is populated by the trace interceptor on-start and can accessed by ConfidentInstrumentationSettings
+_trace_var: contextvars.ContextVar[Optional[str]] = contextvars.ContextVar("trace_uuid", default=None)
+
 class SpanInterceptor(SpanProcessor):
     def __init__(self, settings_instance):
         # Keep a reference to the settings instance instead of copying values
@@ -39,7 +44,7 @@ class SpanInterceptor(SpanProcessor):
     def on_start(self, span, parent_context):
 
         # populate the trace id
-        self.settings.trace_id = to_hex_string(span.get_span_context().trace_id, 32)
+        self.settings._set_trace_id(to_hex_string(span.get_span_context().trace_id, 32))
 
         # set trace attributes
         if self.settings.thread_id:
@@ -139,10 +144,6 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
     agent_metric_collection: Optional[str] = None
     tool_metric_collection_map: dict = {}
     trace_metric_collection: Optional[str] = None
-    
-    trace_id: Optional[str] = None # to be populated by the trace interceptor on-start
-    # This can be used to send annotations to the trace after the Agent Run ends 
-    # Pydantic AI does not have any callback for trace id, this is a workaround to send annotations to the trace after the Agent Run ends 
 
     
     def __init__(
@@ -203,3 +204,16 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
             )
         )
         super().__init__(tracer_provider=trace_provider)
+    
+    def get_trace_id(self) -> Optional[str]:
+        """
+        Get the trace id from the context variable.
+        """
+        return _trace_var.get()
+    
+    def _set_trace_id(self, trace_id: str) -> None:
+        """
+        Set the trace id in the context variable. It is used by the trace interceptor to populate the trace id.
+        It is not meant to be used by the user.
+        """
+        _trace_var.set(trace_id)
