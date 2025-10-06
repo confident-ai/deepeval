@@ -7,7 +7,16 @@ from deepeval.tracing.types import LlmSpan
 
 try:
     from crewai.utilities.events.base_event_listener import BaseEventListener
-    from crewai.events import CrewKickoffStartedEvent, CrewKickoffCompletedEvent, LLMCallStartedEvent, LLMCallCompletedEvent, AgentExecutionStartedEvent, AgentExecutionCompletedEvent
+    from crewai.events import (
+        CrewKickoffStartedEvent, 
+        CrewKickoffCompletedEvent, 
+        LLMCallStartedEvent, 
+        LLMCallCompletedEvent, 
+        AgentExecutionStartedEvent, 
+        AgentExecutionCompletedEvent,
+        ToolUsageStartedEvent,
+        ToolUsageFinishedEvent
+    )
     crewai_installed = True
 except:
     crewai_installed = False
@@ -82,6 +91,15 @@ class CrewAIEventsListener(BaseEventListener):
             # set the output
             if current_span:
                 current_span.output = event.output
+        
+        @crewai_event_bus.on(ToolUsageStartedEvent)
+        def on_tool_started(source, event: ToolUsageStartedEvent):
+            pass
+
+        @crewai_event_bus.on(ToolUsageFinishedEvent)
+        def on_tool_completed(source, event: ToolUsageFinishedEvent):
+            pass
+
 
 
 def instrument_crewai(api_key: Optional[str] = None):
