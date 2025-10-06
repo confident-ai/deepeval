@@ -7,6 +7,7 @@ class BaseTool(BaseModel):
 
 class InputTool(BaseTool):
     parameters: Dict[str, Any]
+    is_called: Optional[bool] = False
 
 class ToolCallOutput(BaseTool):
     args: Dict[str, Any]
