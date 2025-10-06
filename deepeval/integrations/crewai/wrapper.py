@@ -1,8 +1,11 @@
 from crewai.llm import LLM
 from crewai.crew import Crew
 from crewai.agent import Agent
+from crewai.tools.base_tool import Tool
+
 from functools import wraps
 from deepeval.tracing.tracing import Observer
+# from deepeval.tracing.tracing import observe
 
 def wrap_crew_kickoff():
     original_kickoff = Crew.kickoff
