@@ -14,7 +14,11 @@ def _mk_model(gen_kwargs: Optional[Dict[str, Any]]):
 
 
 def test_get_converse_request_body_contains_temperature_and_kwargs():
-    gen_kwargs = {"maxTokens": 1234, "stopSequences": ["END", "STOP"], "temperature": 0.7}
+    gen_kwargs = {
+        "maxTokens": 1234,
+        "stopSequences": ["END", "STOP"],
+        "temperature": 0.7,
+    }
     model = _mk_model(gen_kwargs)
     body = model.get_converse_request_body("hello")
 
@@ -42,7 +46,12 @@ def test_generation_kwargs_not_mutated():
         {"maxTokens": 1000},
         {"stopSequences": ["STOP"]},
         {"temperature": 0.5},
-        {"maxTokens": 1000, "stopSequences": ["STOP"], "topP": 0.5, "temperature": 0.5},
+        {
+            "maxTokens": 1000,
+            "stopSequences": ["STOP"],
+            "topP": 0.5,
+            "temperature": 0.5,
+        },
     ],
 )
 def test_various_generation_kwargs_passed_through(gen_kwargs):
