@@ -384,10 +384,6 @@ def post_test_run(traces: List[Trace], test_run_id: Optional[str]):
 
 
 def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
-    """
-    Extract and normalize pydantic_ai.all_messages from span attributes.
-    Returns a list of normalized messages or None if not available.
-    """
     try:
         raw = span.attributes.get("pydantic_ai.all_messages")
         if not raw:
