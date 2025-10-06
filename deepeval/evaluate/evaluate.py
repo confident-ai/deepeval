@@ -269,8 +269,8 @@ def evaluate(
                 )
 
         test_run = global_test_run_manager.get_test_run()
-        test_run.prompts = process_prompts(hyperparameters)
         test_run.hyperparameters = process_hyperparameters(hyperparameters)
+        test_run.prompts = process_prompts(hyperparameters)
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
         confident_link = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False

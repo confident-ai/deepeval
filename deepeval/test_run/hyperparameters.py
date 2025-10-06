@@ -1,5 +1,4 @@
-from typing import Union, Dict
-
+from typing import Union, Dict, Optional, List
 from deepeval.test_run import global_test_run_manager
 from deepeval.prompt import Prompt
 from deepeval.prompt.api import PromptApi
@@ -9,7 +8,8 @@ from deepeval.test_run.test_run import PromptData
 
 
 def process_hyperparameters(
-    hyperparameters,
+    hyperparameters: Optional[Dict] = None,
+    verbose: bool = True,
 ) -> Union[Dict[str, Union[str, int, float, PromptApi]], None]:
     if hyperparameters is None:
         return None
@@ -34,6 +34,7 @@ def process_hyperparameters(
 
         if isinstance(value, Prompt):
             prompt_key = f"{value.alias}_{value.version}"
+            print(prompt_key)
             if value._prompt_version_id is not None and value.type is not None:
                 processed_hyperparameters[key] = PromptApi(
                     id=value._prompt_version_id,
@@ -41,7 +42,7 @@ def process_hyperparameters(
                 )
             elif is_confident():
                 if prompt_key not in prompts_version_id_map:
-                    value.push(_verbose=False)
+                    value.push(_verbose=verbose)
                     prompts_version_id_map[prompt_key] = (
                         value._prompt_version_id
                     )
@@ -76,7 +77,9 @@ def log_hyperparameters(func):
     return wrapper
 
 
-def process_prompts(hyperparameters: Dict[str, Union[str, int, float, Prompt]]):
+def process_prompts(
+    hyperparameters: Dict[str, Union[str, int, float, Prompt]]
+) -> List[PromptData]:
     prompts = []
     if not hyperparameters:
         return prompts

@@ -2293,8 +2293,16 @@ def log_prompt(
         test_run.hyperparameters = {}
 
     if key not in test_run.hyperparameters:
-        test_run.prompts.extend(process_prompts(span_hyperparameters))
         test_run.hyperparameters.update(
-            process_hyperparameters(span_hyperparameters)
+            process_hyperparameters(span_hyperparameters, False)
         )
+        existing_prompt_keys = {
+            f"{p.alias}_{p.version}" for p in test_run.prompts
+        }
+        new_prompts = process_prompts(span_hyperparameters)
+        for new_prompt in new_prompts:
+            new_prompt_key = f"{new_prompt.alias}_{new_prompt.version}"
+            if new_prompt_key not in existing_prompt_keys:
+                test_run.prompts.append(new_prompt)
+    
     global_test_run_manager.save_test_run(TEMP_FILE_PATH)

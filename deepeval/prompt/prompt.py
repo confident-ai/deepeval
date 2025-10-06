@@ -333,7 +333,7 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
-        _verbose: Optional[bool] = False,
+        _verbose: Optional[bool] = True,
     ):
         if self.alias is None:
             raise ValueError(
@@ -587,10 +587,13 @@ class Prompt:
                 "Prompt alias is not set. Please set an alias to continue."
             )
         api = Api()
-        data, _ = api.send_request(
-            method=HttpMethods.GET,
-            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
-            url_params={"alias": self.alias},
-        )
-        versions = PromptVersionsHttpResponse(**data)
-        return versions.text_versions or versions.messages_versions or []
+        try:
+            data, _ = api.send_request(
+                method=HttpMethods.GET,
+                endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
+                url_params={"alias": self.alias},
+            )
+            versions = PromptVersionsHttpResponse(**data)
+            return versions.text_versions or versions.messages_versions or []
+        except:
+            return []
