@@ -11,6 +11,7 @@ import pytest
 import tenacity
 
 from pathlib import Path
+from deepeval.config.settings import get_settings, reset_settings
 
 
 @pytest.fixture(autouse=True)
@@ -52,3 +53,19 @@ def hidden_store_dir(tmp_path: Path) -> Path:
 @pytest.fixture(autouse=True)
 def no_sleep(monkeypatch):
     monkeypatch.setattr(tenacity.nap, "sleep", lambda _: None, raising=True)
+
+
+@pytest.fixture()
+def settings():
+    settings = get_settings()
+    yield settings
+
+
+@pytest.fixture(autouse=True)
+def settings_reset():
+    reset_settings()
+
+
+@pytest.fixture()
+def settings_reload():
+    reset_settings(reload_dotenv=True)
