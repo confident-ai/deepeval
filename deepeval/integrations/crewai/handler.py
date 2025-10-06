@@ -112,13 +112,13 @@ def instrument_crewai(api_key: Optional[str] = None):
             wrap_crew_kickoff, 
             wrap_llm_call, 
             wrap_agent_execute_task, 
-            # wrap_tool_decorator
+            wrap_tool_decorator
         )
 
         wrap_crew_kickoff()
         wrap_llm_call()
         wrap_agent_execute_task()
-        # wrap_tool_decorator()
+        # wrap_tool_decorator() #TODO: sort this out later
         # CrewAgentExecutor.invoke = observe(CrewAgentExecutor.invoke)
         # ToolUsage.use = observe(ToolUsage.use, type="tool")
         # patch_build_context_for_task()

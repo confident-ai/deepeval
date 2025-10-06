@@ -2,10 +2,10 @@ from crewai.llm import LLM
 from crewai.crew import Crew
 from crewai.agent import Agent
 from crewai.tools.base_tool import Tool
-
+from typing import Callable
 from functools import wraps
 from deepeval.tracing.tracing import Observer
-# from deepeval.tracing.tracing import observe
+from deepeval.tracing.tracing import observe
 
 def wrap_crew_kickoff():
     original_kickoff = Crew.kickoff
@@ -38,3 +38,15 @@ def wrap_agent_execute_task():
             result = original_execute_task(self, *args, **kwargs)
         return result
     Agent.execute_task = wrapper
+
+def wrap_tool_decorator():
+    from crewai import tools
+    original_tool_decorator = tools.tool
+    
+    @wraps(original_tool_decorator)
+    def wrapper(*args, **kwargs):
+        print(args[0])
+        if isinstance(args[0], Callable):
+            args[0] = observe(args[0], type="tool")
+    
+    tools.tool = wrapper

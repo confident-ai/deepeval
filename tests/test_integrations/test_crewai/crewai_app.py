@@ -2,11 +2,13 @@
 from crewai import Task, Crew, Agent
 from crewai.tools import tool
 from deepeval.integrations.crewai import instrument_crewai
+from deepeval.tracing.tracing import observe
 
 instrument_crewai()
 
 # Define a tool that fetches dummy weather data
 @tool("Get Weather")
+@observe(type="tool")
 def get_weather(city: str) -> str:
     """Fetch weather data for a given city. Returns temperature and conditions."""
     # Dummy weather data
