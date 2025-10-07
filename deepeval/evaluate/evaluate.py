@@ -276,7 +276,9 @@ def evaluate(
         else:
             confident_link = test_run_id = None
         return EvaluationResult(
-            test_results=test_results, confident_link=confident_link, test_run_id=test_run_id,
+            test_results=test_results,
+            confident_link=confident_link,
+            test_run_id=test_run_id,
         )
     elif metric_collection:
         api = Api()
