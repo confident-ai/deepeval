@@ -35,6 +35,7 @@ TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
+COLUMN_MAX_WIDTH = 40
 console = Console()
 
 
@@ -643,10 +644,7 @@ class TestRunManager:
 
         # Process regular test cases
         for index, test_case in enumerate(test_run.test_cases):
-            if test_case.metrics_data is None:
-                continue
-
-            if self._should_skip_test_case(test_case, display):
+            if test_case.metrics_data is None or self._should_skip_test_case(test_case, display):
                 continue
 
             pass_count, fail_count = self._count_metric_results(
@@ -683,10 +681,7 @@ class TestRunManager:
 
         table.add_row(
             "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            "",
-            "",
-            "",
-            "",
+            *[""] * (len(table.columns)-1),
         )
         print(table)
 
