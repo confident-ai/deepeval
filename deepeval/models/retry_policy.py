@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import itertools
 import functools
 import threading
 import logging
@@ -63,6 +64,7 @@ logger = logging.getLogger(__name__)
 Provider = Union[str, PS]
 _MAX_TIMEOUT_THREADS = get_settings().DEEPEVAL_TIMEOUT_THREAD_LIMIT
 _TIMEOUT_SEMA = threading.BoundedSemaphore(_MAX_TIMEOUT_THREADS)
+_WORKER_ID = itertools.count(1)
 
 # --------------------------
 # Policy description
@@ -414,6 +416,22 @@ def make_after_log(slug: str):
     return _after
 
 
+def _make_timeout_error(timeout_seconds: float) -> TimeoutError:
+    settings = get_settings()
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            "retry config: per_attempt=%s s, max_attempts=%s, per_task_budget=%s s",
+            timeout_seconds,
+            settings.DEEPEVAL_RETRY_MAX_ATTEMPTS,
+            settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+        )
+    msg = (
+        f"call timed out after {timeout_seconds:g}s (per attempt). "
+        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS (0 disables) or reduce work per attempt."
+    )
+    return TimeoutError(msg)
+
+
 def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
     """
     Run a synchronous callable with a soft timeout enforced by a helper thread,
@@ -428,8 +446,7 @@ def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
       to wait.
     - Once a permit is acquired, a daemon thread executes `func(*args, **kwargs)`.
     - We wait up to `timeout_seconds` for completion. If the timeout elapses, we raise
-      `TimeoutError("call timed out after {timeout}s")`. The worker thread is not
-      killed, it continues and releases the semaphore when it eventually finishes.
+      `TimeoutError`. The worker thread is not killed, it continues and releases the semaphore when it eventually finishes.
     - If the worker finishes in time, we return its result or re-raise its exception
       (with original traceback).
 
@@ -492,7 +509,9 @@ def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
             _TIMEOUT_SEMA.release()
 
     t = threading.Thread(
-        target=target, daemon=True, name="deepeval-timeout-worker"
+        target=target,
+        daemon=True,
+        name=f"deepeval-timeout-worker-{next(_WORKER_ID)}",
     )
 
     try:
@@ -514,7 +533,7 @@ def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
                 threading.active_count(),
                 names,
             )
-        raise TimeoutError(f"call timed out after {timeout_seconds:g}s")
+        raise _make_timeout_error(timeout_seconds)
 
     # Completed within time: return or raise
     if result["exc"] is not None:
@@ -544,7 +563,7 @@ def create_retry_decorator(provider: Provider):
             @functools.wraps(func)
             async def attempt(*args, **kwargs):
                 timeout_seconds = (
-                    get_settings().DEEPEVAL_HTTP_TIMEOUT_SECONDS or 0
+                    get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
                 )
                 coro = func(*args, **kwargs)
                 if timeout_seconds > 0:
@@ -556,20 +575,21 @@ def create_retry_decorator(provider: Provider):
                             and get_settings().DEEPEVAL_VERBOSE_MODE is True
                         ):
                             logger.debug(
-                                "async timeout after %.3fs (active_threads=%d)",
+                                "async timeout after %.3fs (active_threads=%d, tasks=%d)",
                                 timeout_seconds,
                                 threading.active_count(),
+                                len(asyncio.all_tasks()),
                             )
-                        raise TimeoutError(
-                            f"call timed out after {timeout_seconds:g}s"  # consistent with _run_sync_with_timeout
-                        ) from e
+                        raise _make_timeout_error(timeout_seconds) from e
                 return await coro
 
             return base_retry(attempt)
 
         @functools.wraps(func)
         def attempt(*args, **kwargs):
-            timeout_seconds = get_settings().DEEPEVAL_HTTP_TIMEOUT_SECONDS or 0
+            timeout_seconds = (
+                get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
+            )
             if timeout_seconds > 0:
                 return _run_sync_with_timeout(
                     func, timeout_seconds, *args, **kwargs
