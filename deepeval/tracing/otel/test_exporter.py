@@ -3,6 +3,7 @@ from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter
 from opentelemetry.sdk.trace.export import SpanExportResult
 import json
+from datetime import datetime
 
 class TestExporter(SpanExporter):
     """This exporter is used to test the exporter. It will store the spans in a list of dictionaries."""
@@ -16,7 +17,10 @@ class TestExporter(SpanExporter):
         return SpanExportResult.SUCCESS
     
     def get_span_json_list(self) -> List[Dict[str, Any]]:
-        return self.span_json_list
+        return sorted(
+            self.span_json_list, 
+            key=lambda x: datetime.fromisoformat(x["start_time"].replace("Z", "+00:00"))
+        )
 
     def clear_span_json_list(self):
         self.span_json_list = []
