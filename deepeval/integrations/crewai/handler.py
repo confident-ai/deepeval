@@ -21,6 +21,7 @@ try:
 except:
     crewai_installed = False
 
+IS_WRAPPED_ALL = False
 
 def is_crewai_installed():
     if not crewai_installed:
@@ -138,14 +139,22 @@ def instrument_crewai(api_key: Optional[str] = None):
         if api_key:
             deepeval.login(api_key)
 
+        wrap_all()
+
+        CrewAIEventsListener()
+
+def wrap_all():
+    global IS_WRAPPED_ALL
+    
+    if not IS_WRAPPED_ALL:
         from deepeval.integrations.crewai.wrapper import (
-            wrap_crew_kickoff, 
-            wrap_crew_kickoff_for_each,
-            wrap_crew_kickoff_async,
-            wrap_crew_kickoff_for_each_async,
-            wrap_llm_call, 
-            wrap_agent_execute_task, 
-        )
+                wrap_crew_kickoff, 
+                wrap_crew_kickoff_for_each,
+                wrap_crew_kickoff_async,
+                wrap_crew_kickoff_for_each_async,
+                wrap_llm_call, 
+                wrap_agent_execute_task, 
+            )
 
         wrap_crew_kickoff()
         wrap_crew_kickoff_for_each()
@@ -153,4 +162,5 @@ def instrument_crewai(api_key: Optional[str] = None):
         wrap_crew_kickoff_for_each_async()
         wrap_llm_call()
         wrap_agent_execute_task()
-        CrewAIEventsListener()
+        
+        IS_WRAPPED_ALL = True

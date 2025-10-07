@@ -1,7 +1,6 @@
 from crewai import Task, Crew, Agent
 from crewai.tools import tool
 from deepeval.integrations.crewai import instrument_crewai
-
 instrument_crewai()
 
 @tool
