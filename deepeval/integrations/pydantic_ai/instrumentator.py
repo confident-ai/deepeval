@@ -25,9 +25,18 @@ try:
     dependency_installed = True
 except ImportError as e:
     if get_settings().DEEPEVAL_VERBOSE_MODE:
-        logger.error(
-            "Optional tracing dependencies missing: %s", e, exc_info=True
-        )
+        if isinstance(e, ModuleNotFoundError):
+            logger.warning(
+                "Optional tracing dependency not installed: %s",
+                e.name,
+                stacklevel=2,
+            )
+        else:
+            logger.warning(
+                "Optional tracing import failed: %s",
+                e,
+                stacklevel=2,
+            )
     dependency_installed = False
 
 
