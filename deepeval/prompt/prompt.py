@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional, List, Dict
+from typing import Literal, Optional, List, Dict
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 import time
@@ -7,6 +7,7 @@ import json
 import os
 from pydantic import BaseModel
 import asyncio
+import portalocker
 
 from deepeval.prompt.api import (
     PromptHttpResponse,
@@ -25,6 +26,8 @@ from deepeval.utils import (
 )
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
+VERSION_CACHE_KEY = "version"
+LABEL_CACHE_KEY = "label"
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -39,6 +42,7 @@ class CustomEncoder(json.JSONEncoder):
 class CachedPrompt(BaseModel):
     alias: str
     version: str
+    label: Optional[str] = None
     template: Optional[str]
     messages_template: Optional[List[PromptMessage]]
     prompt_version_id: str
@@ -50,6 +54,7 @@ class CachedPrompt(BaseModel):
 
 
 class Prompt:
+    label: Optional[str] = None
     _prompt_version_id: Optional[str] = None
     _type: Optional[PromptType] = None
     _interpolation_type: Optional[PromptInterpolationType] = None
@@ -73,8 +78,8 @@ class Prompt:
         self._text_template = template
         self._messages_template = messages_template
         self._version = None
-        self._polling_tasks: Dict[str, asyncio.Task] = {}
-        self._refresh_map: Dict[str, int] = {}
+        self._polling_tasks: Dict[str, Dict[str, asyncio.Task]] = {}
+        self._refresh_map: Dict[str, Dict[str, int]] = {}
         if template:
             self._type = PromptType.TEXT
         elif messages_template:
@@ -138,87 +143,173 @@ class Prompt:
         return versions.text_versions or versions.messages_versions or []
 
     def _read_from_cache(
-        self, alias: str, version: Optional[str] = None
+        self,
+        alias: str,
+        version: Optional[str] = None,
+        label: Optional[str] = None,
     ) -> Optional[CachedPrompt]:
         if not os.path.exists(CACHE_FILE_NAME):
-            raise Exception("No Prompt cache file found")
+            return None
 
         try:
-            with open(CACHE_FILE_NAME, "r") as f:
+            # Use shared lock for reading to allow concurrent reads
+            with portalocker.Lock(
+                CACHE_FILE_NAME,
+                mode="r",
+                flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
+            ) as f:
                 cache_data = json.load(f)
 
             if alias in cache_data:
                 if version:
-                    if version in cache_data[alias]:
-                        return CachedPrompt(**cache_data[alias][version])
-                    else:
-                        raise Exception(
-                            f"Unable to find Prompt version: '{version}' for alias: '{alias}' in cache"
+                    if (
+                        VERSION_CACHE_KEY in cache_data[alias]
+                        and version in cache_data[alias][VERSION_CACHE_KEY]
+                    ):
+                        return CachedPrompt(
+                            **cache_data[alias][VERSION_CACHE_KEY][version]
                         )
-                else:
-                    raise Exception(
-                        f"Unable to load Prompt with alias: '{alias}' from cache when no version is specified "
-                    )
-            else:
-                raise Exception(
-                    f"Unable to find Prompt with alias: '{alias}' in cache"
-                )
-        except Exception as e:
-            raise Exception(f"Error reading Prompt cache from disk: {e}")
+                elif label:
+                    if (
+                        LABEL_CACHE_KEY in cache_data[alias]
+                        and label in cache_data[alias][LABEL_CACHE_KEY]
+                    ):
+                        return CachedPrompt(
+                            **cache_data[alias][LABEL_CACHE_KEY][label]
+                        )
+            return None
+        except (portalocker.exceptions.LockException, Exception):
+            # If cache is locked, corrupted or unreadable, return None and let it fetch from API
+            return None
 
     def _write_to_cache(
         self,
-        version: Optional[str] = None,
+        cache_key: Literal[VERSION_CACHE_KEY, LABEL_CACHE_KEY],
+        version: str,
+        label: Optional[str] = None,
         text_template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
         prompt_version_id: Optional[str] = None,
         type: Optional[PromptType] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
     ):
-        if not self.alias or not version:
+        if not self.alias:
             return
-
-        cache_data = {}
-        if os.path.exists(CACHE_FILE_NAME):
-            try:
-                with open(CACHE_FILE_NAME, "r") as f:
-                    cache_data = json.load(f)
-            except Exception:
-                cache_data = {}
-
-        # Ensure the cache structure is initialized properly
-        if self.alias not in cache_data:
-            cache_data[self.alias] = {}
-
-        # Cache the prompt
-        cache_data[self.alias][version] = {
-            "alias": self.alias,
-            "version": version,
-            "template": text_template,
-            "messages_template": messages_template,
-            "prompt_version_id": prompt_version_id,
-            "type": type,
-            "interpolation_type": interpolation_type,
-        }
 
         # Ensure directory exists
         os.makedirs(HIDDEN_DIR, exist_ok=True)
 
-        # Write back to cache file
-        with open(CACHE_FILE_NAME, "w") as f:
-            json.dump(cache_data, f, cls=CustomEncoder)
+        try:
+            # Use r+ mode if file exists, w mode if it doesn't
+            mode = "r+" if os.path.exists(CACHE_FILE_NAME) else "w"
+
+            with portalocker.Lock(
+                CACHE_FILE_NAME,
+                mode=mode,
+                flags=portalocker.LOCK_EX,
+            ) as f:
+                # Read existing cache data if file exists and has content
+                cache_data = {}
+                if mode == "r+":
+                    try:
+                        f.seek(0)
+                        content = f.read()
+                        if content:
+                            cache_data = json.loads(content)
+                    except (json.JSONDecodeError, Exception):
+                        cache_data = {}
+
+                # Ensure the cache structure is initialized properly
+                if self.alias not in cache_data:
+                    cache_data[self.alias] = {}
+
+                if cache_key not in cache_data[self.alias]:
+                    cache_data[self.alias][cache_key] = {}
+
+                # Cache the prompt
+                cached_entry = {
+                    "alias": self.alias,
+                    "version": version,
+                    "label": label,
+                    "template": text_template,
+                    "messages_template": messages_template,
+                    "prompt_version_id": prompt_version_id,
+                    "type": type,
+                    "interpolation_type": interpolation_type,
+                }
+
+                if cache_key == VERSION_CACHE_KEY:
+                    cache_data[self.alias][cache_key][version] = cached_entry
+                else:
+                    cache_data[self.alias][cache_key][label] = cached_entry
+
+                # Write back to cache file
+                f.seek(0)
+                f.truncate()
+                json.dump(cache_data, f, cls=CustomEncoder)
+        except portalocker.exceptions.LockException:
+            # If we can't acquire the lock, silently skip caching
+            pass
+        except Exception:
+            # If any other error occurs during caching, silently skip
+            pass
+
+    def _load_from_cache_with_progress(
+        self,
+        progress: Progress,
+        task_id: int,
+        start_time: float,
+        version: Optional[str] = None,
+        label: Optional[str] = None,
+    ):
+        """
+        Load prompt from cache and update progress bar.
+        Raises if unable to load from cache.
+        """
+        cached_prompt = self._read_from_cache(
+            self.alias, version=version, label=label
+        )
+        if not cached_prompt:
+            raise ValueError("Unable to fetch prompt and load from cache")
+
+        self.version = cached_prompt.version
+        self.label = cached_prompt.label
+        self._text_template = cached_prompt.template
+        self._messages_template = cached_prompt.messages_template
+        self._prompt_version_id = cached_prompt.prompt_version_id
+        self._type = PromptType(cached_prompt.type)
+        self._interpolation_type = PromptInterpolationType(
+            cached_prompt.interpolation_type
+        )
+
+        end_time = time.perf_counter()
+        time_taken = format(end_time - start_time, ".2f")
+        progress.update(
+            task_id,
+            description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
+        )
 
     def pull(
         self,
         version: Optional[str] = None,
+        label: Optional[str] = None,
         fallback_to_cache: bool = True,
         write_to_cache: bool = True,
         default_to_cache: bool = True,
         refresh: Optional[int] = 60,
     ):
+        should_write_on_first_fetch = False
         if refresh:
             default_to_cache = True
-            write_to_cache = False
+            # Check if we need to bootstrap the cache
+            cached_prompt = self._read_from_cache(
+                self.alias, version=version, label=label
+            )
+            if cached_prompt is None:
+                # No cache exists, so we should write after fetching to bootstrap
+                should_write_on_first_fetch = True
+            write_to_cache = False  # Polling will handle subsequent writes
+
         if self.alias is None:
             raise TypeError(
                 "Unable to pull prompt from Confident AI when no alias is provided."
@@ -227,15 +318,20 @@ class Prompt:
         # Manage background prompt polling
         loop = get_or_create_general_event_loop()
         if loop.is_running():
-            loop.create_task(self.create_polling_task(version, refresh))
+            loop.create_task(self.create_polling_task(version, label, refresh))
         else:
-            loop.run_until_complete(self.create_polling_task(version, refresh))
+            loop.run_until_complete(
+                self.create_polling_task(version, label, refresh)
+            )
 
         if default_to_cache:
             try:
-                cached_prompt = self._read_from_cache(self.alias, version)
+                cached_prompt = self._read_from_cache(
+                    self.alias, version=version, label=label
+                )
                 if cached_prompt:
                     self.version = cached_prompt.version
+                    self.label = cached_prompt.label
                     self._text_template = cached_prompt.template
                     self._messages_template = cached_prompt.messages_template
                     self._prompt_version_id = cached_prompt.prompt_version_id
@@ -254,58 +350,60 @@ class Prompt:
             TextColumn("[progress.description]{task.description}"),
             transient=False,
         ) as progress:
+            HINT_TEXT = (
+                f"version='{version or 'latest'}'"
+                if not label
+                else f"label='{label}'"
+            )
             task_id = progress.add_task(
-                f"Pulling [rgb(106,0,255)]'{self.alias}' (version='{version or 'latest'}')[/rgb(106,0,255)] from Confident AI...",
+                f"Pulling [rgb(106,0,255)]'{self.alias}' ({HINT_TEXT})[/rgb(106,0,255)] from Confident AI...",
                 total=100,
             )
+
             start_time = time.perf_counter()
             try:
-                data, _ = api.send_request(
-                    method=HttpMethods.GET,
-                    endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
-                    url_params={
-                        "alias": self.alias,
-                        "versionId": version or "latest",
-                    },
-                )
+                if label:
+                    data, _ = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPTS_LABEL_ENDPOINT,
+                        url_params={
+                            "alias": self.alias,
+                            "label": label,
+                        },
+                    )
+                else:
+                    data, _ = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
+                        url_params={
+                            "alias": self.alias,
+                            "versionId": version or "latest",
+                        },
+                    )
+
                 response = PromptHttpResponse(
                     id=data["id"],
+                    version=data.get("version", None),
+                    label=data.get("label", None),
                     text=data.get("text", None),
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
                 )
-            except:
-                try:
-                    if fallback_to_cache:
-                        cached_prompt = self._read_from_cache(
-                            self.alias, version
-                        )
-                        if cached_prompt:
-                            self.version = cached_prompt.version
-                            self._text_template = cached_prompt.template
-                            self._messages_template = (
-                                cached_prompt.messages_template
-                            )
-                            self._prompt_version_id = (
-                                cached_prompt.prompt_version_id
-                            )
-                            self._type = PromptType(cached_prompt.type)
-                            self._interpolation_type = PromptInterpolationType(
-                                cached_prompt.interpolation_type
-                            )
+            except Exception:
+                if fallback_to_cache:
+                    self._load_from_cache_with_progress(
+                        progress,
+                        task_id,
+                        start_time,
+                        version=version,
+                        label=label,
+                    )
+                    return
+                raise
 
-                            end_time = time.perf_counter()
-                            time_taken = format(end_time - start_time, ".2f")
-                            progress.update(
-                                task_id,
-                                description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
-                            )
-                            return
-                except:
-                    raise
-
-            self.version = version or "latest"
+            self.version = response.version
+            self.label = response.label
             self._text_template = response.text
             self._messages_template = response.messages
             self._prompt_version_id = response.id
@@ -318,9 +416,12 @@ class Prompt:
                 task_id,
                 description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Done! ({time_taken}s)",
             )
-            if write_to_cache:
+            # Write to cache if explicitly requested OR if we need to bootstrap cache for refresh mode
+            if write_to_cache or should_write_on_first_fetch:
                 self._write_to_cache(
-                    version=version or "latest",
+                    cache_key=LABEL_CACHE_KEY if label else VERSION_CACHE_KEY,
+                    version=response.version,
+                    label=response.label,
                     text_template=response.text,
                     messages_template=response.messages,
                     prompt_version_id=response.id,
@@ -380,55 +481,114 @@ class Prompt:
     async def create_polling_task(
         self,
         version: Optional[str],
+        label: Optional[str],
         refresh: Optional[int] = 60,
+        default_to_cache: bool = True,
     ):
-        if version is None:
+        if version is None and label is None:
             return
 
         # If polling task doesn't exist, start it
-        polling_task: Optional[asyncio.Task] = self._polling_tasks.get(version)
+        CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
+        cache_value = label if label else version
+
+        # Initialize nested dicts if they don't exist
+        if CACHE_KEY not in self._polling_tasks:
+            self._polling_tasks[CACHE_KEY] = {}
+        if CACHE_KEY not in self._refresh_map:
+            self._refresh_map[CACHE_KEY] = {}
+
+        polling_task: Optional[asyncio.Task] = self._polling_tasks[
+            CACHE_KEY
+        ].get(cache_value)
+
         if refresh:
-            self._refresh_map[version] = refresh
+            self._refresh_map[CACHE_KEY][cache_value] = refresh
             if not polling_task:
-                self._polling_tasks[version] = asyncio.create_task(
-                    self.poll(version)
+                self._polling_tasks[CACHE_KEY][cache_value] = (
+                    asyncio.create_task(
+                        self.poll(version, label, default_to_cache)
+                    )
                 )
 
         # If invalid `refresh`, stop the task
         else:
             if polling_task:
                 polling_task.cancel()
-            self._polling_tasks.pop(version)
-            self._refresh_map.pop(version)
+            if cache_value in self._polling_tasks[CACHE_KEY]:
+                self._polling_tasks[CACHE_KEY].pop(cache_value)
+            if cache_value in self._refresh_map[CACHE_KEY]:
+                self._refresh_map[CACHE_KEY].pop(cache_value)
 
-    async def poll(self, version: Optional[str] = None):
-        api = Api()
+    async def poll(
+        self,
+        version: Optional[str] = None,
+        label: Optional[str] = None,
+        default_to_cache: bool = True,
+    ):
         while True:
-            try:
-                data, _ = api.send_request(
-                    method=HttpMethods.GET,
-                    endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
-                    url_params={
-                        "alias": self.alias,
-                        "versionId": version or "latest",
-                    },
+            if default_to_cache:
+                cached_prompt = self._read_from_cache(
+                    self.alias, version=version, label=label
                 )
+                if cached_prompt:
+                    self.version = cached_prompt.version
+                    self.label = cached_prompt.label
+                    self._text_template = cached_prompt.template
+                    self._messages_template = cached_prompt.messages_template
+                    self._prompt_version_id = cached_prompt.prompt_version_id
+                    self._type = PromptType(cached_prompt.type)
+                    self._interpolation_type = PromptInterpolationType(
+                        cached_prompt.interpolation_type
+                    )
+                    return
+
+            api = Api()
+            try:
+                if label:
+                    data, _ = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPTS_LABEL_ENDPOINT,
+                        url_params={
+                            "alias": self.alias,
+                            "label": label,
+                        },
+                    )
+                else:
+                    data, _ = api.send_request(
+                        method=HttpMethods.GET,
+                        endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
+                        url_params={
+                            "alias": self.alias,
+                            "versionId": version or "latest",
+                        },
+                    )
+
                 response = PromptHttpResponse(
                     id=data["id"],
+                    version=data.get("version", None),
+                    label=data.get("label", None),
                     text=data.get("text", None),
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
                 )
-                self._write_to_cache(
-                    version=version or "latest",
-                    text_template=response.text,
-                    messages_template=response.messages,
-                    prompt_version_id=response.id,
-                    type=response.type,
-                    interpolation_type=response.interpolation_type,
-                )
+                if default_to_cache:
+                    self._write_to_cache(
+                        cache_key=(
+                            LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
+                        ),
+                        version=response.version,
+                        label=response.label,
+                        text_template=response.text,
+                        messages_template=response.messages,
+                        prompt_version_id=response.id,
+                        type=response.type,
+                        interpolation_type=response.interpolation_type,
+                    )
             except Exception as e:
                 pass
 
-            await asyncio.sleep(self._refresh_map[version])
+            CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
+            cache_value = label if label else version
+            await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
