@@ -76,10 +76,3 @@ async def test_concurrent_agents():
         
         print(f"Initial: {initial_uuid}")
         print(f"Final: {current_trace.uuid}") # print trace uuid of the last agent run
-
-if __name__ == "__main__":
-    # asyncio.run(execute_simple_agent())
-    # execute_simple_agent_sync()
-    # test_nested_traces()
-    # asyncio.run(test_concurrent_agents())
-    pass
