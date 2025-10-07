@@ -348,10 +348,10 @@ class Settings(BaseSettings):
     #
     MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
     MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
-    # DEEPEVAL_HTTP_TIMEOUT_SECONDS: per-attempt timeout for provider calls enforced by our retry decorator.
+    # DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS: per-attempt timeout for provider calls enforced by our retry decorator.
     # This timeout interacts with retry policy and the task level budget (DEEPEVAL_PER_TASK_TIMEOUT_SECONDS) below.
     # If you leave this at 0/None, the computed outer budget defaults to 180s.
-    DEEPEVAL_HTTP_TIMEOUT_SECONDS: Optional[confloat(ge=0)] = (
+    DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS: Optional[confloat(ge=0)] = (
         None  # per-attempt timeout. Set 0/None to disable
     )
 
@@ -369,7 +369,7 @@ class Settings(BaseSettings):
     #   to permit the configured attempts/backoff.
     #
     # Tip:
-    #   Most users only need to set DEEPEVAL_HTTP_TIMEOUT_SECONDS and DEEPEVAL_RETRY_MAX_ATTEMPTS.
+    #   Most users only need to set DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS and DEEPEVAL_RETRY_MAX_ATTEMPTS.
     #   Leave the outer budget on auto unless you have very strict SLAs.
     DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: Optional[conint(ge=0)] = None
 
@@ -386,7 +386,7 @@ class Settings(BaseSettings):
         Never reference the computed property itself here.
         """
         attempts = self.DEEPEVAL_RETRY_MAX_ATTEMPTS or 1
-        timeout_seconds = float(self.DEEPEVAL_HTTP_TIMEOUT_SECONDS or 0)
+        timeout_seconds = float(self.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
         if timeout_seconds <= 0:
             # No per-attempt timeout set -> default outer budget
             return 180
@@ -415,7 +415,7 @@ class Settings(BaseSettings):
         outer = self.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE
         if outer not in (None, 0):
             # Warn if user-provided outer is likely to truncate retries
-            if (self.DEEPEVAL_HTTP_TIMEOUT_SECONDS or 0) > 0:
+            if (self.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0) > 0:
                 min_needed = self._calc_auto_outer_timeout()
                 if int(outer) < min_needed:
                     if self.DEEPEVAL_VERBOSE_MODE:
