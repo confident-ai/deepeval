@@ -38,5 +38,3 @@ crew = Crew(
     agents=[agent],
     tasks=[task],
 )
-
-result = crew.kickoff({"city": "London"})
