@@ -35,12 +35,10 @@ from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
 from deepeval.prompt import (
     PromptMessage,
     ModelSettings,
-    OutputType,
     PromptInterpolationType,
     OutputType,
 )
 from rich.panel import Panel
-from rich.text import Text
 from rich.columns import Columns
 
 
@@ -216,7 +214,7 @@ class TestRun(BaseModel):
         def process_metric_data(metric_data: MetricData):
             """
             Process and aggregate metric data for overall test metrics.
-            
+
             Args:
                 metric_data: The metric data to process
             """
@@ -224,7 +222,7 @@ class TestRun(BaseModel):
             metric_name = metric_data.name
             score = metric_data.score
             success = metric_data.success
-            
+
             if metric_name not in metrics_dict:
                 metrics_dict[metric_name] = {
                     "scores": [],
@@ -246,11 +244,13 @@ class TestRun(BaseModel):
                     metric_dict["fails"] += 1
 
         def process_span_metric_data(
-            metric_data: MetricData, span_type: span_api_type_literals, span_name: str
+            metric_data: MetricData,
+            span_type: span_api_type_literals,
+            span_name: str,
         ):
             """
             Process and aggregate metric data for a specific span.
-            
+
             Args:
                 metric_data: The metric data to process
                 span_type: The type of span (agent, tool, retriever, llm, base)
@@ -285,7 +285,7 @@ class TestRun(BaseModel):
         def process_spans(spans, span_type: span_api_type_literals):
             """
             Process all metrics for a list of spans of a specific type.
-            
+
             Args:
                 spans: List of spans to process
                 span_type: The type of spans being processed
@@ -311,7 +311,9 @@ class TestRun(BaseModel):
             # Process all span types using the helper function
             process_spans(test_case.trace.agent_spans, SpanApiType.AGENT.value)
             process_spans(test_case.trace.tool_spans, SpanApiType.TOOL.value)
-            process_spans(test_case.trace.retriever_spans, SpanApiType.RETRIEVER.value)
+            process_spans(
+                test_case.trace.retriever_spans, SpanApiType.RETRIEVER.value
+            )
             process_spans(test_case.trace.llm_spans, SpanApiType.LLM.value)
             process_spans(test_case.trace.base_spans, SpanApiType.BASE.value)
 
@@ -567,8 +569,12 @@ class TestRunManager:
     def _format_metric_score(metric_data: MetricData) -> str:
         """Format metric score with evaluation details."""
         evaluation_model = metric_data.evaluation_model or "n/a"
-        metric_score = round(metric_data.score, 2) if metric_data.score is not None else None
-        
+        metric_score = (
+            round(metric_data.score, 2)
+            if metric_data.score is not None
+            else None
+        )
+
         return (
             f"{metric_score} "
             f"(threshold={metric_data.threshold}, "
@@ -578,16 +584,20 @@ class TestRunManager:
         )
 
     @staticmethod
-    def _should_skip_test_case(test_case, display: TestRunResultDisplay) -> bool:
+    def _should_skip_test_case(
+        test_case, display: TestRunResultDisplay
+    ) -> bool:
         """Determine if test case should be skipped based on display filter."""
-        if display == TestRunResultDisplay.PASSING and test_case.success == False:
+        if display == TestRunResultDisplay.PASSING and not test_case.success:
             return True
         elif display == TestRunResultDisplay.FAILING and test_case.success:
             return True
         return False
 
     @staticmethod
-    def _count_metric_results(metrics_data: List[MetricData]) -> tuple[int, int]:
+    def _count_metric_results(
+        metrics_data: List[MetricData],
+    ) -> tuple[int, int]:
         """Count passing and failing metrics."""
         pass_count = 0
         fail_count = 0
@@ -598,7 +608,13 @@ class TestRunManager:
                 fail_count += 1
         return pass_count, fail_count
 
-    def _add_test_case_header_row(self, table: Table, test_case_name: str, pass_count: int, fail_count: int):
+    def _add_test_case_header_row(
+        self,
+        table: Table,
+        test_case_name: str,
+        pass_count: int,
+        fail_count: int,
+    ):
         """Add test case header row with name and success rate."""
         success_rate = self._calculate_success_rate(pass_count, fail_count)
         table.add_row(
@@ -612,7 +628,7 @@ class TestRunManager:
         for metric_data in metrics_data:
             status = self._get_metric_status(metric_data)
             formatted_score = self._format_metric_score(metric_data)
-            
+
             table.add_row(
                 "",
                 str(metric_data.name),
@@ -620,7 +636,7 @@ class TestRunManager:
                 status,
                 "",
             )
-    
+
     def _add_separator_row(self, table: Table):
         """Add empty separator row between test cases."""
         table.add_row(*[""] * len(table.columns))
@@ -631,18 +647,32 @@ class TestRunManager:
         """Display test results in a formatted table."""
 
         table = Table(title="Test Results")
-        column_config = dict(justify="left", max_width=MAX_COLUMN_WIDTH, no_wrap=False)
-        column_names = ["Test case", "Metric", "Score", "Status", "Overall Success Rate"]
-        
+        column_config = dict(
+            justify="left", max_width=MAX_COLUMN_WIDTH, no_wrap=False
+        )
+        column_names = [
+            "Test case",
+            "Metric",
+            "Score",
+            "Status",
+            "Overall Success Rate",
+        ]
+
         for name in column_names:
             table.add_column(name, **column_config)
 
         # Process regular test cases
         for index, test_case in enumerate(test_run.test_cases):
-            if test_case.metrics_data is None or self._should_skip_test_case(test_case, display):
+            if test_case.metrics_data is None or self._should_skip_test_case(
+                test_case, display
+            ):
                 continue
-            pass_count, fail_count = self._count_metric_results(test_case.metrics_data)
-            self._add_test_case_header_row(table, test_case.name, pass_count, fail_count)
+            pass_count, fail_count = self._count_metric_results(
+                test_case.metrics_data
+            )
+            self._add_test_case_header_row(
+                table, test_case.name, pass_count, fail_count
+            )
             self._add_metric_rows(table, test_case.metrics_data)
 
             if index < len(test_run.test_cases) - 1:
@@ -716,18 +746,21 @@ class TestRunManager:
                     f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
                 )
             if conversational_test_case.metrics_data is not None:
-                pass_count, fail_count = self._count_metric_results(conversational_test_case.metrics_data)
-                self._add_test_case_header_row(table, conversational_test_case.name, pass_count, fail_count)
-                self._add_metric_rows(table, conversational_test_case.metrics_data)
-            
-
-            
+                pass_count, fail_count = self._count_metric_results(
+                    conversational_test_case.metrics_data
+                )
+                self._add_test_case_header_row(
+                    table, conversational_test_case.name, pass_count, fail_count
+                )
+                self._add_metric_rows(
+                    table, conversational_test_case.metrics_data
+                )
 
             if index < len(test_run.conversational_test_cases) - 1:
                 self._add_separator_row(table)
 
             if index < len(test_run.test_cases) - 1:
-                self._add_separator_row(table)      
+                self._add_separator_row(table)
 
         table.add_row(
             "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
