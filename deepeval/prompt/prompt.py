@@ -8,6 +8,7 @@ import os
 from pydantic import BaseModel
 import asyncio
 import portalocker
+import threading
 
 from deepeval.prompt.api import (
     PromptHttpResponse,
@@ -20,14 +21,38 @@ from deepeval.prompt.api import (
 from deepeval.prompt.utils import interpolate_text
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
-from deepeval.utils import (
-    get_or_create_event_loop,
-    get_or_create_general_event_loop,
-)
 
 CACHE_FILE_NAME = f"{HIDDEN_DIR}/.deepeval-prompt-cache.json"
 VERSION_CACHE_KEY = "version"
 LABEL_CACHE_KEY = "label"
+
+# Global background event loop for polling
+_polling_loop: Optional[asyncio.AbstractEventLoop] = None
+_polling_thread: Optional[threading.Thread] = None
+_polling_loop_lock = threading.Lock()
+
+
+def _get_or_create_polling_loop() -> asyncio.AbstractEventLoop:
+    """Get or create a background event loop for polling that runs in a daemon thread."""
+    global _polling_loop, _polling_thread
+
+    with _polling_loop_lock:
+        if _polling_loop is None or not _polling_loop.is_running():
+
+            def run_loop():
+                global _polling_loop
+                _polling_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(_polling_loop)
+                _polling_loop.run_forever()
+
+            _polling_thread = threading.Thread(target=run_loop, daemon=True)
+            _polling_thread.start()
+
+            # Wait for loop to be ready
+            while _polling_loop is None:
+                time.sleep(0.01)
+
+        return _polling_loop
 
 
 class CustomEncoder(json.JSONEncoder):
@@ -80,10 +105,21 @@ class Prompt:
         self._version = None
         self._polling_tasks: Dict[str, Dict[str, asyncio.Task]] = {}
         self._refresh_map: Dict[str, Dict[str, int]] = {}
+        self._lock = (
+            threading.Lock()
+        )  # Protect instance attributes from race conditions
         if template:
             self._type = PromptType.TEXT
         elif messages_template:
             self._type = PromptType.LIST
+
+    def __del__(self):
+        """Cleanup polling tasks when instance is destroyed"""
+        try:
+            self._stop_polling()
+        except Exception:
+            # Suppress exceptions during cleanup to avoid issues in interpreter shutdown
+            pass
 
     @property
     def version(self):
@@ -100,33 +136,37 @@ class Prompt:
         self._version = value
 
     def interpolate(self, **kwargs):
-        if self._type == PromptType.TEXT:
-            if self._text_template is None:
+        with self._lock:
+            prompt_type = self._type
+            text_template = self._text_template
+            messages_template = self._messages_template
+            interpolation_type = self._interpolation_type
+
+        if prompt_type == PromptType.TEXT:
+            if text_template is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
-            return interpolate_text(
-                self._interpolation_type, self._text_template, **kwargs
-            )
+            return interpolate_text(interpolation_type, text_template, **kwargs)
 
-        elif self._type == PromptType.LIST:
-            if self._messages_template is None:
+        elif prompt_type == PromptType.LIST:
+            if messages_template is None:
                 raise TypeError(
                     "Unable to interpolate empty prompt template messages. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
             interpolated_messages = []
-            for message in self._messages_template:
+            for message in messages_template:
                 interpolated_content = interpolate_text(
-                    self._interpolation_type, message.content, **kwargs
+                    interpolation_type, message.content, **kwargs
                 )
                 interpolated_messages.append(
                     {"role": message.role, "content": interpolated_content}
                 )
             return interpolated_messages
         else:
-            raise ValueError(f"Unsupported prompt type: {self._type}")
+            raise ValueError(f"Unsupported prompt type: {prompt_type}")
 
     def _get_versions(self) -> List:
         if self.alias is None:
@@ -272,15 +312,16 @@ class Prompt:
         if not cached_prompt:
             raise ValueError("Unable to fetch prompt and load from cache")
 
-        self.version = cached_prompt.version
-        self.label = cached_prompt.label
-        self._text_template = cached_prompt.template
-        self._messages_template = cached_prompt.messages_template
-        self._prompt_version_id = cached_prompt.prompt_version_id
-        self._type = PromptType(cached_prompt.type)
-        self._interpolation_type = PromptInterpolationType(
-            cached_prompt.interpolation_type
-        )
+        with self._lock:
+            self.version = cached_prompt.version
+            self.label = cached_prompt.label
+            self._text_template = cached_prompt.template
+            self._messages_template = cached_prompt.messages_template
+            self._prompt_version_id = cached_prompt.prompt_version_id
+            self._type = PromptType(cached_prompt.type)
+            self._interpolation_type = PromptInterpolationType(
+                cached_prompt.interpolation_type
+            )
 
         end_time = time.perf_counter()
         time_taken = format(end_time - start_time, ".2f")
@@ -300,7 +341,6 @@ class Prompt:
     ):
         should_write_on_first_fetch = False
         if refresh:
-            default_to_cache = True
             # Check if we need to bootstrap the cache
             cached_prompt = self._read_from_cache(
                 self.alias, version=version, label=label
@@ -316,12 +356,10 @@ class Prompt:
             )
 
         # Manage background prompt polling
-        loop = get_or_create_general_event_loop()
-        if loop.is_running():
-            loop.create_task(self.create_polling_task(version, label, refresh))
-        else:
-            loop.run_until_complete(
-                self.create_polling_task(version, label, refresh)
+        if refresh:
+            loop = _get_or_create_polling_loop()
+            asyncio.run_coroutine_threadsafe(
+                self.create_polling_task(version, label, refresh), loop
             )
 
         if default_to_cache:
@@ -330,15 +368,20 @@ class Prompt:
                     self.alias, version=version, label=label
                 )
                 if cached_prompt:
-                    self.version = cached_prompt.version
-                    self.label = cached_prompt.label
-                    self._text_template = cached_prompt.template
-                    self._messages_template = cached_prompt.messages_template
-                    self._prompt_version_id = cached_prompt.prompt_version_id
-                    self._type = PromptType(cached_prompt.type)
-                    self._interpolation_type = PromptInterpolationType(
-                        cached_prompt.interpolation_type
-                    )
+                    with self._lock:
+                        self.version = cached_prompt.version
+                        self.label = cached_prompt.label
+                        self._text_template = cached_prompt.template
+                        self._messages_template = (
+                            cached_prompt.messages_template
+                        )
+                        self._prompt_version_id = (
+                            cached_prompt.prompt_version_id
+                        )
+                        self._type = PromptType(cached_prompt.type)
+                        self._interpolation_type = PromptInterpolationType(
+                            cached_prompt.interpolation_type
+                        )
                     return
             except:
                 pass
@@ -402,13 +445,14 @@ class Prompt:
                     return
                 raise
 
-            self.version = response.version
-            self.label = response.label
-            self._text_template = response.text
-            self._messages_template = response.messages
-            self._prompt_version_id = response.id
-            self._type = response.type
-            self._interpolation_type = response.interpolation_type
+            with self._lock:
+                self.version = response.version
+                self.label = response.label
+                self._text_template = response.text
+                self._messages_template = response.messages
+                self._prompt_version_id = response.id
+                self._type = response.type
+                self._interpolation_type = response.interpolation_type
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -483,11 +527,7 @@ class Prompt:
         version: Optional[str],
         label: Optional[str],
         refresh: Optional[int] = 60,
-        default_to_cache: bool = True,
     ):
-        if version is None and label is None:
-            return
-
         # If polling task doesn't exist, start it
         CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
         cache_value = label if label else version
@@ -506,9 +546,7 @@ class Prompt:
             self._refresh_map[CACHE_KEY][cache_value] = refresh
             if not polling_task:
                 self._polling_tasks[CACHE_KEY][cache_value] = (
-                    asyncio.create_task(
-                        self.poll(version, label, default_to_cache)
-                    )
+                    asyncio.create_task(self.poll(version, label))
                 )
 
         # If invalid `refresh`, stop the task
@@ -524,24 +562,13 @@ class Prompt:
         self,
         version: Optional[str] = None,
         label: Optional[str] = None,
-        default_to_cache: bool = True,
     ):
+        CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
+        cache_value = label if label else version
+
         while True:
-            if default_to_cache:
-                cached_prompt = self._read_from_cache(
-                    self.alias, version=version, label=label
-                )
-                if cached_prompt:
-                    self.version = cached_prompt.version
-                    self.label = cached_prompt.label
-                    self._text_template = cached_prompt.template
-                    self._messages_template = cached_prompt.messages_template
-                    self._prompt_version_id = cached_prompt.prompt_version_id
-                    self._type = PromptType(cached_prompt.type)
-                    self._interpolation_type = PromptInterpolationType(
-                        cached_prompt.interpolation_type
-                    )
-                    return
+            # Wait for the refresh interval before fetching updates
+            await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
 
             api = Api()
             try:
@@ -573,22 +600,43 @@ class Prompt:
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
                 )
-                if default_to_cache:
-                    self._write_to_cache(
-                        cache_key=(
-                            LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
-                        ),
-                        version=response.version,
-                        label=response.label,
-                        text_template=response.text,
-                        messages_template=response.messages,
-                        prompt_version_id=response.id,
-                        type=response.type,
-                        interpolation_type=response.interpolation_type,
-                    )
-            except Exception as e:
+
+                # Update the cache with fresh data from server
+                self._write_to_cache(
+                    cache_key=CACHE_KEY,
+                    version=response.version,
+                    label=response.label,
+                    text_template=response.text,
+                    messages_template=response.messages,
+                    prompt_version_id=response.id,
+                    type=response.type,
+                    interpolation_type=response.interpolation_type,
+                )
+
+                # Update in-memory properties with fresh data (thread-safe)
+                with self._lock:
+                    self.version = response.version
+                    self.label = response.label
+                    self._text_template = response.text
+                    self._messages_template = response.messages
+                    self._prompt_version_id = response.id
+                    self._type = response.type
+                    self._interpolation_type = response.interpolation_type
+
+            except Exception:
                 pass
 
-            CACHE_KEY = LABEL_CACHE_KEY if label else VERSION_CACHE_KEY
-            cache_value = label if label else version
-            await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
+    def _stop_polling(self):
+        loop = _polling_loop
+        if not loop or not loop.is_running():
+            return
+
+        # Stop all polling tasks
+        for ck in list(self._polling_tasks.keys()):
+            for cv in list(self._polling_tasks[ck].keys()):
+                task = self._polling_tasks[ck][cv]
+                if task and not task.done():
+                    loop.call_soon_threadsafe(task.cancel)
+            self._polling_tasks[ck].clear()
+            self._refresh_map[ck].clear()
+        return
