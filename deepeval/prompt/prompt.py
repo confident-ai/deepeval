@@ -567,7 +567,6 @@ class Prompt:
         cache_value = label if label else version
 
         while True:
-            # Wait for the refresh interval before fetching updates
             await asyncio.sleep(self._refresh_map[CACHE_KEY][cache_value])
 
             api = Api()
