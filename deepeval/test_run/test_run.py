@@ -48,6 +48,7 @@ TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
+MAX_COLUMN_WIDTH = 80
 console = Console()
 
 
@@ -213,65 +214,89 @@ class TestRun(BaseModel):
         valid_scores = 0
 
         def process_metric_data(metric_data: MetricData):
+            """
+            Process and aggregate metric data for overall test metrics.
+            
+            Args:
+                metric_data: The metric data to process
+            """
             nonlocal valid_scores
-            name = metric_data.name
+            metric_name = metric_data.name
             score = metric_data.score
             success = metric_data.success
-            # Initialize dict entry if needed.
-            if name not in metrics_dict:
-                metrics_dict[name] = {
+            
+            if metric_name not in metrics_dict:
+                metrics_dict[metric_name] = {
                     "scores": [],
                     "passes": 0,
                     "fails": 0,
                     "errors": 0,
                 }
 
+            metric_dict = metrics_dict[metric_name]
+
             if score is None or success is None:
-                metrics_dict[name]["errors"] += 1
+                metric_dict["errors"] += 1
             else:
                 valid_scores += 1
-
-                # Append the score.
-                metrics_dict[name]["scores"].append(score)
-
-                # Increment passes or fails based on the metric_data.success flag.
+                metric_dict["scores"].append(score)
                 if success:
-                    metrics_dict[name]["passes"] += 1
+                    metric_dict["passes"] += 1
                 else:
-                    metrics_dict[name]["fails"] += 1
+                    metric_dict["fails"] += 1
 
         def process_span_metric_data(
-            metric_data: MetricData, type: span_api_type_literals, name: str
+            metric_data: MetricData, span_type: span_api_type_literals, span_name: str
         ):
+            """
+            Process and aggregate metric data for a specific span.
+            
+            Args:
+                metric_data: The metric data to process
+                span_type: The type of span (agent, tool, retriever, llm, base)
+                span_name: The name of the span
+            """
             metric_name = metric_data.name
             score = metric_data.score
             success = metric_data.success
 
-            # Initialize the structure if needed
-            if name not in trace_metrics_dict[type]:
-                trace_metrics_dict[type][name] = {}
+            if span_name not in trace_metrics_dict[span_type]:
+                trace_metrics_dict[span_type][span_name] = {}
 
-            if metric_name not in trace_metrics_dict[type][name]:
-                trace_metrics_dict[type][name][metric_name] = {
+            if metric_name not in trace_metrics_dict[span_type][span_name]:
+                trace_metrics_dict[span_type][span_name][metric_name] = {
                     "scores": [],
                     "passes": 0,
                     "fails": 0,
                     "errors": 0,
                 }
 
-            if score is None or success is None:
-                trace_metrics_dict[type][name][metric_name]["errors"] += 1
-            else:
-                # Append the score
-                trace_metrics_dict[type][name][metric_name]["scores"].append(
-                    score
-                )
+            metric_dict = trace_metrics_dict[span_type][span_name][metric_name]
 
-                # Increment passes or fails
+            if score is None or success is None:
+                metric_dict["errors"] += 1
+            else:
+                metric_dict["scores"].append(score)
                 if success:
-                    trace_metrics_dict[type][name][metric_name]["passes"] += 1
+                    metric_dict["passes"] += 1
                 else:
-                    trace_metrics_dict[type][name][metric_name]["fails"] += 1
+                    metric_dict["fails"] += 1
+
+        def process_spans(spans, span_type: span_api_type_literals):
+            """
+            Process all metrics for a list of spans of a specific type.
+            
+            Args:
+                spans: List of spans to process
+                span_type: The type of spans being processed
+            """
+            for span in spans:
+                if span.metrics_data is not None:
+                    for metric_data in span.metrics_data:
+                        process_metric_data(metric_data)
+                        process_span_metric_data(
+                            metric_data, span_type, span.name
+                        )
 
         # Process non-conversational test cases.
         for test_case in self.test_cases:
@@ -283,45 +308,12 @@ class TestRun(BaseModel):
             if test_case.trace is None:
                 continue
 
-            for span in test_case.trace.agent_spans:
-                if span.metrics_data is not None:
-                    for metric_data in span.metrics_data:
-                        process_metric_data(metric_data)
-                        process_span_metric_data(
-                            metric_data, SpanApiType.AGENT.value, span.name
-                        )
-
-            for span in test_case.trace.tool_spans:
-                if span.metrics_data is not None:
-                    for metric_data in span.metrics_data:
-                        process_metric_data(metric_data)
-                        process_span_metric_data(
-                            metric_data, SpanApiType.TOOL.value, span.name
-                        )
-
-            for span in test_case.trace.retriever_spans:
-                if span.metrics_data is not None:
-                    for metric_data in span.metrics_data:
-                        process_metric_data(metric_data)
-                        process_span_metric_data(
-                            metric_data, SpanApiType.RETRIEVER.value, span.name
-                        )
-
-            for span in test_case.trace.llm_spans:
-                if span.metrics_data is not None:
-                    for metric_data in span.metrics_data:
-                        process_metric_data(metric_data)
-                        process_span_metric_data(
-                            metric_data, SpanApiType.LLM.value, span.name
-                        )
-
-            for span in test_case.trace.base_spans:
-                if span.metrics_data is not None:
-                    for metric_data in span.metrics_data:
-                        process_metric_data(metric_data)
-                        process_span_metric_data(
-                            metric_data, SpanApiType.BASE.value, span.name
-                        )
+            # Process all span types using the helper function
+            process_spans(test_case.trace.agent_spans, SpanApiType.AGENT.value)
+            process_spans(test_case.trace.tool_spans, SpanApiType.TOOL.value)
+            process_spans(test_case.trace.retriever_spans, SpanApiType.RETRIEVER.value)
+            process_spans(test_case.trace.llm_spans, SpanApiType.LLM.value)
+            process_spans(test_case.trace.base_spans, SpanApiType.BASE.value)
 
         # Process conversational test cases.
         for convo_test_case in self.conversational_test_cases:
@@ -554,105 +546,115 @@ class TestRunManager:
     def clear_test_run(self):
         self.test_run = None
 
+    @staticmethod
+    def _calculate_success_rate(pass_count: int, fail_count: int) -> str:
+        """Calculate success rate percentage or return error message."""
+        total = pass_count + fail_count
+        if total > 0:
+            return str(round((100 * pass_count) / total, 2))
+        return "Cannot display metrics for component-level evals, please run 'deepeval view' to see results on Confident AI."
+
+    @staticmethod
+    def _get_metric_status(metric_data: MetricData) -> str:
+        """Get formatted status string for a metric."""
+        if metric_data.error:
+            return "[red]ERRORED[/red]"
+        elif metric_data.success:
+            return "[green]PASSED[/green]"
+        return "[red]FAILED[/red]"
+
+    @staticmethod
+    def _format_metric_score(metric_data: MetricData) -> str:
+        """Format metric score with evaluation details."""
+        evaluation_model = metric_data.evaluation_model or "n/a"
+        metric_score = round(metric_data.score, 2) if metric_data.score is not None else None
+        
+        return (
+            f"{metric_score} "
+            f"(threshold={metric_data.threshold}, "
+            f"evaluation model={evaluation_model}, "
+            f"reason={metric_data.reason}, "
+            f"error={metric_data.error})"
+        )
+
+    @staticmethod
+    def _should_skip_test_case(test_case, display: TestRunResultDisplay) -> bool:
+        """Determine if test case should be skipped based on display filter."""
+        if display == TestRunResultDisplay.PASSING and test_case.success == False:
+            return True
+        elif display == TestRunResultDisplay.FAILING and test_case.success:
+            return True
+        return False
+
+    @staticmethod
+    def _count_metric_results(metrics_data: List[MetricData]) -> tuple[int, int]:
+        """Count passing and failing metrics."""
+        pass_count = 0
+        fail_count = 0
+        for metric_data in metrics_data:
+            if metric_data.success:
+                pass_count += 1
+            else:
+                fail_count += 1
+        return pass_count, fail_count
+
+    def _add_test_case_header_row(self, table: Table, test_case_name: str, pass_count: int, fail_count: int):
+        """Add test case header row with name and success rate."""
+        success_rate = self._calculate_success_rate(pass_count, fail_count)
+        table.add_row(
+            test_case_name,
+            *[""] * 3,
+            f"{success_rate}%",
+        )
+
+    def _add_metric_rows(self, table: Table, metrics_data: List[MetricData]):
+        """Add metric detail rows to the table."""
+        for metric_data in metrics_data:
+            status = self._get_metric_status(metric_data)
+            formatted_score = self._format_metric_score(metric_data)
+            
+            table.add_row(
+                "",
+                str(metric_data.name),
+                formatted_score,
+                status,
+                "",
+            )
+    
+    def _add_separator_row(self, table: Table):
+        """Add empty separator row between test cases."""
+        table.add_row(*[""] * len(table.columns))
+
     def display_results_table(
         self, test_run: TestRun, display: TestRunResultDisplay
     ):
+        """Display test results in a formatted table."""
+
         table = Table(title="Test Results")
-        table.add_column("Test case", justify="left")
-        table.add_column("Metric", justify="left")
-        table.add_column("Score", justify="left")
-        table.add_column("Status", justify="left")
-        table.add_column("Overall Success Rate", justify="left")
+        column_config = dict(justify="left", max_width=MAX_COLUMN_WIDTH, no_wrap=False)
+        column_names = ["Test case", "Metric", "Score", "Status", "Overall Success Rate"]
+        
+        for name in column_names:
+            table.add_column(name, **column_config)
 
+        # Process regular test cases
         for index, test_case in enumerate(test_run.test_cases):
-            if test_case.metrics_data is None:
+            if test_case.metrics_data is None or self._should_skip_test_case(test_case, display):
                 continue
+            pass_count, fail_count = self._count_metric_results(test_case.metrics_data)
+            self._add_test_case_header_row(table, test_case.name, pass_count, fail_count)
+            self._add_metric_rows(table, test_case.metrics_data)
 
-            if (
-                display == TestRunResultDisplay.PASSING
-                and test_case.success is False
-            ):
-                continue
-            elif display == TestRunResultDisplay.FAILING and test_case.success:
-                continue
+            if index < len(test_run.test_cases) - 1:
+                self._add_separator_row(table)
 
-            pass_count = 0
-            fail_count = 0
-            test_case_name = test_case.name
-
-            # TODO: recursively iterate through it to calculate pass and fail count
-            if test_case.trace:
-                pass
-
-            for metric_data in test_case.metrics_data:
-                if metric_data.success:
-                    pass_count += 1
-                else:
-                    fail_count += 1
-
-            success_rate = (
-                round((100 * pass_count) / (pass_count + fail_count), 2)
-                if pass_count + fail_count > 0
-                else "Cannot display metrics for component-level evals, please run 'deepeval view' to see results on Confident AI."
-            )
-            table.add_row(
-                test_case_name,
-                "",
-                "",
-                "",
-                f"{success_rate}%",
-            )
-
-            for metric_data in test_case.metrics_data:
-                if metric_data.error:
-                    status = "[red]ERRORED[/red]"
-                elif metric_data.success:
-                    status = "[green]PASSED[/green]"
-                else:
-                    status = "[red]FAILED[/red]"
-
-                evaluation_model = metric_data.evaluation_model
-                if evaluation_model is None:
-                    evaluation_model = "n/a"
-
-                if metric_data.score is not None:
-                    metric_score = round(metric_data.score, 2)
-                else:
-                    metric_score = None
-
-                table.add_row(
-                    "",
-                    str(metric_data.name),
-                    f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
-                    status,
-                    "",
-                )
-
-            if index is not len(self.test_run.test_cases) - 1:
-                table.add_row(
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                )
-
+        # Process conversational test cases
         for index, conversational_test_case in enumerate(
             test_run.conversational_test_cases
         ):
-            if (
-                display == TestRunResultDisplay.PASSING
-                and conversational_test_case.success is False
-            ):
-                continue
-            elif (
-                display == TestRunResultDisplay.FAILING
-                and conversational_test_case.success
-            ):
+            if self._should_skip_test_case(conversational_test_case, display):
                 continue
 
-            pass_count = 0
-            fail_count = 0
             conversational_test_case_name = conversational_test_case.name
 
             if conversational_test_case.turns:
@@ -713,71 +715,23 @@ class TestRunManager:
                 console.print(
                     f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
                 )
-
             if conversational_test_case.metrics_data is not None:
-                for metric_data in conversational_test_case.metrics_data:
-                    if metric_data.success:
-                        pass_count += 1
-                    else:
-                        fail_count += 1
-                table.add_row(
-                    conversational_test_case_name,
-                    "",
-                    "",
-                    "",
-                    f"{round((100*pass_count)/(pass_count+fail_count),2)}%",
-                )
+                pass_count, fail_count = self._count_metric_results(conversational_test_case.metrics_data)
+                self._add_test_case_header_row(table, conversational_test_case.name, pass_count, fail_count)
+                self._add_metric_rows(table, conversational_test_case.metrics_data)
+            
 
-            if conversational_test_case.metrics_data is not None:
-                for metric_data in conversational_test_case.metrics_data:
-                    if metric_data.error:
-                        status = "[red]ERRORED[/red]"
-                    elif metric_data.success:
-                        status = "[green]PASSED[/green]"
-                    else:
-                        status = "[red]FAILED[/red]"
+            
 
-                    evaluation_model = metric_data.evaluation_model
-                    if evaluation_model is None:
-                        evaluation_model = "n/a"
+            if index < len(test_run.conversational_test_cases) - 1:
+                self._add_separator_row(table)
 
-                    if metric_data.score is not None:
-                        metric_score = round(metric_data.score, 2)
-                    else:
-                        metric_score = None
-
-                    table.add_row(
-                        "",
-                        str(metric_data.name),
-                        f"{metric_score} (threshold={metric_data.threshold}, evaluation model={evaluation_model}, reason={metric_data.reason}, error={metric_data.error})",
-                        status,
-                        "",
-                    )
-
-            if index is not len(self.test_run.conversational_test_cases) - 1:
-                table.add_row(
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                )
-
-            if index is not len(self.test_run.test_cases) - 1:
-                table.add_row(
-                    "",
-                    "",
-                    "",
-                    "",
-                    "",
-                )
+            if index < len(test_run.test_cases) - 1:
+                self._add_separator_row(table)      
 
         table.add_row(
             "[bold red]Note: Use Confident AI with DeepEval to analyze failed test cases for more details[/bold red]",
-            "",
-            "",
-            "",
-            "",
+            *[""] * (len(table.columns) - 1),
         )
         print(table)
 
@@ -970,7 +924,6 @@ class TestRunManager:
             global_test_run_cache_manager.disable_write_cache = not bool(
                 get_is_running_deepeval()
             )
-
         global_test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
