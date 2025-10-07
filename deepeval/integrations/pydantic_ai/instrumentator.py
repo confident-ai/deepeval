@@ -1,7 +1,6 @@
 import json
 import os
 from typing import Literal, Optional, List
-from contextvars import ContextVar
 
 try:
     from pydantic_ai.models.instrumented import InstrumentationSettings
@@ -26,12 +25,12 @@ def is_dependency_installed():
 
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
+from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.types import Trace
 from deepeval.tracing.otel.utils import to_hex_string
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
-
-trace_uuid: ContextVar[Optional[str]] = ContextVar("trace_uuid", default=None)
 
 class SpanInterceptor(SpanProcessor):
     def __init__(self, settings_instance):
@@ -40,9 +39,12 @@ class SpanInterceptor(SpanProcessor):
 
     def on_start(self, span, parent_context):
         
-        # populate the trace id
-        trace_uuid_str = to_hex_string(span.get_span_context().trace_id, 32)
-        self.settings._set_trace_id(trace_uuid_str)
+        # set trace uuid
+        _current_trace_context = current_trace_context.get()
+        if _current_trace_context and isinstance(_current_trace_context, Trace):
+            _otel_trace_id = span.get_span_context().trace_id
+            _current_trace_context.uuid = to_hex_string(_otel_trace_id, 32)
+            
 
         # set trace attributes
         if self.settings.thread_id:
@@ -202,12 +204,3 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
             )
         )
         super().__init__(tracer_provider=trace_provider)
-    
-    def get_trace_id(self) -> Optional[str]:
-        return trace_uuid.get()
-    
-    def _set_trace_id(self, trace_id: str) -> None:
-        """Set the trace id in the context variable. It is used by the trace interceptor to populate the trace id.
-        It is not meant to be used by the user.
-        """
-        trace_uuid.set(trace_id)

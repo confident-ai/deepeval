@@ -1,4 +1,5 @@
 import asyncio
+from deepeval.tracing import TraceContext
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai.instrumentator import (
     ConfidentInstrumentationSettings,
