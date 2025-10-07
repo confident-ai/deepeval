@@ -628,7 +628,9 @@ async def a_execute_test_cases(
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
-                logger.warning(f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s.
+                logger.warning(
+                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
+                )
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
@@ -1380,7 +1382,9 @@ async def a_execute_agentic_test_cases(
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
-                logger.warning(f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s.
+                logger.warning(
+                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
+                )
     else:
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -1546,8 +1550,7 @@ async def _a_execute_agentic_test_case(
                         t.cancel()
                 await asyncio.gather(*child_tasks, return_exceptions=True)
                 logger.warning(
-                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s. "
-                    "Cancelled pending child_tasks and drained results."
+                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
                 )
 
     test_start_time = time.perf_counter()
@@ -2750,7 +2753,9 @@ async def _evaluate_test_case_pairs(
             if not t.done():
                 t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
-        logger.warning(f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s.
+        logger.warning(
+            f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
+        )
 
 
 def _execute_metric(
