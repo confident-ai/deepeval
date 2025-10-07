@@ -97,7 +97,7 @@ class GEval(BaseMetric):
                     test_case, _additional_context=_additional_context
                 )
                 self.score = (
-                    float(g_score) / self.score_range_span
+                    (float(g_score) - self.score_range[0]) / self.score_range_span
                     if not self.strict_mode
                     else int(g_score)
                 )
@@ -140,7 +140,7 @@ class GEval(BaseMetric):
                 test_case, _additional_context=_additional_context
             )
             self.score = (
-                float(g_score) / self.score_range_span
+                (float(g_score) - self.score_range[0]) / self.score_range_span
                 if not self.strict_mode
                 else int(g_score)
             )
