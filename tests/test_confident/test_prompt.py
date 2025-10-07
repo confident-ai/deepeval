@@ -1,5 +1,6 @@
 import pytest
 import uuid
+import time
 from unittest.mock import patch
 from deepeval.prompt import Prompt
 from deepeval.prompt.api import (
@@ -7,6 +8,7 @@ from deepeval.prompt.api import (
     PromptInterpolationType,
     PromptMessage,
 )
+from deepeval.confident.api import Api
 
 
 class TestPromptText:
@@ -120,6 +122,29 @@ class TestPromptText:
             assert prompt4.label == self.LABEL
             # Api() should not have been instantiated when using cache
             mock_api.assert_not_called()
+
+    def test_version_polling(self):
+        # Use wraps to spy on real API calls while still counting them
+        with patch("deepeval.prompt.prompt.Api", wraps=Api) as spy_api:
+            prompt = Prompt(alias=self.ALIAS)
+            prompt.pull(refresh=2, default_to_cache=False)
+
+            time.sleep(5)  # polls twice in 5 seconds
+
+            assert spy_api.call_count == 3  # 1 for pull, 2 for polling
+            prompt._stop_polling()
+
+    def test_label_polling(self):
+        # Use wraps to spy on real API calls while still counting them
+        with patch("deepeval.prompt.prompt.Api", wraps=Api) as spy_api:
+            prompt = Prompt(alias=self.ALIAS)
+            prompt.pull(label=self.LABEL, refresh=2, default_to_cache=False)
+
+            time.sleep(5)  # polls twice in 5 seconds
+
+            assert prompt.version == self.LABEL_VERSION
+            assert spy_api.call_count == 3  # 1 for pull, 2 for polling
+            prompt._stop_polling()
 
 
 class TestPromptList:
@@ -241,3 +266,29 @@ class TestPromptList:
             assert prompt4.label == self.LABEL
             # Api() should not have been instantiated when using cache
             mock_api.assert_not_called()
+
+    def test_version_polling(self):
+        # Use wraps to spy on real API calls while still counting them
+        with patch("deepeval.prompt.prompt.Api", wraps=Api) as spy_api:
+            prompt = Prompt(alias=self.ALIAS)
+            prompt.pull(refresh=2, default_to_cache=False)
+
+            time.sleep(5)  # polls twice in 5 seconds
+
+            assert spy_api.call_count == 3  # 1 for pull, 2 for polling
+            prompt._stop_polling()
+
+    def test_label_polling(self):
+        # Use wraps to spy on real API calls while still counting them
+        with patch("deepeval.prompt.prompt.Api", wraps=Api) as spy_api:
+            prompt = Prompt(alias=self.ALIAS)
+            prompt.pull(label=self.LABEL, refresh=2, default_to_cache=False)
+
+            time.sleep(5)  # polls twice in 5 seconds
+
+            assert prompt.version == self.LABEL_VERSION
+            assert spy_api.call_count == 3  # 1 for pull, 2 for polling
+            prompt._stop_polling()
+
+
+TestPromptList().test_label_polling()
