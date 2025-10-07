@@ -2,7 +2,7 @@ from enum import Enum
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict, Union
+from typing import Any, Optional, List, Dict, Union, Tuple
 import shutil
 import webbrowser
 import sys
@@ -698,7 +698,7 @@ class TestRunManager:
         )
         print(table)
 
-    def post_test_run(self, test_run: TestRun) -> Optional[str]:
+    def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
@@ -814,7 +814,7 @@ class TestRunManager:
         )
         self.save_final_test_run_link(link)
         open_browser(link)
-        return link
+        return link, res.id
 
     def save_test_run_locally(self):
         local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
@@ -841,7 +841,7 @@ class TestRunManager:
         runDuration: float,
         display_table: bool = True,
         display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
-    ) -> Optional[str]:
+    ) -> Optional[Tuple[str, str]]:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")

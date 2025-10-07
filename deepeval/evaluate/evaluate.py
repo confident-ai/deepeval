@@ -268,11 +268,15 @@ def evaluate(
         test_run = global_test_run_manager.get_test_run()
         test_run.hyperparameters = process_hyperparameters(hyperparameters)
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
-        confident_link = global_test_run_manager.wrap_up_test_run(
+        res = global_test_run_manager.wrap_up_test_run(
             run_duration, display_table=False
         )
+        if isinstance(res, tuple):
+            confident_link, test_run_id = res
+        else:
+            confident_link = test_run_id = None
         return EvaluationResult(
-            test_results=test_results, confident_link=confident_link
+            test_results=test_results, confident_link=confident_link, test_run_id=test_run_id,
         )
     elif metric_collection:
         api = Api()
