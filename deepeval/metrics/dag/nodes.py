@@ -2,6 +2,8 @@ from typing import Optional, List, Union, Literal
 from dataclasses import dataclass
 from pydantic import create_model
 import asyncio
+import ast
+import inspect
 
 from deepeval.metrics.dag.schema import (
     MetricScoreReason,
@@ -295,7 +297,7 @@ class TaskNode(BaseNode):
         text = """"""
         if self._parents is not None:
             for parent in self._parents:
-                if isinstance(parent, TaskNode):
+                if isinstance(parent, TaskNode) or isinstance(parent, LoopNode):
                     text += f"{parent.output_label}:\n{parent._output}\n\n"
 
         if self.evaluation_params is not None:
@@ -391,6 +393,66 @@ class TaskNode(BaseNode):
                 for child in self.children
             )
         )
+
+@dataclass
+class LoopNode(BaseNode):
+    loop_function: callable
+    output_label: str
+    children: List[TaskNode]
+    _parent: Optional[BaseNode] = None
+
+    def __hash__(self):
+        return id(self)
+
+    def __post_init__(self):
+        for child in self.children:
+            if not isinstance(child, TaskNode) and len(self.children) > 1:
+                raise ValueError(
+                    "A LoopNode must only have a single TaskNode in its 'children'."
+                )
+
+        if not callable(self.loop_function):
+            raise ValueError(
+                "The 'loop_function' must be a callable function with a single argument taking your TaskNode's expected python output"
+            )
+        
+        self.child = self.children[0]
+        self.child.set_parent(self)
+        increment_indegree(self.child)
+
+    def _execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
+        self._depth = max(0, self._depth, depth)
+        decrement_indegree(self)
+        if self._indegree > 0:
+            raise ValueError("Too many indegrees for a 'LoopNode'")
+
+        if self._parent is None:
+            raise ValueError(
+                "A LoopNode must have a single parent TaskNode."
+            )
+
+        task_node_output = self._parent._output
+        try:
+            task_node_output = ast.literal_eval(task_node_output)
+        except:
+            raise ValueError(
+                f"The 'TaskNode' has produced an output is not a valid python expression: {task_node_output}"
+            )
+
+        self._output = str(self.loop_function(task_node_output))
+
+        metric._verbose_steps.append(
+            construct_node_verbose_log(self, self._depth)
+        )
+
+        self.child._execute(
+            metric=metric, test_case=test_case, depth=self._depth + 1
+        )
+
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
+        self._execute(metric, test_case, depth)
 
 
 @dataclass
@@ -741,6 +803,13 @@ def construct_node_verbose_log(
             f"Label: {label}\n\n"
             "Instructions:\n"
             f"{node.instructions}\n\n"
+            f"{node.output_label}:\n{node._output}\n"
+        )
+    elif isinstance(node, LoopNode):
+        return (
+            "______________________\n"
+            f"| LoopNode | Level == {depth} |\n"
+            "*******************************\n"
             f"{node.output_label}:\n{node._output}\n"
         )
     elif isinstance(node, VerdictNode):
