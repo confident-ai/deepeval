@@ -1,10 +1,15 @@
+import os
+import time
+import json
 import asyncio
+from pathlib import Path
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai.instrumentator import (
     ConfidentInstrumentationSettings,
 )
 from deepeval.prompt import Prompt
 from deepeval.tracing.otel.test_exporter import test_exporter
+from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
@@ -31,8 +36,24 @@ agent = Agent(
 
 ######################### GENERATE TEST JSON #################################
 
-def generate_test_json():
-    result = asyncio.run(agent.run("What are the LLMs?"))
-    print(test_exporter.span_json_list)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(current_dir, "simple_agent.json")
 
-generate_test_json()
+def generate_test_json():
+    try:
+        result = asyncio.run(agent.run("What are the LLMs?"))
+        time.sleep(5)
+        with open(json_path, "w") as f:
+            json.dump(test_exporter.get_span_json_list(), f, indent=2)
+    finally:
+        test_exporter.clear_span_json_list()
+
+# generate_test_json()
+
+def test_simple_agent():
+    try:
+        expected_dict = load_trace_data(json_path)
+        actual_dict = test_exporter.get_span_json_list()
+        assert assert_json_object_structure(expected_dict, actual_dict)
+    finally:
+        test_exporter.clear_span_json_list()
