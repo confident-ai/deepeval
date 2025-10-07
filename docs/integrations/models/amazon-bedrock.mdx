@@ -43,13 +43,12 @@ There are **TWO** mandatory and **FIVE** optional parameters when creating an `A
 - `region_name`: A string specifying the AWS region hosting your Bedrock endpoint (e.g. `us-east-1`).
 - [Optional] `aws_access_key_id`: A string specifiying your AWS Access Key ID. If omitted, falls back to the default AWS credentials chain.
 - [Optional] `aws_secret_access_key`: A string specifiying your AWS Secret Access Key. If omitted, falls back to the default AWS credentials chain.
-- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
 - [Optional] `input_token_cost`: A float specifying the per-input-token cost in USD. Defaulted to 0.
 - [Optional] `output_token_cost`: A float specifying the per-output-token cost in USD. Defaulted to 0.
 - [Optional] `generation_kwargs`: A dictionary of additional generation parameters supported by your model provider.
 
 :::tip
-Any `**kwargs` you would like to use for your model can be passed through the `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
+All `**kwargs` like `temperature` and `topP` are defaulted to what amazon bedrock model offers and you must set them in `generation_kwargs` parameter. However, we request you to double check the params supported by the model and your model provider in their [official docs](https://docs.aws.amazon.com/bedrock/latest/userguide/inference-parameters.html).
 :::
 
 ### Available Amazon Bedrock Models

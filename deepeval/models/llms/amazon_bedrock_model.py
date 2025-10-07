@@ -40,7 +40,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         region_name: str,
         aws_access_key_id: Optional[str] = None,
         aws_secret_access_key: Optional[str] = None,
-        temperature: float = 0,
         input_token_cost: float = 0,
         output_token_cost: float = 0,
         generation_kwargs: Optional[Dict] = None,
@@ -53,12 +52,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self.region_name = region_name
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
-        self.temperature = temperature
         self.input_token_cost = input_token_cost
         self.output_token_cost = output_token_cost
-
-        if self.temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
 
         # prepare aiobotocore session, config, and async exit stack
         self._session = get_session()
@@ -146,7 +141,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         return {
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
             "inferenceConfig": {
-                "temperature": self.temperature,
                 **self.generation_kwargs,
             },
         }
