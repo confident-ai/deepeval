@@ -35,14 +35,13 @@ from deepeval.tracing.utils import (
 )
 
 
-def _is_metric_successful(metric_data) -> bool:
+def _is_metric_successful(metric_data: MetricData) -> bool:
     """
     Robustly determine success for a metric row.
 
     Rationale:
     - If the metric recorded an error, treat as failure.
-    - Try/except guards against custom metrics that may omit or mistyped `success`.
-    - Be defensive: missing/None/non-bool -> False (failure).
+    - Be defensive: custom rows may not be MetricData at runtime.
     """
     if getattr(metric_data, "error", None):
         return False
