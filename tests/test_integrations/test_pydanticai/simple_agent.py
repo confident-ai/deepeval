@@ -29,12 +29,13 @@ agent = Agent(
 
 
 async def execute_simple_agent():
-    result = await agent.run("What are the LLMs?")
-    print("===============Simple agent output:===============")
-    print(result)
+    with TraceContext() as trace:
+        result = await agent.run("What are the LLMs?")
+        print("===============Simple agent output:===============")
+        print(result)
+        print("===============Trace ID:===============")
+        print(trace.get_uuid())
 
 
 if __name__ == "__main__":
-    execute_simple_agent()
-
-execute_simple_agent()
+    asyncio.run(execute_simple_agent())
