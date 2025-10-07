@@ -9,6 +9,8 @@ from deepeval.integrations.pydantic_ai.instrumentator import (
 )
 from deepeval.prompt import Prompt
 from deepeval.tracing.otel.test_exporter import test_exporter
+from deepeval.tracing.trace_context import trace
+from deepeval.tracing.otel.utils import to_hex_string
 from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 
 prompt = Prompt(alias="asd")
@@ -51,11 +53,13 @@ def generate_test_json():
 # generate_test_json()
 
 def test_simple_agent():
-    asyncio.run(agent.run("What are the LLMs?"))
-    time.sleep(7)
-    try:
-        expected_dict = load_trace_data(json_path)
-        actual_dict = test_exporter.get_span_json_list()
-        assert assert_json_object_structure(expected_dict, actual_dict)
-    finally:
-        test_exporter.clear_span_json_list()
+    with trace() as current_trace:
+        asyncio.run(agent.run("What are the LLMs?"))
+        time.sleep(7)
+        try:
+            expected_dict = load_trace_data(json_path)
+            actual_dict = test_exporter.get_span_json_list()
+            assert assert_json_object_structure(expected_dict, actual_dict)
+            assert current_trace.uuid == actual_dict[0]["context"]["trace_id"][2:]
+        finally:
+            test_exporter.clear_span_json_list()
