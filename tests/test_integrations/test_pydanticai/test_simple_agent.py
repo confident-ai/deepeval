@@ -42,7 +42,7 @@ json_path = os.path.join(current_dir, "simple_agent.json")
 def generate_test_json():
     try:
         result = asyncio.run(agent.run("What are the LLMs?"))
-        time.sleep(5)
+        time.sleep(7)
         with open(json_path, "w") as f:
             json.dump(test_exporter.get_span_json_list(), f, indent=2)
     finally:
@@ -51,6 +51,8 @@ def generate_test_json():
 # generate_test_json()
 
 def test_simple_agent():
+    asyncio.run(agent.run("What are the LLMs?"))
+    time.sleep(7)
     try:
         expected_dict = load_trace_data(json_path)
         actual_dict = test_exporter.get_span_json_list()
