@@ -51,6 +51,9 @@ def is_dependency_installed():
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
 from deepeval.tracing.otel.test_exporter import test_exporter
+from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.types import Trace
+from deepeval.tracing.otel.utils import to_hex_string
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
