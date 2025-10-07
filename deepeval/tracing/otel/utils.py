@@ -388,7 +388,7 @@ def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
         raw = span.attributes.get("pydantic_ai.all_messages")
         if not raw:
             return None
-            
+
         messages = raw
         if isinstance(messages, str):
             messages = json.loads(messages)
@@ -407,7 +407,7 @@ def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
             return normalized
     except Exception:
         pass
-    
+
     return None
 
 
