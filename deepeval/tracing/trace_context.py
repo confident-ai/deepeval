@@ -1,21 +1,14 @@
-from typing import Optional
 from .context import current_trace_context
 from .tracing import trace_manager
+from contextlib import contextmanager
 
-class TraceContext:
+@contextmanager
+def trace():
+    current_trace = current_trace_context.get()
 
-    def __init__(self):
+    if not current_trace:
+        current_trace = trace_manager.start_new_trace()
+        current_trace_context.set(current_trace)
 
-        current_trace = current_trace_context.get()
-        if not current_trace:
-            _current_trace = trace_manager.start_new_trace()
-            current_trace_context.set(_current_trace)
-
-    def __enter__(self):
-        return self
+    yield current_trace
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False
-
-    def get_uuid(self):
-        return current_trace_context.get().uuid
