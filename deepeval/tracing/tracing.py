@@ -53,7 +53,7 @@ from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
-from tests.test_integrations.manager import trace_testing_manager
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 

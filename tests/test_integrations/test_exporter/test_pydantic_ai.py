@@ -4,7 +4,7 @@ from tests.test_integrations.test_exporter.readable_spans import list_of_readabl
 
 exporter = ConfidentSpanExporter()
 
-from tests.test_integrations.manager import trace_testing_manager
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 @pytest.mark.asyncio
 async def test_pydantic_ai_trace():
