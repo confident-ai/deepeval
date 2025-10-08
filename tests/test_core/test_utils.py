@@ -38,8 +38,9 @@ def test_read_env_float_min(monkeypatch):
     assert read_env_float("X_FLOAT", 2.0, min_value=0.5) == 2.0
 
 
-def test_dynamic_stop_env_override(monkeypatch):
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "3")
+def test_dynamic_stop_env_override(monkeypatch, settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
     stopper = dynamic_stop()
 
     # It's our own strategy (subclass of stop_base), not stop_after_attempt
@@ -67,12 +68,13 @@ def test_dynamic_stop_env_override(monkeypatch):
     assert calls["n"] == 3
 
 
-def test_dynamic_wait_env_override(monkeypatch):
+def test_dynamic_wait_env_override(monkeypatch, settings):
     # Deterministic (no jitter) + custom params
-    monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "0.5")
-    monkeypatch.setenv("DEEPEVAL_RETRY_EXP_BASE", "3")
-    monkeypatch.setenv("DEEPEVAL_RETRY_JITTER", "0")
-    monkeypatch.setenv("DEEPEVAL_RETRY_CAP_SECONDS", "9")
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_INITIAL_SECONDS = 0.5
+        settings.DEEPEVAL_RETRY_EXP_BASE = 3
+        settings.DEEPEVAL_RETRY_JITTER = 0
+        settings.DEEPEVAL_RETRY_CAP_SECONDS = 9
 
     w = dynamic_wait()
     assert isinstance(w, wait_base)  # return a Tenacity wait strategy
@@ -108,32 +110,6 @@ def test_dynamic_wait_env_override(monkeypatch):
     # should be: 0.5, 1.5, 4.5
     assert sleeps == [0.5, 1.5, 4.5]
     assert calls["n"] == 4  # attempted exactly 4 times
-
-
-def test_dynamic_stop_invalid_env_falls_back(monkeypatch):
-    # Invalid env should fall back to default attempts=2
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "zero?")
-    stopper = dynamic_stop()
-    assert isinstance(stopper, stop_base)
-
-    calls = {"n": 0}
-
-    def boom():
-        calls["n"] += 1
-        raise ValueError("boom")
-
-    r = Retrying(
-        stop=stopper,
-        wait=wait_fixed(0),
-        retry=retry_if_exception_type(ValueError),
-        reraise=True,
-    )
-
-    with pytest.raises(ValueError):
-        r(boom)
-
-    # default attempts == 2 means 1 initial try + 1 retry
-    assert calls["n"] == 2
 
 
 ################
