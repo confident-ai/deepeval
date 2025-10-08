@@ -48,8 +48,9 @@ def execute_simple_agent_sync():
         print(current_trace.uuid)  # ok
 
 
-# Test nested trace() calls
-def test_nested_traces():
+#################### Testing different trace modes #################################
+
+def nested_traces():
     with trace() as outer_trace:
         outer_uuid = outer_trace.uuid
         print(f"Outer trace UUID: {outer_uuid}")  # ok
@@ -67,7 +68,7 @@ def test_nested_traces():
 
 
 # Test concurrent agent runs
-async def test_concurrent_agents():
+async def concurrent_agents():
     with trace() as current_trace:
         initial_uuid = current_trace.uuid
 

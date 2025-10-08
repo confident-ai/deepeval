@@ -70,7 +70,3 @@ async def _execute_joke_selection_agent():
 
 def execute_joke_selection_agent():
     asyncio.run(_execute_joke_selection_agent())
-
-
-if __name__ == "__main__":
-    execute_joke_selection_agent()
