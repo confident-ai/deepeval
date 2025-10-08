@@ -10,4 +10,5 @@ class ToolSchema(BaseTool):
     is_called: Optional[bool] = False
 
 class ToolOutput(BaseTool):
+    """Output of the tool function"""
     output: Any

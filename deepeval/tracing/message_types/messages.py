@@ -6,5 +6,6 @@ class TextMessage(BaseMessage):
     content: str
 
 class ToolCallMessage(BaseMessage):
+    """ This is a message for tool calls in response.choices[0].message.tool_calls"""
     name: str
     args: Dict[str, Any]
