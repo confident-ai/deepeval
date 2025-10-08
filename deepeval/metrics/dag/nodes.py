@@ -398,6 +398,7 @@ class TaskNode(BaseNode):
             )
         )
 
+
 @dataclass
 class LoopNode(BaseNode):
     output_label: str
@@ -425,7 +426,7 @@ class LoopNode(BaseNode):
             raise ValueError(
                 "The 'loop_function' must be a callable function with a single argument taking your TaskNode's expected python output"
             )
-        
+
         self.child = self.children[0]
         self.child.set_parent(self)
         increment_indegree(self.child)
@@ -437,9 +438,7 @@ class LoopNode(BaseNode):
             raise ValueError("Too many indegrees for a 'LoopNode'")
 
         if self._parent is None:
-            raise ValueError(
-                "A LoopNode must have a single parent TaskNode."
-            )
+            raise ValueError("A LoopNode must have a single parent TaskNode.")
 
         task_node_output = self._parent._output
         try:
@@ -454,9 +453,10 @@ class LoopNode(BaseNode):
         else:
             if not isinstance(task_node_output, list):
                 raise ValueError(
-                    "The 'TaskNode' did not generate a python list. Task Node Output: ", task_node_output
+                    "The 'TaskNode' did not generate a python list. Task Node Output: ",
+                    task_node_output,
                 )
-            
+
             final_list = []
 
             for item in task_node_output:
@@ -481,7 +481,7 @@ class LoopNode(BaseNode):
                         res = metric.model.generate(prompt)
                         data = trimAndLoadJson(res, self)
                         final_list.append(TaskNodeOutput(**data).output)
-            
+
             self._output = str(final_list)
 
         metric._verbose_steps.append(
@@ -492,16 +492,16 @@ class LoopNode(BaseNode):
             metric=metric, test_case=test_case, depth=self._depth + 1
         )
 
-    async def _a_execute(self, metric: BaseMetric, test_case: LLMTestCase, depth: int):
+    async def _a_execute(
+        self, metric: BaseMetric, test_case: LLMTestCase, depth: int
+    ):
         self._depth = max(0, self._depth, depth)
         decrement_indegree(self)
         if self._indegree > 0:
             raise ValueError("Too many indegrees for a 'LoopNode'")
 
         if self._parent is None:
-            raise ValueError(
-                "A LoopNode must have a single parent TaskNode."
-            )
+            raise ValueError("A LoopNode must have a single parent TaskNode.")
 
         task_node_output = self._parent._output
         try:
@@ -516,7 +516,8 @@ class LoopNode(BaseNode):
         else:
             if not isinstance(task_node_output, list):
                 raise ValueError(
-                    "The 'TaskNode' did not generate a python list. Task Node Output: ", task_node_output
+                    "The 'TaskNode' did not generate a python list. Task Node Output: ",
+                    task_node_output,
                 )
 
             async def generate_result(item):
@@ -555,6 +556,7 @@ class LoopNode(BaseNode):
         await self.child._a_execute(
             metric=metric, test_case=test_case, depth=self._depth + 1
         )
+
 
 @dataclass
 class BinaryJudgementNode(BaseNode):

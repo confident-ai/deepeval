@@ -4,6 +4,6 @@ from .nodes import (
     TaskNode,
     BinaryJudgementNode,
     NonBinaryJudgementNode,
-    LoopNode
+    LoopNode,
 )
 from .graph import DeepAcyclicGraph
