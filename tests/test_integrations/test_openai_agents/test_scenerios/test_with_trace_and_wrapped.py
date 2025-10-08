@@ -7,7 +7,7 @@ from tests.test_integrations.utils import (
     assert_json_object_structure,
     load_trace_data,
 )
-from tests.test_integrations.manager import trace_testing_manager
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.openai_agents import (
     Agent,
     function_tool,
@@ -20,7 +20,7 @@ from tests.test_integrations.utils import (
     assert_json_object_structure,
     load_trace_data,
 )
-from tests.test_integrations.manager import trace_testing_manager
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 # add_trace_processor(DeepEvalTracingProcessor())
 
