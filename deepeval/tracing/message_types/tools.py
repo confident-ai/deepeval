@@ -5,12 +5,9 @@ class BaseTool(BaseModel):
     name: str
     description: Optional[str] = None
 
-class InputTool(BaseTool):
+class ToolSchema(BaseTool):
     parameters: Dict[str, Any]
     is_called: Optional[bool] = False
-
-class ToolCallOutput(BaseTool):
-    args: Dict[str, Any]
 
 class ToolOutput(BaseTool):
     output: Any

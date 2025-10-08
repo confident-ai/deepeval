@@ -1,10 +1,10 @@
-from .tools import BaseTool, InputTool, ToolCallOutput, ToolOutput
-from .messages import Message
+from .messages import TextMessage, ToolCallMessage
+from .tools import BaseTool, ToolSchema, ToolOutput
 
 __all__ = [
     "BaseTool",
-    "InputTool", 
-    "ToolCallOutput",
+    "TextMessage",
+    "ToolCallMessage",
+    "ToolSchema",
     "ToolOutput",
-    "Message",
 ]

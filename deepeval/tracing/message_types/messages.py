@@ -1,6 +1,10 @@
-from typing import Literal
-from pydantic import BaseModel
+from typing import Literal, Dict, Any
+from .base import BaseMessage
 
-class Message(BaseModel):
-    role: Literal["user", "assistant"]
+class TextMessage(BaseMessage):
+    type: Literal["text", "thinking"]
     content: str
+
+class ToolCallMessage(BaseMessage):
+    name: str
+    args: Dict[str, Any]
