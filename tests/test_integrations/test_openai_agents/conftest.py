@@ -2,6 +2,7 @@ import pytest
 from agents import add_trace_processor
 from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 
+
 @pytest.fixture(scope="session", autouse=True)
 def _install_deepeval_tracer():
     # guard in case something else already registered it

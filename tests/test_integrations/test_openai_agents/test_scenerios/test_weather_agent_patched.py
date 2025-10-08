@@ -4,11 +4,18 @@ import asyncio
 import json
 from agents import Runner, add_trace_processor
 
-from deepeval.openai_agents import Agent, function_tool, DeepEvalTracingProcessor
+from deepeval.openai_agents import (
+    Agent,
+    function_tool,
+    DeepEvalTracingProcessor,
+)
 
 from deepeval.prompt import Prompt
 
-from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.utils import (
+    assert_json_object_structure,
+    load_trace_data,
+)
 from tests.test_integrations.manager import trace_testing_manager
 
 # add_trace_processor(DeepEvalTracingProcessor())
@@ -92,16 +99,19 @@ weather_agent_patched = Agent(
     agent_metric_collection="test_collection_1",
 )
 
+
 async def run_weather_agent(input: str):
     """Run the weather agent with user input"""
     runner = Runner()
     result = await runner.run(weather_agent_patched, input)
     return result.final_output
 
+
 ################################ TESTING CODE #################################
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(_current_dir, 'weather_agent_patched.json')
+json_path = os.path.join(_current_dir, "weather_agent_patched.json")
+
 
 @pytest.mark.asyncio
 async def test_json_schema():
@@ -113,13 +123,15 @@ async def test_json_schema():
         await run_weather_agent(input="What's the weather in London?")
         actual_dict = await trace_testing_manager.wait_for_test_dict()
         expected_dict = load_trace_data(json_path)
-        
+
         assert assert_json_object_structure(expected_dict, actual_dict)
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
 
+
 ################################ Generate Actual JSON Dump Code #################################
+
 
 async def generate_actual_json_dump():
     try:
@@ -127,10 +139,11 @@ async def generate_actual_json_dump():
         await run_weather_agent(input="What's the weather in London?")
         actual_dict = await trace_testing_manager.wait_for_test_dict()
 
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(actual_dict, f)
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
+
 
 # asyncio.run(generate_actual_json_dump())

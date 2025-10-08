@@ -4,10 +4,14 @@ from agents import Runner, add_trace_processor, Agent, function_tool, trace
 from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 import pytest
 import json
-from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.utils import (
+    assert_json_object_structure,
+    load_trace_data,
+)
 from tests.test_integrations.manager import trace_testing_manager
 
 # add_trace_processor(DeepEvalTracingProcessor())
+
 
 @function_tool
 def get_current_weather(latitude: float, longitude: float) -> dict:
@@ -81,6 +85,7 @@ weather_agent = Agent(
     tool_use_behavior="run_llm_again",
 )
 
+
 async def run():
     with trace(
         workflow_name="test_workflow_1",  # name of the trace,
@@ -94,10 +99,12 @@ async def run():
             "What's the weather in London?",
         )
 
+
 ################################ TESTING CODE #################################
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(_current_dir, 'with_trace.json')
+json_path = os.path.join(_current_dir, "with_trace.json")
+
 
 @pytest.mark.asyncio
 async def test_json_schema():
@@ -109,13 +116,15 @@ async def test_json_schema():
         await run()
         actual_dict = await trace_testing_manager.wait_for_test_dict()
         expected_dict = load_trace_data(json_path)
-        
+
         assert assert_json_object_structure(expected_dict, actual_dict)
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
 
+
 ################################ Generate Actual JSON Dump Code #################################
+
 
 async def generate_actual_json_dump():
     try:
@@ -123,10 +132,11 @@ async def generate_actual_json_dump():
         await run()
         actual_dict = await trace_testing_manager.wait_for_test_dict()
 
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(actual_dict, f)
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
+
 
 # asyncio.run(generate_actual_json_dump())

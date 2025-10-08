@@ -50,6 +50,7 @@ def execute_simple_agent_sync():
 
 #################### Testing different trace modes #################################
 
+
 def nested_traces():
     with trace() as outer_trace:
         outer_uuid = outer_trace.uuid

@@ -222,9 +222,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         trace_provider.add_span_processor(span_interceptor)
 
         if is_test_mode:
-            trace_provider.add_span_processor(
-                BatchSpanProcessor(test_exporter)
-            )
+            trace_provider.add_span_processor(BatchSpanProcessor(test_exporter))
         else:
             trace_provider.add_span_processor(
                 BatchSpanProcessor(

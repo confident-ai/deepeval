@@ -3,8 +3,12 @@ from agents import Runner, add_trace_processor, Agent, function_tool
 from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 import pytest
 import os
-from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.utils import (
+    assert_json_object_structure,
+    load_trace_data,
+)
 from tests.test_integrations.manager import trace_testing_manager
+
 
 @function_tool
 def get_current_weather(latitude: float, longitude: float) -> dict:
@@ -78,16 +82,19 @@ weather_agent = Agent(
     tool_use_behavior="run_llm_again",
 )
 
+
 def run_sync():
     Runner.run_sync(
         weather_agent,
         "What's the weather in London?",
     )
 
+
 ################################ TESTING CODE #################################
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(_current_dir, 'run_sync.json')
+json_path = os.path.join(_current_dir, "run_sync.json")
+
 
 @pytest.mark.skip(reason="Loop issue with asyncio.run")
 async def test_json_schema():
@@ -99,13 +106,15 @@ async def test_json_schema():
         run_sync()
         actual_dict = await trace_testing_manager.wait_for_test_dict()
         expected_dict = load_trace_data(json_path)
-        
+
         assert assert_json_object_structure(expected_dict, actual_dict)
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
 
+
 ################################ Generate Actual JSON Dump Code #################################
+
 
 async def generate_actual_json_dump():
     try:
@@ -113,7 +122,7 @@ async def generate_actual_json_dump():
         run_sync()
         actual_dict = await trace_testing_manager.wait_for_test_dict()
 
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(actual_dict, f)
     finally:
         trace_testing_manager.test_name = None

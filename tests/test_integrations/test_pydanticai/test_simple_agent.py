@@ -11,7 +11,10 @@ from deepeval.prompt import Prompt
 from deepeval.tracing.otel.test_exporter import test_exporter
 from deepeval.tracing.trace_context import trace
 from deepeval.tracing.otel.utils import to_hex_string
-from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
+from tests.test_integrations.utils import (
+    assert_json_object_structure,
+    load_trace_data,
+)
 
 prompt = Prompt(alias="asd")
 prompt._version = "00.00.01"
@@ -25,7 +28,6 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
     name="test_name_1",
     confident_prompt=prompt,
     trace_metric_collection="test_collection_1",
-
     is_test_mode=True,
 )
 
@@ -41,6 +43,7 @@ agent = Agent(
 current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(current_dir, "simple_agent.json")
 
+
 def generate_test_json():
     try:
         result = asyncio.run(agent.run("What are the LLMs?"))
@@ -50,7 +53,9 @@ def generate_test_json():
     finally:
         test_exporter.clear_span_json_list()
 
+
 # generate_test_json()
+
 
 def test_simple_agent():
     with trace() as current_trace:
@@ -60,6 +65,8 @@ def test_simple_agent():
             expected_dict = load_trace_data(json_path)
             actual_dict = test_exporter.get_span_json_list()
             assert assert_json_object_structure(expected_dict, actual_dict)
-            assert current_trace.uuid == actual_dict[0]["context"]["trace_id"][2:]
+            assert (
+                current_trace.uuid == actual_dict[0]["context"]["trace_id"][2:]
+            )
         finally:
             test_exporter.clear_span_json_list()
