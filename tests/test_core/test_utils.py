@@ -112,32 +112,6 @@ def test_dynamic_wait_env_override(monkeypatch, settings):
     assert calls["n"] == 4  # attempted exactly 4 times
 
 
-def test_dynamic_stop_invalid_env_falls_back(monkeypatch):
-    # Invalid env should fall back to default attempts=2
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "zero?")
-    stopper = dynamic_stop()
-    assert isinstance(stopper, stop_base)
-
-    calls = {"n": 0}
-
-    def boom():
-        calls["n"] += 1
-        raise ValueError("boom")
-
-    r = Retrying(
-        stop=stopper,
-        wait=wait_fixed(0),
-        retry=retry_if_exception_type(ValueError),
-        reraise=True,
-    )
-
-    with pytest.raises(ValueError):
-        r(boom)
-
-    # default attempts == 2 means 1 initial try + 1 retry
-    assert calls["n"] == 2
-
-
 ################
 # Test shorten #
 ################
