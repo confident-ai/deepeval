@@ -111,6 +111,15 @@ def _gather_timeout() -> float:
     )
 
 
+async def _gather_with_timeout(
+    *tasks: Awaitable[Any], timeout: Optional[float] = None, **kwargs: Any
+):
+    return await asyncio.wait_for(
+        asyncio.gather(*tasks, **kwargs),
+        timeout=_gather_timeout() if timeout is None else timeout,
+    )
+
+
 ###########################################
 ### E2E Evals #############################
 ###########################################
@@ -495,7 +504,7 @@ async def a_execute_test_cases(
                         tasks.append(asyncio.create_task(task))
 
                     await asyncio.sleep(async_config.throttle_value)
-            await asyncio.gather(*tasks)
+            await _gather_with_timeout(*tasks)
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
@@ -568,7 +577,7 @@ async def a_execute_test_cases(
                     tasks.append(asyncio.create_task(task))
 
                 await asyncio.sleep(async_config.throttle_value)
-        await asyncio.gather(*tasks)
+        await _gather_with_timeout(*tasks)
 
     return test_results
 
@@ -1144,7 +1153,7 @@ async def a_execute_agentic_test_cases(
                     tasks.append(asyncio.create_task(task))
                     await asyncio.sleep(async_config.throttle_value)
 
-            await asyncio.gather(*tasks)
+            await _gather_with_timeout(*tasks)
     else:
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -1165,7 +1174,7 @@ async def a_execute_agentic_test_cases(
                 )
                 tasks.append(asyncio.create_task(task))
                 await asyncio.sleep(async_config.throttle_value)
-        await asyncio.gather(*tasks)
+        await _gather_with_timeout(*tasks)
     local_trace_manager.evaluating = False
     return test_results
 
@@ -1288,7 +1297,7 @@ async def _a_execute_agentic_test_case(
         )
         child_tasks = [dfs(child) for child in span.children]
         if child_tasks:
-            await asyncio.gather(*child_tasks)
+            await _gather_with_timeout(*child_tasks)
 
     test_start_time = time.perf_counter()
     await dfs(current_trace.root_spans[0])
@@ -2154,7 +2163,7 @@ async def _a_evaluate_traces(
             )
             eval_tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*eval_tasks)
+    await _gather_with_timeout(*eval_tasks)
 
 
 async def _evaluate_test_case_pairs(
@@ -2210,7 +2219,7 @@ async def _evaluate_test_case_pairs(
             )
             tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*tasks)
+    await _gather_with_timeout(*tasks)
 
 
 def _execute_metric(
