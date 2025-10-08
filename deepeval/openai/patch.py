@@ -151,7 +151,7 @@ def patch_sync_openai_client_method(
         input_parameters: InputParameters = extract_input_parameters(
             is_completion_method, kwargs
         )
-        is_traced = len(trace_manager.traces) > 0
+        is_traced = True
 
         if is_traced:
 
@@ -202,3 +202,48 @@ def patch_sync_openai_client_method(
             return response
 
     return patched_sync_openai_method
+
+
+def patch_openai_classes():
+    """Monkey patch OpenAI resource classes directly."""
+    
+    try:
+        from openai.resources.chat.completions import Completions, AsyncCompletions
+        
+        # Helper to create bound method wrapper
+        def wrap_sync_method(original_method):
+            def method_wrapper(self, *args, **kwargs):
+                # Bind the original method to self, then wrap it
+                bound_method = original_method.__get__(self, type(self))
+                patched = patch_sync_openai_client_method(
+                    orig_method=bound_method,
+                    is_completion_method=True
+                )
+                return patched(*args, **kwargs)
+            return method_wrapper
+        
+        def wrap_async_method(original_method):
+            async def method_wrapper(self, *args, **kwargs):
+                # Bind the original method to self, then wrap it
+                bound_method = original_method.__get__(self, type(self))
+                patched = patch_async_openai_client_method(
+                    orig_method=bound_method,
+                    is_completion_method=True
+                )
+                return await patched(*args, **kwargs)
+            return method_wrapper
+        
+        # Patch sync methods
+        if hasattr(Completions, 'create'):
+            Completions.create = wrap_sync_method(Completions.create)
+        if hasattr(Completions, 'parse'):
+            Completions.parse = wrap_sync_method(Completions.parse)
+        
+        # Patch async methods
+        if hasattr(AsyncCompletions, 'create'):
+            AsyncCompletions.create = wrap_async_method(AsyncCompletions.create)
+        if hasattr(AsyncCompletions, 'parse'):
+            AsyncCompletions.parse = wrap_async_method(AsyncCompletions.parse)
+            
+    except ImportError:
+        pass
