@@ -38,8 +38,9 @@ def test_read_env_float_min(monkeypatch):
     assert read_env_float("X_FLOAT", 2.0, min_value=0.5) == 2.0
 
 
-def test_dynamic_stop_env_override(monkeypatch):
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "3")
+def test_dynamic_stop_env_override(monkeypatch, settings):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
     stopper = dynamic_stop()
 
     # It's our own strategy (subclass of stop_base), not stop_after_attempt
@@ -67,12 +68,13 @@ def test_dynamic_stop_env_override(monkeypatch):
     assert calls["n"] == 3
 
 
-def test_dynamic_wait_env_override(monkeypatch):
+def test_dynamic_wait_env_override(monkeypatch, settings):
     # Deterministic (no jitter) + custom params
-    monkeypatch.setenv("DEEPEVAL_RETRY_INITIAL_SECONDS", "0.5")
-    monkeypatch.setenv("DEEPEVAL_RETRY_EXP_BASE", "3")
-    monkeypatch.setenv("DEEPEVAL_RETRY_JITTER", "0")
-    monkeypatch.setenv("DEEPEVAL_RETRY_CAP_SECONDS", "9")
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_INITIAL_SECONDS = 0.5
+        settings.DEEPEVAL_RETRY_EXP_BASE = 3
+        settings.DEEPEVAL_RETRY_JITTER = 0
+        settings.DEEPEVAL_RETRY_CAP_SECONDS = 9
 
     w = dynamic_wait()
     assert isinstance(w, wait_base)  # return a Tenacity wait strategy
