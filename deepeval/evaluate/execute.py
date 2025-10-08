@@ -373,9 +373,8 @@ async def a_execute_test_cases(
                     timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
                 )
             except asyncio.TimeoutError:
-            
-                raise
 
+                raise
 
     global_test_run_cache_manager.disable_write_cache = (
         cache_config.write_cache is False
@@ -1096,7 +1095,7 @@ async def a_execute_agentic_test_cases(
                     timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
                 )
             except asyncio.TimeoutError:
-          
+
                 raise
 
     test_run_manager = global_test_run_manager
@@ -2143,9 +2142,8 @@ async def _a_evaluate_traces(
                     timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
                 )
             except asyncio.TimeoutError:
-            
-                raise
 
+                raise
 
     eval_tasks = []
     for count, trace in enumerate(traces_to_evaluate):
@@ -2199,9 +2197,8 @@ async def _evaluate_test_case_pairs(
                     timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
                 )
             except asyncio.TimeoutError:
-            
-                raise
 
+                raise
 
     tasks = []
     for count, test_case_pair in enumerate(test_case_pairs):
