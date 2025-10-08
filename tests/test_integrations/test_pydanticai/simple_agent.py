@@ -24,6 +24,7 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
 agent = Agent(
     "openai:gpt-5",
     system_prompt="Be concise, reply with one sentence.",
+    instructions="You are a helpful assistant.",
     instrument=confident_instrumentation_settings,
     name="test_agent",
 )
@@ -33,11 +34,7 @@ async def execute_simple_agent():
     with trace() as current_trace:
         await agent.run("What are the LLMs?")
         print("===============Result 1: trace ID===============")
-        print(current_trace.uuid)  # ok
-
-        await agent.run("What are the LLMs?")
-        print("===============Result 2: Trace ID:===============")
-        print(current_trace.uuid)  # ok
+        print(current_trace.uuid)  # use this trace id to send annotation
 
 
 def execute_simple_agent_sync():
