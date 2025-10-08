@@ -36,6 +36,10 @@ async def execute_simple_agent():
         print("===============Result 1: trace ID===============")
         print(current_trace.uuid)  # use this trace id to send annotation
 
+        await agent.run("What are the LLMs?")
+        print("===============Result 2: trace ID===============")
+        print(current_trace.uuid)  # use this trace id to send annotation
+
 
 def execute_simple_agent_sync():
 
