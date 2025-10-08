@@ -188,6 +188,19 @@ class Settings(BaseSettings):
     # into this directory. The directory will be created on demand.
     DEEPEVAL_RESULTS_FOLDER: Optional[Path] = None
 
+    # Display / Truncation
+    DEEPEVAL_MAXLEN_TINY: Optional[int] = 40
+    DEEPEVAL_MAXLEN_SHORT: Optional[int] = 60
+    DEEPEVAL_MAXLEN_MEDIUM: Optional[int] = 120
+    DEEPEVAL_MAXLEN_LONG: Optional[int] = 240
+
+    # If set, this overrides the default max_len used by deepeval/utils shorten
+    # falls back to DEEPEVAL_MAXLEN_LONG when None.
+    DEEPEVAL_SHORTEN_DEFAULT_MAXLEN: Optional[int] = None
+
+    # Optional global suffix (keeps your "..." default).
+    DEEPEVAL_SHORTEN_SUFFIX: Optional[str] = "..."
+
     #
     # GPU and perf toggles
     #

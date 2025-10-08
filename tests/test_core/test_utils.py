@@ -1,8 +1,10 @@
 import pytest
+from types import SimpleNamespace
 from tenacity import Retrying, wait_fixed, retry_if_exception_type
 from tenacity.wait import wait_base
 from tenacity.stop import stop_after_attempt, stop_base
-from deepeval.utils import read_env_int, read_env_float
+from deepeval.utils import read_env_int, read_env_float, shorten
+from deepeval.evaluate.utils import _is_metric_successful
 from deepeval.models.retry_policy import dynamic_wait, dynamic_stop
 
 

@@ -1,7 +1,8 @@
 from typing import Optional, List, Union, Dict
 from dataclasses import dataclass
 from pydantic import BaseModel
-from deepeval.test_run import MetricData
+
+from deepeval.test_run.api import MetricData, TurnApi
 from deepeval.test_case import MLLMImage
 
 
@@ -19,9 +20,11 @@ class TestResult:
     expected_output: Optional[str] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
+    turns: Optional[List[TurnApi]] = None
     additional_metadata: Optional[Dict] = None
 
 
 class EvaluationResult(BaseModel):
     test_results: List[TestResult]
     confident_link: Optional[str]
+    test_run_id: Optional[str]

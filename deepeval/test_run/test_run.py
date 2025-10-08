@@ -2,9 +2,8 @@ from enum import Enum
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict, Union
+from typing import Any, Optional, List, Dict, Union, Tuple
 import shutil
-import webbrowser
 import sys
 import datetime
 import portalocker
@@ -27,6 +26,9 @@ from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
     open_browser,
+    shorten,
+    format_turn,
+    len_short,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
@@ -546,7 +548,7 @@ class TestRunManager:
 
             if (
                 display == TestRunResultDisplay.PASSING
-                and test_case.success == False
+                and test_case.success is False
             ):
                 continue
             elif display == TestRunResultDisplay.FAILING and test_case.success:
@@ -618,7 +620,7 @@ class TestRunManager:
         ):
             if (
                 display == TestRunResultDisplay.PASSING
-                and conversational_test_case.success == False
+                and conversational_test_case.success is False
             ):
                 continue
             elif (
@@ -630,6 +632,65 @@ class TestRunManager:
             pass_count = 0
             fail_count = 0
             conversational_test_case_name = conversational_test_case.name
+
+            if conversational_test_case.turns:
+                turns_table = Table(
+                    title=f"Conversation - {conversational_test_case_name}",
+                    show_header=True,
+                    header_style="bold",
+                )
+                turns_table.add_column("#", justify="right", width=3)
+                turns_table.add_column("Role", justify="left", width=10)
+
+                # subtract fixed widths + borders and padding.
+                # ~20 as a safe buffer
+                details_max_width = max(
+                    48, min(120, console.width - 3 - 10 - 20)
+                )
+                turns_table.add_column(
+                    "Details",
+                    justify="left",
+                    overflow="fold",
+                    max_width=details_max_width,
+                )
+
+                # truncate when too long
+                tools_max_width = min(60, max(24, console.width // 3))
+                turns_table.add_column(
+                    "Tools",
+                    justify="left",
+                    no_wrap=True,
+                    overflow="ellipsis",
+                    max_width=tools_max_width,
+                )
+
+                sorted_turns = sorted(
+                    conversational_test_case.turns, key=lambda t: t.order
+                )
+
+                for t in sorted_turns:
+                    tools = t.tools_called or []
+                    tool_names = ", ".join(tc.name for tc in tools)
+
+                    # omit order, role and tools since we show them in a separate columns.
+                    details = format_turn(
+                        t,
+                        include_tools_in_header=False,
+                        include_order_role_in_header=False,
+                    )
+
+                    turns_table.add_row(
+                        str(t.order),
+                        t.role,
+                        details,
+                        shorten(tool_names, len_short()),
+                    )
+
+                console.print(turns_table)
+            else:
+                console.print(
+                    f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
+                )
 
             if conversational_test_case.metrics_data is not None:
                 for metric_data in conversational_test_case.metrics_data:
@@ -698,7 +759,7 @@ class TestRunManager:
         )
         print(table)
 
-    def post_test_run(self, test_run: TestRun) -> Optional[str]:
+    def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
@@ -751,6 +812,21 @@ class TestRunManager:
             endpoint=Endpoints.TEST_RUN_ENDPOINT,
             body=body,
         )
+
+        if not isinstance(data, dict) or "id" not in data:
+            # try to show helpful details
+            detail = None
+            if isinstance(data, dict):
+                detail = (
+                    data.get("detail")
+                    or data.get("message")
+                    or data.get("error")
+                )
+            # fall back to repr for visibility
+            raise RuntimeError(
+                f"Confident API response missing 'id'. "
+                f"detail={detail!r} raw={type(data).__name__}:{repr(data)[:500]}"
+            )
 
         res = TestRunHttpResponse(
             id=data["id"],
@@ -814,7 +890,7 @@ class TestRunManager:
         )
         self.save_final_test_run_link(link)
         open_browser(link)
-        return link
+        return link, res.id
 
     def save_test_run_locally(self):
         local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
@@ -841,7 +917,7 @@ class TestRunManager:
         runDuration: float,
         display_table: bool = True,
         display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
-    ) -> Optional[str]:
+    ) -> Optional[Tuple[str, str]]:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
@@ -868,8 +944,8 @@ class TestRunManager:
         test_run.sort_test_cases()
 
         if global_test_run_cache_manager.disable_write_cache is None:
-            global_test_run_cache_manager.disable_write_cache = (
-                get_is_running_deepeval() == False
+            global_test_run_cache_manager.disable_write_cache = not bool(
+                get_is_running_deepeval()
             )
 
         global_test_run_cache_manager.wrap_up_cached_test_run()
