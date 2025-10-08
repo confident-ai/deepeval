@@ -12,9 +12,6 @@ from deepeval.integrations.llama_index import (
     FunctionAgent,
 )
 
-# instrument_llama_index(instrument.get_dispatcher())
-
-
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
@@ -66,5 +63,3 @@ async def generate_actual_json_dump():
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
-
-# asyncio.run(generate_actual_json_dump())

@@ -14,7 +14,7 @@ from tests.test_integrations.manager import trace_testing_manager
 # add_trace_processor(DeepEvalTracingProcessor())
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 
 @function_tool(metric_collection="test_collection_1")

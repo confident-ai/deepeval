@@ -5,13 +5,12 @@ import json
 import pytest
 from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 from tests.test_integrations.manager import trace_testing_manager
-# from deepeval.tracing.tracing import observe
 from langchain_openai import ChatOpenAI
 from deepeval.prompt import Prompt
 import asyncio
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 
 @tool(metric_collection="test_collection_1")
@@ -87,5 +86,3 @@ async def generate_actual_json_dump():
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
-
-# asyncio.run(generate_actual_json_dump())

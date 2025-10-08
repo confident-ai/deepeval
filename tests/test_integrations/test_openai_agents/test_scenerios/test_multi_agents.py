@@ -8,8 +8,6 @@ from deepeval.openai_agents.callback_handler import DeepEvalTracingProcessor
 from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 from tests.test_integrations.manager import trace_testing_manager
 
-# add_trace_processor(DeepEvalTracingProcessor())
-
 spanish_agent = Agent(
     name="Spanish agent",
     instructions="You only speak Spanish.",
@@ -64,5 +62,3 @@ async def generate_actual_json_dump():
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
-
-# asyncio.run(generate_actual_json_dump())

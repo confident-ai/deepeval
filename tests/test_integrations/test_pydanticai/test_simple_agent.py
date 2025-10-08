@@ -14,7 +14,7 @@ from deepeval.tracing.otel.utils import to_hex_string
 from tests.test_integrations.utils import assert_json_object_structure, load_trace_data
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 confident_instrumentation_settings = ConfidentInstrumentationSettings(
     thread_id="test_thread_id_1",
