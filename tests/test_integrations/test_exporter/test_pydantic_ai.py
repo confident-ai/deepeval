@@ -23,5 +23,3 @@ async def test_pydantic_ai_trace():
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
-
-asyncio.run(test_pydantic_ai_trace())
