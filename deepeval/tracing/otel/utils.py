@@ -435,6 +435,21 @@ def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
     return None
 
 
+def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
+
+    if isinstance(message, dict) and message.get("role") == "assistant":
+        parts = message.get("parts")
+        if parts:
+            # Iterate from the last part
+            for part in reversed(parts):
+                if isinstance(part, dict) and part.get("type") == "text":
+                    # Return a modified message with only the text content
+                    return {
+                        "role": "assistant",
+                        "content": part.get("content")
+                    }       
+    return None
+
 def check_pydantic_ai_agent_input_output(
     span: ReadableSpan,
 ) -> Tuple[Optional[Any], Optional[Any]]:
@@ -469,8 +484,7 @@ def check_pydantic_ai_agent_input_output(
         if span.attributes.get("confident.span.type") == "agent":
             output_val = span.attributes.get("final_result")
             if not output_val and normalized:
-                # Extract the last message if no final_result is available
-                output_val = [normalized[-1]] # flattening the last message as a list
+                output_val = _extract_non_thinking_part_of_last_message(normalized[-1])
     except Exception:
         pass
 
@@ -480,7 +494,6 @@ def check_pydantic_ai_agent_input_output(
         system_instructions = _flatten_system_instructions(json.loads(system_instruction_raw))
 
     input_val = _flatten_input(input_val)
-    output_val = _flatten_input(output_val)
     return system_instructions + input_val, output_val
 
 
