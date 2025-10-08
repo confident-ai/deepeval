@@ -1901,9 +1901,8 @@ def a_execute_agentic_test_cases_from_loop(
             # This will prevent re-awaiting and avoids cross loop "future belongs to a different loop" errors
             try:
                 loop.run_until_complete(
-                    asyncio.wait_for(
-                        asyncio.gather(*created_tasks, return_exceptions=True),
-                        timeout=_gather_timeout(),
+                    _gather_with_timeout(
+                        *created_tasks, return_exceptions=True
                     )
                 )
             except asyncio.TimeoutError:
@@ -1949,9 +1948,16 @@ def a_execute_agentic_test_cases_from_loop(
                 # Cancel and drain the tasks
                 for t in pending:
                     t.cancel()
-                loop.run_until_complete(
-                    asyncio.gather(*created_tasks, return_exceptions=True)
-                )
+                try:
+                    loop.run_until_complete(
+                        _gather_with_timeout(
+                            *created_tasks, return_exceptions=True
+                        )
+                    )
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "[deepeval] cancelled tasks failed to finish within gather timeout"
+                    )
             finally:
 
                 # if it is already closed, we are done
@@ -1993,7 +1999,9 @@ def a_execute_agentic_test_cases_from_loop(
                 # Drain strays so they don’t leak into the next iteration
                 try:
                     loop.run_until_complete(
-                        asyncio.gather(*leftovers, return_exceptions=True)
+                        _gather_with_timeout(
+                            *leftovers, return_exceptions=True
+                        )
                     )
                 except RuntimeError:
                     # If the loop is closing here, just continue
@@ -2001,6 +2009,10 @@ def a_execute_agentic_test_cases_from_loop(
                         logger.warning(
                             "[deepeval] failed to drain stray tasks because loop is closing"
                         )
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "[deepeval] timed out draining stray tasks after cancellation"
+                    )
 
         # Evaluate traces
         if trace_manager.traces_to_evaluate:
