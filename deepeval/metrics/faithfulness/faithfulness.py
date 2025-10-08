@@ -41,6 +41,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
+        penalize_ambiguous_claims: bool = False,
         evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -51,6 +52,7 @@ class FaithfulnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
+        self.penalize_ambiguous_claims = penalize_ambiguous_claims
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
@@ -328,6 +330,12 @@ class FaithfulnessMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":
                 faithfulness_count += 1
+
+            if (
+                self.penalize_ambiguous_claims
+                and verdict.verdict.strip().lower() == "idk"
+            ):
+                faithfulness_count -= 1
 
         score = faithfulness_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score
