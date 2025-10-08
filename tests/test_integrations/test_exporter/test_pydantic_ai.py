@@ -2,10 +2,10 @@ from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 from tests.test_integrations.test_exporter.readable_spans import (
     list_of_readable_spans,
 )
+from deepeval.tracing.trace_test_manager import trace_testing_manager
+
 
 exporter = ConfidentSpanExporter()
-
-from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 
 async def test_pydantic_ai_trace():
