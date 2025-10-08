@@ -28,9 +28,18 @@ try:
     crewai_installed = True
 except ImportError as e:
     if get_settings().DEEPEVAL_VERBOSE_MODE:
-        logger.error(
-            "Optional crewai dependencies missing: %s", e, exc_info=True
-        )
+        if isinstance(e, ModuleNotFoundError):
+            logger.warning(
+                "Optional crewai dependency not installed: %s",
+                e.name,
+                stacklevel=2,
+            )
+        else:
+            logger.warning(
+                "Optional crewai import failed: %s",
+                e,
+                stacklevel=2,
+            )
 
     crewai_installed = False
 
