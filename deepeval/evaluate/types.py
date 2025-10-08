@@ -27,3 +27,4 @@ class TestResult:
 class EvaluationResult(BaseModel):
     test_results: List[TestResult]
     confident_link: Optional[str]
+    test_run_id: Optional[str]
