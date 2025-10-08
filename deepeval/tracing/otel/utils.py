@@ -470,7 +470,7 @@ def check_pydantic_ai_agent_input_output(
             output_val = span.attributes.get("final_result")
             if not output_val and normalized:
                 # Extract the last message if no final_result is available
-                output_val = normalized[-1]
+                output_val = [normalized[-1]]
     except Exception:
         pass
 
