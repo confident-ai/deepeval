@@ -10,6 +10,7 @@ from deepeval.prompt import Prompt
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
+
 confident_instrumentation_settings = ConfidentInstrumentationSettings(
     thread_id="test_thread_id_1",
     user_id="test_user_id_1",
@@ -31,14 +32,14 @@ agent = Agent(
 
 
 async def execute_simple_agent():
-    with trace() as current_trace:
+    with trace():
         await agent.run("What are the LLMs?")
         await agent.run("What are the LLMs?")
 
 
 def execute_simple_agent_sync():
 
-    with trace() as current_trace:
+    with trace():
         agent.run_sync("What are the LLMs?")
 
 
@@ -46,19 +47,17 @@ def execute_simple_agent_sync():
 
 
 def nested_traces():
-    with trace() as outer_trace:
-        outer_uuid = outer_trace.uuid
+    with trace():
         agent.run_sync("Query 1")
 
         # Nested trace context
-        with trace() as inner_trace:
+        with trace():
             agent.run_sync("Query 2")
 
 
 # Test concurrent agent runs
 async def concurrent_agents():
-    with trace() as current_trace:
-        initial_uuid = current_trace.uuid
+    with trace():
 
         await asyncio.gather(
             agent.run("Query 1"),
