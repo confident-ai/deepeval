@@ -35,6 +35,7 @@ async def execute_simple_agent():
         await agent.run("What are the LLMs?")
         await agent.run("What are the LLMs?")
 
+
 def execute_simple_agent_sync():
 
     with trace() as current_trace:

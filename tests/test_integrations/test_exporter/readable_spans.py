@@ -5,7 +5,7 @@ from opentelemetry.trace.status import Status, StatusCode
 # Create a simple span context
 span_context = SpanContext(
     trace_id=1,  # Simple trace ID
-    span_id=1,   # Simple span ID
+    span_id=1,  # Simple span ID
     is_remote=False,
     trace_flags=TraceFlags(0x01),  # Sampled flag
 )
@@ -90,7 +90,7 @@ readable_span = ReadableSpan(
     },  # Single attribute
     status=Status(StatusCode.OK),
     start_time=1000000000,  # nanoseconds since epoch
-    end_time=1000001000,    # nanoseconds since epoch
+    end_time=1000001000,  # nanoseconds since epoch
 )
 
 list_of_readable_spans = [readable_span]

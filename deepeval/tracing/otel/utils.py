@@ -111,17 +111,21 @@ def check_llm_input_from_gen_ai_attributes(
     try:
         # check for system instructions
         system_instructions = []
-        system_instructions_raw = span.attributes.get("gen_ai.system_instructions")
+        system_instructions_raw = span.attributes.get(
+            "gen_ai.system_instructions"
+        )
         if system_instructions_raw and isinstance(system_instructions_raw, str):
             system_instructions_json = json.loads(system_instructions_raw)
-            system_instructions = _flatten_system_instructions(system_instructions_json)
-        
+            system_instructions = _flatten_system_instructions(
+                system_instructions_json
+            )
+
         input_messages = []
         input_messages_raw = span.attributes.get("gen_ai.input.messages")
         if input_messages_raw and isinstance(input_messages_raw, str):
             input_messages_json = json.loads(input_messages_raw)
             input_messages = _flatten_input(input_messages_json)
-        
+
         input = system_instructions + input_messages
 
     except Exception:
@@ -148,6 +152,7 @@ def check_llm_input_from_gen_ai_attributes(
 
     return input, output
 
+
 def _flatten_system_instructions(system_instructions: list) -> list:
     if isinstance(system_instructions, list):
         for system_instruction in system_instructions:
@@ -158,8 +163,9 @@ def _flatten_system_instructions(system_instructions: list) -> list:
         return _flatten_input(system_instructions)
     elif isinstance(system_instructions, str):
         return [{"role": "System Instruction", "content": system_instructions}]
-    
+
     return []
+
 
 def _flatten_input(input: list) -> list:
     if input and isinstance(input, list):
@@ -444,11 +450,9 @@ def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
             for part in reversed(parts):
                 if isinstance(part, dict) and part.get("type") == "text":
                     # Return a modified message with only the text content
-                    return {
-                        "role": "assistant",
-                        "content": part.get("content")
-                    }       
+                    return {"role": "assistant", "content": part.get("content")}
     return None
+
 
 def check_pydantic_ai_agent_input_output(
     span: ReadableSpan,
@@ -484,14 +488,18 @@ def check_pydantic_ai_agent_input_output(
         if span.attributes.get("confident.span.type") == "agent":
             output_val = span.attributes.get("final_result")
             if not output_val and normalized:
-                output_val = _extract_non_thinking_part_of_last_message(normalized[-1])
+                output_val = _extract_non_thinking_part_of_last_message(
+                    normalized[-1]
+                )
     except Exception:
         pass
 
     system_instructions = []
     system_instruction_raw = span.attributes.get("gen_ai.system_instructions")
     if system_instruction_raw and isinstance(system_instruction_raw, str):
-        system_instructions = _flatten_system_instructions(json.loads(system_instruction_raw))
+        system_instructions = _flatten_system_instructions(
+            json.loads(system_instruction_raw)
+        )
 
     input_val = _flatten_input(input_val)
     return system_instructions + input_val, output_val
