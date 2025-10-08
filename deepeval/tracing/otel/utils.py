@@ -453,7 +453,7 @@ def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
 def check_pydantic_ai_agent_input_output(
     span: ReadableSpan,
 ) -> Tuple[Optional[Any], Optional[Any]]:
-    input_val: Optional[Any] = None
+    input_val: list = []
     output_val: Optional[Any] = None
 
     # Get normalized messages once
