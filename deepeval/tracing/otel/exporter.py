@@ -90,12 +90,6 @@ class ConfidentSpanExporter(SpanExporter):
         api_key: Optional[str] = None,  # dynamic api key,
         _test_run_id: Optional[str] = None,
     ) -> SpanExportResult:
-        # build forest of spans
-        # for span in spans:
-        #     print("--------------------------------")
-        #     print(span.to_json())
-        #     print("--------------------------------")
-        # return SpanExportResult.SUCCESS
 
         ################ Build Forest of Spans ################
         forest = self._build_span_forest(spans)

@@ -24,6 +24,7 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
 agent = Agent(
     "openai:gpt-5",
     system_prompt="Be concise, reply with one sentence.",
+    instructions="You are a helpful assistant.",
     instrument=confident_instrumentation_settings,
     name="test_agent",
 )
@@ -32,20 +33,12 @@ agent = Agent(
 async def execute_simple_agent():
     with trace() as current_trace:
         await agent.run("What are the LLMs?")
-        print("===============Result 1: trace ID===============")
-        print(current_trace.uuid)  # ok
-
         await agent.run("What are the LLMs?")
-        print("===============Result 2: Trace ID:===============")
-        print(current_trace.uuid)  # ok
-
 
 def execute_simple_agent_sync():
 
     with trace() as current_trace:
         agent.run_sync("What are the LLMs?")
-        print("===============Result 1: trace ID===============")
-        print(current_trace.uuid)  # ok
 
 
 #################### Testing different trace modes #################################
@@ -54,18 +47,11 @@ def execute_simple_agent_sync():
 def nested_traces():
     with trace() as outer_trace:
         outer_uuid = outer_trace.uuid
-        print(f"Outer trace UUID: {outer_uuid}")  # ok
-
         agent.run_sync("Query 1")
-        print(f"After agent run 1: {outer_trace.uuid}")  # ok
 
         # Nested trace context
         with trace() as inner_trace:
-            # Should reuse the same trace (based on trace_context.py logic)
-            print(f"Inner trace UUID: {inner_trace.uuid}")  # ok
-
             agent.run_sync("Query 2")
-            print(f"After agent run 2: {inner_trace.uuid}")  # ok
 
 
 # Test concurrent agent runs
@@ -73,14 +59,8 @@ async def concurrent_agents():
     with trace() as current_trace:
         initial_uuid = current_trace.uuid
 
-        # Run multiple agents concurrently
         await asyncio.gather(
             agent.run("Query 1"),
             agent.run("Query 2"),
             agent.run("Query 3"),
         )
-
-        print(f"Initial: {initial_uuid}")
-        print(
-            f"Final: {current_trace.uuid}"
-        )  # print trace uuid of the last agent run

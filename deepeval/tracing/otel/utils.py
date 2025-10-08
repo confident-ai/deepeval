@@ -109,8 +109,20 @@ def check_llm_input_from_gen_ai_attributes(
     input = None
     output = None
     try:
-        input = json.loads(span.attributes.get("gen_ai.input.messages"))
-        input = _flatten_input(input)
+        # check for system instructions
+        system_instructions = []
+        system_instructions_raw = span.attributes.get("gen_ai.system_instructions")
+        if system_instructions_raw and isinstance(system_instructions_raw, str):
+            system_instructions_json = json.loads(system_instructions_raw)
+            system_instructions = _flatten_system_instructions(system_instructions_json)
+        
+        input_messages = []
+        input_messages_raw = span.attributes.get("gen_ai.input.messages")
+        if input_messages_raw and isinstance(input_messages_raw, str):
+            input_messages_json = json.loads(input_messages_raw)
+            input_messages = _flatten_input(input_messages_json)
+        
+        input = system_instructions + input_messages
 
     except Exception:
         pass
@@ -136,6 +148,18 @@ def check_llm_input_from_gen_ai_attributes(
 
     return input, output
 
+def _flatten_system_instructions(system_instructions: list) -> list:
+    if isinstance(system_instructions, list):
+        for system_instruction in system_instructions:
+            if isinstance(system_instruction, dict):
+                role = system_instruction.get("role")
+                if not role:
+                    system_instruction["role"] = "System Instruction"
+        return _flatten_input(system_instructions)
+    elif isinstance(system_instructions, str):
+        return [{"role": "System Instruction", "content": system_instructions}]
+    
+    return []
 
 def _flatten_input(input: list) -> list:
     if input and isinstance(input, list):
@@ -411,10 +435,25 @@ def _normalize_pydantic_ai_messages(span: ReadableSpan) -> Optional[list]:
     return None
 
 
+def _extract_non_thinking_part_of_last_message(message: dict) -> dict:
+
+    if isinstance(message, dict) and message.get("role") == "assistant":
+        parts = message.get("parts")
+        if parts:
+            # Iterate from the last part
+            for part in reversed(parts):
+                if isinstance(part, dict) and part.get("type") == "text":
+                    # Return a modified message with only the text content
+                    return {
+                        "role": "assistant",
+                        "content": part.get("content")
+                    }       
+    return None
+
 def check_pydantic_ai_agent_input_output(
     span: ReadableSpan,
 ) -> Tuple[Optional[Any], Optional[Any]]:
-    input_val: Optional[Any] = None
+    input_val: list = []
     output_val: Optional[Any] = None
 
     # Get normalized messages once
@@ -445,14 +484,17 @@ def check_pydantic_ai_agent_input_output(
         if span.attributes.get("confident.span.type") == "agent":
             output_val = span.attributes.get("final_result")
             if not output_val and normalized:
-                # Extract the last message if no final_result is available
-                output_val = normalized[-1]
+                output_val = _extract_non_thinking_part_of_last_message(normalized[-1])
     except Exception:
         pass
 
+    system_instructions = []
+    system_instruction_raw = span.attributes.get("gen_ai.system_instructions")
+    if system_instruction_raw and isinstance(system_instruction_raw, str):
+        system_instructions = _flatten_system_instructions(json.loads(system_instruction_raw))
+
     input_val = _flatten_input(input_val)
-    output_val = _flatten_input(output_val)
-    return input_val, output_val
+    return system_instructions + input_val, output_val
 
 
 def check_tool_output(span: ReadableSpan):
