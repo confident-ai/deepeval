@@ -9,7 +9,7 @@ from deepeval.openai.extractors import (
 )
 from deepeval.tracing.context import current_trace_context, update_current_span, update_llm_span
 from deepeval.tracing import observe
-from deepeval.tracing.trace_context import current_prompt_context
+from deepeval.tracing.trace_context import current_llm_context
 
 def patch_async_openai_client_method(
     orig_method: Callable,
@@ -24,7 +24,9 @@ def patch_async_openai_client_method(
             is_completion_method, kwargs
         )
 
-        @observe(type="llm", model=input_parameters.model)
+        llm_context = current_llm_context.get()
+
+        @observe(type="llm", model=input_parameters.model, metrics=llm_context.metrics, metric_collection=llm_context.metric_collection)
         async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
             output_parameters = extract_output_parameters(
@@ -52,7 +54,9 @@ def patch_sync_openai_client_method(
             is_completion_method, kwargs
         )
 
-        @observe(type="llm", model=input_parameters.model)
+        llm_context = current_llm_context.get()
+
+        @observe(type="llm", model=input_parameters.model, metrics=llm_context.metrics, metric_collection=llm_context.metric_collection)
         def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
             output_parameters = extract_output_parameters(
@@ -157,11 +161,12 @@ def _update_all_attributes(
         output=output_parameters.output or "NA",
     )
     
-    prompt = current_prompt_context.get()
+    llm_context = current_llm_context.get()
+    
     update_llm_span(
         input_token_count=output_parameters.prompt_tokens,
         output_token_count=output_parameters.completion_tokens,
-        prompt=prompt,
+        prompt=llm_context.prompt,
     )
     
     __update_input_and_output_of_current_trace(input_parameters, output_parameters)
@@ -175,5 +180,5 @@ def __update_input_and_output_of_current_trace(input_parameters: InputParameters
         
         if current_trace.output is None:
             current_trace.output = output_parameters.output or "NA"
-            
+
     return
