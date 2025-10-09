@@ -1,18 +1,28 @@
 from typing import Optional, List, Dict, Any
 from contextvars import ContextVar
 from contextlib import contextmanager
+from dataclasses import dataclass
 
 from .tracing import trace_manager
 from .context import current_trace_context, update_current_trace
-
 from deepeval.prompt import Prompt
-current_prompt_context: ContextVar[Optional[Prompt]] = ContextVar(
-    "current_prompt", default=None
+from deepeval.metrics import BaseMetric
+
+@dataclass
+class LlmContext:
+    prompt: Optional[Prompt] = None
+    metrics: Optional[List[BaseMetric]] = None
+    metric_collection: Optional[str] = None
+
+current_llm_context: ContextVar[Optional[LlmContext]] = ContextVar(
+    "current_llm_context", default=None
 )
 
 @contextmanager
 def trace(
     prompt: Optional[Prompt] = None,
+    llm_metrics: Optional[List[BaseMetric]] = None,
+    llm_metric_collection: Optional[str] = None,
     name: Optional[str] = None,
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
@@ -25,10 +35,8 @@ def trace(
         current_trace = trace_manager.start_new_trace()
         
     current_trace_context.set(current_trace)
-    
-    # set the current prompt context
-    if prompt:
-        current_prompt_context.set(prompt)
+
+    current_llm_context.set(LlmContext(prompt=prompt, metrics=llm_metrics, metric_collection=llm_metric_collection))
     
     # set the current trace attributes
     if name:
