@@ -1,10 +1,31 @@
-from agents import Agent, Runner
-from deepeval.openai_agents.agent import DeepEvalAgent
+import os
+import asyncio
+import pytest
+from agents import Runner, trace, add_trace_processor
+import json
+from tests.test_integrations.utils import (
+    assert_json_object_structure,
+    load_trace_data,
+)
+from deepeval.tracing.trace_test_manager import trace_testing_manager
+from deepeval.openai_agents import (
+    Agent,
+    function_tool,
+    DeepEvalTracingProcessor,
+)
+
 from deepeval.prompt import Prompt
-from deepeval.openai_agents.patch import function_tool
+
+from tests.test_integrations.utils import (
+    assert_json_object_structure,
+    load_trace_data,
+)
+from deepeval.tracing.trace_test_manager import trace_testing_manager
+
+# add_trace_processor(DeepEvalTracingProcessor())
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 
 @function_tool(metric_collection="test_collection_1")
@@ -57,7 +78,7 @@ def get_location_coordinates(city_name: str) -> dict:
 
 
 # Create the weather specialist agent
-weather_agent_patched = DeepEvalAgent(
+weather_agent_patched = Agent(
     name="Weather Specialist Agent",
     instructions="""
     You are a weather agent. When providing current weather information 
@@ -83,8 +104,57 @@ weather_agent_patched = DeepEvalAgent(
 )
 
 
-async def run_weather_agent(user_input: str):
+async def run_weather_agent(input: str):
     """Run the weather agent with user input"""
-    runner = Runner()
-    result = await runner.run(weather_agent, user_input)
-    return result.final_output
+    with trace(
+        workflow_name="test_workflow_1",  # name of the trace,
+        group_id="test_group_id_1",  # thread_id of the trace,
+        metadata={
+            "test_metadata_1": "test_metadata_1"
+        },  # metadata of the trace,
+    ):
+        runner = Runner()
+        result = await runner.run(weather_agent_patched, input)
+        return result.final_output
+
+
+################################ TESTING CODE #################################
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, "with_trace_and_wrapped.json")
+
+
+@pytest.mark.asyncio
+async def test_json_schema():
+    """
+    Test the json schema of the trace. Raises an exception if the schema is invalid.
+    """
+    try:
+        trace_testing_manager.test_name = json_path
+        await run_weather_agent(input="What's the weather in London?")
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+        expected_dict = load_trace_data(json_path)
+
+        assert assert_json_object_structure(expected_dict, actual_dict)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+
+################################ Generate Actual JSON Dump Code #################################
+
+
+async def generate_actual_json_dump():
+    try:
+        trace_testing_manager.test_name = json_path
+        await run_weather_agent(input="What's the weather in London?")
+        actual_dict = await trace_testing_manager.wait_for_test_dict()
+
+        with open(json_path, "w") as f:
+            json.dump(actual_dict, f)
+    finally:
+        trace_testing_manager.test_name = None
+        trace_testing_manager.test_dict = None
+
+
+# asyncio.run(generate_actual_json_dump())

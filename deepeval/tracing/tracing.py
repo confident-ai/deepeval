@@ -1,3 +1,4 @@
+import os
 from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
 from time import perf_counter
 import threading
@@ -47,13 +48,12 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
-    dump_body_to_json_file,
-    get_deepeval_trace_mode,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
@@ -183,13 +183,14 @@ class TraceManager:
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
 
-            mode = get_deepeval_trace_mode()
-            if mode == "gen":
+            if trace_testing_manager.test_name:
+                # Trace testing mode is enabled
+                # Instead posting the trace to the queue, it will be stored in this global variable
                 body = self.create_trace_api(trace).model_dump(
                     by_alias=True, exclude_none=True
                 )
-                dump_body_to_json_file(body)
-            # Post the trace to the server before removing it
+                trace_testing_manager.test_dict = make_json_serializable(body)
+            #  Post the trace to the server before removing it
             elif not self.evaluating:
                 self.post_trace(trace)
             else:
