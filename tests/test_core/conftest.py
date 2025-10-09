@@ -7,6 +7,7 @@ try:
 except Exception:
     pass
 
+import os
 import pytest
 import tenacity
 
@@ -62,13 +63,24 @@ def settings():
 
 
 @pytest.fixture(autouse=True)
-def settings_reset():
-    reset_settings()
+def _env_sandbox():
+    from deepeval.config.settings import reset_settings
 
-
-@pytest.fixture()
-def settings_reload():
-    reset_settings(reload_dotenv=True)
+    before = os.environ.copy()
+    # ensure clean singleton before the test runs
+    reset_settings(reload_dotenv=False)
+    try:
+        yield
+    finally:
+        # restore env
+        to_remove = [k for k in list(os.environ.keys()) if k not in before]
+        for k in to_remove:
+            os.environ.pop(k, None)
+        for k, v in before.items():
+            if os.environ.get(k) != v:
+                os.environ[k] = v
+        # ensure fresh Settings for the next test
+        reset_settings(reload_dotenv=False)
 
 
 @pytest.fixture(autouse=True)
