@@ -110,8 +110,8 @@ class LlmSpan(BaseSpan):
     )
     input_tools: Optional[List[ToolSchema]] = Field(None, serialization_alias="inputTools")
 
-    invocation_params: Optional[Dict[str, Any]] = Field(None, serialization_alias="invocationParams")
-    output_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="outputMetadata")
+    # invocation_params: Optional[Dict[str, Any]] = Field(None, serialization_alias="invocationParams")
+    # output_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="outputMetadata")
 
     # for serializing `prompt`
     model_config = {"arbitrary_types_allowed": True}
