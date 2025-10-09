@@ -5,8 +5,9 @@ from deepeval.openai.extractors import (
     extract_output_parameters,
     extract_input_parameters,
     InputParameters,
+    OutputParameters,
 )
-from deepeval.tracing.context import update_current_span, update_llm_span
+from deepeval.tracing.context import current_trace_context, update_current_span, update_llm_span
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_prompt_context
 
@@ -41,6 +42,9 @@ def patch_async_openai_client_method(
                 output_token_count=output_parameters.completion_tokens,
                 prompt=prompt,
             )
+            
+            _update_input_and_output_of_current_trace(input_parameters, output_parameters)
+            
             return response
 
         return await llm_generation(*args, **kwargs)
@@ -80,6 +84,8 @@ def patch_sync_openai_client_method(
                 output_token_count=output_parameters.completion_tokens,
                 prompt=prompt,
             )
+            _update_input_and_output_of_current_trace(input_parameters, output_parameters)  
+            
             return response
 
         return llm_generation(*args, **kwargs)
@@ -130,3 +136,13 @@ def patch_openai_classes():
             
     except ImportError:
         pass
+
+def _update_input_and_output_of_current_trace(input_parameters: InputParameters, output_parameters: OutputParameters):
+    
+    current_trace = current_trace_context.get()
+    if current_trace:
+        if current_trace.input is None:
+            current_trace.input = input_parameters.input or input_parameters.messages or "NA"
+        
+        current_trace.output = output_parameters.output or "NA"
+    return

@@ -9,6 +9,9 @@ from deepeval.prompt import Prompt
 current_prompt_context: ContextVar[Optional[Prompt]] = ContextVar(
     "current_prompt", default=None
 )
+from time import perf_counter
+import uuid
+from deepeval.tracing.types import BaseSpan, TraceSpanStatus
 
 @contextmanager
 def trace(
@@ -42,5 +45,23 @@ def trace(
     if thread_id:
         update_current_trace(thread_id=thread_id)
     
+    dummy_span = _create_a_dummy_span(current_trace.uuid)
+    trace_manager.add_span(dummy_span)
+    
+    try:
+        yield current_trace
+    finally:
+        trace_manager.remove_span(dummy_span.uuid)
+        trace_manager.end_trace(current_trace.uuid)
 
-    yield current_trace
+
+def _create_a_dummy_span(trace_uuid: str):
+    return BaseSpan(
+        uuid=str(uuid.uuid4()),
+        trace_uuid=trace_uuid,
+        parent_uuid=None,
+        start_time=perf_counter(),
+        name=None,
+        status=TraceSpanStatus.IN_PROGRESS,
+        children=[],
+    )
