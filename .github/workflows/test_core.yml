@@ -11,7 +11,8 @@ jobs:
     env:
       # Expose once at job level because forked PRs can't use secrets.* in `if:` conditions.
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
+      DEEPEVAL_TELEMETRY_OPT_OUT: 1
+      DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS: 120
     steps:
       #----------------------------------------------
       #       check-out repo and set-up python
