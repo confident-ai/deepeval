@@ -69,3 +69,26 @@ def settings_reset():
 @pytest.fixture()
 def settings_reload():
     reset_settings(reload_dotenv=True)
+
+
+@pytest.fixture(autouse=True)
+def _core_mode_no_confident(monkeypatch):
+    # Ensure no Confident keys come from the process env in this test
+    for key in ("CONFIDENT_API_KEY", "CONFIDENTAI_API_KEY"):
+        monkeypatch.delenv(key, raising=False)
+
+    # Prevent dotenv from re-injecting keys from files during the test
+    # core tests shouldn’t depend on local .env anyway
+    monkeypatch.setenv("DEEPEVAL_DISABLE_DOTENV", "1")
+
+    # Rebuild the Settings singleton from the now-clean process env
+    reset_settings(reload_dotenv=False)
+
+    # Clear the in-memory Settings fields (no persistence)
+    s = get_settings()
+    with s.edit(persist=False) as ctx:
+        ctx.s.API_KEY = None
+        ctx.s.CONFIDENT_API_KEY = None
+
+    # Yield control to the test
+    yield
