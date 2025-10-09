@@ -110,6 +110,40 @@ def patch_openai_classes():
             
     except ImportError:
         pass
+    
+    # Patch responses.create
+    try:
+        from openai.resources.responses import Responses, AsyncResponses
+        
+        # Use the same wrapper functions defined above
+        def wrap_sync_method(original_method):
+            def method_wrapper(self, *args, **kwargs):
+                bound_method = original_method.__get__(self, type(self))
+                patched = patch_sync_openai_client_method(
+                    orig_method=bound_method,
+                    is_completion_method=False  # responses use different parameters
+                )
+                return patched(*args, **kwargs)
+            return method_wrapper
+        
+        def wrap_async_method(original_method):
+            async def method_wrapper(self, *args, **kwargs):
+                bound_method = original_method.__get__(self, type(self))
+                patched = patch_async_openai_client_method(
+                    orig_method=bound_method,
+                    is_completion_method=False  # responses use different parameters
+                )
+                return await patched(*args, **kwargs)
+            return method_wrapper
+        
+        # Patch sync and async responses.create
+        if hasattr(Responses, 'create'):
+            Responses.create = wrap_sync_method(Responses.create)
+        if hasattr(AsyncResponses, 'create'):
+            AsyncResponses.create = wrap_async_method(AsyncResponses.create)
+            
+    except ImportError:
+        pass
 
 def _update_all_attributes(
     input_parameters: InputParameters,
@@ -139,5 +173,7 @@ def __update_input_and_output_of_current_trace(input_parameters: InputParameters
         if current_trace.input is None:
             current_trace.input = input_parameters.input or input_parameters.messages or "NA"
         
-        current_trace.output = output_parameters.output or "NA"
+        if current_trace.output is None:
+            current_trace.output = output_parameters.output or "NA"
+            
     return
