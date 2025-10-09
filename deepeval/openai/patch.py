@@ -30,20 +30,7 @@ def patch_async_openai_client_method(
             output_parameters = extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
-            update_current_span(
-                input=input_parameters.input
-                or input_parameters.messages
-                or "NA",
-                output=output_parameters.output or "NA",
-            )
-            prompt = current_prompt_context.get()
-            update_llm_span(
-                input_token_count=output_parameters.prompt_tokens,
-                output_token_count=output_parameters.completion_tokens,
-                prompt=prompt,
-            )
-            
-            _update_input_and_output_of_current_trace(input_parameters, output_parameters)
+            _update_all_attributes(input_parameters, output_parameters)
             
             return response
 
@@ -71,20 +58,7 @@ def patch_sync_openai_client_method(
             output_parameters = extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
-            update_current_span(
-                input=input_parameters.input
-                or input_parameters.messages
-                or "NA",
-                output=output_parameters.output or "NA",
-            )
-
-            prompt = current_prompt_context.get()
-            update_llm_span(
-                input_token_count=output_parameters.prompt_tokens,
-                output_token_count=output_parameters.completion_tokens,
-                prompt=prompt,
-            )
-            _update_input_and_output_of_current_trace(input_parameters, output_parameters)  
+            _update_all_attributes(input_parameters, output_parameters)
             
             return response
 
@@ -137,7 +111,28 @@ def patch_openai_classes():
     except ImportError:
         pass
 
-def _update_input_and_output_of_current_trace(input_parameters: InputParameters, output_parameters: OutputParameters):
+def _update_all_attributes(
+    input_parameters: InputParameters,
+    output_parameters: OutputParameters
+):
+    """Update span and trace attributes with input/output parameters."""
+    update_current_span(
+        input=input_parameters.input
+        or input_parameters.messages
+        or "NA",
+        output=output_parameters.output or "NA",
+    )
+    
+    prompt = current_prompt_context.get()
+    update_llm_span(
+        input_token_count=output_parameters.prompt_tokens,
+        output_token_count=output_parameters.completion_tokens,
+        prompt=prompt,
+    )
+    
+    __update_input_and_output_of_current_trace(input_parameters, output_parameters)
+    
+def __update_input_and_output_of_current_trace(input_parameters: InputParameters, output_parameters: OutputParameters):
     
     current_trace = current_trace_context.get()
     if current_trace:
