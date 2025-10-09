@@ -47,7 +47,7 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_mllm_test_case_params(test_case, self._required_params, self)
+        check_mllm_test_case_params(test_case, self._required_params, None, None, self)
         self.test_case = test_case
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
