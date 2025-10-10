@@ -32,7 +32,7 @@ deepeval login
 
 Create a `CallbackHandler` with a list of [task completion metrics](/docs/metrics-task-completion) you wish to use, and pass it to your LangChain application's `invoke` method.
 
-```python title="main.py" showLineNumbers {7,9,10}
+```python title="main.py" showLineNumbers
 from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.tools import tool
@@ -42,7 +42,6 @@ from langchain_openai import ChatOpenAI
 from deepeval.integrations.langchain import CallbackHandler
 
 from deepeval.metrics import TaskCompletionMetric
-task_completion_metric = TaskCompletionMetric()
 
 @tool
 def multiply(a: int, b: int) -> int:
@@ -62,7 +61,7 @@ agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 
 # result = agent_executor.invoke(
 #    {"input": "What is 8 multiplied by 6?"},
-#    config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+#    config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
 #)
 
 #print(result)
@@ -91,7 +90,7 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator():
     agent_executor.invoke(
         {"input": golden.input},
-        config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
     )
 ```
 
@@ -110,7 +109,7 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(
         agent_executor.ainvoke(
             {"input": golden.input},
-            config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+            config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
         )
     )
     dataset.evaluate(task)
@@ -135,6 +134,39 @@ for golden in dataset.evals_iterator():
 :::note
 If you need to evaluate individual components of your LangChain application, [set up tracing](/docs/evaluation-llm-tracing) instead.
 :::
+
+## Component-level Evals
+
+Using `deepeval`, you can now evaluate individual components of your LangChain application.
+
+### LLM
+Define `metrics` in the metadata of the all the `BaseLanguageModel`s in your LangChain application.
+
+```python title="main.py" showLineNumbers
+from langchain_openai import ChatOpenAI
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+llm = ChatOpenAI(
+    model="gpt-4o-mini", 
+    metadata={"metric": [AnswerRelevancyMetric()]}
+).bind_tools([get_weather])
+```
+
+### Tool
+To pass `metrics` to the tools, you can use the DeepEval's LangChain `tool` decorator.
+```python title="main.py" showLineNumbers
+# from langchain_core.tools import tool
+from deepeval.integrations.langchain import tool
+from deepeval.metrics import AnswerRelevancyMetric
+...
+
+@tool(metric=[AnswerRelevancyMetric()])
+def get_weather(location: str) -> str:
+    """Get the current weather in a location."""
+    return f"It's always sunny in {location}!"
+```
+
 
 ## Evals in Production
 
