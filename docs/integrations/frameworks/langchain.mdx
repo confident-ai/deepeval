@@ -42,7 +42,6 @@ from langchain_openai import ChatOpenAI
 from deepeval.integrations.langchain import CallbackHandler
 
 from deepeval.metrics import TaskCompletionMetric
-task_completion_metric = TaskCompletionMetric()
 
 @tool
 def multiply(a: int, b: int) -> int:
@@ -62,7 +61,7 @@ agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 
 # result = agent_executor.invoke(
 #    {"input": "What is 8 multiplied by 6?"},
-#    config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+#    config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
 #)
 
 #print(result)
@@ -91,7 +90,7 @@ dataset = EvaluationDataset(goldens=[
 for golden in dataset.evals_iterator():
     agent_executor.invoke(
         {"input": golden.input},
-        config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
     )
 ```
 
@@ -110,7 +109,7 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(
         agent_executor.ainvoke(
             {"input": golden.input},
-            config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+            config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
         )
     )
     dataset.evaluate(task)

@@ -44,7 +44,6 @@ from langgraph.prebuilt import create_react_agent
 from deepeval.integrations.langchain import CallbackHandler
  
 from deepeval.metrics import TaskCompletionMetric
-task_completion_metric = TaskCompletionMetric()
  
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
@@ -89,7 +88,7 @@ dataset = EvaluationDataset(goldens=goldens)
 for golden in dataset.evals_iterator():
     agent.invoke(
         input={"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
     )
 ```
 
@@ -109,7 +108,7 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(
         agent.ainvoke(
             input={"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+            config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
         )
     )
     dataset.evaluate(task)
