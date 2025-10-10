@@ -88,7 +88,9 @@ class AnswerRelevancyMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                metric_data_manager.post_metric(self)
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
 
             return self.score
 
@@ -126,7 +128,9 @@ class AnswerRelevancyMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            metric_data_manager.post_metric(self)
+            metric_data_manager.post_metric_if_enabled(
+                self, test_case=test_case
+            )
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

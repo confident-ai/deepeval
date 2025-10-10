@@ -61,6 +61,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMTestCase,
 )
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run import (
     global_test_run_manager,
     LLMApiTestCase,
@@ -80,7 +81,6 @@ from deepeval.evaluate.utils import (
     create_api_trace,
     create_metric_data,
     create_test_result,
-    create_api_test_case,
     count_metrics_in_trace,
     extract_trace_test_results,
 )

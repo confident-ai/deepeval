@@ -7,15 +7,16 @@ from time import perf_counter
 from enum import Enum
 from pydantic import Field
 from rich.console import Console
-from deepeval.confident.api import Api, HttpMethods, Endpoints
+
+from deepeval.confident.api import Api, HttpMethods, Endpoints, is_confident
 from deepeval.constants import (
     CONFIDENT_METRIC_LOGGING_FLUSH,
     CONFIDENT_METRIC_LOGGING_VERBOSE,
 )
-from deepeval.evaluate.utils import create_api_test_case, create_metric_data
 from deepeval.metrics.base_metric import BaseConversationalMetric, BaseMetric
 from deepeval.test_case.conversational_test_case import ConversationalTestCase
 from deepeval.test_case.llm_test_case import LLMTestCase
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run.api import LLMApiTestCase, ConversationalApiTestCase
 from deepeval.tracing.api import MetricData
 from deepeval.config.settings import get_settings
@@ -45,7 +46,7 @@ class MetricDataManager:
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
-        self._flush_enabled = bool(settings.CONFIDENT_METRIC_LOGGING_ENABLED)
+        self._flush_enabled = bool(settings.CONFIDENT_METRIC_LOGGING_FLUSH)
         self._daemon = not self._flush_enabled
         self._thread_lock = threading.Lock()
         self.metric_logging_enabled = bool(
@@ -55,25 +56,31 @@ class MetricDataManager:
         # Register an exit handler to warn about unprocessed metrics
         atexit.register(self._warn_on_exit)
 
-    def post_metric(
+    def post_metric_if_enabled(
         self,
         metric: Union[BaseMetric, BaseConversationalMetric],
-        llm_test_case: Optional[LLMTestCase] = None,
-        conversational_test_case: Optional[ConversationalTestCase] = None,
+        test_case: Optional[Union[LLMTestCase, ConversationalTestCase]] = None,
     ):
         """Post metric data asynchronously in a background thread."""
-        self._ensure_worker_thread_running()
+        if not self.metric_logging_enabled or not is_confident():
+            return
+
+        from deepeval.evaluate.utils import create_metric_data
+
         metric_data = create_metric_data(metric)
+        api_metric_data = ApiMetricData(
+            **metric_data.model_dump(by_alias=True, exclude_none=True)
+        )
 
-        if llm_test_case:
-            metric_data.llm_test_case = create_api_test_case(llm_test_case)
-
-        if conversational_test_case:
-            metric_data.conversational_test_case = create_api_test_case(
-                conversational_test_case
+        if isinstance(test_case, LLMTestCase):
+            api_metric_data.llm_test_case = create_api_test_case(test_case)
+        elif isinstance(test_case, ConversationalTestCase):
+            api_metric_data.conversational_test_case = create_api_test_case(
+                test_case
             )
 
-        self._metric_queue.put(metric_data)
+        self._ensure_worker_thread_running()
+        self._metric_queue.put(api_metric_data)
 
     def _warn_on_exit(self):
         """Warn if there are unprocessed metrics on exit."""
@@ -118,15 +125,15 @@ class MetricDataManager:
             elif metric_worker_status == MetricWorkerStatus.WARNING:
                 message = f"[yellow]{message}[/yellow]"
 
-            if description:
+            if bool(CONFIDENT_METRIC_LOGGING_VERBOSE):
+                if description:
+                    message += f": {description}"
+
                 console.print(
                     message_prefix,
-                    message + ":",
-                    description,
+                    message,
                     f"\nTo disable dev logging, set {CONFIDENT_METRIC_LOGGING_VERBOSE}=0 as an environment variable.",
                 )
-            else:
-                console.print(message_prefix, message)
 
     def _process_metric_queue(self):
         """Worker thread function that processes the metric queue."""
@@ -157,7 +164,7 @@ class MetricDataManager:
                 # If the main thread is still alive, send now
                 if main_thr.is_alive():
                     api = Api()
-                    _, link = await api.a_send_request(
+                    _, _ = await api.a_send_request(
                         method=HttpMethods.POST,
                         endpoint=Endpoints.METRIC_DATA_ENDPOINT,
                         body=body,
@@ -168,7 +175,6 @@ class MetricDataManager:
                     self._print_metric_data_status(
                         metric_worker_status=MetricWorkerStatus.SUCCESS,
                         message=f"Successfully posted metric data {status}",
-                        description=link,
                     )
                 elif self._flush_enabled:
                     # Main thread gone → to be flushed
