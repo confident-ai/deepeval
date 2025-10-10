@@ -21,6 +21,7 @@ class ProviderSlug(str, Enum):
     AZURE = "azure"
     ANTHROPIC = "anthropic"
     BEDROCK = "bedrock"
+    COMETAPI = "cometapi"
     DEEPSEEK = "deepseek"
     GOOGLE = "google"
     GROK = "grok"

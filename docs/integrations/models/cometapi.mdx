@@ -1,0 +1,205 @@
+---
+title: CometAPI
+sidebar_label: CometAPI
+---
+
+DeepEval allows you to use [CometAPI's 500+ AI models](https://www.cometapi.com/?utm_source=deepeval&utm_campaign=integration&utm_medium=integration&utm_content=integration) - All In One API - to run all of DeepEval's metrics and embedding operations. CometAPI provides access to models from OpenAI, Anthropic, Google, xAI, and many more through a unified interface.
+
+## Command Line
+
+### LLM Configuration
+
+To configure your CometAPI model through the CLI, run the following command:
+
+```bash
+deepeval set-cometapi --model-name="gpt-4o-mini" \
+    --api-key="your-cometapi-key" \
+    --temperature=0
+```
+
+The CLI command above sets `gpt-4o-mini` as the default model for all metrics, unless overridden in Python code. To use a different default model provider, you must first unset CometAPI:
+
+```bash
+deepeval unset-cometapi
+```
+
+### Embedding Configuration
+
+To configure CometAPI embeddings through the CLI:
+
+```bash
+deepeval set-cometapi-embeddings --model-name="text-embedding-3-small" \
+    --api-key="your-cometapi-key"
+```
+
+To unset CometAPI embeddings:
+
+```bash
+deepeval unset-cometapi-embeddings
+```
+
+:::tip Persisting settings
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+## Python
+
+### LLM Model
+
+You can specify your model directly in code using `CometAPIModel`.
+
+```python
+from deepeval.models import CometAPIModel
+from deepeval.metrics import AnswerRelevancyMetric
+
+model = CometAPIModel(
+    model="gpt-4o-mini",
+    api_key="your-cometapi-key",
+    temperature=0
+)
+
+answer_relevancy = AnswerRelevancyMetric(model=model)
+```
+
+There are **TWO** mandatory and **THREE** optional parameters when creating a `CometAPIModel`:
+
+- `model`: A string specifying the name of the model to use (see available models below).
+- `api_key`: A string specifying your CometAPI API key for authentication.
+- [Optional] `temperature`: A float specifying the model temperature. Defaulted to 0.
+- [Optional] `cost_per_input_token`: A float specifying custom input token pricing.
+- [Optional] `cost_per_output_token`: A float specifying custom output token pricing.
+- [Optional] `generation_kwargs`: A dictionary of additional generation parameters.
+
+:::tip Custom Pricing
+For models without predefined pricing, you can specify custom costs:
+
+```python
+model = CometAPIModel(
+    model="custom-model-name",
+    api_key="your-key",
+    cost_per_input_token=0.001 / 1e6,
+    cost_per_output_token=0.002 / 1e6
+)
+```
+:::
+
+### Embedding Model
+
+You can use CometAPI for text embeddings using `CometAPIEmbeddingModel`.
+
+```python
+from deepeval.models import CometAPIEmbeddingModel
+
+embedder = CometAPIEmbeddingModel(
+    model="text-embedding-3-small",
+    api_key="your-cometapi-key"
+)
+
+# Embed single text
+embedding = embedder.embed_text("Hello world")
+
+# Embed multiple texts
+embeddings = embedder.embed_texts(["Text 1", "Text 2", "Text 3"])
+
+# Async embedding
+import asyncio
+async def embed():
+    embedding = await embedder.a_embed_text("Hello world")
+    return embedding
+```
+
+There are **TWO** parameters when creating a `CometAPIEmbeddingModel`:
+
+- `model`: A string specifying the embedding model name. Defaulted to `"text-embedding-3-small"`.
+- `api_key`: A string specifying your CometAPI API key for authentication.
+
+## Available Models
+
+### GPT Series
+- `gpt-5-chat-latest` - Latest GPT-5 chat model
+- `gpt-5` - GPT-5 base model
+- `gpt-5-pro` - GPT-5 Pro variant
+- `gpt-5-nano` - GPT-5 Nano (lightweight)
+- `gpt-4.1` - GPT-4.1 model
+- `gpt-4o-mini` - GPT-4o Mini (cost-effective)
+- `o4-mini-2025-04-16` - O4 Mini model
+- `o3-pro-2025-06-10` - O3 Pro model
+- `chatgpt-4o-latest` - Latest ChatGPT-4o
+
+### Claude Series (Anthropic)
+- `claude-sonnet-4-5-20250929` - Claude Sonnet 4.5
+- `claude-opus-4-1-20250805` - Claude Opus 4.1
+- `claude-opus-4-1-20250805-thinking` - Claude Opus 4.1 with extended thinking
+- `claude-sonnet-4-20250514` - Claude Sonnet 4
+- `claude-sonnet-4-20250514-thinking` - Claude Sonnet 4 with extended thinking
+- `claude-3-7-sonnet-latest` - Claude 3.7 Sonnet (latest)
+- `claude-3-5-haiku-latest` - Claude 3.5 Haiku (latest)
+
+### Gemini Series (Google)
+- `gemini-2.5-pro` - Gemini 2.5 Pro
+- `gemini-2.5-flash` - Gemini 2.5 Flash
+- `gemini-2.5-flash-lite` - Gemini 2.5 Flash Lite
+- `gemini-2.0-flash` - Gemini 2.0 Flash
+
+### Grok Series (xAI)
+- `grok-4-0709` - Grok 4
+- `grok-4-fast-non-reasoning` - Grok 4 Fast (non-reasoning)
+- `grok-4-fast-reasoning` - Grok 4 Fast (with reasoning)
+
+### DeepSeek Series
+- `deepseek-v3.1` - DeepSeek V3.1
+- `deepseek-v3` - DeepSeek V3
+- `deepseek-r1-0528` - DeepSeek R1
+- `deepseek-chat` - DeepSeek Chat
+- `deepseek-reasoner` - DeepSeek Reasoner
+
+### Qwen Series
+- `qwen3-30b-a3b` - Qwen3 30B
+- `qwen3-coder-plus-2025-07-22` - Qwen3 Coder Plus
+
+### Embedding Models
+- `text-embedding-3-small` - Small embedding model (default)
+- `text-embedding-3-large` - Large embedding model
+- `text-embedding-ada-002` - Ada-002 embedding model
+
+:::info Model Availability
+CometAPI provides access to 500+ models. The models listed above are recommended for DeepEval integration. For the complete list of available models, visit the [CometAPI pricing page](https://api.cometapi.com/pricing) or check the [model list endpoint](https://api.cometapi.com/v1/models).
+:::
+
+## Getting Your API Key
+
+To get started with CometAPI:
+
+1. Visit [CometAPI Console](https://api.cometapi.com/console/token)
+2. Sign up or log in to your account
+3. Generate your API key
+4. Use the API key with DeepEval as shown above
+
+:::tip Environment Variables
+You can set your CometAPI key as an environment variable `COMETAPI_KEY` to avoid passing it explicitly in code:
+
+```bash
+export COMETAPI_KEY="your-cometapi-key"
+```
+
+Then use the model without the `api_key` parameter:
+
+```python
+from deepeval.models import CometAPIModel
+
+model = CometAPIModel(model="gpt-4o-mini")
+```
+:::
+
+## Resources
+
+- **CometAPI Website**: https://www.cometapi.com/?utm_source=deepeval&utm_campaign=integration&utm_medium=integration&utm_content=integration
+- **API Documentation**: https://api.cometapi.com/doc
+- **Pricing**: https://api.cometapi.com/pricing
+- **Discord Community**: https://discord.gg/cometapi
+- **GitHub**: https://github.com/cometapi-dev
+
+:::tip Need Help?
+Join the [CometAPI Discord community](https://discord.gg/cometapi) for support and discussions, or check out the [official documentation](https://api.cometapi.com/doc) for more details.
+:::

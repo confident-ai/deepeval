@@ -1332,6 +1332,179 @@ def unset_deepseek_model_env(
 
 
 #############################################
+# CometAPI Model Integration ################
+#############################################
+
+
+@app.command(name="set-cometapi")
+def set_cometapi_model_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the CometAPI model"
+    ),
+    api_key: str = typer.Option(
+        ...,
+        "--api-key",
+        help="API key for CometAPI. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+    ),
+    temperature: float = typer.Option(
+        0, "--temperature", help="Temperature for the CometAPI model"
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(ModelKeyValues.USE_COMETAPI_MODEL)
+        settings.COMETAPI_KEY = api_key
+        settings.COMETAPI_MODEL_NAME = model_name
+        settings.TEMPERATURE = temperature
+
+    handled, path, _ = edit_ctx.result
+
+    if not handled and save is not None:
+        # invalid --save format (unsupported)
+        print("Unsupported --save option. Use --save=dotenv[:path].")
+    elif path:
+        # persisted to a file
+        print(
+            f"Saved environment variables to {path} (ensure it's git-ignored)."
+        )
+    else:
+        # updated in-memory & process env only
+        print(
+            "Settings updated for this session. To persist, use --save=dotenv[:path] "
+            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
+    print(
+        f":raising_hands: Congratulations! You're now using CometAPI's `{escape(model_name)}` for all evals that require an LLM."
+    )
+
+
+@app.command(name="unset-cometapi")
+def unset_cometapi_model_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the CometAPI model related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.COMETAPI_KEY = None
+        settings.COMETAPI_MODEL_NAME = None
+        settings.TEMPERATURE = None
+        settings.USE_COMETAPI_MODEL = None
+
+    handled, path, _ = edit_ctx.result
+
+    if not handled and save is not None:
+        # invalid --save format (unsupported)
+        print("Unsupported --save option. Use --save=dotenv[:path].")
+    elif path:
+        # persisted to a file
+        print(f"Removed CometAPI model environment variables from {path}.")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The CometAPI model configuration has been removed. No model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
+
+
+#############################################
+# CometAPI Embedding Integration ############
+#############################################
+
+
+@app.command(name="set-cometapi-embeddings")
+def set_cometapi_embeddings_env(
+    model_name: str = typer.Option(
+        ..., "--model-name", help="Name of the CometAPI embedding model"
+    ),
+    api_key: str = typer.Option(
+        ...,
+        "--api-key",
+        help="API key for CometAPI. Persisted to dotenv if --save is used; never written to the legacy JSON keystore.",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        edit_ctx.switch_model_provider(EmbeddingKeyValues.USE_COMETAPI_EMBEDDING)
+        settings.COMETAPI_KEY = api_key
+        settings.COMETAPI_EMBEDDING_MODEL_NAME = model_name
+
+    handled, path, _ = edit_ctx.result
+
+    if not handled and save is not None:
+        # invalid --save format (unsupported)
+        print("Unsupported --save option. Use --save=dotenv[:path].")
+    elif path:
+        # persisted to a file
+        print(
+            f"Saved environment variables to {path} (ensure it's git-ignored)."
+        )
+    else:
+        # updated in-memory & process env only
+        print(
+            "Settings updated for this session. To persist, use --save=dotenv[:path] "
+            "(default .env.local) or set DEEPEVAL_DEFAULT_SAVE=dotenv:.env.local"
+        )
+
+    print(
+        f":raising_hands: Congratulations! You're now using CometAPI's embedding model `{escape(model_name)}` for all evals that require text embeddings."
+    )
+
+
+@app.command(name="unset-cometapi-embeddings")
+def unset_cometapi_embeddings_env(
+    save: Optional[str] = typer.Option(
+        None,
+        "--save",
+        help="Remove only the CometAPI embedding related environment variables from a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+):
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.COMETAPI_KEY = None
+        settings.COMETAPI_EMBEDDING_MODEL_NAME = None
+        settings.USE_COMETAPI_EMBEDDING = None
+
+    handled, path, _ = edit_ctx.result
+
+    if not handled and save is not None:
+        # invalid --save format (unsupported)
+        print("Unsupported --save option. Use --save=dotenv[:path].")
+    elif path:
+        # persisted to a file
+        print(f"Removed CometAPI embedding environment variables from {path}.")
+
+    if is_openai_configured():
+        print(
+            ":raised_hands: OpenAI will still be used by default because OPENAI_API_KEY is set."
+        )
+    else:
+        print(
+            "The CometAPI embeddings configuration has been removed. No embeddings model is currently configured, but you can set one with the CLI or add credentials to .env[.local]."
+        )
+
+
+#############################################
 # Local Embedding Model Integration #########
 #############################################
 

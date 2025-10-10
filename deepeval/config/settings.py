@@ -234,6 +234,10 @@ class Settings(BaseSettings):
     USE_DEEPSEEK_MODEL: Optional[bool] = None
     DEEPSEEK_API_KEY: Optional[SecretStr] = None
     DEEPSEEK_MODEL_NAME: Optional[str] = None
+    # CometAPI
+    USE_COMETAPI_MODEL: Optional[bool] = None
+    COMETAPI_KEY: Optional[SecretStr] = None
+    COMETAPI_MODEL_NAME: Optional[str] = None
     # Gemini
     USE_GEMINI_MODEL: Optional[bool] = None
     GOOGLE_API_KEY: Optional[SecretStr] = None
@@ -287,6 +291,9 @@ class Settings(BaseSettings):
     # Azure OpenAI
     USE_AZURE_OPENAI_EMBEDDING: Optional[bool] = None
     AZURE_EMBEDDING_DEPLOYMENT_NAME: Optional[str] = None
+    # CometAPI
+    USE_COMETAPI_EMBEDDING: Optional[bool] = None
+    COMETAPI_EMBEDDING_MODEL_NAME: Optional[str] = None
     # Local
     USE_LOCAL_EMBEDDINGS: Optional[bool] = None
     LOCAL_EMBEDDING_MODEL_NAME: Optional[str] = None
@@ -446,8 +453,10 @@ class Settings(BaseSettings):
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
         "USE_DEEPSEEK_MODEL",
+        "USE_COMETAPI_MODEL",
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
+        "USE_COMETAPI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
         "DEEPEVAL_GRPC_LOGGING",
         "DEEPEVAL_DISABLE_DOTENV",
