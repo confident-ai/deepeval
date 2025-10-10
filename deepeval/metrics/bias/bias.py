@@ -83,9 +83,10 @@ class BiasMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-                metric_data_manager.post_metric_if_enabled(
-                    self, test_case=test_case
-                )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
             return self.score
 
     async def a_measure(
@@ -119,9 +120,11 @@ class BiasMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-            metric_data_manager.post_metric_if_enabled(
-                self, test_case=test_case
-            )
+
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_reason(self) -> str:
