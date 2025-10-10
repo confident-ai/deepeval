@@ -15,48 +15,6 @@ from deepeval.constants import ProviderSlug as PS
 # consistent retry rules
 retry_cometapi = create_retry_decorator(PS.COMETAPI)
 
-# CometAPI recommended models - 500+ AI Model API, All In One API
-# Note: CometAPI pricing may vary; using placeholder values (0.0) for unknown models
-# Users can override with cost_per_input_token and cost_per_output_token parameters
-model_pricing = {
-    # GPT series
-    "gpt-5-chat-latest": {"input": 0.0, "output": 0.0},
-    "gpt-5": {"input": 0.0, "output": 0.0},
-    "gpt-5-pro": {"input": 0.0, "output": 0.0},
-    "gpt-5-nano": {"input": 0.0, "output": 0.0},
-    "gpt-4.1": {"input": 0.0, "output": 0.0},
-    "gpt-4o-mini": {"input": 0.15 / 1e6, "output": 0.60 / 1e6},
-    "o4-mini-2025-04-16": {"input": 0.0, "output": 0.0},
-    "o3-pro-2025-06-10": {"input": 0.0, "output": 0.0},
-    "chatgpt-4o-latest": {"input": 5.00 / 1e6, "output": 15.00 / 1e6},
-    # Claude series
-    "claude-sonnet-4-5-20250929": {"input": 0.0, "output": 0.0},
-    "claude-opus-4-1-20250805": {"input": 0.0, "output": 0.0},
-    "claude-opus-4-1-20250805-thinking": {"input": 0.0, "output": 0.0},
-    "claude-sonnet-4-20250514": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-sonnet-4-20250514-thinking": {"input": 0.0, "output": 0.0},
-    "claude-3-7-sonnet-latest": {"input": 3.00 / 1e6, "output": 15.00 / 1e6},
-    "claude-3-5-haiku-latest": {"input": 1.00 / 1e6, "output": 5.00 / 1e6},
-    # Gemini series
-    "gemini-2.5-pro": {"input": 0.0, "output": 0.0},
-    "gemini-2.5-flash": {"input": 0.0, "output": 0.0},
-    "gemini-2.5-flash-lite": {"input": 0.0, "output": 0.0},
-    "gemini-2.0-flash": {"input": 0.0, "output": 0.0},
-    # Grok series
-    "grok-4-0709": {"input": 0.0, "output": 0.0},
-    "grok-4-fast-non-reasoning": {"input": 0.0, "output": 0.0},
-    "grok-4-fast-reasoning": {"input": 0.0, "output": 0.0},
-    # DeepSeek series
-    "deepseek-v3.1": {"input": 0.0, "output": 0.0},
-    "deepseek-v3": {"input": 0.27 / 1e6, "output": 1.10 / 1e6},
-    "deepseek-r1-0528": {"input": 0.0, "output": 0.0},
-    "deepseek-chat": {"input": 0.27 / 1e6, "output": 1.10 / 1e6},
-    "deepseek-reasoner": {"input": 0.55 / 1e6, "output": 2.19 / 1e6},
-    # Qwen series
-    "qwen3-30b-a3b": {"input": 0.0, "output": 0.0},
-    "qwen3-coder-plus-2025-07-22": {"input": 0.0, "output": 0.0},
-}
-
 # Default model for CometAPI
 default_cometapi_model = "gpt-4o-mini"
 
@@ -95,20 +53,6 @@ class CometAPIModel(DeepEvalBaseLLM):
                 ModelKeyValues.OPENAI_COST_PER_OUTPUT_TOKEN
             )
         )
-        
-        # Add custom pricing if provided and model not in pricing dict
-        if model_name not in model_pricing:
-            if cost_per_input_token is not None and cost_per_output_token is not None:
-                model_pricing[model_name] = {
-                    "input": float(cost_per_input_token),
-                    "output": float(cost_per_output_token),
-                }
-            else:
-                # Allow unknown models with placeholder pricing
-                model_pricing[model_name] = {
-                    "input": 0.0,
-                    "output": 0.0,
-                }
         
         temperature_from_key = KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.TEMPERATURE
@@ -212,13 +156,16 @@ class CometAPIModel(DeepEvalBaseLLM):
         input_tokens: int,
         output_tokens: int,
     ) -> float:
-        pricing = model_pricing.get(
-            self.model_name,
-            {"input": 0.0, "output": 0.0}
-        )
-        input_cost = input_tokens * pricing["input"]
-        output_cost = output_tokens * pricing["output"]
-        return input_cost + output_cost
+        """Calculate cost for tokens. Returns 0.0 as CometAPI does not provide pricing info.
+        
+        Args:
+            input_tokens: Number of input tokens
+            output_tokens: Number of output tokens
+            
+        Returns:
+            Cost in USD (always 0.0)
+        """
+        return 0.0
 
     ###############################################
     # Model
