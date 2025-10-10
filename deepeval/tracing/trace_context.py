@@ -15,7 +15,7 @@ class LlmContext:
     metric_collection: Optional[str] = None
 
 current_llm_context: ContextVar[Optional[LlmContext]] = ContextVar(
-    "current_llm_context", default=None
+    "current_llm_context", default=LlmContext()
 )
 
 @contextmanager
