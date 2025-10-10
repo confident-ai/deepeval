@@ -1,3 +1,4 @@
+from ast import List
 from typing import Callable
 from functools import wraps
 
@@ -7,6 +8,7 @@ from deepeval.openai.extractors import (
     InputParameters,
     OutputParameters,
 )
+from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import current_trace_context, update_current_span, update_llm_span
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
@@ -32,7 +34,12 @@ def patch_async_openai_client_method(
             output_parameters = extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
-            _update_all_attributes(input_parameters, output_parameters)
+            _update_all_attributes(
+                input_parameters, output_parameters,
+                llm_context.expected_tools,
+                llm_context.context,
+                llm_context.retrieval_context,
+            )
             
             return response
 
@@ -62,7 +69,12 @@ def patch_sync_openai_client_method(
             output_parameters = extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
-            _update_all_attributes(input_parameters, output_parameters)
+            _update_all_attributes(
+                input_parameters, output_parameters,
+                llm_context.expected_tools,
+                llm_context.context,
+                llm_context.retrieval_context,
+            )
             
             return response
 
@@ -151,7 +163,10 @@ def patch_openai_classes():
 
 def _update_all_attributes(
     input_parameters: InputParameters,
-    output_parameters: OutputParameters
+    output_parameters: OutputParameters, 
+    expected_tools: List[ToolCall],
+    context: List[str],
+    retrieval_context: List[str],
 ):
     """Update span and trace attributes with input/output parameters."""
     update_current_span(
@@ -159,6 +174,12 @@ def _update_all_attributes(
         or input_parameters.messages
         or "NA",
         output=output_parameters.output or "NA",
+        tools_called=output_parameters.tools_called,
+        
+        # attributes to be added 
+        expected_tools=expected_tools,
+        context=context,
+        retrieval_context=retrieval_context,
     )
     
     llm_context = current_llm_context.get()
