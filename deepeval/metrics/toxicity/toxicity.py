@@ -17,6 +17,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.metrics.toxicity.template import ToxicityTemplate
 from deepeval.metrics.toxicity.schema import *
+from deepeval.metrics.api import metric_data_manager
 
 
 class ToxicityMetric(BaseMetric):
@@ -86,6 +87,10 @@ class ToxicityMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
 
             return self.score
 
@@ -125,6 +130,10 @@ class ToxicityMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
 
             return self.score
 

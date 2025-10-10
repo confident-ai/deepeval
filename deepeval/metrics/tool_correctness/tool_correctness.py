@@ -12,6 +12,7 @@ from deepeval.test_case import (
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.api import metric_data_manager
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -84,6 +85,11 @@ class ToolCorrectnessMetric(BaseMetric):
             ]
             steps.append(f"Score: {self.score}\nReason: {self.reason}")
             self.verbose_logs = construct_verbose_logs(self, steps=steps)
+
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def a_measure(

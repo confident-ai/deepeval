@@ -1,6 +1,7 @@
 from typing import List, Optional, Type, Union
 
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.api import metric_data_manager
 from deepeval.test_case import (
     LLMTestCase,
     LLMTestCaseParams,
@@ -50,7 +51,6 @@ class BiasMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -83,7 +83,9 @@ class BiasMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def a_measure(
@@ -93,7 +95,6 @@ class BiasMetric(BaseMetric):
         _in_component: bool = False,
         _log_metric_to_confident: bool = True,
     ) -> float:
-
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -118,7 +119,9 @@ class BiasMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
+            metric_data_manager.post_metric_if_enabled(
+                self, test_case=test_case
+            )
             return self.score
 
     async def _a_generate_reason(self) -> str:

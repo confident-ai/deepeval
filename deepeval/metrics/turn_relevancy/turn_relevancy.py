@@ -20,6 +20,7 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.turn_relevancy.schema import *
+from deepeval.metrics.api import metric_data_manager
 
 
 class TurnRelevancyMetric(BaseConversationalMetric):
@@ -93,6 +94,10 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
             return self.score
 
     async def a_measure(
@@ -137,6 +142,10 @@ class TurnRelevancyMetric(BaseConversationalMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_reason(self) -> str:
