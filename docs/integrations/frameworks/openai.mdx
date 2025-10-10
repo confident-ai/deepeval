@@ -17,100 +17,134 @@ To begin evaluating your OpenAI application, simply replace your OpenAI client w
 <Tabs groupId="openai">
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python title="main.py" showLineNumbers {1,17}
+```python title="main.py"
 from deepeval.openai import OpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
-
-dataset = EvaluationDataset(goldens=[Golden(input="Test")])
-
-client = OpenAI()
-
-for golden in dataset.evals_iterator():
-    # run OpenAI client
-    client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": golden.input}
-        ],
-        metrics=[AnswerRelevancyMetric(), BiasMetric()]
-    )
-```
-
-</TabItem>
-<TabItem value="responses" label="Responses">
-
-```python title="main.py" showLineNumbers {1,15}
-from deepeval.openai import OpenAI
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
-
-dataset = EvaluationDataset(goldens=[Golden(input="Test")])
+from deepeval.tracing import trace
 
 client = OpenAI()
 
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+]
+
+dataset = EvaluationDataset(goldens=goldens)
+
 for golden in dataset.evals_iterator():
     # run OpenAI client
-    client.responses.create(
-        model="gpt-4o",
-        instructions="You are a helpful assistant.",
-        input=golden.input,
-        metrics=[AnswerRelevancyMetric(), BiasMetric()]
-    )
-```
-
-</TabItem>
-<TabItem value="async-chat-completions" label="Async Chat Completions">
-
-```python title="main.py" showLineNumbers {1,19}
-from deepeval.openai import AsyncOpenAI
-from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
-from deepeval.dataset import EvaluationDataset, Golden
-import asyncio
-
-dataset = EvaluationDataset(goldens=[Golden(input="Test")])
-
-client = AsyncOpenAI()
-
-for golden in dataset.evals_iterator():
-    # add OpenAI client task
-    task = asyncio.create_task(
+    with trace(
+        llm_metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        expected_output=golden.expected_output,
+    ):
         client.chat.completions.create(
             model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": golden.input}
             ],
-            metrics=[AnswerRelevancyMetric(), BiasMetric()]
         )
-    )
+```
+
+</TabItem>
+<TabItem value="responses" label="Responses">
+
+```python title="main.py" showLineNumbers
+from deepeval.openai import OpenAI
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace
+
+client = OpenAI()
+
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+]
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
+    # run OpenAI client
+    with trace(
+        llm_metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        expected_output=golden.expected_output,
+    ):
+        client.responses.create(
+            model="gpt-4o",
+            instructions="You are a helpful assistant.",
+            input=golden.input,
+        )
+```
+
+</TabItem>
+<TabItem value="async-chat-completions" label="Async Chat Completions">
+
+```python title="main.py"
+import asyncio
+from deepeval.openai import AsyncOpenAI
+from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace
+
+async_client = AsyncOpenAI()
+
+async def openai_llm_call(input):
+    with trace(
+        llm_metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        expected_output=golden.expected_output,
+    ):
+        return await async_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a helpful chatbot. Always generate a string response."},
+                {"role": "user", "content": input},
+            ],
+        )
+
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+]
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(openai_llm_call(golden.input))
     dataset.evaluate(task)
 ```
 
 </TabItem>
 <TabItem value="async-responses" label="Async Responses">
 
-```python title="main.py" showLineNumbers {1,17}
+```python title="main.py"
+import asyncio
 from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
-import asyncio
+from deepeval.tracing import trace
 
-dataset = EvaluationDataset(goldens=[Golden(input="Test")])
+async_client = AsyncOpenAI()
 
-client = AsyncOpenAI()
-
-for golden in dataset.evals_iterator():
-    # add OpenAI client task
-    task = asyncio.create_task(
-        client.responses.create(
+async def openai_llm_call(input):
+    with trace(
+        llm_metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        expected_output=golden.expected_output,
+    ):
+        return await async_client.responses.create(
             model="gpt-4o",
             instructions="You are a helpful assistant.",
-            input=golden.input,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()]
+            input=input,  
         )
-    )
+
+
+goldens = [
+    Golden(input="What is the weather in Bogotá, Colombia?"),
+    Golden(input="What is the weather in Paris, France?"),
+]
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(openai_llm_call(golden.input))
     dataset.evaluate(task)
 ```
 
