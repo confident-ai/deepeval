@@ -46,6 +46,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case, self._required_test_case_params, self
@@ -97,6 +98,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case, self._required_test_case_params, self

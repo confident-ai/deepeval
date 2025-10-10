@@ -12,6 +12,8 @@ from deepeval.constants import (
     CONFIDENT_METRIC_LOGGING_FLUSH,
     CONFIDENT_METRIC_LOGGING_VERBOSE,
 )
+from deepeval.evaluate.utils import create_metric_data
+from deepeval.metrics.base_metric import BaseMetric
 from deepeval.test_run.api import LLMApiTestCase, ConversationalApiTestCase
 from deepeval.tracing.api import MetricData
 from deepeval.config.settings import get_settings
@@ -57,9 +59,10 @@ class MetricDataManager:
         # Register an exit handler to warn about unprocessed metrics
         atexit.register(self._warn_on_exit)
 
-    def post_metric_data(self, metric_data: ApiMetricData):
+    def post_metric(self, metric: BaseMetric):
         """Post metric data asynchronously in a background thread."""
         self._ensure_worker_thread_running()
+        metric_data = create_metric_data(metric)
         self._metric_queue.put(metric_data)
 
     def _warn_on_exit(self):

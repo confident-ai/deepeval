@@ -2225,6 +2225,7 @@ def _execute_metric(
             test_case,
             _show_indicator=show_metric_indicator,
             _in_component=in_component,
+            _log_metric_to_confident=False,
         )
     except MissingTestCaseParamsError as e:
         if error_config.skip_on_missing_params:

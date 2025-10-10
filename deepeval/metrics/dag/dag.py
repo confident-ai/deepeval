@@ -59,6 +59,7 @@ class DAGMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,
@@ -96,6 +97,7 @@ class DAGMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         check_llm_test_case_params(
             test_case,

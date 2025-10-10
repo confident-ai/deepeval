@@ -255,7 +255,9 @@ def test_answer_relevancy_measure_sync(model_class, setup_func):
         answer = "The capital of Germany is Berlin. It's a historic city with rich culture."
         test_case = LLMTestCase(input=question, actual_output=answer)
         metric = AnswerRelevancyMetric(model=model, async_mode=False)
-        score = metric.measure(test_case, _show_indicator=False)
+        score = metric.measure(
+            test_case, _show_indicator=False, _log_metric_to_confident=False
+        )
         assert isinstance(score, float)
         assert 0 <= score <= 1
     finally:
@@ -284,7 +286,9 @@ def test_answer_relevancy_measure_async(model_class, setup_func):
         answer = "The capital of Germany is Berlin. It's a historic city with rich culture."
         test_case = LLMTestCase(input=question, actual_output=answer)
         metric = AnswerRelevancyMetric(model=model, async_mode=True)
-        score = metric.measure(test_case, _show_indicator=False)
+        score = metric.measure(
+            test_case, _show_indicator=False, _log_metric_to_confident=False
+        )
         assert isinstance(score, float)
     finally:
         clear()
