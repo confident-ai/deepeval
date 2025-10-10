@@ -68,6 +68,6 @@ def test_tracing():
 ##############################################
 
 if __name__ == "__main__":
-    # test_end_to_end_loop()
-    # test_component_level_loop()
+    test_end_to_end_loop()
+    test_component_level_loop()
     test_tracing()
