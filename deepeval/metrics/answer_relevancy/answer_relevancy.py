@@ -16,6 +16,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.answer_relevancy.template import AnswerRelevancyTemplate
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.answer_relevancy.schema import *
+from deepeval.metrics.api import metric_data_manager
 
 
 class AnswerRelevancyMetric(BaseMetric):
@@ -87,6 +88,7 @@ class AnswerRelevancyMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+                metric_data_manager.post_metric(self)
 
             return self.score
 
@@ -124,7 +126,7 @@ class AnswerRelevancyMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
+            metric_data_manager.post_metric(self)
             return self.score
 
     async def _a_generate_reason(self, input: str) -> str:

@@ -1,4 +1,4 @@
-from typing import Optional, Set, Any, Dict, List
+from typing import Optional, Set, Any, Dict, List, Union
 import threading
 import asyncio
 import queue
@@ -12,8 +12,10 @@ from deepeval.constants import (
     CONFIDENT_METRIC_LOGGING_FLUSH,
     CONFIDENT_METRIC_LOGGING_VERBOSE,
 )
-from deepeval.evaluate.utils import create_metric_data
-from deepeval.metrics.base_metric import BaseMetric
+from deepeval.evaluate.utils import create_api_test_case, create_metric_data
+from deepeval.metrics.base_metric import BaseConversationalMetric, BaseMetric
+from deepeval.test_case.conversational_test_case import ConversationalTestCase
+from deepeval.test_case.llm_test_case import LLMTestCase
 from deepeval.test_run.api import LLMApiTestCase, ConversationalApiTestCase
 from deepeval.tracing.api import MetricData
 from deepeval.config.settings import get_settings
@@ -30,12 +32,6 @@ class ApiMetricData(MetricData):
     conversational_test_case: Optional[ConversationalApiTestCase] = Field(
         None, alias="conversationalTestCase"
     )
-
-    def post_init(self):
-        if self.llm_test_case is None and self.conversational_test_case is None:
-            raise ValueError(
-                "Either llm_test_case or conversational_test_case must be provided"
-            )
 
 
 class MetricDataManager:
@@ -59,10 +55,24 @@ class MetricDataManager:
         # Register an exit handler to warn about unprocessed metrics
         atexit.register(self._warn_on_exit)
 
-    def post_metric(self, metric: BaseMetric):
+    def post_metric(
+        self,
+        metric: Union[BaseMetric, BaseConversationalMetric],
+        llm_test_case: Optional[LLMTestCase] = None,
+        conversational_test_case: Optional[ConversationalTestCase] = None,
+    ):
         """Post metric data asynchronously in a background thread."""
         self._ensure_worker_thread_running()
         metric_data = create_metric_data(metric)
+
+        if llm_test_case:
+            metric_data.llm_test_case = create_api_test_case(llm_test_case)
+
+        if conversational_test_case:
+            metric_data.conversational_test_case = create_api_test_case(
+                conversational_test_case
+            )
+
         self._metric_queue.put(metric_data)
 
     def _warn_on_exit(self):
