@@ -14,6 +14,7 @@ class LlmContext:
     prompt: Optional[Prompt] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
+    expected_output: Optional[str] = None
     expected_tools: Optional[List[ToolCall]] = None
     context: Optional[List[str]] = None
     retrieval_context: Optional[List[str]] = None
@@ -33,6 +34,7 @@ def trace(
     metadata: Optional[Dict[str, Any]] = None,
     user_id: Optional[str] = None,
     thread_id: Optional[str] = None,
+    expected_output: Optional[str] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     context: Optional[List[str]] = None,
     retrieval_context: Optional[List[str]] = None,
@@ -49,6 +51,7 @@ def trace(
             prompt=prompt, 
             metrics=llm_metrics, 
             metric_collection=llm_metric_collection, 
+            expected_output=expected_output,
             expected_tools=expected_tools, 
             context=context, 
             retrieval_context=retrieval_context,
