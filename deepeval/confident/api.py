@@ -87,6 +87,7 @@ class Endpoints(Enum):
     DATASET_ALIAS_QUEUE_ENDPOINT = "/v1/datasets/:alias/queue"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
+    METRIC_DATA_ENDPOINT = "/v1/metric-data"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"
     PROMPTS_VERSION_ID_ENDPOINT = "/v1/prompts/:alias/versions/:versionId"

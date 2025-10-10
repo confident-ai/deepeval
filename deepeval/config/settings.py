@@ -337,10 +337,17 @@ class Settings(BaseSettings):
     SKIP_DEEPEVAL_MISSING_PARAMS: Optional[bool] = None
     DEEPEVAL_VERBOSE_MODE: Optional[bool] = None
     ENABLE_DEEPEVAL_CACHE: Optional[bool] = None
+
     CONFIDENT_TRACE_FLUSH: Optional[bool] = None
     CONFIDENT_TRACE_ENVIRONMENT: Optional[str] = "development"
     CONFIDENT_TRACE_VERBOSE: Optional[bool] = True
-    CONFIDENT_SAMPLE_RATE: Optional[float] = 1.0
+    CONFIDENT_TRACE_SAMPLE_RATE: Optional[float] = 1.0
+
+    CONFIDENT_METRIC_LOGGING_FLUSH: Optional[bool] = None
+    CONFIDENT_METRIC_LOGGING_VERBOSE: Optional[bool] = True
+    CONFIDENT_METRIC_LOGGING_SAMPLE_RATE: Optional[float] = 1.0
+    CONFIDENT_METRIC_LOGGING_ENABLED: Optional[bool] = True
+
     OTEL_EXPORTER_OTLP_ENDPOINT: Optional[AnyUrl] = None
 
     #
@@ -484,7 +491,8 @@ class Settings(BaseSettings):
         "OPENAI_COST_PER_INPUT_TOKEN",
         "OPENAI_COST_PER_OUTPUT_TOKEN",
         "TEMPERATURE",
-        "CONFIDENT_SAMPLE_RATE",
+        "CONFIDENT_TRACE_SAMPLE_RATE",
+        "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE",
         mode="before",
     )
     @classmethod
@@ -496,13 +504,17 @@ class Settings(BaseSettings):
             return None
         return float(v)
 
-    @field_validator("CONFIDENT_SAMPLE_RATE")
+    @field_validator(
+        "CONFIDENT_TRACE_SAMPLE_RATE", "CONFIDENT_METRIC_LOGGING_SAMPLE_RATE"
+    )
     @classmethod
     def _validate_sample_rate(cls, v):
         if v is None:
             return None
         if not (0.0 <= float(v) <= 1.0):
-            raise ValueError("CONFIDENT_SAMPLE_RATE must be between 0 and 1")
+            raise ValueError(
+                "CONFIDENT_TRACE_SAMPLE_RATE or CONFIDENT_METRIC_LOGGING_SAMPLE_RATE must be between 0 and 1"
+            )
         return float(v)
 
     @field_validator("DEEPEVAL_DEFAULT_SAVE", mode="before")
