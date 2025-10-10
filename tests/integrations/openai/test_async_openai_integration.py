@@ -18,6 +18,7 @@ goldens = [
     Golden(input="What is the weather in Paris, France?"),
 ] * 10
 
+from deepeval.tracing import trace
 
 def test_end_to_end_evaluation():
     openai_client = AsyncOpenAI()
@@ -34,10 +35,10 @@ def test_end_to_end_evaluation():
                     {"role": "user", "content": golden.input},
                 ],
                 tools=CHAT_TOOLS,
-                metrics=[AnswerRelevancyMetric(), BiasMetric()],
             ),
         )
-        dataset.evaluate(task)
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            dataset.evaluate(task)
 
 
 def test_component_level_loop():
@@ -50,8 +51,8 @@ def test_component_level_loop():
 
     for golden in dataset.evals_iterator():
         task = asyncio.create_task(
-            async_llm_app(golden.input, completion_mode="response")
-        )
+                async_llm_app(golden.input, completion_mode="response")
+            )
         dataset.evaluate(task)
 
 
@@ -75,6 +76,6 @@ async def test_tracing():
 ##############################################
 
 if __name__ == "__main__":
-    test_end_to_end_evaluation()
+    # test_end_to_end_evaluation()
     test_component_level_loop()
-    asyncio.run(test_tracing())
+    # asyncio.run(test_tracing())
