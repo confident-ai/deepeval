@@ -3,7 +3,7 @@ import json
 from typing import List, Optional, Tuple, Any
 from opentelemetry.sdk.trace.export import ReadableSpan
 
-from deepeval.evaluate.utils import create_api_test_case
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run.api import LLMApiTestCase
 from deepeval.test_run.test_run import global_test_run_manager
 from deepeval.tracing.types import Trace, LLMTestCase, ToolCall

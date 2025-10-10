@@ -96,6 +96,8 @@ class DocumentChunker:
         lc = _get_langchain()
         chroma = _get_chromadb()
 
+        from chromadb.config import Settings as ChromaSettings
+
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
             raise ValueError(
@@ -105,7 +107,10 @@ class DocumentChunker:
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
-        client = chroma.PersistentClient(path=f".vector_db/{document_name}")
+        client = chroma.PersistentClient(
+            path=f".vector_db/{document_name}",
+            settings=ChromaSettings(anonymized_telemetry=True),
+        )
 
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
@@ -144,6 +149,8 @@ class DocumentChunker:
         lc = _get_langchain()
         chroma = _get_chromadb()
 
+        from chromadb.config import Settings as ChromaSettings
+
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
             raise ValueError(
@@ -153,7 +160,10 @@ class DocumentChunker:
         # Create ChromaDB client
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
-        client = chroma.PersistentClient(path=f".vector_db/{document_name}")
+        client = chroma.PersistentClient(
+            path=f".vector_db/{document_name}",
+            settings=ChromaSettings(anonymized_telemetry=True),
+        )
 
         collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
