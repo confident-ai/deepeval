@@ -85,7 +85,6 @@ from deepeval.evaluate.utils import (
     extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
-from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
 
@@ -2004,25 +2003,6 @@ def a_execute_agentic_test_cases_from_loop(
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,
                     show_indicator=display_config.show_indicator,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
-                    _use_bar_indicator=_use_bar_indicator,
-                    _is_assert_test=_is_assert_test,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                )
-            )
-        elif openai_test_case_pairs:
-            loop.run_until_complete(
-                _evaluate_test_case_pairs(
-                    test_case_pairs=openai_test_case_pairs,
-                    test_run=test_run,
-                    test_run_manager=test_run_manager,
-                    test_results=test_results,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
-                    verbose_mode=display_config.verbose_mode,
                     throttle_value=async_config.throttle_value,
                     max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,

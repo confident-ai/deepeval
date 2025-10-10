@@ -11,6 +11,7 @@ from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import current_trace_context, update_current_span, update_llm_span
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
+from deepeval.openai.utils import create_child_tool_spans
 
 def patch_async_openai_client_method(
     orig_method: Callable,
@@ -191,17 +192,21 @@ def _update_all_attributes(
         output_token_count=output_parameters.completion_tokens,
         prompt=llm_context.prompt,
     )
-    
+
+    if output_parameters.tools_called:
+        create_child_tool_spans(output_parameters)
+
     __update_input_and_output_of_current_trace(input_parameters, output_parameters)
+
     
 def __update_input_and_output_of_current_trace(input_parameters: InputParameters, output_parameters: OutputParameters):
     
     current_trace = current_trace_context.get()
     if current_trace:
         if current_trace.input is None:
-            current_trace.input = input_parameters.input or input_parameters.messages or "NA"
+            current_trace.input = input_parameters.input or input_parameters.messages
         
         if current_trace.output is None:
-            current_trace.output = output_parameters.output or "NA"
+            current_trace.output = output_parameters.output
 
     return
