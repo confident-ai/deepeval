@@ -17,7 +17,7 @@ To begin evaluating your OpenAI application, simply replace your OpenAI client w
 <Tabs groupId="openai">
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python title="main.py"
+```python title="main.py" showLineNumbers
 from deepeval.openai import OpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
@@ -80,7 +80,7 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python title="main.py"
+```python title="main.py" showLineNumbers
 import asyncio
 from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
@@ -116,7 +116,7 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-responses" label="Async Responses">
 
-```python title="main.py"
+```python title="main.py" showLineNumbers
 import asyncio
 from deepeval.openai import AsyncOpenAI
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
@@ -170,11 +170,12 @@ You can also use `deepeval`'s OpenAI client **within component-level evaluations
 <Tabs groupId="openai">
 <TabItem value="chat-completions" label="Chat Completions">
 
-```python title="main.py" showLineNumbers {4,23}
+```python title="main.py" showLineNumbers
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import OpenAI
+from deepeval.tracing import trace
 
 client = OpenAI()
 
@@ -187,14 +188,14 @@ def retrieve_docs(query):
 
 @observe()
 def llm_app(input):
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": '\n'.join(retrieve_docs(input)) + "\n\nQuestion: " + input}
-        ],
-        metrics=[AnswerRelevancyMetric(), BiasMetric()]
-    )
+    with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": '\n'.join(retrieve_docs(input)) + "\n\nQuestion: " + input}
+            ]
+        )
     return response.choices[0].message.content
 
 # Create dataset
@@ -214,6 +215,7 @@ from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import OpenAI
+from deepeval.tracing import trace
 
 @observe()
 def retrieve_docs(query):
@@ -225,12 +227,12 @@ def retrieve_docs(query):
 @observe()
 def llm_app(input):
     client = OpenAI()
-    response = client.responses.create(
-        model="gpt-4o",
-        instructions="You are a helpful assistant.",
-        input=input,
-        metrics=[AnswerRelevancyMetric(), BiasMetric()]
-    )
+    with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+        response = client.responses.create(
+            model="gpt-4o",
+            instructions="You are a helpful assistant.",
+            input=input
+        )
     return response.output_text
 
 # Create dataset
@@ -245,12 +247,13 @@ for golden in dataset.evals_iterator():
 </TabItem>
 <TabItem value="async-chat-completions" label="Async Chat Completions">
 
-```python title="main.py" showLineNumbers {4,23}
+```python title="main.py" showLineNumbers
+import asyncio
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import AsyncOpenAI
-import asyncio
+from deepeval.tracing import trace
 
 @observe()
 async def retrieve_docs(query):
@@ -262,14 +265,14 @@ async def retrieve_docs(query):
 @observe()
 async def llm_app(input):
     client = AsyncOpenAI()
-    response = await client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": '\n'.join(await retrieve_docs(input)) + "\n\nQuestion: " + input}
-        ],
-        metrics=[AnswerRelevancyMetric(), BiasMetric()]
-    )
+    with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+        response = await client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": '\n'.join(await retrieve_docs(input)) + "\n\nQuestion: " + input}
+            ],
+        )
     return response.choices[0].message.content
 
 # Create dataset
@@ -286,11 +289,12 @@ for golden in dataset.evals_iterator():
 <TabItem value="async-responses" label="Async Responses">
 
 ```python title="main.py" showLineNumbers {4,21}
+import asyncio
 from deepeval.tracing import observe
 from deepeval.metrics import AnswerRelevancyMetric, BiasMetric
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.openai import AsyncOpenAI
-import asyncio
+from deepeval.tracing import trace
 
 @observe()
 async def retrieve_docs(query):
@@ -302,12 +306,12 @@ async def retrieve_docs(query):
 @observe()
 async def llm_app(input):
     client = AsyncOpenAI()
-    response = await client.responses.create(
-        model="gpt-4o",
-        instructions="You are a helpful assistant.",
-        input=input,
-        metrics=[AnswerRelevancyMetric(), BiasMetric()]
-    )
+    with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+        response = await client.responses.create(
+            model="gpt-4o",
+            instructions="You are a helpful assistant.",
+            input=input,
+        )
     return response.output_text
 
 # Create dataset
@@ -340,4 +344,22 @@ When used inside `@observe` components, `deepeval`'s OpenAI client automatically
 
 ## Online Evals in Production
 
-...To be documented
+If your OpenAI application is in production, and you still want to run evaluations on your traces, use online evals. It lets you run evaluations on all incoming traces on Confident AI's server.
+
+Set the `llm_metric_collection` name in the `trace` context when invoking your OpenAI client to evaluate Llm Spans.
+
+```python main.py
+from deepeval.openai import OpenAI
+from deepeval.tracing import trace
+
+client = OpenAI()
+
+with trace(llm_metric_collection="test_collection_1"):
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello, how are you?"},
+        ],
+    )
+```
