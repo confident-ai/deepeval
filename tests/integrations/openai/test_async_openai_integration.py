@@ -20,25 +20,26 @@ goldens = [
 
 from deepeval.tracing import trace
 
+async_client = AsyncOpenAI()
+
+async def openai_llm_call(input):
+    with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+        return await async_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful chatbot. Always generate a string response.",
+                },
+                {"role": "user", "content": input},
+            ],
+        )
+
 def test_end_to_end_evaluation():
-    openai_client = AsyncOpenAI()
     dataset = EvaluationDataset(goldens=goldens)
     for golden in dataset.evals_iterator():
-        task = asyncio.create_task(
-            openai_client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a helpful chatbot. Always generate a string response.",
-                    },
-                    {"role": "user", "content": golden.input},
-                ],
-                tools=CHAT_TOOLS,
-            ),
-        )
-        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
-            dataset.evaluate(task)
+        task = asyncio.create_task(openai_llm_call(golden.input))
+        dataset.evaluate(task)
 
 
 def test_component_level_loop():
@@ -76,6 +77,6 @@ async def test_tracing():
 ##############################################
 
 if __name__ == "__main__":
-    # test_end_to_end_evaluation()
+    test_end_to_end_evaluation()
     test_component_level_loop()
-    # asyncio.run(test_tracing())
+    asyncio.run(test_tracing())
