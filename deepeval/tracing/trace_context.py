@@ -7,12 +7,17 @@ from .tracing import trace_manager
 from .context import current_trace_context, update_current_trace
 from deepeval.prompt import Prompt
 from deepeval.metrics import BaseMetric
+from deepeval.test_case.llm_test_case import ToolCall
 
 @dataclass
 class LlmContext:
     prompt: Optional[Prompt] = None
     metrics: Optional[List[BaseMetric]] = None
     metric_collection: Optional[str] = None
+    expected_tools: Optional[List[ToolCall]] = None
+    context: Optional[List[str]] = None
+    retrieval_context: Optional[List[str]] = None
+
 
 current_llm_context: ContextVar[Optional[LlmContext]] = ContextVar(
     "current_llm_context", default=LlmContext()
@@ -28,6 +33,9 @@ def trace(
     metadata: Optional[Dict[str, Any]] = None,
     user_id: Optional[str] = None,
     thread_id: Optional[str] = None,
+    expected_tools: Optional[List[ToolCall]] = None,
+    context: Optional[List[str]] = None,
+    retrieval_context: Optional[List[str]] = None,
 ):
     current_trace = current_trace_context.get()
 
@@ -36,7 +44,16 @@ def trace(
         
     current_trace_context.set(current_trace)
 
-    current_llm_context.set(LlmContext(prompt=prompt, metrics=llm_metrics, metric_collection=llm_metric_collection))
+    current_llm_context.set(
+        LlmContext(
+            prompt=prompt, 
+            metrics=llm_metrics, 
+            metric_collection=llm_metric_collection, 
+            expected_tools=expected_tools, 
+            context=context, 
+            retrieval_context=retrieval_context,
+        )
+    )
     
     # set the current trace attributes
     if name:
