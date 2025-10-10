@@ -1,5 +1,4 @@
-from ast import List
-from typing import Callable
+from typing import Callable, List
 from functools import wraps
 
 from deepeval.openai.extractors import (
@@ -37,6 +36,7 @@ def patch_async_openai_client_method(
             _update_all_attributes(
                 input_parameters, output_parameters,
                 llm_context.expected_tools,
+                llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
             )
@@ -72,6 +72,7 @@ def patch_sync_openai_client_method(
             _update_all_attributes(
                 input_parameters, output_parameters,
                 llm_context.expected_tools,
+                llm_context.expected_output,
                 llm_context.context,
                 llm_context.retrieval_context,
             )
@@ -165,6 +166,7 @@ def _update_all_attributes(
     input_parameters: InputParameters,
     output_parameters: OutputParameters, 
     expected_tools: List[ToolCall],
+    expected_output: str,
     context: List[str],
     retrieval_context: List[str],
 ):
@@ -175,8 +177,8 @@ def _update_all_attributes(
         or "NA",
         output=output_parameters.output or "NA",
         tools_called=output_parameters.tools_called,
-        
         # attributes to be added 
+        expected_output=expected_output,
         expected_tools=expected_tools,
         context=context,
         retrieval_context=retrieval_context,
