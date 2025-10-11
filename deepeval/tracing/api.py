@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Dict, List, Optional, Union, Literal, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from deepeval.test_case import ToolCall
 
@@ -27,6 +27,8 @@ class PromptApi(BaseModel):
 
 
 class MetricData(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
     name: str
     threshold: float
     success: bool

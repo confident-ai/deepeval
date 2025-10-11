@@ -111,7 +111,9 @@ class VerdictNode(BaseNode):
                 copied_g_eval = GEval(**g_eval_args)
 
                 copied_g_eval.measure(
-                    test_case=test_case, _show_indicator=False
+                    test_case=test_case,
+                    _show_indicator=False,
+                    _log_metric_to_confident=False,
                 )
                 metric._verbose_steps.append(
                     construct_node_verbose_log(self, depth, copied_g_eval)
@@ -124,7 +126,9 @@ class VerdictNode(BaseNode):
                 copied_metric.verbose_mode = False
 
                 copied_metric.measure(
-                    test_case=test_case, _show_indicator=False
+                    test_case=test_case,
+                    _show_indicator=False,
+                    _log_metric_to_confident=False,
                 )
                 metric._verbose_steps.append(
                     construct_node_verbose_log(self, depth, copied_metric)
@@ -174,7 +178,9 @@ class VerdictNode(BaseNode):
                 copied_g_eval = GEval(**g_eval_args)
 
                 await copied_g_eval.a_measure(
-                    test_case=test_case, _show_indicator=False
+                    test_case=test_case,
+                    _show_indicator=False,
+                    _log_metric_to_confident=False,
                 )
                 metric._verbose_steps.append(
                     construct_node_verbose_log(self, depth, copied_g_eval)
@@ -188,7 +194,9 @@ class VerdictNode(BaseNode):
                 copied_metric.verbose_mode = False
 
                 await copied_metric.a_measure(
-                    test_case=test_case, _show_indicator=False
+                    test_case=test_case,
+                    _show_indicator=False,
+                    _log_metric_to_confident=False,
                 )
                 metric._verbose_steps.append(
                     construct_node_verbose_log(self, depth, copied_metric)

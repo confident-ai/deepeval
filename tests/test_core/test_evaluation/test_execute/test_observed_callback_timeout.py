@@ -6,62 +6,52 @@ from deepeval.evaluate.execute import (
     a_execute_agentic_test_cases,
 )
 from deepeval.dataset import Golden
-from deepeval.config.settings import get_settings
 
 
-def test_observed_callback_times_out_sync_path(monkeypatch):
+def test_observed_callback_times_out_sync_path(monkeypatch, settings):
     """
     Ensures async observed_callback in the sync path is bounded by
     DEEPEVAL_PER_TASK_TIMEOUT_SECONDS and raises asyncio.TimeoutError.
     """
-    settings = get_settings()
-    original = settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-    try:
+    with settings.edit(persist=False):
         # Make the timeout tiny so the test is fast
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS = 1
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 1
 
-        async def slow_callback(_):
-            # Sleep well past the configured timeout
-            await asyncio.sleep(5)
+    async def slow_callback(_):
+        # Sleep well past the configured timeout
+        await asyncio.sleep(5)
 
-        goldens = [Golden(input="hello")]
+    goldens = [Golden(input="hello")]
 
-        with pytest.raises(asyncio.TimeoutError):
-            execute_agentic_test_cases(
-                goldens=goldens,
-                observed_callback=slow_callback,
-            )
-    finally:
-        # restore global setting to avoid leaking to other tests
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS = original
+    with pytest.raises(asyncio.TimeoutError):
+        execute_agentic_test_cases(
+            goldens=goldens,
+            observed_callback=slow_callback,
+        )
 
 
 @pytest.mark.asyncio
-async def test_observed_callback_times_out_async_path(monkeypatch):
+async def test_observed_callback_times_out_async_path(monkeypatch, settings):
     """
     Ensures async observed_callback in the async path is bounded by
     DEEPEVAL_PER_TASK_TIMEOUT_SECONDS and raises asyncio.TimeoutError.
     """
-    settings = get_settings()
-    original = settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-    try:
+
+    with settings.edit(persist=False):
         # Make the timeout tiny so the test is fast
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS = 1
+        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE = 1
 
-        async def slow_callback(_):
-            # Sleep well past the configured timeout
-            await asyncio.sleep(5)
+    async def slow_callback(_):
+        # Sleep well past the configured timeout
+        await asyncio.sleep(5)
 
-        goldens = [Golden(input="hello")]
+    goldens = [Golden(input="hello")]
 
-        with pytest.raises(asyncio.TimeoutError):
-            await a_execute_agentic_test_cases(
-                goldens=goldens,
-                observed_callback=slow_callback,
-            )
-    finally:
-        # restore global setting to avoid leaking to other tests
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS = original
+    with pytest.raises(asyncio.TimeoutError):
+        await a_execute_agentic_test_cases(
+            goldens=goldens,
+            observed_callback=slow_callback,
+        )
 
 
 def test_observed_callback_sync_callback_unaffected():

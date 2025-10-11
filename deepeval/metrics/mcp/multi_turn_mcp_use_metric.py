@@ -16,6 +16,7 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.schema import Task, ArgsScore, ToolScore
 from deepeval.metrics.mcp.template import MCPTaskCompletionTemplate
 from deepeval.errors import MissingTestCaseParamsError
+from deepeval.metrics.api import metric_data_manager
 
 
 class MultiTurnMCPUseMetric(BaseConversationalMetric):
@@ -46,6 +47,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case, self._required_test_case_params, self
@@ -62,6 +64,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -102,6 +105,11 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                         f"Score: {self.score}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
+
             return self.score
 
     async def a_measure(
@@ -109,6 +117,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         test_case: ConversationalTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ):
         check_conversational_test_case_params(
             test_case, self._required_test_case_params, self
@@ -161,6 +170,10 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     f"Score: {self.score}",
                 ],
             )
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
         return self.score
 
     def _get_tool_accuracy_score(

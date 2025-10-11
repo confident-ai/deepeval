@@ -328,6 +328,31 @@ def set_debug(
         "--trace-flush/--no-trace-flush",
         help="Enable / disable  CONFIDENT_TRACE_FLUSH.",
     ),
+    trace_sample_rate: Optional[float] = typer.Option(
+        None,
+        "--trace-sample-rate",
+        help="Set CONFIDENT_TRACE_SAMPLE_RATE.",
+    ),
+    metric_logging_verbose: Optional[bool] = typer.Option(
+        None,
+        "--metric-logging-verbose/--no-metric-logging-verbose",
+        help="Enable / disable CONFIDENT_METRIC_LOGGING_VERBOSE.",
+    ),
+    metric_logging_flush: Optional[bool] = typer.Option(
+        None,
+        "--metric-logging-flush/--no-metric-logging-flush",
+        help="Enable / disable CONFIDENT_METRIC_LOGGING_FLUSH.",
+    ),
+    metric_logging_sample_rate: Optional[float] = typer.Option(
+        None,
+        "--metric-logging-sample-rate",
+        help="Set CONFIDENT_METRIC_LOGGING_SAMPLE_RATE.",
+    ),
+    metric_logging_enabled: Optional[bool] = typer.Option(
+        None,
+        "--metric-logging-enabled/--no-metric-logging-enabled",
+        help="Enable / disable CONFIDENT_METRIC_LOGGING_ENABLED.",
+    ),
     # Advanced / potentially surprising
     error_reporting: Optional[bool] = typer.Option(
         None,
@@ -387,6 +412,20 @@ def set_debug(
             settings.CONFIDENT_TRACE_ENVIRONMENT = trace_env
         if trace_flush is not None:
             settings.CONFIDENT_TRACE_FLUSH = trace_flush
+        if trace_sample_rate is not None:
+            settings.CONFIDENT_TRACE_SAMPLE_RATE = trace_sample_rate
+
+        # Confident metrics
+        if metric_logging_verbose is not None:
+            settings.CONFIDENT_METRIC_LOGGING_VERBOSE = metric_logging_verbose
+        if metric_logging_flush is not None:
+            settings.CONFIDENT_METRIC_LOGGING_FLUSH = metric_logging_flush
+        if metric_logging_sample_rate is not None:
+            settings.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE = (
+                metric_logging_sample_rate
+            )
+        if metric_logging_enabled is not None:
+            settings.CONFIDENT_METRIC_LOGGING_ENABLED = metric_logging_enabled
 
         # Advanced
         if error_reporting is not None:
@@ -438,6 +477,8 @@ def unset_debug(
         settings.LOG_LEVEL = "info"
         settings.CONFIDENT_TRACE_ENVIRONMENT = "development"
         settings.CONFIDENT_TRACE_VERBOSE = True
+        settings.CONFIDENT_METRIC_LOGGING_VERBOSE = True
+        settings.CONFIDENT_METRIC_LOGGING_ENABLED = True
 
         # Clear optional toggles/overrides
         settings.DEEPEVAL_VERBOSE_MODE = None
@@ -449,6 +490,7 @@ def unset_debug(
         settings.GRPC_TRACE = None
 
         settings.CONFIDENT_TRACE_FLUSH = None
+        settings.CONFIDENT_METRIC_LOGGING_FLUSH = None
 
         settings.ERROR_REPORTING = None
         settings.IGNORE_DEEPEVAL_ERRORS = None
