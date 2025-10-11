@@ -238,7 +238,6 @@ class Prompt:
         )
         versions = PromptVersionsHttpResponse(**data)
         return versions.text_versions or versions.messages_versions or []
-        
 
     def _read_from_cache(
         self,
@@ -379,20 +378,14 @@ class Prompt:
         with self._lock:
             self.label = cached_prompt.label
             self.text_template = cached_prompt.template
-            self.messages_template = (
-                cached_prompt.messages_template
-            )
-            self._prompt_version_id = (
-                cached_prompt.prompt_version_id
-            )
+            self.messages_template = cached_prompt.messages_template
+            self._prompt_version_id = cached_prompt.prompt_version_id
             self.type = PromptType(cached_prompt.type)
             self.interpolation_type = PromptInterpolationType(
                 cached_prompt.interpolation_type
             )
             self.model_settings = cached_prompt.model_settings
-            self.output_type = OutputType(
-                cached_prompt.output_type
-            )
+            self.output_type = OutputType(cached_prompt.output_type)
             self.output_schema = construct_base_model(
                 cached_prompt.output_schema
             )
@@ -403,7 +396,6 @@ class Prompt:
             task_id,
             description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
         )
-
 
     ############################################
     ### Pull, Push, Update
@@ -451,7 +443,9 @@ class Prompt:
                         self._version = cached_prompt.version
                         self.text_template = cached_prompt.template
                         self.messages_template = cached_prompt.messages_template
-                        self._prompt_version_id = cached_prompt.prompt_version_id
+                        self._prompt_version_id = (
+                            cached_prompt.prompt_version_id
+                        )
                         self.type = PromptType(cached_prompt.type)
                         self.interpolation_type = PromptInterpolationType(
                             cached_prompt.interpolation_type
@@ -536,7 +530,9 @@ class Prompt:
                 self.interpolation_type = response.interpolation_type
                 self.model_settings = response.model_settings
                 self.output_type = response.output_type
-                self.output_schema = construct_base_model(response.output_schema)
+                self.output_schema = construct_base_model(
+                    response.output_schema
+                )
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
