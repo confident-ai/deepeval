@@ -222,6 +222,190 @@ class Prompt:
             raise ValueError(f"Unsupported prompt type: {self.type}")
 
     ############################################
+    ### Utils
+    ############################################
+
+    def _get_versions(self) -> List:
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.GET,
+            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
+            url_params={"alias": self.alias},
+        )
+        versions = PromptVersionsHttpResponse(**data)
+        return versions.text_versions or versions.messages_versions or []
+        
+
+    def _read_from_cache(
+        self,
+        alias: str,
+        version: Optional[str] = None,
+        label: Optional[str] = None,
+    ) -> Optional[CachedPrompt]:
+        if not os.path.exists(CACHE_FILE_NAME):
+            return None
+
+        try:
+            # Use shared lock for reading to allow concurrent reads
+            with portalocker.Lock(
+                CACHE_FILE_NAME,
+                mode="r",
+                flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
+            ) as f:
+                cache_data = json.load(f)
+
+            if alias in cache_data:
+                if version:
+                    if (
+                        VERSION_CACHE_KEY in cache_data[alias]
+                        and version in cache_data[alias][VERSION_CACHE_KEY]
+                    ):
+                        return CachedPrompt(
+                            **cache_data[alias][VERSION_CACHE_KEY][version]
+                        )
+                elif label:
+                    if (
+                        LABEL_CACHE_KEY in cache_data[alias]
+                        and label in cache_data[alias][LABEL_CACHE_KEY]
+                    ):
+                        return CachedPrompt(
+                            **cache_data[alias][LABEL_CACHE_KEY][label]
+                        )
+            return None
+        except (portalocker.exceptions.LockException, Exception):
+            # If cache is locked, corrupted or unreadable, return None and let it fetch from API
+            return None
+
+    def _write_to_cache(
+        self,
+        cache_key: Literal[VERSION_CACHE_KEY, LABEL_CACHE_KEY],
+        version: str,
+        label: Optional[str] = None,
+        text_template: Optional[str] = None,
+        messages_template: Optional[List[PromptMessage]] = None,
+        prompt_version_id: Optional[str] = None,
+        type: Optional[PromptType] = None,
+        interpolation_type: Optional[PromptInterpolationType] = None,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[OutputSchema] = None,
+    ):
+        if not self.alias:
+            return
+
+        # Ensure directory exists
+        os.makedirs(HIDDEN_DIR, exist_ok=True)
+
+        try:
+            # Use r+ mode if file exists, w mode if it doesn't
+            mode = "r+" if os.path.exists(CACHE_FILE_NAME) else "w"
+
+            with portalocker.Lock(
+                CACHE_FILE_NAME,
+                mode=mode,
+                flags=portalocker.LOCK_EX,
+            ) as f:
+                # Read existing cache data if file exists and has content
+                cache_data = {}
+                if mode == "r+":
+                    try:
+                        f.seek(0)
+                        content = f.read()
+                        if content:
+                            cache_data = json.loads(content)
+                    except (json.JSONDecodeError, Exception):
+                        cache_data = {}
+
+                # Ensure the cache structure is initialized properly
+                if self.alias not in cache_data:
+                    cache_data[self.alias] = {}
+
+                if cache_key not in cache_data[self.alias]:
+                    cache_data[self.alias][cache_key] = {}
+
+                # Cache the prompt
+                cached_entry = {
+                    "alias": self.alias,
+                    "version": version,
+                    "label": label,
+                    "template": text_template,
+                    "messages_template": messages_template,
+                    "prompt_version_id": prompt_version_id,
+                    "type": type,
+                    "interpolation_type": interpolation_type,
+                    "model_settings": model_settings,
+                    "output_type": output_type,
+                    "output_schema": output_schema,
+                }
+
+                if cache_key == VERSION_CACHE_KEY:
+                    cache_data[self.alias][cache_key][version] = cached_entry
+                else:
+                    cache_data[self.alias][cache_key][label] = cached_entry
+
+                # Write back to cache file
+                f.seek(0)
+                f.truncate()
+                json.dump(cache_data, f, cls=CustomEncoder)
+        except portalocker.exceptions.LockException:
+            # If we can't acquire the lock, silently skip caching
+            pass
+        except Exception:
+            # If any other error occurs during caching, silently skip
+            pass
+
+    def _load_from_cache_with_progress(
+        self,
+        progress: Progress,
+        task_id: int,
+        start_time: float,
+        version: Optional[str] = None,
+        label: Optional[str] = None,
+    ):
+        """
+        Load prompt from cache and update progress bar.
+        Raises if unable to load from cache.
+        """
+        cached_prompt = self._read_from_cache(
+            self.alias, version=version, label=label
+        )
+        if not cached_prompt:
+            raise ValueError("Unable to fetch prompt and load from cache")
+
+        with self._lock:
+            self.label = cached_prompt.label
+            self.text_template = cached_prompt.template
+            self.messages_template = (
+                cached_prompt.messages_template
+            )
+            self._prompt_version_id = (
+                cached_prompt.prompt_version_id
+            )
+            self.type = PromptType(cached_prompt.type)
+            self.interpolation_type = PromptInterpolationType(
+                cached_prompt.interpolation_type
+            )
+            self.model_settings = cached_prompt.model_settings
+            self.output_type = OutputType(
+                cached_prompt.output_type
+            )
+            self.output_schema = construct_base_model(
+                cached_prompt.output_schema
+            )
+
+        end_time = time.perf_counter()
+        time_taken = format(end_time - start_time, ".2f")
+        progress.update(
+            task_id,
+            description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
+        )
+
+
+    ############################################
     ### Pull, Push, Update
     ############################################
 
@@ -599,187 +783,3 @@ class Prompt:
 
             except Exception:
                 pass
-
-
-    ############################################
-    ### Utils
-    ############################################
-
-    def _get_versions(self) -> List:
-        if self.alias is None:
-            raise ValueError(
-                "Prompt alias is not set. Please set an alias to continue."
-            )
-        api = Api()
-        data, _ = api.send_request(
-            method=HttpMethods.GET,
-            endpoint=Endpoints.PROMPTS_VERSIONS_ENDPOINT,
-            url_params={"alias": self.alias},
-        )
-        versions = PromptVersionsHttpResponse(**data)
-        return versions.text_versions or versions.messages_versions or []
-        
-
-    def _read_from_cache(
-        self,
-        alias: str,
-        version: Optional[str] = None,
-        label: Optional[str] = None,
-    ) -> Optional[CachedPrompt]:
-        if not os.path.exists(CACHE_FILE_NAME):
-            return None
-
-        try:
-            # Use shared lock for reading to allow concurrent reads
-            with portalocker.Lock(
-                CACHE_FILE_NAME,
-                mode="r",
-                flags=portalocker.LOCK_SH | portalocker.LOCK_NB,
-            ) as f:
-                cache_data = json.load(f)
-
-            if alias in cache_data:
-                if version:
-                    if (
-                        VERSION_CACHE_KEY in cache_data[alias]
-                        and version in cache_data[alias][VERSION_CACHE_KEY]
-                    ):
-                        return CachedPrompt(
-                            **cache_data[alias][VERSION_CACHE_KEY][version]
-                        )
-                elif label:
-                    if (
-                        LABEL_CACHE_KEY in cache_data[alias]
-                        and label in cache_data[alias][LABEL_CACHE_KEY]
-                    ):
-                        return CachedPrompt(
-                            **cache_data[alias][LABEL_CACHE_KEY][label]
-                        )
-            return None
-        except (portalocker.exceptions.LockException, Exception):
-            # If cache is locked, corrupted or unreadable, return None and let it fetch from API
-            return None
-
-    def _write_to_cache(
-        self,
-        cache_key: Literal[VERSION_CACHE_KEY, LABEL_CACHE_KEY],
-        version: str,
-        label: Optional[str] = None,
-        text_template: Optional[str] = None,
-        messages_template: Optional[List[PromptMessage]] = None,
-        prompt_version_id: Optional[str] = None,
-        type: Optional[PromptType] = None,
-        interpolation_type: Optional[PromptInterpolationType] = None,
-        model_settings: Optional[ModelSettings] = None,
-        output_type: Optional[OutputType] = None,
-        output_schema: Optional[OutputSchema] = None,
-    ):
-        if not self.alias:
-            return
-
-        # Ensure directory exists
-        os.makedirs(HIDDEN_DIR, exist_ok=True)
-
-        try:
-            # Use r+ mode if file exists, w mode if it doesn't
-            mode = "r+" if os.path.exists(CACHE_FILE_NAME) else "w"
-
-            with portalocker.Lock(
-                CACHE_FILE_NAME,
-                mode=mode,
-                flags=portalocker.LOCK_EX,
-            ) as f:
-                # Read existing cache data if file exists and has content
-                cache_data = {}
-                if mode == "r+":
-                    try:
-                        f.seek(0)
-                        content = f.read()
-                        if content:
-                            cache_data = json.loads(content)
-                    except (json.JSONDecodeError, Exception):
-                        cache_data = {}
-
-                # Ensure the cache structure is initialized properly
-                if self.alias not in cache_data:
-                    cache_data[self.alias] = {}
-
-                if cache_key not in cache_data[self.alias]:
-                    cache_data[self.alias][cache_key] = {}
-
-                # Cache the prompt
-                cached_entry = {
-                    "alias": self.alias,
-                    "version": version,
-                    "label": label,
-                    "template": text_template,
-                    "messages_template": messages_template,
-                    "prompt_version_id": prompt_version_id,
-                    "type": type,
-                    "interpolation_type": interpolation_type,
-                    "model_settings": model_settings,
-                    "output_type": output_type,
-                    "output_schema": output_schema,
-                }
-
-                if cache_key == VERSION_CACHE_KEY:
-                    cache_data[self.alias][cache_key][version] = cached_entry
-                else:
-                    cache_data[self.alias][cache_key][label] = cached_entry
-
-                # Write back to cache file
-                f.seek(0)
-                f.truncate()
-                json.dump(cache_data, f, cls=CustomEncoder)
-        except portalocker.exceptions.LockException:
-            # If we can't acquire the lock, silently skip caching
-            pass
-        except Exception:
-            # If any other error occurs during caching, silently skip
-            pass
-
-    def _load_from_cache_with_progress(
-        self,
-        progress: Progress,
-        task_id: int,
-        start_time: float,
-        version: Optional[str] = None,
-        label: Optional[str] = None,
-    ):
-        """
-        Load prompt from cache and update progress bar.
-        Raises if unable to load from cache.
-        """
-        cached_prompt = self._read_from_cache(
-            self.alias, version=version, label=label
-        )
-        if not cached_prompt:
-            raise ValueError("Unable to fetch prompt and load from cache")
-
-        with self._lock:
-            self.label = cached_prompt.label
-            self.text_template = cached_prompt.template
-            self.messages_template = (
-                cached_prompt.messages_template
-            )
-            self._prompt_version_id = (
-                cached_prompt.prompt_version_id
-            )
-            self.type = PromptType(cached_prompt.type)
-            self.interpolation_type = PromptInterpolationType(
-                cached_prompt.interpolation_type
-            )
-            self.model_settings = cached_prompt.model_settings
-            self.output_type = OutputType(
-                cached_prompt.output_type
-            )
-            self.output_schema = construct_base_model(
-                cached_prompt.output_schema
-            )
-
-        end_time = time.perf_counter()
-        time_taken = format(end_time - start_time, ".2f")
-        progress.update(
-            task_id,
-            description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
-        )
