@@ -100,7 +100,6 @@ class Prompt:
         model_settings: Optional[ModelSettings] = None,
         output_type: Optional[OutputType] = None,
         output_schema: Optional[Type[BaseModel]] = None,
-        interpolation_type: Optional[PromptInterpolationType] = None,
     ):
         if text_template and messages_template:
             raise TypeError(
@@ -112,15 +111,8 @@ class Prompt:
         self.model_settings: Optional[ModelSettings] = model_settings
         self.output_type: Optional[OutputType] = output_type
         self.output_schema: Optional[Type[BaseModel]] = output_schema
-        self.interpolation_type: Optional[PromptInterpolationType] = (
-            interpolation_type
-        )
+        self.label: Optional[str] = None
 
-        self.type: Optional[PromptType] = None
-        if text_template:
-            self.type = PromptType.TEXT
-        elif messages_template:
-            self.type = PromptType.LIST
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
@@ -129,6 +121,12 @@ class Prompt:
         self._lock = (
             threading.Lock()
         )  # Protect instance attributes from race conditions
+
+        self.type: Optional[PromptType] = None
+        if text_template:
+            self.type = PromptType.TEXT
+        elif messages_template:
+            self.type = PromptType.LIST
 
     def __del__(self):
         """Cleanup polling tasks when instance is destroyed"""
@@ -376,7 +374,8 @@ class Prompt:
             raise ValueError("Unable to fetch prompt and load from cache")
 
         with self._lock:
-            self.label = cached_prompt.label
+            self._version = cached_prompt.version
+            self.label = cached_prompt.slabel
             self.text_template = cached_prompt.template
             self.messages_template = cached_prompt.messages_template
             self._prompt_version_id = cached_prompt.prompt_version_id
@@ -769,7 +768,7 @@ class Prompt:
 
                 # Update in-memory properties with fresh data (thread-safe)
                 with self._lock:
-                    self.version = response.version
+                    self._version = response.version
                     self.label = response.label
                     self._text_template = response.text
                     self._messages_template = response.messages
