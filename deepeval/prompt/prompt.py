@@ -440,6 +440,7 @@ class Prompt:
                 if cached_prompt:
                     with self._lock:
                         self._version = cached_prompt.version
+                        self.label = cached_prompt.label
                         self.text_template = cached_prompt.template
                         self.messages_template = cached_prompt.messages_template
                         self._prompt_version_id = (
