@@ -19,7 +19,7 @@ class TestPromptLoad:
             assert (
                 prompt.alias == os.path.basename(temp_file_path).split(".")[0]
             )
-            assert prompt._text_template == "You are a helpful assistant."
+            assert prompt.text_template == "You are a helpful assistant."
         finally:
             os.unlink(temp_file_path)
 
@@ -46,15 +46,15 @@ class TestPromptLoad:
             assert (
                 prompt.alias == os.path.basename(temp_file_path).split(".")[0]
             )
-            assert prompt._messages_template is not None
-            assert len(prompt._messages_template) == 2
-            assert prompt._messages_template[0].role == "system"
+            assert prompt.messages_template is not None
+            assert len(prompt.messages_template) == 2
+            assert prompt.messages_template[0].role == "system"
             assert (
-                prompt._messages_template[0].content
+                prompt.messages_template[0].content
                 == "You are a helpful assistant."
             )
-            assert prompt._messages_template[1].role == "user"
-            assert prompt._messages_template[1].content == "Hello, how are you?"
+            assert prompt.messages_template[1].role == "user"
+            assert prompt.messages_template[1].content == "Hello, how are you?"
         finally:
             os.unlink(temp_file_path)
 
@@ -81,8 +81,8 @@ class TestPromptLoad:
             assert (
                 prompt.alias == os.path.basename(temp_file_path).split(".")[0]
             )
-            assert prompt._messages_template is not None
-            assert len(prompt._messages_template) == 2
+            assert prompt.messages_template is not None
+            assert len(prompt.messages_template) == 2
         finally:
             os.unlink(temp_file_path)
 
@@ -111,10 +111,10 @@ class TestPromptLoad:
             assert (
                 prompt.alias == os.path.basename(temp_file_path).split(".")[0]
             )
-            assert prompt._messages_template is not None
-            assert len(prompt._messages_template) == 2
-            assert prompt._messages_template[0].role == "system"
-            assert prompt._messages_template[1].role == "user"
+            assert prompt.messages_template is not None
+            assert len(prompt.messages_template) == 2
+            assert prompt.messages_template[0].role == "system"
+            assert prompt.messages_template[1].role == "user"
         finally:
             os.unlink(temp_file_path)
 
@@ -241,9 +241,9 @@ class TestPromptLoad:
 
         try:
             prompt.load(temp_file_path, messages_key="custom_messages")
-            assert hasattr(prompt, "_messages_template")
-            assert len(prompt._messages_template) == 1
-            assert prompt._messages_template[0].role == "system"
-            assert prompt._messages_template[0].content == "Test"
+            assert hasattr(prompt, "messages_template")
+            assert len(prompt.messages_template) == 1
+            assert prompt.messages_template[0].role == "system"
+            assert prompt.messages_template[0].content == "Test"
         finally:
             os.unlink(temp_file_path)

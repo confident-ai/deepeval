@@ -112,7 +112,7 @@ class Prompt:
         self.output_type: Optional[OutputType] = output_type
         self.output_schema: Optional[Type[BaseModel]] = output_schema
         self.label: Optional[str] = None
-
+        self.interpolation_type: Optional[PromptInterpolationType] = None
 
         self._version = None
         self._prompt_version_id: Optional[str] = None
@@ -162,7 +162,7 @@ class Prompt:
         try:
             data = json.loads(content)
         except:
-            self.template = content
+            self.text_template = content
             return content
 
         text_template = None
@@ -182,14 +182,14 @@ class Prompt:
         except ValidationError:
             text_template = content
 
-        self.template = text_template
+        self.text_template = text_template
         self.messages_template = messages_template
         return text_template or messages_template
 
     def interpolate(self, **kwargs):
         with self._lock:
             prompt_type = self.type
-            text_template = self.template
+            text_template = self.text_template
             messages_template = self.messages_template
             interpolation_type = self.interpolation_type
 
@@ -379,12 +379,12 @@ class Prompt:
             self.text_template = cached_prompt.template
             self.messages_template = cached_prompt.messages_template
             self._prompt_version_id = cached_prompt.prompt_version_id
-            self.type = PromptType(cached_prompt.type)
+            self.type = PromptType(cached_prompt.type) if cached_prompt.type else None
             self.interpolation_type = PromptInterpolationType(
                 cached_prompt.interpolation_type
-            )
+            ) if cached_prompt.interpolation_type else None
             self.model_settings = cached_prompt.model_settings
-            self.output_type = OutputType(cached_prompt.output_type)
+            self.output_type = OutputType(cached_prompt.output_type) if cached_prompt.output_type else None
             self.output_schema = construct_base_model(
                 cached_prompt.output_schema
             )
@@ -446,12 +446,12 @@ class Prompt:
                         self._prompt_version_id = (
                             cached_prompt.prompt_version_id
                         )
-                        self.type = PromptType(cached_prompt.type)
+                        self.type = PromptType(cached_prompt.type) if cached_prompt.type else None
                         self.interpolation_type = PromptInterpolationType(
                             cached_prompt.interpolation_type
-                        )
+                        ) if cached_prompt.interpolation_type else None
                         self.model_settings = cached_prompt.model_settings
-                        self.output_type = OutputType(cached_prompt.output_type)
+                        self.output_type = OutputType(cached_prompt.output_type) if cached_prompt.output_type else None
                         self.output_schema = construct_base_model(
                             cached_prompt.output_schema
                         )
@@ -521,8 +521,10 @@ class Prompt:
                     return
                 raise
 
+            print(response)
             with self._lock:
-                self._version = version or "latest"
+                self._version = response.version
+                self.label = response.label
                 self.text_template = response.text
                 self.messages_template = response.messages
                 self._prompt_version_id = response.id
@@ -664,7 +666,6 @@ class Prompt:
             self._version = version
             self.text_template = text
             self.messages_template = messages
-            self.type = PromptType.TEXT
             self.interpolation_type = interpolation_type
             self.model_settings = model_settings
             self.output_type = output_type
@@ -771,11 +772,26 @@ class Prompt:
                 with self._lock:
                     self._version = response.version
                     self.label = response.label
-                    self._text_template = response.text
-                    self._messages_template = response.messages
+                    self.text_template = response.text
+                    self.messages_template = response.messages
                     self._prompt_version_id = response.id
-                    self._type = response.type
-                    self._interpolation_type = response.interpolation_type
+                    self.type = response.type
+                    self.interpolation_type = response.interpolation_type
 
             except Exception:
                 pass
+
+    def _stop_polling(self):
+        loop = _polling_loop
+        if not loop or not loop.is_running():
+            return
+
+        # Stop all polling tasks
+        for ck in list(self._polling_tasks.keys()):
+            for cv in list(self._polling_tasks[ck].keys()):
+                task = self._polling_tasks[ck][cv]
+                if task and not task.done():
+                    loop.call_soon_threadsafe(task.cancel)
+            self._polling_tasks[ck].clear()
+            self._refresh_map[ck].clear()
+        return
