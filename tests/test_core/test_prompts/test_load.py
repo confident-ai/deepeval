@@ -192,7 +192,7 @@ class TestPromptLoad:
             assert (
                 prompt.alias == os.path.basename(temp_file_path).split(".")[0]
             )
-            assert prompt._text_template == "This is not valid JSON content"
+            assert prompt.text_template == "This is not valid JSON content"
         finally:
             os.unlink(temp_file_path)
 
@@ -208,7 +208,7 @@ class TestPromptLoad:
             assert (
                 prompt.alias == os.path.basename(temp_file_path).split(".")[0]
             )
-            assert prompt._text_template == '[{"invalid": "structure"}]'
+            assert prompt.text_template == '[{"invalid": "structure"}]'
         finally:
             os.unlink(temp_file_path)
 
