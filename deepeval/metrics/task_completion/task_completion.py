@@ -50,6 +50,7 @@ class TaskCompletionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if not has_trace:
@@ -66,6 +67,7 @@ class TaskCompletionMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -89,6 +91,7 @@ class TaskCompletionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         has_trace: bool = isinstance(test_case._trace_dict, Dict)
         if not has_trace:

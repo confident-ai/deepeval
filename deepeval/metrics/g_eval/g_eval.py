@@ -31,6 +31,7 @@ from deepeval.metrics.g_eval.utils import (
     number_evaluation_steps,
     get_score_range,
 )
+from deepeval.metrics.api import metric_data_manager
 from deepeval.config.settings import get_settings
 
 
@@ -74,6 +75,7 @@ class GEval(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
         check_llm_test_case_params(test_case, self.evaluation_params, self)
@@ -122,6 +124,10 @@ class GEval(BaseMetric):
                         f"Reason: {self.reason}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
 
             return self.score
 
@@ -130,6 +136,7 @@ class GEval(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
         check_llm_test_case_params(test_case, self.evaluation_params, self)
@@ -165,6 +172,10 @@ class GEval(BaseMetric):
                     f"Reason: {self.reason}",
                 ],
             )
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:

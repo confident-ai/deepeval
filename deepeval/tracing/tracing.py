@@ -86,7 +86,7 @@ class TraceManager:
         )
         validate_environment(self.environment)
 
-        self.sampling_rate = settings.CONFIDENT_SAMPLE_RATE
+        self.sampling_rate = settings.CONFIDENT_TRACE_SAMPLE_RATE
         validate_sampling_rate(self.sampling_rate)
         self.openai_client = None
         self.tracing_enabled = True

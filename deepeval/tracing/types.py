@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
+from deepeval.tracing.message_types import ToolSchema, ToolOutput, TextMessage, ToolCallMessage
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
@@ -88,6 +89,8 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
+    input: Optional[Union[Any, List[Union[TextMessage, ToolCallMessage, ToolOutput]]]] = None
+    output: Optional[Union[Any, List[Union[TextMessage, ToolCallMessage]]]] = None
     model: Optional[str] = None
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
@@ -105,6 +108,10 @@ class LlmSpan(BaseSpan):
     token_intervals: Optional[Dict[float, str]] = Field(
         None, serialization_alias="tokenTimes"
     )
+    
+    # input_tools: Optional[List[ToolSchema]] = Field(None, serialization_alias="inputTools")
+    # invocation_params: Optional[Dict[str, Any]] = Field(None, serialization_alias="invocationParams")
+    # output_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="outputMetadata")
 
     # for serializing `prompt`
     model_config = {"arbitrary_types_allowed": True}
