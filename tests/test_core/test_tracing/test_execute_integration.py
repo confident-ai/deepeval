@@ -1,14 +1,23 @@
+import asyncio
 import pytest
 
 from deepeval.contextvars import (
     get_current_golden,
 )
 from deepeval.dataset.golden import Golden
-from deepeval.evaluate.execute import execute_agentic_test_cases_from_loop
+from deepeval.evaluate.execute import (
+    a_execute_agentic_test_cases_from_loop,
+    execute_agentic_test_cases_from_loop,
+)
 from deepeval.tracing.context import update_current_span, update_current_trace
 from deepeval.tracing.tracing import Observer, trace_manager
 from deepeval.test_case.llm_test_case import LLMTestCase
-from deepeval.evaluate.configs import DisplayConfig, CacheConfig, ErrorConfig
+from deepeval.evaluate.configs import (
+    AsyncConfig,
+    DisplayConfig,
+    CacheConfig,
+    ErrorConfig,
+)
 from deepeval.evaluate import execute as exec_mod
 from .helpers import get_active_trace_and_span
 
@@ -22,6 +31,16 @@ def _silence_confident_trace(monkeypatch):
     monkeypatch.setattr(
         trace_manager, "post_trace", lambda *a, **k: None, raising=True
     )
+
+
+@pytest.fixture(autouse=True)
+def _reset_eval_state():
+    yield
+    trace_manager.traces_to_evaluate_order.clear()
+    trace_manager.traces_to_evaluate.clear()
+    trace_manager.integration_traces_to_evaluate.clear()
+    trace_manager.test_case_metrics.clear()
+    trace_manager.trace_to_golden.clear()
 
 
 def test_execute_propagates_expected_output(monkeypatch):
@@ -163,3 +182,68 @@ def test_noop_when_no_active_trace_or_span():
     update_current_trace(test_case=LLMTestCase(input="x", actual_output="y"))
     update_current_span(test_case=LLMTestCase(input="x", actual_output="y"))
     # nothing to assert! success == no exception
+
+
+def test_async_evaluator_skips_empty_traces_without_crash():
+    goldens = [Golden(input="x")]
+    loop = asyncio.get_event_loop()
+
+    gen = a_execute_agentic_test_cases_from_loop(
+        goldens=goldens,
+        trace_metrics=None,
+        test_results=[],
+        loop=loop,
+        display_config=DisplayConfig(show_indicator=False, verbose_mode=False),
+        cache_config=CacheConfig(write_cache=False),
+        error_config=ErrorConfig(
+            ignore_errors=False, skip_on_missing_params=False
+        ),
+        async_config=AsyncConfig(run_async=True),
+        _use_bar_indicator=False,
+    )
+
+    next(gen)
+
+    async def make_empty_traces(n):
+        for _ in range(n):
+            t = trace_manager.start_new_trace()
+            trace_manager.end_trace(t.uuid)  # no spans means empty trace
+            await asyncio.sleep(0)
+
+    loop.run_until_complete(make_empty_traces(2))
+
+    with pytest.raises(StopIteration):
+        next(gen)
+
+
+def test_async_evaluator_handles_extra_traces_with_spans():
+    goldens = [Golden(input="x")]
+    loop = asyncio.get_event_loop()
+
+    gen = a_execute_agentic_test_cases_from_loop(
+        goldens=goldens,
+        trace_metrics=None,
+        test_results=[],
+        loop=loop,
+        display_config=DisplayConfig(show_indicator=False, verbose_mode=False),
+        cache_config=CacheConfig(write_cache=False),
+        error_config=ErrorConfig(
+            ignore_errors=False, skip_on_missing_params=False
+        ),
+        async_config=AsyncConfig(run_async=True),
+        _use_bar_indicator=False,
+    )
+
+    next(gen)
+
+    async def make_traces_with_spans(n):
+        for _ in range(n):
+            # creates a trace and one root span, then closes it
+            with Observer("llm", func_name="dummy"):
+                pass
+            await asyncio.sleep(0)
+
+    loop.run_until_complete(make_traces_with_spans(2))
+
+    with pytest.raises(StopIteration):
+        next(gen)
