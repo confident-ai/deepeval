@@ -11,7 +11,6 @@ from deepeval.metrics.g_eval.utils import (
     format_rubrics,
 )
 from deepeval.test_case import (
-    Turn,
     TurnParams,
     ConversationalTestCase,
 )
@@ -28,7 +27,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.conversational_g_eval.schema import *
+import deepeval.metrics.conversational_g_eval.schema as cgschema
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -199,12 +198,16 @@ class ConversationalGEval(BaseConversationalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Steps)
+            res, cost = await self.model.a_generate(
+                prompt, schema=cgschema.Steps
+            )
             self.evaluation_cost += cost
             return res.steps
         else:
             try:
-                res: Steps = await self.model.a_generate(prompt, schema=Steps)
+                res: cgschema.Steps = await self.model.a_generate(
+                    prompt, schema=cgschema.Steps
+                )
                 return res.steps
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -222,12 +225,14 @@ class ConversationalGEval(BaseConversationalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Steps)
+            res, cost = self.model.generate(prompt, schema=cgschema.Steps)
             self.evaluation_cost += cost
             return res.steps
         else:
             try:
-                res: Steps = self.model.generate(prompt, schema=Steps)
+                res: cgschema.Steps = self.model.generate(
+                    prompt, schema=cgschema.Steps
+                )
                 return res.steps
             except TypeError:
                 res = self.model.generate(prompt)
@@ -282,21 +287,21 @@ class ConversationalGEval(BaseConversationalMetric):
                     score, res
                 )
                 return weighted_summed_score, reason
-            except:
+            except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
         except (
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
             if self.using_native_model:
                 res, cost = await self.model.a_generate(
-                    prompt, schema=ReasonScore
+                    prompt, schema=cgschema.ReasonScore
                 )
                 self.evaluation_cost += cost
                 return res.score, res.reason
             else:
                 try:
-                    res: ReasonScore = await self.model.a_generate(
-                        prompt, schema=ReasonScore
+                    res: cgschema.ReasonScore = await self.model.a_generate(
+                        prompt, schema=cgschema.ReasonScore
                     )
                     return res.score, res.reason
                 except TypeError:
@@ -352,18 +357,20 @@ class ConversationalGEval(BaseConversationalMetric):
                     score, res
                 )
                 return weighted_summed_score, reason
-            except:
+            except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
             if self.using_native_model:
-                res, cost = self.model.generate(prompt, schema=ReasonScore)
+                res, cost = self.model.generate(
+                    prompt, schema=cgschema.ReasonScore
+                )
                 self.evaluation_cost += cost
                 return res.score, res.reason
             else:
                 try:
-                    res: ReasonScore = self.model.generate(
-                        prompt, schema=ReasonScore
+                    res: cgschema.ReasonScore = self.model.generate(
+                        prompt, schema=cgschema.ReasonScore
                     )
                     return res.score, res.reason
                 except TypeError:
@@ -374,49 +381,44 @@ class ConversationalGEval(BaseConversationalMetric):
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion
     ) -> Union[int, float]:
-        try:
-            generated_logprobs = raw_response.choices[0].logprobs.content
-            # First, locate the token that we care for logprobs, i.e., the token matching the score
-            score_logprobs = None
-            for token_logprobs in generated_logprobs:
-                if token_logprobs.token == str(raw_score):
-                    score_logprobs = token_logprobs
-                    break
-            # Then, calculate the score based on the logprobs
-            token_linear_probability: Dict[int, float] = {}
-            sum_linear_probability = 0
-            # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
-            min_logprob = math.log(0.01)
-            for token_logprob in score_logprobs.top_logprobs:
-                logprob = token_logprob.logprob
+        generated_logprobs = raw_response.choices[0].logprobs.content
+        # First, locate the token that we care for logprobs, i.e., the token matching the score
+        score_logprobs = None
+        for token_logprobs in generated_logprobs:
+            if token_logprobs.token == str(raw_score):
+                score_logprobs = token_logprobs
+                break
+        # Then, calculate the score based on the logprobs
+        token_linear_probability: Dict[int, float] = {}
+        sum_linear_probability = 0
+        # Filter out tokens with <1% linear probability, i.e., logprobs < math.log(0.01)
+        min_logprob = math.log(0.01)
+        for token_logprob in score_logprobs.top_logprobs:
+            logprob = token_logprob.logprob
 
-                # Filter out low probability tokens
-                if logprob < min_logprob:
-                    continue
-                # Filter out non-decimal token to prevent errors in later int(token) conversion
-                if not token_logprob.token.isdecimal():
-                    continue
+            # Filter out low probability tokens
+            if logprob < min_logprob:
+                continue
+            # Filter out non-decimal token to prevent errors in later int(token) conversion
+            if not token_logprob.token.isdecimal():
+                continue
 
-                # Calculate the linear probability
-                linear_prob = math.exp(logprob)
-                token_score = int(token_logprob.token)
-                if token_linear_probability.get(token_score):
-                    token_linear_probability[token_score] += linear_prob
-                else:
-                    token_linear_probability[token_score] = linear_prob
-                sum_linear_probability += linear_prob
+            # Calculate the linear probability
+            linear_prob = math.exp(logprob)
+            token_score = int(token_logprob.token)
+            if token_linear_probability.get(token_score):
+                token_linear_probability[token_score] += linear_prob
+            else:
+                token_linear_probability[token_score] = linear_prob
+            sum_linear_probability += linear_prob
 
-            sum_of_weighted_scores = 0.0
-            for score, prob in token_linear_probability.items():
-                sum_of_weighted_scores += score * prob
+        sum_of_weighted_scores = 0.0
+        for score, prob in token_linear_probability.items():
+            sum_of_weighted_scores += score * prob
 
-            # Scale the sum of linear probability to 1
-            weighted_summed_score = (
-                sum_of_weighted_scores / sum_linear_probability
-            )
-            return weighted_summed_score
-        except:
-            raise
+        # Scale the sum of linear probability to 1
+        weighted_summed_score = sum_of_weighted_scores / sum_linear_probability
+        return weighted_summed_score
 
     def number_evaluation_steps(self):
         evaluation_steps = """"""
@@ -429,8 +431,8 @@ class ConversationalGEval(BaseConversationalMetric):
             self.success = False
         else:
             try:
-                self.score >= self.threshold
-            except:
+                self.success = self.score >= self.threshold
+            except TypeError:
                 self.success = False
         return self.success
 
