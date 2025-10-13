@@ -4,7 +4,6 @@ import asyncio
 import pytest
 from tests.test_integrations.utils import (
     assert_trace_json,
-    generate_trace_json,
 )
 from crewai import Task, Crew, Agent
 from crewai.tools import tool
