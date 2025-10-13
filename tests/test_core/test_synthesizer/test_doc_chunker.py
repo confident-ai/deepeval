@@ -312,7 +312,7 @@ def test_persistent_path_and_collection_name(monkeypatch, tmp_path):
     fake_client = FakeClient()
 
     class CapturingChroma:
-        def PersistentClient(self, path):
+        def PersistentClient(self, path, **kwargs):
             captured["path"] = path
             return fake_client
 
