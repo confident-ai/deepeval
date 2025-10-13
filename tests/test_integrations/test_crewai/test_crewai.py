@@ -3,10 +3,9 @@ import json
 import asyncio
 import pytest
 from tests.test_integrations.utils import (
-    assert_json_object_structure,
-    load_trace_data,
+    assert_trace_json,
 )
-from deepeval.tracing.trace_test_manager import trace_testing_manager
+from deepeval.integrations.crewai import instrument_crewai
 from crewai import Task, Crew, Agent
 from crewai.tools import tool
 
@@ -73,35 +72,8 @@ crew = Crew(
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "crewai.json")
 
-async def test_json_schema():
-    """
-    Test the json schema of the trace. Raises an exception if the schema is invalid.
-    """
-    try:
-        trace_testing_manager.test_name = json_path
-        crew.kickoff({"city": "London"})
-        actual_dict = await trace_testing_manager.wait_for_test_dict()
-        expected_dict = load_trace_data(json_path)
 
-        print(actual_dict)
-
-        assert assert_json_object_structure(expected_dict, actual_dict)
-    finally:
-        trace_testing_manager.test_name = None
-        trace_testing_manager.test_dict = None
-
-
-################################ Generate Actual JSON Dump Code #################################
-
-
-async def generate_actual_json_dump():
-    try:
-        trace_testing_manager.test_name = json_path
-        crew.kickoff({"city": "London"})
-        actual_dict = await trace_testing_manager.wait_for_test_dict()
-
-        with open(json_path, "w") as f:
-            json.dump(actual_dict, f)
-    finally:
-        trace_testing_manager.test_name = None
-        trace_testing_manager.test_dict = None
+@assert_trace_json(json_path)
+async def test_crewai():
+    instrument_crewai()
+    crew.kickoff({"city": "London"})
