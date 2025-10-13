@@ -4,11 +4,12 @@ import asyncio
 import pytest
 from tests.test_integrations.utils import (
     assert_trace_json,
+    generate_trace_json,
 )
-from deepeval.integrations.crewai import instrument_crewai
 from crewai import Task, Crew, Agent
 from crewai.tools import tool
-
+from deepeval.integrations.crewai import instrument_crewai
+from deepeval.tracing import trace
 
 @tool
 def get_weather(city: str) -> str:
@@ -72,7 +73,20 @@ crew = Crew(
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "crewai.json")
 
-
+# @generate_trace_json(json_path)
 @assert_trace_json(json_path)
-async def test_crewai():
-    crew.kickoff({"city": "London"})
+def test_crewai():
+    
+    with trace(
+        name="crewai",
+        tags=["crewai"],
+        metadata={"crewai": "crewai"},
+        user_id="crewai",
+        thread_id="crewai",
+        trace_metric_collection="test_collection_1",
+    ):
+        crew.kickoff({"city": "London"})
+
+if __name__ == "__main__":
+    instrument_crewai()
+    test_crewai()
