@@ -13,7 +13,10 @@ from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.openai.utils import create_child_tool_spans
 
-def patch_async_openai_client_method(
+# Global flag to track whether OpenAI has been patched
+_OPENAI_PATCHED = False
+
+def _patch_async_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
 ):
@@ -49,7 +52,7 @@ def patch_async_openai_client_method(
     return patched_async_openai_method
 
 
-def patch_sync_openai_client_method(
+def _patch_sync_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
 ):
@@ -87,6 +90,11 @@ def patch_sync_openai_client_method(
 
 def patch_openai_classes():
     """Monkey patch OpenAI resource classes directly."""
+    global _OPENAI_PATCHED
+    
+    # Guard against double-patching
+    if _OPENAI_PATCHED:
+        return
     
     try:
         from openai.resources.chat.completions import Completions, AsyncCompletions
@@ -96,7 +104,7 @@ def patch_openai_classes():
             def method_wrapper(self, *args, **kwargs):
                 # Bind the original method to self, then wrap it
                 bound_method = original_method.__get__(self, type(self))
-                patched = patch_sync_openai_client_method(
+                patched = _patch_sync_openai_client_method(
                     orig_method=bound_method,
                     is_completion_method=True
                 )
@@ -107,7 +115,7 @@ def patch_openai_classes():
             async def method_wrapper(self, *args, **kwargs):
                 # Bind the original method to self, then wrap it
                 bound_method = original_method.__get__(self, type(self))
-                patched = patch_async_openai_client_method(
+                patched = _patch_async_openai_client_method(
                     orig_method=bound_method,
                     is_completion_method=True
                 )
@@ -137,7 +145,7 @@ def patch_openai_classes():
         def wrap_sync_method(original_method):
             def method_wrapper(self, *args, **kwargs):
                 bound_method = original_method.__get__(self, type(self))
-                patched = patch_sync_openai_client_method(
+                patched = _patch_sync_openai_client_method(
                     orig_method=bound_method,
                     is_completion_method=False  # responses use different parameters
                 )
@@ -147,7 +155,7 @@ def patch_openai_classes():
         def wrap_async_method(original_method):
             async def method_wrapper(self, *args, **kwargs):
                 bound_method = original_method.__get__(self, type(self))
-                patched = patch_async_openai_client_method(
+                patched = _patch_async_openai_client_method(
                     orig_method=bound_method,
                     is_completion_method=False  # responses use different parameters
                 )
@@ -162,6 +170,9 @@ def patch_openai_classes():
             
     except ImportError:
         pass
+    
+    # Mark as patched after successful patching
+    _OPENAI_PATCHED = True
 
 def _update_all_attributes(
     input_parameters: InputParameters,
