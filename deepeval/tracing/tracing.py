@@ -862,20 +862,6 @@ class Observer:
         ):
             current_span.prompt = self.prompt
 
-        elif (
-            isinstance(current_span, ToolSpan)
-        ):
-            parent_span = trace_manager.get_span_by_uuid(current_span.parent_uuid)
-            if parent_span:
-                parent_span.tools_called = parent_span.tools_called or []
-                parent_span.tools_called.append(
-                    ToolCall(
-                        name=current_span.name,
-                        description=current_span.description,
-                        input_parameters=make_json_serializable(current_span.input),
-                        output=current_span.output,
-                    )
-                )
         if not current_span.tools_called:
             # check any tool span children
             for child in current_span.children:
