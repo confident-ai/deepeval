@@ -35,27 +35,40 @@ class ModelSettings(BaseModel):
     name: Optional[str] = None
     temperature: Optional[float] = None
     max_tokens: Optional[int] = Field(
-        default=None, serialization_alias="maxTokens"
+        default=None,
+        serialization_alias="maxTokens",
+        validation_alias=AliasChoices("max_tokens", "maxTokens"),
     )
-    top_p: Optional[float] = Field(default=None, serialization_alias="topP")
+    top_p: Optional[float] = Field(
+        default=None,
+        serialization_alias="topP",
+        validation_alias=AliasChoices("top_p", "topP"),
+    )
     frequency_penalty: Optional[float] = Field(
-        default=None, serialization_alias="frequencyPenalty"
+        default=None,
+        serialization_alias="frequencyPenalty",
+        validation_alias=AliasChoices("frequency_penalty", "frequencyPenalty"),
     )
     presence_penalty: Optional[float] = Field(
-        default=None, serialization_alias="presencePenalty"
+        default=None,
+        serialization_alias="presencePenalty",
+        validation_alias=AliasChoices("presence_penalty", "presencePenalty"),
     )
     stop_sequence: Optional[List[str]] = Field(
-        default=None, serialization_alias="stopSequence"
+        default=None,
+        serialization_alias="stopSequence",
+        validation_alias=AliasChoices("stop_sequence", "stopSequence"),
     )
     reasoning_effort: Optional[ReasoningEffort] = Field(
-        default=None, serialization_alias="reasoningEffort"
+        default=None,
+        serialization_alias="reasoningEffort",
+        validation_alias=AliasChoices("reasoning_effort", "reasoningEffort"),
     )
     verbosity: Optional[Verbosity] = Field(
-        default=None, serialization_alias="verbosity"
+        default=None,
+        serialization_alias="verbosity",
+        validation_alias=AliasChoices("verbosity", "verbosity"),
     )
-
-    class Config:
-        use_enum_values = True
 
 
 ###################################

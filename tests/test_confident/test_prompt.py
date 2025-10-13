@@ -156,6 +156,7 @@ class TestPromptText:
 class TestPromptList:
     ALIAS = "test_prompt_list"
     ALIAS_WITH_INTERPOLATION_TYPE = "test_prompt_list_interpolation_type"
+    ALIAS_SETTINGS = "test_prompt_settings"
     LABEL = "STAGING"
     LABEL_VERSION = "00.07.01"
 
@@ -340,3 +341,105 @@ class TestPromptList:
             assert prompt.version == self.LABEL_VERSION
             assert spy_api.call_count == 3  # 1 for pull, 2 for polling
             prompt._stop_polling()
+
+    def test_model_settings_pull(self):
+        prompt = Prompt(alias=self.ALIAS_SETTINGS)
+        prompt.pull()
+        assert prompt.model_settings is not None
+        assert prompt.model_settings.provider == ModelProvider.OPEN_AI
+        assert prompt.model_settings.name == "gpt-4o"
+        assert prompt.model_settings.temperature == 0.5
+        assert prompt.model_settings.max_tokens == 1000
+        assert prompt.model_settings.top_p == 0.9
+        assert prompt.model_settings.frequency_penalty == 0.1
+        assert prompt.model_settings.presence_penalty == 0.1
+        assert prompt.model_settings.stop_sequence == ["hi"]
+        assert prompt.model_settings.reasoning_effort == ReasoningEffort.MINIMAL
+        assert prompt.model_settings.verbosity == Verbosity.LOW
+        assert prompt.output_type == OutputType.SCHEMA
+        assert prompt.output_schema is not None
+        assert hasattr(prompt.output_schema, '__fields__') or hasattr(prompt.output_schema, 'model_fields')
+        expected_fields = {'verdict', 'reason'}
+        actual_fields = set(prompt.output_schema.model_fields.keys())
+        assert actual_fields == expected_fields
+
+    def test_push_with_model_settings_and_output(self):
+        prompt = Prompt(alias=self.ALIAS_SETTINGS)
+        UUID = uuid.uuid4()
+        messages = [
+            PromptMessage(role="user", content=f"Test message {UUID}"),
+            PromptMessage(role="assistant", content=f"Test response {UUID}"),
+        ]
+        model_settings = ModelSettings(
+            provider=ModelProvider.OPEN_AI,
+            name="gpt-4o",
+            temperature=0.5,
+            max_tokens=1000,
+            top_p=0.9,
+            frequency_penalty=0.1,
+            presence_penalty=0.1,
+            stop_sequence=["hi"],
+            reasoning_effort=ReasoningEffort.MINIMAL,
+            verbosity=Verbosity.LOW,
+        )
+        output_type = OutputType.SCHEMA
+        output_schema = FaithfulnessVerdict
+        prompt.push(
+            messages=messages,
+            model_settings=model_settings,
+            output_type=output_type,
+            output_schema=output_schema,
+            _verbose=False,
+        )
+        assert prompt.model_settings is not None
+        assert prompt.model_settings.provider == ModelProvider.OPEN_AI
+        assert prompt.model_settings.name == "gpt-4o"
+        assert prompt.model_settings.temperature == 0.5
+        assert prompt.model_settings.max_tokens == 1000
+        assert prompt.model_settings.top_p == 0.9
+        assert prompt.model_settings.frequency_penalty == 0.1
+        assert prompt.model_settings.presence_penalty == 0.1
+        assert prompt.model_settings.stop_sequence == ["hi"]
+        assert prompt.model_settings.reasoning_effort == ReasoningEffort.MINIMAL
+        assert prompt.model_settings.verbosity == Verbosity.LOW
+        assert prompt.output_type == OutputType.SCHEMA
+        assert prompt.output_schema is not None
+        expected_fields = {'verdict', 'reason'}
+        actual_fields = set(prompt.output_schema.model_fields.keys())
+        assert actual_fields == expected_fields
+
+    def test_cache_preserves_settings(self):
+        """Test that caching preserves model settings and output configuration"""
+        # First, pull and cache a prompt
+        prompt1 = Prompt(alias=self.ALIAS_SETTINGS)
+        prompt1.pull(write_to_cache=True)
+
+        original_model_settings = prompt1.model_settings
+        original_output_type = prompt1.output_type
+        original_output_schema = prompt1.output_schema
+
+        # Load from cache
+        prompt2 = Prompt(alias=self.ALIAS_SETTINGS)
+        prompt2.pull(default_to_cache=True)
+
+        # Verify settings are preserved
+        if original_model_settings:
+            assert prompt2.model_settings is not None
+            assert (
+                prompt2.model_settings.provider
+                == original_model_settings.provider
+            )
+            assert prompt2.model_settings.name == original_model_settings.name
+            assert (
+                prompt2.model_settings.temperature
+                == original_model_settings.temperature
+            )
+
+        assert prompt2.output_type == original_output_type
+        if original_output_schema is not None:
+            assert prompt2.output_schema is not None
+            original_fields = set(original_output_schema.model_fields.keys())
+            cached_fields = set(prompt2.output_schema.model_fields.keys())
+            assert cached_fields == original_fields
+        else:
+            assert prompt2.output_schema == original_output_schema

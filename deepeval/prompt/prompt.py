@@ -22,6 +22,9 @@ from deepeval.prompt.api import (
     ModelSettings,
     OutputSchema,
     OutputType,
+    ReasoningEffort,
+    Verbosity,
+    ModelProvider,
 )
 from deepeval.prompt.utils import (
     interpolate_text,
@@ -379,12 +382,20 @@ class Prompt:
             self.text_template = cached_prompt.template
             self.messages_template = cached_prompt.messages_template
             self._prompt_version_id = cached_prompt.prompt_version_id
-            self.type = PromptType(cached_prompt.type) if cached_prompt.type else None
-            self.interpolation_type = PromptInterpolationType(
-                cached_prompt.interpolation_type
-            ) if cached_prompt.interpolation_type else None
+            self.type = (
+                PromptType(cached_prompt.type) if cached_prompt.type else None
+            )
+            self.interpolation_type = (
+                PromptInterpolationType(cached_prompt.interpolation_type)
+                if cached_prompt.interpolation_type
+                else None
+            )
             self.model_settings = cached_prompt.model_settings
-            self.output_type = OutputType(cached_prompt.output_type) if cached_prompt.output_type else None
+            self.output_type = (
+                OutputType(cached_prompt.output_type)
+                if cached_prompt.output_type
+                else None
+            )
             self.output_schema = construct_base_model(
                 cached_prompt.output_schema
             )
@@ -446,12 +457,24 @@ class Prompt:
                         self._prompt_version_id = (
                             cached_prompt.prompt_version_id
                         )
-                        self.type = PromptType(cached_prompt.type) if cached_prompt.type else None
-                        self.interpolation_type = PromptInterpolationType(
-                            cached_prompt.interpolation_type
-                        ) if cached_prompt.interpolation_type else None
+                        self.type = (
+                            PromptType(cached_prompt.type)
+                            if cached_prompt.type
+                            else None
+                        )
+                        self.interpolation_type = (
+                            PromptInterpolationType(
+                                cached_prompt.interpolation_type
+                            )
+                            if cached_prompt.interpolation_type
+                            else None
+                        )
                         self.model_settings = cached_prompt.model_settings
-                        self.output_type = OutputType(cached_prompt.output_type) if cached_prompt.output_type else None
+                        self.output_type = (
+                            OutputType(cached_prompt.output_type)
+                            if cached_prompt.output_type
+                            else None
+                        )
                         self.output_schema = construct_base_model(
                             cached_prompt.output_schema
                         )
@@ -521,7 +544,6 @@ class Prompt:
                     return
                 raise
 
-            print(response)
             with self._lock:
                 self._version = response.version
                 self.label = response.label
@@ -592,7 +614,9 @@ class Prompt:
             or construct_output_schema(self.output_schema),
         )
         try:
-            body = body.model_dump(by_alias=True, exclude_none=True)
+            body = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         except AttributeError:
             # Pydantic version below 2.0
             body = body.dict(by_alias=True, exclude_none=True)
@@ -649,7 +673,9 @@ class Prompt:
             output_schema=construct_output_schema(output_schema),
         )
         try:
-            body = body.model_dump(by_alias=True, exclude_none=True)
+            body = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         except AttributeError:
             body = body.dict(by_alias=True, exclude_none=True)
         api = Api()
