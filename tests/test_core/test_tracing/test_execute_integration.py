@@ -186,7 +186,7 @@ def test_noop_when_no_active_trace_or_span():
 
 def test_async_evaluator_skips_empty_traces_without_crash():
     goldens = [Golden(input="x")]
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
 
     try:
         asyncio.set_event_loop(loop)
@@ -227,7 +227,7 @@ def test_async_evaluator_skips_empty_traces_without_crash():
 
 def test_async_evaluator_handles_extra_traces_with_spans():
     goldens = [Golden(input="x")]
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
 
     try:
         asyncio.set_event_loop(loop)
