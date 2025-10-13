@@ -1,4 +1,3 @@
-import asyncio
 from deepeval.openai import OpenAI
 from deepeval.tracing import trace, observe
 from deepeval.prompt import Prompt

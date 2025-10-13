@@ -73,8 +73,6 @@ crew = Crew(
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "crewai.json")
 
-
-@pytest.mark.asyncio
 async def test_json_schema():
     """
     Test the json schema of the trace. Raises an exception if the schema is invalid.

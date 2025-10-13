@@ -2,7 +2,6 @@ import pytest
 from deepeval.openai import AsyncOpenAI
 from deepeval.tracing import trace
 from deepeval.prompt import Prompt
-import asyncio
 from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 import os
 
