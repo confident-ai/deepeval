@@ -868,9 +868,11 @@ class Synthesizer:
         goldens: List[Golden] = []
         if self.async_mode:
             loop = get_or_create_event_loop()
-            return loop.run_until_complete(
-                self.a_generate_goldens_from_scratch(
-                    num_goldens=num_goldens,
+            goldens.extend(
+                loop.run_until_complete(
+                    self.a_generate_goldens_from_scratch(
+                        num_goldens=num_goldens,
+                    )
                 )
             )
         else:
