@@ -61,12 +61,22 @@ def test_defaults():
     # should see model defaults
     s = get_settings()
     assert s.CONFIDENT_TRACE_VERBOSE is True
-    assert s.CONFIDENT_SAMPLE_RATE == 1.0
+    assert s.CONFIDENT_TRACE_SAMPLE_RATE == 1.0
+    assert s.CONFIDENT_METRIC_LOGGING_VERBOSE is True
+    assert s.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE == 1.0
+    assert s.CONFIDENT_METRIC_LOGGING_ENABLED is True
 
 
-def test_invalid_sample_rate_raises(monkeypatch):
+def test_invalid_trace_sample_rate_raises(monkeypatch):
     # set env before first construction to trigger the validator
-    monkeypatch.setenv("CONFIDENT_SAMPLE_RATE", "1.2")
+    monkeypatch.setenv("CONFIDENT_TRACE_SAMPLE_RATE", "1.2")
+    with pytest.raises(ValueError):
+        get_settings()
+
+
+def test_invalid_metric_sample_rate_raises(monkeypatch):
+    # set env before first construction to trigger the validator
+    monkeypatch.setenv("CONFIDENT_METRIC_LOGGING_SAMPLE_RATE", "1.2")
     with pytest.raises(ValueError):
         get_settings()
 
@@ -245,21 +255,30 @@ def test_boolean_coercion_tokens(monkeypatch, tok, expected):
 
 
 def test_sample_rate_empty_string_is_none(monkeypatch):
-    monkeypatch.setenv("CONFIDENT_SAMPLE_RATE", "")
+    monkeypatch.setenv("CONFIDENT_TRACE_SAMPLE_RATE", "")
     s = get_settings()
-    assert s.CONFIDENT_SAMPLE_RATE is None
+    assert s.CONFIDENT_TRACE_SAMPLE_RATE is None
+    monkeypatch.setenv("CONFIDENT_METRIC_LOGGING_SAMPLE_RATE", "")
+    s = get_settings()
+    assert s.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE is None
 
 
 @pytest.mark.parametrize("val", ["0", "1", "0.25"])
 def test_sample_rate_valid_boundaries(monkeypatch, val):
-    monkeypatch.setenv("CONFIDENT_SAMPLE_RATE", val)
+    monkeypatch.setenv("CONFIDENT_TRACE_SAMPLE_RATE", val)
     s = get_settings()
-    assert s.CONFIDENT_SAMPLE_RATE == float(val)
+    assert s.CONFIDENT_TRACE_SAMPLE_RATE == float(val)
+    monkeypatch.setenv("CONFIDENT_METRIC_LOGGING_SAMPLE_RATE", val)
+    s = get_settings()
+    assert s.CONFIDENT_METRIC_LOGGING_SAMPLE_RATE == float(val)
 
 
 @pytest.mark.parametrize("val", ["1.5", "-0.1"])
 def test_sample_rate_invalid_raises(monkeypatch, val):
-    monkeypatch.setenv("CONFIDENT_SAMPLE_RATE", val)
+    monkeypatch.setenv("CONFIDENT_TRACE_SAMPLE_RATE", val)
+    with pytest.raises(ValueError):
+        get_settings()
+    monkeypatch.setenv("CONFIDENT_METRIC_LOGGING_SAMPLE_RATE", val)
     with pytest.raises(ValueError):
         get_settings()
 
