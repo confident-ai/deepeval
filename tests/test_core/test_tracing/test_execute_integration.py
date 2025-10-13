@@ -188,62 +188,79 @@ def test_async_evaluator_skips_empty_traces_without_crash():
     goldens = [Golden(input="x")]
     loop = asyncio.get_event_loop()
 
-    gen = a_execute_agentic_test_cases_from_loop(
-        goldens=goldens,
-        trace_metrics=None,
-        test_results=[],
-        loop=loop,
-        display_config=DisplayConfig(show_indicator=False, verbose_mode=False),
-        cache_config=CacheConfig(write_cache=False),
-        error_config=ErrorConfig(
-            ignore_errors=False, skip_on_missing_params=False
-        ),
-        async_config=AsyncConfig(run_async=True),
-        _use_bar_indicator=False,
-    )
+    try:
+        asyncio.set_event_loop(loop)
 
-    next(gen)
+        gen = a_execute_agentic_test_cases_from_loop(
+            goldens=goldens,
+            trace_metrics=None,
+            test_results=[],
+            loop=loop,
+            display_config=DisplayConfig(
+                show_indicator=False, verbose_mode=False
+            ),
+            cache_config=CacheConfig(write_cache=False),
+            error_config=ErrorConfig(
+                ignore_errors=False, skip_on_missing_params=False
+            ),
+            async_config=AsyncConfig(run_async=True),
+            _use_bar_indicator=False,
+        )
 
-    async def make_empty_traces(n):
-        for _ in range(n):
-            t = trace_manager.start_new_trace()
-            trace_manager.end_trace(t.uuid)  # no spans means empty trace
-            await asyncio.sleep(0)
-
-    loop.run_until_complete(make_empty_traces(2))
-
-    with pytest.raises(StopIteration):
         next(gen)
+
+        async def make_empty_traces(n):
+            for _ in range(n):
+                t = trace_manager.start_new_trace()
+                trace_manager.end_trace(t.uuid)  # no spans means empty trace
+                await asyncio.sleep(0)
+
+        loop.run_until_complete(make_empty_traces(2))
+
+        with pytest.raises(StopIteration):
+            next(gen)
+
+    finally:
+        asyncio.set_event_loop(None)
+        loop.close()
 
 
 def test_async_evaluator_handles_extra_traces_with_spans():
     goldens = [Golden(input="x")]
     loop = asyncio.get_event_loop()
 
-    gen = a_execute_agentic_test_cases_from_loop(
-        goldens=goldens,
-        trace_metrics=None,
-        test_results=[],
-        loop=loop,
-        display_config=DisplayConfig(show_indicator=False, verbose_mode=False),
-        cache_config=CacheConfig(write_cache=False),
-        error_config=ErrorConfig(
-            ignore_errors=False, skip_on_missing_params=False
-        ),
-        async_config=AsyncConfig(run_async=True),
-        _use_bar_indicator=False,
-    )
+    try:
+        asyncio.set_event_loop(loop)
 
-    next(gen)
+        gen = a_execute_agentic_test_cases_from_loop(
+            goldens=goldens,
+            trace_metrics=None,
+            test_results=[],
+            loop=loop,
+            display_config=DisplayConfig(
+                show_indicator=False, verbose_mode=False
+            ),
+            cache_config=CacheConfig(write_cache=False),
+            error_config=ErrorConfig(
+                ignore_errors=False, skip_on_missing_params=False
+            ),
+            async_config=AsyncConfig(run_async=True),
+            _use_bar_indicator=False,
+        )
 
-    async def make_traces_with_spans(n):
-        for _ in range(n):
-            # creates a trace and one root span, then closes it
-            with Observer("llm", func_name="dummy"):
-                pass
-            await asyncio.sleep(0)
-
-    loop.run_until_complete(make_traces_with_spans(2))
-
-    with pytest.raises(StopIteration):
         next(gen)
+
+        async def make_traces_with_spans(n):
+            for _ in range(n):
+                # creates a trace and one root span, then closes it
+                with Observer("llm", func_name="dummy"):
+                    pass
+                await asyncio.sleep(0)
+
+        loop.run_until_complete(make_traces_with_spans(2))
+
+        with pytest.raises(StopIteration):
+            next(gen)
+    finally:
+        asyncio.set_event_loop(None)
+        loop.close()
