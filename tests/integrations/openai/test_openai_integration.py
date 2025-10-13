@@ -47,8 +47,8 @@ def test_end_to_end_loop():
 
 
 def test_component_level_loop():
-    # for golden in dataset.evals_iterator():
-    #     llm_app(golden.input, completion_mode="chat")
+    for golden in dataset.evals_iterator():
+        llm_app(golden.input, completion_mode="chat")
 
     for golden in dataset.evals_iterator():
         llm_app(golden.input, completion_mode="response")
