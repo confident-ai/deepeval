@@ -1,5 +1,4 @@
 import pytest
-from pathlib import Path
 
 from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
 
@@ -89,7 +88,7 @@ class FakeChromaMod:
     def __init__(self, client):
         self._client = client
 
-    def PersistentClient(self, path):
+    def PersistentClient(self, path, **kwargs):
         return self._client
 
 
