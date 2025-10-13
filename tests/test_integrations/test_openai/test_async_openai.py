@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from deepeval.openai import AsyncOpenAI
 from deepeval.tracing import trace

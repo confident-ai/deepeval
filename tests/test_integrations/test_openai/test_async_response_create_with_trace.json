@@ -1,30 +1,31 @@
 {
-  "uuid": "79142a1f-ee24-40b4-b470-e9905fc30683",
+  "uuid": "a0963d30-4ebb-47ed-a84b-965045b5918f",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "c7911901-1d82-4ce1-b831-486060c44145",
+      "uuid": "cc0d1a98-08da-46f5-9e22-df7ffce79168",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2025-10-13T06:05:12.121Z",
-      "endTime": "2025-10-13T06:05:13.676Z",
+      "startTime": "2025-10-13T10:36:26.396Z",
+      "endTime": "2025-10-13T10:36:29.625Z",
       "input": "Hello, how are you?",
-      "output": "Hello! I'm here and ready to help. How can I assist you today?",
+      "output": "Hello! I'm here to help. How can I assist you today?",
       "model": "gpt-4o",
       "prompt": {
-        "alias": "asd"
+        "alias": "asd",
+        "version": "00.00.01"
       },
       "inputTokenCount": 29.0,
-      "outputTokenCount": 17.0,
+      "outputTokenCount": 15.0,
       "metricCollection": "test_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2025-10-13T06:05:12.121Z",
-  "endTime": "2025-10-13T06:05:13.676Z",
+  "startTime": "2025-10-13T10:36:26.396Z",
+  "endTime": "2025-10-13T10:36:29.625Z",
   "name": "test_name_1",
   "metadata": {
     "test_metadata_1": "test_value_1"
@@ -36,6 +37,6 @@
   "threadId": "test_thread_id_1",
   "userId": "test_user_id_1",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm here and ready to help. How can I assist you today?",
+  "output": "Hello! I'm here to help. How can I assist you today?",
   "status": "SUCCESS"
 }
