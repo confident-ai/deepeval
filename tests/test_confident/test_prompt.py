@@ -215,8 +215,6 @@ class TestPromptList:
             output_schema=FaithfulnessVerdict,
         )
 
-        prompt.pull()
-
         assert prompt.text_template is None
         assert len(prompt.messages_template) == 2
         assert prompt.messages_template[0].content == "Hello, assistant!"
