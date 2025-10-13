@@ -13,8 +13,103 @@ from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.openai.utils import create_child_tool_spans
 
-# Global flag to track whether OpenAI has been patched
+# Store original methods for safety and potential unpatching
+_ORIGINAL_METHODS = {}
 _OPENAI_PATCHED = False
+
+
+def patch_openai_classes():
+    """Monkey patch OpenAI resource classes directly."""
+    global _OPENAI_PATCHED
+    
+    # Single guard - if already patched, return immediately
+    if _OPENAI_PATCHED:
+        return
+    
+    try:
+        from openai.resources.chat.completions import Completions, AsyncCompletions
+        
+        # Store original methods before patching
+        if hasattr(Completions, 'create'):
+            _ORIGINAL_METHODS['Completions.create'] = Completions.create
+            Completions.create = _create_sync_wrapper(
+                Completions.create, 
+                is_completion_method=True
+            )
+            
+        if hasattr(Completions, 'parse'):
+            _ORIGINAL_METHODS['Completions.parse'] = Completions.parse
+            Completions.parse = _create_sync_wrapper(
+                Completions.parse,
+                is_completion_method=True
+            )
+        
+        if hasattr(AsyncCompletions, 'create'):
+            _ORIGINAL_METHODS['AsyncCompletions.create'] = AsyncCompletions.create
+            AsyncCompletions.create = _create_async_wrapper(
+                AsyncCompletions.create,
+                is_completion_method=True
+            )
+            
+        if hasattr(AsyncCompletions, 'parse'):
+            _ORIGINAL_METHODS['AsyncCompletions.parse'] = AsyncCompletions.parse
+            AsyncCompletions.parse = _create_async_wrapper(
+                AsyncCompletions.parse,
+                is_completion_method=True
+            )
+            
+    except ImportError:
+        pass
+    
+    try:
+        from openai.resources.responses import Responses, AsyncResponses
+        
+        if hasattr(Responses, 'create'):
+            _ORIGINAL_METHODS['Responses.create'] = Responses.create
+            Responses.create = _create_sync_wrapper(
+                Responses.create,
+                is_completion_method=False
+            )
+            
+        if hasattr(AsyncResponses, 'create'):
+            _ORIGINAL_METHODS['AsyncResponses.create'] = AsyncResponses.create
+            AsyncResponses.create = _create_async_wrapper(
+                AsyncResponses.create,
+                is_completion_method=False
+            )
+            
+    except ImportError:
+        pass
+    
+    # Set flag at the END after successful patching
+    _OPENAI_PATCHED = True
+
+
+def _create_sync_wrapper(original_method, is_completion_method: bool):
+    """Create a wrapper for sync methods - called ONCE during patching."""
+    @wraps(original_method)
+    def method_wrapper(self, *args, **kwargs):
+        bound_method = original_method.__get__(self, type(self))
+        patched = _patch_sync_openai_client_method(
+            orig_method=bound_method,
+            is_completion_method=is_completion_method
+        )
+        return patched(*args, **kwargs)
+    return method_wrapper
+
+
+def _create_async_wrapper(original_method, is_completion_method: bool):
+    """Create a wrapper for async methods - called ONCE during patching."""
+    @wraps(original_method)
+    async def method_wrapper(self, *args, **kwargs):
+        bound_method = original_method.__get__(self, type(self))
+        patched = _patch_async_openai_client_method(
+            orig_method=bound_method,
+            is_completion_method=is_completion_method
+        )
+        return await patched(*args, **kwargs)
+    return method_wrapper
+
 
 def _patch_async_openai_client_method(
     orig_method: Callable,
@@ -87,92 +182,6 @@ def _patch_sync_openai_client_method(
 
     return patched_sync_openai_method
 
-
-def patch_openai_classes():
-    """Monkey patch OpenAI resource classes directly."""
-    global _OPENAI_PATCHED
-    
-    # Guard against double-patching
-    if _OPENAI_PATCHED:
-        return
-    
-    try:
-        from openai.resources.chat.completions import Completions, AsyncCompletions
-        
-        # Helper to create bound method wrapper
-        def wrap_sync_method(original_method):
-            def method_wrapper(self, *args, **kwargs):
-                # Bind the original method to self, then wrap it
-                bound_method = original_method.__get__(self, type(self))
-                patched = _patch_sync_openai_client_method(
-                    orig_method=bound_method,
-                    is_completion_method=True
-                )
-                return patched(*args, **kwargs)
-            return method_wrapper
-        
-        def wrap_async_method(original_method):
-            async def method_wrapper(self, *args, **kwargs):
-                # Bind the original method to self, then wrap it
-                bound_method = original_method.__get__(self, type(self))
-                patched = _patch_async_openai_client_method(
-                    orig_method=bound_method,
-                    is_completion_method=True
-                )
-                return await patched(*args, **kwargs)
-            return method_wrapper
-        
-        # Patch sync methods
-        if hasattr(Completions, 'create'):
-            Completions.create = wrap_sync_method(Completions.create)
-        if hasattr(Completions, 'parse'):
-            Completions.parse = wrap_sync_method(Completions.parse)
-        
-        # Patch async methods
-        if hasattr(AsyncCompletions, 'create'):
-            AsyncCompletions.create = wrap_async_method(AsyncCompletions.create)
-        if hasattr(AsyncCompletions, 'parse'):
-            AsyncCompletions.parse = wrap_async_method(AsyncCompletions.parse)
-            
-    except ImportError:
-        pass
-    
-    # Patch responses.create
-    try:
-        from openai.resources.responses import Responses, AsyncResponses
-        
-        # Use the same wrapper functions defined above
-        def wrap_sync_method(original_method):
-            def method_wrapper(self, *args, **kwargs):
-                bound_method = original_method.__get__(self, type(self))
-                patched = _patch_sync_openai_client_method(
-                    orig_method=bound_method,
-                    is_completion_method=False  # responses use different parameters
-                )
-                return patched(*args, **kwargs)
-            return method_wrapper
-        
-        def wrap_async_method(original_method):
-            async def method_wrapper(self, *args, **kwargs):
-                bound_method = original_method.__get__(self, type(self))
-                patched = _patch_async_openai_client_method(
-                    orig_method=bound_method,
-                    is_completion_method=False  # responses use different parameters
-                )
-                return await patched(*args, **kwargs)
-            return method_wrapper
-        
-        # Patch sync and async responses.create
-        if hasattr(Responses, 'create'):
-            Responses.create = wrap_sync_method(Responses.create)
-        if hasattr(AsyncResponses, 'create'):
-            AsyncResponses.create = wrap_async_method(AsyncResponses.create)
-            
-    except ImportError:
-        pass
-    
-    # Mark as patched after successful patching
-    _OPENAI_PATCHED = True
 
 def _update_all_attributes(
     input_parameters: InputParameters,
