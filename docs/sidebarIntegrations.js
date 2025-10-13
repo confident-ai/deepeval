@@ -8,7 +8,7 @@ module.exports = {
         "frameworks/langchain",
         "frameworks/langgraph",
         "frameworks/llamaindex",
-        // "frameworks/crewai",
+        "frameworks/crewai",
         // "frameworks/pydanticai",
       ],
       collapsed: false,
