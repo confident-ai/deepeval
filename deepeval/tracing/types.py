@@ -108,8 +108,8 @@ class LlmSpan(BaseSpan):
     token_intervals: Optional[Dict[float, str]] = Field(
         None, serialization_alias="tokenTimes"
     )
-    input_tools: Optional[List[ToolSchema]] = Field(None, serialization_alias="inputTools")
-
+    
+    # input_tools: Optional[List[ToolSchema]] = Field(None, serialization_alias="inputTools")
     # invocation_params: Optional[Dict[str, Any]] = Field(None, serialization_alias="invocationParams")
     # output_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="outputMetadata")
 
