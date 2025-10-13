@@ -876,13 +876,19 @@ class Observer:
                         output=current_span.output,
                     )
                 )
-        else: 
-            # avoid adding tools_called to the to llm and tool type spans
-            if current_span.tools_called:
-                parent_span = trace_manager.get_span_by_uuid(current_span.parent_uuid)
-                if parent_span:
-                    parent_span.tools_called = parent_span.tools_called or []
-                    parent_span.tools_called.extend(current_span.tools_called)
+        if not current_span.tools_called:
+            # check any tool span children
+            for child in current_span.children:
+                if isinstance(child, ToolSpan):
+                    current_span.tools_called = current_span.tools_called or []
+                    current_span.tools_called.append(
+                        ToolCall(
+                            name=child.name,
+                            description=child.description,
+                            input_parameters=make_json_serializable(child.input),
+                            output=child.output,
+                        )
+                    )
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:

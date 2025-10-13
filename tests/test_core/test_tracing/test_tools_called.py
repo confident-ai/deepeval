@@ -28,7 +28,8 @@ async def test_tools_called_propogation():
         level_1()
         test_dict =await trace_testing_manager.wait_for_test_dict()
 
-        assert len(test_dict["baseSpans"][0]["toolsCalled"]) > 0
+        assert len(test_dict["baseSpans"][1]["toolsCalled"]) > 0
+        assert test_dict["baseSpans"][0].get("toolsCalled") is None
 
     finally:
         trace_testing_manager.test_dict = None
