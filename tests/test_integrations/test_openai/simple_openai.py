@@ -4,7 +4,7 @@ from deepeval.tracing import trace, observe
 from deepeval.prompt import Prompt
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 from deepeval.openai import AsyncOpenAI
 
@@ -32,4 +32,3 @@ async def run_async_openai():
             instructions="You are a helpful assistant.",
             input="Hello, how are you?",
         )
-        print(current_trace.uuid)

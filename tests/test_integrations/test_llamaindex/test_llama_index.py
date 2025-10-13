@@ -38,7 +38,6 @@ async def llm_app(input: str):
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "llama_index.json")
 
-
 @pytest.mark.asyncio
 async def test_json_schema():
     """

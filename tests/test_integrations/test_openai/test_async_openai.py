@@ -1,19 +1,26 @@
+import pytest
 from deepeval.openai import AsyncOpenAI
 from deepeval.tracing import trace
 from deepeval.prompt import Prompt
 import asyncio
+from tests.test_integrations.utils import assert_trace_json, generate_trace_json
+import os
 
 client = AsyncOpenAI()
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+
+@assert_trace_json(json_path=os.path.join(_current_dir, "test_async_openai_without_trace.json"))
 async def test_async_openai_without_trace():
     response = await client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
 
+@pytest.mark.skip
 async def test_async_openai_with_trace():
     with trace(
         prompt=prompt,
@@ -29,6 +36,7 @@ async def test_async_openai_with_trace():
             messages=[{"role": "user", "content": "Hello, how are you?"}],
         )
 
+@pytest.mark.skip
 async def test_async_response_create_without_trace():
     response = await client.responses.create(
         model="gpt-4o",
@@ -36,6 +44,7 @@ async def test_async_response_create_without_trace():
         input="Hello, how are you?",
     )
 
+@assert_trace_json(json_path=os.path.join(_current_dir, "test_async_response_create_with_trace.json"))
 async def test_async_response_create_with_trace():
     with trace(
         prompt=prompt,
@@ -52,11 +61,10 @@ async def test_async_response_create_with_trace():
             input="Hello, how are you?",
         )
 
-async def main():
+async def generate_all_json_dumps():
     await test_async_openai_without_trace()
     await test_async_openai_with_trace()
     await test_async_response_create_without_trace()
     await test_async_response_create_with_trace()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+

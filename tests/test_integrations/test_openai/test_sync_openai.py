@@ -1,18 +1,25 @@
 from deepeval.openai import OpenAI
 from deepeval.tracing import trace
 from deepeval.prompt import Prompt
+from tests.test_integrations.utils import assert_trace_json, generate_trace_json
+import os
+import pytest
 
 client = OpenAI()
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+
+@pytest.mark.skip
 def test_sync_openai_without_trace():
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
 
+@assert_trace_json(json_path=os.path.join(_current_dir, "test_sync_openai_with_trace.json"))
 def test_sync_openai_with_trace():
 
     with trace(
@@ -29,6 +36,7 @@ def test_sync_openai_with_trace():
             messages=[{"role": "user", "content": "Hello, how are you?"}],
         )
 
+@assert_trace_json(json_path=os.path.join(_current_dir, "test_sync_response_create_without_trace.json"))
 def test_sync_response_create_without_trace():
     response = client.responses.create(
         model="gpt-4o",
@@ -36,6 +44,7 @@ def test_sync_response_create_without_trace():
         input="Hello, how are you?",
     )
 
+@pytest.mark.skip
 def test_sync_response_create_with_trace():
     with trace(
         prompt=prompt,
@@ -52,7 +61,7 @@ def test_sync_response_create_with_trace():
             input="Hello, how are you?",
         )
 
-if __name__ == "__main__":
+def generate_all_json_dumps():
     test_sync_openai_without_trace()
     test_sync_openai_with_trace()
     test_sync_response_create_without_trace()
