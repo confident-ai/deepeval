@@ -230,3 +230,48 @@ def __update_input_and_output_of_current_trace(input_parameters: InputParameters
             current_trace.output = output_parameters.output
 
     return
+
+def unpatch_openai_classes():
+    """Restore OpenAI resource classes to their original state."""
+    global _OPENAI_PATCHED
+    
+    # If not patched, nothing to do
+    if not _OPENAI_PATCHED:
+        return
+    
+    try:
+        from openai.resources.chat.completions import Completions, AsyncCompletions
+        
+        # Restore original methods for Completions
+        if 'Completions.create' in _ORIGINAL_METHODS:
+            Completions.create = _ORIGINAL_METHODS['Completions.create']
+            
+        if 'Completions.parse' in _ORIGINAL_METHODS:
+            Completions.parse = _ORIGINAL_METHODS['Completions.parse']
+        
+        # Restore original methods for AsyncCompletions
+        if 'AsyncCompletions.create' in _ORIGINAL_METHODS:
+            AsyncCompletions.create = _ORIGINAL_METHODS['AsyncCompletions.create']
+            
+        if 'AsyncCompletions.parse' in _ORIGINAL_METHODS:
+            AsyncCompletions.parse = _ORIGINAL_METHODS['AsyncCompletions.parse']
+            
+    except ImportError:
+        pass
+    
+    try:
+        from openai.resources.responses import Responses, AsyncResponses
+        
+        # Restore original methods for Responses
+        if 'Responses.create' in _ORIGINAL_METHODS:
+            Responses.create = _ORIGINAL_METHODS['Responses.create']
+            
+        # Restore original methods for AsyncResponses
+        if 'AsyncResponses.create' in _ORIGINAL_METHODS:
+            AsyncResponses.create = _ORIGINAL_METHODS['AsyncResponses.create']
+            
+    except ImportError:
+        pass
+    
+    # Reset the patched flag
+    _OPENAI_PATCHED = False

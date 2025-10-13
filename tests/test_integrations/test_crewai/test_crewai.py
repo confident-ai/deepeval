@@ -75,5 +75,4 @@ json_path = os.path.join(_current_dir, "crewai.json")
 
 @assert_trace_json(json_path)
 async def test_crewai():
-    instrument_crewai()
     crew.kickoff({"city": "London"})
