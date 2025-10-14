@@ -141,7 +141,6 @@ class ContextGenerator:
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
-        from chromadb.api.models.Collection import Collection
 
         enable_chroma_anon_telemetry = (
             not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
@@ -161,9 +160,9 @@ class ContextGenerator:
 
         try:
             # Initialize lists for scores, contexts, and source files
-            scores = []
-            contexts = []
-            source_files = []
+            scores: List[float] = []
+            contexts: List[List[str]] = []
+            source_files: List[str] = []
 
             pbar_load_docs_id = add_pbar(
                 progress,
@@ -190,71 +189,71 @@ class ContextGenerator:
             )
             update_pbar(progress, pbar_id, remove=False)
 
-            # Chunk each file into a chroma collection of chunks
-            source_files_to_chunk_collections_map: Dict[str, Collection] = {}
-            for key, chunker in source_file_to_chunker_map.items():
-                collection = chunker.chunk_doc(
-                    self.chunk_size,
-                    self.chunk_overlap,
-                    client=client,  # reuse the single client
-                )
-                self.validate_chunk_size(
-                    min_contexts_per_source_file, collection
-                )
-                source_files_to_chunk_collections_map[key] = collection
-                update_pbar(progress, pbar_chunk_docs_id, remove=False)
-            update_pbar(progress, pbar_id, remove=False)
-
-            # Initialize progress bar for context generation
-            num_contexts = sum(
-                min(max_contexts_per_source_file, collection.count())
-                for _, collection in source_files_to_chunk_collections_map.items()
-            )
-            self.total_chunks = sum(
-                collection.count()
-                for _, collection in source_files_to_chunk_collections_map.items()
-            )
-
-            # Update progress bar total length for context generation after determining number of contexts
-            if progress and pbar_generate_contexts_id:
-                progress.update(
-                    pbar_generate_contexts_id,
-                    total=(self.max_retries + max_context_size - 1)
-                    * num_contexts,
-                    completed=0,
-                )
-
-            # Generate contexts for each source file
-            for (
-                path,
-                collection,
-            ) in source_files_to_chunk_collections_map.items():
-                self.validate_context_size(min_context_size, path, collection)
-                max_context_size = min(max_context_size, collection.count())
-                num_context_per_source_file = min(
-                    max_contexts_per_source_file, collection.count()
-                )
-                contexts_per_source_file, scores_per_source_file = (
-                    self._generate_contexts_per_source_file(
-                        path=path,
-                        n_contexts_per_source_file=num_context_per_source_file,
-                        context_size=max_context_size,
-                        similarity_threshold=self.similarity_threshold,
-                        source_files_to_collections_map=source_files_to_chunk_collections_map,
-                        progress=progress,
-                        pbar_generate_contexts_id=pbar_generate_contexts_id,
+            # stream each doc end-to-end on the shared client
+            for path, chunker in source_file_to_chunker_map.items():
+                collection = None
+                try:
+                    # chunk this doc into its own collection on the shared client
+                    collection = chunker.chunk_doc(
+                        self.chunk_size,
+                        self.chunk_overlap,
+                        client=client,
                     )
-                )
-                contexts.extend(contexts_per_source_file)
-                scores.extend(scores_per_source_file)
-                source_files.extend([path] * len(contexts_per_source_file))
+                    self.validate_chunk_size(
+                        min_contexts_per_source_file, collection
+                    )
+                    update_pbar(progress, pbar_chunk_docs_id, remove=False)
+
+                    # generate contexts for this doc using a map
+                    single_map = {path: collection}
+                    self.total_chunks += collection.count()
+                    max_sz_for_doc = min(max_context_size, collection.count())
+                    n_ctx_for_doc = min(
+                        max_contexts_per_source_file, collection.count()
+                    )
+
+                    if progress and pbar_generate_contexts_id:
+                        progress.update(
+                            pbar_generate_contexts_id,
+                            total=progress.tasks[
+                                pbar_generate_contexts_id
+                            ].total
+                            + (self.max_retries + max_sz_for_doc - 1)
+                            * n_ctx_for_doc,
+                        )
+
+                    # fill contexts for that doc
+                    ctxs_for_doc, scores_for_doc = (
+                        self._generate_contexts_per_source_file(
+                            path=path,
+                            n_contexts_per_source_file=n_ctx_for_doc,
+                            context_size=max_sz_for_doc,
+                            similarity_threshold=self.similarity_threshold,
+                            source_files_to_collections_map=single_map,
+                            progress=progress,
+                            pbar_generate_contexts_id=pbar_generate_contexts_id,
+                        )
+                    )
+                    contexts.extend(ctxs_for_doc)
+                    scores.extend(scores_for_doc)
+                    source_files.extend([path] * len(ctxs_for_doc))
+                finally:
+                    # drop the collection asap to avoid too many open collections
+                    try:
+                        client.delete_collection(
+                            name=collection.name
+                        )  # if available
+                    except Exception:
+                        pass
+
+            # finalize progress bars
+            update_pbar(progress, pbar_id, remove=False)
             update_pbar(
                 progress,
                 pbar_generate_contexts_id,
                 advance_to_end=True,
                 remove=False,
             )
-            update_pbar(progress, pbar_id, remove=False)
             remove_pbars(progress, self.pbar_filling_contexts_ids)
 
             if self.not_enough_chunks:
@@ -279,7 +278,6 @@ class ContextGenerator:
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
-        from chromadb.api.models.Collection import Collection
 
         enable_chroma_anon_telemetry = (
             not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
@@ -298,9 +296,9 @@ class ContextGenerator:
 
         try:
             # Initialize lists for scores, contexts, and source files
-            scores = []
-            contexts = []
-            source_files = []
+            scores: List[float] = []
+            contexts: List[List[str]] = []
+            source_files: List[str] = []
 
             # Check if chunk_size and max_context_size is valid for document lengths
             pbar_load_docs_id = add_pbar(
@@ -327,87 +325,69 @@ class ContextGenerator:
             )
             update_pbar(progress, pbar_id, remove=False)
 
-            # Chunk each file into a chroma collection of chunks
-            async def a_chunk_and_store(
-                key,
-                chunker: DocumentChunker,
-                progress: Optional[Progress] = None,
-                pbar_chunk_docs_id: Optional[int] = None,
-            ):
-                collection = await chunker.a_chunk_doc(
-                    self.chunk_size,
-                    self.chunk_overlap,
-                    client=client,  # reuse our client for efficiency
-                )
-                self.validate_chunk_size(
-                    min_contexts_per_source_file, collection
-                )
-                source_files_to_chunk_collections_map[key] = collection
-                update_pbar(progress, pbar_chunk_docs_id, remove=False)
+            # stream each doc end-to-end on the shared client
 
-            source_files_to_chunk_collections_map: Dict[str, Collection] = {}
-            tasks = [
-                a_chunk_and_store(key, chunker, progress, pbar_chunk_docs_id)
-                for key, chunker in source_file_to_chunker_map.items()
-            ]
-            await asyncio.gather(*tasks)
-            update_pbar(progress, pbar_id, remove=False)
-
-            # Initialize progress bar for context generation
-            num_contexts = sum(
-                min(max_contexts_per_source_file, collection.count())
-                for _, collection in source_files_to_chunk_collections_map.items()
-            )
-            self.total_chunks = sum(
-                collection.count()
-                for _, collection in source_files_to_chunk_collections_map.items()
-            )
-
-            # Update progress bar total length for context generation after determining number of contexts
-            if progress and pbar_generate_contexts_id:
-                progress.update(
-                    pbar_generate_contexts_id,
-                    total=(self.max_retries + max_context_size - 1)
-                    * num_contexts,
-                    completed=0,
-                )
-
-            # Generate contexts for each source file
-            tasks = []
-            for (
-                path,
-                collection,
-            ) in source_files_to_chunk_collections_map.items():
-                self.validate_context_size(min_context_size, path, collection)
-                max_context_size = min(max_context_size, collection.count())
-                n_contexts_per_source_file = min(
-                    max_contexts_per_source_file, collection.count()
-                )
-                tasks.append(
-                    self._a_process_document_async(
-                        path=path,
-                        num_context_per_source_file=n_contexts_per_source_file,
-                        max_context_size=max_context_size,
-                        source_files_to_collections_map=source_files_to_chunk_collections_map,
-                        progress=progress,
-                        pbar_generate_contexts_id=pbar_generate_contexts_id,
+            for path, chunker in source_file_to_chunker_map.items():
+                collection = None
+                try:
+                    # chunk this doc into its own collection on the shared client
+                    collection = await chunker.a_chunk_doc(
+                        self.chunk_size,
+                        self.chunk_overlap,
+                        client=client,
                     )
-                )
+                    self.validate_chunk_size(
+                        min_contexts_per_source_file, collection
+                    )
+                    update_pbar(progress, pbar_chunk_docs_id, remove=False)
 
-            results = await asyncio.gather(*tasks)
+                    # generate contexts for this doc using a map
+                    single_map = {path: collection}
+                    self.total_chunks += collection.count()
+                    max_sz_for_doc = min(max_context_size, collection.count())
+                    n_ctx_for_doc = min(
+                        max_contexts_per_source_file, collection.count()
+                    )
+
+                    if progress and pbar_generate_contexts_id:
+                        progress.update(
+                            pbar_generate_contexts_id,
+                            total=progress.tasks[
+                                pbar_generate_contexts_id
+                            ].total
+                            + (self.max_retries + max_sz_for_doc - 1)
+                            * n_ctx_for_doc,
+                        )
+
+                    # then fill contexts for that doc
+                    _, contexts_for_doc, scores_per_doc = (
+                        await self._a_process_document_async(
+                            path=path,
+                            num_context_per_source_file=n_ctx_for_doc,
+                            max_context_size=max_sz_for_doc,
+                            source_files_to_collections_map=single_map,
+                            progress=progress,
+                            pbar_generate_contexts_id=pbar_generate_contexts_id,
+                        )
+                    )
+                    contexts.extend(contexts_for_doc)
+                    scores.extend(scores_per_doc)
+                    source_files.extend([path] * len(contexts_for_doc))
+                finally:
+                    # drop the collection asap to avoid too many open collections
+                    try:
+                        client.delete_collection(name=collection.name)
+                    except Exception:
+                        pass
+
+            update_pbar(progress, pbar_id, remove=False)
             update_pbar(
                 progress,
                 pbar_generate_contexts_id,
                 advance_to_end=True,
                 remove=False,
             )
-            update_pbar(progress, pbar_id, remove=False)
             remove_pbars(progress, self.pbar_filling_contexts_ids)
-            for path, contexts_per_doc, scores_per_doc in results:
-                contexts.extend(contexts_per_doc)
-                scores.extend(scores_per_doc)
-                for _ in contexts_per_doc:
-                    source_files.append(path)
 
             if self.not_enough_chunks:
                 print_synthesizer_status(
