@@ -40,7 +40,7 @@ def _reset_eval_state():
     trace_manager.traces_to_evaluate.clear()
     trace_manager.integration_traces_to_evaluate.clear()
     trace_manager.test_case_metrics.clear()
-    trace_manager.trace_to_golden.clear()
+    trace_manager.trace_uuid_to_golden.clear()
 
 
 def test_execute_propagates_expected_output(monkeypatch):

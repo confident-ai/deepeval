@@ -1768,7 +1768,7 @@ def execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
-        local_trace_manager.trace_to_golden.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -2106,7 +2106,7 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
-        local_trace_manager.trace_to_golden.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 async def _a_evaluate_traces(
@@ -2139,7 +2139,7 @@ async def _a_evaluate_traces(
 
     for count, trace in enumerate(traces_snapshot):
         # Prefer the explicit mapping from trace -> golden captured at trace creation.
-        golden = trace_manager.trace_to_golden.get(trace.uuid)
+        golden = trace_manager.trace_uuid_to_golden.get(trace.uuid)
         if not golden:
             # trace started during evaluation_loop but the CURRENT_GOLDEN was
             # not set for some reason. We can’t map it to a golden, so the best

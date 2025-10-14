@@ -82,7 +82,7 @@ class TraceManager:
         # Map each trace created during evaluation_loop to the Golden that was active
         # when it was started. This lets us evaluate traces against the correct golden
         # since we cannot rely on positional indexing as the order is not guaranteed.
-        self.trace_to_golden: Dict[str, Golden] = {}
+        self.trace_uuid_to_golden: Dict[str, Golden] = {}
 
         settings = get_settings()
         # Initialize queue and worker thread for trace posting
@@ -192,7 +192,7 @@ class TraceManager:
 
                 current_golden = get_current_golden()
                 if current_golden is not None:
-                    self.trace_to_golden[trace_uuid] = current_golden
+                    self.trace_uuid_to_golden[trace_uuid] = current_golden
             except Exception:
                 # not much we can do, but if the golden is not there during evaluation
                 # we will write out a verbose debug log
