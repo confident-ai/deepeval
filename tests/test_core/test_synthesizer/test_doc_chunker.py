@@ -174,7 +174,7 @@ def test_lazy_imports_chromadb_required_on_chunk(monkeypatch, tmp_path):
     """Verify that attempting to chunk a document requires ChromaDB.
 
     After loading a markdown file via LangChain, this test monkeypatches
-    ``_get_chromadb`` to raise ImportError, simulating a missing ChromaDB
+    ``get_chromadb`` to raise ImportError, simulating a missing ChromaDB
     installation. When ``DocumentChunker.chunk_doc`` is called, it should
     propagate the ImportError since ChromaDB is required for chunking.
     """
@@ -186,7 +186,7 @@ def test_lazy_imports_chromadb_required_on_chunk(monkeypatch, tmp_path):
 
     # now simulate chromadb missing only for the chunking path
     monkeypatch.setattr(
-        "deepeval.synthesizer.chunking.doc_chunker._get_chromadb",
+        "deepeval.synthesizer.chunking.doc_chunker.get_chromadb",
         lambda: (_ for _ in ()).throw(ImportError("no chroma")),
     )
     with pytest.raises(ImportError):

@@ -10,13 +10,17 @@ import math
 import sys
 import os
 import gc
+import tempfile
 
 
 from deepeval.synthesizer.utils import (
     print_synthesizer_status,
     SynthesizerStatus,
 )
-from deepeval.synthesizer.chunking.doc_chunker import DocumentChunker
+from deepeval.synthesizer.chunking.doc_chunker import (
+    DocumentChunker,
+    get_chromadb,
+)
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.synthesizer.templates.template import FilterTemplate
 from deepeval.models.base_model import (
@@ -24,6 +28,8 @@ from deepeval.models.base_model import (
     DeepEvalBaseLLM,
 )
 from deepeval.utils import update_pbar, add_pbar, remove_pbars
+from deepeval.config.settings import get_settings
+
 
 # Monkey patch shutil.rmtree to handle locked files better on Windows
 original_rmtree = shutil.rmtree
@@ -137,9 +143,21 @@ class ContextGenerator:
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
-        vector_db_path = ".vector_db"
-        if os.path.exists(vector_db_path):
-            shutil.rmtree(vector_db_path)
+        enable_chroma_anon_telemetry = (
+            not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
+        )
+
+        # one temp root and one client for the whole run
+        temp_root = tempfile.mkdtemp(prefix="deepeval_chroma_")
+        chroma = get_chromadb()
+        from chromadb.config import Settings as ChromaSettings
+
+        client = chroma.PersistentClient(
+            path=temp_root,
+            settings=ChromaSettings(
+                anonymized_telemetry=enable_chroma_anon_telemetry
+            ),
+        )
 
         try:
             # Initialize lists for scores, contexts, and source files
@@ -176,7 +194,9 @@ class ContextGenerator:
             source_files_to_chunk_collections_map: Dict[str, Collection] = {}
             for key, chunker in source_file_to_chunker_map.items():
                 collection = chunker.chunk_doc(
-                    self.chunk_size, self.chunk_overlap
+                    self.chunk_size,
+                    self.chunk_overlap,
+                    client=client,  # reuse the single client
                 )
                 self.validate_chunk_size(
                     min_contexts_per_source_file, collection
@@ -241,15 +261,14 @@ class ContextGenerator:
                 print_synthesizer_status(
                     SynthesizerStatus.WARNING,
                     "Filtering not applied",
-                    f"Nnot enough chunks in smallest document",
+                    "Not enough chunks in smallest document",
                 )
 
             return contexts, source_files, scores
 
         finally:
-            # Always delete the .vector_db folder if it exists, regardless of success or failure
-            if os.path.exists(vector_db_path):
-                shutil.rmtree(vector_db_path)
+            if os.path.exists(temp_root):
+                shutil.rmtree(temp_root)
 
     async def a_generate_contexts(
         self,
@@ -262,9 +281,20 @@ class ContextGenerator:
     ) -> Tuple[List[List[str]], List[str], List[float]]:
         from chromadb.api.models.Collection import Collection
 
-        vector_db_path = ".vector_db"
-        if os.path.exists(vector_db_path):
-            shutil.rmtree(vector_db_path)
+        enable_chroma_anon_telemetry = (
+            not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
+        )
+
+        temp_root = tempfile.mkdtemp(prefix="deepeval_chroma_")
+        chroma = get_chromadb()
+        from chromadb.config import Settings as ChromaSettings
+
+        client = chroma.PersistentClient(
+            path=temp_root,
+            settings=ChromaSettings(
+                anonymized_telemetry=enable_chroma_anon_telemetry
+            ),
+        )
 
         try:
             # Initialize lists for scores, contexts, and source files
@@ -305,7 +335,9 @@ class ContextGenerator:
                 pbar_chunk_docs_id: Optional[int] = None,
             ):
                 collection = await chunker.a_chunk_doc(
-                    self.chunk_size, self.chunk_overlap
+                    self.chunk_size,
+                    self.chunk_overlap,
+                    client=client,  # reuse our client for efficiency
                 )
                 self.validate_chunk_size(
                     min_contexts_per_source_file, collection
@@ -387,8 +419,8 @@ class ContextGenerator:
             return contexts, source_files, scores
 
         finally:
-            if os.path.exists(vector_db_path):
-                shutil.rmtree(vector_db_path)
+            if os.path.exists(temp_root):
+                shutil.rmtree(temp_root)
 
     async def _a_process_document_async(
         self,
