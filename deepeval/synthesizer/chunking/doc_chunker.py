@@ -4,7 +4,6 @@ from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 from types import SimpleNamespace
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
-from deepeval.config.settings import get_settings
 
 
 if TYPE_CHECKING:
@@ -109,19 +108,13 @@ class DocumentChunker:
                 "Document Chunker has yet to properly load documents"
             )
 
-        enable_chroma_anon_telemetry = (
-            not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
-        )
-
         # Determine client and collection_name
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
         if client is None:
             client = chroma.PersistentClient(
                 path=f".vector_db/{document_name}",
-                settings=ChromaSettings(
-                    anonymized_telemetry=enable_chroma_anon_telemetry
-                ),
+                settings=ChromaSettings(anonymized_telemetry=False),
             )
             default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         else:
@@ -181,19 +174,13 @@ class DocumentChunker:
                 "Document Chunker has yet to properly load documents"
             )
 
-        enable_chroma_anon_telemetry = (
-            not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
-        )
-
         # Determine client and collection_name
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
         if client is None:
             client = chroma.PersistentClient(
                 path=f".vector_db/{document_name}",
-                settings=ChromaSettings(
-                    anonymized_telemetry=enable_chroma_anon_telemetry
-                ),
+                settings=ChromaSettings(anonymized_telemetry=False),
             )
             default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         else:

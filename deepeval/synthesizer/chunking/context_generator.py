@@ -147,10 +147,6 @@ class ContextGenerator:
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
-        enable_chroma_anon_telemetry = (
-            not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
-        )
-
         # one temp root and one client for the whole run
         temp_root = tempfile.mkdtemp(prefix="deepeval_chroma_")
         chroma = get_chromadb()
@@ -158,9 +154,7 @@ class ContextGenerator:
 
         client = chroma.PersistentClient(
             path=temp_root,
-            settings=ChromaSettings(
-                anonymized_telemetry=enable_chroma_anon_telemetry
-            ),
+            settings=ChromaSettings(anonymized_telemetry=False),
         )
 
         try:
@@ -301,19 +295,13 @@ class ContextGenerator:
         pbar_id: Optional[int] = None,
     ) -> Tuple[List[List[str]], List[str], List[float]]:
 
-        enable_chroma_anon_telemetry = (
-            not get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
-        )
-
         temp_root = tempfile.mkdtemp(prefix="deepeval_chroma_")
         chroma = get_chromadb()
         from chromadb.config import Settings as ChromaSettings
 
         client = chroma.PersistentClient(
             path=temp_root,
-            settings=ChromaSettings(
-                anonymized_telemetry=enable_chroma_anon_telemetry
-            ),
+            settings=ChromaSettings(anonymized_telemetry=False),
         )
 
         try:
