@@ -87,7 +87,12 @@ from deepeval.evaluate.utils import (
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
-
+from deepeval.test_run import TEMP_FILE_PATH
+from deepeval.confident.api import is_confident
+from deepeval.test_run.hyperparameters import (
+    process_hyperparameters,
+    process_prompts,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -901,6 +906,7 @@ def execute_agentic_test_cases(
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
                         trace_api.llm_spans.append(api_span)
+                        log_prompt(span, test_run_manager)
                     elif isinstance(span, RetrieverSpan):
                         trace_api.retriever_spans.append(api_span)
                     elif isinstance(span, ToolSpan):
@@ -1283,6 +1289,7 @@ async def _a_execute_agentic_test_case(
             verbose_mode=verbose_mode,
             progress=progress,
             pbar_eval_id=pbar_eval_id,
+            test_run_manager=test_run_manager,
             _use_bar_indicator=_use_bar_indicator,
         )
         child_tasks = [dfs(child) for child in span.children]
@@ -1312,6 +1319,7 @@ async def _a_execute_span_test_case(
     verbose_mode: Optional[bool],
     progress: Optional[Progress],
     pbar_eval_id: Optional[int],
+    test_run_manager: Optional[TestRunManager],
     _use_bar_indicator: bool,
 ):
     api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
@@ -1319,6 +1327,7 @@ async def _a_execute_span_test_case(
         trace_api.agent_spans.append(api_span)
     elif isinstance(span, LlmSpan):
         trace_api.llm_spans.append(api_span)
+        log_prompt(span, test_run_manager)
     elif isinstance(span, RetrieverSpan):
         trace_api.retriever_spans.append(api_span)
     elif isinstance(span, ToolSpan):
@@ -1567,6 +1576,7 @@ def execute_agentic_test_cases_from_loop(
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
                         trace_api.llm_spans.append(api_span)
+                        log_prompt(span, test_run_manager)
                     elif isinstance(span, RetrieverSpan):
                         trace_api.retriever_spans.append(api_span)
                     elif isinstance(span, ToolSpan):
@@ -2238,3 +2248,38 @@ def _execute_metric(
             metric.success = False
         else:
             raise
+
+
+def log_prompt(
+    llm_span: LlmSpan,
+    test_run_manager: TestRunManager,
+):
+    prompt = llm_span.prompt
+    if prompt is None:
+        return
+
+    span_hyperparameters = {}
+    prompt_version = prompt.version if is_confident() else None
+    key = f"{prompt.alias}_{prompt_version}"
+    span_hyperparameters[key] = prompt
+
+    test_run = test_run_manager.get_test_run()
+    if test_run.prompts is None:
+        test_run.prompts = []
+    if test_run.hyperparameters is None:
+        test_run.hyperparameters = {}
+
+    if key not in test_run.hyperparameters:
+        test_run.hyperparameters.update(
+            process_hyperparameters(span_hyperparameters, False)
+        )
+        existing_prompt_keys = {
+            f"{p.alias}_{p.version}" for p in test_run.prompts
+        }
+        new_prompts = process_prompts(span_hyperparameters)
+        for new_prompt in new_prompts:
+            new_prompt_key = f"{new_prompt.alias}_{new_prompt.version}"
+            if new_prompt_key not in existing_prompt_keys:
+                test_run.prompts.append(new_prompt)
+
+    global_test_run_manager.save_test_run(TEMP_FILE_PATH)
