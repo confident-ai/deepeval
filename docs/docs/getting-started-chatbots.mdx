@@ -77,13 +77,134 @@ You can learn about a `Turn`'s data model [here.](/docs/evaluation-multiturn-tes
 
 Run an evaluation on the test case using `deepeval`'s multi-turn metrics, or create your own using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
 
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
 ```python title="main.py" showLineNumbers={true}
 from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
 from deepeval import evaluate
 ...
 
-evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(), KnowledgeRetentionMetric()])
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model="gpt-4.1"), KnowledgeRetentionMetric(model="gpt-4.1")])
 ```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import AnthropicModel
+from deepeval import evaluate
+...
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import GeminiModel
+from deepeval import evaluate
+...
+
+model = GeminiModel("gemini-2.5-flash")
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="ollama" label="Ollama">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import OllamaModel
+from deepeval import evaluate
+...
+
+model = OllamaModel("deepseek-r1")
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import GrokModel
+from deepeval import evaluate
+...
+
+model = GrokModel("grok-4-0709")
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="azure_openai" label="Azure OpenAI">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import AzureOpenAIModel
+from deepeval import evaluate
+...
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="amazon_bedrock" label="Amazon Bedrock">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import AmazonBedrockModel
+from deepeval import evaluate
+...
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="vertex_ai" label="Vertex AI">
+
+```python title="main.py" showLineNumbers={true}
+from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
+from deepeval.models import GeminiModel
+from deepeval import evaluate
+...
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+evaluate(test_cases=[test_case], metrics=[TurnRelevancyMetric(model=model), KnowledgeRetentionMetric(model=model)])
+```
+
+</TabItem>
+
+</Tabs>
 
 Finally run `main.py`:
 
@@ -338,13 +459,134 @@ ConversationalTestCase(
 
 Run an evaluation like how you learnt in the previous section:
 
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
 ```python title="main.py"
 from deepeval.metrics import TurnRelevancyMetric
 from deepeval import evaluate
 ...
 
-evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric()])
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model="gpt-4.1")])
 ```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import AnthropicModel
+from deepeval import evaluate
+...
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import GeminiModel
+from deepeval import evaluate
+...
+
+model = GeminiModel("gemini-2.5-flash")
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="ollama" label="Ollama">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import OllamaModel
+from deepeval import evaluate
+...
+
+model = OllamaModel("deepseek-r1")
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import GrokModel
+from deepeval import evaluate
+...
+
+model = GrokModel("grok-4-0709")
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="azure_openai" label="Azure OpenAI">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import AzureOpenAIModel
+from deepeval import evaluate
+...
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="amazon_bedrock" label="Amazon Bedrock">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import AmazonBedrockModel
+from deepeval import evaluate
+...
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+<TabItem value="vertex_ai" label="Vertex AI">
+
+```python title="main.py"
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import GeminiModel
+from deepeval import evaluate
+...
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+evaluate(conversational_test_cases, metrics=[TurnRelevancyMetric(model=model)])
+```
+
+</TabItem>
+
+</Tabs>
 
 ✅ Done. You've successfully learnt how to benchmark your chatbot.
 
