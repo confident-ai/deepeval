@@ -114,7 +114,7 @@ class DocumentChunker:
         if client is None:
             client = chroma.PersistentClient(
                 path=f".vector_db/{document_name}",
-                settings=ChromaSettings(anonymized_telemetry=False),
+                settings=ChromaSettings(anonymized_telemetry=True),
             )
             default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         else:
@@ -180,7 +180,7 @@ class DocumentChunker:
         if client is None:
             client = chroma.PersistentClient(
                 path=f".vector_db/{document_name}",
-                settings=ChromaSettings(anonymized_telemetry=False),
+                settings=ChromaSettings(anonymized_telemetry=True),
             )
             default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         else:
