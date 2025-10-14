@@ -872,7 +872,7 @@ class Observer:
                             name=child.name,
                             description=child.description,
                             input_parameters=make_json_serializable(child.input),
-                            output=child.output,
+                            output=make_json_serializable(child.output),
                         )
                     )
 
