@@ -1,5 +1,7 @@
 import json
 from typing import Dict, Any
+from functools import wraps
+import inspect
 
 
 def assert_json_object_structure(
@@ -91,3 +93,129 @@ def assert_json_object_structure(
 def load_trace_data(file_path: str):
     with open(file_path, "r") as file:
         return json.load(file)
+
+
+def generate_trace_json(json_path: str):
+    """
+    Decorator that generates and saves trace data to a JSON file.
+    
+    Usage:
+        @generate_trace_json("path/to/output.json")
+        async def my_function():
+            await some_llm_app("input")
+    
+    Args:
+        json_path: Path where the trace JSON will be saved
+    """
+    def decorator(func):
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            from deepeval.tracing.trace_test_manager import trace_testing_manager
+            
+            try:
+                trace_testing_manager.test_name = json_path
+                result = await func(*args, **kwargs)
+                actual_dict = await trace_testing_manager.wait_for_test_dict()
+                
+                with open(json_path, "w") as f:
+                    json.dump(actual_dict, f, indent=2)
+                
+                return result
+            finally:
+                trace_testing_manager.test_name = None
+                trace_testing_manager.test_dict = None
+        
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            from deepeval.tracing.trace_test_manager import trace_testing_manager
+            import asyncio
+            
+            try:
+                trace_testing_manager.test_name = json_path
+                result = func(*args, **kwargs)
+                
+                # For sync functions, we need to handle the async wait differently
+                loop = asyncio.get_event_loop()
+                actual_dict = loop.run_until_complete(
+                    trace_testing_manager.wait_for_test_dict()
+                )
+                
+                with open(json_path, "w") as f:
+                    json.dump(actual_dict, f, indent=2)
+                
+                return result
+            finally:
+                trace_testing_manager.test_name = None
+                trace_testing_manager.test_dict = None
+        
+        if inspect.iscoroutinefunction(func):
+            return async_wrapper
+        else:
+            return sync_wrapper
+    
+    return decorator
+
+
+def assert_trace_json(json_path: str):
+    """
+    Decorator that tests trace data against an expected JSON file.
+    
+    Usage:
+        @pytest.mark.asyncio
+        @test_trace_json("path/to/expected.json")
+        async def test_my_function():
+            await some_llm_app("input")
+    
+    Args:
+        json_path: Path to the expected trace JSON file
+    
+    Raises:
+        AssertionError: If the actual trace doesn't match the expected structure
+    """
+    def decorator(func):
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            from deepeval.tracing.trace_test_manager import trace_testing_manager
+            
+            try:
+                trace_testing_manager.test_name = json_path
+                result = await func(*args, **kwargs)
+                actual_dict = await trace_testing_manager.wait_for_test_dict()
+                expected_dict = load_trace_data(json_path)
+                
+                assert assert_json_object_structure(expected_dict, actual_dict)
+                
+                return result
+            finally:
+                trace_testing_manager.test_name = None
+                trace_testing_manager.test_dict = None
+        
+        @wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            from deepeval.tracing.trace_test_manager import trace_testing_manager
+            import asyncio
+            
+            try:
+                trace_testing_manager.test_name = json_path
+                result = func(*args, **kwargs)
+                
+                # For sync functions, we need to handle the async wait differently
+                loop = asyncio.get_event_loop()
+                actual_dict = loop.run_until_complete(
+                    trace_testing_manager.wait_for_test_dict()
+                )
+                expected_dict = load_trace_data(json_path)
+                
+                assert assert_json_object_structure(expected_dict, actual_dict)
+                
+                return result
+            finally:
+                trace_testing_manager.test_name = None
+                trace_testing_manager.test_dict = None
+        
+        if inspect.iscoroutinefunction(func):
+            return async_wrapper
+        else:
+            return sync_wrapper
+    
+    return decorator

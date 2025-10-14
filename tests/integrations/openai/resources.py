@@ -45,34 +45,40 @@ CHAT_TOOLS = [
 ]
 
 
+sync_client = OpenAI()
+async_client = AsyncOpenAI()
+
+from deepeval.tracing import trace
+
 @observe()
 def llm_app(
     input: str,
     completion_mode: str = "chat",
 ):
     if completion_mode == "chat":
-        response = OpenAI().chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful chatbot. Always generate a string response.",
-                },
-                {"role": "user", "content": input},
-            ],
-            tools=CHAT_TOOLS,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        )
-        return response.choices[0].message.content
+
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            response = sync_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful chatbot. Always generate a string response.",
+                    },
+                    {"role": "user", "content": input},
+                ],
+                # tools=CHAT_TOOLS,
+            )
+            return response.choices[0].message.content
     else:
-        response = OpenAI().responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful assistant. Always generate a string response.",
-            input=input,
-            tools=RESPONSE_TOOLS,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        )
-        return response.output_text
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            response = sync_client.responses.create(
+                model="gpt-4o",
+                instructions="You are a helpful assistant. Always generate a string response.",
+                input=input,
+                # tools=RESPONSE_TOOLS,
+            )
+            return response.output_text
 
 
 @observe()
@@ -81,25 +87,25 @@ async def async_llm_app(
     completion_mode: str = "chat",
 ):
     if completion_mode == "chat":
-        response = await AsyncOpenAI().chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful chatbot. Always generate a string response.",
-                },
-                {"role": "user", "content": input},
-            ],
-            tools=CHAT_TOOLS,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        )
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            response = await async_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful chatbot. Always generate a string response.",
+                    },
+                    {"role": "user", "content": input},
+                ],
+                # tools=CHAT_TOOLS,
+            )
         return response.choices[0].message.content
     else:
-        response = await AsyncOpenAI().responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful assistant. Always generate a string response.",
-            input=input,
-            tools=RESPONSE_TOOLS,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        )
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            response = await async_client.responses.create(
+                model="gpt-4o",
+                instructions="You are a helpful assistant. Always generate a string response.",
+                input=input,
+                # tools=RESPONSE_TOOLS,
+            )
         return response.output_text

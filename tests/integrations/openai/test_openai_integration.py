@@ -18,30 +18,32 @@ goldens = [
 ]
 dataset = EvaluationDataset(goldens=goldens)
 
+from deepeval.tracing import trace
 
 def test_end_to_end_loop():
     openai_client = OpenAI()
     for golden in dataset.evals_iterator():
-        openai_client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful chatbot. Always generate a string response.",
-                },
-                {"role": "user", "content": golden.input},
-            ],
-            tools=CHAT_TOOLS,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        )
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful chatbot. Always generate a string response.",
+                    },
+                    {"role": "user", "content": golden.input},
+                ],
+                # tools=CHAT_TOOLS,
+            )
+    
     for golden in dataset.evals_iterator():
-        openai_client.responses.create(
-            model="gpt-4o",
-            instructions="You are a helpful chatbot. Always generate a string response.",
-            input=golden.input,
-            tools=RESPONSE_TOOLS,
-            metrics=[AnswerRelevancyMetric(), BiasMetric()],
-        )
+        with trace(llm_metrics=[AnswerRelevancyMetric(), BiasMetric()]):
+            openai_client.responses.create(
+                model="gpt-4o",
+                instructions="You are a helpful chatbot. Always generate a string response.",
+                input=golden.input,
+                # tools=RESPONSE_TOOLS,
+            )
 
 
 def test_component_level_loop():

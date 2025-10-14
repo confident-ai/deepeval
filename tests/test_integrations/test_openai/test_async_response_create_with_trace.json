@@ -1,0 +1,42 @@
+{
+  "uuid": "a0963d30-4ebb-47ed-a84b-965045b5918f",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "cc0d1a98-08da-46f5-9e22-df7ffce79168",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-13T10:36:26.396Z",
+      "endTime": "2025-10-13T10:36:29.625Z",
+      "input": "Hello, how are you?",
+      "output": "Hello! I'm here to help. How can I assist you today?",
+      "model": "gpt-4o",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "inputTokenCount": 29.0,
+      "outputTokenCount": 15.0,
+      "metricCollection": "test_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-13T10:36:26.396Z",
+  "endTime": "2025-10-13T10:36:29.625Z",
+  "name": "test_name_1",
+  "metadata": {
+    "test_metadata_1": "test_value_1"
+  },
+  "tags": [
+    "test_tag_1"
+  ],
+  "environment": "development",
+  "threadId": "test_thread_id_1",
+  "userId": "test_user_id_1",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm here to help. How can I assist you today?",
+  "status": "SUCCESS"
+}
