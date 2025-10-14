@@ -204,11 +204,118 @@ You can also use these models for evaluation: [Ollama](https://deepeval.com/inte
 
 _Task Completion_ is the most powerful metric on `deepeval` for evaluating AI agents end-to-end.
 
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
 ```python
 from deepeval.metrics import TaskCompletionMetric
 
-task_completion_metric = TaskCompletionMetric()
+task_completion_metric = TaskCompletionMetric(model="gpt-4.1")
 ```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import AnthropicModel
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel("gemini-2.5-flash")
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure-openai" label="Ollama">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import OllamaModel
+
+model = OllamaModel("deepseek-r1")
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import GrokModel
+
+model = GrokModel("grok-4-0709")
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure" label="Azure OpenAI">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="amazon-bedrock" label="Amazon Bedrock">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import AmazonBedrockModel
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="vertex-ai" label="Vertex AI">
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+</Tabs>
 
 <details>
   <summary>What other metrics are available?</summary>
@@ -225,7 +332,7 @@ For more information on available metrics, see the [Metrics Introduction](/docs/
 </details>
 
 :::tip
-The task completion metric works by analyzing traces to determine the task at hand and the degree of completion of said task.
+The task completion metric is an llm-judge metric and works by analyzing traces to determine the task at hand and the degree of completion of said task.
 
 :::
 
@@ -426,12 +533,125 @@ Component-level evaluation integrations are **not available** on `deepeval` at t
 
 Any [single-turn metric](/docs/metrics-introduction) can be used to evaluate agentic components.
 
+<Tabs> 
+<TabItem value="openai" label="OpenAI">
+
 ```python title=main.py showLineNumbers={true}
 from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
 
-arg_correctness_metric = ArgumentCorrectnessMetric()
-task_completion_metric = TaskCompletionMetric()
+arg_correctness_metric = ArgumentCorrectnessMetric(model="gpt-4.1")
+task_completion_metric = TaskCompletionMetric(model="gpt-4.1")
 ```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import AnthropicModel
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel("gemini-2.5-flash")
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="ollama" label="Ollama">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import OllamaModel
+
+model = OllamaModel("deepseek-r1")
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import GrokModel
+
+model = GrokModel("grok-4-0709")
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure_openai" label="Azure OpenAI">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="amazon_bedrock" label="Amazon Bedrock">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import AmazonBedrockModel
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="vertex_ai" label="Vertex AI">
+
+```python title=main.py showLineNumbers={true}
+from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
+task_completion_metric = TaskCompletionMetric(model=model)
+```
+
+</TabItem>
+
+</Tabs>
 
 </TimelineItem>
 <TimelineItem title="Setup test cases & metrics">
