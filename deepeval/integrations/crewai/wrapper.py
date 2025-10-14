@@ -88,7 +88,6 @@ def wrap_agent_execute_task():
     @wraps(original_execute_task)
     def wrapper(self, *args, **kwargs):
         metric_collection, metrics = _check_metrics_and_metric_collection(self)
-        print(f"metric_collection: {metric_collection}")
         with Observer(span_type="agent", func_name="execute_task", metric_collection=metric_collection, metrics=metrics):
             result = original_execute_task(self, *args, **kwargs)
         return result
