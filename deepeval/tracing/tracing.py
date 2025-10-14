@@ -871,7 +871,9 @@ class Observer:
                         ToolCall(
                             name=child.name,
                             description=child.description,
-                            input_parameters=make_json_serializable(child.input),
+                            input_parameters=make_json_serializable(
+                                child.input
+                            ),
                             output=make_json_serializable(child.output),
                         )
                     )
