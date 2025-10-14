@@ -4,6 +4,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+
 from deepeval.tracing.otel.exporter import ConfidentSpanExporter
 
 # Set up tracer provider

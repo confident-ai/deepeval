@@ -1,8 +1,10 @@
 import uuid
 
+
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.openai.extractors import OutputParameters
 from deepeval.tracing.context import current_span_context
+
 
 def create_child_tool_spans(output_parameters: OutputParameters):
     if output_parameters.tools_called is None:
