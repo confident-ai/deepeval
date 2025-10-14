@@ -11,10 +11,10 @@ from deepeval.test_case import (
     ToolCallParams,
     ToolCall,
 )
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseMultimodalMetric
 
 
-class MultimodalToolCorrectnessMetric(BaseMetric):
+class MultimodalToolCorrectnessMetric(BaseMultimodalMetric):
 
     _required_params: List[MLLMTestCaseParams] = [
         MLLMTestCaseParams.INPUT,
@@ -283,7 +283,7 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Tool Correctness"
+        return "Multi Modal Tool Correctness"
 
     def indent_multiline_string(self, s, indent_level=4):
         indent = " " * indent_level
