@@ -68,13 +68,9 @@ ruff = "^0.13.0"
 
 [tool.black]
 line-length = 80
-extend-exclude = '''
-(^|/)tests/integrations/
-'''
 
 [tool.ruff]
 line-length = 80
-extend-exclude = ["tests/integrations"]
 
 [build-system]
 requires = ["poetry-core"]
@@ -87,9 +83,6 @@ markers = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-norecursedirs = [
-  "tests/integrations",
-]
 
 [tool.poetry.group.integrations]
 optional = true
