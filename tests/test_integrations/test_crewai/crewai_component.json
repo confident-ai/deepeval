@@ -1,43 +1,45 @@
 {
-  "uuid": "65aacd49-ac15-4979-af59-a105fbc3401e",
+  "uuid": "1528bd17-be44-4e90-8103-bc35fa792276",
   "baseSpans": [
     {
-      "uuid": "62543984-b1b4-40d3-ab81-d1d2f3561fc8",
+      "uuid": "d2381141-e17c-460c-9cd1-c4bf66eaad86",
       "name": "kickoff",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-14T13:07:57.675Z",
-      "endTime": "2025-10-14T13:08:03.124Z",
+      "startTime": "2025-10-14T12:49:03.234Z",
+      "endTime": "2025-10-14T12:49:06.765Z",
       "input": {
         "city": "London"
       },
-      "output": "The current weather in London is 60\u00b0F with rainy conditions. The humidity level is at 80%."
+      "output": "The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
+      "metricCollection": "test_collection_1"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "5ec4fbac-7592-4682-a71b-e86e73d46bc6",
+      "uuid": "61a691b8-f302-4f91-aa2d-c8e994899169",
       "name": "execute_task",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "62543984-b1b4-40d3-ab81-d1d2f3561fc8",
-      "startTime": "2025-10-14T13:07:57.677Z",
-      "endTime": "2025-10-14T13:08:03.123Z",
+      "parentUuid": "d2381141-e17c-460c-9cd1-c4bf66eaad86",
+      "startTime": "2025-10-14T12:49:03.236Z",
+      "endTime": "2025-10-14T12:49:06.763Z",
       "input": "Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "The current weather in London is 60\u00b0F with rainy conditions. The humidity level is at 80%.",
+      "output": "The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
       "availableTools": [],
-      "agentHandoffs": []
+      "agentHandoffs": [],
+      "metricCollection": "test_collection_1"
     }
   ],
   "llmSpans": [
     {
-      "uuid": "be87c440-b224-48f6-85fc-558fd34014b4",
+      "uuid": "c0572cae-755e-4eed-8fc6-59bca1a3878a",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "5ec4fbac-7592-4682-a71b-e86e73d46bc6",
-      "startTime": "2025-10-14T13:08:00.531Z",
-      "endTime": "2025-10-14T13:08:03.121Z",
+      "parentUuid": "61a691b8-f302-4f91-aa2d-c8e994899169",
+      "startTime": "2025-10-14T12:49:05.338Z",
+      "endTime": "2025-10-14T12:49:06.761Z",
       "input": [
         {
           "role": "system",
@@ -49,21 +51,22 @@
         },
         {
           "role": "assistant",
-          "content": "I need to fetch the current weather data for London to provide an accurate report.\n\nAction: get_weather\nAction Input: {\"city\":\"London\"}\nObservation: Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
+          "content": "I need to fetch the current weather data for London to provide an accurate report.\n\nAction: get_weather  \nAction Input: {\"city\":\"London\"}  \nObservation: Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
         }
       ],
-      "output": "Thought: I now know the final answer\nFinal Answer: The current weather in London is 60\u00b0F with rainy conditions. The humidity level is at 80%.",
+      "output": "Thought: I now know the final answer  \nFinal Answer: The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
       "model": "gpt-4o-mini",
-      "prompt": {}
+      "prompt": {},
+      "metricCollection": "test_collection_1"
     },
     {
-      "uuid": "c52e853b-1c85-4561-a2a1-46e042f34953",
+      "uuid": "cb42f83f-8261-487a-b7c5-75ef502a586e",
       "name": "call",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "5ec4fbac-7592-4682-a71b-e86e73d46bc6",
-      "startTime": "2025-10-14T13:07:57.678Z",
-      "endTime": "2025-10-14T13:08:00.524Z",
+      "parentUuid": "61a691b8-f302-4f91-aa2d-c8e994899169",
+      "startTime": "2025-10-14T12:49:03.238Z",
+      "endTime": "2025-10-14T12:49:05.329Z",
       "input": [
         {
           "role": "system",
@@ -74,31 +77,42 @@
           "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
         }
       ],
-      "output": "I need to fetch the current weather data for London to provide an accurate report.\n\nAction: get_weather\nAction Input: {\"city\":\"London\"}",
+      "output": "I need to fetch the current weather data for London to provide an accurate report.\n\nAction: get_weather  \nAction Input: {\"city\":\"London\"}  ",
       "model": "gpt-4o-mini",
-      "prompt": {}
+      "prompt": {},
+      "metricCollection": "test_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "507c24b3-ea86-45b6-ae84-f61e80feaf5c",
+      "uuid": "8ba5841c-41b8-4115-a030-d6972d7bbf26",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "5ec4fbac-7592-4682-a71b-e86e73d46bc6",
-      "startTime": "2025-10-14T13:08:00.525Z",
-      "endTime": "2025-10-14T13:08:00.527Z",
+      "parentUuid": "61a691b8-f302-4f91-aa2d-c8e994899169",
+      "startTime": "2025-10-14T12:49:05.330Z",
+      "endTime": "2025-10-14T12:49:05.333Z",
       "input": "{\"city\": \"London\"}",
       "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
     }
   ],
-  "startTime": "2025-10-14T13:07:57.675Z",
-  "endTime": "2025-10-14T13:08:03.124Z",
+  "startTime": "2025-10-14T12:49:03.233Z",
+  "endTime": "2025-10-14T12:49:06.765Z",
+  "name": "crewai",
+  "metadata": {
+    "crewai": "crewai"
+  },
+  "tags": [
+    "crewai"
+  ],
   "environment": "development",
+  "threadId": "crewai",
+  "userId": "crewai",
   "input": {
     "city": "London"
   },
-  "output": "The current weather in London is 60\u00b0F with rainy conditions. The humidity level is at 80%.",
-  "status": "SUCCESS"
+  "output": "The current weather in London is 60\u00b0F with rainy conditions and a humidity level of 80%.",
+  "status": "SUCCESS",
+  "metricCollection": "test_collection_1"
 }
