@@ -80,3 +80,15 @@ markers = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.poetry.group.integrations]
+optional = true
+
+[tool.poetry.group.integrations.dependencies]
+crewai = {version = "*", python = ">=3.10,<3.11"}
+pydantic-ai = "*"
+langgraph = "^0.6.10"
+llama-index = "^0.14.4"
+langchain_openai = "^0.3.35"
+openai-agents = "^0.3.3"
+langchain = "^0.3.27"
