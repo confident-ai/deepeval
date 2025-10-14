@@ -3,8 +3,10 @@ repos:
     rev: 24.8.0
     hooks:
       - id: black
+        exclude: ^tests/integrations/
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.9
     hooks:
       - id: ruff
         args: [--fix]   # auto-fix lint issues
+        exclude: ^tests/integrations/

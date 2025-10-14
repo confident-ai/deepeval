@@ -1,4 +1,3 @@
-import pytest
 import uuid
 import time
 from unittest.mock import patch
@@ -356,8 +355,10 @@ class TestPromptList:
         assert prompt.model_settings.verbosity == Verbosity.LOW
         assert prompt.output_type == OutputType.SCHEMA
         assert prompt.output_schema is not None
-        assert hasattr(prompt.output_schema, '__fields__') or hasattr(prompt.output_schema, 'model_fields')
-        expected_fields = {'verdict', 'reason'}
+        assert hasattr(prompt.output_schema, "__fields__") or hasattr(
+            prompt.output_schema, "model_fields"
+        )
+        expected_fields = {"verdict", "reason"}
         actual_fields = set(prompt.output_schema.model_fields.keys())
         assert actual_fields == expected_fields
 
@@ -402,7 +403,7 @@ class TestPromptList:
         assert prompt.model_settings.verbosity == Verbosity.LOW
         assert prompt.output_type == OutputType.SCHEMA
         assert prompt.output_schema is not None
-        expected_fields = {'verdict', 'reason'}
+        expected_fields = {"verdict", "reason"}
         actual_fields = set(prompt.output_schema.model_fields.keys())
         assert actual_fields == expected_fields
 

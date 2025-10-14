@@ -9,6 +9,7 @@ from deepeval.prompt import Prompt
 from deepeval.metrics import BaseMetric
 from deepeval.test_case.llm_test_case import ToolCall
 
+
 @dataclass
 class LlmContext:
     prompt: Optional[Prompt] = None
@@ -23,6 +24,7 @@ class LlmContext:
 current_llm_context: ContextVar[Optional[LlmContext]] = ContextVar(
     "current_llm_context", default=LlmContext()
 )
+
 
 @contextmanager
 def trace(
@@ -43,21 +45,21 @@ def trace(
 
     if not current_trace:
         current_trace = trace_manager.start_new_trace()
-        
+
     current_trace_context.set(current_trace)
 
     current_llm_context.set(
         LlmContext(
-            prompt=prompt, 
-            metrics=llm_metrics, 
-            metric_collection=llm_metric_collection, 
+            prompt=prompt,
+            metrics=llm_metrics,
+            metric_collection=llm_metric_collection,
             expected_output=expected_output,
-            expected_tools=expected_tools, 
-            context=context, 
+            expected_tools=expected_tools,
+            context=context,
             retrieval_context=retrieval_context,
         )
     )
-    
+
     # set the current trace attributes
     if name:
         update_current_trace(name=name)
@@ -69,5 +71,5 @@ def trace(
         update_current_trace(user_id=user_id)
     if thread_id:
         update_current_trace(thread_id=thread_id)
-    
+
     yield current_trace
