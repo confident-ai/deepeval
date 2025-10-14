@@ -20,6 +20,7 @@ from deepeval.constants import (
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
+from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
@@ -860,6 +861,20 @@ class Observer:
             and not current_span.prompt
         ):
             current_span.prompt = self.prompt
+
+        if not current_span.tools_called:
+            # check any tool span children
+            for child in current_span.children:
+                if isinstance(child, ToolSpan):
+                    current_span.tools_called = current_span.tools_called or []
+                    current_span.tools_called.append(
+                        ToolCall(
+                            name=child.name,
+                            description=child.description,
+                            input_parameters=make_json_serializable(child.input),
+                            output=make_json_serializable(child.output),
+                        )
+                    )
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:
