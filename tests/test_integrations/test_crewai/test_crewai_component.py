@@ -97,3 +97,8 @@ def test_crewai_component():
         trace_metric_collection="test_collection_1",
     ):
         crew.kickoff({"city": "London"})
+
+
+if __name__ == "__main__":
+    instrument_crewai()
+    test_crewai_component()

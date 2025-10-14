@@ -1,4 +1,5 @@
 import os
+from typing import Dict, Any
 from datetime import datetime, timezone
 from enum import Enum
 from time import perf_counter
@@ -183,3 +184,9 @@ def replace_self_with_class_name(obj):
         return f"<{obj.__class__.__name__}>"
     except:
         return f"<self>"
+
+def prepare_tool_call_input_parameters(output: Any) -> Dict[str, Any]:
+    res = make_json_serializable(output)
+    if res and not isinstance(res, dict):
+        res = {"output": res}
+    return res
