@@ -898,6 +898,7 @@ class Synthesizer:
                 update_pbar(progress, pbar_id)
 
                 # Evolve inputs
+                evolved_prompts = []
                 for i, data in enumerate(synthetic_data):
                     pbar_evolve_input_id = add_pbar(
                         progress,
@@ -911,14 +912,16 @@ class Synthesizer:
                         progress=progress,
                         pbar_evolve_input_id=pbar_evolve_input_id,
                     )
+                    evolved_prompts.append(evolved_prompt)
                     update_pbar(progress, pbar_id)
 
                 # Synthesize Goldens
-                golden = Golden(
-                    input=evolved_prompt,
-                    additional_metadata={"evolutions": evolutions_used},
-                )
-                goldens.append(golden)
+                for evolved_prompt in evolved_prompts:
+                    golden = Golden(
+                        input=evolved_prompt,
+                        additional_metadata={"evolutions": evolutions_used},
+                    )
+                    goldens.append(golden)
 
         # Wrap up Synthesis
         self.synthetic_goldens.extend(goldens)
