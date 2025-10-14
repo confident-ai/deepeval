@@ -363,6 +363,12 @@ class Settings(BaseSettings):
     )
 
     #
+    # Async Document Pipelines
+    #
+
+    DEEPEVAL_MAX_CONCURRENT_DOC_PROCESSING: conint(ge=1) = 2
+
+    #
     # Async Task Configuration
     #
     DEEPEVAL_TIMEOUT_THREAD_LIMIT: conint(ge=1) = 128

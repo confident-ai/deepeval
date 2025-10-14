@@ -1297,7 +1297,18 @@ async def _a_execute_agentic_test_case(
             await asyncio.gather(*child_tasks)
 
     test_start_time = time.perf_counter()
-    await dfs(current_trace.root_spans[0])
+    if current_trace and current_trace.root_spans:
+        await dfs(current_trace.root_spans[0])
+    else:
+        if (
+            logger.isEnabledFor(logging.DEBUG)
+            and get_settings().DEEPEVAL_VERBOSE_MODE
+        ):
+            logger.debug(
+                "Skipping DFS: empty trace or no root spans (trace=%s)",
+                current_trace.uuid if current_trace else None,
+            )
+
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
 
@@ -1757,6 +1768,7 @@ def execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -2094,6 +2106,7 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 async def _a_evaluate_traces(
@@ -2120,8 +2133,26 @@ async def _a_evaluate_traces(
             return await func(*args, **kwargs)
 
     eval_tasks = []
-    for count, trace in enumerate(traces_to_evaluate):
-        golden = goldens[count]
+    # Here, we will work off a fixed-set copy to avoid surprises from potential
+    # mid-iteration mutation
+    traces_snapshot = list(traces_to_evaluate or [])
+
+    for count, trace in enumerate(traces_snapshot):
+        # Prefer the explicit mapping from trace -> golden captured at trace creation.
+        golden = trace_manager.trace_uuid_to_golden.get(trace.uuid)
+        if not golden:
+            # trace started during evaluation_loop but the CURRENT_GOLDEN was
+            # not set for some reason. We can’t map it to a golden, so the best
+            # we can do is skip evaluation for this trace.
+            if (
+                logger.isEnabledFor(logging.DEBUG)
+                and get_settings().DEEPEVAL_VERBOSE_MODE
+            ):
+                logger.debug(
+                    "Skipping trace %s: no golden association found during evaluation_loop ",
+                    trace.uuid,
+                )
+            continue
         with capture_evaluation_run("golden"):
             task = execute_evals_with_semaphore(
                 func=_a_execute_agentic_test_case,
