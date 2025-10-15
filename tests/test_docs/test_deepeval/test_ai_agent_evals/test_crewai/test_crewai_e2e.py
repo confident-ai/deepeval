@@ -11,6 +11,7 @@ instrument_crewai()
 
 answer_relavancy_metric = AnswerRelevancyMetric()
 
+
 @tool
 def get_weather(city: str) -> str:
     """Fetch weather data for a given city. Returns temperature and conditions."""
@@ -26,7 +27,9 @@ def get_weather(city: str) -> str:
     temperature = f"{random.randint(45, 95)}°F"
     humidity = f"{random.randint(30, 90)}%"
 
-    return f"Weather in {city}: {temperature}, {condition}, Humidity: {humidity}"
+    return (
+        f"Weather in {city}: {temperature}, {condition}, Humidity: {humidity}"
+    )
 
 
 agent = Agent(
