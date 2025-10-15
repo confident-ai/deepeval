@@ -3,4 +3,4 @@ from pydantic import BaseModel
 
 
 class BaseMessage(BaseModel):
-    role: Literal["user", "assistant"]
+    role: Literal["user", "assistant", "tool", "system"]

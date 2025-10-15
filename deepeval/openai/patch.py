@@ -16,7 +16,7 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
-from deepeval.openai.utils import create_child_tool_spans
+from deepeval.openai.utils import convert_input_messages_from_completions_create, convert_input_messages_from_responses_create, create_child_tool_spans
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -123,9 +123,14 @@ def _patch_async_openai_client_method(
 ):
     @wraps(orig_method)
     async def patched_async_openai_method(*args, **kwargs):
-        input_parameters: InputParameters = extract_input_parameters(
-            is_completion_method, kwargs
-        )
+
+        input_parameters = InputParameters(model="NA")
+        try:
+            input_parameters: InputParameters = extract_input_parameters(
+                is_completion_method, kwargs
+            )
+        except Exception as e:
+            pass
 
         llm_context = current_llm_context.get()
 
@@ -137,9 +142,15 @@ def _patch_async_openai_client_method(
         )
         async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
-                is_completion_method, response, input_parameters
-            )
+            
+            output_parameters = OutputParameters()
+            try:
+                output_parameters = extract_output_parameters(
+                    is_completion_method, response, input_parameters
+                )
+            except Exception as e:
+                pass
+
             _update_all_attributes(
                 input_parameters,
                 output_parameters,
@@ -148,6 +159,16 @@ def _patch_async_openai_client_method(
                 llm_context.context,
                 llm_context.retrieval_context,
             )
+
+            # change input messages
+            input_messages = None
+            if is_completion_method:
+                input_messages = convert_input_messages_from_completions_create(kwargs.get("messages"))
+            else:
+                input_messages = convert_input_messages_from_responses_create(kwargs.get("instructions"), kwargs.get("input"))
+
+            if input_messages:
+                update_current_span(input=input_messages)
 
             return response
 
@@ -162,9 +183,13 @@ def _patch_sync_openai_client_method(
 ):
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
-        input_parameters: InputParameters = extract_input_parameters(
-            is_completion_method, kwargs
-        )
+        input_parameters = InputParameters(model="NA")
+        try:
+            input_parameters: InputParameters = extract_input_parameters(
+                is_completion_method, kwargs
+            )
+        except Exception as e:
+            pass
 
         llm_context = current_llm_context.get()
 
@@ -176,9 +201,15 @@ def _patch_sync_openai_client_method(
         )
         def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
-                is_completion_method, response, input_parameters
-            )
+
+            output_parameters = OutputParameters()
+            try:
+                output_parameters = extract_output_parameters(
+                    is_completion_method, response, input_parameters
+                )
+            except Exception as e:
+                pass
+
             _update_all_attributes(
                 input_parameters,
                 output_parameters,
@@ -187,6 +218,17 @@ def _patch_sync_openai_client_method(
                 llm_context.context,
                 llm_context.retrieval_context,
             )
+
+            # change input messages
+            input_messages = None
+
+            if is_completion_method:
+                input_messages = convert_input_messages_from_completions_create(kwargs.get("messages"))
+            else:
+                input_messages = convert_input_messages_from_responses_create(kwargs.get("instructions"), kwargs.get("input"))
+            
+            if input_messages:
+                update_current_span(input=input_messages)
 
             return response
 

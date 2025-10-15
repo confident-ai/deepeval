@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 from deepeval.tracing.message_types import (
     ToolSchema,
-    ToolOutput,
+    ToolOutputMessage,
     TextMessage,
     ToolCallMessage,
 )
@@ -95,7 +95,7 @@ class AgentSpan(BaseSpan):
 
 class LlmSpan(BaseSpan):
     input: Optional[
-        Union[Any, List[Union[TextMessage, ToolCallMessage, ToolOutput]]]
+        Union[Any, List[Union[TextMessage, ToolCallMessage, ToolOutputMessage]]]
     ] = None
     output: Optional[Union[Any, List[Union[TextMessage, ToolCallMessage]]]] = (
         None

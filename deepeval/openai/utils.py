@@ -1,11 +1,15 @@
 import json
 import uuid
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union, Dict
 
+from deepeval.tracing.message_types.messages import TextMessage, ToolCallMessage, ToolOutputMessage
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.tracing.context import current_span_context
+from deepeval.tracing.utils import make_json_serializable
 from deepeval.utils import shorten, len_long
 from deepeval.openai.types import OutputParameters
+from openai.types.chat import ChatCompletionMessageParam
+from openai.types.responses import ResponseInputParam
 
 
 _URL_MAX = 200
@@ -126,3 +130,156 @@ def stringify_multimodal_content(content: Any) -> str:
 
     # unknown dicts and types returned as shortened JSON
     return _compact_dump(content)
+
+
+def _extract_tool_call_message(tool_call: dict) -> Optional[ToolCallMessage]:
+    """
+    Safely extract and convert an OpenAI tool call into a ToolCallMessage.
+    
+    Handles both 'function' and 'custom' tool call types, with robust JSON parsing
+    that gracefully handles malformed arguments from the model.
+    
+    Args:
+        tool_call: A tool call dict from ChatCompletionAssistantMessageParam
+        
+    Returns:
+        ToolCallMessage if extraction succeeded, None otherwise
+    """
+    try:
+        tool_call_type = tool_call.get("type")
+        tool_call_id = tool_call.get("id")
+        
+        name = None
+        args = {}
+        
+        if tool_call_type == "function":
+            # Extract from function tool call
+            function = tool_call.get("function")
+            if function:
+                name = function.get("name")
+                arguments_str = function.get("arguments", "{}")
+                
+                # Parse arguments JSON string safely
+                try:
+                    args = json.loads(arguments_str) if arguments_str else {}
+                    # Ensure it's a dict
+                    if not isinstance(args, dict):
+                        args = {"value": args}
+                except json.JSONDecodeError:
+                    # If JSON is invalid, store as string in a safe wrapper
+                    args = {"_raw_arguments": arguments_str}
+                    
+        elif tool_call_type == "custom":
+            # Extract from custom tool call
+            custom = tool_call.get("custom")
+            if custom:
+                name = custom.get("name")
+                input_str = custom.get("input", "{}")
+                
+                # Parse input JSON string safely
+                try:
+                    args = json.loads(input_str) if input_str else {}
+                    # Ensure it's a dict
+                    if not isinstance(args, dict):
+                        args = {"value": args}
+                except json.JSONDecodeError:
+                    # If JSON is invalid, store as string in a safe wrapper
+                    args = {"_raw_input": input_str}
+        
+        # Only create ToolCallMessage if we successfully extracted a name
+        if name:
+            return ToolCallMessage(
+                role="assistant",
+                name=name,
+                args=args,
+                id=tool_call_id
+            )
+        
+        return None
+        
+    except Exception:
+        # Don't let a malformed tool call break the entire conversion
+        return None
+
+
+def convert_input_messages_from_completions_create(
+    messages: Optional[List[ChatCompletionMessageParam]] = None
+) -> Union[Any, List[Union[TextMessage, ToolCallMessage, ToolOutputMessage, Dict[str, Any]]]]:
+    
+    if messages is None:
+        return []
+    
+    converted_messages: List[Union[TextMessage, ToolCallMessage, ToolOutputMessage]] = []
+    
+    for message in messages:
+        # Ensure dict-shape for robust processing
+        if not isinstance(message, dict):
+            message = make_json_serializable(message)
+            if not isinstance(message, dict):
+                continue
+
+        role = message.get("role")
+        content = message.get("content")
+
+        # Extract tool call messages from assistant messages
+        if role == "assistant":
+            tool_calls = message.get("tool_calls") or []
+            for tool_call in tool_calls:
+                tool_call_msg = _extract_tool_call_message(tool_call)
+                if tool_call_msg:
+                    converted_messages.append(tool_call_msg)
+
+        # Extract tool outputs
+        elif role == "tool":
+            tool_output = ToolOutputMessage(
+                role=role,
+                id=message.get("tool_call_id"),
+                output=content
+            )
+            converted_messages.append(tool_output)
+
+        # Extract user text message
+        elif isinstance(content, str) and role == "user":
+            text_msg = TextMessage(
+                role=role,
+                type="text",
+                content=content
+            )
+            converted_messages.append(text_msg)
+
+        else:
+            serializable = make_json_serializable(message)
+            if isinstance(serializable, dict):
+                converted_messages.append(serializable)
+
+    return converted_messages
+
+def convert_input_messages_from_responses_create(
+    instructions: Optional[str], 
+    input: Optional[Union[str, ResponseInputParam]]
+) -> List[Union[TextMessage, Dict[str, Any]]]:
+
+    converted_messages: List[Union[TextMessage, Dict[str, Any]]] = []
+    
+    if instructions:
+        converted_messages.append(
+            TextMessage(
+                role="system",
+                type="text",
+                content=instructions
+            )
+        )
+    
+    if input and isinstance(input, str):
+        converted_messages.append(
+            TextMessage(
+                role="user",
+                type="text",
+                content=input
+            )
+        )
+    elif input:
+        converted_messages.append(make_json_serializable(input))
+    
+    return converted_messages
+    

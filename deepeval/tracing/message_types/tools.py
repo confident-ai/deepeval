@@ -10,9 +10,3 @@ class BaseTool(BaseModel):
 class ToolSchema(BaseTool):
     parameters: Dict[str, Any]
     is_called: Optional[bool] = False
-
-
-class ToolOutput(BaseTool):
-    """Output of the tool function"""
-
-    output: Any
