@@ -193,6 +193,26 @@ def validate_assert_test_inputs(
             "Both 'test_case' and 'metrics' must be provided together."
         )
 
+    if test_case and metrics:
+        if isinstance(test_case, LLMTestCase) and not all(
+            isinstance(metric, BaseMetric) for metric in metrics
+        ):
+            raise ValueError(
+                "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
+            )
+        if isinstance(test_case, ConversationalTestCase) and not all(
+            isinstance(metric, BaseConversationalMetric) for metric in metrics
+        ):
+            raise ValueError(
+                "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
+            )
+        if isinstance(test_case, MLLMTestCase) and not all(
+            isinstance(metric, BaseMultimodalMetric) for metric in metrics
+        ):
+            raise ValueError(
+                "All 'metrics' for an 'MLLMTestCase' must be instances of 'BaseMultimodalMetric' only."
+            )
+
     if not ((golden and observed_callback) or (test_case and metrics)):
         raise ValueError(
             "You must provide either ('golden' + 'observed_callback') or ('test_case' + 'metrics')."
