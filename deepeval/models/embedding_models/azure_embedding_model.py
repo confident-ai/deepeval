@@ -18,21 +18,26 @@ retry_azure = create_retry_decorator(PS.AZURE)
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
-            self,
-            _open_api_key: Optional[str] = None,
-            _openai_api_version: Optional[str] = None,
-            _azure_embedding_deployment: Optional[str] = None,
-            _azure_endpoint: Optional[str] = None,
-            **kwargs
-        ):
-        self.azure_openai_api_key = _open_api_key or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_API_KEY
+        self,
+        _open_api_key: Optional[str] = None,
+        _openai_api_version: Optional[str] = None,
+        _azure_embedding_deployment: Optional[str] = None,
+        _azure_endpoint: Optional[str] = None,
+        **kwargs
+    ):
+        self.azure_openai_api_key = (
+            _open_api_key
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.AZURE_OPENAI_API_KEY)
         )
-        self.openai_api_version = _openai_api_version or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.OPENAI_API_VERSION
+        self.openai_api_version = (
+            _openai_api_version
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
         )
-        self.azure_embedding_deployment = _azure_embedding_deployment or KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
+        self.azure_embedding_deployment = (
+            _azure_embedding_deployment
+            or KEY_FILE_HANDLER.fetch_data(
+                EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
+            )
         )
         self.azure_endpoint = _azure_endpoint or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.AZURE_OPENAI_ENDPOINT

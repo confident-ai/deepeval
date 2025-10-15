@@ -14,13 +14,13 @@ retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
-            self,
-            _base_url: Optional[str] = None,
-            _model_name: Optional[str] = None,
-            _api_key: Optional[str] = None,
-            *args, 
-            **kwargs
-        ):
+        self,
+        _base_url: Optional[str] = None,
+        _model_name: Optional[str] = None,
+        _api_key: Optional[str] = None,
+        *args,
+        **kwargs,
+    ):
         self.base_url = _base_url + KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
         )
