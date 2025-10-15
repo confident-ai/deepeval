@@ -1,11 +1,11 @@
 from enum import Enum
-from typing import Literal, Optional, List, Dict
+from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.console import Console
 import time
 import json
 import os
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import asyncio
 import portalocker
 import threading
@@ -17,8 +17,20 @@ from deepeval.prompt.api import (
     PromptInterpolationType,
     PromptPushRequest,
     PromptVersionsHttpResponse,
+    PromptMessageList,
+    PromptUpdateRequest,
+    ModelSettings,
+    OutputSchema,
+    OutputType,
+    ReasoningEffort,
+    Verbosity,
+    ModelProvider,
 )
-from deepeval.prompt.utils import interpolate_text
+from deepeval.prompt.utils import (
+    interpolate_text,
+    construct_base_model,
+    construct_output_schema,
+)
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.constants import HIDDEN_DIR
 
@@ -73,45 +85,51 @@ class CachedPrompt(BaseModel):
     prompt_version_id: str
     type: PromptType
     interpolation_type: PromptInterpolationType
+    model_settings: Optional[ModelSettings]
+    output_type: Optional[OutputType]
+    output_schema: Optional[OutputSchema]
 
     class Config:
         use_enum_values = True
 
 
 class Prompt:
-    label: Optional[str] = None
-    _prompt_version_id: Optional[str] = None
-    _type: Optional[PromptType] = None
-    _interpolation_type: Optional[PromptInterpolationType] = None
 
     def __init__(
         self,
         alias: Optional[str] = None,
-        template: Optional[str] = None,
+        text_template: Optional[str] = None,
         messages_template: Optional[List[PromptMessage]] = None,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[Type[BaseModel]] = None,
     ):
-        if alias is None and template is None:
+        if text_template and messages_template:
             raise TypeError(
-                "Unable to create Prompt where 'alias' and 'template' are both None. Please provide at least one to continue."
+                "Unable to create Prompt where 'text_template' and 'messages_template' are both provided. Please provide only one to continue."
             )
-        if template and messages_template:
-            raise TypeError(
-                "Unable to create Prompt where 'template' and 'messages_template' are both provided. Please provide only one to continue."
-            )
-
         self.alias = alias
-        self._text_template = template
-        self._messages_template = messages_template
+        self.text_template = text_template
+        self.messages_template = messages_template
+        self.model_settings: Optional[ModelSettings] = model_settings
+        self.output_type: Optional[OutputType] = output_type
+        self.output_schema: Optional[Type[BaseModel]] = output_schema
+        self.label: Optional[str] = None
+        self.interpolation_type: Optional[PromptInterpolationType] = None
+
         self._version = None
+        self._prompt_version_id: Optional[str] = None
         self._polling_tasks: Dict[str, Dict[str, asyncio.Task]] = {}
         self._refresh_map: Dict[str, Dict[str, int]] = {}
         self._lock = (
             threading.Lock()
         )  # Protect instance attributes from race conditions
-        if template:
-            self._type = PromptType.TEXT
+
+        self.type: Optional[PromptType] = None
+        if text_template:
+            self.type = PromptType.TEXT
         elif messages_template:
-            self._type = PromptType.LIST
+            self.type = PromptType.LIST
 
     def __del__(self):
         """Cleanup polling tasks when instance is destroyed"""
@@ -135,12 +153,48 @@ class Prompt:
     def version(self, value):
         self._version = value
 
+    def load(self, file_path: str, messages_key: Optional[str] = None):
+        _, ext = os.path.splitext(file_path)
+        if ext != ".json" and ext != ".txt":
+            raise ValueError("Only .json and .txt files are supported")
+
+        file_name = os.path.basename(file_path).split(".")[0]
+        self.alias = file_name
+        with open(file_path, "r") as f:
+            content = f.read()
+        try:
+            data = json.loads(content)
+        except:
+            self.text_template = content
+            return content
+
+        text_template = None
+        messages_template = None
+        try:
+            if isinstance(data, list):
+                messages_template = PromptMessageList.validate_python(data)
+            elif isinstance(data, dict):
+                if messages_key is None:
+                    raise ValueError(
+                        "messages `key` must be provided if file is a dictionary"
+                    )
+                messages = data[messages_key]
+                messages_template = PromptMessageList.validate_python(messages)
+            else:
+                text_template = content
+        except ValidationError:
+            text_template = content
+
+        self.text_template = text_template
+        self.messages_template = messages_template
+        return text_template or messages_template
+
     def interpolate(self, **kwargs):
         with self._lock:
-            prompt_type = self._type
-            text_template = self._text_template
-            messages_template = self._messages_template
-            interpolation_type = self._interpolation_type
+            prompt_type = self.type
+            text_template = self.text_template
+            messages_template = self.messages_template
+            interpolation_type = self.interpolation_type
 
         if prompt_type == PromptType.TEXT:
             if text_template is None:
@@ -166,7 +220,11 @@ class Prompt:
                 )
             return interpolated_messages
         else:
-            raise ValueError(f"Unsupported prompt type: {prompt_type}")
+            raise ValueError(f"Unsupported prompt type: {self.type}")
+
+    ############################################
+    ### Utils
+    ############################################
 
     def _get_versions(self) -> List:
         if self.alias is None:
@@ -232,6 +290,9 @@ class Prompt:
         prompt_version_id: Optional[str] = None,
         type: Optional[PromptType] = None,
         interpolation_type: Optional[PromptInterpolationType] = None,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[OutputSchema] = None,
     ):
         if not self.alias:
             return
@@ -276,6 +337,9 @@ class Prompt:
                     "prompt_version_id": prompt_version_id,
                     "type": type,
                     "interpolation_type": interpolation_type,
+                    "model_settings": model_settings,
+                    "output_type": output_type,
+                    "output_schema": output_schema,
                 }
 
                 if cache_key == VERSION_CACHE_KEY:
@@ -313,14 +377,27 @@ class Prompt:
             raise ValueError("Unable to fetch prompt and load from cache")
 
         with self._lock:
-            self.version = cached_prompt.version
+            self._version = cached_prompt.version
             self.label = cached_prompt.label
-            self._text_template = cached_prompt.template
-            self._messages_template = cached_prompt.messages_template
+            self.text_template = cached_prompt.template
+            self.messages_template = cached_prompt.messages_template
             self._prompt_version_id = cached_prompt.prompt_version_id
-            self._type = PromptType(cached_prompt.type)
-            self._interpolation_type = PromptInterpolationType(
-                cached_prompt.interpolation_type
+            self.type = (
+                PromptType(cached_prompt.type) if cached_prompt.type else None
+            )
+            self.interpolation_type = (
+                PromptInterpolationType(cached_prompt.interpolation_type)
+                if cached_prompt.interpolation_type
+                else None
+            )
+            self.model_settings = cached_prompt.model_settings
+            self.output_type = (
+                OutputType(cached_prompt.output_type)
+                if cached_prompt.output_type
+                else None
+            )
+            self.output_schema = construct_base_model(
+                cached_prompt.output_schema
             )
 
         end_time = time.perf_counter()
@@ -329,6 +406,10 @@ class Prompt:
             task_id,
             description=f"{progress.tasks[task_id].description}[rgb(25,227,160)]Loaded from cache! ({time_taken}s)",
         )
+
+    ############################################
+    ### Pull, Push, Update
+    ############################################
 
     def pull(
         self,
@@ -369,18 +450,33 @@ class Prompt:
                 )
                 if cached_prompt:
                     with self._lock:
-                        self.version = cached_prompt.version
+                        self._version = cached_prompt.version
                         self.label = cached_prompt.label
-                        self._text_template = cached_prompt.template
-                        self._messages_template = (
-                            cached_prompt.messages_template
-                        )
+                        self.text_template = cached_prompt.template
+                        self.messages_template = cached_prompt.messages_template
                         self._prompt_version_id = (
                             cached_prompt.prompt_version_id
                         )
-                        self._type = PromptType(cached_prompt.type)
-                        self._interpolation_type = PromptInterpolationType(
-                            cached_prompt.interpolation_type
+                        self.type = (
+                            PromptType(cached_prompt.type)
+                            if cached_prompt.type
+                            else None
+                        )
+                        self.interpolation_type = (
+                            PromptInterpolationType(
+                                cached_prompt.interpolation_type
+                            )
+                            if cached_prompt.interpolation_type
+                            else None
+                        )
+                        self.model_settings = cached_prompt.model_settings
+                        self.output_type = (
+                            OutputType(cached_prompt.output_type)
+                            if cached_prompt.output_type
+                            else None
+                        )
+                        self.output_schema = construct_base_model(
+                            cached_prompt.output_schema
                         )
                     return
             except:
@@ -432,6 +528,9 @@ class Prompt:
                     messages=data.get("messages", None),
                     type=data["type"],
                     interpolation_type=data["interpolationType"],
+                    model_settings=data.get("modelSettings", None),
+                    output_type=data.get("outputType", None),
+                    output_schema=data.get("outputSchema", None),
                 )
             except Exception:
                 if fallback_to_cache:
@@ -446,13 +545,18 @@ class Prompt:
                 raise
 
             with self._lock:
-                self.version = response.version
+                self._version = response.version
                 self.label = response.label
-                self._text_template = response.text
-                self._messages_template = response.messages
+                self.text_template = response.text
+                self.messages_template = response.messages
                 self._prompt_version_id = response.id
-                self._type = response.type
-                self._interpolation_type = response.interpolation_type
+                self.type = response.type
+                self.interpolation_type = response.interpolation_type
+                self.model_settings = response.model_settings
+                self.output_type = response.output_type
+                self.output_schema = construct_base_model(
+                    response.output_schema
+                )
 
             end_time = time.perf_counter()
             time_taken = format(end_time - start_time, ".2f")
@@ -471,6 +575,9 @@ class Prompt:
                     prompt_version_id=response.id,
                     type=response.type,
                     interpolation_type=response.interpolation_type,
+                    model_settings=response.model_settings,
+                    output_type=response.output_type,
+                    output_schema=response.output_schema,
                 )
 
     def push(
@@ -480,26 +587,36 @@ class Prompt:
         interpolation_type: Optional[
             PromptInterpolationType
         ] = PromptInterpolationType.FSTRING,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[Type[BaseModel]] = None,
+        _verbose: Optional[bool] = True,
     ):
         if self.alias is None:
             raise ValueError(
                 "Prompt alias is not set. Please set an alias to continue."
             )
-
-        if text is None and messages is None:
+        text_template = text or self.text_template
+        messages_template = messages or self.messages_template
+        if text_template is None and messages_template is None:
             raise ValueError("Either text or messages must be provided")
-
-        if text is not None and messages is not None:
+        if text_template is not None and messages_template is not None:
             raise ValueError("Only one of text or messages can be provided")
 
         body = PromptPushRequest(
             alias=self.alias,
-            text=text,
-            messages=messages,
-            interpolation_type=interpolation_type,
+            text=text_template,
+            messages=messages_template,
+            interpolation_type=interpolation_type or self.interpolation_type,
+            model_settings=model_settings or self.model_settings,
+            output_type=output_type or self.output_type,
+            output_schema=construct_output_schema(output_schema)
+            or construct_output_schema(self.output_schema),
         )
         try:
-            body = body.model_dump(by_alias=True, exclude_none=True)
+            body = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
         except AttributeError:
             # Pydantic version below 2.0
             body = body.dict(by_alias=True, exclude_none=True)
@@ -510,13 +627,78 @@ class Prompt:
             endpoint=Endpoints.PROMPTS_ENDPOINT,
             body=body,
         )
+        versions = self._get_versions()
 
-        if link:
-            console = Console()
-            console.print(
-                "✅ Prompt successfully pushed to Confident AI! View at "
-                f"[link={link}]{link}[/link]"
+        if link and versions:
+            self._prompt_version_id = versions[-1].id
+            self.text_template = text_template
+            self.messages_template = messages_template
+            self.interpolation_type = (
+                interpolation_type or self.interpolation_type
             )
+            self.model_settings = model_settings or self.model_settings
+            self.output_type = output_type or self.output_type
+            self.output_schema = output_schema or self.output_schema
+            self.type = PromptType.TEXT if text_template else PromptType.LIST
+            if _verbose:
+                console = Console()
+                console.print(
+                    "✅ Prompt successfully pushed to Confident AI! View at "
+                    f"[link={link}]{link}[/link]"
+                )
+
+    def update(
+        self,
+        version: str,
+        text: Optional[str] = None,
+        messages: Optional[List[PromptMessage]] = None,
+        interpolation_type: Optional[
+            PromptInterpolationType
+        ] = PromptInterpolationType.FSTRING,
+        model_settings: Optional[ModelSettings] = None,
+        output_type: Optional[OutputType] = None,
+        output_schema: Optional[Type[BaseModel]] = None,
+    ):
+        if self.alias is None:
+            raise ValueError(
+                "Prompt alias is not set. Please set an alias to continue."
+            )
+
+        body = PromptUpdateRequest(
+            text=text,
+            messages=messages,
+            interpolation_type=interpolation_type,
+            model_settings=model_settings,
+            output_type=output_type,
+            output_schema=construct_output_schema(output_schema),
+        )
+        try:
+            body = body.model_dump(
+                by_alias=True, exclude_none=True, mode="json"
+            )
+        except AttributeError:
+            body = body.dict(by_alias=True, exclude_none=True)
+        api = Api()
+        data, _ = api.send_request(
+            method=HttpMethods.PUT,
+            endpoint=Endpoints.PROMPTS_VERSION_ID_ENDPOINT,
+            url_params={
+                "alias": self.alias,
+                "versionId": version,
+            },
+            body=body,
+        )
+        if data:
+            self._version = version
+            self.text_template = text
+            self.messages_template = messages
+            self.interpolation_type = interpolation_type
+            self.model_settings = model_settings
+            self.output_type = output_type
+            self.output_schema = output_schema
+            self.type = PromptType.TEXT if text else PromptType.LIST
+            console = Console()
+            console.print("✅ Prompt successfully updated on Confident AI!")
 
     ############################################
     ### Polling
@@ -614,13 +796,13 @@ class Prompt:
 
                 # Update in-memory properties with fresh data (thread-safe)
                 with self._lock:
-                    self.version = response.version
+                    self._version = response.version
                     self.label = response.label
-                    self._text_template = response.text
-                    self._messages_template = response.messages
+                    self.text_template = response.text
+                    self.messages_template = response.messages
                     self._prompt_version_id = response.id
-                    self._type = response.type
-                    self._interpolation_type = response.interpolation_type
+                    self.type = response.type
+                    self.interpolation_type = response.interpolation_type
 
             except Exception:
                 pass

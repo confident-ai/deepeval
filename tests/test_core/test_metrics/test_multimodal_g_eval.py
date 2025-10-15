@@ -68,6 +68,7 @@ class MyMMTemplate(MultimodalGEvalTemplate):
         return [{"role": "system", "content": MyMMTemplate.MARK}] + list(base)
 
 
+# import deepeval.openai
 @pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
     or not os.getenv("OPENAI_API_KEY").strip(),

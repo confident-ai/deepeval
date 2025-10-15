@@ -1,5 +1,14 @@
-import os
-from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Union,
+)
 from time import perf_counter
 import threading
 import functools
@@ -56,6 +65,10 @@ from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 
+
+if TYPE_CHECKING:
+    from deepeval.dataset.golden import Golden
+
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
 
@@ -66,6 +79,10 @@ class TraceManager:
         self.active_spans: Dict[str, BaseSpan] = (
             {}
         )  # Map of span_uuid to BaseSpan
+        # Map each trace created during evaluation_loop to the Golden that was active
+        # when it was started. This lets us evaluate traces against the correct golden
+        # since we cannot rely on positional indexing as the order is not guaranteed.
+        self.trace_uuid_to_golden: Dict[str, Golden] = {}
 
         settings = get_settings()
         # Initialize queue and worker thread for trace posting
@@ -167,6 +184,19 @@ class TraceManager:
         self.traces.append(new_trace)
         if self.evaluation_loop:
             self.traces_to_evaluate_order.append(trace_uuid)
+            # Associate the current Golden with this trace so we can
+            # later evaluate traces against the correct golden, even if more traces
+            # are created than goldens or the order interleaves.
+            try:
+                from deepeval.contextvars import get_current_golden
+
+                current_golden = get_current_golden()
+                if current_golden is not None:
+                    self.trace_uuid_to_golden[trace_uuid] = current_golden
+            except Exception:
+                # not much we can do, but if the golden is not there during evaluation
+                # we will write out a verbose debug log
+                pass
         return new_trace
 
     def end_trace(self, trace_uuid: str):
