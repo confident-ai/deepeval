@@ -148,7 +148,7 @@ def test_conversational_dag_imports():
     assert ConversationalVerdictNode is not None
 
 
-def test_core_modules_import():
+def test_core_modules_import(unpatch_openai_after):
     """Test that core modules can be imported."""
     import deepeval
     import deepeval.metrics

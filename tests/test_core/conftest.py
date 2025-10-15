@@ -104,3 +104,11 @@ def _core_mode_no_confident(monkeypatch):
 
     # Yield control to the test
     yield
+
+
+@pytest.fixture(autouse=False)
+def unpatch_openai_after():
+    from deepeval.openai.patch import unpatch_openai_classes
+
+    yield
+    unpatch_openai_classes()
