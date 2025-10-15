@@ -124,7 +124,7 @@ def _patch_async_openai_client_method(
     @wraps(orig_method)
     async def patched_async_openai_method(*args, **kwargs):
         input_parameters = InputParameters(model="NA")
-        
+
         # safe extract input parameters
         try:
             input_parameters: InputParameters = extract_input_parameters(
@@ -144,7 +144,7 @@ def _patch_async_openai_client_method(
         async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
             output_parameters = OutputParameters()
-            
+
             # safe extract output parameters
             try:
                 output_parameters = extract_output_parameters(
@@ -175,7 +175,7 @@ def _patch_sync_openai_client_method(
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
         input_parameters = InputParameters(model="NA")
-        
+
         # safe extract input parameters
         try:
             input_parameters: InputParameters = extract_input_parameters(
@@ -195,7 +195,7 @@ def _patch_sync_openai_client_method(
         def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
             output_parameters = OutputParameters()
-            
+
             # safe extract output parameters
             try:
                 output_parameters = extract_output_parameters(
@@ -203,7 +203,7 @@ def _patch_sync_openai_client_method(
                 )
             except Exception:
                 pass
-            
+
             _update_all_attributes(
                 input_parameters,
                 output_parameters,
