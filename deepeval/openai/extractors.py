@@ -18,7 +18,7 @@ def extract_input_parameters(
 
 
 def extract_input_parameters_from_completion(
-    kwargs: Dict[str, Any]
+    kwargs: Dict[str, Any],
 ) -> InputParameters:
     model = kwargs.get("model")
     messages = kwargs.get("messages") or []
@@ -53,7 +53,7 @@ def extract_input_parameters_from_completion(
 
 
 def extract_input_parameters_from_response(
-    kwargs: Dict[str, Any]
+    kwargs: Dict[str, Any],
 ) -> InputParameters:
     model = kwargs.get("model")
     input_payload = kwargs.get("input")
