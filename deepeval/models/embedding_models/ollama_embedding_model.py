@@ -1,5 +1,5 @@
 from ollama import Client, AsyncClient
-from typing import List
+from typing import List, Optional
 
 from deepeval.key_handler import EmbeddingKeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
@@ -13,15 +13,22 @@ retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
-    def __init__(self, *args, **kwargs):
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
+    def __init__(
+            self,
+            _base_url: Optional[str] = None,
+            _model_name: Optional[str] = None,
+            _api_key: Optional[str] = None,
+            *args, 
+            **kwargs
+        ):
+        self.base_url = _base_url + KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
         )
-        model_name = KEY_FILE_HANDLER.fetch_data(
+        model_name = _model_name + KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
         )
         # TODO: This is not being used. Clean it up in consistency PR
-        self.api_key = KEY_FILE_HANDLER.fetch_data(
+        self.api_key = _api_key + KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
         )
         self.args = args

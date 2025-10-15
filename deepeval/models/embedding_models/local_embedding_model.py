@@ -1,5 +1,5 @@
 from openai import OpenAI, AsyncOpenAI
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from deepeval.key_handler import EmbeddingKeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
@@ -15,14 +15,20 @@ retry_local = create_retry_decorator(PS.LOCAL)
 
 
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
-    def __init__(self, **kwargs):
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
+    def __init__(
+            self,
+            _base_url: Optional[str] = None,
+            _model_name: Optional[str] = None,
+            _api_key: Optional[str] = None,
+            **kwargs
+        ):
+        self.base_url = _base_url or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
         )
-        model_name = KEY_FILE_HANDLER.fetch_data(
+        model_name = _model_name or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
         )
-        self.api_key = KEY_FILE_HANDLER.fetch_data(
+        self.api_key = _api_key or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
         )
         self.kwargs = kwargs

@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 from openai import AzureOpenAI, AsyncAzureOpenAI
 from deepeval.key_handler import (
     EmbeddingKeyValues,
@@ -17,17 +17,24 @@ retry_azure = create_retry_decorator(PS.AZURE)
 
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
-    def __init__(self, **kwargs):
-        self.azure_openai_api_key = KEY_FILE_HANDLER.fetch_data(
+    def __init__(
+            self,
+            _open_api_key: Optional[str] = None,
+            _openai_api_version: Optional[str] = None,
+            _azure_embedding_deployment: Optional[str] = None,
+            _azure_endpoint: Optional[str] = None,
+            **kwargs
+        ):
+        self.azure_openai_api_key = _open_api_key or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.AZURE_OPENAI_API_KEY
         )
-        self.openai_api_version = KEY_FILE_HANDLER.fetch_data(
+        self.openai_api_version = _openai_api_version or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.OPENAI_API_VERSION
         )
-        self.azure_embedding_deployment = KEY_FILE_HANDLER.fetch_data(
+        self.azure_embedding_deployment = _azure_embedding_deployment or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
         )
-        self.azure_endpoint = KEY_FILE_HANDLER.fetch_data(
+        self.azure_endpoint = _azure_endpoint or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.AZURE_OPENAI_ENDPOINT
         )
         self.model_name = self.azure_embedding_deployment
