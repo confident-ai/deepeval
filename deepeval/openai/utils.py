@@ -8,7 +8,7 @@ from deepeval.tracing.context import current_span_context
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.utils import shorten, len_long
 from deepeval.openai.types import OutputParameters
-from openai.types.chat import ChatCompletionMessageParam
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletion
 from openai.types.responses import ResponseInputParam
 
 
@@ -283,3 +283,42 @@ def convert_input_messages_from_responses_create(
     
     return converted_messages
     
+def convert_output_messages_from_completions_create(
+    output: ChatCompletion
+) -> List[Union[TextMessage, ToolCallMessage]]:
+
+    if isinstance(output, ChatCompletion):
+        converted_messages: List[Union[TextMessage, ToolCallMessage]] = []
+        
+        for choice in output.choices:
+            if choice.message.content:
+                converted_messages.append(
+                    TextMessage(
+                        type="text",
+                        role="assistant",
+                        content=choice.message.content
+                    )
+                )
+            
+            if choice.message.tool_calls:
+                for tool_call in choice.message.tool_calls:
+                    tc_name = tool_call.function.name
+                    try:
+                        tc_args = json.loads(tool_call.function.arguments or "{}")
+                        if not isinstance(tc_args, dict):
+                            tc_args = {"value": tc_args}
+                    except (json.JSONDecodeError, ValueError, TypeError):
+                        tc_args = {"_raw_arguments": tool_call.function.arguments}
+                    
+                    converted_messages.append(
+                        ToolCallMessage(
+                            role="assistant",
+                            id=tool_call.id,
+                            name=tc_name,
+                            args=tc_args
+                        )
+                    )
+        
+        return converted_messages
+    
+    return output
