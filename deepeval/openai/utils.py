@@ -9,7 +9,7 @@ from deepeval.tracing.utils import make_json_serializable
 from deepeval.utils import shorten, len_long
 from deepeval.openai.types import OutputParameters
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion
-from openai.types.responses import ResponseInputParam
+from openai.types.responses import ResponseInputParam, Response
 
 
 _URL_MAX = 200
@@ -239,7 +239,7 @@ def convert_input_messages_from_completions_create(
             converted_messages.append(tool_output)
 
         # Extract user text message
-        elif isinstance(content, str) and role == "user":
+        elif isinstance(content, str):
             text_msg = TextMessage(
                 role=role,
                 type="text",
@@ -322,3 +322,27 @@ def convert_output_messages_from_completions_create(
         return converted_messages
     
     return output
+
+def check_tool_call_from_response(
+    response: Response
+) -> Optional[List[ToolCallMessage]]:
+
+    if not response.output_text:
+        converted_messages: List[ToolCallMessage] = []
+        for output_item in response.output:
+            if output_item.type == "function_call":
+                try:
+                    args = json.loads(output_item.arguments)
+                except Exception as e:
+                    args = {}
+                
+                converted_messages.append(ToolCallMessage(
+                    role="assistant",
+                    id=output_item.id,
+                    name=output_item.name,
+                    args=args
+                ))
+        return converted_messages
+
+    return None
+    

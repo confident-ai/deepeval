@@ -16,7 +16,7 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
-from deepeval.openai.utils import convert_input_messages_from_completions_create, convert_input_messages_from_responses_create, convert_output_messages_from_completions_create, create_child_tool_spans
+from deepeval.openai.utils import convert_input_messages_from_completions_create, convert_input_messages_from_responses_create, convert_output_messages_from_completions_create, create_child_tool_spans, check_tool_call_from_response
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -162,11 +162,16 @@ def _patch_async_openai_client_method(
 
             # change input messages
             input_messages = None
+            output_messages = None
+            
             if is_completion_method:
                 input_messages = convert_input_messages_from_completions_create(kwargs.get("messages"))
                 output_messages = convert_output_messages_from_completions_create(response)
             else:
                 input_messages = convert_input_messages_from_responses_create(kwargs.get("instructions"), kwargs.get("input"))
+                tool_calls = check_tool_call_from_response(response)
+                if tool_calls:
+                    output_messages = tool_calls
 
             if input_messages:
                 update_current_span(input=input_messages)
@@ -225,12 +230,16 @@ def _patch_sync_openai_client_method(
 
             # change input messages
             input_messages = None
+            output_messages = None
 
             if is_completion_method:
                 input_messages = convert_input_messages_from_completions_create(kwargs.get("messages"))
                 output_messages = convert_output_messages_from_completions_create(response)
             else:
                 input_messages = convert_input_messages_from_responses_create(kwargs.get("instructions"), kwargs.get("input"))
+                tool_calls = check_tool_call_from_response(response)
+                if tool_calls:
+                    output_messages = tool_calls
             
             if input_messages:
                 update_current_span(input=input_messages)
