@@ -238,7 +238,7 @@ def convert_input_messages_from_completions_create(
             )
             converted_messages.append(tool_output)
 
-        # Extract user text message
+        # Extract text messages
         elif isinstance(content, str):
             text_msg = TextMessage(
                 role=role,
@@ -246,8 +246,9 @@ def convert_input_messages_from_completions_create(
                 content=content
             )
             converted_messages.append(text_msg)
-
-        else:
+        
+        # Fallback to serializable message
+        else: 
             serializable = make_json_serializable(message)
             if isinstance(serializable, dict):
                 converted_messages.append(serializable)
@@ -269,23 +270,44 @@ def convert_input_messages_from_responses_create(
                 content=instructions
             )
         )
-    
-    if input and isinstance(input, str):
-        converted_messages.append(
-            TextMessage(
-                role="user",
-                type="text",
-                content=input
+    if input:
+        if isinstance(input, str):
+            converted_messages.append(
+                TextMessage(
+                    role="user",
+                    type="text",
+                    content=input
+                )
             )
-        )
-    elif input:
-        converted_messages.append(make_json_serializable(input))
+        elif isinstance(input, list):
+            for item in input:
+                if item.type == "message" and item.type == "input_text":
+                    converted_messages.append(
+
+                        TextMessage(
+                            role=item.role,
+                            type="text",
+                            content=item.content.text
+                        )
+                    )
+                elif item.type == "function_call":
+                    converted_messages.append(
+                        ToolCallMessage(
+                            role="assistant",
+                            id=item.id,
+                            name=item.name,
+                            args=json.loads(item.arguments)
+                        )
+                    )
+                elif item.type == "function_call_output":
+                    converted_messages.append(item)
+
     
     return converted_messages
     
 def convert_output_messages_from_completions_create(
     output: ChatCompletion
-) -> List[Union[TextMessage, ToolCallMessage]]:
+) -> Optional[List[Union[TextMessage, ToolCallMessage]]]:
 
     if isinstance(output, ChatCompletion):
         converted_messages: List[Union[TextMessage, ToolCallMessage]] = []
@@ -304,11 +326,9 @@ def convert_output_messages_from_completions_create(
                 for tool_call in choice.message.tool_calls:
                     tc_name = tool_call.function.name
                     try:
-                        tc_args = json.loads(tool_call.function.arguments or "{}")
-                        if not isinstance(tc_args, dict):
-                            tc_args = {"value": tc_args}
-                    except (json.JSONDecodeError, ValueError, TypeError):
-                        tc_args = {"_raw_arguments": tool_call.function.arguments}
+                        tc_args = json.loads(tool_call.function.arguments)
+                    except Exception:
+                        tc_args = {}
                     
                     converted_messages.append(
                         ToolCallMessage(
@@ -321,7 +341,7 @@ def convert_output_messages_from_completions_create(
         
         return converted_messages
     
-    return output
+    return None
 
 def check_tool_call_from_response(
     response: Response
@@ -333,7 +353,7 @@ def check_tool_call_from_response(
             if output_item.type == "function_call":
                 try:
                     args = json.loads(output_item.arguments)
-                except Exception as e:
+                except Exception:
                     args = {}
                 
                 converted_messages.append(ToolCallMessage(

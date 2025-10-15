@@ -193,11 +193,12 @@ def _patch_sync_openai_client_method(
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
         input_parameters = InputParameters(model="NA")
-        try:
+        
+        try: # safe extract input parameters
             input_parameters: InputParameters = extract_input_parameters(
                 is_completion_method, kwargs
             )
-        except Exception as e:
+        except Exception:
             pass
 
         llm_context = current_llm_context.get()
@@ -212,11 +213,11 @@ def _patch_sync_openai_client_method(
             response = orig_method(*args, **kwargs)
 
             output_parameters = OutputParameters()
-            try:
+            try: # safe extract output parameters
                 output_parameters = extract_output_parameters(
                     is_completion_method, response, input_parameters
                 )
-            except Exception as e:
+            except Exception:
                 pass
 
             _update_all_attributes(
