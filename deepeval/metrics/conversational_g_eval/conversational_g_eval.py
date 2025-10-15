@@ -44,7 +44,9 @@ class ConversationalGEval(BaseConversationalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        evaluation_template: Type[ConversationalGEvalTemplate] = ConversationalGEvalTemplate,
+        evaluation_template: Type[
+            ConversationalGEvalTemplate
+        ] = ConversationalGEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
