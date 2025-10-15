@@ -139,7 +139,7 @@ We can see that the `actual_output` of an `LLMTestCase` is first processed to ex
 The `LLMTestCase` we're showing symbolizes all nodes can get access to an `LLMTestCase` at any point in the DAG, but in this example only the first node that extracts all the headings from the `actual_output` needed the `LLMTestCase`.
 :::
 
-We can see that our decision tree involves **involves four types of nodes**:
+We can see that our decision tree involves **four types of nodes**:
 
 1. `TaskNode`s: this node simply processes an `LLMTestCase` into the desired format for subsequent judgement.
 2. `BinaryJudgementNode`s: this node will take in a `criteria`, and output a verdict of `True`/`False` based on whether that criteria has been met.
@@ -149,7 +149,7 @@ We can see that our decision tree involves **involves four types of nodes**:
 Putting everything into context, the `TaskNode` is the node that extracts summary headings from the `actual_output`, the `BinaryJudgementNode` is the node that determines if all headings are present, while the `NonBinaryJudgementNode` determines if they are in the correct order. The final score is determined by the four `VerdictNode`s.
 
 :::note
-Some might skeptical if this complexity is necessary but in reality, you'll quickly realize that the more processing you do, the more deterministic your evaluation gets. You can of course combine the correctness and ordering of the summary headings in one step, but as your criteria gets more complicated, your evaluation model is likely to hallucinate more and more.
+Some might be skeptical if this complexity is necessary but in reality, you'll quickly realize that the more processing you do, the more deterministic your evaluation gets. You can of course combine the correctness and ordering of the summary headings in one step, but as your criteria gets more complicated, your evaluation model is likely to hallucinate more and more.
 :::
 
 ### Implement DAG In Code
