@@ -5,13 +5,19 @@ from functools import wraps
 from deepeval.tracing.tracing import Observer
 from typing import Any
 
+
 def wrap_crew_kickoff():
     original_kickoff = Crew.kickoff
 
     @wraps(original_kickoff)
     def wrapper(self, *args, **kwargs):
         metric_collection, metrics = _check_metrics_and_metric_collection(self)
-        with Observer(span_type="crew", func_name="kickoff", metric_collection=metric_collection, metrics=metrics):
+        with Observer(
+            span_type="crew",
+            func_name="kickoff",
+            metric_collection=metric_collection,
+            metrics=metrics,
+        ):
             result = original_kickoff(self, *args, **kwargs)
 
         return result
@@ -25,7 +31,12 @@ def wrap_crew_kickoff_for_each():
     @wraps(original_kickoff_for_each)
     def wrapper(self, *args, **kwargs):
         metric_collection, metrics = _check_metrics_and_metric_collection(self)
-        with Observer(span_type="crew", func_name="kickoff_for_each", metric_collection=metric_collection, metrics=metrics):
+        with Observer(
+            span_type="crew",
+            func_name="kickoff_for_each",
+            metric_collection=metric_collection,
+            metrics=metrics,
+        ):
             result = original_kickoff_for_each(self, *args, **kwargs)
 
         return result
@@ -39,7 +50,12 @@ def wrap_crew_kickoff_async():
     @wraps(original_kickoff_async)
     async def wrapper(self, *args, **kwargs):
         metric_collection, metrics = _check_metrics_and_metric_collection(self)
-        with Observer(span_type="crew", func_name="kickoff_async", metric_collection=metric_collection, metrics=metrics):
+        with Observer(
+            span_type="crew",
+            func_name="kickoff_async",
+            metric_collection=metric_collection,
+            metrics=metrics,
+        ):
             result = await original_kickoff_async(self, *args, **kwargs)
 
         return result
@@ -53,7 +69,12 @@ def wrap_crew_kickoff_for_each_async():
     @wraps(original_kickoff_for_each_async)
     async def wrapper(self, *args, **kwargs):
         metric_collection, metrics = _check_metrics_and_metric_collection(self)
-        with Observer(span_type="crew", func_name="kickoff_for_each_async", metric_collection=metric_collection, metrics=metrics):
+        with Observer(
+            span_type="crew",
+            func_name="kickoff_for_each_async",
+            metric_collection=metric_collection,
+            metrics=metrics,
+        ):
             result = await original_kickoff_for_each_async(
                 self, *args, **kwargs
             )
@@ -88,7 +109,12 @@ def wrap_agent_execute_task():
     @wraps(original_execute_task)
     def wrapper(self, *args, **kwargs):
         metric_collection, metrics = _check_metrics_and_metric_collection(self)
-        with Observer(span_type="agent", func_name="execute_task", metric_collection=metric_collection, metrics=metrics):
+        with Observer(
+            span_type="agent",
+            func_name="execute_task",
+            metric_collection=metric_collection,
+            metrics=metrics,
+        ):
             result = original_execute_task(self, *args, **kwargs)
         return result
 

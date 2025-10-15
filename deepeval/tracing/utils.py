@@ -185,6 +185,7 @@ def replace_self_with_class_name(obj):
     except:
         return f"<self>"
 
+
 def prepare_tool_call_input_parameters(output: Any) -> Dict[str, Any]:
     res = make_json_serializable(output)
     if res and not isinstance(res, dict):

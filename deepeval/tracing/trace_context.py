@@ -47,13 +47,13 @@ def trace(
 
     if not current_trace:
         current_trace = trace_manager.start_new_trace()
-    
+
     if trace_metrics:
         current_trace.metrics = trace_metrics
-    
+
     if trace_metric_collection:
         current_trace.metric_collection = trace_metric_collection
-        
+
     current_trace_context.set(current_trace)
 
     current_llm_context.set(
@@ -79,5 +79,5 @@ def trace(
         update_current_trace(user_id=user_id)
     if thread_id:
         update_current_trace(thread_id=thread_id)
-            
+
     yield current_trace
