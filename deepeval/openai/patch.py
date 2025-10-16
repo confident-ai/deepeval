@@ -205,7 +205,7 @@ def _update_all_attributes(
 ):
     """Update span and trace attributes with input/output parameters."""
     update_current_span(
-        input=input_parameters.input or input_parameters.messages or "NA",
+        input=input_parameters.messages,
         output=output_parameters.output or "NA",
         tools_called=output_parameters.tools_called,
         # attributes to be added

@@ -6,6 +6,7 @@ from openai.types.responses import Response
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.openai.utils import stringify_multimodal_content
 from deepeval.openai.types import InputParameters, OutputParameters
+from deepeval.tracing.types import Message
 
 
 def extract_input_parameters(
@@ -35,9 +36,30 @@ def extract_input_parameters_from_completion(
     # extract first user input from messages
     input_arg = ""
     user_messages = []
+    messages_list = []
     for message in messages:
         role = message["role"]
         content = message["content"]
+        type = "default"
+        
+        # prepare content 
+        if role == "assistant" and message.get("tool_calls"):
+            content = message.get("tool_calls")
+            type = "tool_calls"
+        elif role == "tool":
+            # Create a dictionary with both content and tool_call_id
+            content = {
+                "content": content,
+                "tool_call_id": message.get("tool_call_id")
+            }
+            type = "tool_output"
+        
+        messages_list.append(Message(
+            role=role,
+            type=type,
+            content=content
+        ))
+    
         if role == "user":
             user_messages.append(content)
     if len(user_messages) > 0:
