@@ -528,13 +528,17 @@ def check_pydantic_ai_trace_input_output(
 
     return input_val, output_val
 
+
 def check_model_parameters(span: ReadableSpan) -> Optional[dict]:
     try:
         raw_model_parameters = span.attributes.get("model_request_parameters")
         if raw_model_parameters and isinstance(raw_model_parameters, str):
             model_parameters = json.loads(raw_model_parameters)
             if isinstance(model_parameters, dict):
-                return {"role": "Model Request Parameters", "content": model_parameters}
+                return {
+                    "role": "Model Request Parameters",
+                    "content": model_parameters,
+                }
     except Exception:
         pass
     return None
