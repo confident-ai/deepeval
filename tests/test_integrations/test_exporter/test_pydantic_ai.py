@@ -24,6 +24,8 @@ async def test_pydantic_ai_trace():
             actual_dict["output"]["content"] == "Final response text"
         ), f"Expected output content to be 'Final response text', got {actual_dict['output']['content']}"
 
+        assert actual_dict["input"][-1]["role"] == "Model Request Parameters", f"Expected input role to be 'Model Request Parameters', got {actual_dict['input'][-1]['role']}"
+
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None

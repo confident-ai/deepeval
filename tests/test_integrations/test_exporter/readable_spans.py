@@ -88,6 +88,7 @@ readable_span = ReadableSpan(
         "gen_ai.usage.output_tokens": 500,
         "confident.trace.environment": "development",
         "gen_ai.usage.details.reasoning_tokens": 300,
+        "model_request_parameter": '{"temperature": 0.7, "max_tokens": 2048, "top_p": 0.9, "frequency_penalty": 0.5, "presence_penalty": 0.2}',
     },  # Single attribute
     status=Status(StatusCode.OK),
     start_time=1000000000,  # nanoseconds since epoch
