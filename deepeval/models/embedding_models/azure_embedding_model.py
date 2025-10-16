@@ -17,40 +17,51 @@ retry_azure = create_retry_decorator(PS.AZURE)
 
 
 class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
+
+    REQUIRED_KEY_MAPPING = {
+        "api_key": ModelKeyValues.AZURE_OPENAI_API_KEY,
+        "api_version": ModelKeyValues.OPENAI_API_VERSION,
+        "azure_endpoint": ModelKeyValues.AZURE_OPENAI_ENDPOINT,
+        "azure_deployment": EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
+    }
+
     def __init__(
         self,
-        _open_api_key: Optional[str] = None,
-        _openai_api_version: Optional[str] = None,
-        _azure_embedding_deployment: Optional[str] = None,
-        _azure_endpoint: Optional[str] = None,
-        **kwargs
+        config: Optional[Dict] = None,
+        **generation_kwargs
     ):
-        self.azure_openai_api_key = (
-            _open_api_key
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.AZURE_OPENAI_API_KEY)
-        )
-        self.openai_api_version = (
-            _openai_api_version
-            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
-        )
-        self.azure_embedding_deployment = (
-            _azure_embedding_deployment
-            or KEY_FILE_HANDLER.fetch_data(
-                EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
-            )
-        )
-        self.azure_endpoint = _azure_endpoint or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.AZURE_OPENAI_ENDPOINT
-        )
-        self.model_name = self.azure_embedding_deployment
-        self.kwargs = kwargs
+        """
+        Initializes an Azure OpenAI embedding model.
+        Please pass 'api_key', 'api_version', 'azure_endpoint' and 'azure_deployment' in your config if you're not using env
+
+        Required env values (if no config):
+            - AZURE_OPENAI_API_KEY
+            - OPENAI_API_VERSION
+            - AZURE_OPENAI_ENDPOINT
+            - AZURE_EMBEDDING_DEPLOYMENT_NAME
+        """
+        self.config = self._load_config(config)
+        self.generation_kwargs = generation_kwargs or {}
+        self.model_name = self.config["azure_deployment"]
+
+    def _load_config(self, config: Optional[Dict]) -> Dict:
+        if config is not None:
+            missing = [key for key in self.REQUIRED_KEY_MAPPING if key not in config]
+            if missing:
+                raise ValueError(f"Missing required params in 'config': {missing}")
+            return config
+        else:
+            return {
+                key: KEY_FILE_HANDLER.fetch_data(env_key)
+                for key, env_key in self.REQUIRED_KEY_MAPPING.items()
+            }
 
     @retry_azure
     def embed_text(self, text: str) -> List[float]:
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
             input=text,
-            model=self.azure_embedding_deployment,
+            model=self.model_name,
         )
         return response.data[0].embedding
 
@@ -59,7 +70,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         client = self.load_model(async_mode=False)
         response = client.embeddings.create(
             input=texts,
-            model=self.azure_embedding_deployment,
+            model=self.model_name,
         )
         return [item.embedding for item in response.data]
 
@@ -68,7 +79,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
             input=text,
-            model=self.azure_embedding_deployment,
+            model=self.model_name,
         )
         return response.data[0].embedding
 
@@ -77,7 +88,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         client = self.load_model(async_mode=True)
         response = await client.embeddings.create(
             input=texts,
-            model=self.azure_embedding_deployment,
+            model=self.model_name,
         )
         return [item.embedding for item in response.data]
 
@@ -89,25 +100,15 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             return self._build_client(AzureOpenAI)
         return self._build_client(AsyncAzureOpenAI)
 
-    def _client_kwargs(self) -> Dict:
-        """
-        If Tenacity is managing retries, force OpenAI SDK retries off to avoid double retries.
-        If the user opts into SDK retries for 'azure' via DEEPEVAL_SDK_RETRY_PROVIDERS,
-        leave their retry settings as is.
-        """
-        kwargs = dict(self.kwargs or {})
-        if not sdk_retries_for(PS.AZURE):
-            kwargs["max_retries"] = 0
-        return kwargs
-
     def _build_client(self, cls):
-        kw = dict(
-            api_key=self.azure_openai_api_key,
-            api_version=self.openai_api_version,
-            azure_endpoint=self.azure_endpoint,
-            azure_deployment=self.azure_embedding_deployment,
-            **self._client_kwargs(),
-        )
+        generation_kwargs = self.generation_kwargs.copy()
+        if not sdk_retries_for(PS.AZURE):
+            generation_kwargs["max_retries"] = 0
+
+        kw = {
+            **self.config,
+            **generation_kwargs,
+        }
         try:
             return cls(**kw)
         except TypeError as e:
