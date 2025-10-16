@@ -4,7 +4,7 @@ from typing import Any, Union, Dict
 from openai.types.responses import Response
 
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.openai.utils import stringify_multimodal_content, render_messages
+from deepeval.openai.utils import render_response_input, stringify_multimodal_content, render_messages
 from deepeval.openai.types import InputParameters, OutputParameters
 from deepeval.tracing.types import Message
 
@@ -68,7 +68,20 @@ def extract_input_parameters_from_response(
         if tools is not None
         else None
     )
-    messages = input_payload if isinstance(input_payload, list) else None
+    if isinstance(input_payload, list):
+        messages = render_response_input(input_payload)
+    elif isinstance(input_payload, str):
+        messages = [
+            {
+                "role": "user",
+                "content": input_payload,
+            }
+        ]
+    if instructions:
+        messages.insert(0, {
+            "role": "system",
+            "content": instructions,
+        })
     return InputParameters(
         model=model,
         input=stringify_multimodal_content(input_payload),
