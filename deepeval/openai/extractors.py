@@ -4,7 +4,7 @@ from typing import Any, Union, Dict
 from openai.types.responses import Response
 
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.openai.utils import stringify_multimodal_content
+from deepeval.openai.utils import stringify_multimodal_content, render_messages
 from deepeval.openai.types import InputParameters, OutputParameters
 from deepeval.tracing.types import Message
 
@@ -36,34 +36,16 @@ def extract_input_parameters_from_completion(
     # extract first user input from messages
     input_arg = ""
     user_messages = []
-    messages_list = []
     for message in messages:
         role = message["role"]
         content = message["content"]
-        type = "default"
-        
-        # prepare content 
-        if role == "assistant" and message.get("tool_calls"):
-            content = message.get("tool_calls")
-            type = "tool_calls"
-        elif role == "tool":
-            # Create a dictionary with both content and tool_call_id
-            content = {
-                "content": content,
-                "tool_call_id": message.get("tool_call_id")
-            }
-            type = "tool_output"
-        
-        messages_list.append(Message(
-            role=role,
-            type=type,
-            content=content
-        ))
-    
         if role == "user":
             user_messages.append(content)
     if len(user_messages) > 0:
         input_arg = user_messages[0]
+    
+    # render messages
+    messages = render_messages(messages)
 
     return InputParameters(
         model=model,
@@ -134,6 +116,16 @@ def extract_output_parameters_from_completion(
                     description=tool_descriptions.get(tool_call.function.name),
                 )
             )
+    
+    # If output is empty and tool calls exist, format them as string
+    if not output and tools_called:
+        formatted_calls = []
+        for tool_call in tools_called:
+            formatted_call = f"Tool: {tool_call.name}\nParameters: {json.dumps(tool_call.input_parameters, indent=2)}"
+            if tool_call.description:
+                formatted_call += f"\nDescription: {tool_call.description}"
+            formatted_calls.append(formatted_call)
+        output = "\n\n".join(formatted_calls)
 
     return OutputParameters(
         output=output,

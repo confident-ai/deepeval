@@ -16,7 +16,6 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
-from deepeval.openai.utils import create_child_tool_spans
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -222,9 +221,6 @@ def _update_all_attributes(
         output_token_count=output_parameters.completion_tokens,
         prompt=llm_context.prompt,
     )
-
-    if output_parameters.tools_called:
-        create_child_tool_spans(output_parameters)
 
     __update_input_and_output_of_current_trace(
         input_parameters, output_parameters
