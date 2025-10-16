@@ -130,3 +130,8 @@ async def generate_actual_json_dump():
     finally:
         trace_testing_manager.test_name = None
         trace_testing_manager.test_dict = None
+
+
+if __name__ == "__main__":
+    add_trace_processor(DeepEvalTracingProcessor())
+    asyncio.run(generate_actual_json_dump())
