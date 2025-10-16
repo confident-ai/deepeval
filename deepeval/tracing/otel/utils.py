@@ -528,11 +528,12 @@ def check_pydantic_ai_trace_input_output(
 
     return input_val, output_val
 
+
 def format_model_parameters(params: dict, indent_level: int = 0) -> str:
     """Format model parameters dictionary into a readable string."""
     lines = []
     indent = "  " * indent_level
-    
+
     for key, value in params.items():
         if isinstance(value, dict):
             # Handle nested dictionaries with braces
@@ -558,11 +559,15 @@ def format_model_parameters(params: dict, indent_level: int = 0) -> str:
                                     lines.append(f"{indent}    {sub_key}: {{}}")
                                 else:
                                     lines.append(f"{indent}    {sub_key}: {{")
-                                    nested_lines = format_model_parameters(sub_value, indent_level + 2)
+                                    nested_lines = format_model_parameters(
+                                        sub_value, indent_level + 2
+                                    )
                                     lines.append(nested_lines)
                                     lines.append(f"{indent}    }}")
                             else:
-                                lines.append(f"{indent}    {sub_key}: {sub_value}")
+                                lines.append(
+                                    f"{indent}    {sub_key}: {sub_value}"
+                                )
                         lines.append(f"{indent}  }}")
                     else:
                         lines.append(f"{indent}  - {item}")
@@ -572,8 +577,9 @@ def format_model_parameters(params: dict, indent_level: int = 0) -> str:
             lines.append(f"{indent}{key}: {str(value).lower()}")
         else:
             lines.append(f"{indent}{key}: {value}")
-    
+
     return "\n".join(lines)
+
 
 def check_model_parameters(span: ReadableSpan) -> Optional[dict]:
     try:
