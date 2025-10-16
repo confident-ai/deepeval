@@ -2,8 +2,11 @@ import os
 import json
 from typing import Any, Dict
 from deepeval.openai import OpenAI
+from deepeval.tracing.tracing import observe
 
 # 1) Define a local "tool" implementation (runs in your code)
+
+@observe(type="tool")
 def get_weather(location: str, unit: str = "c") -> Dict[str, Any]:
     # Demo stub: replace with a real API call if desired
     data = {
@@ -38,6 +41,7 @@ TOOLS = [
     }
 ]
 
+@observe
 def main():
     # Ensure your API key is set: export OPENAI_API_KEY=...
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))

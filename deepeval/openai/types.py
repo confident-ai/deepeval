@@ -1,4 +1,4 @@
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional, List, Dict, Union
 from pydantic import BaseModel
 
 from deepeval.test_case.llm_test_case import ToolCall
@@ -10,7 +10,7 @@ class InputParameters(BaseModel):
     input: Optional[str] = None
     tools: Optional[List[Dict[str, Any]]] = None
     instructions: Optional[str] = None
-    messages: Optional[List[Message]] = None
+    messages: Optional[Union[List[Message], List[Dict[str, Any]]]] = None
     tool_descriptions: Optional[Dict[str, str]] = None
 
 
