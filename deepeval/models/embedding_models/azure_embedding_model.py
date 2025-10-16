@@ -22,7 +22,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         openai_api_key: Optional[str] = None,
         openai_api_version: Optional[str] = None,
         azure_endpoint: Optional[str] = None,
-        azure_deployment: Optional[str] = None,        
+        azure_deployment: Optional[str] = None,
         model: Optional[str] = None,
         generation_kwargs: Optional[Dict] = None,
         **client_kwargs,
@@ -30,13 +30,14 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         self.openai_api_key = openai_api_key or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.AZURE_OPENAI_API_KEY
         )
-        self.openai_api_version = openai_api_version or KEY_FILE_HANDLER.fetch_data(
-            ModelKeyValues.OPENAI_API_VERSION
+        self.openai_api_version = (
+            openai_api_version
+            or KEY_FILE_HANDLER.fetch_data(ModelKeyValues.OPENAI_API_VERSION)
         )
         self.azure_endpoint = azure_endpoint or KEY_FILE_HANDLER.fetch_data(
             ModelKeyValues.AZURE_OPENAI_ENDPOINT
         )
-        self.azure_deployment = azure_deployment  or KEY_FILE_HANDLER.fetch_data(
+        self.azure_deployment = azure_deployment or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME
         )
         self.client_kwargs = client_kwargs or {}
@@ -93,8 +94,8 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             api_key=self.openai_api_key,
             api_version=self.openai_api_version,
             azure_endpoint=self.azure_endpoint,
-            azure_deployment=self.azure_deployment,            
-            **client_kwargs
+            azure_deployment=self.azure_deployment,
+            **client_kwargs,
         )
         try:
             return cls(**client_init_kwargs)
