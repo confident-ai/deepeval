@@ -312,12 +312,10 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
     ) -> float:
-        tool_score = sum(score.score for score in tool_accuracy_score) / len(
-            tool_accuracy_score
-        )
-        args_score = sum(score.score for score in args_accuracy_score) / len(
-            args_accuracy_score
-        )
+        tool_divisor = len(tool_accuracy_score) if len(tool_accuracy_score) > 0 else 1
+        args_divisor = len(args_accuracy_score) if len(args_accuracy_score) > 0 else 1
+        tool_score = sum(score.score for score in tool_accuracy_score) / tool_divisor
+        args_score = sum(score.score for score in args_accuracy_score) / args_divisor
         return min(tool_score, args_score)
 
     def _generate_reason(
