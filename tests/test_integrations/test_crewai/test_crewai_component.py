@@ -85,7 +85,7 @@ json_path = os.path.join(_current_dir, "crewai_component.json")
 
 
 # @generate_trace_json(json_path)
-# @assert_trace_json(json_path)
+@assert_trace_json(json_path)
 def test_crewai_component():
 
     with trace(
