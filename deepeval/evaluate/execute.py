@@ -1062,6 +1062,7 @@ def execute_agentic_test_cases(
 
                 start_time = time.perf_counter()
 
+                skip_metrics_for_this_golden = False
                 # Handle trace-level metrics
                 if _skip_metrics_for_error(trace=current_trace):
                     trace_api.status = TraceSpanStatus.ERRORED
@@ -1125,8 +1126,8 @@ def execute_agentic_test_cases(
                                             current_trace
                                         ),
                                     )
-                                return
-                            if llm_test_case.actual_output is None:
+                                skip_metrics_for_this_golden = True
+                            elif llm_test_case.actual_output is None:
                                 trace_api.status = TraceSpanStatus.ERRORED
                                 current_trace.status = TraceSpanStatus.ERRORED
                                 if current_trace.root_spans:
@@ -1146,37 +1147,42 @@ def execute_agentic_test_cases(
                                             current_trace
                                         ),
                                     )
-                                return
+                                skip_metrics_for_this_golden = True
 
-                        for metric in current_trace.metrics:
-                            metric.skipped = False
-                            metric.error = None
-                            if display_config.verbose_mode is not None:
-                                metric.verbose_mode = (
-                                    display_config.verbose_mode
+                        if not skip_metrics_for_this_golden:
+                            for metric in current_trace.metrics:
+                                metric.skipped = False
+                                metric.error = None
+                                if display_config.verbose_mode is not None:
+                                    metric.verbose_mode = (
+                                        display_config.verbose_mode
+                                    )
+
+                            trace_api.metrics_data = []
+                            for metric in current_trace.metrics:
+                                res = _execute_metric(
+                                    metric=metric,
+                                    test_case=llm_test_case,
+                                    show_metric_indicator=show_metric_indicator,
+                                    in_component=True,
+                                    error_config=error_config,
                                 )
+                                if res == "skip":
+                                    continue
 
-                        trace_api.metrics_data = []
-                        for metric in current_trace.metrics:
-                            res = _execute_metric(
-                                metric=metric,
-                                test_case=llm_test_case,
-                                show_metric_indicator=show_metric_indicator,
-                                in_component=True,
-                                error_config=error_config,
-                            )
-                            if res == "skip":
-                                continue
+                                if not metric.skipped:
+                                    metric_data = create_metric_data(metric)
+                                    trace_api.metrics_data.append(metric_data)
+                                    api_test_case.update_metric_data(
+                                        metric_data
+                                    )
+                                    api_test_case.update_status(
+                                        metric_data.success
+                                    )
+                                    update_pbar(progress, pbar_eval_id)
 
-                            if not metric.skipped:
-                                metric_data = create_metric_data(metric)
-                                trace_api.metrics_data.append(metric_data)
-                                api_test_case.update_metric_data(metric_data)
-                                api_test_case.update_status(metric_data.success)
-                                update_pbar(progress, pbar_eval_id)
-
-                    # Then handle span-level metrics
-                    dfs(current_trace.root_spans[0], progress, pbar_eval_id)
+                        # Then handle span-level metrics
+                        dfs(current_trace.root_spans[0], progress, pbar_eval_id)
 
                 end_time = time.perf_counter()
                 run_duration = end_time - start_time
@@ -1896,6 +1902,7 @@ def execute_agentic_test_cases_from_loop(
                 start_time = time.perf_counter()
 
                 # Handle trace-level metrics
+                skip_metrics_for_this_golden = False
                 if _skip_metrics_for_error(trace=current_trace):
                     trace_api.status = TraceSpanStatus.ERRORED
                     if progress and pbar_eval_id is not None:
@@ -1959,8 +1966,8 @@ def execute_agentic_test_cases_from_loop(
                                             current_trace
                                         ),
                                     )
-                                return
-                            if llm_test_case.actual_output is None:
+                                skip_metrics_for_this_golden = True
+                            elif llm_test_case.actual_output is None:
                                 trace_api.status = TraceSpanStatus.ERRORED
                                 current_trace.status = TraceSpanStatus.ERRORED
                                 if current_trace.root_spans:
@@ -1980,34 +1987,39 @@ def execute_agentic_test_cases_from_loop(
                                             current_trace
                                         ),
                                     )
-                                return
+                                skip_metrics_for_this_golden = True
 
-                        for metric in current_trace.metrics:
-                            metric.skipped = False
-                            metric.error = None
-                            if display_config.verbose_mode is not None:
-                                metric.verbose_mode = (
-                                    display_config.verbose_mode
+                        if not skip_metrics_for_this_golden:
+                            for metric in current_trace.metrics:
+                                metric.skipped = False
+                                metric.error = None
+                                if display_config.verbose_mode is not None:
+                                    metric.verbose_mode = (
+                                        display_config.verbose_mode
+                                    )
+
+                            trace_api.metrics_data = []
+                            for metric in current_trace.metrics:
+                                res = _execute_metric(
+                                    metric=metric,
+                                    test_case=llm_test_case,
+                                    show_metric_indicator=show_metric_indicator,
+                                    in_component=True,
+                                    error_config=error_config,
                                 )
+                                if res == "skip":
+                                    continue
 
-                        trace_api.metrics_data = []
-                        for metric in current_trace.metrics:
-                            res = _execute_metric(
-                                metric=metric,
-                                test_case=llm_test_case,
-                                show_metric_indicator=show_metric_indicator,
-                                in_component=True,
-                                error_config=error_config,
-                            )
-                            if res == "skip":
-                                continue
-
-                            if not metric.skipped:
-                                metric_data = create_metric_data(metric)
-                                trace_api.metrics_data.append(metric_data)
-                                api_test_case.update_metric_data(metric_data)
-                                api_test_case.update_status(metric_data.success)
-                                update_pbar(progress, pbar_eval_id)
+                                if not metric.skipped:
+                                    metric_data = create_metric_data(metric)
+                                    trace_api.metrics_data.append(metric_data)
+                                    api_test_case.update_metric_data(
+                                        metric_data
+                                    )
+                                    api_test_case.update_status(
+                                        metric_data.success
+                                    )
+                                    update_pbar(progress, pbar_eval_id)
 
                     # Then handle span-level metrics
                     dfs(current_trace.root_spans[0], progress, pbar_eval_id)
@@ -2018,6 +2030,7 @@ def execute_agentic_test_cases_from_loop(
             api_test_case.update_run_duration(run_duration)
             test_run_manager.update_test_run(api_test_case, test_case)
             test_results.append(create_test_result(api_test_case))
+            test_results.extend(extract_trace_test_results(trace_api))
 
             update_pbar(progress, pbar_id)
 
