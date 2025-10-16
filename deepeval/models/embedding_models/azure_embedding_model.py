@@ -32,7 +32,11 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     ):
         """
         Initializes an Azure OpenAI embedding model.
-        Please pass 'api_key', 'api_version', 'azure_endpoint' and 'azure_deployment' in your config if you're not using env
+        Required config values (if no env):
+            - api_key
+            - api_version
+            - azure_endpoint
+            - azure_deployment
 
         Required env values (if no config):
             - AZURE_OPENAI_API_KEY
