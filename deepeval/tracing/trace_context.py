@@ -36,7 +36,6 @@ def trace(
     thread_id: Optional[str] = None,
     trace_metric_collection: Optional[str] = None,
     trace_metrics: Optional[List[BaseMetric]] = None,
-    
     # llm span attributes
     prompt: Optional[Prompt] = None,
     llm_metrics: Optional[List[BaseMetric]] = None,

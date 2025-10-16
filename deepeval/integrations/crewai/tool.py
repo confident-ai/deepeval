@@ -51,6 +51,7 @@ def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
 
     # Case 3: @tool(result_as_answer=True, ...) — kwargs only
     if len(args) == 0:
+
         def _decorator(f: Callable) -> Callable:
             tool_name = f.__name__
 
