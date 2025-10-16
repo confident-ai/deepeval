@@ -1010,20 +1010,6 @@ def execute_agentic_test_cases(
                                     advance=count_metrics_in_span_subtree(span),
                                 )
                             return
-                        if llm_test_case.actual_output is None:
-                            api_span.status = TraceSpanStatus.ERRORED
-                            api_span.error = str(
-                                MissingTestCaseParamsError(
-                                    "No actual_output; did your app raise before updating the trace?"
-                                )
-                            )
-                            if progress and pbar_eval_id is not None:
-                                update_pbar(
-                                    progress,
-                                    pbar_eval_id,
-                                    advance=count_metrics_in_span_subtree(span),
-                                )
-                            return
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
@@ -1116,27 +1102,6 @@ def execute_agentic_test_cases(
                                         DeepEvalError(
                                             "Trace has metrics but no LLMTestCase (missing input/output). "
                                             "Are you sure you called `update_current_trace()`?"
-                                        )
-                                    )
-                                if progress and pbar_eval_id is not None:
-                                    update_pbar(
-                                        progress,
-                                        pbar_eval_id,
-                                        advance=count_total_metrics_for_trace(
-                                            current_trace
-                                        ),
-                                    )
-                                skip_metrics_for_this_golden = True
-                            elif llm_test_case.actual_output is None:
-                                trace_api.status = TraceSpanStatus.ERRORED
-                                current_trace.status = TraceSpanStatus.ERRORED
-                                if current_trace.root_spans:
-                                    current_trace.root_spans[0].status = (
-                                        TraceSpanStatus.ERRORED
-                                    )
-                                    current_trace.root_spans[0].error = str(
-                                        MissingTestCaseParamsError(
-                                            "No actual_output; did your app raise before updating the trace?"
                                         )
                                     )
                                 if progress and pbar_eval_id is not None:
@@ -1528,20 +1493,6 @@ async def _a_execute_span_test_case(
                     advance=count_metrics_in_span_subtree(span),
                 )
             return
-        if llm_test_case.actual_output is None:
-            api_span.status = TraceSpanStatus.ERRORED
-            api_span.error = str(
-                MissingTestCaseParamsError(
-                    "No actual_output; did your app raise before updating the trace?"
-                )
-            )
-            if progress and pbar_eval_id is not None:
-                update_pbar(
-                    progress,
-                    pbar_eval_id,
-                    advance=count_metrics_in_span_subtree(span),
-                )
-            return
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     test_case: Optional[LLMTestCase] = llm_test_case
@@ -1634,23 +1585,6 @@ async def _a_execute_trace_test_case(
                     DeepEvalError(
                         "Trace has metrics but no LLMTestCase (missing input/output). "
                         "Are you sure you called `update_current_trace()`?"
-                    )
-                )
-            if progress and pbar_eval_id is not None:
-                update_pbar(
-                    progress,
-                    pbar_eval_id,
-                    advance=count_total_metrics_for_trace(trace),
-                )
-            return
-        if llm_test_case.actual_output is None:
-            trace.status = TraceSpanStatus.ERRORED
-            trace_api.status = TraceSpanStatus.ERRORED
-            if trace.root_spans:
-                trace.root_spans[0].status = TraceSpanStatus.ERRORED
-                trace.root_spans[0].error = str(
-                    MissingTestCaseParamsError(
-                        "No actual_output; did your app raise before updating the trace?"
                     )
                 )
             if progress and pbar_eval_id is not None:
@@ -1956,27 +1890,6 @@ def execute_agentic_test_cases_from_loop(
                                         DeepEvalError(
                                             "Trace has metrics but no LLMTestCase (missing input/output). "
                                             "Are you sure you called `update_current_trace()`?"
-                                        )
-                                    )
-                                if progress and pbar_eval_id is not None:
-                                    update_pbar(
-                                        progress,
-                                        pbar_eval_id,
-                                        advance=count_total_metrics_for_trace(
-                                            current_trace
-                                        ),
-                                    )
-                                skip_metrics_for_this_golden = True
-                            elif llm_test_case.actual_output is None:
-                                trace_api.status = TraceSpanStatus.ERRORED
-                                current_trace.status = TraceSpanStatus.ERRORED
-                                if current_trace.root_spans:
-                                    current_trace.root_spans[0].status = (
-                                        TraceSpanStatus.ERRORED
-                                    )
-                                    current_trace.root_spans[0].error = str(
-                                        MissingTestCaseParamsError(
-                                            "No actual_output; did your app raise before updating the trace?"
                                         )
                                     )
                                 if progress and pbar_eval_id is not None:
