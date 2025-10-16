@@ -528,67 +528,13 @@ def check_pydantic_ai_trace_input_output(
 
     return input_val, output_val
 
-
-def format_model_parameters(params: dict, indent_level: int = 0) -> str:
-    """Format model parameters dictionary into a readable string."""
-    lines = []
-    indent = "  " * indent_level
-
-    for key, value in params.items():
-        if isinstance(value, dict):
-            # Handle nested dictionaries with braces
-            if len(value) == 0:
-                lines.append(f"{indent}{key}: {{}}")
-            else:
-                lines.append(f"{indent}{key}: {{")
-                nested_lines = format_model_parameters(value, indent_level + 1)
-                lines.append(nested_lines)
-                lines.append(f"{indent}}}")
-        elif isinstance(value, list):
-            if len(value) == 0:
-                lines.append(f"{indent}{key}: []")
-            else:
-                lines.append(f"{indent}{key}:")
-                for item in value:
-                    if isinstance(item, dict):
-                        # Handle dictionaries in lists with braces
-                        lines.append(f"{indent}  - {{")
-                        for sub_key, sub_value in item.items():
-                            if isinstance(sub_value, dict):
-                                if len(sub_value) == 0:
-                                    lines.append(f"{indent}    {sub_key}: {{}}")
-                                else:
-                                    lines.append(f"{indent}    {sub_key}: {{")
-                                    nested_lines = format_model_parameters(
-                                        sub_value, indent_level + 2
-                                    )
-                                    lines.append(nested_lines)
-                                    lines.append(f"{indent}    }}")
-                            else:
-                                lines.append(
-                                    f"{indent}    {sub_key}: {sub_value}"
-                                )
-                        lines.append(f"{indent}  }}")
-                    else:
-                        lines.append(f"{indent}  - {item}")
-        elif value is None:
-            lines.append(f"{indent}{key}: null")
-        elif isinstance(value, bool):
-            lines.append(f"{indent}{key}: {str(value).lower()}")
-        else:
-            lines.append(f"{indent}{key}: {value}")
-
-    return "\n".join(lines)
-
-
 def check_model_parameters(span: ReadableSpan) -> Optional[dict]:
     try:
         raw_model_parameters = span.attributes.get("model_request_parameters")
         if raw_model_parameters and isinstance(raw_model_parameters, str):
             model_parameters = json.loads(raw_model_parameters)
             if isinstance(model_parameters, dict):
-                content = format_model_parameters(model_parameters)
-                return {"role": "Model Request Parameters", "content": content}
+                return {"role": "Model Request Parameters", "content": model_parameters}
     except Exception:
         pass
     return None
