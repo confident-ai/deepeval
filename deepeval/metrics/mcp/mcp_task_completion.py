@@ -241,8 +241,9 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         return tasks
 
     def _calculate_score(self, scores: List[TaskScore]) -> float:
+        score_divsor = len(scores) if len(scores) > 0 else 1
         total_score = sum(score.score for score in scores)
-        return total_score / len(scores)
+        return total_score / score_divsor
 
     def is_successful(self) -> bool:
         if self.error is not None:

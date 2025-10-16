@@ -40,11 +40,19 @@ def trace(
     expected_tools: Optional[List[ToolCall]] = None,
     context: Optional[List[str]] = None,
     retrieval_context: Optional[List[str]] = None,
+    trace_metric_collection: Optional[str] = None,
+    trace_metrics: Optional[List[BaseMetric]] = None,
 ):
     current_trace = current_trace_context.get()
 
     if not current_trace:
         current_trace = trace_manager.start_new_trace()
+
+    if trace_metrics:
+        current_trace.metrics = trace_metrics
+
+    if trace_metric_collection:
+        current_trace.metric_collection = trace_metric_collection
 
     current_trace_context.set(current_trace)
 

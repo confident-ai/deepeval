@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from crewai.utilities.events.base_event_listener import BaseEventListener
+    from crewai.events import BaseEventListener
     from crewai.events import (
         CrewKickoffStartedEvent,
         CrewKickoffCompletedEvent,
