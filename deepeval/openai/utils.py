@@ -133,21 +133,62 @@ def render_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     for message in messages:
         role = message["role"]
+        content = message.get("content")
         if role == "assistant" and message.get("tool_calls"):
             tool_calls = message.get("tool_calls")
 
             for tool_call in tool_calls:
                 messages_list.append({
                     "role": "Assistant (tool call)",
-                    "content": str(tool_call),
+                    "content": _render_content(tool_call) if isinstance(tool_call, dict) else str(tool_call),
                 })
         
         else:
             messages_list.append(
                 {
                     "role": role,
-                    "content": str(message.get("content")),
+                    "content": _render_content(content) if isinstance(content, dict) else str(content),
                 }
             )
     
     return messages_list
+
+def render_response_input(input: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
+    messages_list = []
+
+    for item in input:
+        type = item.get("type")
+        if type == "message":
+            messages_list.append({
+                "role": item.get("role"),
+                "content": str(item.get("content")),
+            })
+        else:
+            messages_list.append({
+                "role": type,
+                "content": _render_content(item),  # Using the new function here
+            })
+    
+    return messages_list
+
+def _render_content(content: Dict[str, Any], indent: int = 0) -> str:
+    """
+    Renders a dictionary as a formatted string with indentation for nested structures.
+    """
+    if not content:
+        return ""
+    
+    lines = []
+    prefix = "  " * indent
+    
+    for key, value in content.items():
+        if isinstance(value, dict):
+            lines.append(f"{prefix}{key}:")
+            lines.append(_render_content(value, indent + 1))
+        elif isinstance(value, list):
+            lines.append(f"{prefix}{key}: {_compact_dump(value)}")
+        else:
+            lines.append(f"{prefix}{key}: {value}")
+    
+    return "\n".join(lines)
