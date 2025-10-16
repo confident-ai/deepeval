@@ -28,20 +28,23 @@ current_llm_context: ContextVar[Optional[LlmContext]] = ContextVar(
 
 @contextmanager
 def trace(
-    prompt: Optional[Prompt] = None,
-    llm_metrics: Optional[List[BaseMetric]] = None,
-    llm_metric_collection: Optional[str] = None,
+    # trace attributes
     name: Optional[str] = None,
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     user_id: Optional[str] = None,
     thread_id: Optional[str] = None,
+    trace_metric_collection: Optional[str] = None,
+    trace_metrics: Optional[List[BaseMetric]] = None,
+    
+    # llm span attributes
+    prompt: Optional[Prompt] = None,
+    llm_metrics: Optional[List[BaseMetric]] = None,
+    llm_metric_collection: Optional[str] = None,
     expected_output: Optional[str] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     context: Optional[List[str]] = None,
     retrieval_context: Optional[List[str]] = None,
-    trace_metric_collection: Optional[str] = None,
-    trace_metrics: Optional[List[BaseMetric]] = None,
 ):
     current_trace = current_trace_context.get()
 

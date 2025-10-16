@@ -4,5 +4,5 @@ from .subs import (
     DeepEvalAgent as Agent,
     DeepEvalLLM as LLM,
 )
-
-__all__ = ["instrument_crewai", "Crew", "Agent", "LLM"]
+from .tool import tool
+__all__ = ["instrument_crewai", "Crew", "Agent", "LLM", "tool"]
