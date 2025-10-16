@@ -49,7 +49,12 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         """
         self.client_kwargs = self._load_client_kwargs(client_kwargs) or {}
         self.model_name = model or self.client_kwargs["azure_deployment"]
-        self.generation_kwargs = generation_kwargs
+        self.generation_kwargs = generation_kwargs or {}
+        if not self.model_name:
+            raise ValueError(
+                "Missing 'model'. Please pass it explicitly or set AZURE_EMBEDDING_DEPLOYMENT_NAME in env / pass azure_deployment in kwargs."
+            )
+        super().__init__(self.model_name)
 
     def _load_client_kwargs(self, client_kwargs: Optional[Dict]) -> Dict:
         if client_kwargs is not None:
