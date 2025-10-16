@@ -1,6 +1,6 @@
 import json
 import uuid
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.tracing.context import current_span_context
@@ -126,3 +126,28 @@ def stringify_multimodal_content(content: Any) -> str:
 
     # unknown dicts and types returned as shortened JSON
     return _compact_dump(content)
+
+def render_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
+    messages_list = []
+
+    for message in messages:
+        role = message["role"]
+        if role == "assistant" and message.get("tool_calls"):
+            tool_calls = message.get("tool_calls")
+
+            for tool_call in tool_calls:
+                messages_list.append({
+                    "role": "Assistant (tool call)",
+                    "content": str(tool_call),
+                })
+        
+        else:
+            messages_list.append(
+                {
+                    "role": role,
+                    "content": str(message.get("content")),
+                }
+            )
+    
+    return messages_list

@@ -98,9 +98,7 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-    input: Optional[Union[Any, List[Message]]] = None
-    output: Optional[Union[Any, List[Message]]] = None
-    
+        
     model: Optional[str] = None
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
