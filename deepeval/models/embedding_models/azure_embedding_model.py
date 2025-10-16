@@ -25,7 +25,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         "azure_deployment": EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
     }
 
-    def __init__(self, config: Optional[Dict] = None, **generation_kwargs):
+    def __init__(self, config: Optional[Dict] = None, **client_kwargs):
         """
         Initializes an Azure OpenAI embedding model.
         Required config values (if no env):
@@ -41,7 +41,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
             - AZURE_EMBEDDING_DEPLOYMENT_NAME
         """
         self.config = self._load_config(config)
-        self.generation_kwargs = generation_kwargs or {}
+        self.client_kwargs = client_kwargs or {}
         self.model_name = self.config["azure_deployment"]
 
     def _load_config(self, config: Optional[Dict]) -> Dict:
@@ -105,13 +105,13 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self._build_client(AsyncAzureOpenAI)
 
     def _build_client(self, cls):
-        generation_kwargs = self.generation_kwargs.copy()
+        client_kwargs = self.client_kwargs.copy()
         if not sdk_retries_for(PS.AZURE):
-            generation_kwargs["max_retries"] = 0
+            client_kwargs["max_retries"] = 0
 
         kw = {
             **self.config,
-            **generation_kwargs,
+            **client_kwargs,
         }
         try:
             return cls(**kw)
