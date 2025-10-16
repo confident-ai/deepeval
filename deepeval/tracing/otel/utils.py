@@ -106,9 +106,6 @@ def validate_llm_test_case_data(
 def check_llm_input_from_gen_ai_attributes(
     span: ReadableSpan,
 ) -> Tuple[Optional[list], Optional[dict]]:
-    print(
-        "===============Checking LLM input from gen ai attributes:==============="
-    )
     input = None
     output = None
     try:
@@ -132,8 +129,6 @@ def check_llm_input_from_gen_ai_attributes(
         input = system_instructions + input_messages
 
         model_parameters = check_model_parameters(span)
-        print("===============Model parameters:===============")
-        print(model_parameters)
         if model_parameters:
             input.append(model_parameters)
 
