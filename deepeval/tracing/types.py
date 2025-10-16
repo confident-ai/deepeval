@@ -12,12 +12,12 @@ from deepeval.metrics import BaseMetric
 
 class Message(BaseModel):
     role: str
-    """The role of the message author, it can be `user`, `assistant` and `system`. To display on the top of the message block."""
+    """To be displayed on the top of the message block."""
 
-    type: Literal["string", "tool_call", "tool_output", "thinking", "dict"] = "dict"
-    """The type of the message content. This decides how the content is rendered."""
+    type: Literal["tool_calls", "tool_output", "thinking", "default"] = "default"
+    """Decides how the content is rendered."""
     
-    content: Union[str, Dict[str, Any]]
+    content: Any
     """The content of the message."""
 
 class TraceWorkerStatus(Enum):
