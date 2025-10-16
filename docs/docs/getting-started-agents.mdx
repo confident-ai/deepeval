@@ -188,21 +188,9 @@ python main.py
 
 An [end-to-end evaluation](/docs/evaluation-end-to-end-llm-evals) means your agent will be treated as a black-box, where all that matters is the degree of task completion for a particular trace.
 
-<Timeline>
-<TimelineItem title="Configure evaluation model">
+:::note
 
-To configure OpenAI as the your evaluation model for all metrics, set your `OPENAI_API_KEY` in the CLI:
-
-```bash
-export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
-```
-
-You can also use these models for evaluation: [Ollama](https://deepeval.com/integrations/models/ollama), [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai), [Anthropic](https://deepeval.com/integrations/models/anthropic), [Gemini](https://deepeval.com/integrations/models/gemini), etc. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
-
-</TimelineItem>
-<TimelineItem title="Setup task completion metric">
-
-_Task Completion_ is the most powerful metric on `deepeval` for evaluating AI agents end-to-end.
+`deepeval` provides a wide selection of LLM models that you can easily choose from and run evaluations with.
 
 <Tabs>
 
@@ -316,6 +304,29 @@ task_completion_metric = TaskCompletionMetric(model=model)
 </TabItem>
 
 </Tabs>
+:::
+
+<Timeline>
+<TimelineItem title="Configure evaluation model">
+
+To configure OpenAI as the your evaluation model for all metrics, set your `OPENAI_API_KEY` in the CLI:
+
+```bash
+export OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
+```
+
+You can also use these models for evaluation: [Ollama](https://deepeval.com/integrations/models/ollama), [Azure OpenAI](https://deepeval.com/integrations/models/azure-openai), [Anthropic](https://deepeval.com/integrations/models/anthropic), [Gemini](https://deepeval.com/integrations/models/gemini), etc. To use **ANY** custom LLM of your choice, [check out this part of the docs](/guides/guides-using-custom-llms).
+
+</TimelineItem>
+<TimelineItem title="Setup task completion metric">
+
+_Task Completion_ is the most powerful metric on `deepeval` for evaluating AI agents end-to-end.
+
+```python
+from deepeval.metrics import TaskCompletionMetric
+
+task_completion_metric = TaskCompletionMetric()
+```
 
 <details>
   <summary>What other metrics are available?</summary>
@@ -529,125 +540,12 @@ Component-level evaluation integrations are **not available** on `deepeval` at t
 
 Any [single-turn metric](/docs/metrics-introduction) can be used to evaluate agentic components.
 
-<Tabs> 
-<TabItem value="openai" label="OpenAI">
-
-```python title=main.py showLineNumbers={true}
+```python
 from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
 
-arg_correctness_metric = ArgumentCorrectnessMetric(model="gpt-4.1")
-task_completion_metric = TaskCompletionMetric(model="gpt-4.1")
+arg_correctness_metric = ArgumentCorrectnessMetric()
+task_completion_metric = TaskCompletionMetric()
 ```
-
-</TabItem>
-
-<TabItem value="anthropic" label="Anthropic">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import AnthropicModel
-
-model = AnthropicModel("claude-3-7-sonnet-latest")
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-<TabItem value="gemini" label="Gemini">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import GeminiModel
-
-model = GeminiModel("gemini-2.5-flash")
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-<TabItem value="ollama" label="Ollama">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import OllamaModel
-
-model = OllamaModel("deepseek-r1")
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-<TabItem value="grok" label="Grok">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import GrokModel
-
-model = GrokModel("grok-4-0709")
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-<TabItem value="azure_openai" label="Azure OpenAI">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import AzureOpenAIModel
-
-model = AzureOpenAIModel(
-    model_name="gpt-4.1",
-    deployment_name="Test Deployment",
-    azure_openai_api_key="Your Azure OpenAI API Key",
-    openai_api_version="2025-01-01-preview",
-    azure_endpoint="https://example-resource.azure.openai.com/",
-    temperature=0
-)
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-<TabItem value="amazon_bedrock" label="Amazon Bedrock">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import AmazonBedrockModel
-
-model = AmazonBedrockModel(
-    model_id="anthropic.claude-3-opus-20240229-v1:0",
-    temperature=0
-)
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-<TabItem value="vertex_ai" label="Vertex AI">
-
-```python title=main.py showLineNumbers={true}
-from deepeval.metrics import TaskCompletionMetric, ArgumentCorrectnessMetric
-from deepeval.models import GeminiModel
-
-model = GeminiModel(
-    model_name="gemini-1.5-pro",
-    project="Your Project ID",
-    location="us-central1",
-    temperature=0
-)
-arg_correctness_metric = ArgumentCorrectnessMetric(model=model)
-task_completion_metric = TaskCompletionMetric(model=model)
-```
-
-</TabItem>
-
-</Tabs>
 
 </TimelineItem>
 <TimelineItem title="Setup test cases & metrics">

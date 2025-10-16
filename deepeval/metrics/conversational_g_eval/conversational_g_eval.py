@@ -1,7 +1,7 @@
 """A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional, List, Tuple, Union, Dict
+from typing import Optional, List, Tuple, Union, Dict, Type
 import math
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
@@ -44,6 +44,9 @@ class ConversationalGEval(BaseConversationalMetric):
         async_mode: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        evaluation_template: Type[
+            ConversationalGEvalTemplate
+        ] = ConversationalGEvalTemplate,
         _include_g_eval_suffix: bool = True,
     ):
         if evaluation_params is not None and len(evaluation_params) == 0:
@@ -85,6 +88,7 @@ class ConversationalGEval(BaseConversationalMetric):
         self.strict_mode = strict_mode
         self.async_mode = async_mode
         self.verbose_mode = verbose_mode
+        self.evaluation_template = evaluation_template
         self._include_g_eval_suffix = _include_g_eval_suffix
 
     def measure(
@@ -194,7 +198,7 @@ class ConversationalGEval(BaseConversationalMetric):
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
-        prompt = ConversationalGEvalTemplate.generate_evaluation_steps(
+        prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -221,7 +225,7 @@ class ConversationalGEval(BaseConversationalMetric):
         g_eval_params_str = construct_conversational_g_eval_turn_params_string(
             self.evaluation_params
         )
-        prompt = ConversationalGEvalTemplate.generate_evaluation_steps(
+        prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
         if self.using_native_model:
@@ -250,7 +254,7 @@ class ConversationalGEval(BaseConversationalMetric):
         )
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
                 test_case_content=test_case_content,
                 turns=[
@@ -261,7 +265,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 rubric=rubric_str,
             )
         else:
-            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
                 test_case_content=test_case_content,
                 turns=[
@@ -320,7 +324,7 @@ class ConversationalGEval(BaseConversationalMetric):
         )
         if not self.strict_mode:
             rubric_str = format_rubrics(self.rubric) if self.rubric else None
-            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
                 test_case_content=test_case_content,
                 turns=[
@@ -331,7 +335,7 @@ class ConversationalGEval(BaseConversationalMetric):
                 rubric=rubric_str,
             )
         else:
-            prompt = ConversationalGEvalTemplate.generate_evaluation_results(
+            prompt = self.evaluation_template.generate_evaluation_results(
                 evaluation_steps=self.number_evaluation_steps(),
                 test_case_content=test_case_content,
                 turns=[
