@@ -25,11 +25,7 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         "azure_deployment": EmbeddingKeyValues.AZURE_EMBEDDING_DEPLOYMENT_NAME,
     }
 
-    def __init__(
-        self,
-        config: Optional[Dict] = None,
-        **generation_kwargs
-    ):
+    def __init__(self, config: Optional[Dict] = None, **generation_kwargs):
         """
         Initializes an Azure OpenAI embedding model.
         Required config values (if no env):
@@ -50,9 +46,13 @@ class AzureOpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
 
     def _load_config(self, config: Optional[Dict]) -> Dict:
         if config is not None:
-            missing = [key for key in self.REQUIRED_KEY_MAPPING if key not in config]
+            missing = [
+                key for key in self.REQUIRED_KEY_MAPPING if key not in config
+            ]
             if missing:
-                raise ValueError(f"Missing required params in 'config': {missing}")
+                raise ValueError(
+                    f"Missing required params in 'config': {missing}"
+                )
             return config
         else:
             return {
