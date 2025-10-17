@@ -8,14 +8,17 @@ from deepeval.openai.utils import render_response_input, stringify_multimodal_co
 from deepeval.openai.types import InputParameters, OutputParameters
 from deepeval.tracing.types import Message
 
-
-def extract_input_parameters(
+# guarding against errors to be compatible with legacy APIs
+def safe_extract_input_parameters(
     is_completion: bool, kwargs: Dict[str, Any]
 ) -> InputParameters:
-    if is_completion:
-        return extract_input_parameters_from_completion(kwargs)
-    else:
-        return extract_input_parameters_from_response(kwargs)
+    try: 
+        if is_completion:
+            return extract_input_parameters_from_completion(kwargs)
+        else:
+            return extract_input_parameters_from_response(kwargs)
+    except: 
+        return InputParameters(model="NA")
 
 
 def extract_input_parameters_from_completion(
@@ -92,19 +95,24 @@ def extract_input_parameters_from_response(
     )
 
 
-def extract_output_parameters(
+def safe_extract_output_parameters(
     is_completion: bool,
     response: Union[ChatCompletion, ParsedChatCompletion, Response],
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    if is_completion:
-        return extract_output_parameters_from_completion(
-            response, input_parameters
-        )
-    else:
-        return extract_output_parameters_from_response(
-            response, input_parameters
-        )
+
+    # guarding against errors to be compatible with legacy APIs
+    try: 
+        if is_completion:
+            return extract_output_parameters_from_completion(
+                response, input_parameters
+            )
+        else:
+            return extract_output_parameters_from_response(
+                response, input_parameters
+            )
+    except: 
+        return OutputParameters()
 
 
 def extract_output_parameters_from_completion(

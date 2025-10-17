@@ -132,7 +132,7 @@ def render_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     messages_list = []
 
     for message in messages:
-        role = message["role"]
+        role = message.get("role")
         content = message.get("content")
         if role == "assistant" and message.get("tool_calls"):
             tool_calls = message.get("tool_calls")

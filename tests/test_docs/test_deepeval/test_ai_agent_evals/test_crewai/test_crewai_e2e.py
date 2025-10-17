@@ -53,7 +53,7 @@ crew = Crew(
 
 
 async def run_crewai_e2e_async(input: str):
-    with trace(trace_metrics=[answer_relavancy_metric]):
+    with trace(metrics=[answer_relavancy_metric]):
         await crew.kickoff_async({"city": input})
 
 
@@ -70,7 +70,7 @@ dataset = EvaluationDataset(
 if __name__ == "__main__":
     # sync evaluations
     for golden in dataset.evals_iterator():
-        with trace(trace_metrics=[answer_relavancy_metric]):
+        with trace(metrics=[answer_relavancy_metric]):
             crew.kickoff({"city": golden.input})
 
     for golden in dataset.evals_iterator():

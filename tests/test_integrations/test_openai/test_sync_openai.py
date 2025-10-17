@@ -1,7 +1,7 @@
 from openai import OpenAI
-from deepeval.tracing import trace
+from deepeval.tracing import trace, LlmSpanContext
 from deepeval.prompt import Prompt
-from tests.test_integrations.utils import assert_trace_json
+from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 import os
 import pytest
 
@@ -28,9 +28,11 @@ def test_sync_openai_without_trace():
 def test_sync_openai_with_trace():
 
     with trace(
-        prompt=prompt,
+        llm_span_context=LlmSpanContext(
+            prompt=prompt,
+            metric_collection="test_collection_1",
+        ),
         thread_id="test_thread_id_1",
-        llm_metric_collection="test_collection_1",
         name="test_name_1",
         tags=["test_tag_1"],
         metadata={"test_metadata_1": "test_value_1"},
@@ -58,9 +60,11 @@ def test_sync_response_create_without_trace():
 @pytest.mark.skip
 def test_sync_response_create_with_trace():
     with trace(
-        prompt=prompt,
+        llm_span_context=LlmSpanContext(
+            prompt=prompt,
+            metric_collection="test_collection_1",
+        ),
         thread_id="test_thread_id_1",
-        llm_metric_collection="test_collection_1",
         name="test_name_1",
         tags=["test_tag_1"],
         metadata={"test_metadata_1": "test_value_1"},
@@ -74,7 +78,8 @@ def test_sync_response_create_with_trace():
 
 
 def generate_all_json_dumps():
-    test_sync_openai_without_trace()
+    # test_sync_openai_without_trace()
     test_sync_openai_with_trace()
     test_sync_response_create_without_trace()
-    test_sync_response_create_with_trace()
+    # test_sync_response_create_with_trace()
+
