@@ -75,5 +75,7 @@ def trace(
 
     if llm_span_context:
         current_llm_context.set(llm_span_context)
-
-    yield current_trace
+    try: 
+        yield current_trace
+    finally:
+        current_llm_context.set(LlmSpanContext())

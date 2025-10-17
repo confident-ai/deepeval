@@ -1,8 +1,9 @@
 import os
 import json
 from typing import Any, Dict
-from deepeval.openai import OpenAI
+from openai import OpenAI
 from deepeval.tracing.tracing import observe
+from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 
 # 1) Define a local "tool" implementation (runs in your code)
 @observe(type="tool")
@@ -39,7 +40,7 @@ TOOLS = [
 ]
 
 @observe
-def main():
+def run_main():
     # Ensure your API key is set: export OPENAI_API_KEY=...
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -94,11 +95,12 @@ def main():
             temperature=0,
         )
 
-        final_text = final.output_text or ""
-        print("\n=== Final Answer ===\n" + final_text)
-    else:
-        # No tool calls needed; print assistant's direct response
-        print("\n=== Final Answer ===\n" + (first.output_text or ""))
 
-if __name__ == "__main__":
-    main()
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+@assert_trace_json(
+    json_path=os.path.join(_current_dir, "test_tool_call_flow_response.json")
+)
+def test_tool_call_flow_response():
+    run_main()

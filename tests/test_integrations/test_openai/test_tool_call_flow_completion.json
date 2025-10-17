@@ -1,13 +1,13 @@
 {
-  "uuid": "4b1b45f7-4d13-4223-9e2c-4d3f14ff265c",
+  "uuid": "4eee401c-d48f-4b4a-85c7-b7bc7ca8f65e",
   "baseSpans": [
     {
-      "uuid": "e6710f2a-d63b-447d-941c-7023918a978c",
+      "uuid": "a86be7cb-4ef5-4c94-85b7-a76a0a28d0fa",
       "name": "run_main",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-17T07:17:06.296Z",
-      "endTime": "2025-10-17T07:17:09.853Z",
+      "startTime": "2025-10-17T07:31:34.138Z",
+      "endTime": "2025-10-17T07:31:37.013Z",
       "input": {},
       "toolsCalled": [
         {
@@ -29,13 +29,13 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "580f82ee-cc31-4a07-8eb1-2143347fc55f",
+      "uuid": "5b313742-d0ed-4c0f-94d1-7b596a9c6794",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "e6710f2a-d63b-447d-941c-7023918a978c",
-      "startTime": "2025-10-17T07:17:08.271Z",
-      "endTime": "2025-10-17T07:17:09.853Z",
+      "parentUuid": "a86be7cb-4ef5-4c94-85b7-a76a0a28d0fa",
+      "startTime": "2025-10-17T07:31:35.369Z",
+      "endTime": "2025-10-17T07:31:37.013Z",
       "input": [
         {
           "role": "system",
@@ -47,27 +47,27 @@
         },
         {
           "role": "Assistant (tool call)",
-          "content": "id: call_ttl7xsLt16IRCks4LdbpZXMS\nfunction:\n  arguments: {\"location\":\"San Francisco\",\"unit\":\"c\"}\n  name: get_weather\ntype: function"
+          "content": "id: call_Rp2UqOSlq6Faqs8emlyP57P1\nfunction:\n  arguments: {\"location\":\"San Francisco\",\"unit\":\"c\"}\n  name: get_weather\ntype: function"
         },
         {
           "role": "tool",
           "content": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
         }
       ],
-      "output": "The current temperature in San Francisco is 18\u00b0C and the weather is partly cloudy. A great travel tip for this weather is to dress in layers, as the temperature can change throughout the day, and be sure to bring a light jacket for the cooler evenings.",
+      "output": "The current weather in San Francisco is 18\u00b0C and partly cloudy. A great travel tip for this weather is to dress in layers, as the temperature can change throughout the day, and be sure to bring a light jacket for the cooler evenings.",
       "model": "gpt-4o-mini",
       "prompt": {},
       "inputTokenCount": 105.0,
-      "outputTokenCount": 52.0
+      "outputTokenCount": 49.0
     },
     {
-      "uuid": "76e7ad32-a0ce-4a3a-96bd-2a135162254d",
+      "uuid": "28604bf7-a933-48a3-a485-06af791e75e0",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "e6710f2a-d63b-447d-941c-7023918a978c",
-      "startTime": "2025-10-17T07:17:06.301Z",
-      "endTime": "2025-10-17T07:17:08.270Z",
+      "parentUuid": "a86be7cb-4ef5-4c94-85b7-a76a0a28d0fa",
+      "startTime": "2025-10-17T07:31:34.143Z",
+      "endTime": "2025-10-17T07:31:35.368Z",
       "input": [
         {
           "role": "system",
@@ -98,13 +98,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "80b2143f-cefb-4279-a958-10503ba2041d",
+      "uuid": "4907e9a3-25e8-4239-8021-003c8692952f",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "e6710f2a-d63b-447d-941c-7023918a978c",
-      "startTime": "2025-10-17T07:17:08.271Z",
-      "endTime": "2025-10-17T07:17:08.271Z",
+      "parentUuid": "a86be7cb-4ef5-4c94-85b7-a76a0a28d0fa",
+      "startTime": "2025-10-17T07:31:35.369Z",
+      "endTime": "2025-10-17T07:31:35.369Z",
       "input": {
         "location": "San Francisco",
         "unit": "c"
@@ -117,8 +117,8 @@
       }
     }
   ],
-  "startTime": "2025-10-17T07:17:06.296Z",
-  "endTime": "2025-10-17T07:17:09.853Z",
+  "startTime": "2025-10-17T07:31:34.138Z",
+  "endTime": "2025-10-17T07:31:37.013Z",
   "environment": "development",
   "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
   "output": "Tool: get_weather\nParameters: {\n  \"location\": \"San Francisco\",\n  \"unit\": \"c\"\n}\nDescription: Get the current weather for a city.",
