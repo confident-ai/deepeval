@@ -10,6 +10,7 @@ import asyncio
 import nest_asyncio
 import uuid
 import math
+import logging
 
 from contextvars import ContextVar
 from enum import Enum
@@ -747,3 +748,23 @@ my_theme = Theme(
     }
 )
 custom_console = Console(theme=my_theme)
+
+
+def format_error_text(
+    exc: BaseException, *, with_stack: bool | None = None
+) -> str:
+    if with_stack is None:
+        with_stack = logging.getLogger("deepeval").isEnabledFor(logging.DEBUG)
+
+    text = f"{type(exc).__name__}: {exc}"
+
+    if with_stack:
+        import traceback
+
+        text += "\n" + "".join(
+            traceback.format_exception(type(exc), exc, exc.__traceback__)
+        )
+    elif get_settings().DEEPEVAL_VERBOSE_MODE:
+        text += " (Run with LOG_LEVEL=DEBUG for stack trace.)"
+
+    return text
