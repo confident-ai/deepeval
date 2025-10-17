@@ -1,6 +1,8 @@
 import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Iterable
+
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.tracing.context import current_span_context
@@ -128,7 +130,7 @@ def stringify_multimodal_content(content: Any) -> str:
     return _compact_dump(content)
 
 
-def render_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def render_messages(messages: Iterable[ChatCompletionMessageParam]) -> List[Dict[str, Any]]:
 
     messages_list = []
 
@@ -137,30 +139,50 @@ def render_messages(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         content = message.get("content")
         if role == "assistant" and message.get("tool_calls"):
             tool_calls = message.get("tool_calls")
+            if isinstance(tool_calls, list):
+                for tool_call in tool_calls:
+                    # Extract type - either "function" or "custom"
+                    tool_type = tool_call.get("type", "function")
+                    
+                    # Extract name and arguments based on type
+                    if tool_type == "function":
+                        function_data = tool_call.get("function", {})
+                        name = function_data.get("name", "")
+                        arguments = function_data.get("arguments", "")
+                    elif tool_type == "custom":
+                        custom_data = tool_call.get("custom", {})
+                        name = custom_data.get("name", "")
+                        arguments = custom_data.get("input", "")
+                    else:
+                        name = ""
+                        arguments = ""
+                    
+                    messages_list.append(
+                        {
+                            "id": tool_call.get("id", ""),
+                            "call_id": tool_call.get("id", ""),  # OpenAI uses 'id', not 'call_id'
+                            "name": name,
+                            "type": tool_type,
+                            "arguments": json.loads(arguments),
+                        }
+                    )
 
-            for tool_call in tool_calls:
-                messages_list.append(
-                    {
-                        "role": "Assistant (tool call)",
-                        "content": (
-                            _render_content(tool_call)
-                            if isinstance(tool_call, dict)
-                            else str(tool_call)
-                        ),
-                    }
-                )
-
+        elif role == "tool":
+            messages_list.append(
+                {
+                    "call_id": message.get("tool_call_id", ""),
+                    "type": role,  # "tool"
+                    "output": message.get("content", {}),
+                }
+            )
         else:
             messages_list.append(
                 {
                     "role": role,
-                    "content": (
-                        _render_content(content)
-                        if isinstance(content, dict)
-                        else str(content)
-                    ),
+                    "content": content,
                 }
             )
+
 
     return messages_list
 
