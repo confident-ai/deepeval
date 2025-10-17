@@ -3,8 +3,8 @@ from functools import wraps
 
 
 from deepeval.openai.extractors import (
-    extract_output_parameters,
-    extract_input_parameters,
+    safe_extract_output_parameters,
+    safe_extract_input_parameters,
     InputParameters,
     OutputParameters,
 )
@@ -122,7 +122,7 @@ def _patch_async_openai_client_method(
 ):
     @wraps(orig_method)
     async def patched_async_openai_method(*args, **kwargs):
-        input_parameters: InputParameters = extract_input_parameters(
+        input_parameters: InputParameters = safe_extract_input_parameters(
             is_completion_method, kwargs
         )
 
@@ -136,7 +136,7 @@ def _patch_async_openai_client_method(
         )
         async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
+            output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
             _update_all_attributes(
@@ -161,7 +161,7 @@ def _patch_sync_openai_client_method(
 ):
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
-        input_parameters: InputParameters = extract_input_parameters(
+        input_parameters: InputParameters = safe_extract_input_parameters(
             is_completion_method, kwargs
         )
 
@@ -175,7 +175,7 @@ def _patch_sync_openai_client_method(
         )
         def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
+            output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
             _update_all_attributes(
