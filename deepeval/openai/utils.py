@@ -2,7 +2,9 @@ import json
 import uuid
 from typing import Any, Dict, List, Optional, Iterable
 
-from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.chat.chat_completion_message_param import (
+    ChatCompletionMessageParam,
+)
 
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 from deepeval.tracing.context import current_span_context
@@ -130,7 +132,9 @@ def stringify_multimodal_content(content: Any) -> str:
     return _compact_dump(content)
 
 
-def render_messages(messages: Iterable[ChatCompletionMessageParam]) -> List[Dict[str, Any]]:
+def render_messages(
+    messages: Iterable[ChatCompletionMessageParam],
+) -> List[Dict[str, Any]]:
 
     messages_list = []
 
@@ -143,7 +147,7 @@ def render_messages(messages: Iterable[ChatCompletionMessageParam]) -> List[Dict
                 for tool_call in tool_calls:
                     # Extract type - either "function" or "custom"
                     tool_type = tool_call.get("type", "function")
-                    
+
                     # Extract name and arguments based on type
                     if tool_type == "function":
                         function_data = tool_call.get("function", {})
@@ -156,11 +160,13 @@ def render_messages(messages: Iterable[ChatCompletionMessageParam]) -> List[Dict
                     else:
                         name = ""
                         arguments = ""
-                    
+
                     messages_list.append(
                         {
                             "id": tool_call.get("id", ""),
-                            "call_id": tool_call.get("id", ""),  # OpenAI uses 'id', not 'call_id'
+                            "call_id": tool_call.get(
+                                "id", ""
+                            ),  # OpenAI uses 'id', not 'call_id'
                             "name": name,
                             "type": tool_type,
                             "arguments": json.loads(arguments),
@@ -183,7 +189,6 @@ def render_messages(messages: Iterable[ChatCompletionMessageParam]) -> List[Dict
                 }
             )
 
-
     return messages_list
 
 
@@ -204,7 +209,6 @@ def render_response_input(input: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             )
         else:
             messages_list.append(item)
-        
 
     return messages_list
 
