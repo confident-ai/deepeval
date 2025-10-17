@@ -1,3 +1,46 @@
+import time
+import uuid
+from datetime import datetime, timezone
+
+from deepeval.tracing.api import TraceApi, TraceSpanApiStatus
+
+
+def ts_iso8601_utc(ts: float) -> str:
+    return (
+        datetime.fromtimestamp(ts, tz=timezone.utc)
+        .isoformat(timespec="milliseconds")
+        .replace("+00:00", "Z")
+    )
+
+
+def make_trace_api(
+    *,
+    uuid_str: str | None = None,
+    status: TraceSpanApiStatus = TraceSpanApiStatus.SUCCESS,
+) -> TraceApi:
+    now = time.time()
+    return TraceApi(
+        uuid=uuid_str or str(uuid.uuid4()),
+        name="test-trace",
+        status=status,
+        error=None,
+        input=None,
+        output=None,
+        expectedOutput=None,
+        context=None,
+        retrievalContext=None,
+        # give these concrete lists to avoid calling append on None
+        agentSpans=[],
+        llmSpans=[],
+        retrieverSpans=[],
+        toolSpans=[],
+        baseSpans=[],
+        metricsData=[],
+        startTime=ts_iso8601_utc(now),
+        endTime=ts_iso8601_utc(now),
+    )
+
+
 def teardown_settings_singleton():
     import deepeval.config.settings as settings_mod
 

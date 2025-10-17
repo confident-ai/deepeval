@@ -88,6 +88,7 @@ from deepeval.evaluate.utils import (
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
 from deepeval.tracing.types import TestCaseMetricPair, TraceSpanStatus
+from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.config.settings import get_settings
 from deepeval.test_run import TEMP_FILE_PATH
 from deepeval.confident.api import is_confident
@@ -949,7 +950,7 @@ def execute_agentic_test_cases(
 
                     # Skip errored trace/span
                     if _skip_metrics_for_error(span=span, trace=current_trace):
-                        api_span.status = TraceSpanStatus.ERRORED
+                        api_span.status = TraceSpanApiStatus.ERRORED
                         api_span.error = span.error or _trace_error(
                             current_trace
                         )
@@ -996,7 +997,7 @@ def execute_agentic_test_cases(
                         )
                     else:
                         if llm_test_case is None:
-                            api_span.status = TraceSpanStatus.ERRORED
+                            api_span.status = TraceSpanApiStatus.ERRORED
                             api_span.error = str(
                                 DeepEvalError(
                                     "Span has metrics but no LLMTestCase. "
@@ -1051,7 +1052,7 @@ def execute_agentic_test_cases(
                 skip_metrics_for_this_golden = False
                 # Handle trace-level metrics
                 if _skip_metrics_for_error(trace=current_trace):
-                    trace_api.status = TraceSpanStatus.ERRORED
+                    trace_api.status = TraceSpanApiStatus.ERRORED
                     if progress and pbar_eval_id is not None:
                         update_pbar(
                             progress,
@@ -1093,7 +1094,7 @@ def execute_agentic_test_cases(
                         else:
                             if llm_test_case is None:
                                 current_trace.status = TraceSpanStatus.ERRORED
-                                trace_api.status = TraceSpanStatus.ERRORED
+                                trace_api.status = TraceSpanApiStatus.ERRORED
                                 if current_trace.root_spans:
                                     current_trace.root_spans[0].status = (
                                         TraceSpanStatus.ERRORED
@@ -1447,7 +1448,7 @@ async def _a_execute_span_test_case(
         trace_api.base_spans.append(api_span)
 
     if _skip_metrics_for_error(span=span, trace=current_trace):
-        api_span.status = TraceSpanStatus.ERRORED
+        api_span.status = TraceSpanApiStatus.ERRORED
         api_span.error = span.error or _trace_error(current_trace)
         if progress and pbar_eval_id is not None:
             update_pbar(
@@ -1479,7 +1480,7 @@ async def _a_execute_span_test_case(
 
     if not has_task_completion:
         if llm_test_case is None:
-            api_span.status = TraceSpanStatus.ERRORED
+            api_span.status = TraceSpanApiStatus.ERRORED
             api_span.error = str(
                 DeepEvalError(
                     "Span has metrics but no LLMTestCase. "
@@ -1544,7 +1545,7 @@ async def _a_execute_trace_test_case(
 ):
 
     if _skip_metrics_for_error(trace=trace):
-        trace_api.status = TraceSpanStatus.ERRORED
+        trace_api.status = TraceSpanApiStatus.ERRORED
         if progress and pbar_eval_id is not None:
             update_pbar(
                 progress,
@@ -1578,7 +1579,7 @@ async def _a_execute_trace_test_case(
     if not has_task_completion:
         if llm_test_case is None:
             trace.status = TraceSpanStatus.ERRORED
-            trace_api.status = TraceSpanStatus.ERRORED
+            trace_api.status = TraceSpanApiStatus.ERRORED
             if trace.root_spans:
                 trace.root_spans[0].status = TraceSpanStatus.ERRORED
                 trace.root_spans[0].error = str(
@@ -1749,7 +1750,7 @@ def execute_agentic_test_cases_from_loop(
 
                     # Skip errored trace/span
                     if _skip_metrics_for_error(span=span, trace=current_trace):
-                        api_span.status = TraceSpanStatus.ERRORED
+                        api_span.status = TraceSpanApiStatus.ERRORED
                         api_span.error = span.error or _trace_error(
                             current_trace
                         )
@@ -1838,7 +1839,7 @@ def execute_agentic_test_cases_from_loop(
                 # Handle trace-level metrics
                 skip_metrics_for_this_golden = False
                 if _skip_metrics_for_error(trace=current_trace):
-                    trace_api.status = TraceSpanStatus.ERRORED
+                    trace_api.status = TraceSpanApiStatus.ERRORED
                     if progress and pbar_eval_id is not None:
                         update_pbar(
                             progress,
@@ -1881,7 +1882,7 @@ def execute_agentic_test_cases_from_loop(
                         else:
                             if llm_test_case is None:
                                 current_trace.status = TraceSpanStatus.ERRORED
-                                trace_api.status = TraceSpanStatus.ERRORED
+                                trace_api.status = TraceSpanApiStatus.ERRORED
                                 if current_trace.root_spans:
                                     current_trace.root_spans[0].status = (
                                         TraceSpanStatus.ERRORED
@@ -2046,14 +2047,32 @@ def a_execute_agentic_test_cases_from_loop(
             }
 
             def on_task_done(t: asyncio.Task):
-                exc = t.exception()
-                if exc is not None:
-                    meta = task_meta.get(t, {})
-                    golden_index = meta.get("golden_index")
-                    if golden_index is not None and 0 <= golden_index < len(
-                        goldens
-                    ):
-                        golden = goldens[golden_index]
+                cancelled = False
+                exc = None
+
+                # Task.exception() raises CancelledError if task was cancelled
+                try:
+                    exc = t.exception()
+                except asyncio.CancelledError:
+                    cancelled = True
+                    exc = None
+
+                meta = task_meta.get(t, {})
+                golden_index = meta.get("golden_index")
+
+                if golden_index is not None and 0 <= golden_index < len(
+                    goldens
+                ):
+                    golden = goldens[golden_index]
+
+                    def mark_trace(trace, msg: str):
+                        trace.status = TraceSpanStatus.ERRORED
+                        if trace.root_spans:
+                            last = trace.root_spans[-1]
+                            last.status = TraceSpanStatus.ERRORED
+                            last.error = msg
+
+                    if exc is not None:
                         msg = f"{type(exc).__name__}: {exc}"
                         if get_settings().DEEPEVAL_VERBOSE_MODE:
                             msg += " (Enable DEEPEVAL_DEBUG_ASYNC for stack trace.)"
@@ -2066,21 +2085,10 @@ def a_execute_agentic_test_cases_from_loop(
                                 )
                                 is golden
                             ):
-                                trace.status = TraceSpanStatus.ERRORED
-                                trace.error = msg
-                                if trace.root_spans:
-                                    trace.root_spans[-1].status = (
-                                        TraceSpanStatus.ERRORED
-                                    )
-                                    trace.root_spans[-1].error = msg
-                elif t.cancelled():
-                    # mark the trace as ERRORED due to timeout or cancel
-                    meta = task_meta.get(t, {})
-                    golden_index = meta.get("golden_index")
-                    if golden_index is not None and 0 <= golden_index < len(
-                        goldens
-                    ):
-                        golden = goldens[golden_index]
+                                mark_trace(trace, msg)
+                                break
+
+                    elif cancelled or t.cancelled():
                         msg = "Task was cancelled (likely due to timeout)."
                         if get_settings().DEEPEVAL_VERBOSE_MODE:
                             msg += " Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS or DEEPEVAL_TASK_GATHER_BUFFER_SECONDS."
@@ -2093,13 +2101,7 @@ def a_execute_agentic_test_cases_from_loop(
                                 )
                                 is golden
                             ):
-                                trace.status = TraceSpanStatus.ERRORED
-                                trace.error = msg
-                                if trace.root_spans:
-                                    trace.root_spans[-1].status = (
-                                        TraceSpanStatus.ERRORED
-                                    )
-                                    trace.root_spans[-1].error = msg
+                                mark_trace(trace, msg)
                                 break
 
                 if get_settings().DEEPEVAL_DEBUG_ASYNC:
