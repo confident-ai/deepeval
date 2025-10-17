@@ -1397,6 +1397,10 @@ async def _a_execute_agentic_test_case(
             test_run_manager=test_run_manager,
             _use_bar_indicator=_use_bar_indicator,
         )
+
+        if _skip_metrics_for_error(span=span, trace=trace):
+            return
+
         child_tasks = [dfs(trace, child) for child in span.children]
         if child_tasks:
             await asyncio.gather(*child_tasks)
@@ -1772,6 +1776,14 @@ def execute_agentic_test_cases_from_loop(
                     for child in span.children:
                         dfs(child, progress, pbar_eval_id)
 
+                    if not span.metrics:
+                        return
+
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in metrics
+                    )
+
                     llm_test_case = None
                     if span.input is not None:
                         llm_test_case = LLMTestCase(
@@ -1787,13 +1799,6 @@ def execute_agentic_test_cases_from_loop(
                             tools_called=span.tools_called,
                             expected_tools=span.expected_tools,
                         )
-                    if not span.metrics or llm_test_case is None:
-                        return
-
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in metrics
-                    )
 
                     if has_task_completion:
                         if llm_test_case is None:
@@ -1801,6 +1806,22 @@ def execute_agentic_test_cases_from_loop(
                         llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(span)
                         )
+                    else:
+                        if llm_test_case is None:
+                            api_span.status = TraceSpanApiStatus.ERRORED
+                            api_span.error = format_error_text(
+                                DeepEvalError(
+                                    "Span has metrics but no LLMTestCase. "
+                                    "Are you sure you called `update_current_span()`?"
+                                )
+                            )
+                            if progress and pbar_eval_id is not None:
+                                update_pbar(
+                                    progress,
+                                    pbar_eval_id,
+                                    advance=count_metrics_in_span_subtree(span),
+                                )
+                            return
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
