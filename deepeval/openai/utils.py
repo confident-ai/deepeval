@@ -193,22 +193,18 @@ def render_response_input(input: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
     for item in input:
         type = item.get("type")
+        role = item.get("role")
+
         if type == "message":
             messages_list.append(
                 {
-                    "role": item.get("role"),
-                    "content": str(item.get("content")),
+                    "role": role,
+                    "content": item.get("content"),
                 }
             )
         else:
-            messages_list.append(
-                {
-                    "role": type,
-                    "content": _render_content(
-                        item
-                    ),  # Using the new function here
-                }
-            )
+            messages_list.append(item)
+        
 
     return messages_list
 
