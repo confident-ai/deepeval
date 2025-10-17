@@ -695,7 +695,8 @@ class Synthesizer:
                 expected_output=expected_output,
                 source_file=(
                     source_files[context_index]
-                    if source_files is not None and context_index < len(source_files)
+                    if source_files is not None
+                    and context_index < len(source_files)
                     else None
                 ),
                 additional_metadata={
