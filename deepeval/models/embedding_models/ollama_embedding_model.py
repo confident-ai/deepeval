@@ -13,56 +13,22 @@ retry_ollama = create_retry_decorator(PS.OLLAMA)
 
 
 class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
-
-    REQUIRED_KEY_MAPPING = {
-        "host": EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL,
-    }
-
     def __init__(
         self,
         model: Optional[str] = None,
-        client_kwargs: Optional[Dict] = None,
-        **generation_kwargs,
+        host: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
+        **client_kwargs,
     ):
-        """
-        Initializes an Ollama embedding model.
-        Required 'client_kwargs' values (if no env):
-            - host
-
-        Required env values (if no client_kwargs):
-            - LOCAL_EMBEDDING_API_KEY
-            - LOCAL_EMBEDDING_BASE_URL
-
-        You can pass in the **generation_kwargs for any generation settings you'd like to change
-        """
-        self.client_kwargs = self._load_client_kwargs(client_kwargs) or {}
+        self.host = host or KEY_FILE_HANDLER.fetch_data(
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
+        )
         self.model_name = model or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
         )
+        self.client_kwargs = client_kwargs or {}
         self.generation_kwargs = generation_kwargs or {}
-        if not self.model_name:
-            raise ValueError(
-                "Missing 'model'. Please pass it explicitly or set LOCAL_EMBEDDING_MODEL_NAME."
-            )
         super().__init__(self.model_name)
-
-    def _load_client_kwargs(self, client_kwargs: Optional[Dict]) -> Dict:
-        if client_kwargs is not None:
-            missing = [
-                key
-                for key in self.REQUIRED_KEY_MAPPING
-                if key not in client_kwargs
-            ]
-            if missing:
-                raise ValueError(
-                    f"Missing required params in 'client_kwargs': {missing}"
-                )
-            return client_kwargs
-        else:
-            return {
-                key: KEY_FILE_HANDLER.fetch_data(env_key)
-                for key, env_key in self.REQUIRED_KEY_MAPPING.items()
-            }
 
     @retry_ollama
     def embed_text(self, text: str) -> List[float]:
@@ -106,7 +72,7 @@ class OllamaEmbeddingModel(DeepEvalBaseEmbeddingModel):
         return self._build_client(AsyncClient)
 
     def _build_client(self, cls):
-        return cls(**self.client_kwargs)
+        return cls(host=self.host, **self.client_kwargs)
 
     def get_model_name(self):
         return f"{self.model_name} (Ollama)"
