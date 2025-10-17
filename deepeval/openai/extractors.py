@@ -76,6 +76,7 @@ def extract_input_parameters_from_response(
         if tools is not None
         else None
     )
+    messages = []
     if isinstance(input_payload, list):
         messages = render_response_input(input_payload)
     elif isinstance(input_payload, str):
