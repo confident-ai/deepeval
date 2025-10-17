@@ -82,4 +82,3 @@ def generate_all_json_dumps():
     test_sync_openai_with_trace()
     test_sync_response_create_without_trace()
     # test_sync_response_create_with_trace()
-

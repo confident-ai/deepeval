@@ -7,6 +7,7 @@ from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 
 # 1) Define a local "tool" implementation (runs in your code)
 
+
 @observe(type="tool")
 def get_weather(location: str, unit: str = "c") -> Dict[str, Any]:
     # Demo stub: replace with a real API call if desired
@@ -19,8 +20,19 @@ def get_weather(location: str, unit: str = "c") -> Dict[str, Any]:
     entry = data.get(city, {"temp_c": 20, "condition": "clear"})
     if unit.lower() == "f":
         temp = round(entry["temp_c"] * 9 / 5 + 32, 1)
-        return {"location": city, "temperature": temp, "unit": "F", "condition": entry["condition"]}
-    return {"location": city, "temperature": entry["temp_c"], "unit": "C", "condition": entry["condition"]}
+        return {
+            "location": city,
+            "temperature": temp,
+            "unit": "F",
+            "condition": entry["condition"],
+        }
+    return {
+        "location": city,
+        "temperature": entry["temp_c"],
+        "unit": "C",
+        "condition": entry["condition"],
+    }
+
 
 # 2) Tool schema exposed to the model
 TOOLS = [
@@ -32,8 +44,15 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "location": {"type": "string", "description": "City name, e.g. 'San Francisco'"},
-                    "unit": {"type": "string", "enum": ["c", "f"], "description": "Temperature unit"},
+                    "location": {
+                        "type": "string",
+                        "description": "City name, e.g. 'San Francisco'",
+                    },
+                    "unit": {
+                        "type": "string",
+                        "enum": ["c", "f"],
+                        "description": "Temperature unit",
+                    },
                 },
                 "required": ["location"],
                 "additionalProperties": False,
@@ -41,6 +60,7 @@ TOOLS = [
         },
     }
 ]
+
 
 @observe
 def run_main():
@@ -77,7 +97,9 @@ def run_main():
             {
                 "role": "assistant",
                 "content": assistant_msg.content or "",
-                "tool_calls": [tc.model_dump() for tc in tool_calls],  # keep structure for continuity
+                "tool_calls": [
+                    tc.model_dump() for tc in tool_calls
+                ],  # keep structure for continuity
             }
         )
 
@@ -108,7 +130,9 @@ def run_main():
             temperature=0,
         )
 
+
 _current_dir = os.path.dirname(os.path.abspath(__file__))
+
 
 @assert_trace_json(
     json_path=os.path.join(_current_dir, "test_tool_call_flow_completion.json")

@@ -54,17 +54,17 @@ def trace(
 
     if metric_collection:
         current_trace.metric_collection = metric_collection
-    
+
     current_trace_context.set(current_trace)
 
     update_current_trace(
-        name=name, 
-        tags=tags, 
-        metadata=metadata, 
-        thread_id=thread_id, 
-        user_id=user_id, 
-        input=input, 
-        output=output, 
+        name=name,
+        tags=tags,
+        metadata=metadata,
+        thread_id=thread_id,
+        user_id=user_id,
+        input=input,
+        output=output,
         retrieval_context=retrieval_context,
         context=context,
         expected_output=expected_output,
@@ -72,10 +72,9 @@ def trace(
         expected_tools=expected_tools,
     )
 
-
     if llm_span_context:
         current_llm_context.set(llm_span_context)
-    try: 
+    try:
         yield current_trace
     finally:
         current_llm_context.set(LlmSpanContext())
