@@ -147,15 +147,11 @@ def extract_output_parameters_from_completion(
                 )
             )
 
-    # If output is empty and tool calls exist, format them as string
     if not output and tools_called:
-        formatted_calls = []
+        tool_calls = []
         for tool_call in tools_called:
-            formatted_call = f"Tool: {tool_call.name}\nParameters: {json.dumps(tool_call.input_parameters, indent=2)}"
-            if tool_call.description:
-                formatted_call += f"\nDescription: {tool_call.description}"
-            formatted_calls.append(formatted_call)
-        output = "\n\n".join(formatted_calls)
+            tool_calls.append(tool_call)
+        output = tool_calls
 
     return OutputParameters(
         output=output,
@@ -188,6 +184,11 @@ def extract_output_parameters_from_response(
                     description=tool_descriptions.get(tool_call.name),
                 )
             )
+    if not output and tools_called:
+        tool_calls = []
+        for tool_call in tools_called:
+            tool_calls.append(tool_call)
+        output = tool_calls
 
     return OutputParameters(
         output=output,
