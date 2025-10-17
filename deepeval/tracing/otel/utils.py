@@ -11,7 +11,7 @@ from deepeval.tracing import trace_manager, BaseSpan
 from deepeval.tracing.utils import make_json_serializable
 
 
-GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "task_completion"]
+GEN_AI_OPERATION_NAMES = ["chat", "generate_content", "text_completion"]
 
 
 def to_hex_string(id_value: int | bytes, length: int = 32) -> str:
@@ -127,6 +127,10 @@ def check_llm_input_from_gen_ai_attributes(
             input_messages = _flatten_input(input_messages_json)
 
         input = system_instructions + input_messages
+
+        model_parameters = check_model_parameters(span)
+        if model_parameters:
+            input.append(model_parameters)
 
     except Exception:
         pass
@@ -523,3 +527,18 @@ def check_pydantic_ai_trace_input_output(
         input_val, output_val = check_pydantic_ai_agent_input_output(span)
 
     return input_val, output_val
+
+
+def check_model_parameters(span: ReadableSpan) -> Optional[dict]:
+    try:
+        raw_model_parameters = span.attributes.get("model_request_parameters")
+        if raw_model_parameters and isinstance(raw_model_parameters, str):
+            model_parameters = json.loads(raw_model_parameters)
+            if isinstance(model_parameters, dict):
+                return {
+                    "role": "Model Request Parameters",
+                    "content": model_parameters,
+                }
+    except Exception:
+        pass
+    return None

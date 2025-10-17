@@ -23,19 +23,11 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def __init__(
         self,
         model: Optional[str] = None,
-        client_kwargs: Optional[Dict] = None,
-        **generation_kwargs,
+        openai_api_key: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
+        **client_kwargs,
     ):
-        """
-        Initializes an OpenAI embedding model.
-        Required 'client_kwargs' values (if no env):
-            - api_key
-
-        Required env values (if no client_kwargs):
-            - OPENAI_API_KEY
-
-        You can pass in the **generation_kwargs for any generation settings you'd like to change
-        """
+        self.openai_api_key = openai_api_key
         self.model_name = model if model else default_openai_embedding_model
         if self.model_name not in valid_openai_embedding_models:
             raise ValueError(
@@ -93,9 +85,10 @@ class OpenAIEmbeddingModel(DeepEvalBaseEmbeddingModel):
         if not sdk_retries_for(PS.OPENAI):
             client_kwargs["max_retries"] = 0
 
-        client_init_kwargs = {
+        client_init_kwargs = dict(
+            api_key=self.openai_api_key,
             **client_kwargs,
-        }
+        )
         try:
             return cls(**client_init_kwargs)
         except TypeError as e:
