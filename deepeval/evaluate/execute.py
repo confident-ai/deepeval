@@ -45,7 +45,12 @@ from deepeval.dataset import Golden
 from deepeval.contextvars import set_current_golden, reset_current_golden
 from deepeval.errors import MissingTestCaseParamsError, DeepEvalError
 from deepeval.metrics.utils import copy_metrics
-from deepeval.utils import get_or_create_event_loop, shorten, len_medium
+from deepeval.utils import (
+    get_or_create_event_loop,
+    shorten,
+    len_medium,
+    format_error_text,
+)
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
@@ -998,7 +1003,7 @@ def execute_agentic_test_cases(
                     else:
                         if llm_test_case is None:
                             api_span.status = TraceSpanApiStatus.ERRORED
-                            api_span.error = str(
+                            api_span.error = format_error_text(
                                 DeepEvalError(
                                     "Span has metrics but no LLMTestCase. "
                                     "Are you sure you called `update_current_span()`?"
@@ -1099,10 +1104,12 @@ def execute_agentic_test_cases(
                                     current_trace.root_spans[0].status = (
                                         TraceSpanStatus.ERRORED
                                     )
-                                    current_trace.root_spans[0].error = str(
-                                        DeepEvalError(
-                                            "Trace has metrics but no LLMTestCase (missing input/output). "
-                                            "Are you sure you called `update_current_trace()`?"
+                                    current_trace.root_spans[0].error = (
+                                        format_error_text(
+                                            DeepEvalError(
+                                                "Trace has metrics but no LLMTestCase (missing input/output). "
+                                                "Are you sure you called `update_current_trace()`?"
+                                            )
                                         )
                                     )
                                 if progress and pbar_eval_id is not None:
@@ -1481,7 +1488,7 @@ async def _a_execute_span_test_case(
     if not has_task_completion:
         if llm_test_case is None:
             api_span.status = TraceSpanApiStatus.ERRORED
-            api_span.error = str(
+            api_span.error = format_error_text(
                 DeepEvalError(
                     "Span has metrics but no LLMTestCase. "
                     "Are you sure you called `update_current_span()`?"
@@ -1582,7 +1589,7 @@ async def _a_execute_trace_test_case(
             trace_api.status = TraceSpanApiStatus.ERRORED
             if trace.root_spans:
                 trace.root_spans[0].status = TraceSpanStatus.ERRORED
-                trace.root_spans[0].error = str(
+                trace.root_spans[0].error = format_error_text(
                     DeepEvalError(
                         "Trace has metrics but no LLMTestCase (missing input/output). "
                         "Are you sure you called `update_current_trace()`?"
@@ -1887,10 +1894,12 @@ def execute_agentic_test_cases_from_loop(
                                     current_trace.root_spans[0].status = (
                                         TraceSpanStatus.ERRORED
                                     )
-                                    current_trace.root_spans[0].error = str(
-                                        DeepEvalError(
-                                            "Trace has metrics but no LLMTestCase (missing input/output). "
-                                            "Are you sure you called `update_current_trace()`?"
+                                    current_trace.root_spans[0].error = (
+                                        format_error_text(
+                                            DeepEvalError(
+                                                "Trace has metrics but no LLMTestCase (missing input/output). "
+                                                "Are you sure you called `update_current_trace()`?"
+                                            )
                                         )
                                     )
                                 if progress and pbar_eval_id is not None:
@@ -2073,9 +2082,7 @@ def a_execute_agentic_test_cases_from_loop(
                             last.error = msg
 
                     if exc is not None:
-                        msg = f"{type(exc).__name__}: {exc}"
-                        if get_settings().DEEPEVAL_VERBOSE_MODE:
-                            msg += " (Enable DEEPEVAL_DEBUG_ASYNC for stack trace.)"
+                        msg = format_error_text(exc)
                         for (
                             trace
                         ) in trace_manager.integration_traces_to_evaluate:
@@ -2089,9 +2096,10 @@ def a_execute_agentic_test_cases_from_loop(
                                 break
 
                     elif cancelled or t.cancelled():
-                        msg = "Task was cancelled (likely due to timeout)."
-                        if get_settings().DEEPEVAL_VERBOSE_MODE:
-                            msg += " Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS or DEEPEVAL_TASK_GATHER_BUFFER_SECONDS."
+                        cancel_exc = DeepEvalError(
+                            "Task was cancelled (likely due to timeout)."
+                        )
+                        msg = format_error_text(cancel_exc)
                         for (
                             trace
                         ) in trace_manager.integration_traces_to_evaluate:
@@ -2106,37 +2114,35 @@ def a_execute_agentic_test_cases_from_loop(
 
                 if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     # Using info level here to make it easy to spot these logs.
-                    # We are gated by DEEPEVAL_DEBUG_ASYNC
-                    meta = task_meta.get(t, {})
                     duration = time.perf_counter() - meta.get(
                         "started", started
                     )
-
-                    if t.cancelled():
+                    if cancelled:
                         logger.info(
                             "[deepeval] task CANCELLED %s after %.2fs meta=%r",
                             t.get_name(),
                             duration,
                             meta,
                         )
+                    elif exc is not None:
+                        logger.error(
+                            "[deepeval] task ERROR %s after %.2fs meta=%r",
+                            t.get_name(),
+                            duration,
+                            meta,
+                            exc_info=(
+                                type(exc),
+                                exc,
+                                getattr(exc, "__traceback__", None),
+                            ),
+                        )
                     else:
-                        exc = t.exception()
-                        if exc is not None:
-                            logger.error(
-                                "[deepeval] task ERROR %s after %.2fs meta=%r",
-                                t.get_name(),
-                                duration,
-                                meta,
-                                exc_info=(type(exc), exc, exc.__traceback__),
-                            )
-                        else:
-                            logger.info(
-                                "[deepeval] task OK %s after %.2fs meta={'golden_index': %r}",
-                                t.get_name(),
-                                duration,
-                                meta.get("golden_index"),
-                            )
-
+                        logger.info(
+                            "[deepeval] task OK %s after %.2fs meta={'golden_index': %r}",
+                            t.get_name(),
+                            duration,
+                            meta.get("golden_index"),
+                        )
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
 
@@ -2515,7 +2521,7 @@ def _execute_metric(
             return "skip"
         else:
             if error_config.ignore_errors:
-                metric.error = str(e)
+                metric.error = format_error_text(e)
                 metric.success = False
             else:
                 raise
@@ -2527,19 +2533,19 @@ def _execute_metric(
                 return "skip"
             else:
                 if error_config.ignore_errors:
-                    metric.error = str(e)
+                    metric.error = format_error_text(e)
                     metric.success = False
                 else:
                     raise
         except Exception as e:
             if error_config.ignore_errors:
-                metric.error = str(e)
+                metric.error = format_error_text(e)
                 metric.success = False
             else:
                 raise
     except Exception as e:
         if error_config.ignore_errors:
-            metric.error = str(e)
+            metric.error = format_error_text(e)
             metric.success = False
         else:
             raise
