@@ -1,5 +1,5 @@
 from openai import OpenAI, AsyncOpenAI
-from deepeval.tracing import trace, observe
+from deepeval.tracing import trace, observe, LlmSpanContext
 from deepeval.prompt import Prompt
 
 
@@ -10,9 +10,11 @@ client = OpenAI()
 async_client = AsyncOpenAI()
 
 with trace(
-    prompt=prompt,
-    thread_id="test_thread_id_1",
-    llm_metric_collection="test_collection_1",
+    llm_span_context=LlmSpanContext(
+        prompt=prompt,
+        thread_id="test_thread_id_1",
+        metric_collection="test_collection_1",
+    ),
 ):
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -28,7 +30,7 @@ with trace(
 
 @observe()
 async def run_async_openai():
-    with trace(prompt=prompt):
+    with trace(llm_span_context=LlmSpanContext(prompt=prompt)):
         await async_client.responses.create(
             model="gpt-4o-mini",
             instructions="You are a helpful assistant.",

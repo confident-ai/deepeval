@@ -4,17 +4,26 @@ from typing import Any, Union, Dict
 from openai.types.responses import Response
 
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.openai.utils import stringify_multimodal_content
+from deepeval.openai.utils import (
+    render_response_input,
+    stringify_multimodal_content,
+    render_messages,
+)
 from deepeval.openai.types import InputParameters, OutputParameters
+from deepeval.tracing.types import Message
 
 
-def extract_input_parameters(
+# guarding against errors to be compatible with legacy APIs
+def safe_extract_input_parameters(
     is_completion: bool, kwargs: Dict[str, Any]
 ) -> InputParameters:
-    if is_completion:
-        return extract_input_parameters_from_completion(kwargs)
-    else:
-        return extract_input_parameters_from_response(kwargs)
+    try:
+        if is_completion:
+            return extract_input_parameters_from_completion(kwargs)
+        else:
+            return extract_input_parameters_from_response(kwargs)
+    except:
+        return InputParameters(model="NA")
 
 
 def extract_input_parameters_from_completion(
@@ -43,6 +52,9 @@ def extract_input_parameters_from_completion(
     if len(user_messages) > 0:
         input_arg = user_messages[0]
 
+    # render messages
+    messages = render_messages(messages)
+
     return InputParameters(
         model=model,
         input=stringify_multimodal_content(input_arg),
@@ -64,7 +76,24 @@ def extract_input_parameters_from_response(
         if tools is not None
         else None
     )
-    messages = input_payload if isinstance(input_payload, list) else None
+    messages = []
+    if isinstance(input_payload, list):
+        messages = render_response_input(input_payload)
+    elif isinstance(input_payload, str):
+        messages = [
+            {
+                "role": "user",
+                "content": input_payload,
+            }
+        ]
+    if instructions:
+        messages.insert(
+            0,
+            {
+                "role": "system",
+                "content": instructions,
+            },
+        )
     return InputParameters(
         model=model,
         input=stringify_multimodal_content(input_payload),
@@ -75,19 +104,24 @@ def extract_input_parameters_from_response(
     )
 
 
-def extract_output_parameters(
+def safe_extract_output_parameters(
     is_completion: bool,
     response: Union[ChatCompletion, ParsedChatCompletion, Response],
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    if is_completion:
-        return extract_output_parameters_from_completion(
-            response, input_parameters
-        )
-    else:
-        return extract_output_parameters_from_response(
-            response, input_parameters
-        )
+
+    # guarding against errors to be compatible with legacy APIs
+    try:
+        if is_completion:
+            return extract_output_parameters_from_completion(
+                response, input_parameters
+            )
+        else:
+            return extract_output_parameters_from_response(
+                response, input_parameters
+            )
+    except:
+        return OutputParameters()
 
 
 def extract_output_parameters_from_completion(
@@ -112,6 +146,12 @@ def extract_output_parameters_from_completion(
                     description=tool_descriptions.get(tool_call.function.name),
                 )
             )
+
+    if not output and tools_called:
+        tool_calls = []
+        for tool_call in tools_called:
+            tool_calls.append(tool_call)
+        output = tool_calls
 
     return OutputParameters(
         output=output,
@@ -144,6 +184,11 @@ def extract_output_parameters_from_response(
                     description=tool_descriptions.get(tool_call.name),
                 )
             )
+    if not output and tools_called:
+        tool_calls = []
+        for tool_call in tools_called:
+            tool_calls.append(tool_call)
+        output = tool_calls
 
     return OutputParameters(
         output=output,
