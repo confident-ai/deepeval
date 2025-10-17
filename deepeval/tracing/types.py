@@ -14,11 +14,14 @@ class Message(BaseModel):
     role: str
     """To be displayed on the top of the message block."""
 
-    type: Literal["tool_calls", "tool_output", "thinking", "default"] = "default"
+    type: Literal["tool_calls", "tool_output", "thinking", "default"] = (
+        "default"
+    )
     """Decides how the content is rendered."""
-    
+
     content: Any
     """The content of the message."""
+
 
 class TraceWorkerStatus(Enum):
     SUCCESS = "success"
@@ -98,7 +101,7 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-        
+
     model: Optional[str] = None
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(

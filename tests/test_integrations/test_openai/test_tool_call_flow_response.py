@@ -5,6 +5,7 @@ from openai import OpenAI
 from deepeval.tracing.tracing import observe
 from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 
+
 # 1) Define a local "tool" implementation (runs in your code)
 @observe(type="tool")
 def get_weather(location: str, unit: str = "c") -> Dict[str, Any]:
@@ -18,8 +19,19 @@ def get_weather(location: str, unit: str = "c") -> Dict[str, Any]:
     entry = data.get(city, {"temp_c": 20, "condition": "clear"})
     if unit.lower() == "f":
         temp = round(entry["temp_c"] * 9 / 5 + 32, 1)
-        return {"location": city, "temperature": temp, "unit": "F", "condition": entry["condition"]}
-    return {"location": city, "temperature": entry["temp_c"], "unit": "C", "condition": entry["condition"]}
+        return {
+            "location": city,
+            "temperature": temp,
+            "unit": "F",
+            "condition": entry["condition"],
+        }
+    return {
+        "location": city,
+        "temperature": entry["temp_c"],
+        "unit": "C",
+        "condition": entry["condition"],
+    }
+
 
 # 2) Tool schema for Responses API (flatter format - name/parameters at top level)
 TOOLS = [
@@ -30,14 +42,22 @@ TOOLS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "location": {"type": "string", "description": "City name, e.g. 'San Francisco'"},
-                "unit": {"type": "string", "enum": ["c", "f"], "description": "Temperature unit"},
+                "location": {
+                    "type": "string",
+                    "description": "City name, e.g. 'San Francisco'",
+                },
+                "unit": {
+                    "type": "string",
+                    "enum": ["c", "f"],
+                    "description": "Temperature unit",
+                },
             },
             "required": ["location"],
             "additionalProperties": False,
         },
     }
 ]
+
 
 @observe
 def run_main():
@@ -54,7 +74,7 @@ def run_main():
     first = client.responses.create(
         model="gpt-4o-mini",
         instructions=system_prompt,
-        input=user_prompt,           # simple text input is allowed
+        input=user_prompt,  # simple text input is allowed
         tools=TOOLS,
         tool_choice="auto",
         temperature=0,

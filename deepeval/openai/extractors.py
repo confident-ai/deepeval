@@ -4,20 +4,25 @@ from typing import Any, Union, Dict
 from openai.types.responses import Response
 
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.openai.utils import render_response_input, stringify_multimodal_content, render_messages
+from deepeval.openai.utils import (
+    render_response_input,
+    stringify_multimodal_content,
+    render_messages,
+)
 from deepeval.openai.types import InputParameters, OutputParameters
 from deepeval.tracing.types import Message
+
 
 # guarding against errors to be compatible with legacy APIs
 def safe_extract_input_parameters(
     is_completion: bool, kwargs: Dict[str, Any]
 ) -> InputParameters:
-    try: 
+    try:
         if is_completion:
             return extract_input_parameters_from_completion(kwargs)
         else:
             return extract_input_parameters_from_response(kwargs)
-    except: 
+    except:
         return InputParameters(model="NA")
 
 
@@ -46,7 +51,7 @@ def extract_input_parameters_from_completion(
             user_messages.append(content)
     if len(user_messages) > 0:
         input_arg = user_messages[0]
-    
+
     # render messages
     messages = render_messages(messages)
 
@@ -81,10 +86,13 @@ def extract_input_parameters_from_response(
             }
         ]
     if instructions:
-        messages.insert(0, {
-            "role": "system",
-            "content": instructions,
-        })
+        messages.insert(
+            0,
+            {
+                "role": "system",
+                "content": instructions,
+            },
+        )
     return InputParameters(
         model=model,
         input=stringify_multimodal_content(input_payload),
@@ -102,7 +110,7 @@ def safe_extract_output_parameters(
 ) -> OutputParameters:
 
     # guarding against errors to be compatible with legacy APIs
-    try: 
+    try:
         if is_completion:
             return extract_output_parameters_from_completion(
                 response, input_parameters
@@ -111,7 +119,7 @@ def safe_extract_output_parameters(
             return extract_output_parameters_from_response(
                 response, input_parameters
             )
-    except: 
+    except:
         return OutputParameters()
 
 
@@ -137,7 +145,7 @@ def extract_output_parameters_from_completion(
                     description=tool_descriptions.get(tool_call.function.name),
                 )
             )
-    
+
     # If output is empty and tool calls exist, format them as string
     if not output and tools_called:
         formatted_calls = []
