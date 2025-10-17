@@ -5,8 +5,6 @@ import os
 import time
 
 from deepeval.utils import format_turn
-from deepeval.test_case.conversational_test_case import Turn
-from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
 from deepeval.metrics import (
@@ -523,7 +521,7 @@ def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
         test_results.append(
             TestResult(
                 name=span_api.name,
-                success=span_api.status == "SUCCESS",
+                success=span_api.status == TraceSpanApiStatus.SUCCESS,
                 metrics_data=span_api.metrics_data,
                 input=span_api.input,
                 actual_output=span_api.output,
