@@ -1,13 +1,13 @@
 {
-  "uuid": "8711c9dc-7b5e-4e52-b77a-4f5dcda113fc",
+  "uuid": "e690e4e1-ffac-4abf-ba3c-2ea9a7663c2d",
   "baseSpans": [
     {
-      "uuid": "f2893505-b8bb-4e73-a372-d8666f631710",
+      "uuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
       "name": "run_main",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2025-10-17T06:39:55.256Z",
-      "endTime": "2025-10-17T06:39:58.444Z",
+      "startTime": "2025-10-17T12:27:09.507Z",
+      "endTime": "2025-10-17T12:27:14.276Z",
       "input": {},
       "toolsCalled": [
         {
@@ -29,33 +29,34 @@
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "aa19db13-b98d-4c5b-b321-707e904fab66",
+      "uuid": "02d76703-685d-4e5c-a902-444f1e27222b",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f2893505-b8bb-4e73-a372-d8666f631710",
-      "startTime": "2025-10-17T06:39:56.840Z",
-      "endTime": "2025-10-17T06:39:58.444Z",
+      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "startTime": "2025-10-17T12:27:12.781Z",
+      "endTime": "2025-10-17T12:27:14.276Z",
       "input": [
         {
-          "role": "function_call_output",
-          "content": "type: function_call_output\ncall_id: call_uniTzFtf7uhCeO5wlU2CwEof\noutput: {\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
+          "type": "function_call_output",
+          "call_id": "call_XjCbIIBKDMAdpYgdgPA9oAhh",
+          "output": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
         }
       ],
-      "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as temperatures can fluctuate throughout the day!",
+      "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as the temperature can change throughout the day!",
       "model": "gpt-4o-mini",
       "prompt": {},
       "inputTokenCount": 85.0,
-      "outputTokenCount": 34.0
+      "outputTokenCount": 35.0
     },
     {
-      "uuid": "92524fcd-7338-4e6f-b0db-5191f391eb86",
+      "uuid": "579160b5-173d-4f24-a1e6-c15bb5a18c69",
       "name": "llm_generation",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "f2893505-b8bb-4e73-a372-d8666f631710",
-      "startTime": "2025-10-17T06:39:55.261Z",
-      "endTime": "2025-10-17T06:39:56.840Z",
+      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "startTime": "2025-10-17T12:27:09.512Z",
+      "endTime": "2025-10-17T12:27:12.781Z",
       "input": [
         {
           "role": "system",
@@ -95,13 +96,13 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "58b7365d-fdc1-4c9c-a804-e571a76ce4d9",
+      "uuid": "83fa29ce-95d3-4806-a5ed-92ac425c7325",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "f2893505-b8bb-4e73-a372-d8666f631710",
-      "startTime": "2025-10-17T06:39:56.840Z",
-      "endTime": "2025-10-17T06:39:56.840Z",
+      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "startTime": "2025-10-17T12:27:12.781Z",
+      "endTime": "2025-10-17T12:27:12.781Z",
       "input": {
         "location": "San Francisco",
         "unit": "c"
@@ -114,10 +115,19 @@
       }
     }
   ],
-  "startTime": "2025-10-17T06:39:55.256Z",
-  "endTime": "2025-10-17T06:39:58.445Z",
+  "startTime": "2025-10-17T12:27:09.507Z",
+  "endTime": "2025-10-17T12:27:14.276Z",
   "environment": "development",
   "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
-  "output": "",
+  "output": [
+    {
+      "name": "get_weather",
+      "description": "Get the current weather for a city.",
+      "inputParameters": {
+        "location": "San Francisco",
+        "unit": "c"
+      }
+    }
+  ],
   "status": "SUCCESS"
 }
