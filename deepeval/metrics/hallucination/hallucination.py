@@ -18,14 +18,14 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.hallucination.schema import *
 from deepeval.metrics.api import metric_data_manager
 
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.CONTEXT,
-]
-
 
 class HallucinationMetric(BaseMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.CONTEXT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -55,7 +55,7 @@ class HallucinationMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -102,7 +102,7 @@ class HallucinationMetric(BaseMetric):
         _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
