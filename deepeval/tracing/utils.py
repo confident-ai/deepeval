@@ -182,8 +182,8 @@ def perf_counter_to_datetime(perf_counter_value: float) -> datetime:
 def replace_self_with_class_name(obj):
     try:
         return f"<{obj.__class__.__name__}>"
-    except:
-        return f"<self>"
+    except Exception:
+        return "<self>"
 
 
 def prepare_tool_call_input_parameters(output: Any) -> Dict[str, Any]:
