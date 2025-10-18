@@ -45,9 +45,7 @@ from deepeval.dataset import Golden
 from deepeval.contextvars import set_current_golden, reset_current_golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics.utils import copy_metrics
-from deepeval.utils import (
-    get_or_create_event_loop,
-)
+from deepeval.utils import get_or_create_event_loop, shorten, len_medium
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
@@ -63,6 +61,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMTestCase,
 )
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run import (
     global_test_run_manager,
     LLMApiTestCase,
@@ -82,24 +81,38 @@ from deepeval.evaluate.utils import (
     create_api_trace,
     create_metric_data,
     create_test_result,
-    create_api_test_case,
     count_metrics_in_trace,
     extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
-from deepeval.openai.utils import openai_test_case_pairs
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.config.settings import get_settings
-
+from deepeval.test_run import TEMP_FILE_PATH
+from deepeval.confident.api import is_confident
+from deepeval.test_run.hyperparameters import (
+    process_hyperparameters,
+    process_prompts,
+)
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 async def _snapshot_tasks():
     cur = asyncio.current_task()
     # `all_tasks` returns tasks for the current running loop only
     return {t for t in asyncio.all_tasks() if t is not cur}
+
+
+def _per_task_timeout() -> float:
+    return get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+
+
+def _gather_timeout() -> float:
+    s = get_settings()
+    return (
+        s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+        + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
+    )
 
 
 ###########################################
@@ -860,7 +873,7 @@ def execute_agentic_test_cases(
                         loop.run_until_complete(
                             asyncio.wait_for(
                                 coro,
-                                timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                                timeout=_per_task_timeout(),
                             )
                         )
                     else:
@@ -913,6 +926,7 @@ def execute_agentic_test_cases(
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
                         trace_api.llm_spans.append(api_span)
+                        log_prompt(span, test_run_manager)
                     elif isinstance(span, RetrieverSpan):
                         trace_api.retriever_spans.append(api_span)
                     elif isinstance(span, ToolSpan):
@@ -1227,7 +1241,7 @@ async def _a_execute_agentic_test_case(
             if asyncio.iscoroutinefunction(observed_callback):
                 await asyncio.wait_for(
                     observed_callback(golden.input),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                    timeout=_per_task_timeout(),
                 )
             else:
                 observed_callback(golden.input)
@@ -1304,6 +1318,7 @@ async def _a_execute_agentic_test_case(
             verbose_mode=verbose_mode,
             progress=progress,
             pbar_eval_id=pbar_eval_id,
+            test_run_manager=test_run_manager,
             _use_bar_indicator=_use_bar_indicator,
         )
         child_tasks = [asyncio.create_task(dfs(child)) for child in span.children]
@@ -1319,7 +1334,18 @@ async def _a_execute_agentic_test_case(
             await asyncio.gather(*child_tasks, return_exceptions=True)
 
     test_start_time = time.perf_counter()
-    await dfs(current_trace.root_spans[0])
+    if current_trace and current_trace.root_spans:
+        await dfs(current_trace.root_spans[0])
+    else:
+        if (
+            logger.isEnabledFor(logging.DEBUG)
+            and get_settings().DEEPEVAL_VERBOSE_MODE
+        ):
+            logger.debug(
+                "Skipping DFS: empty trace or no root spans (trace=%s)",
+                current_trace.uuid if current_trace else None,
+            )
+
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
 
@@ -1341,6 +1367,7 @@ async def _a_execute_span_test_case(
     verbose_mode: Optional[bool],
     progress: Optional[Progress],
     pbar_eval_id: Optional[int],
+    test_run_manager: Optional[TestRunManager],
     _use_bar_indicator: bool,
 ):
     api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
@@ -1348,6 +1375,7 @@ async def _a_execute_span_test_case(
         trace_api.agent_spans.append(api_span)
     elif isinstance(span, LlmSpan):
         trace_api.llm_spans.append(api_span)
+        log_prompt(span, test_run_manager)
     elif isinstance(span, RetrieverSpan):
         trace_api.retriever_spans.append(api_span)
     elif isinstance(span, ToolSpan):
@@ -1596,6 +1624,7 @@ def execute_agentic_test_cases_from_loop(
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
                         trace_api.llm_spans.append(api_span)
+                        log_prompt(span, test_run_manager)
                     elif isinstance(span, RetrieverSpan):
                         trace_api.retriever_spans.append(api_span)
                     elif isinstance(span, ToolSpan):
@@ -1776,6 +1805,7 @@ def execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -1792,11 +1822,6 @@ def a_execute_agentic_test_cases_from_loop(
     _is_assert_test: bool = False,
 ) -> Iterator[TestResult]:
 
-    GATHER_TIMEOUT_SECONDS = (
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-    )
-
     semaphore = asyncio.Semaphore(async_config.max_concurrent)
     original_create_task = asyncio.create_task
 
@@ -1811,7 +1836,7 @@ def a_execute_agentic_test_cases_from_loop(
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
             return await asyncio.wait_for(
-                coroutine, timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+                coroutine, timeout=_per_task_timeout()
             )
 
     def evaluate_test_cases(
@@ -1839,14 +1864,11 @@ def a_execute_agentic_test_cases_from_loop(
             )
 
             # record metadata for debugging
-            MAX_META_INPUT_LENGTH = 120
             started = time.perf_counter()
-            short_input = current_golden_ctx["input"]
-            if (
-                isinstance(short_input, str)
-                and len(short_input) > MAX_META_INPUT_LENGTH
-            ):
-                short_input = short_input[:MAX_META_INPUT_LENGTH] + "…"
+            short_input = current_golden_ctx.get("input")
+            if isinstance(short_input, str):
+                short_input = shorten(short_input, len_medium())
+
             task_meta[task] = {
                 "golden_index": current_golden_ctx["index"],
                 "golden_name": current_golden_ctx["name"],
@@ -1856,7 +1878,7 @@ def a_execute_agentic_test_cases_from_loop(
             }
 
             def on_task_done(t: asyncio.Task):
-                if settings.DEEPEVAL_DEBUG_ASYNC:
+                if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     # Using info level here to make it easy to spot these logs.
                     # We are gated by DEEPEVAL_DEBUG_ASYNC
                     meta = task_meta.get(t, {})
@@ -1930,7 +1952,7 @@ def a_execute_agentic_test_cases_from_loop(
                 loop.run_until_complete(
                     asyncio.wait_for(
                         asyncio.gather(*created_tasks, return_exceptions=True),
-                        timeout=GATHER_TIMEOUT_SECONDS,
+                        timeout=_gather_timeout(),
                     )
                 )
             except asyncio.TimeoutError:
@@ -1945,16 +1967,13 @@ def a_execute_agentic_test_cases_from_loop(
                     elapsed_time = time.perf_counter() - start_time
 
                     # Determine if it was a per task or gather timeout based on task's elapsed time
-                    if (
-                        elapsed_time
-                        >= settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                    ):
+                    if elapsed_time >= _per_task_timeout():
                         timeout_type = "per-task"
                     else:
                         timeout_type = "gather"
 
                     logger.warning(
-                        f"[deepeval] gather TIMEOUT after {GATHER_TIMEOUT_SECONDS}s; "
+                        f"[deepeval] gather TIMEOUT after {_gather_timeout()}s; "
                         f"pending={len(pending)} tasks. Timeout type: {timeout_type}. "
                         f"To give tasks more time, consider increasing "
                         f"DEEPEVAL_PER_TASK_TIMEOUT_SECONDS for longer task completion time or "
@@ -1968,7 +1987,7 @@ def a_execute_agentic_test_cases_from_loop(
                         elapsed_time,
                         meta,
                     )
-                    if loop.get_debug() and settings.DEEPEVAL_DEBUG_ASYNC:
+                    if loop.get_debug() and get_settings().DEEPEVAL_DEBUG_ASYNC:
                         frames = t.get_stack(limit=6)
                         if frames:
                             logger.info("    stack:")
@@ -1989,12 +2008,12 @@ def a_execute_agentic_test_cases_from_loop(
                     return
 
                 try:
+                    current_tasks = set()
                     # Find tasks that were created during this run but we didn’t track
                     current_tasks = loop.run_until_complete(_snapshot_tasks())
                 except RuntimeError:
                     # this might happen if the loop is already closing
-                    # nothing we can do
-                    return
+                    pass
 
                 leftovers = [
                     t
@@ -2004,12 +2023,9 @@ def a_execute_agentic_test_cases_from_loop(
                     and not t.done()
                 ]
 
-                if not leftovers:
-                    return
-
-                if settings.DEEPEVAL_DEBUG_ASYNC:
+                if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     logger.warning(
-                        "[deepeval] %d stray task(s) not tracked; cancelling…",
+                        "[deepeval] %d stray task(s) not tracked; cancelling...",
                         len(leftovers),
                     )
                     for t in leftovers:
@@ -2017,20 +2033,21 @@ def a_execute_agentic_test_cases_from_loop(
                         name = t.get_name()
                         logger.warning("  - STRAY %s meta=%s", name, meta)
 
-                for t in leftovers:
-                    t.cancel()
+                if leftovers:
+                    for t in leftovers:
+                        t.cancel()
 
-                # Drain strays so they don’t leak into the next iteration
-                try:
-                    loop.run_until_complete(
-                        asyncio.gather(*leftovers, return_exceptions=True)
-                    )
-                except RuntimeError:
-                    # If the loop is closing here, just continue
-                    if settings.DEEPEVAL_DEBUG_ASYNC:
-                        logger.warning(
-                            "[deepeval] failed to drain stray tasks because loop is closing"
+                    # Drain strays so they don’t leak into the next iteration
+                    try:
+                        loop.run_until_complete(
+                            asyncio.gather(*leftovers, return_exceptions=True)
                         )
+                    except RuntimeError:
+                        # If the loop is closing here, just continue
+                        if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                            logger.warning(
+                                "[deepeval] failed to drain stray tasks because loop is closing"
+                            )
 
         # Evaluate traces
         if trace_manager.traces_to_evaluate:
@@ -2045,25 +2062,6 @@ def a_execute_agentic_test_cases_from_loop(
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,
                     show_indicator=display_config.show_indicator,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
-                    _use_bar_indicator=_use_bar_indicator,
-                    _is_assert_test=_is_assert_test,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                )
-            )
-        elif openai_test_case_pairs:
-            loop.run_until_complete(
-                _evaluate_test_case_pairs(
-                    test_case_pairs=openai_test_case_pairs,
-                    test_run=test_run,
-                    test_run_manager=test_run_manager,
-                    test_results=test_results,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
-                    verbose_mode=display_config.verbose_mode,
                     throttle_value=async_config.throttle_value,
                     max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,
@@ -2145,6 +2143,7 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 async def _a_evaluate_traces(
@@ -2171,8 +2170,26 @@ async def _a_evaluate_traces(
             return await func(*args, **kwargs)
 
     eval_tasks = []
-    for count, trace in enumerate(traces_to_evaluate):
-        golden = goldens[count]
+    # Here, we will work off a fixed-set copy to avoid surprises from potential
+    # mid-iteration mutation
+    traces_snapshot = list(traces_to_evaluate or [])
+
+    for count, trace in enumerate(traces_snapshot):
+        # Prefer the explicit mapping from trace -> golden captured at trace creation.
+        golden = trace_manager.trace_uuid_to_golden.get(trace.uuid)
+        if not golden:
+            # trace started during evaluation_loop but the CURRENT_GOLDEN was
+            # not set for some reason. We can’t map it to a golden, so the best
+            # we can do is skip evaluation for this trace.
+            if (
+                logger.isEnabledFor(logging.DEBUG)
+                and get_settings().DEEPEVAL_VERBOSE_MODE
+            ):
+                logger.debug(
+                    "Skipping trace %s: no golden association found during evaluation_loop ",
+                    trace.uuid,
+                )
+            continue
         with capture_evaluation_run("golden"):
             task = execute_evals_with_semaphore(
                 func=_a_execute_agentic_test_case,
@@ -2289,6 +2306,7 @@ def _execute_metric(
             test_case,
             _show_indicator=show_metric_indicator,
             _in_component=in_component,
+            _log_metric_to_confident=False,
         )
     except MissingTestCaseParamsError as e:
         if error_config.skip_on_missing_params:
@@ -2323,3 +2341,38 @@ def _execute_metric(
             metric.success = False
         else:
             raise
+
+
+def log_prompt(
+    llm_span: LlmSpan,
+    test_run_manager: TestRunManager,
+):
+    prompt = llm_span.prompt
+    if prompt is None:
+        return
+
+    span_hyperparameters = {}
+    prompt_version = prompt.version if is_confident() else None
+    key = f"{prompt.alias}_{prompt_version}"
+    span_hyperparameters[key] = prompt
+
+    test_run = test_run_manager.get_test_run()
+    if test_run.prompts is None:
+        test_run.prompts = []
+    if test_run.hyperparameters is None:
+        test_run.hyperparameters = {}
+
+    if key not in test_run.hyperparameters:
+        test_run.hyperparameters.update(
+            process_hyperparameters(span_hyperparameters, False)
+        )
+        existing_prompt_keys = {
+            f"{p.alias}_{p.version}" for p in test_run.prompts
+        }
+        new_prompts = process_prompts(span_hyperparameters)
+        for new_prompt in new_prompts:
+            new_prompt_key = f"{new_prompt.alias}_{new_prompt.version}"
+            if new_prompt_key not in existing_prompt_keys:
+                test_run.prompts.append(new_prompt)
+
+    global_test_run_manager.save_test_run(TEMP_FILE_PATH)

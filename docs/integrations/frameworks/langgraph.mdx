@@ -13,7 +13,7 @@ import ColabButton from "@site/src/components/ColabButton";
 # LangGraph
 
 <ColabButton 
-  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/cookbooks/examples/notebooks/langgraph.ipynb" 
+  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/examples/notebooks/langgraph.ipynb" 
   className="header-colab-button"
 />
 
@@ -38,13 +38,12 @@ deepeval login
 
 Create a `CallbackHandler` with a list of [task completion metrics](/docs/metrics-task-completion) you wish to use, and pass it to your LangGraph application's `invoke` method.
 
-```python title="main.py" showLineNumbers {3,5,6}
+```python title="main.py" showLineNumbers
 from langgraph.prebuilt import create_react_agent
 
 from deepeval.integrations.langchain import CallbackHandler
  
 from deepeval.metrics import TaskCompletionMetric
-task_completion_metric = TaskCompletionMetric()
  
 def get_weather(city: str) -> str:
     """Returns the weather in a city"""
@@ -89,7 +88,7 @@ dataset = EvaluationDataset(goldens=goldens)
 for golden in dataset.evals_iterator():
     agent.invoke(
         input={"messages": [{"role": "user", "content": golden.input}]},
-        config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+        config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
     )
 ```
 
@@ -109,7 +108,7 @@ for golden in dataset.evals_iterator():
     task = asyncio.create_task(
         agent.ainvoke(
             input={"messages": [{"role": "user", "content": golden.input}]},
-            config={"callbacks": [CallbackHandler(metrics=[task_completion_metric])]}
+            config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
         )
     )
     dataset.evaluate(task)
@@ -140,26 +139,28 @@ If you need to evaluate individual components of your LangGraph application, [se
 Using `deepeval`, you can now evaluate individual components of your LangGraph application.
 
 ### LLM
-Define `metrics` or `metric_collection` in the metadata of the all the `BaseLanguageModel`s in your LangGraph application.
+Define `metrics` in the metadata of the all the `BaseLanguageModel`s in your LangGraph application.
 
-```python title="main.py" showLineNumbers {6}
+```python title="main.py" showLineNumbers
 from langchain_openai import ChatOpenAI
+from deepeval.metrics import AnswerRelevancyMetric
 ...
 
 llm = ChatOpenAI(
     model="gpt-4o-mini", 
-    metadata={"metric_collection": "test_collection_1"}
+    metadata={"metric": [AnswerRelevancyMetric()]}
 ).bind_tools([get_weather])
 ```
 
 ### Tool
-To pass `metrics` or `metric_collection` to the tools, you can use the DeepEval's LangChain `tool` decorator.
-```python title="main.py" showLineNumbers {5}
+To pass `metrics` to the tools, you can use the DeepEval's LangChain `tool` decorator.
+```python title="main.py" showLineNumbers
 # from langchain_core.tools import tool
 from deepeval.integrations.langchain import tool
+from deepeval.metrics import AnswerRelevancyMetric
 ...
 
-@tool(metric_collection="test_collection_1")
+@tool(metric=[AnswerRelevancyMetric()])
 def get_weather(location: str) -> str:
     """Get the current weather in a location."""
     return f"It's always sunny in {location}!"
@@ -167,4 +168,15 @@ def get_weather(location: str) -> str:
 
 ## Evals in Production
 
-To run online evaluations in production, simply replace `
+To run online evaluations in production, simply replace `metrics` in `CallbackHandler` with a [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections) string from Confident AI, and push your LangChain agent to production.
+
+:::info
+This will automatically evaluate all incoming traces in production with the task completion metrics defined in your [metric collection](https://www.confident-ai.com/docs/metrics/metric-collections).
+:::
+
+```python filename="main.py" showLineNumbers
+result = agent_executor.invoke(
+    {"input": "What is 8 multiplied by 6?"},
+    config={"callbacks": [CallbackHandler(metric_collection="<metric-collection-name-with-task-completion>")]}
+)
+```

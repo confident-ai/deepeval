@@ -71,6 +71,7 @@ There are **EIGHT** optional parameters when creating a `FaithfulnessMetric`:
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
 - [Optional] `truths_extraction_limit`: an int which when set, determines the maximum number of factual truths to extract from the `retrieval_context`. The truths extracted will be used to determine the degree of factual alignment, and will be ordered by importance, decided by your evaluation `model`. Defaulted to `None`.
+- [Optional] `penalize_ambiguous_claims`: a boolean which when set to `True`, will **not** count claims that are ambigious as faithful. Defaulted to `False`.
 - [Optional] `evaluation_template`: a class of type `FaithfulnessTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `FaithfulnessMetric` score. Defaulted to `deepeval`'s `FaithfulnessTemplate`.
 
 ### Within components

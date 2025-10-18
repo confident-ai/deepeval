@@ -1,0 +1,42 @@
+{
+  "uuid": "c157815f-40ec-4562-b980-9fef047994e1",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "61ae103d-d734-4a9e-a9ab-68c09658398f",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-13T06:21:30.771Z",
+      "endTime": "2025-10-13T06:21:32.005Z",
+      "input": "Hello, how are you?",
+      "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+      "model": "gpt-4o",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "inputTokenCount": 13.0,
+      "outputTokenCount": 30.0,
+      "metricCollection": "test_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-13T06:21:30.771Z",
+  "endTime": "2025-10-13T06:21:32.005Z",
+  "name": "test_name_1",
+  "metadata": {
+    "test_metadata_1": "test_value_1"
+  },
+  "tags": [
+    "test_tag_1"
+  ],
+  "environment": "development",
+  "threadId": "test_thread_id_1",
+  "userId": "test_user_id_1",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+  "status": "SUCCESS"
+}

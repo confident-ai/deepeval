@@ -1,4 +1,14 @@
-from typing import Any, Dict, List, Literal, Optional, Set, Union, Callable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Union,
+)
 from time import perf_counter
 import threading
 import functools
@@ -19,6 +29,7 @@ from deepeval.constants import (
 )
 from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 from deepeval.metrics import BaseMetric
+from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.api import (
     BaseApiSpan,
     SpanApiType,
@@ -40,6 +51,7 @@ from deepeval.tracing.types import (
 )
 from deepeval.tracing.utils import (
     Environment,
+    prepare_tool_call_input_parameters,
     replace_self_with_class_name,
     make_json_serializable,
     perf_counter_to_datetime,
@@ -47,13 +59,16 @@ from deepeval.tracing.utils import (
     tracing_enabled,
     validate_environment,
     validate_sampling_rate,
-    dump_body_to_json_file,
-    get_deepeval_trace_mode,
 )
 from deepeval.utils import dataclass_to_dict
 from deepeval.tracing.context import current_span_context, current_trace_context
 from deepeval.tracing.types import TestCaseMetricPair
 from deepeval.tracing.api import PromptApi
+from deepeval.tracing.trace_test_manager import trace_testing_manager
+
+
+if TYPE_CHECKING:
+    from deepeval.dataset.golden import Golden
 
 EVAL_DUMMY_SPAN_NAME = "evals_iterator"
 
@@ -65,6 +80,10 @@ class TraceManager:
         self.active_spans: Dict[str, BaseSpan] = (
             {}
         )  # Map of span_uuid to BaseSpan
+        # Map each trace created during evaluation_loop to the Golden that was active
+        # when it was started. This lets us evaluate traces against the correct golden
+        # since we cannot rely on positional indexing as the order is not guaranteed.
+        self.trace_uuid_to_golden: Dict[str, Golden] = {}
 
         settings = get_settings()
         # Initialize queue and worker thread for trace posting
@@ -86,7 +105,7 @@ class TraceManager:
         )
         validate_environment(self.environment)
 
-        self.sampling_rate = settings.CONFIDENT_SAMPLE_RATE
+        self.sampling_rate = settings.CONFIDENT_TRACE_SAMPLE_RATE
         validate_sampling_rate(self.sampling_rate)
         self.openai_client = None
         self.tracing_enabled = True
@@ -166,6 +185,19 @@ class TraceManager:
         self.traces.append(new_trace)
         if self.evaluation_loop:
             self.traces_to_evaluate_order.append(trace_uuid)
+            # Associate the current Golden with this trace so we can
+            # later evaluate traces against the correct golden, even if more traces
+            # are created than goldens or the order interleaves.
+            try:
+                from deepeval.contextvars import get_current_golden
+
+                current_golden = get_current_golden()
+                if current_golden is not None:
+                    self.trace_uuid_to_golden[trace_uuid] = current_golden
+            except Exception:
+                # not much we can do, but if the golden is not there during evaluation
+                # we will write out a verbose debug log
+                pass
         return new_trace
 
     def end_trace(self, trace_uuid: str):
@@ -183,13 +215,14 @@ class TraceManager:
             if trace.status == TraceSpanStatus.IN_PROGRESS:
                 trace.status = TraceSpanStatus.SUCCESS
 
-            mode = get_deepeval_trace_mode()
-            if mode == "gen":
+            if trace_testing_manager.test_name:
+                # Trace testing mode is enabled
+                # Instead posting the trace to the queue, it will be stored in this global variable
                 body = self.create_trace_api(trace).model_dump(
                     by_alias=True, exclude_none=True
                 )
-                dump_body_to_json_file(body)
-            # Post the trace to the server before removing it
+                trace_testing_manager.test_dict = make_json_serializable(body)
+            #  Post the trace to the server before removing it
             elif not self.evaluating:
                 self.post_trace(trace)
             else:
@@ -859,6 +892,22 @@ class Observer:
             and not current_span.prompt
         ):
             current_span.prompt = self.prompt
+
+        if not current_span.tools_called:
+            # check any tool span children
+            for child in current_span.children:
+                if isinstance(child, ToolSpan):
+                    current_span.tools_called = current_span.tools_called or []
+                    current_span.tools_called.append(
+                        ToolCall(
+                            name=child.name,
+                            description=child.description,
+                            input_parameters=prepare_tool_call_input_parameters(
+                                child.input
+                            ),
+                            output=child.output,
+                        )
+                    )
 
         trace_manager.remove_span(self.uuid)
         if current_span.parent_uuid:

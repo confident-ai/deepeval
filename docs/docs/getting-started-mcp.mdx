@@ -32,6 +32,7 @@ Confident AI allows you to view and share your testing reports. Set your API key
 ```bash
 CONFIDENT_API_KEY="confident_us..."
 ```
+
 :::
 
 ## Understanding MCP Evals
@@ -50,6 +51,124 @@ The MCP architecture is composed of three main components:
 ## Run Your First MCP Eval
 
 In `deepeval` MCP evaluations can be done using either single-turn or multi-turn test cases. In code, you'll have to track all MCP interactions and finally create a test case after the execution of your application.
+
+:::note
+
+`deepeval` provides a wide selection of LLM models that you can easily choose from and run evaluations with.
+
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
+```python
+from deepeval.metrics import MCPUseMetric
+
+task_completion_metric = MCPUseMetric(model="gpt-4.1")
+```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import AnthropicModel
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel("gemini-2.5-flash")
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure-openai" label="Ollama">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import OllamaModel
+
+model = OllamaModel("deepseek-r1")
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import GrokModel
+
+model = GrokModel("grok-4-0709")
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure" label="Azure OpenAI">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="amazon-bedrock" label="Amazon Bedrock">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import AmazonBedrockModel
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="vertex-ai" label="Vertex AI">
+
+```python
+from deepeval.metrics import MCPUseMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+task_completion_metric = MCPUseMetric(model=model)
+```
+
+</TabItem>
+
+</Tabs>
+:::
 
 <Timeline>
 <TimelineItem title="Create an MCP server">
@@ -93,7 +212,7 @@ In your MCP application's main file, you need to track all the MCP interactions 
 from deepeval.test_case import MCPToolCall
 
 available_tools = [
-    {"name": tool.name, "description": tool.description, "input_schema": tool.inputSchema} 
+    {"name": tool.name, "description": tool.description, "input_schema": tool.inputSchema}
     for tool in tool_list
 ]
 
@@ -110,8 +229,8 @@ for content in response.content:
         result = await session.call_tool(tool_name, tool_args)
 
         tools_called.append(MCPToolCall(
-            name=tool_name, 
-            args=tool_args, 
+            name=tool_name,
+            args=tool_args,
             result=result
         ))
 ```
@@ -177,10 +296,10 @@ evaluate([test_case], [mcp_use_metric])
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
-<VideoDisplayer 
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-single-turn.mp4" 
-    confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
-    label="Evaluations Test Reports on Confident AI"
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-single-turn.mp4"
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports"
+  label="Evaluations Test Reports on Confident AI"
 />
 
 :::tip
@@ -283,10 +402,10 @@ evaluate([convo_test_case], [mcp_use_metric, mcp_task_completion])
 
 If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), the DeepEval platform.
 
-<VideoDisplayer 
-    src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-multi-turn.mp4" 
-    confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/multi-turn/end-to-end"
-    label="Multi-Turn End-to-End Evals"
+<VideoDisplayer
+  src="https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:getting-started-mcp-multi-turn.mp4"
+  confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/multi-turn/end-to-end"
+  label="Multi-Turn End-to-End Evals"
 />
 
 :::tip

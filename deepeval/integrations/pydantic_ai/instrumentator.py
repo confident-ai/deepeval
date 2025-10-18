@@ -1,6 +1,18 @@
 import json
+import logging
 import os
 from typing import Literal, Optional, List
+
+from deepeval.config.settings import get_settings
+from deepeval.confident.api import get_confident_api_key
+from deepeval.prompt import Prompt
+from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.types import Trace
+from deepeval.tracing.otel.utils import to_hex_string
+
+
+logger = logging.getLogger(__name__)
+
 
 try:
     from pydantic_ai.models.instrumented import InstrumentationSettings
@@ -11,7 +23,20 @@ try:
     )
 
     dependency_installed = True
-except:
+except ImportError as e:
+    if get_settings().DEEPEVAL_VERBOSE_MODE:
+        if isinstance(e, ModuleNotFoundError):
+            logger.warning(
+                "Optional tracing dependency not installed: %s",
+                e.name,
+                stacklevel=2,
+            )
+        else:
+            logger.warning(
+                "Optional tracing import failed: %s",
+                e,
+                stacklevel=2,
+            )
     dependency_installed = False
 
 
@@ -25,6 +50,10 @@ def is_dependency_installed():
 
 from deepeval.confident.api import get_confident_api_key
 from deepeval.prompt import Prompt
+from deepeval.tracing.otel.test_exporter import test_exporter
+from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.types import Trace
+from deepeval.tracing.otel.utils import to_hex_string
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
@@ -36,6 +65,12 @@ class SpanInterceptor(SpanProcessor):
         self.settings: ConfidentInstrumentationSettings = settings_instance
 
     def on_start(self, span, parent_context):
+
+        # set trace uuid
+        _current_trace_context = current_trace_context.get()
+        if _current_trace_context and isinstance(_current_trace_context, Trace):
+            _otel_trace_id = span.get_span_context().trace_id
+            _current_trace_context.uuid = to_hex_string(_otel_trace_id, 32)
 
         # set trace attributes
         if self.settings.thread_id:
@@ -148,8 +183,9 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         confident_prompt: Optional[Prompt] = None,
         llm_metric_collection: Optional[str] = None,
         agent_metric_collection: Optional[str] = None,
-        tool_metric_collection_map: dict = {},
+        tool_metric_collection_map: Optional[dict] = None,
         trace_metric_collection: Optional[str] = None,
+        is_test_mode: Optional[bool] = False,
     ):
         is_dependency_installed()
 
@@ -162,7 +198,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         ]:
             self.environment = _environment
 
-        self.tool_metric_collection_map = tool_metric_collection_map
+        self.tool_metric_collection_map = tool_metric_collection_map or {}
         self.name = name
         self.thread_id = thread_id
         self.user_id = user_id
@@ -185,12 +221,15 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
         span_interceptor = SpanInterceptor(self)
         trace_provider.add_span_processor(span_interceptor)
 
-        trace_provider.add_span_processor(
-            BatchSpanProcessor(
-                OTLPSpanExporter(
-                    endpoint=OTLP_ENDPOINT,
-                    headers={"x-confident-api-key": api_key},
+        if is_test_mode:
+            trace_provider.add_span_processor(BatchSpanProcessor(test_exporter))
+        else:
+            trace_provider.add_span_processor(
+                BatchSpanProcessor(
+                    OTLPSpanExporter(
+                        endpoint=OTLP_ENDPOINT,
+                        headers={"x-confident-api-key": api_key},
+                    )
                 )
             )
-        )
         super().__init__(tracer_provider=trace_provider)

@@ -1,6 +1,7 @@
 from typing import Dict
 import re
 import json
+import asyncio
 
 
 def trim_and_load_json(
@@ -20,3 +21,24 @@ def trim_and_load_json(
         raise ValueError(error_str)
     except Exception as e:
         raise Exception(f"An unexpected error occurred: {str(e)}")
+
+
+def safe_asyncio_run(coro):
+    """
+    Run an async coroutine safely.
+    Falls back to run_until_complete if already in a running event loop.
+    """
+    try:
+        return asyncio.run(coro)
+    except RuntimeError:
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                future = asyncio.ensure_future(coro)
+                return loop.run_until_complete(future)
+            else:
+                return loop.run_until_complete(coro)
+        except Exception as inner_e:
+            raise
+    except Exception as e:
+        raise

@@ -1,24 +1,56 @@
-import os
-import warnings
-import re
+from __future__ import annotations
 
-# load environment variables before other imports
+import logging
+import os
+import re
+import warnings
+
+# IMPORTANT: load environment variables before other imports
 from deepeval.config.settings import autoload_dotenv, get_settings
 
+logging.getLogger("deepeval").addHandler(logging.NullHandler())
 autoload_dotenv()
 
-from ._version import __version__
-from deepeval.evaluate import evaluate, assert_test
-from deepeval.evaluate.compare import compare
-from deepeval.test_run import on_test_run_end, log_hyperparameters
-from deepeval.utils import login
-from deepeval.telemetry import *
+
+def _expose_public_api() -> None:
+    # All other imports must happen after env is loaded
+    # Do not do this at module level or ruff will complain with E402
+    global __version__, evaluate, assert_test, compare
+    global on_test_run_end, log_hyperparameters, login, telemetry
+
+    from ._version import __version__ as _version
+    from deepeval.evaluate import (
+        evaluate as _evaluate,
+        assert_test as _assert_test,
+    )
+    from deepeval.evaluate.compare import compare as _compare
+    from deepeval.test_run import (
+        on_test_run_end as _on_end,
+        log_hyperparameters as _log_hparams,
+    )
+    from deepeval.utils import login as _login
+    import deepeval.telemetry as _telemetry
+
+    __version__ = _version
+    evaluate = _evaluate
+    assert_test = _assert_test
+    compare = _compare
+    on_test_run_end = _on_end
+    log_hyperparameters = _log_hparams
+    login = _login
+    telemetry = _telemetry
+
+
+_expose_public_api()
 
 
 settings = get_settings()
+
 if not settings.DEEPEVAL_GRPC_LOGGING:
-    os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
-    os.environ.setdefault("GRPC_TRACE", "")
+    if os.getenv("GRPC_VERBOSITY") is None:
+        os.environ["GRPC_VERBOSITY"] = settings.GRPC_VERBOSITY or "ERROR"
+    if os.getenv("GRPC_TRACE") is None:
+        os.environ["GRPC_TRACE"] = settings.GRPC_TRACE or ""
 
 
 __all__ = [

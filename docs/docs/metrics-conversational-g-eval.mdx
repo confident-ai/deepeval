@@ -63,6 +63,7 @@ There are **THREE** mandatory and **SIX** optional parameters required when inst
 - [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `evaluation_template`: a class of type `ConversationalGEvalTemplate`, which allows you to [override the default prompts](#customize-your-template) used to compute the `ConversationalGEval` score. Defaulted to `deepeval`'s `ConversationalGEvalTemplate`.
 
 :::danger
 For accurate and valid results, only turn parameters that are mentioned in `criteria`/`evaluation_steps` should be included as a member of `evaluation_params`.
@@ -92,3 +93,51 @@ Unlike regular `GEval` though, the `ConversationalGEval` takes the entire conver
 :::tip
 Similar to the original [G-Eval paper](https://arxiv.org/abs/2303.16634), the `ConversationalGEval` metric uses the probabilities of the LLM output tokens to normalize the score by calculating a weighted summation. This step was introduced in the paper to minimize bias in LLM scoring, and is automatically handled by `deepeval` (unless you're using a custom LLM).
 :::
+
+## Customize Your Template
+
+Since `deepeval`'s `ConversationalGEval` is evaluated by LLM-as-a-judge, you can likely improve your metric accuracy by [overriding `deepeval`'s default prompt templates](/docs/metrics-introduction#customize-metric-prompts). This is especially helpful if:
+
+- You're using a [custom evaluation LLM](/guides/guides-using-custom-llms), especially for smaller models that have weaker instruction following capabilities.
+- You want to customize the examples used in the default `ConversationalGEvalTemplate` to better align with your expectations.
+
+:::tip
+You can learn what the default `ConversationalGEvalTemplate` looks like [here on GitHub](https://github.com/confident-ai/deepeval/blob/main/deepeval/metrics/conversational_g_eval/template.py), and should read the [How Is It Calculated](#how-is-it-calculated) section above to understand how you can tailor it to your needs.
+:::
+
+Here's a quick example of how you can override the process of extracting claims in the `ConversationalGEval` algorithm:
+
+```python
+from deepeval.metrics import ConversationalGEval
+from deepeval.metrics.conversational_g_eval import ConversationalGEvalTemplate
+import textwrap
+
+
+class CustomConvoGEvalTemplate(ConversationalGEvalTemplate):
+    @staticmethod
+    def generate_evaluation_steps(parameters: str, criteria: str):
+        return textwrap.dedent(
+            f"""
+            You are given criteria for evaluating a conversation based on the following parameters: {parameters}.
+            Write 3-4 clear and concise evaluation steps that describe how to judge the quality of each turn and the conversation overall.
+
+            Criteria:
+            {criteria}
+
+            Return JSON only in the format:
+            {{
+                "steps": [
+                    "Step 1",
+                    "Step 2",
+                    "Step 3"
+                ]
+            }}
+
+            JSON:
+            """
+        )
+
+# Inject custom template to metric
+metric = ConversationalGEval(evaluation_template=CustomConvoGEvalTemplate)
+metric.measure(...)
+```

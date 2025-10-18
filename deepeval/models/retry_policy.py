@@ -33,9 +33,13 @@ Retry logging (settings; read at call time):
 
 from __future__ import annotations
 
+import asyncio
+import inspect
+import itertools
+import functools
+import threading
 import logging
 
-from deepeval.utils import read_env_int, read_env_float
 from dataclasses import dataclass, field
 from typing import Callable, Iterable, Mapping, Optional, Sequence, Tuple, Union
 from collections.abc import Mapping as ABCMapping
@@ -58,6 +62,9 @@ from deepeval.config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 Provider = Union[str, PS]
+_MAX_TIMEOUT_THREADS = get_settings().DEEPEVAL_TIMEOUT_THREAD_LIMIT
+_TIMEOUT_SEMA = threading.BoundedSemaphore(_MAX_TIMEOUT_THREADS)
+_WORKER_ID = itertools.count(1)
 
 # --------------------------
 # Policy description
@@ -184,6 +191,12 @@ def extract_error_code(
 # Predicate factory
 # --------------------------
 
+_BUILTIN_TIMEOUT_EXCS = (
+    (TimeoutError,)
+    if asyncio.TimeoutError is TimeoutError
+    else (TimeoutError, asyncio.TimeoutError)
+)
+
 
 def make_is_transient(
     policy: ErrorPolicy,
@@ -213,6 +226,9 @@ def make_is_transient(
     )
 
     def _pred(e: Exception) -> bool:
+        if isinstance(e, _BUILTIN_TIMEOUT_EXCS):
+            return True
+
         if isinstance(e, policy.auth_excs):
             return False
 
@@ -245,18 +261,23 @@ def make_is_transient(
 
 class StopFromEnv(stop_base):
     def __call__(self, retry_state):
-        attempts = read_env_int("DEEPEVAL_RETRY_MAX_ATTEMPTS", 2, min_value=1)
+        settings = get_settings()
+        attempts = (
+            settings.DEEPEVAL_RETRY_MAX_ATTEMPTS
+        )  # TODO: add constraints in settings
         return stop_after_attempt(attempts)(retry_state)
 
 
 class WaitFromEnv(wait_base):
     def __call__(self, retry_state):
-        initial = read_env_float(
-            "DEEPEVAL_RETRY_INITIAL_SECONDS", 1.0, min_value=0.0
-        )
-        exp_base = read_env_float("DEEPEVAL_RETRY_EXP_BASE", 2.0, min_value=1.0)
-        jitter = read_env_float("DEEPEVAL_RETRY_JITTER", 2.0, min_value=0.0)
-        cap = read_env_float("DEEPEVAL_RETRY_CAP_SECONDS", 5.0, min_value=0.0)
+        settings = get_settings()
+        initial = settings.DEEPEVAL_RETRY_INITIAL_SECONDS
+        exp_base = settings.DEEPEVAL_RETRY_EXP_BASE
+        jitter = settings.DEEPEVAL_RETRY_JITTER
+        cap = settings.DEEPEVAL_RETRY_CAP_SECONDS
+
+        if cap == 0:  # <- 0 means no backoff sleeps or jitter
+            return 0
         return wait_exponential_jitter(
             initial=initial, exp_base=exp_base, jitter=jitter, max=cap
         )(retry_state)
@@ -324,10 +345,11 @@ def dynamic_retry(provider: Provider):
 
 def _retry_log_levels():
     s = get_settings()
+    base_level = s.LOG_LEVEL if s.LOG_LEVEL is not None else logging.INFO
     before_level = s.DEEPEVAL_RETRY_BEFORE_LOG_LEVEL
     after_level = s.DEEPEVAL_RETRY_AFTER_LOG_LEVEL
     return (
-        before_level if before_level is not None else logging.INFO,
+        before_level if before_level is not None else base_level,
         after_level if after_level is not None else logging.ERROR,
     )
 
@@ -394,20 +416,189 @@ def make_after_log(slug: str):
     return _after
 
 
+def _make_timeout_error(timeout_seconds: float) -> TimeoutError:
+    settings = get_settings()
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            "retry config: per_attempt=%s s, max_attempts=%s, per_task_budget=%s s",
+            timeout_seconds,
+            settings.DEEPEVAL_RETRY_MAX_ATTEMPTS,
+            settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+        )
+    msg = (
+        f"call timed out after {timeout_seconds:g}s (per attempt). "
+        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS (0 disables) or reduce work per attempt."
+    )
+    return TimeoutError(msg)
+
+
+def _run_sync_with_timeout(func, timeout_seconds, *args, **kwargs):
+    """
+    Run a synchronous callable with a soft timeout enforced by a helper thread,
+    with a global cap on concurrent timeout-workers.
+
+    How it works
+    ------------
+    - A module-level BoundedSemaphore (size = settings.DEEPEVAL_TIMEOUT_THREAD_LIMIT)
+      gates creation of timeout worker threads. If no permit is available, this call
+      blocks until a slot frees up. If settings.DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS
+      > 0 and acquisition takes longer than that, a warning is logged before continuing
+      to wait.
+    - Once a permit is acquired, a daemon thread executes `func(*args, **kwargs)`.
+    - We wait up to `timeout_seconds` for completion. If the timeout elapses, we raise
+      `TimeoutError`. The worker thread is not killed, it continues and releases the semaphore when it eventually finishes.
+    - If the worker finishes in time, we return its result or re-raise its exception
+      (with original traceback).
+
+    Cancellation semantics
+    ----------------------
+    This is a soft timeout: Python threads cannot be forcibly terminated. When timeouts
+    are rare this is fine. If timeouts are common, consider moving to:
+      - a shared ThreadPoolExecutor (caps threads and amortizes creation), or
+      - worker process (supports killing in-flight processes)
+
+    Concurrency control & logging
+    -----------------------------
+    - Concurrency is bounded by `DEEPEVAL_TIMEOUT_THREAD_LIMIT`.
+    - If acquisition exceeds `DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS`, we log a
+      warning and then block until a slot is available.
+    - On timeout, if DEBUG is enabled and `DEEPEVAL_VERBOSE_MODE` is True, we log a short
+      thread sample to help diagnose pressure.
+
+    Args:
+        func: Synchronous callable to execute.
+        timeout_seconds: Float seconds for the soft timeout (0/None disables).
+        *args, **kwargs: Passed through to `func`.
+
+    Returns:
+        Whatever `func` returns.
+
+    Raises:
+        TimeoutError: If `timeout_seconds` elapse before completion.
+        BaseException: If `func` raises, the same exception is re-raised with its
+                       original traceback.
+    """
+    if not timeout_seconds or timeout_seconds <= 0:
+        return func(*args, **kwargs)
+
+    # try to respect the global cap on concurrent timeout workers
+    warn_after = float(
+        get_settings().DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS or 0.0
+    )
+    if warn_after > 0:
+        acquired = _TIMEOUT_SEMA.acquire(timeout=warn_after)
+        if not acquired:
+            logger.warning(
+                "timeout thread limit reached (%d); waiting for a slot...",
+                _MAX_TIMEOUT_THREADS,
+            )
+            _TIMEOUT_SEMA.acquire()
+    else:
+        _TIMEOUT_SEMA.acquire()
+
+    done = threading.Event()
+    result = {"value": None, "exc": None}
+
+    def target():
+        try:
+            result["value"] = func(*args, **kwargs)
+        except BaseException as e:
+            result["exc"] = e
+        finally:
+            done.set()
+            _TIMEOUT_SEMA.release()
+
+    t = threading.Thread(
+        target=target,
+        daemon=True,
+        name=f"deepeval-timeout-worker-{next(_WORKER_ID)}",
+    )
+
+    try:
+        t.start()
+    except BaseException:
+        _TIMEOUT_SEMA.release()
+        raise
+
+    finished = done.wait(timeout_seconds)
+    if not finished:
+        if (
+            logger.isEnabledFor(logging.DEBUG)
+            and get_settings().DEEPEVAL_VERBOSE_MODE
+        ):
+            names = [th.name for th in threading.enumerate()[:10]]
+            logger.debug(
+                "timeout after %.3fs (active_threads=%d, sample=%s)",
+                timeout_seconds,
+                threading.active_count(),
+                names,
+            )
+        raise _make_timeout_error(timeout_seconds)
+
+    # Completed within time: return or raise
+    if result["exc"] is not None:
+        exc = result["exc"]
+        raise exc.with_traceback(getattr(exc, "__traceback__", None))
+    return result["value"]
+
+
 def create_retry_decorator(provider: Provider):
     """
     Build a Tenacity @retry decorator wired to our dynamic retry policy
     for the given provider slug.
     """
     slug = slugify(provider)
-
-    return retry(
+    base_retry = retry(
         wait=dynamic_wait(),
         stop=dynamic_stop(),
         retry=dynamic_retry(slug),
         before_sleep=make_before_sleep_log(slug),
         after=make_after_log(slug),
+        reraise=False,
     )
+
+    def _decorator(func):
+        if inspect.iscoroutinefunction(func):
+
+            @functools.wraps(func)
+            async def attempt(*args, **kwargs):
+                timeout_seconds = (
+                    get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
+                )
+                coro = func(*args, **kwargs)
+                if timeout_seconds > 0:
+                    try:
+                        return await asyncio.wait_for(coro, timeout_seconds)
+                    except asyncio.TimeoutError as e:
+                        if (
+                            logger.isEnabledFor(logging.DEBUG)
+                            and get_settings().DEEPEVAL_VERBOSE_MODE is True
+                        ):
+                            logger.debug(
+                                "async timeout after %.3fs (active_threads=%d, tasks=%d)",
+                                timeout_seconds,
+                                threading.active_count(),
+                                len(asyncio.all_tasks()),
+                            )
+                        raise _make_timeout_error(timeout_seconds) from e
+                return await coro
+
+            return base_retry(attempt)
+
+        @functools.wraps(func)
+        def attempt(*args, **kwargs):
+            timeout_seconds = (
+                get_settings().DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0
+            )
+            if timeout_seconds > 0:
+                return _run_sync_with_timeout(
+                    func, timeout_seconds, *args, **kwargs
+                )
+            return func(*args, **kwargs)
+
+        return base_retry(attempt)
+
+    return _decorator
 
 
 def _httpx_net_excs() -> tuple[type, ...]:

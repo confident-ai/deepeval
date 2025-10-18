@@ -61,7 +61,7 @@ def gpt_model_retryable(monkeypatch):
 
 
 @pytest.fixture
-def gpt_model_length_limit(monkeypatch):
+def gpt_model_length_limit(monkeypatch, settings):
     # Use a local dummy class to stand in for the SDK error (keeps test stable across SDK versions).
     class DummyLengthFinishReasonError(Exception):
         pass
@@ -85,18 +85,20 @@ def gpt_model_length_limit(monkeypatch):
     def _fake_loader(self, async_mode=False):
         return AlwaysLengthLimitClient(counter)
 
-    monkeypatch.setenv(
-        "DEEPEVAL_RETRY_MAX_ATTEMPTS", "5"
-    )  # big number to prove we don't retry
-    monkeypatch.setenv(
-        "DEEPEVAL_RETRY_CAP_SECONDS", "0"
-    )  # speed up, no waiting
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 5
+        settings.DEEPEVAL_RETRY_CAP_SECONDS = 0
+
     monkeypatch.setattr(GPTModel, "load_model", _fake_loader, raising=True)
     return GPTModel(model="gpt-4o-mini"), counter
 
 
-def test_retry_respects_max_attempts(monkeypatch, gpt_model_retryable):
-    monkeypatch.setenv("DEEPEVAL_RETRY_MAX_ATTEMPTS", "4")
+def test_retry_respects_max_attempts(
+    monkeypatch, gpt_model_retryable, settings
+):
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 4
+
     gpt, counter = gpt_model_retryable
 
     with pytest.raises(RetryError) as excinfo:

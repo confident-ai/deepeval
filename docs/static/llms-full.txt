@@ -2746,7 +2746,7 @@ from deepeval.metrics import AnswerRelevancyMetric
 # Loop through test cases using Pytest
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
     assert_test(test_case, [AnswerRelevancyMetric(threshold=0.5)])
@@ -14683,7 +14683,7 @@ dataset = EvaluationDataset(test_cases=[...])
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
     answer_relevancy_metric = AnswerRelevancyMetric()
@@ -16103,7 +16103,7 @@ dataset = EvaluationDataset(test_cases=[...])
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
     hallucination_metric = HallucinationMetric(threshold=0.3)
@@ -21696,7 +21696,7 @@ dataset = EvaluationDataset(test_cases=[...])
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_rag(test_case: LLMTestCase):
     # metrics is the list of RAG metrics as shown in previous sections

@@ -2,9 +2,8 @@ from enum import Enum
 import os
 import json
 from pydantic import BaseModel, Field
-from typing import Any, Optional, List, Dict, Union
+from typing import Any, Optional, List, Dict, Union, Tuple
 import shutil
-import webbrowser
 import sys
 import datetime
 import portalocker
@@ -27,9 +26,23 @@ from deepeval.utils import (
     delete_file_if_exists,
     get_is_running_deepeval,
     open_browser,
+    shorten,
+    format_turn,
+    len_short,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.constants import CONFIDENT_TEST_CASE_BATCH_SIZE, HIDDEN_DIR
+from deepeval.prompt import (
+    PromptMessage,
+    ModelSettings,
+    OutputType,
+    PromptInterpolationType,
+    OutputType,
+)
+from rich.panel import Panel
+from rich.text import Text
+from rich.columns import Columns
+
 
 TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
@@ -67,6 +80,16 @@ class TraceMetricScores(BaseModel):
     retriever: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
     llm: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
     base: Dict[str, Dict[str, MetricScores]] = Field(default_factory=dict)
+
+
+class PromptData(BaseModel):
+    alias: Optional[str] = None
+    version: Optional[str] = None
+    text_template: Optional[str] = None
+    messages_template: Optional[List[PromptMessage]] = None
+    model_settings: Optional[ModelSettings] = None
+    output_type: Optional[OutputType] = None
+    interpolation_type: Optional[PromptInterpolationType] = None
 
 
 class MetricsAverageDict:
@@ -121,6 +144,7 @@ class TestRun(BaseModel):
     )
     identifier: Optional[str] = None
     hyperparameters: Optional[Dict[str, Any]] = Field(None)
+    prompts: Optional[List[PromptData]] = Field(None)
     test_passed: Optional[int] = Field(None, alias="testPassed")
     test_failed: Optional[int] = Field(None, alias="testFailed")
     run_duration: float = Field(0.0, alias="runDuration")
@@ -546,7 +570,7 @@ class TestRunManager:
 
             if (
                 display == TestRunResultDisplay.PASSING
-                and test_case.success == False
+                and test_case.success is False
             ):
                 continue
             elif display == TestRunResultDisplay.FAILING and test_case.success:
@@ -618,7 +642,7 @@ class TestRunManager:
         ):
             if (
                 display == TestRunResultDisplay.PASSING
-                and conversational_test_case.success == False
+                and conversational_test_case.success is False
             ):
                 continue
             elif (
@@ -630,6 +654,65 @@ class TestRunManager:
             pass_count = 0
             fail_count = 0
             conversational_test_case_name = conversational_test_case.name
+
+            if conversational_test_case.turns:
+                turns_table = Table(
+                    title=f"Conversation - {conversational_test_case_name}",
+                    show_header=True,
+                    header_style="bold",
+                )
+                turns_table.add_column("#", justify="right", width=3)
+                turns_table.add_column("Role", justify="left", width=10)
+
+                # subtract fixed widths + borders and padding.
+                # ~20 as a safe buffer
+                details_max_width = max(
+                    48, min(120, console.width - 3 - 10 - 20)
+                )
+                turns_table.add_column(
+                    "Details",
+                    justify="left",
+                    overflow="fold",
+                    max_width=details_max_width,
+                )
+
+                # truncate when too long
+                tools_max_width = min(60, max(24, console.width // 3))
+                turns_table.add_column(
+                    "Tools",
+                    justify="left",
+                    no_wrap=True,
+                    overflow="ellipsis",
+                    max_width=tools_max_width,
+                )
+
+                sorted_turns = sorted(
+                    conversational_test_case.turns, key=lambda t: t.order
+                )
+
+                for t in sorted_turns:
+                    tools = t.tools_called or []
+                    tool_names = ", ".join(tc.name for tc in tools)
+
+                    # omit order, role and tools since we show them in a separate columns.
+                    details = format_turn(
+                        t,
+                        include_tools_in_header=False,
+                        include_order_role_in_header=False,
+                    )
+
+                    turns_table.add_row(
+                        str(t.order),
+                        t.role,
+                        details,
+                        shorten(tool_names, len_short()),
+                    )
+
+                console.print(turns_table)
+            else:
+                console.print(
+                    f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
+                )
 
             if conversational_test_case.metrics_data is not None:
                 for metric_data in conversational_test_case.metrics_data:
@@ -698,7 +781,7 @@ class TestRunManager:
         )
         print(table)
 
-    def post_test_run(self, test_run: TestRun) -> Optional[str]:
+    def post_test_run(self, test_run: TestRun) -> Optional[Tuple[str, str]]:
         if (
             len(test_run.test_cases) == 0
             and len(test_run.conversational_test_cases) == 0
@@ -738,6 +821,7 @@ class TestRunManager:
             test_run.test_cases = initial_batch
 
         try:
+            test_run.prompts = None
             body = test_run.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
             # Pydantic version below 2.0
@@ -751,6 +835,21 @@ class TestRunManager:
             endpoint=Endpoints.TEST_RUN_ENDPOINT,
             body=body,
         )
+
+        if not isinstance(data, dict) or "id" not in data:
+            # try to show helpful details
+            detail = None
+            if isinstance(data, dict):
+                detail = (
+                    data.get("detail")
+                    or data.get("message")
+                    or data.get("error")
+                )
+            # fall back to repr for visibility
+            raise RuntimeError(
+                f"Confident API response missing 'id'. "
+                f"detail={detail!r} raw={type(data).__name__}:{repr(data)[:500]}"
+            )
 
         res = TestRunHttpResponse(
             id=data["id"],
@@ -814,7 +913,7 @@ class TestRunManager:
         )
         self.save_final_test_run_link(link)
         open_browser(link)
-        return link
+        return link, res.id
 
     def save_test_run_locally(self):
         local_folder = os.getenv("DEEPEVAL_RESULTS_FOLDER")
@@ -841,7 +940,7 @@ class TestRunManager:
         runDuration: float,
         display_table: bool = True,
         display: Optional[TestRunResultDisplay] = TestRunResultDisplay.ALL,
-    ) -> Optional[str]:
+    ) -> Optional[Tuple[str, str]]:
         test_run = self.get_test_run()
         if test_run is None:
             print("Test Run is empty, please try again.")
@@ -868,14 +967,31 @@ class TestRunManager:
         test_run.sort_test_cases()
 
         if global_test_run_cache_manager.disable_write_cache is None:
-            global_test_run_cache_manager.disable_write_cache = (
-                get_is_running_deepeval() == False
+            global_test_run_cache_manager.disable_write_cache = not bool(
+                get_is_running_deepeval()
             )
 
         global_test_run_cache_manager.wrap_up_cached_test_run()
 
         if display_table:
             self.display_results_table(test_run, display)
+
+        if test_run.hyperparameters is None:
+            console.print(
+                "\n[bold yellow]⚠ WARNING:[/bold yellow] No hyperparameters logged.\n"
+                "» [bold blue][link=https://deepeval.com/docs/evaluation-prompts]Log hyperparameters[/link][/bold blue] to attribute prompts and models to your test runs.\n\n"
+                + "=" * 80
+            )
+        else:
+            if not test_run.prompts:
+                console.print(
+                    "\n[bold yellow]⚠ WARNING:[/bold yellow] No prompts logged.\n"
+                    "» [bold blue][link=https://deepeval.com/docs/evaluation-prompts]Log prompts[/link][/bold blue] to evaluate and optimize your prompt templates and models.\n\n"
+                    + "=" * 80
+                )
+            else:
+                console.print("\n[bold green]✓ Prompts Logged[/bold green]\n")
+                self._render_prompts_panels(prompts=test_run.prompts)
 
         self.save_test_run_locally()
         delete_file_if_exists(self.temp_file_path)
@@ -891,7 +1007,7 @@ class TestRunManager:
                 f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
                 f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,
-                "\n\n» What to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
+                "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
                 "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
             )
 
@@ -916,6 +1032,69 @@ class TestRunManager:
         except (FileNotFoundError, json.JSONDecodeError, Exception):
             pass
         return None
+
+    def _render_prompts_panels(self, prompts: List[PromptData]) -> None:
+
+        def format_string(
+            v, default="[dim]None[/dim]", color: Optional[str] = None
+        ):
+            formatted_string = str(v) if v not in (None, "", []) else default
+            return (
+                f"{formatted_string}"
+                if color is None or v in (None, "", [])
+                else f"[{color}]{formatted_string}[/]"
+            )
+
+        panels = []
+        for prompt in prompts:
+            lines = []
+            p_type = (
+                "messages"
+                if prompt.messages_template
+                else ("text" if prompt.text_template else "—")
+            )
+            if p_type:
+                lines.append(f"type: {format_string(p_type, color='blue')}")
+            if prompt.output_type:
+                lines.append(
+                    f"output_type: {format_string(prompt.output_type, color='blue')}"
+                )
+            if prompt.interpolation_type:
+                lines.append(
+                    f"interpolation_type: {format_string(prompt.interpolation_type, color='blue')}"
+                )
+            if prompt.model_settings:
+                ms = prompt.model_settings
+                settings_lines = [
+                    "Model Settings:",
+                    f"  – provider: {format_string(ms.provider, color='green')}",
+                    f"  – name: {format_string(ms.name, color='green')}",
+                    f"  – temperature: {format_string(ms.temperature, color='green')}",
+                    f"  – max_tokens: {format_string(ms.max_tokens, color='green')}",
+                    f"  – top_p: {format_string(ms.top_p, color='green')}",
+                    f"  – frequency_penalty: {format_string(ms.frequency_penalty, color='green')}",
+                    f"  – presence_penalty: {format_string(ms.presence_penalty, color='green')}",
+                    f"  – stop_sequence: {format_string(ms.stop_sequence, color='green')}",
+                    f"  – reasoning_effort: {format_string(ms.reasoning_effort, color='green')}",
+                    f"  – verbosity: {format_string(ms.verbosity, color='green')}",
+                ]
+                lines.append("")
+                lines.extend(settings_lines)
+            title = f"{format_string(prompt.alias)}"
+            if prompt.version:
+                title += f" (v{prompt.version})"
+            body = "\n".join(lines)
+            panel = Panel(
+                body,
+                title=title,
+                title_align="left",
+                expand=False,
+                padding=(1, 6, 1, 2),
+            )
+            panels.append(panel)
+
+        if panels:
+            console.print(Columns(panels, equal=False, expand=False))
 
 
 global_test_run_manager = TestRunManager()

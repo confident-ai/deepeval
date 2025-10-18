@@ -7,6 +7,3 @@ def execute_all_agents():
     execute_weather_agent()
     execute_joke_selection_agent()
     execute_simple_agent()
-
-
-# execute_all_agents()

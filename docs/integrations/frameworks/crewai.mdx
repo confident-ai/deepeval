@@ -8,13 +8,9 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
+import ColabButton from "@site/src/components/ColabButton";
 
 # CrewAI
-
-<ColabButton 
-  notebookUrl="https://colab.research.google.com/github/confident-ai/deepeval/blob/main/cookbooks/examples/notebooks/crewai.ipynb" 
-  className="header-colab-button"
-/>
 
 [CrewAI](https://www.crewai.com/) is a lean, independent Python framework designed for creating and orchestrating autonomous multi-agent AI systems, offering high flexibility, speed, and precision control for complex automation tasks.
 
@@ -35,39 +31,54 @@ deepeval login
 
 <TimelineItem title="Configure CrewAI">
 
-Create a `Crew` and pass `metrics` to the `deepeval`'s `Agent` wrapper.
+Create a `Crew` and use `instrument_crewai` to instrument your CrewAI application.
 
-```python title="main.py" showLineNumbers {8,9,15}
-from crewai import Task, Crew
+```python title="main.py" showLineNumbers
+import random
 
-from deepeval.integrations.crewai import Agent
+from crewai import Task, Crew, Agent
+from crewai.tools import tool
+
 from deepeval.integrations.crewai import instrument_crewai
- 
+
 instrument_crewai()
- 
-from deepeval.metrics import AnswerRelevancyMetric
-answer_relavancy_metric = AnswerRelevancyMetric()
- 
+
+@tool
+def get_weather(city: str) -> str:
+    """Fetch weather data for a given city. Returns temperature and conditions."""
+    weather_data = {
+        "New York": "Partly Cloudy",
+        "London": "Rainy",
+        "Tokyo": "Sunny",
+        "Paris": "Cloudy",
+        "Sydney": "Clear",
+    }
+
+    condition = weather_data.get(city, "Clear")
+    temperature = f"{random.randint(45, 95)}°F"
+    humidity = f"{random.randint(30, 90)}%"
+
+    return f"Weather in {city}: {temperature}, {condition}, Humidity: {humidity}"
+
+
 agent = Agent(
-    role="Consultant",
-    goal="Write clear, concise explanation.",
-    backstory="An expert consultant with a keen eye for software trends.",
-    metrics=[answer_relavancy_metric]
+    role="Weather Reporter",
+    goal="Provide accurate and helpful weather information to users.",
+    backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
+    tools=[get_weather],
+    verbose=True,
 )
- 
+
 task = Task(
-    description="Explain the given topic",
-    expected_output="A clear and concise explanation.",
-    agent=agent
+    description="Get the current weather for {city} and provide a helpful summary.",
+    expected_output="A clear weather report including temperature, conditions, and humidity.",
+    agent=agent,
 )
- 
+
 crew = Crew(
     agents=[agent],
     tasks=[task],
 )
-
-# result = crew.kickoff({"input": "What are the LLMs?"})
-# print(result)
 ```
 
 :::info
@@ -77,34 +88,53 @@ Evaluations are supported for CrewAI `Agent`. Only metrics with parameters `inpu
 </TimelineItem>
 <TimelineItem title="Run evaluations">
 
-Create an `EvaluationDataset` and invoke your CrewAI application for each golden within the `evals_iterator()` loop to run end-to-end evaluations.
+Create an `EvaluationDataset` and invoke your CrewAI application for each golden within the `evals_iterator()` loop to run end-to-end evaluations. Pass the `metrics` to the `trace` context manager.
 
 <Tabs groupId="crewai">
 <TabItem value="synchronous" label="Synchronous">
 
 ```python title="main.py" showLineNumbers
-dataset = EvaluationDataset(goldens=[
-    Golden(input="What are Transformers in AI?"),
-    Golden(input="What is the biggest open source database?"),
-    Golden(input="What are LLMs?"),
-])
+from deepeval.tracing import trace
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+
+answer_relavancy_metric = AnswerRelevancyMetric()
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(input="London"),
+        Golden(input="Paris"),
+    ]
+)
 
 for golden in dataset.evals_iterator():
-    result = crew.kickoff(inputs={"input": golden.input})
+    with trace(trace_metrics=[answer_relavancy_metric]):
+        crew.kickoff({"city": golden.input})
 ```
 
 </TabItem>
   <TabItem value="asynchronous" label="Asynchronous">
 
 ```python title="main.py" showLineNumbers
-dataset = EvaluationDataset(goldens=[
-    Golden(input="What are Transformers in AI?"),
-    Golden(input="What is the biggest open source database?"),
-    Golden(input="What are LLMs?"),
-])
+from deepeval.tracing import trace
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+
+answer_relavancy_metric = AnswerRelevancyMetric()
+
+dataset = EvaluationDataset(
+    goldens=[
+        Golden(input="London"),
+        Golden(input="Paris"),
+    ]
+)
+
+async def run_crewai_e2e_async(input: str):
+    with trace(trace_metrics=[answer_relavancy_metric]):
+        await crew.kickoff_async({"city": input})
 
 for golden in dataset.evals_iterator():
-    task = asyncio.create_task(crew.kickoff_async(inputs={"input": golden.input}))
+    task = asyncio.create_task(run_crewai_e2e_async(golden.input))
     dataset.evaluate(task)
 ```
 
@@ -134,15 +164,8 @@ To run online evaluations in production, replace `metrics` with a [metric collec
 
 ```python filename="main.py" showLineNumbers
 ...
-agent = Agent(
-    role="Consultant",
-    goal="Write clear, concise explanation.",
-    backstory="An expert consultant with a keen eye for software trends.",
-    # metrics=[answer_relavancy_metric]
-    metric_collection="test_collection_1",
-)
-
-result = crew.kickoff(
-    "input": "What are the LLMs?"
-)
+with trace(trace_metric_collection="test_collection_1"):
+    result = crew.kickoff(
+        "city": "London"
+    )
 ```

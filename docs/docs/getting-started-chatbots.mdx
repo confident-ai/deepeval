@@ -52,6 +52,124 @@ Scenarios are optional in the diagram because not all users start with conversat
 
 In `deepeval`, chatbots are evaluated as multi-turn **interactions**. In code, you'll have to format them into test cases, which adheres to OpenAI's messages format.
 
+:::note
+
+`deepeval` provides a wide selection of LLM models that you can easily choose from and run evaluations with.
+
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+
+task_completion_metric = TurnRelevancyMetric(model="gpt-4.1")
+```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import AnthropicModel
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel("gemini-2.5-flash")
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure-openai" label="Ollama">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import OllamaModel
+
+model = OllamaModel("deepseek-r1")
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import GrokModel
+
+model = GrokModel("grok-4-0709")
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure" label="Azure OpenAI">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="amazon-bedrock" label="Amazon Bedrock">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import AmazonBedrockModel
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="vertex-ai" label="Vertex AI">
+
+```python
+from deepeval.metrics import TurnRelevancyMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+task_completion_metric = TurnRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+</Tabs>
+:::
+
 <Timeline>
 <TimelineItem title="Create a test case">
 
@@ -77,7 +195,7 @@ You can learn about a `Turn`'s data model [here.](/docs/evaluation-multiturn-tes
 
 Run an evaluation on the test case using `deepeval`'s multi-turn metrics, or create your own using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
 
-```python title="main.py" showLineNumbers={true}
+```python
 from deepeval.metrics import TurnRelevancyMetric, KnowledgeRetentionMetric
 from deepeval import evaluate
 ...
@@ -338,7 +456,7 @@ ConversationalTestCase(
 
 Run an evaluation like how you learnt in the previous section:
 
-```python title="main.py"
+```python
 from deepeval.metrics import TurnRelevancyMetric
 from deepeval import evaluate
 ...

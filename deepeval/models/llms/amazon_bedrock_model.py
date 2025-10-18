@@ -9,7 +9,7 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.utils import trim_and_load_json, safe_asyncio_run
 from deepeval.constants import ProviderSlug as PS
 
 # check aiobotocore availability
@@ -40,7 +40,6 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         region_name: str,
         aws_access_key_id: Optional[str] = None,
         aws_secret_access_key: Optional[str] = None,
-        temperature: float = 0,
         input_token_cost: float = 0,
         output_token_cost: float = 0,
         generation_kwargs: Optional[Dict] = None,
@@ -53,12 +52,8 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
         self.region_name = region_name
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
-        self.temperature = temperature
         self.input_token_cost = input_token_cost
         self.output_token_cost = output_token_cost
-
-        if self.temperature < 0:
-            raise ValueError("Temperature must be >= 0.")
 
         # prepare aiobotocore session, config, and async exit stack
         self._session = get_session()
@@ -75,7 +70,7 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     def generate(
         self, prompt: str, schema: Optional[BaseModel] = None
     ) -> Tuple[Union[str, Dict], float]:
-        return asyncio.run(self.a_generate(prompt, schema))
+        return safe_asyncio_run(self.a_generate(prompt, schema))
 
     @retry_bedrock
     async def a_generate(
@@ -142,34 +137,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
     ###############################################
 
     def get_converse_request_body(self, prompt: str) -> dict:
-        # Inline parameter translation with defaults
-        param_mapping = {
-            "max_tokens": "maxTokens",
-            "top_p": "topP",
-            "top_k": "topK",
-            "stop_sequences": "stopSequences",
-        }
-
-        # Start with defaults for required parameters
-        translated_kwargs = {
-            "maxTokens": self.generation_kwargs.get("max_tokens", 1000),
-            "topP": self.generation_kwargs.get("top_p", 0),
-        }
-
-        # Add any other parameters from generation_kwargs
-        for key, value in self.generation_kwargs.items():
-            if key not in [
-                "max_tokens",
-                "top_p",
-            ]:  # Skip already handled defaults
-                aws_key = param_mapping.get(key, key)
-                translated_kwargs[aws_key] = value
 
         return {
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
             "inferenceConfig": {
-                "temperature": self.temperature,
-                **translated_kwargs,
+                **self.generation_kwargs,
             },
         }
 

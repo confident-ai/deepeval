@@ -309,7 +309,7 @@ for golden in dataset.goldens:
 
 @pytest.mark.parametrize(
     "test_case",
-    dataset,
+    dataset.test_cases,
 )
 def test_customer_chatbot(test_case: LLMTestCase):
     answer_relevancy_metric = AnswerRelevancyMetric(threshold=0.5)

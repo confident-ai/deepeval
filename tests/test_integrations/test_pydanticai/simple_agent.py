@@ -1,12 +1,15 @@
 import asyncio
+from deepeval.tracing import trace
 from pydantic_ai import Agent
 from deepeval.integrations.pydantic_ai.instrumentator import (
     ConfidentInstrumentationSettings,
 )
 from deepeval.prompt import Prompt
 
+
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
+
 
 confident_instrumentation_settings = ConfidentInstrumentationSettings(
     thread_id="test_thread_id_1",
@@ -22,12 +25,42 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
 agent = Agent(
     "openai:gpt-5",
     system_prompt="Be concise, reply with one sentence.",
+    instructions="You are a helpful assistant.",
     instrument=confident_instrumentation_settings,
     name="test_agent",
 )
 
 
-def execute_simple_agent():
-    result = asyncio.run(agent.run("What are the LLMs?"))
-    print("===============Simple agent output:===============")
-    print(result)
+async def execute_simple_agent():
+    with trace():
+        await agent.run("What are the LLMs?")
+        await agent.run("What are the LLMs?")
+
+
+def execute_simple_agent_sync():
+
+    with trace():
+        agent.run_sync("What are the LLMs?")
+
+
+#################### Testing different trace modes #################################
+
+
+def nested_traces():
+    with trace():
+        agent.run_sync("Query 1")
+
+        # Nested trace context
+        with trace():
+            agent.run_sync("Query 2")
+
+
+# Test concurrent agent runs
+async def concurrent_agents():
+    with trace():
+
+        await asyncio.gather(
+            agent.run("Query 1"),
+            agent.run("Query 2"),
+            agent.run("Query 3"),
+        )

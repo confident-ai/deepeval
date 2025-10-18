@@ -1,7 +1,7 @@
-import time
-
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.openai import OpenAI
-from deepeval.tracing import observe, trace_manager
+from deepeval.tracing import observe
 
 client = OpenAI()
 
@@ -22,12 +22,6 @@ response = generate_response("What is the weather in Tokyo?")
 
 ############################################
 
-import time
-
-from deepeval.openai import OpenAI
-from deepeval.tracing import observe, trace_manager
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.dataset import EvaluationDataset, Golden
 
 client = OpenAI()
 

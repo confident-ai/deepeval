@@ -1,5 +1,7 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
+import asyncio
+
 from typing import Optional, List, Tuple, Union, Type
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
@@ -16,7 +18,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.g_eval.schema import *
+from deepeval.metrics.g_eval import schema as gschema
 from deepeval.metrics.g_eval.utils import (
     Rubric,
     construct_g_eval_params_string,
@@ -29,6 +31,8 @@ from deepeval.metrics.g_eval.utils import (
     number_evaluation_steps,
     get_score_range,
 )
+from deepeval.metrics.api import metric_data_manager
+from deepeval.config.settings import get_settings
 
 
 class GEval(BaseMetric):
@@ -71,6 +75,7 @@ class GEval(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
         check_llm_test_case_params(test_case, self.evaluation_params, self)
@@ -81,12 +86,16 @@ class GEval(BaseMetric):
         ):
             if self.async_mode:
                 loop = get_or_create_event_loop()
+                coro = self.a_measure(
+                    test_case,
+                    _show_indicator=False,
+                    _in_component=_in_component,
+                    _additional_context=_additional_context,
+                )
                 loop.run_until_complete(
-                    self.a_measure(
-                        test_case,
-                        _show_indicator=False,
-                        _in_component=_in_component,
-                        _additional_context=_additional_context,
+                    asyncio.wait_for(
+                        coro,
+                        timeout=get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
                     )
                 )
             else:
@@ -97,7 +106,8 @@ class GEval(BaseMetric):
                     test_case, _additional_context=_additional_context
                 )
                 self.score = (
-                    float(g_score) / self.score_range_span
+                    (float(g_score) - self.score_range[0])
+                    / self.score_range_span
                     if not self.strict_mode
                     else int(g_score)
                 )
@@ -114,6 +124,10 @@ class GEval(BaseMetric):
                         f"Reason: {self.reason}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
 
             return self.score
 
@@ -122,6 +136,7 @@ class GEval(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
         _additional_context: Optional[str] = None,
     ) -> float:
         check_llm_test_case_params(test_case, self.evaluation_params, self)
@@ -140,7 +155,7 @@ class GEval(BaseMetric):
                 test_case, _additional_context=_additional_context
             )
             self.score = (
-                float(g_score) / self.score_range_span
+                (float(g_score) - self.score_range[0]) / self.score_range_span
                 if not self.strict_mode
                 else int(g_score)
             )
@@ -157,6 +172,10 @@ class GEval(BaseMetric):
                     f"Reason: {self.reason}",
                 ],
             )
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_evaluation_steps(self) -> List[str]:
@@ -176,7 +195,9 @@ class GEval(BaseMetric):
             return data["steps"]
         else:
             try:
-                res: Steps = await self.model.a_generate(prompt, schema=Steps)
+                res: gschema.Steps = await self.model.a_generate(
+                    prompt, schema=gschema.Steps
+                )
                 return res.steps
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -200,7 +221,9 @@ class GEval(BaseMetric):
             return data["steps"]
         else:
             try:
-                res: Steps = self.model.generate(prompt, schema=Steps)
+                res: gschema.Steps = self.model.generate(
+                    prompt, schema=gschema.Steps
+                )
                 return res.steps
             except TypeError:
                 res = self.model.generate(prompt)
@@ -263,7 +286,7 @@ class GEval(BaseMetric):
                     score, res
                 )
                 return weighted_summed_score, reason
-            except:
+            except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
         except (
             AttributeError
@@ -275,8 +298,8 @@ class GEval(BaseMetric):
                 return data["score"], data["reason"]
             else:
                 try:
-                    res: ReasonScore = await self.model.a_generate(
-                        prompt, schema=ReasonScore
+                    res: gschema.ReasonScore = await self.model.a_generate(
+                        prompt, schema=gschema.ReasonScore
                     )
                     return res.score, res.reason
                 except TypeError:
@@ -337,7 +360,7 @@ class GEval(BaseMetric):
                     score, res
                 )
                 return weighted_summed_score, reason
-            except:
+            except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
@@ -348,8 +371,8 @@ class GEval(BaseMetric):
                 return data["score"], data["reason"]
             else:
                 try:
-                    res: ReasonScore = self.model.generate(
-                        prompt, schema=ReasonScore
+                    res: gschema.ReasonScore = self.model.generate(
+                        prompt, schema=gschema.ReasonScore
                     )
                     return res.score, res.reason
                 except TypeError:
@@ -363,7 +386,7 @@ class GEval(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

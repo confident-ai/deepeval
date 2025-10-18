@@ -120,7 +120,7 @@ def format_turns(turns: List[Turn]) -> str:
         }
         res.append(cur_turn)
     try:
-        return json.dumps(res)
+        return json.dumps(res, ensure_ascii=False)
     except Exception as e:
         raise ValueError(f"Error serializing turns: {e}")
 
