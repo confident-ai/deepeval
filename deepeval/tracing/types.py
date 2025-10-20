@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from rich.progress import Progress
 from deepeval.tracing.message_types import (
-    ToolSchema,
     ToolOutput,
     TextMessage,
     ToolCallMessage,
@@ -50,7 +49,7 @@ class LlmOutput(BaseModel):
 class BaseSpan(BaseModel):
     uuid: str
     status: TraceSpanStatus
-    children: List["BaseSpan"]
+    children: List["BaseSpan"] = Field(default_factory=list)
     trace_uuid: str = Field(serialization_alias="traceUuid")
     parent_uuid: Optional[str] = Field(None, serialization_alias="parentUuid")
     start_time: float = Field(serialization_alias="startTime")

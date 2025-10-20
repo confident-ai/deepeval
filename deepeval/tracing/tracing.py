@@ -1,3 +1,4 @@
+import weakref
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -92,6 +93,9 @@ class TraceManager:
         self._min_interval = 0.2  # Minimum time between API calls (seconds)
         self._last_post_time = 0
         self._in_flight_tasks: Set[asyncio.Task[Any]] = set()
+        self.task_bindings: "weakref.WeakKeyDictionary[asyncio.Task, dict]" = (
+            weakref.WeakKeyDictionary()
+        )
         self._flush_enabled = bool(settings.CONFIDENT_TRACE_FLUSH)
         self._daemon = not self._flush_enabled
 
@@ -851,6 +855,25 @@ class Observer:
         ):
             self._progress = parent_span.progress
             self._pbar_callback_id = parent_span.pbar_callback_id
+
+        try:
+            import asyncio
+
+            task = asyncio.current_task()
+        except Exception:
+            task = None
+
+        if task is not None:
+            binding = trace_manager.task_bindings.get(task) or {}
+            # record the trace the task is working on
+            binding["trace_uuid"] = span_instance.trace_uuid
+            # only set root_span_uuid when this span is a root. Don't do this for child or we will override our record.
+            if (
+                span_instance.parent_uuid is None
+                and "root_span_uuid" not in binding
+            ):
+                binding["root_span_uuid"] = span_instance.uuid
+            trace_manager.task_bindings[task] = binding
 
         if self._progress is not None and self._pbar_callback_id is not None:
             span_instance.progress = self._progress
