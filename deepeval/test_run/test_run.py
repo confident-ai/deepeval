@@ -46,7 +46,6 @@ TEMP_FILE_PATH = f"{HIDDEN_DIR}/.temp_test_run_data.json"
 LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
-MAX_COLUMN_WIDTH = 80
 console = Console()
 
 
@@ -647,9 +646,7 @@ class TestRunManager:
         """Display test results in a formatted table."""
 
         table = Table(title="Test Results")
-        column_config = dict(
-            justify="left", max_width=MAX_COLUMN_WIDTH, no_wrap=False
-        )
+        column_config = dict(justify="left")
         column_names = [
             "Test case",
             "Metric",
