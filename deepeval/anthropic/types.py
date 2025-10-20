@@ -14,9 +14,7 @@ class InputParameters(BaseModel):
 
 class OutputParameters(BaseModel):
     content: Optional[Any] = None
-    id: Optional[str] = None
     role: Optional[str] = None
-    stop_reason: Optional[str] = None
-    stop_sequence: Optional[str] = None
     type: Optional[str] = None
     usage: Optional[Dict[str, int]] = None
+    tools_called: Optional[List[ToolCall]] = None
