@@ -7,6 +7,8 @@ from types import SimpleNamespace
 from deepeval.dataset import Golden
 from deepeval.evaluate.configs import ErrorConfig, DisplayConfig, AsyncConfig
 from deepeval.evaluate.types import TestResult
+from deepeval.tracing import observe
+from deepeval.tracing.types import TraceSpanStatus
 from deepeval.tracing.tracing import trace_manager, Observer
 from tests.test_core.stubs import (
     _DummyMetric,
@@ -15,6 +17,7 @@ from tests.test_core.stubs import (
     _FakeTrace,
 )
 from tests.test_core.helpers import make_trace_api
+
 
 # module under test
 exec_mod = import_module("deepeval.evaluate.execute")
@@ -84,6 +87,24 @@ def record_measure_calls(monkeypatch):
         exec_mod, "measure_metrics_with_indicator", _stub, raising=True
     )
     return calls
+
+
+@observe
+async def child_raises():
+    raise RuntimeError("boom")
+
+
+@observe
+async def parent_catches():
+    try:
+        await child_raises()
+    except RuntimeError:
+        return "recovered"
+
+
+@observe
+async def parent_uncaught():
+    await child_raises()
 
 
 #########
@@ -464,3 +485,349 @@ def test_task_cancel_after_observe_marks_existing_trace(monkeypatch):
     finally:
         asyncio.set_event_loop(None)
         loop.close()
+
+
+@pytest.mark.asyncio
+async def test_caught_child_error_trace_success():
+    trace_manager.clear_traces()
+
+    await parent_catches()
+    tr = trace_manager.traces[-1]
+
+    assert tr.status == TraceSpanStatus.SUCCESS
+    # Child span should be ERRORED and parent should be SUCCESS
+    parent = tr.root_spans[0]
+    assert parent.status == TraceSpanStatus.SUCCESS
+    assert any(c.status == TraceSpanStatus.ERRORED for c in parent.children)
+
+
+@pytest.mark.asyncio
+async def test_uncaught_error_trace_error():
+    trace_manager.clear_traces()
+    with pytest.raises(RuntimeError):
+        await parent_uncaught()
+    tr = trace_manager.traces[-1]
+    assert tr.status == TraceSpanStatus.ERRORED
+    assert tr.root_spans[0].status == TraceSpanStatus.ERRORED
+
+
+@pytest.mark.asyncio
+async def test_cancelled_task_marks_trace_error():
+    event_loop = asyncio.get_running_loop()
+    trace_manager.clear_traces()
+
+    @observe
+    async def sleepy():
+        await asyncio.sleep(5)
+
+    task = event_loop.create_task(sleepy())
+    await asyncio.sleep(0.05)
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+    # Find the most recent trace
+    tr = trace_manager.traces[-1]
+    assert tr.status == TraceSpanStatus.ERRORED
+    assert tr.root_spans, "root span should exist"
+    assert tr.root_spans[0].status == TraceSpanStatus.ERRORED
+    assert tr.root_spans[0].end_time is not None
+
+
+def test_task_cancelled_without_observe_logs_and_marks_nothing(
+    monkeypatch, caplog, settings
+):
+    from deepeval.evaluate.configs import (
+        DisplayConfig,
+        AsyncConfig,
+        ErrorConfig,
+    )
+
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_DEBUG_ASYNC = 1
+    caplog.set_level(logging.INFO, logger="deepeval.evaluate.execute")
+
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+
+        goldens = [Golden(input="x")]
+        results = []
+        it = exec_mod.a_execute_agentic_test_cases_from_loop(
+            goldens=goldens,
+            trace_metrics=[_DummyMetric()],
+            test_results=results,
+            loop=loop,
+            display_config=DisplayConfig(show_indicator=False),
+            async_config=AsyncConfig(run_async=True),
+            error_config=ErrorConfig(
+                ignore_errors=True, skip_on_missing_params=True
+            ),
+        )
+
+        next(it)
+
+        async def sleeper(_):
+            await asyncio.sleep(5)
+
+        # create_task is monkeypatched by the iterator, this goes to callback
+        task = asyncio.create_task(sleeper("x"))
+
+        # ensure it’s cancelled before the iterator gathers/awaits it
+        loop.call_soon(task.cancel)
+
+        # resume the iterator; it may complete right here
+        try:
+            it.send(
+                task
+            )  # We don't care about the value, just want to resume the generator
+        except StopIteration:
+            pass
+
+        # drain
+        for _ in it:
+            pass
+
+        # no traces should be enqueued when no @observe ran
+        assert not trace_manager.traces_to_evaluate
+        assert not trace_manager.integration_traces_to_evaluate
+
+        # breadcrumb that a cancel happened
+        assert any("task CANCELLED" in r.message for r in caplog.records)
+
+    finally:
+        asyncio.set_event_loop(None)
+        loop.close()
+
+
+def test_fallback_marks_open_root_when_multiple_roots(monkeypatch):
+    # Build a real Trace with two root spans
+    # first closed, second open
+    from deepeval.tracing.types import Trace, BaseSpan, TraceSpanStatus
+    import time
+
+    tr = Trace(
+        uuid="T1",
+        root_spans=[],
+        status=TraceSpanStatus.SUCCESS,
+        start_time=time.perf_counter(),
+        end_time=None,
+        metric_collection=None,
+        confident_api_key=None,
+    )
+    s1 = BaseSpan(
+        uuid="S1",
+        trace_uuid=tr.uuid,
+        parent_uuid=None,
+        start_time=time.perf_counter(),
+        end_time=time.perf_counter(),
+        status=TraceSpanStatus.SUCCESS,
+        children=[],
+        name="r1",
+        input=None,
+        output=None,
+        metrics=[],
+        metric_collection=None,
+    )
+    s2 = BaseSpan(
+        uuid="S2",
+        trace_uuid=tr.uuid,
+        parent_uuid=None,
+        start_time=time.perf_counter(),
+        end_time=None,
+        status=TraceSpanStatus.SUCCESS,
+        children=[],
+        name="r2",
+        input=None,
+        output=None,
+        metrics=[],
+        metric_collection=None,
+    )
+    tr.root_spans = [s1, s2]
+
+    # There is a fallback path that uses integration_traces_to_evaluate and golden mapping
+    g = Golden(input="g")
+    trace_manager.integration_traces_to_evaluate.append(tr)
+    trace_manager.trace_uuid_to_golden[tr.uuid] = g
+
+    # Simulate on_task_done fallback. Call the inner helper directly
+    # or run iterator with a failing task but don't enter observe.
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        results = []
+        it = exec_mod.a_execute_agentic_test_cases_from_loop(
+            goldens=[g],
+            trace_metrics=None,
+            test_results=results,
+            loop=loop,
+            display_config=DisplayConfig(show_indicator=False),
+            async_config=AsyncConfig(run_async=True),
+            error_config=ErrorConfig(
+                ignore_errors=True, skip_on_missing_params=True
+            ),
+        )
+        next(it)
+
+        async def failing(_):
+            raise RuntimeError("x")
+
+        task = asyncio.create_task(failing(g.input))
+
+        try:
+            it.send(task)
+        except StopIteration:
+            pass
+
+        for _ in it:
+            pass
+
+        assert tr.status == TraceSpanStatus.ERRORED
+        assert tr.end_time is not None
+        # open root (s2) should be the one marked
+        assert s2.status == TraceSpanStatus.ERRORED
+        assert s2.error and "x" in s2.error
+        # closed root remains SUCCESS
+        assert s1.status == TraceSpanStatus.SUCCESS
+    finally:
+        trace_manager.integration_traces_to_evaluate.clear()
+        trace_manager.trace_uuid_to_golden.clear()
+        asyncio.set_event_loop(None)
+        loop.close()
+
+
+def test_error_after_observe_does_not_overwrite_root_end_time(monkeypatch):
+    from deepeval.tracing.context import current_trace_context
+
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        g = Golden(input="y")
+        results = []
+        it = exec_mod.a_execute_agentic_test_cases_from_loop(
+            goldens=[g],
+            trace_metrics=None,
+            test_results=results,
+            loop=loop,
+            display_config=DisplayConfig(show_indicator=False),
+            async_config=AsyncConfig(run_async=True),
+            error_config=ErrorConfig(
+                ignore_errors=True, skip_on_missing_params=True
+            ),
+        )
+        next(it)
+
+        before_after = {}
+
+        async def app(_):
+            with Observer("custom", func_name="unit"):
+                tr = current_trace_context.get()
+                trace_manager.trace_uuid_to_golden[tr.uuid] = g
+                if tr not in trace_manager.integration_traces_to_evaluate:
+                    trace_manager.integration_traces_to_evaluate.append(tr)
+            # root is now closed, so capture its end_time
+            rs = tr.root_spans[-1]
+            before_after["before"] = rs.end_time
+            # then fail
+            raise RuntimeError("later failure")
+
+        task = asyncio.create_task(app(g.input))
+        try:
+            it.send(task)
+        except StopIteration:
+            pass
+        for _ in it:
+            pass
+
+        tr = trace_manager.traces[-1]
+        rs = tr.root_spans[-1]
+        assert tr.status.name == "ERRORED"
+        assert rs.status.name == "ERRORED"
+        # end_time not rewritten
+        assert rs.end_time == before_after["before"]
+    finally:
+        asyncio.set_event_loop(None)
+        loop.close()
+
+
+@pytest.mark.asyncio
+async def test_span_errored_skips_span_metrics(
+    patched_api_layer, record_measure_calls
+):
+    # Build a trace whose root span is ERRORED and has metrics
+    from deepeval.tracing.types import TraceSpanStatus
+
+    span_metrics = [_DummyMetric(name="m1")]
+    root = _FakeSpan(
+        input="in", output="out", metrics=span_metrics, children=[]
+    )
+    root.status = TraceSpanStatus.ERRORED
+    fake_trace = _FakeTrace(
+        input="trace-in", output="trace-out", metrics=None, root_span=root
+    )
+
+    results: list[TestResult] = []
+    await exec_mod._a_execute_agentic_test_case(
+        golden=Golden(input="x"),
+        test_run_manager=exec_mod.global_test_run_manager,
+        test_results=results,
+        count=1,
+        verbose_mode=False,
+        ignore_errors=True,
+        skip_on_missing_params=True,
+        show_indicator=False,
+        _use_bar_indicator=False,
+        _is_assert_test=False,
+        observed_callback=None,
+        trace=fake_trace,
+        trace_metrics=None,
+        progress=None,
+        pbar_id=None,
+    )
+    names_called = {
+        getattr(m, "name", "<noname>") for m in record_measure_calls["metrics"]
+    }
+    assert "m1" not in names_called
+
+
+@pytest.mark.asyncio
+async def test_trace_errored_skips_trace_metrics(
+    patched_api_layer, record_measure_calls
+):
+    from deepeval.tracing.types import TraceSpanStatus
+
+    trace_metrics = [_DummyMetric(name="tm")]
+    root = _FakeSpan(input="in", output="out", metrics=[], children=[])
+    fake_trace = _FakeTrace(
+        input="trace-in",
+        output="trace-out",
+        metrics=trace_metrics,
+        root_span=root,
+    )
+    # mark trace as ERRORED and ensure we skip trace metrics
+    fake_trace.status = TraceSpanStatus.ERRORED
+
+    results: list[TestResult] = []
+    await exec_mod._a_execute_agentic_test_case(
+        golden=Golden(input="x"),
+        test_run_manager=exec_mod.global_test_run_manager,
+        test_results=results,
+        count=1,
+        verbose_mode=False,
+        ignore_errors=True,
+        skip_on_missing_params=True,
+        show_indicator=False,
+        _use_bar_indicator=False,
+        _is_assert_test=False,
+        observed_callback=None,
+        trace=fake_trace,
+        trace_metrics=None,
+        progress=None,
+        pbar_id=None,
+    )
+    names_called = {
+        getattr(m, "name", "<noname>") for m in record_measure_calls["metrics"]
+    }
+    assert "tm" not in names_called

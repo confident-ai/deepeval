@@ -135,6 +135,78 @@ def _trace_error(current_trace: Trace) -> Optional[str]:
     return None
 
 
+def _get_trace_by_uuid_anywhere(trace_uuid: str):
+    """
+    Resolver for a trace UUID across the manager's state.
+
+    First tries the manager's indexed lookup, which (covers active/in-flight traces,
+    then does a linear scan of the full `trace_manager.traces` list, which covers
+    traces that were recorded/closed earlier or not yet indexed. Returns
+    the concrete Trace object or None if not found.
+    """
+    tr = trace_manager.get_trace_by_uuid(trace_uuid)
+    if tr:
+        return tr
+    for tr in trace_manager.traces:
+        if tr.uuid == trace_uuid:
+            return tr
+    return None
+
+
+def _pick_root_for_marking(trace):
+    """
+    Choose the most appropriate root span to annotate on error/cancel.
+
+    Heuristic:
+      - Prefer the most recent open root, which will have no `end_time` since this is the
+        span currently in flight.
+      - If none are open, use the last root span if it exists.
+      - If the trace has no roots, return None.
+
+    This favors marking the active root in multi root traces while remaining
+    stable for already closed traces.
+    """
+    open_roots = [rs for rs in trace.root_spans if rs.end_time is None]
+    return (
+        open_roots[-1]
+        if open_roots
+        else (trace.root_spans[-1] if trace.root_spans else None)
+    )
+
+
+def _resolve_trace_and_root_for_task(t: asyncio.Task):
+    """
+    Resolve trace and root for a completed task using the weak binding map.
+
+    Steps:
+      1. Look up the task in `trace_manager.task_bindings` to get the
+         bound `trace_uuid` and, if available, `root_span_uuid`.
+      2. Resolve the Trace with `_get_trace_by_uuid_anywhere`.
+      3. If a bound root UUID exists, try to find that exact root on the trace.
+      4. Otherwise, fall back to `_pick_root_for_marking(trace)`.
+
+    Returns a trace / root tuple. Either may be `None` when no binding is
+    present. This function is used by `on_task_done` to robustly mark error/cancel
+    states without assuming a single root trace or a root that is still open.
+    """
+    binding = trace_manager.task_bindings.get(t) or {}
+    trace_uuid = binding.get("trace_uuid")
+    root_span_uuid = binding.get("root_span_uuid")
+
+    trace = _get_trace_by_uuid_anywhere(trace_uuid) if trace_uuid else None
+    root = None
+
+    if trace and root_span_uuid:
+        root = next(
+            (rs for rs in trace.root_spans if rs.uuid == root_span_uuid), None
+        )
+
+    if trace and root is None:
+        root = _pick_root_for_marking(trace)
+
+    return trace, root
+
+
 async def _snapshot_tasks():
     cur = asyncio.current_task()
     # `all_tasks` returns tasks for the current running loop only
@@ -885,6 +957,7 @@ def execute_agentic_test_cases(
                     _progress=progress,
                     _pbar_callback_id=pbar_tags_id,
                 ):
+
                     if asyncio.iscoroutinefunction(observed_callback):
                         loop = get_or_create_event_loop()
                         coro = observed_callback(golden.input)
@@ -2079,6 +2152,10 @@ def a_execute_agentic_test_cases_from_loop(
             def on_task_done(t: asyncio.Task):
                 cancelled = False
                 exc = None
+                trace = None
+                root = None
+                resolved_trace_from_task = False
+                resolved_root_from_task = False
 
                 # Task.exception() raises CancelledError if task was cancelled
                 try:
@@ -2095,49 +2172,84 @@ def a_execute_agentic_test_cases_from_loop(
                 ):
                     golden = goldens[golden_index]
 
-                    def mark_trace(trace, msg: str):
+                    def _mark_trace_error(trace, root, msg: str):
+                        now = time.perf_counter()
                         trace.status = TraceSpanStatus.ERRORED
-                        if trace.root_spans:
-                            last = trace.root_spans[-1]
-                            last.status = TraceSpanStatus.ERRORED
-                            last.error = msg
+                        # Close the trace so the API layer has a proper endTime
+                        if trace.end_time is None:
+                            trace.end_time = now
+                        if root:
+                            root.status = TraceSpanStatus.ERRORED
+                            root.error = msg
+                            if root.end_time is None:
+                                root.end_time = now
 
                     if exc is not None:
                         msg = format_error_text(exc)
-                        for (
-                            trace
-                        ) in trace_manager.integration_traces_to_evaluate:
-                            if (
-                                trace_manager.trace_uuid_to_golden.get(
-                                    trace.uuid
-                                )
-                                is golden
-                            ):
-                                mark_trace(trace, msg)
-                                break
+                        trace, root = _resolve_trace_and_root_for_task(t)
+                        resolved_trace_from_task = bool(trace)
+                        resolved_root_from_task = bool(root)
+                        if trace:
+                            _mark_trace_error(trace, root, msg)
+                        else:
+                            for (
+                                trace
+                            ) in trace_manager.integration_traces_to_evaluate:
+                                if (
+                                    trace_manager.trace_uuid_to_golden.get(
+                                        trace.uuid
+                                    )
+                                    is golden
+                                ):
+                                    root = _pick_root_for_marking(trace)
+                                    _mark_trace_error(trace, root, msg)
+                                    break
 
                     elif cancelled or t.cancelled():
                         cancel_exc = DeepEvalError(
                             "Task was cancelled (likely due to timeout)."
                         )
                         msg = format_error_text(cancel_exc)
-                        for (
-                            trace
-                        ) in trace_manager.integration_traces_to_evaluate:
-                            if (
-                                trace_manager.trace_uuid_to_golden.get(
-                                    trace.uuid
-                                )
-                                is golden
-                            ):
-                                mark_trace(trace, msg)
-                                break
+                        trace, root = _resolve_trace_and_root_for_task(t)
+                        resolved_trace_from_task = bool(trace)
+                        resolved_root_from_task = bool(root)
+                        if trace:
+                            _mark_trace_error(trace, root, msg)
+                        else:
+                            for (
+                                trace
+                            ) in trace_manager.integration_traces_to_evaluate:
+                                if (
+                                    trace_manager.trace_uuid_to_golden.get(
+                                        trace.uuid
+                                    )
+                                    is golden
+                                ):
+                                    root = _pick_root_for_marking(trace)
+                                    _mark_trace_error(trace, root, msg)
+                                    break
 
                 if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     # Using info level here to make it easy to spot these logs.
+                    golden_name = meta.get("golden_name")
                     duration = time.perf_counter() - meta.get(
                         "started", started
                     )
+
+                    if cancelled or exc is not None:
+                        if not resolved_trace_from_task:
+                            logger.warning(
+                                "[deepeval] on_task_done: no binding for task; falling back to golden->trace. task=%s golden=%r",
+                                t.get_name(),
+                                golden_name,
+                            )
+                        elif not resolved_root_from_task:
+                            logger.warning(
+                                "[deepeval] on_task_done: bound trace found but no bound root; using heuristic. task=%s trace=%s",
+                                t.get_name(),
+                                trace.uuid,
+                            )
+
                     if cancelled:
                         logger.info(
                             "[deepeval] task CANCELLED %s after %.2fs meta=%r",
@@ -2164,6 +2276,11 @@ def a_execute_agentic_test_cases_from_loop(
                             duration,
                             meta.get("golden_index"),
                         )
+
+                try:
+                    trace_manager.task_bindings.pop(t, None)
+                except Exception:
+                    pass
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
 
@@ -2278,10 +2395,11 @@ def a_execute_agentic_test_cases_from_loop(
                 ]
 
                 if get_settings().DEEPEVAL_DEBUG_ASYNC:
-                    logger.warning(
-                        "[deepeval] %d stray task(s) not tracked; cancelling...",
-                        len(leftovers),
-                    )
+                    if len(leftovers) > 0:
+                        logger.warning(
+                            "[deepeval] %d stray task(s) not tracked; cancelling...",
+                            len(leftovers),
+                        )
                     for t in leftovers:
                         meta = task_meta.get(t, {})
                         name = t.get_name()
