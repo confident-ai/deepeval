@@ -12,6 +12,7 @@ import pytest
 import tenacity
 
 from pathlib import Path
+from deepeval.tracing.tracing import trace_manager
 from deepeval.config.settings import get_settings, reset_settings
 
 
@@ -112,3 +113,19 @@ def unpatch_openai_after():
 
     yield
     unpatch_openai_classes()
+
+
+@pytest.fixture(autouse=True)
+def _reset_tracing_state():
+    trace_manager.clear_traces()
+    trace_manager.traces_to_evaluate_order.clear()
+    trace_manager.traces_to_evaluate.clear()
+    trace_manager.integration_traces_to_evaluate.clear()
+    trace_manager.trace_uuid_to_golden.clear()
+    try:
+        trace_manager.task_bindings.clear()
+    except Exception:
+        pass
+    trace_manager.evaluating = False
+    trace_manager.evaluation_loop = False
+    yield
