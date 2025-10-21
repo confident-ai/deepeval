@@ -1,3 +1,5 @@
+import asyncio
+
 from deepeval.metrics import BaseMetric, TaskCompletionMetric
 from types import SimpleNamespace
 from typing import List, Optional, Protocol, runtime_checkable
@@ -77,6 +79,63 @@ class _DummyTaskCompletionMetric(TaskCompletionMetric):
 
     def measure(self, test_case, *_args, **_kwargs):
         self.success = True
+
+    def is_successful(self) -> bool:
+        return bool(self.success)
+
+
+class _SleepyMetric(BaseMetric):
+    """
+    Test stub that can sleep in both sync and async paths.
+
+    Args:
+        name: display name
+        async_sleep: seconds to sleep in a_measure (None/0 -> no stall)
+        sync_sleep: seconds to sleep in measure (None/0 -> no stall)
+        should_skip: mark as skipped instead of evaluating
+        succeed: whether to set success=True after sleep, the default is False
+    """
+
+    def __init__(
+        self,
+        name: str = "sleepy",
+        *,
+        async_sleep: float | None = None,
+        sync_sleep: float | None = None,
+        should_skip: bool = False,
+        succeed: bool = False,
+    ):
+        self.name = name
+        self.async_sleep = async_sleep
+        self.sync_sleep = sync_sleep
+        self.should_skip = should_skip
+        self.succeed = succeed
+
+        # required BaseMetric fields
+        self.skipped = False
+        self.error = None
+        self.success = False
+        self.threshold = 0.5
+        self.score = None
+        self.reason = None
+
+    def measure(self, test_case, *_args, **_kwargs):
+        if self.should_skip:
+            self.skipped = True
+            return
+        if self.sync_sleep:
+            import time
+
+            time.sleep(self.sync_sleep)
+        self.success = bool(self.succeed)
+
+    async def a_measure(self, test_case, *_args, **_kwargs):
+        if self.should_skip:
+            self.skipped = True
+            return
+        if self.async_sleep:
+            await asyncio.sleep(self.async_sleep)
+        self.success = bool(self.succeed)
 
     def is_successful(self) -> bool:
         return bool(self.success)
