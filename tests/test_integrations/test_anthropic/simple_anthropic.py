@@ -28,17 +28,17 @@ with trace(
     )
 
 
-# @observe()
-# async def run_async_anthropic():
-#     with trace(prompt=prompt):
-#         await async_client.messages.create(
-#             model="claude-sonnet-4-5",
-#             system="You are a helpful assistant.",
-#             max_tokens=1024,
-#             messages=[
-#                 {
-#                     "role": "user",
-#                     "content": "Hello, how are you?"
-#                 },
-#             ]
-#         )
+@observe()
+async def run_async_anthropic():
+    with trace(prompt=prompt):
+        await async_client.messages.create(
+            model="claude-sonnet-4-5",
+            system="You are a helpful assistant.",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": "Hello, how are you?"
+                },
+            ]
+        )
