@@ -2,8 +2,8 @@ from typing import Callable, List
 from functools import wraps
 
 from deepeval.anthropic.extractors import (
-    extract_output_parameters,
     extract_input_parameters,
+    extract_output_parameters,
     InputParameters,
     OutputParameters,
 )
