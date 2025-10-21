@@ -8,126 +8,111 @@ class ExecutionEfficiencyTemplate:
     @staticmethod
     def extract_task_from_trace(trace: dict) -> str:
         return textwrap.dedent(
-            f"""You are given a nested execution trace of a workflow involving an agent and its child components (e.g., tools, LLMs, retrievers, custom modules).
+            f"""You are an expert evaluator tasked with extracting the **user's original goal** from a nested execution trace of an AI agent's workflow.
 
-                Your task is to:
-                1. Extract the underlying user task or objective, based only on the `input` field of the root-level agent.
-                2. Based on the full trace, determine what specific sub-tasks or actions were performed by the agent and its children to fulfill that task.
-                3. Return a fact-based, precise description of the user's goal, broken down into clear, concrete, and actionable components.
+                You are given:
+                - A **trace**: a full nested dictionary representing the entire execution of an agent and its child components (tools, LLM calls, retrievers, custom modules, etc.).
+                - The trace contains a root-level agent with an `input` field representing the user's original instruction or query.
 
-                Guidelines:
-                - The extracted task should represent the user's intent, not the agent's internal reasoning or execution summary.
-                - Use the trace itself (including tool/LLM/retriever/custom spans) to inform what sub-tasks were involved.
-                - Be strictly objective. Do not use subjective language such as “successfully”, “efficiently”, or “appropriately”.
-                - Describe the task from the user's point of view. Don't include internal agent behavior like “called flight_tool”.
-                - Ensure the task description can be used as a reference to evaluate whether the agent's execution fulfilled the user's goal.
+                Your job is to:
+                1. Identify the user's **full intended task or objective** based strictly on the root-level agent's `input` field.
+                2. Analyze all child spans in the trace to understand what sub-tasks or actions were performed.
+                3. Return a **precise, fact-based, structured description** of the user's goal, expressed from the user's perspective as a clear set of concrete, actionable points.
+                4. Do **not** include any internal agent reasoning, intermediate steps, or component names.
+                5. Do **not** speculate beyond what the trace clearly supports.
+                6. If the user's task cannot be inferred beyond the root input, return that input verbatim.
 
-                CHAIN OF THOUGHT:
-                1. Look at the root agent's `input` field — that contains the user's instruction or question.
-                2. Review all children spans (`tool`, `llm`, `retriever`, `custom`, etc.) to see what the agent did.
-                3. Infer the user's full task, combining the input with actions taken in the trace.
-                4. Describe this task clearly and factually in plain language with exact actionable points.
-                5. Do not speculate — only describe what is clearly supported by the trace.
+                ---
+
+                GUIDELINES:
+
+                - The extracted task should reflect only the user's intent.
+                - Use the full trace only to inform what sub-tasks or subtleties the user requested.
+                - Avoid subjective or evaluative language.
+                - Produce output that can serve as a definitive reference to check whether the agent fulfilled the user's request.
+
+                ---
 
                 OUTPUT FORMAT:
-                Return a JSON object with a single key:
-                ```json
-                {{
-                "task": "..."
-                }}
-                ```
-                If the task cannot be inferred, just return user's input
-                ```json
-                {{
-                "task": user's input here taken from the trace
-                }}
-                ```
 
-                EXAMPLE: 
+                Return a JSON object with a single key `"task"` and a string value describing the user's task.
 
-                Trace:
+                Use this exact format with double curly braces for the example:
+
+                ---
+
+                Example Trace:
+
                 {{
-                "name": "client_pitch_prep",
+                "name": "trip_planner",
                 "type": "agent",
                 "input": {{
-                    "input": "Help me prepare for a client pitch meeting in New York next Tuesday."
+                    "input": "Help me plan a business trip to Chicago next week."
                 }},
-                "output": {{
-                    "summary": "Pitch preparation started."
-                }},
-                "available_tools": ["flight_finder", "hotel_booker", "agenda_generator"],
                 "children": [
                     {{
-                    "name": "flight_finder",
+                    "name": "flight_tool",
                     "type": "tool",
                     "input": {{
                         "inputParameters": {{
-                        "destination": "New York",
-                        "date": "2024-08-13"
+                        "destination": "Chicago",
+                        "date": "2024-07-10"
                         }}
                     }},
                     "output": {{
-                        "flights": ["Flight A123", "Flight B456"]
+                        "flights": ["Flight 101", "Flight 202"]
                     }},
                     "children": []
                     }},
                     {{
-                    "name": "hotel_booker",
+                    "name": "hotel_tool",
                     "type": "tool",
                     "input": {{
                         "inputParameters": {{
-                        "location": "New York",
-                        "check_in": "2024-08-13",
-                        "check_out": "2024-08-14"
+                        "location": "Chicago",
+                        "check_in": "2024-07-10",
+                        "check_out": "2024-07-12"
                         }}
                     }},
                     "output": {{
-                        "hotels": ["Central Hotel NY", "Eastside Suites"]
+                        "hotels": ["The Grand Chicago", "Lakeview Inn"]
                     }},
                     "children": []
                     }},
                     {{
-                    "name": "agenda_generator",
+                    "name": "agenda_llm",
                     "type": "llm",
                     "input": {{
-                        "prompt": "Draft a pitch agenda",
+                        "prompt": "Draft a meeting agenda",
                         "input": [
                         {{
+                            "role": "system",
+                            "content": "You are an executive assistant."
+                        }},
+                        {{
                             "role": "user",
-                            "content": "Create an agenda for a client pitch meeting."
+                            "content": "Create an agenda for a client strategy meeting."
                         }}
                         ]
                     }},
-                    "output": "1. Introduction\\n2. Product demo\\n3. Pricing discussion\\n4. Q&A",
-                    "children": []
-                    }},
-                    {{
-                    "name": "slide_fetcher",
-                    "type": "retriever",
-                    "input": {{
-                        "embeddingInput": "pitch_deck_v2.pdf"
-                    }},
-                    "output": {{
-                        "retrievalContext": ["Slide 2: Product Features", "Slide 5: Pricing Options"]
-                    }},
+                    "output": "1. Q2 review\\n2. Client feedback\\n3. Strategy planning",
                     "children": []
                     }}
                 ]
                 }}
 
-                Example JSON:
+                Expected JSON:
 
                 {{
-                "task": "Prepare for a client pitch meeting in New York, including booking flights, reserving lodging, generating a presentation agenda, and retrieving relevant slides from a pitch deck."
+                    "task": "Plan a business trip to Chicago next week, including booking a flight, reserving a hotel, and drafting a client meeting agenda."
                 }}
 
-                ===== END OF EXAMPLE ======
+                ---
 
-                **
-                IMPORTANT: Please make sure to only return in JSON format with one key: 'task'
-                **
+                **IMPORTANT**: Only return a single JSON object with the `"task"` key and your extraction as the value.
 
                 Trace:
+
                 {json.dumps(trace, default=make_json_serializable, indent=2)}
 
                 JSON:
@@ -198,22 +183,6 @@ class ExecutionEfficiencyTemplate:
                 - Avoid vague language like "pretty good" or "reasonable".
                 - Justify deductions clearly: e.g. “LLM was used to restate input”, or “web search added speculative context”.
 
-                ---
-
-                EXAMPLE:
-
-                Task:
-                Summarize the main argument in a paragraph of text provided by the user.
-
-                Trace:
-                The agent called an LLM to summarize the paragraph. No tools, no retrieval, no extra formatting.
-
-                → JSON:
-                {{
-                "score": 1.0,
-                "reason": "The agent used only a single LLM call to summarize the text, which directly fulfills the task with no unnecessary steps."
-                }}
-
                 EXAMPLE:
 
                 Task:
@@ -233,8 +202,8 @@ class ExecutionEfficiencyTemplate:
                 **IMPORTANT**:
                 - Do not consider output quality, correctness, or helpfulness — this metric only evaluates execution efficiency.
                 - Do not invent or infer intent beyond what is clearly stated in the task.
-                - The agent must **ABSOLUTELY** not use a tool when it is 100% not required. Any extra tool calls or other activities that enhance an answer but slow the process should HEAVILY penalise the score.
-                - It does not matter if the output of agent is correct, if the execution has extra steps that were not necessary, reduce the score
+                - The agent **MUST ABSOLUTELY NOT** use a tool UNLESS it is 100% required to finsih the task given. Any extra tool calls or other activities that enhance an answer but slow the process should HEAVILY penalise the score.
+                - This metric is built to fail, ONLY give a high score if the agent has done everyting **meticulously** right. If not, give the lowest score possible
 
                 ---
 

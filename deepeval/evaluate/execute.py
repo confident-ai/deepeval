@@ -1046,12 +1046,8 @@ def execute_agentic_test_cases(
 
                     if not span.metrics:
                         return
-                    has_task_completion = any(
-                        (
-                            isinstance(metric, TaskCompletionMetric)
-                            or isinstance(metric, ExecutionEfficiencyMetric)
-                        )
-                        for metric in span.metrics
+                    requires_trace = any(
+                        metric.requires_trace for metric in span.metrics
                     )
 
                     llm_test_case = None
@@ -1071,7 +1067,7 @@ def execute_agentic_test_cases(
                         )
 
                     # add trace if task completion
-                    if has_task_completion:
+                    if requires_trace:
                         if llm_test_case is None:
                             llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
@@ -1145,11 +1141,8 @@ def execute_agentic_test_cases(
                         )
                 else:
                     if current_trace.metrics:
-                        has_task_completion = any(
-                            (
-                                isinstance(metric, TaskCompletionMetric)
-                                or isinstance(metric, ExecutionEfficiencyMetric)
-                            )
+                        requires_trace = any(
+                            metric.requires_trace
                             for metric in current_trace.metrics
                         )
 
@@ -1168,7 +1161,7 @@ def execute_agentic_test_cases(
                                 tools_called=current_trace.tools_called,
                                 expected_tools=current_trace.expected_tools,
                             )
-                        if has_task_completion:
+                        if requires_trace:
                             if llm_test_case is None:
                                 llm_test_case = LLMTestCase(input="None")
                             llm_test_case._trace_dict = (
@@ -1553,13 +1546,7 @@ async def _a_execute_span_test_case(
     if not metrics:
         return
 
-    has_task_completion = any(
-        (
-            isinstance(metric, TaskCompletionMetric)
-            or isinstance(metric, ExecutionEfficiencyMetric)
-        )
-        for metric in metrics
-    )
+    requires_trace = any(metric.requires_trace for metric in metrics)
 
     llm_test_case = None
     if span.input:
@@ -1573,7 +1560,7 @@ async def _a_execute_span_test_case(
             expected_tools=span.expected_tools,
         )
 
-    if not has_task_completion:
+    if not requires_trace:
         if llm_test_case is None:
             api_span.status = TraceSpanApiStatus.ERRORED
             api_span.error = format_error_text(
@@ -1594,7 +1581,7 @@ async def _a_execute_span_test_case(
     test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
-    if has_task_completion:
+    if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
@@ -1653,13 +1640,7 @@ async def _a_execute_trace_test_case(
     if not metrics:
         return
 
-    has_task_completion = any(
-        (
-            isinstance(metric, TaskCompletionMetric)
-            or isinstance(metric, ExecutionEfficiencyMetric)
-        )
-        for metric in metrics
-    )
+    requires_trace = any(metric.requires_trace for metric in metrics)
 
     llm_test_case = None
     if trace.input:
@@ -1675,7 +1656,7 @@ async def _a_execute_trace_test_case(
             expected_tools=trace.expected_tools,
         )
 
-    if not has_task_completion:
+    if not requires_trace:
         if llm_test_case is None:
             trace.status = TraceSpanStatus.ERRORED
             trace_api.status = TraceSpanApiStatus.ERRORED
@@ -1699,7 +1680,7 @@ async def _a_execute_trace_test_case(
     test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
-    if has_task_completion:
+    if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(
@@ -1867,12 +1848,8 @@ def execute_agentic_test_cases_from_loop(
                     if not span.metrics:
                         return
 
-                    has_task_completion = any(
-                        (
-                            isinstance(metric, TaskCompletionMetric)
-                            or isinstance(metric, ExecutionEfficiencyMetric)
-                        )
-                        for metric in metrics
+                    requires_trace = any(
+                        metric.requires_trace for metric in metrics
                     )
 
                     llm_test_case = None
@@ -1891,7 +1868,7 @@ def execute_agentic_test_cases_from_loop(
                             expected_tools=span.expected_tools,
                         )
 
-                    if has_task_completion:
+                    if requires_trace:
                         if llm_test_case is None:
                             llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
@@ -1969,11 +1946,8 @@ def execute_agentic_test_cases_from_loop(
                         )
                 else:
                     if current_trace.metrics:
-                        has_task_completion = any(
-                            (
-                                isinstance(metric, TaskCompletionMetric)
-                                or isinstance(metric, ExecutionEfficiencyMetric)
-                            )
+                        requires_trace = any(
+                            metric.requires_trace
                             for metric in current_trace.metrics
                         )
 
@@ -1993,7 +1967,7 @@ def execute_agentic_test_cases_from_loop(
                                 expected_tools=current_trace.expected_tools,
                             )
 
-                        if has_task_completion:
+                        if requires_trace:
                             if llm_test_case is None:
                                 llm_test_case = LLMTestCase(input="None")
                             llm_test_case._trace_dict = (
