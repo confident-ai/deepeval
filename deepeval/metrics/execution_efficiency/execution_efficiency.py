@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple, Union, Dict
+from typing import Optional, List, Union, Dict
 
 from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
