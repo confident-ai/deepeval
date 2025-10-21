@@ -13,12 +13,16 @@ from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.agent_goal_accuracy.template import AgentGoalAccuracyTemplate
-from deepeval.metrics.agent_goal_accuracy.utils import print_goals_and_steps_taken
+from deepeval.metrics.agent_goal_accuracy.template import (
+    AgentGoalAccuracyTemplate,
+)
+from deepeval.metrics.agent_goal_accuracy.utils import (
+    print_goals_and_steps_taken,
+)
 from deepeval.metrics.agent_goal_accuracy.schema import (
     GoalSteps,
     GoalScore,
-    PlanScore
+    PlanScore,
 )
 from deepeval.metrics.api import metric_data_manager
 
@@ -74,12 +78,18 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
                 )
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
-                goal_and_steps_taken = self._goal_and_steps_taken(unit_interactions)
+                goal_and_steps_taken = self._goal_and_steps_taken(
+                    unit_interactions
+                )
                 goal_scores = [
-                    self._get_goal_accuracy_score(task.user_goal, task.steps_taken) for task in goal_and_steps_taken
+                    self._get_goal_accuracy_score(
+                        task.user_goal, task.steps_taken
+                    )
+                    for task in goal_and_steps_taken
                 ]
                 plan_scores = [
-                    self._get_plan_scores(task.user_goal, task.steps_taken) for task in goal_and_steps_taken
+                    self._get_plan_scores(task.user_goal, task.steps_taken)
+                    for task in goal_and_steps_taken
                 ]
                 self.score = self._calculate_score(goal_scores, plan_scores)
                 self.success = self.score >= self.threshold
@@ -125,14 +135,24 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
             unit_interactions = get_unit_interactions(test_case.turns)
             goal_and_steps_taken = self._goal_and_steps_taken(unit_interactions)
             goal_scores = await asyncio.gather(
-                *[self._a_get_goal_accuracy_score(task.user_goal, task.steps_taken) for task in goal_and_steps_taken]
+                *[
+                    self._a_get_goal_accuracy_score(
+                        task.user_goal, task.steps_taken
+                    )
+                    for task in goal_and_steps_taken
+                ]
             )
             plan_scores = await asyncio.gather(
-                *[self._a_get_plan_scores(task.user_goal, task.steps_taken) for task in goal_and_steps_taken]
+                *[
+                    self._a_get_plan_scores(task.user_goal, task.steps_taken)
+                    for task in goal_and_steps_taken
+                ]
             )
             self.score = self._calculate_score(goal_scores, plan_scores)
             self.success = self.score >= self.threshold
-            self.reason = await self._a_generate_reason(goal_scores, plan_scores)
+            self.reason = await self._a_generate_reason(
+                goal_scores, plan_scores
+            )
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -152,7 +172,9 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
 
             return self.score
 
-    def _goal_and_steps_taken(self, unit_interactions: List[List[Turn]]) -> List[GoalSteps]:
+    def _goal_and_steps_taken(
+        self, unit_interactions: List[List[Turn]]
+    ) -> List[GoalSteps]:
         goal_and_steps_taken = []
         for unit_interaction in unit_interactions:
             user_messages = "User messages: \n"
@@ -171,11 +193,10 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
                     new_goal_steps.steps_taken.append(assistant_messages)
             goal_and_steps_taken.append(new_goal_steps)
         return goal_and_steps_taken
-    
+
     def _get_plan_scores(self, user_goal, steps_taken):
         prompt = AgentGoalAccuracyTemplate.get_plan_evaluation_score(
-            user_goal,
-            "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=PlanScore)
@@ -189,11 +210,10 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return PlanScore(**data)
-            
+
     async def _a_get_plan_scores(self, user_goal, steps_taken):
         prompt = AgentGoalAccuracyTemplate.get_plan_evaluation_score(
-            user_goal,
-            "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=PlanScore)
@@ -201,17 +221,17 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
             return res
         else:
             try:
-                res: PlanScore = await self.model.a_generate(prompt, schema=PlanScore)
+                res: PlanScore = await self.model.a_generate(
+                    prompt, schema=PlanScore
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return PlanScore(**data)
-            
+
     def _calculate_score(
-        self, 
-        goal_scores: List[GoalScore], 
-        plan_scores: List[PlanScore]
+        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]
     ):
         goal_scores = [goal_score.score for goal_score in goal_scores]
         plan_scores = [plan_score.score for plan_score in plan_scores]
@@ -222,17 +242,18 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
         return (goal_avg + plan_avg) / 2
 
     def _generate_reason(
-        self, 
-
-        goal_scores: List[GoalScore], 
-        plan_scores: List[PlanScore]
+        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]
     ):
         goal_evaluations = ""
         for goal_score in goal_scores:
-            goal_evaluations += f"Score: {goal_score.score}, Reason: {goal_score.reason}"
+            goal_evaluations += (
+                f"Score: {goal_score.score}, Reason: {goal_score.reason}"
+            )
         plan_evalautions = ""
         for plan_score in plan_scores:
-            plan_evalautions += f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
+            plan_evalautions += (
+                f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
+            )
 
         prompt = AgentGoalAccuracyTemplate.get_final_reason(
             self.score, self.threshold, goal_evaluations, plan_evalautions
@@ -244,19 +265,20 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
         else:
             res = self.model.generate(prompt)
             return res
-        
-    async def _a_generate_reason(
-        self, 
 
-        goal_scores: List[GoalScore], 
-        plan_scores: List[PlanScore]
+    async def _a_generate_reason(
+        self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]
     ):
         goal_evaluations = ""
         for goal_score in goal_scores:
-            goal_evaluations += f"Score: {goal_score.score}, Reason: {goal_score.reason}"
+            goal_evaluations += (
+                f"Score: {goal_score.score}, Reason: {goal_score.reason}"
+            )
         plan_evalautions = ""
         for plan_score in plan_scores:
-            plan_evalautions += f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
+            plan_evalautions += (
+                f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
+            )
 
         prompt = AgentGoalAccuracyTemplate.get_final_reason(
             self.score, self.threshold, goal_evaluations, plan_evalautions
@@ -268,11 +290,10 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
         else:
             res = await self.model.a_generate(prompt)
             return res
-    
+
     def _get_goal_accuracy_score(self, user_goal, steps_taken):
         prompt = AgentGoalAccuracyTemplate.get_accuracy_score(
-            user_goal,
-            "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=GoalScore)
@@ -286,11 +307,10 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return GoalScore(**data)
-            
+
     async def _a_get_goal_accuracy_score(self, user_goal, steps_taken):
         prompt = AgentGoalAccuracyTemplate.get_accuracy_score(
-            user_goal,
-            "\n".join(steps_taken)
+            user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=GoalScore)
@@ -298,7 +318,9 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
             return res
         else:
             try:
-                res: GoalScore = await self.model.a_generate(prompt, schema=GoalScore)
+                res: GoalScore = await self.model.a_generate(
+                    prompt, schema=GoalScore
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)

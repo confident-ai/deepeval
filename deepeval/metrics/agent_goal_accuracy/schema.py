@@ -15,4 +15,3 @@ class GoalScore(BaseModel):
 class PlanScore(BaseModel):
     score: float
     reason: str
-

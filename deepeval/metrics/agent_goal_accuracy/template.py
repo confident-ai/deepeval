@@ -73,7 +73,7 @@ class AgentGoalAccuracyTemplate:
                 JSON:
             """
         )
-    
+
     @staticmethod
     def get_plan_evaluation_score(task, steps_taken):
         return textwrap.dedent(
@@ -150,9 +150,11 @@ class AgentGoalAccuracyTemplate:
                 JSON:
             """
         )
-    
+
     @staticmethod
-    def get_final_reason(final_score, threshold, goal_evaluations, plan_evalautions):
+    def get_final_reason(
+        final_score, threshold, goal_evaluations, plan_evalautions
+    ):
         return textwrap.dedent(
             f"""You are an expert evaluator providing a **final justification** for whether an AI agent has passed or failed an evaluation metric.
 
