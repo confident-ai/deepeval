@@ -1,4 +1,5 @@
 from anthropic.types.message import Message
+from anthropic.types import ToolUseBlock
 from typing import Any, Dict
 
 from deepeval.anthropic.types import InputParameters, OutputParameters
@@ -49,14 +50,9 @@ def extract_messages_api_output_parameters(
     input_parameters: InputParameters,
 ) -> OutputParameters:
     content = str(message_response.content[0].text or "")
-    role = message_response.role
-    type = message_response.type
-    input_tokens = message_response.usage["input_tokens"]
-    output_tokens = message_response.usage["output_tokens"]
-
     tools_called = None
     anthropic_tool_calls = [
-        block for block in getattr(message_response, "content", []) if getattr(block, "type", None) == "tool_use"
+        block for block in message_response.content if isinstance(block, ToolUseBlock)
     ]
     if anthropic_tool_calls:
         tools_called = []
@@ -64,18 +60,18 @@ def extract_messages_api_output_parameters(
         for tool_call in anthropic_tool_calls:
             tools_called.append(
                 ToolCall(
-                    name=tool_call["name"],
-                    input_parameters=tool_call["input"],
-                    description=tool_descriptions.get(getattr(tool_call, "name", None)),
+                    name=tool_call.name,
+                    input_parameters=tool_call.input,
+                    description=tool_descriptions.get(tool_call.name),
                 )
             )
     return OutputParameters(
         content=content,
-        role=role,
-        type=type,
+        role=message_response.role,
+        type=message_response.type,
         usage={
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens
+            "input_tokens": message_response.usage.input_tokens,
+            "output_tokens": message_response.usage.output_tokens
         },
         tools_called=tools_called,
     )
