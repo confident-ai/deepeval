@@ -9,9 +9,9 @@ import TabItem from "@theme/TabItem";
 
 `deepeval` integrates with Anthropic models, allowing you to evaluate and trace Claude LLM requests, whether standalone or within complex applications with multiple components, in both development and production environment.
 
-## Local Evaluations
+## Local Evaluations in Development
 
-Local (offline) evaluations run entirely on your machine using data points or datasets, this is the development environment.
+To evaluate your Claude application during development, opt for local evals. This allows you to run evaluations on the data points directly on your machine.
 
 ### Evaluating Claude as a Standalone
 
@@ -104,7 +104,7 @@ With `deepeval`’s `Anthropic` client, input and output are auto-extracted for 
 
 ### Evaluating Claude within Components
 
-You can also use `deepeval`'s OpenAI client **within component-level evaluations**. To set up component-level evaluations, add the `@observe` decorator to your llm_application's components, and simply replace existing OpenAI clients with `deepeval`'s OpenAI client, passing in the metrics you wish to use.
+For component-level evaluation, use `deepeval`'s `Anthropic` client and add the `@observe` decorator to your component functions. Pass your chosen metrics via the `trace()` context.
 
 <Tabs groupId="anthropic">
 <TabItem value="messages" label="Messages">
@@ -165,10 +165,10 @@ def retrieve_documents(query):
     ]
 
 @observe()
-def llm_app(input):
+async def llm_app(input):
     client = AsyncAnthropic()
     with trace(llm_metrics=[AnswerRelevancyMetric()]):
-        response = client.responses.create(
+        response = await client.responses.create(
             model="claude-sonnet-4-5",
             max_tokens=4096,
             system="You are a helpful assistant.",
@@ -199,11 +199,11 @@ When used inside `@observe` components, `deepeval`'s `Anthropic` client automati
 - Records span level llm attributes such as the input prompt, generated output and token usage.
 - Logs hyperparameters such as model name and system prompt for comprehensive experiment analysis.
 
-## Online Evals in Production
+## Online Evaluations in Production
 
-If your Claude based application is in production, and you still want to run evaluations on your traces, use online evals. It lets you run evaluations on all incoming traces on Confident AI's server.
+To evaluate your Claude application's traces in production, enable online evals. This runs automatic evaluations on all incoming traces using Confident AI's server.
 
-Set the `llm_metric_collection` name in the `trace` context when invoking your `Anthropic` client to evaluate LLM Spans.
+Set the `llm_metric_collection` parameter in the `trace()` context manager to evaluate the trace against a collection of metrics.
 
 ```python main.py
 from deepeval.anthropic import Anthropic
