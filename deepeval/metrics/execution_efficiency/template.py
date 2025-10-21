@@ -133,7 +133,7 @@ class ExecutionEfficiencyTemplate:
                 JSON:
             """
         )
-    
+
     def get_execution_efficiency(task: str, trace: dict) -> str:
         return textwrap.dedent(
             f"""You are an expert evaluator assessing the **execution efficiency** of an AI agent.
