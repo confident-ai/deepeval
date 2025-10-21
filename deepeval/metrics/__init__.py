@@ -27,6 +27,7 @@ from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
+from .topic_adherence.topic_adherence import TopicAdherenceMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
 from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
@@ -98,6 +99,8 @@ __all__ = [
     "TaskCompletionMetric",
     "ArgumentCorrectnessMetric",
     "KnowledgeRetentionMetric",
+    # Agentic metrics
+    "TopicAdherenceMetric"
     # Conversational metrics
     "TurnRelevancyMetric",
     "ConversationCompletenessMetric",
