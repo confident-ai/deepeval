@@ -21,12 +21,7 @@ async def test_async_messages_create_without_trace():
         model="claude-sonnet-4-5",
         system="You are a helpful assistant. Always generate a string response.",
         max_tokens=1024,
-        messages=[
-            {
-                "role": "user",
-                "content": "Hello, how are you?"
-            }
-        ]
+        messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
 
 
@@ -49,12 +44,7 @@ async def test_async_messages_create_with_trace():
             model="claude-sonnet-4-5",
             system="You are a helpful assistant. Always generate a string response.",
             max_tokens=1024,
-            messages=[
-                {
-                    "role": "user",
-                    "content": "Hello, how are you?"
-                }
-            ]
+            messages=[{"role": "user", "content": "Hello, how are you?"}],
         )
 
 

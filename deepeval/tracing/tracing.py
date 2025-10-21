@@ -38,7 +38,10 @@ from deepeval.tracing.api import (
     TraceSpanApiStatus,
 )
 from deepeval.telemetry import capture_send_trace
-from deepeval.tracing.patchers import patch_anthropic_client, patch_openai_client
+from deepeval.tracing.patchers import (
+    patch_anthropic_client,
+    patch_openai_client,
+)
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,

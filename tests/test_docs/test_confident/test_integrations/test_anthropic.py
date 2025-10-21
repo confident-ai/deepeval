@@ -6,10 +6,7 @@ from deepeval.tracing import observe
 client = Anthropic()
 
 
-@observe(
-    type="llm",
-    model="claude-sonnet-4-5"
-)
+@observe(type="llm", model="claude-sonnet-4-5")
 def generate_response(input: str) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-5",
@@ -33,21 +30,13 @@ response = generate_response("Hey, how are you?")
 client = Anthropic()
 
 
-@observe(
-    type="llm",
-    model="claude-sonnet-4-5"
-)
+@observe(type="llm", model="claude-sonnet-4-5")
 def generate_response2(input: str) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=4096,
         system="You are a helpful assistant.",
-        messages=[
-            {
-                "role": "user",
-                "content": input
-            }
-        ],
+        messages=[{"role": "user", "content": input}],
         metrics=[AnswerRelevancyMetric()],
     )
     return response
@@ -55,7 +44,9 @@ def generate_response2(input: str) -> str:
 
 goldens = [
     Golden(input="What is application of useState() in React?"),
-    Golden(input="Compare Repeatable Read vs Read Committed as Isolation level for PostgreSQL."),
+    Golden(
+        input="Compare Repeatable Read vs Read Committed as Isolation level for PostgreSQL."
+    ),
 ]
 dataset = EvaluationDataset(goldens=goldens)
 

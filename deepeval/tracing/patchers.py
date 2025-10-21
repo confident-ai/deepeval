@@ -74,10 +74,7 @@ def patch_openai_client(client: OpenAI):
                         pass
 
                     update_current_span(
-                        input=kwargs.get(
-                            "messages",
-                            "INPUT_MESSAGE_NOT_FOUND"
-                        ),
+                        input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
                         output=output if output else "OUTPUT_MESSAGE_NOT_FOUND",
                     )
                     update_llm_span(
@@ -139,8 +136,8 @@ def patch_anthropic_client(client: Anthropic):
                     output = None
                     try:
                         if (
-                            hasattr(response, "content") 
-                            and response.content 
+                            hasattr(response, "content")
+                            and response.content
                             and len(response.content) > 0
                         ):
                             for block in response.content:
@@ -157,19 +154,24 @@ def patch_anthropic_client(client: Anthropic):
                             usage = response.usage
                             # usage can be a dict or an object with attributes
                             if isinstance(usage, dict):
-                                input_token_count = usage.get("input_tokens", None)
-                                output_token_count = usage.get("output_tokens", None)
+                                input_token_count = usage.get(
+                                    "input_tokens", None
+                                )
+                                output_token_count = usage.get(
+                                    "output_tokens", None
+                                )
                             else:
-                                input_token_count = getattr(usage, "input_tokens", None)
-                                output_token_count = getattr(usage, "output_tokens", None)
+                                input_token_count = getattr(
+                                    usage, "input_tokens", None
+                                )
+                                output_token_count = getattr(
+                                    usage, "output_tokens", None
+                                )
                     except Exception:
                         pass
 
                     update_current_span(
-                        input=kwargs.get(
-                            "messages",
-                            "INPUT_MESSAGE_NOT_FOUND"
-                        ),
+                        input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
                         output=output if output else "OUTPUT_MESSAGE_NOT_FOUND",
                     )
                     update_llm_span(

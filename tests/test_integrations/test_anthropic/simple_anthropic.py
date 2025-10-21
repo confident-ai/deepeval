@@ -18,10 +18,7 @@ with trace(
         system="You are a helpful assistant.",
         max_tokens=1024,
         messages=[
-            {
-                "role": "user",
-                "content": "Hello, how are you?"
-            },
+            {"role": "user", "content": "Hello, how are you?"},
         ],
     )
 
@@ -34,9 +31,6 @@ async def run_async_anthropic():
             system="You are a helpful assistant.",
             max_tokens=1024,
             messages=[
-                {
-                    "role": "user",
-                    "content": "Hello, how are you?"
-                },
-            ]
+                {"role": "user", "content": "Hello, how are you?"},
+            ],
         )

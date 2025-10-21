@@ -34,7 +34,7 @@ def patch_anthropic_classes():
     try:
         from anthropic.resources.messages import Messages, AsyncMessages
 
-         # Store original methods before patching
+        # Store original methods before patching
         if hasattr(Messages, "create"):
             _ORIGINAL_METHODS["Messages.create"] = Messages.create
             Messages.create = _create_sync_wrapper(Messages.create)
@@ -48,10 +48,12 @@ def patch_anthropic_classes():
 
     _ANTHROPIC_PATCHED = True
 
+
 def _create_sync_wrapper(original_method):
     """
     Create a wrapper for sync methods - called ONCE during patching.
     """
+
     @wraps(original_method)
     def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
@@ -62,10 +64,12 @@ def _create_sync_wrapper(original_method):
 
     return method_wrapper
 
+
 def _create_async_wrapper(original_method):
     """
     Create a wrapper for sync methods - called ONCE during patching.
     """
+
     @wraps(original_method)
     def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
@@ -75,6 +79,7 @@ def _create_async_wrapper(original_method):
         return patched(*args, **kwargs)
 
     return method_wrapper
+
 
 def _patch_sync_anthropic_client_method(original_method: Callable):
     @wraps(original_method)
@@ -107,6 +112,7 @@ def _patch_sync_anthropic_client_method(original_method: Callable):
 
     return patched_sync_anthropic_method
 
+
 def _patch_async_anthropic_client_method(original_method: Callable):
     @wraps(original_method)
     async def patched_async_anthropic_method(*args, **kwargs):
@@ -137,6 +143,7 @@ def _patch_async_anthropic_client_method(original_method: Callable):
         return await llm_generation(*args, **kwargs)
 
     return patched_async_anthropic_method
+
 
 def _update_all_attributes(
     input_parameters: InputParameters,
@@ -174,8 +181,7 @@ def _update_all_attributes(
 
 
 def __update_input_and_output_of_current_trace(
-    input_parameters: InputParameters,
-    output_parameters: OutputParameters
+    input_parameters: InputParameters, output_parameters: OutputParameters
 ):
     current_trace = current_trace_context.get()
     if current_trace:
@@ -185,6 +191,7 @@ def __update_input_and_output_of_current_trace(
             current_trace.output = output_parameters.output
 
     return
+
 
 def unpatch_anthropic_classes():
     """
@@ -199,7 +206,7 @@ def unpatch_anthropic_classes():
     try:
         from anthropic.resources.messages import Messages, AsyncMessages
 
-         # Restore original methods for Messages
+        # Restore original methods for Messages
         if hasattr(Messages, "create"):
             Messages.create = _ORIGINAL_METHODS["Messages.create"]
 

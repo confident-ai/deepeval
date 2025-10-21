@@ -129,7 +129,11 @@ def stringify_anthropic_content(content: Any) -> str:
         if t == "tool_result":
             tool_id = content.get("tool_use_id", "")
             tool_content = content.get("content")
-            content_str = stringify_anthropic_content(tool_content) if tool_content else ""
+            content_str = (
+                stringify_anthropic_content(tool_content)
+                if tool_content
+                else ""
+            )
             is_error = content.get("is_error", False)
             error_flag = ":error" if is_error else ""
             return f"[tool_result:{tool_id}{error_flag}:{content_str}]"

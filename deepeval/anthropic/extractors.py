@@ -7,9 +7,7 @@ from deepeval.anthropic.utils import stringify_anthropic_content
 from deepeval.test_case.llm_test_case import ToolCall
 
 
-def extract_input_parameters(
-    kwargs: Dict[str, Any]
-) -> InputParameters:
+def extract_input_parameters(kwargs: Dict[str, Any]) -> InputParameters:
     return extract_messages_api_input_parameters(kwargs)
 
 
@@ -22,11 +20,8 @@ def extract_messages_api_input_parameters(
     tools = kwargs.get("tools")
     messages = kwargs.get("messages")
     tool_descriptions = (
-        {
-            tool["name"]: tool["description"]
-            for tool in tools
-        }
-            if tools is not None
+        {tool["name"]: tool["description"] for tool in tools}
+        if tools is not None
         else None
     )
 
@@ -46,7 +41,7 @@ def extract_messages_api_input_parameters(
         input=stringify_anthropic_content(input_argument),
         messages=messages,
         tools=tools,
-        tool_descriptions=tool_descriptions
+        tool_descriptions=tool_descriptions,
     )
 
 
@@ -67,7 +62,9 @@ def extract_messages_api_output_parameters(
     output = str(message_response.content[0].text)
     tools_called = None
     anthropic_tool_calls = [
-        block for block in message_response.content if isinstance(block, ToolUseBlock)
+        block
+        for block in message_response.content
+        if isinstance(block, ToolUseBlock)
     ]
     if anthropic_tool_calls:
         tools_called = []
@@ -87,7 +84,7 @@ def extract_messages_api_output_parameters(
         type=message_response.type,
         usage={
             "input_tokens": message_response.usage.input_tokens,
-            "output_tokens": message_response.usage.output_tokens
+            "output_tokens": message_response.usage.output_tokens,
         },
         tools_called=tools_called,
     )
