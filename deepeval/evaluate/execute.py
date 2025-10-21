@@ -612,25 +612,17 @@ async def a_execute_test_cases(
                         tasks.append(asyncio.create_task(task))
 
                     await asyncio.sleep(async_config.throttle_value)
-            GATHER_TIMEOUT_SECONDS = (
-                settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-            )
 
             try:
-                await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=GATHER_TIMEOUT_SECONDS,
-                )
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True),
+                       timeout=_gather_timeout())
             except asyncio.TimeoutError:
                 # Cancel any still-pending tasks and drain them
                 for t in tasks:
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
-                logger.warning(
-                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
-                )
+                
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
@@ -703,16 +695,10 @@ async def a_execute_test_cases(
                     tasks.append(asyncio.create_task(task))
 
                 await asyncio.sleep(async_config.throttle_value)
-        GATHER_TIMEOUT_SECONDS = (
-            settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-            + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-        )
+        
 
-        try:
-            await asyncio.wait_for(
-                asyncio.gather(*tasks, return_exceptions=True),
-                timeout=GATHER_TIMEOUT_SECONDS,
-            )
+       await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True),
+                       timeout=_gather_timeout())
         except asyncio.TimeoutError:
             # Cancel any still-pending tasks and drain them
             for t in tasks:
@@ -1366,25 +1352,16 @@ async def a_execute_agentic_test_cases(
                     tasks.append(asyncio.create_task(task))
                     await asyncio.sleep(async_config.throttle_value)
 
-            GATHER_TIMEOUT_SECONDS = (
-                settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-            )
-
             try:
-                await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=GATHER_TIMEOUT_SECONDS,
-                )
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True),
+                       timeout=_gather_timeout())
             except asyncio.TimeoutError:
                 # Cancel any still-pending tasks and drain them
                 for t in tasks:
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
-                logger.warning(
-                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
-                )
+                
     else:
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -1534,24 +1511,18 @@ async def _a_execute_agentic_test_case(
 
         child_tasks = [dfs(trace, child) for child in span.children]
         if child_tasks:
-            GATHER_TIMEOUT_SECONDS = (
-                settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-            )
-
+            child_tasks = [asyncio.create_task(dfs(child)) for child in span.children]
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*child_tasks, return_exceptions=True),
-                    timeout=GATHER_TIMEOUT_SECONDS,
+                    timeout=_gather_timeout(),
+
                 )
             except asyncio.TimeoutError:
                 for t in child_tasks:
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*child_tasks, return_exceptions=True)
-                logger.warning(
-                    f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s."
-                )
 
     test_start_time = time.perf_counter()
 
@@ -2660,25 +2631,17 @@ async def _a_evaluate_traces(
             )
             eval_tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    GATHER_TIMEOUT_SECONDS = (
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-    )
 
     try:
         await asyncio.wait_for(
             asyncio.gather(*eval_tasks, return_exceptions=True),
-            timeout=GATHER_TIMEOUT_SECONDS,
+            timeout=_gather_timeout())
         )
     except asyncio.TimeoutError:
         for t in eval_tasks:
             if not t.done():
                 t.cancel()
         await asyncio.gather(*eval_tasks, return_exceptions=True)
-        logger.warning(
-            f"asyncio.gather timed out after {GATHER_TIMEOUT_SECONDS}s. "
-            "Cancelled pending eval_tasks and drained results."
-        )
 
 
 async def _evaluate_test_case_pairs(
@@ -2737,15 +2700,12 @@ async def _evaluate_test_case_pairs(
             )
             tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    GATHER_TIMEOUT_SECONDS = (
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-    )
+    
 
     try:
         await asyncio.wait_for(
             asyncio.gather(*tasks, return_exceptions=True),
-            timeout=GATHER_TIMEOUT_SECONDS,
+            timeout=_gather_timeout()
         )
     except asyncio.TimeoutError:
         # Cancel any still-pending tasks and drain them
