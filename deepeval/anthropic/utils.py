@@ -1,61 +1,7 @@
-import json
-import uuid
+from typing import Any, List
 
-from typing import Any, List, Optional
-
-from deepeval.openai.types import OutputParameters
-from deepeval.tracing.types import ToolSpan, TraceSpanStatus
-from deepeval.tracing.context import current_span_context
-from deepeval.utils import shorten, len_long
-
-
-_URL_MAX = 200
-_JSON_MAX = max(
-    len_long(), 400
-)  # <- make this bigger by increasing DEEPEVAL_MAXLEN_LONG above 400
-
-
-def _compact_dump(value: Any) -> str:
-    try:
-        dumped = json.dumps(
-            value, ensure_ascii=False, default=str, separators=(",", ":")
-        )
-    except Exception:
-        dumped = repr(value)
-    return shorten(dumped, max_len=_JSON_MAX)
-
-
-def _fmt_url(url: Optional[str]) -> str:
-    if not url:
-        return ""
-    if url.startswith("data:"):
-        return "[data-uri]"
-    return shorten(url, max_len=_URL_MAX)
-
-
-def create_child_tool_spans(output_parameters: OutputParameters):
-    if output_parameters.tools_called is None:
-        return
-
-    current_span = current_span_context.get()
-    for tool_called in output_parameters.tools_called:
-        tool_span = ToolSpan(
-            **{
-                "uuid": str(uuid.uuid4()),
-                "trace_uuid": current_span.trace_uuid,
-                "parent_uuid": current_span.uuid,
-                "start_time": current_span.start_time,
-                "end_time": current_span.start_time,
-                "status": TraceSpanStatus.SUCCESS,
-                "children": [],
-                "name": tool_called.name,
-                "input": tool_called.input_parameters,
-                "output": None,
-                "metrics": None,
-                "description": tool_called.description,
-            }
-        )
-        current_span.children.append(tool_span)
+from deepeval.openai.utils import _fmt_url, _compact_dump
+from deepeval.utils import shorten
 
 
 def stringify_anthropic_content(content: Any) -> str:
