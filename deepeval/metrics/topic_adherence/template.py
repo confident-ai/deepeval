@@ -1,7 +1,5 @@
-from typing import Dict, Union, List
+from typing import List
 import textwrap
-import json
-from deepeval.tracing.utils import make_json_serializable
 
 
 class TopicAdherenceTemplate:
