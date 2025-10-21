@@ -56,7 +56,7 @@ def _create_sync_wrapper(original_method):
     def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
         patched = _patch_sync_anthropic_client_method(
-            orig_method=bound_method
+            original_method=bound_method
         )
         return patched(*args, **kwargs)
 
@@ -70,7 +70,7 @@ def _create_async_wrapper(original_method):
     def method_wrapper(self, *args, **kwargs):
         bound_method = original_method.__get__(self, type(self))
         patched = _patch_async_anthropic_client_method(
-            orig_method=bound_method
+            original_method=bound_method
         )
         return patched(*args, **kwargs)
 

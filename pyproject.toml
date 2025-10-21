@@ -62,7 +62,6 @@ tiktoken = "*"
 pypdf = "*"
 docx2txt = "*"
 pandas = "*"
-pysqlite3-binary = "^0.5.4"
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"
 
@@ -83,6 +82,7 @@ markers = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
 
 [tool.poetry.group.integrations]
 optional = true
