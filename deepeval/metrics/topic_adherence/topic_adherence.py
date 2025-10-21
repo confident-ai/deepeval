@@ -8,21 +8,20 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     initialize_model,
 )
-from deepeval.test_case import ConversationalTestCase, Turn, TurnParams
-from deepeval.metrics.utils import print_tools_called
-from deepeval.metrics import BaseMetric
+from deepeval.test_case import ConversationalTestCase, TurnParams
+from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from .template import TopicAdherenceTemplate
-from .schema import RelevancyVerdict, QAPairs, QAPair
+from deepeval.metrics.topic_adherence.template import TopicAdherenceTemplate
+from deepeval.metrics.topic_adherence.schema import RelevancyVerdict, QAPairs, QAPair
+from deepeval.metrics.api import metric_data_manager
 
 
-class TopicAdherenceMetric(BaseMetric):
+class TopicAdherenceMetric(BaseConversationalMetric):
 
     _required_test_case_params = [
         TurnParams.ROLE,
         TurnParams.CONTENT,
-        TurnParams.TOOLS_CALLED,
     ]
 
     def __init__(
@@ -76,8 +75,8 @@ class TopicAdherenceMetric(BaseMetric):
                 True_Negatives = [0, []]
                 False_Positives = [0, []]
                 False_Negatives = [0, []]
-                for qa_pairs in interaction_pairs:
-                    for qa_pair in qa_pairs.qa_pairs:
+                for interaction_pair in interaction_pairs:
+                    for qa_pair in interaction_pair.qa_pairs:
                         qa_verdict: RelevancyVerdict = self._get_qa_verdict(
                             qa_pair
                         )
@@ -93,97 +92,111 @@ class TopicAdherenceMetric(BaseMetric):
                         elif qa_verdict.verdict == "FN":
                             False_Negatives[0] += 1
                             False_Negatives[1].append(qa_verdict.reason)
-                self.normalize_scores(
-                    True_Positives,
-                    True_Negatives,
-                    False_Positives,
-                    False_Negatives,
-                )
-                
-                # TODO: Use (TP + TN) / total instead of F1 score.
-                # Reason is because, this allows us to evaluate an agent's handling of question instead of just focusing on F1
 
-                precision, recall = self._get_precision_recall(
-                    True_Positives,
-                    True_Negatives,
-                    False_Positives,
-                    False_Negatives,
-                )
-                if precision + recall > 0:
-                    self.score = (2 * precision * recall) / (precision + recall)
-                else:
-                    self.score = 0
+                self.score = self._get_score(True_Positives, True_Negatives, False_Positives, False_Negatives)
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(
-                    True_Positives,
-                    True_Negatives,
-                    False_Positives,
-                    False_Negatives,
+                    True_Positives, True_Negatives, False_Positives, False_Negatives
                 )
+
+                self.verbose_logs = construct_verbose_logs(
+                    self,
+                    steps=[
+                        f"Interaction Pairs: \n{prettify_list(interaction_pairs)} \n",
+                        f"Truth Table:",
+                        f"\nTrue Positives:",
+                        f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n"
+                        f"\nTrue Negatives: ",
+                        f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n"
+                        f"\nFalse Positives: ",
+                        f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n"
+                        f"\nFalse Negatives: ",
+                        f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n\n"
+                        f"Final Score: {self.score}",
+                        f"Final Reason: {self.reason}"
+                    ],
+                )
+
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
+
                 return self.score
 
-    async def a_measure(self, test_case, *args, **kwargs):
+    async def a_measure(
+        self,
+        test_case: ConversationalTestCase,
+        _show_indicator: bool = True,
+        _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
+    ):
         check_conversational_test_case_params(
             test_case, self._required_test_case_params, self
         )
 
         self.evaluation_cost = 0 if self.using_native_model else None
 
-        unit_interactions = get_unit_interactions(test_case.turns)
-        interaction_pairs = await self._a_get_qa_pairs(unit_interactions)
-        True_Positives = [0, []]
-        True_Negatives = [0, []]
-        False_Positives = [0, []]
-        False_Negatives = [0, []]
-        for qa_pairs in interaction_pairs:
-            for qa_pair in qa_pairs.qa_pairs:
-                qa_verdict: RelevancyVerdict = self._get_qa_verdict(qa_pair)
-                if qa_verdict.verdict == "TP":
-                    True_Positives[0] += 1
-                    True_Positives[1].append(qa_verdict.reason)
-                elif qa_verdict.verdict == "TN":
-                    True_Negatives[0] += 1
-                    True_Negatives[1].append(qa_verdict.reason)
-                elif qa_verdict.verdict == "FP":
-                    False_Positives[0] += 1
-                    False_Positives[1].append(qa_verdict.reason)
-                elif qa_verdict.verdict == "FN":
-                    False_Negatives[0] += 1
-                    False_Negatives[1].append(qa_verdict.reason)
-        self.normalize_scores(
-            True_Positives, True_Negatives, False_Positives, False_Negatives
-        )
-        precision, recall = self._get_precision_recall(
-            True_Positives, True_Negatives, False_Positives, False_Negatives
-        )
-        if precision + recall > 0:
-            self.score = (2 * precision * recall) / (precision + recall)
-        else:
-            self.score = 0
-        self.success = self.score >= self.threshold
-        self.reason = await self._a_generate_reason(
-            True_Positives, True_Negatives, False_Positives, False_Negatives
-        )
-        return self.score
+        with metric_progress_indicator(
+            self, async_mode=True, _show_indicator=_show_indicator
+        ):
+            unit_interactions = get_unit_interactions(test_case.turns)
+            interaction_pairs = await self._a_get_qa_pairs(unit_interactions)
+            True_Positives = [0, []]
+            True_Negatives = [0, []]
+            False_Positives = [0, []]
+            False_Negatives = [0, []]
+            for interaction_pair in interaction_pairs:
+                for qa_pair in interaction_pair.qa_pairs:
+                    qa_verdict: RelevancyVerdict = self._get_qa_verdict(qa_pair)
+                    if qa_verdict.verdict == "TP":
+                        True_Positives[0] += 1
+                        True_Positives[1].append(qa_verdict.reason)
+                    elif qa_verdict.verdict == "TN":
+                        True_Negatives[0] += 1
+                        True_Negatives[1].append(qa_verdict.reason)
+                    elif qa_verdict.verdict == "FP":
+                        False_Positives[0] += 1
+                        False_Positives[1].append(qa_verdict.reason)
+                    elif qa_verdict.verdict == "FN":
+                        False_Negatives[0] += 1
+                        False_Negatives[1].append(qa_verdict.reason)
 
-    def normalize_scores(
-        self, True_Positives, True_Negatives, False_Positives, False_Negatives
-    ):
-        total = sum(
-            [
-                True_Positives[0],
-                True_Negatives[0],
-                False_Positives[0],
-                False_Negatives[0],
-            ]
-        )
-        True_Positives[0] /= total
-        True_Negatives[0] /= total
-        False_Positives[0] /= total
-        False_Negatives[0] /= total
-        True_Positives[0] += True_Negatives[0]
+            self.score = self._get_score(True_Positives, True_Negatives, False_Positives, False_Negatives)
+            self.success = self.score >= self.threshold
+            self.reason = await self._a_generate_reason(
+                True_Positives, True_Negatives, False_Positives, False_Negatives
+            )
+
+            self.verbose_logs = construct_verbose_logs(
+                self,
+                steps=[
+                    f"Interaction Pairs: \n{prettify_list(interaction_pairs)} \n",
+                    f"Truth Table:",
+                    f"\nTrue Positives:",
+                    f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n"
+                    f"\nTrue Negatives: ",
+                    f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n"
+                    f"\nFalse Positives: ",
+                    f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n"
+                    f"\nFalse Negatives: ",
+                    f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n\n"
+                    f"Final Score: {self.score}",
+                    f"Final Reason: {self.reason}"
+                ],
+            )
+
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
+
+            return self.score
 
     def _generate_reason(self, TP, TN, FP, FN):
+        total = TP[0] + TN[0] + FP[0] + FN[0]
+        if total <= 0:
+            return "There were no question-answer pairs to evaluate. Please enable verbose logs to look at the evaluation steps taken"
         prompt = TopicAdherenceTemplate.generate_reason(
             self.success, self.score, self.threshold, TP, TN, FP, FN
         )
@@ -207,12 +220,12 @@ class TopicAdherenceMetric(BaseMetric):
             res = await self.model.a_generate(prompt)
             return res
 
-    def _get_precision_recall(self, TP, TN, FP, FN) -> Tuple[int, int]:
-        precision_total = TP[0] + FP[0]
-        recall_total = TP[0] + FN[0]
-        precision = TP[0] / (precision_total if precision_total > 0 else 1)
-        recall = TP[0] / (recall_total if recall_total > 0 else 1)
-        return precision, recall
+    def _get_score(self, TP, TN, FP, FN) -> float:
+        true_values = TP[0] + TN[0]
+        total = TP[0] + TN[0] + FP[0] + FN[0]
+        if total <= 0:
+            return 0
+        return true_values / total
 
     def _get_qa_verdict(self, qa_pair: QAPair) -> RelevancyVerdict:
         prompt = TopicAdherenceTemplate.get_qa_pair_verdict(
@@ -307,6 +320,16 @@ class TopicAdherenceMetric(BaseMetric):
                 qa_pairs.append(new_pair)
 
         return qa_pairs
+    
+    def is_successful(self) -> bool:
+        if self.error is not None:
+            self.success = False
+        else:
+            try:
+                self.score >= self.threshold
+            except:
+                self.success = False
+        return self.success
 
     @property
     def __name__(self):

@@ -136,7 +136,7 @@ class TopicAdherenceTemplate:
     def generate_reason(success, score, threshold, TP, TN, FP, FN) -> str:
         return textwrap.dedent(
             f"""You are given a score for a metric that calculates whether an agent has adhered to it's topics. 
-                You are also given a list of reasons for the truth table values that were used to calculate precision and recall scores.
+                You are also given a list of reasons for the truth table values that were used to calculate final score.
                 
                 Your task is to go through these reasons and give a single final explaination that clearly explains why this metric has failed or passed.
 
@@ -151,9 +151,7 @@ class TopicAdherenceTemplate:
                 False positives reasons: {FP[1]}
                 False negatives reasons: {FN[1]}
 
-                Score calculation = Precision * Recall * 2 / Precision + Recall
-                Precision = Number of true positives / Number of true positives + Number of false positives
-                Recall = Number of true positives / Number of true positives + Number of false negatives
+                Score calculation = Number of True Positives + Number of True Negatives / Total number of table entries
 
                 **
                 IMPORTANT: Now generate a comprehensive reason that explains why this metric failed. You MUST output only the reason as a string and nothing else.
