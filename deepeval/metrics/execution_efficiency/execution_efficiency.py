@@ -1,10 +1,9 @@
 from typing import Optional, List, Tuple, Union, Dict
 
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import get_or_create_event_loop
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
-    get_unit_interactions,
     check_llm_test_case_params,
     initialize_model,
 )
