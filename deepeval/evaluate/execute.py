@@ -490,14 +490,10 @@ async def a_execute_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
-                )
-            except asyncio.TimeoutError:
-
-                raise
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     global_test_run_cache_manager.disable_write_cache = (
         cache_config.write_cache is False
@@ -1286,14 +1282,10 @@ async def a_execute_agentic_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
-                )
-            except asyncio.TimeoutError:
-
-                raise
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = cache_config.write_cache
@@ -2553,14 +2545,10 @@ async def _a_evaluate_traces(
 
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
-                )
-            except asyncio.TimeoutError:
-
-                raise
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     eval_tasks = []
     # Here, we will work off a fixed-set copy to avoid surprises from potential
@@ -2626,14 +2614,10 @@ async def _evaluate_test_case_pairs(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            try:
-                return await asyncio.wait_for(
-                    func(*args, **kwargs),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
-                )
-            except asyncio.TimeoutError:
-
-                raise
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     tasks = []
     for count, test_case_pair in enumerate(test_case_pairs):

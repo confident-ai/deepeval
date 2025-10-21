@@ -42,15 +42,10 @@ class StalledMetric(BaseMetric):
 
 
 @pytest.mark.asyncio
-async def test_per_task_timeout_via_a_execute_test_cases(monkeypatch):
+async def test_per_task_timeout_via_a_execute_test_cases(monkeypatch, settings):
     """Test that per-task timeout works in a_execute_test_cases"""
-    # Import settings to patch it
-    from deepeval.config.settings import get_settings
-
-    settings = get_settings()
-
-    # Set small timeout for the test
-    monkeypatch.setattr(settings, "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS", 2)
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS = 2
 
     tc = LLMTestCase(input="hello", actual_output="test")
     metric = StalledMetric()
