@@ -48,7 +48,7 @@ def generate_response2(input: str) -> str:
 
 goldens = [
     Golden(input="What is application of useState() in React?"),
-    Golden(input="Compare Repeatable Reads vs Read Committed as Isolation level for PostgreSQL."),
+    Golden(input="Compare Repeatable Read vs Read Committed as Isolation level for PostgreSQL."),
 ]
 
 

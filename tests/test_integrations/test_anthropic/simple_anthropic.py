@@ -1,5 +1,3 @@
-import asyncio
-
 from anthropic import Anthropic, AsyncAnthropic
 from deepeval.tracing import trace, observe
 from deepeval.prompt import Prompt

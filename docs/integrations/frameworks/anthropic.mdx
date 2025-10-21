@@ -1,0 +1,93 @@
+---
+id: anthropic
+title: Anthropic
+sidebar_label: Anthropic
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+`deepeval` provides integration with Anthropic's Claude models, enabling evaluation and tracing of your Anthropic applications through the `Anthropic` client wrapper. With deepeval, you can capture both end-to-end and component-level metrics, monitor quality in production and have insights into your Claude powered workflows.
+
+## End-to-End Evals
+
+Getting started with evaluating your Claude powered applications is easy, just swap out your existing `Anthropic` client for the `Anthropic` client provided by `deepeval`. Then, specify the `metrics` you want to track within the `trace` context manager to automatically capture evaluation data, insights and spans for your application.
+
+<Tabs groupId="anthropic">
+<TabItem value="messages" label="Messages">
+
+```python title="main.py" showLineNumbers
+from deepeval.anthropic import Anthropic
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace
+
+client = Anthropic()
+
+goldens = [
+    Golden(input="What is application of useState() in React?"),
+    Golden(input="Compare Repeatable Read vs Read Committed as Isolation level for PostgreSQL."),
+]
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
+    with trace(
+        metrics=[AnswerRelevancyMetric()],
+        expected_output=golden.expected_output,
+    ):
+        client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            system="You are a helpful assistant.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": golden.input
+                }
+            ],
+        )
+```
+
+</TabItem>
+<TabItem value="async-messages" label="AsyncMessages">
+
+```python title="main.py" showLineNumbers
+import asyncio
+
+from deepeval.anthropic import AsyncAnthropic
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.tracing import trace
+
+async_client = AsyncAnthropic()
+
+async def run_claude(input):
+    with trace(
+        llm_metrics=[AnswerRelevancyMetric(), BiasMetric()],
+        expected_output=golden.expected_output,
+    ):
+        async_client.messages.create(
+            model="claude-sonnet-4-5",
+            max_tokens=4096,
+            system="You are a helpful assistant.",
+            messages=[
+                {
+                    "role": "user",
+                    "content": golden.input
+                }
+            ],
+        )
+
+goldens = [
+    Golden(input="What is application of useState() in React?"),
+    Golden(input="Compare Repeatable Read vs Read Committed as Isolation level for PostgreSQL."),
+]
+dataset = EvaluationDataset(goldens=goldens)
+
+for golden in dataset.evals_iterator():
+    task = asyncio.create_task(run_claude(input=golden.input))
+    dataset.evaluate(task)
+```
+
+</TabItem>
+</Tabs>
