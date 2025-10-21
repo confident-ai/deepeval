@@ -150,7 +150,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         self.evaluation_cost = 0 if self.using_native_model else None
 
         with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
+            self, async_mode=True, _show_indicator=_show_indicator, _in_component=_in_component,
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
             interaction_pairs = await self._a_get_qa_pairs(unit_interactions)

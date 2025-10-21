@@ -28,6 +28,7 @@ from .json_correctness.json_correctness import JsonCorrectnessMetric
 from .prompt_alignment.prompt_alignment import PromptAlignmentMetric
 from .task_completion.task_completion import TaskCompletionMetric
 from .topic_adherence.topic_adherence import TopicAdherenceMetric
+from .execution_efficiency.execution_efficiency import ExecutionEfficiencyMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
 from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
@@ -100,7 +101,8 @@ __all__ = [
     "ArgumentCorrectnessMetric",
     "KnowledgeRetentionMetric",
     # Agentic metrics
-    "TopicAdherenceMetric"
+    "TopicAdherenceMetric",
+    "ExecutionEfficiencyMetric",
     # Conversational metrics
     "TurnRelevancyMetric",
     "ConversationCompletenessMetric",
