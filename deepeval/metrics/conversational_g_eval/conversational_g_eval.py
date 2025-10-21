@@ -192,22 +192,18 @@ class ConversationalGEval(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate(
-                prompt, schema=cgschema.Steps
-            )
+        result, cost = await self.model.a_generate_with_schema(
+            prompt, schema=cgschema.Steps
+        )
+        if self.evaluation_cost is not None:
             self.evaluation_cost += cost
-            return res.steps
+
+        if isinstance(result, cgschema.Steps):
+            steps: List[str] = result.steps
         else:
-            try:
-                res: cgschema.Steps = await self.model.a_generate(
-                    prompt, schema=cgschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = await self.model.a_generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+            steps = trimAndLoadJson(result, self)["steps"]
+
+        return steps
 
     def _generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -219,20 +215,19 @@ class ConversationalGEval(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=cgschema.Steps)
+
+        result, cost = self.model.generate_with_schema(
+            prompt, schema=cgschema.Steps
+        )
+        if self.evaluation_cost is not None:
             self.evaluation_cost += cost
-            return res.steps
+
+        if isinstance(result, cgschema.Steps):
+            steps: List[str] = result.steps
         else:
-            try:
-                res: cgschema.Steps = self.model.generate(
-                    prompt, schema=cgschema.Steps
-                )
-                return res.steps
-            except TypeError:
-                res = self.model.generate(prompt)
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+            steps = trimAndLoadJson(result, self)["steps"]
+
+        return steps
 
     async def _a_evaluate(
         self, test_case: ConversationalTestCase
@@ -287,22 +282,19 @@ class ConversationalGEval(BaseConversationalMetric):
         except (
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(
-                    prompt, schema=cgschema.ReasonScore
-                )
+            result, cost = await self.model.a_generate_with_schema(
+                prompt, schema=cgschema.ReasonScore
+            )
+            if self.evaluation_cost is not None:
                 self.evaluation_cost += cost
-                return res.score, res.reason
+
+            if isinstance(result, cgschema.ReasonScore):
+                score, reason = result.score, result.reason
             else:
-                try:
-                    res: cgschema.ReasonScore = await self.model.a_generate(
-                        prompt, schema=cgschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+                data = trimAndLoadJson(result, self)
+                score, reason = data["score"], data["reason"]
+
+            return score, reason
 
     def evaluate(
         self, test_case: ConversationalTestCase
@@ -356,22 +348,19 @@ class ConversationalGEval(BaseConversationalMetric):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = self.model.generate(
-                    prompt, schema=cgschema.ReasonScore
-                )
+            result, cost = self.model.generate_with_schema(
+                prompt, schema=cgschema.ReasonScore
+            )
+            if self.evaluation_cost is not None:
                 self.evaluation_cost += cost
-                return res.score, res.reason
+
+            if isinstance(result, cgschema.ReasonScore):
+                score, reason = result.score, result.reason
             else:
-                try:
-                    res: cgschema.ReasonScore = self.model.generate(
-                        prompt, schema=cgschema.ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+                data = trimAndLoadJson(result, self)
+                score, reason = data["score"], data["reason"]
+
+            return score, reason
 
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion
