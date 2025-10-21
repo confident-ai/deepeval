@@ -57,6 +57,7 @@ from deepeval.metrics import (
     BaseConversationalMetric,
     BaseMultimodalMetric,
     TaskCompletionMetric,
+    ExecutionEfficiencyMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -1046,7 +1047,7 @@ def execute_agentic_test_cases(
                     if not span.metrics:
                         return
                     has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
+                        (isinstance(metric, TaskCompletionMetric) or isinstance(metric, ExecutionEfficiencyMetric))
                         for metric in span.metrics
                     )
 
@@ -1142,7 +1143,7 @@ def execute_agentic_test_cases(
                 else:
                     if current_trace.metrics:
                         has_task_completion = any(
-                            isinstance(metric, TaskCompletionMetric)
+                            (isinstance(metric, TaskCompletionMetric) or isinstance(metric, ExecutionEfficiencyMetric))
                             for metric in current_trace.metrics
                         )
 
@@ -1547,7 +1548,7 @@ async def _a_execute_span_test_case(
         return
 
     has_task_completion = any(
-        isinstance(metric, TaskCompletionMetric) for metric in metrics
+        (isinstance(metric, TaskCompletionMetric) or isinstance(metric, ExecutionEfficiencyMetric)) for metric in metrics
     )
 
     llm_test_case = None
@@ -1643,7 +1644,7 @@ async def _a_execute_trace_test_case(
         return
 
     has_task_completion = any(
-        isinstance(metric, TaskCompletionMetric) for metric in metrics
+        (isinstance(metric, TaskCompletionMetric) or isinstance(metric, ExecutionEfficiencyMetric)) for metric in metrics
     )
 
     llm_test_case = None
@@ -1853,7 +1854,7 @@ def execute_agentic_test_cases_from_loop(
                         return
 
                     has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
+                        (isinstance(metric, TaskCompletionMetric) or isinstance(metric, ExecutionEfficiencyMetric))
                         for metric in metrics
                     )
 
@@ -1952,7 +1953,7 @@ def execute_agentic_test_cases_from_loop(
                 else:
                     if current_trace.metrics:
                         has_task_completion = any(
-                            isinstance(metric, TaskCompletionMetric)
+                            (isinstance(metric, TaskCompletionMetric) or isinstance(metric, ExecutionEfficiencyMetric))
                             for metric in current_trace.metrics
                         )
 
