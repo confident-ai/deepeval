@@ -561,6 +561,7 @@ class TraceManager:
                         endpoint=Endpoints.TRACES_ENDPOINT,
                         body=body,
                     )
+                    print(body)
                     qs = self._trace_queue.qsize()
                     self._print_trace_status(
                         trace_worker_status=TraceWorkerStatus.SUCCESS,
