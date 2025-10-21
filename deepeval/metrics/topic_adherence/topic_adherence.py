@@ -13,7 +13,11 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.topic_adherence.template import TopicAdherenceTemplate
-from deepeval.metrics.topic_adherence.schema import RelevancyVerdict, QAPairs, QAPair
+from deepeval.metrics.topic_adherence.schema import (
+    RelevancyVerdict,
+    QAPairs,
+    QAPair,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -93,10 +97,18 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                             False_Negatives[0] += 1
                             False_Negatives[1].append(qa_verdict.reason)
 
-                self.score = self._get_score(True_Positives, True_Negatives, False_Positives, False_Negatives)
+                self.score = self._get_score(
+                    True_Positives,
+                    True_Negatives,
+                    False_Positives,
+                    False_Negatives,
+                )
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(
-                    True_Positives, True_Negatives, False_Positives, False_Negatives
+                    True_Positives,
+                    True_Negatives,
+                    False_Positives,
+                    False_Negatives,
                 )
 
                 self.verbose_logs = construct_verbose_logs(
@@ -113,7 +125,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                         f"\nFalse Negatives: ",
                         f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n\n"
                         f"Final Score: {self.score}",
-                        f"Final Reason: {self.reason}"
+                        f"Final Reason: {self.reason}",
                     ],
                 )
 
@@ -162,7 +174,9 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                         False_Negatives[0] += 1
                         False_Negatives[1].append(qa_verdict.reason)
 
-            self.score = self._get_score(True_Positives, True_Negatives, False_Positives, False_Negatives)
+            self.score = self._get_score(
+                True_Positives, True_Negatives, False_Positives, False_Negatives
+            )
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(
                 True_Positives, True_Negatives, False_Positives, False_Negatives
@@ -182,7 +196,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     f"\nFalse Negatives: ",
                     f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n\n"
                     f"Final Score: {self.score}",
-                    f"Final Reason: {self.reason}"
+                    f"Final Reason: {self.reason}",
                 ],
             )
 
@@ -320,7 +334,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                 qa_pairs.append(new_pair)
 
         return qa_pairs
-    
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False
