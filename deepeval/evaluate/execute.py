@@ -615,7 +615,7 @@ async def a_execute_test_cases(
 
             try:
                 await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
+                    asyncio.gather(*tasks),
                     timeout=_gather_timeout(),
                 )
             except asyncio.TimeoutError:
@@ -624,6 +624,7 @@ async def a_execute_test_cases(
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
+                raise
 
     else:
         for test_case in test_cases:
@@ -700,7 +701,7 @@ async def a_execute_test_cases(
 
         try:
             await asyncio.wait_for(
-                asyncio.gather(*tasks, return_exceptions=True),
+                asyncio.gather(*tasks),
                 timeout=_gather_timeout(),
             )
         except asyncio.TimeoutError:
@@ -709,7 +710,7 @@ async def a_execute_test_cases(
                 if not t.done():
                     t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-            # Optional: log a concise warning referencing GATHER_TIMEOUT_SECONDS
+            raise
 
     return test_results
 
@@ -1358,7 +1359,7 @@ async def a_execute_agentic_test_cases(
 
             try:
                 await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
+                    asyncio.gather(*tasks),
                     timeout=_gather_timeout(),
                 )
             except asyncio.TimeoutError:
@@ -1367,6 +1368,7 @@ async def a_execute_agentic_test_cases(
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*tasks, return_exceptions=True)
+                raise
 
     else:
         for golden in goldens:
@@ -1515,20 +1517,21 @@ async def _a_execute_agentic_test_case(
         if _skip_metrics_for_error(span=span, trace=trace):
             return
 
-        child_tasks = [dfs(trace, child) for child in span.children]
+        child_tasks = [
+            asyncio.create_task(dfs(trace, child)) for child in span.children
+        ]
         if child_tasks:
-            child_tasks = [asyncio.create_task(dfs(child)) for child in span.children]
             try:
                 await asyncio.wait_for(
-                    asyncio.gather(*child_tasks, return_exceptions=True),
+                    asyncio.gather(*child_tasks),
                     timeout=_gather_timeout(),
-
                 )
             except asyncio.TimeoutError:
                 for t in child_tasks:
                     if not t.done():
                         t.cancel()
                 await asyncio.gather(*child_tasks, return_exceptions=True)
+                raise
 
     test_start_time = time.perf_counter()
 
@@ -2640,7 +2643,7 @@ async def _a_evaluate_traces(
 
     try:
         await asyncio.wait_for(
-            asyncio.gather(*eval_tasks, return_exceptions=True),
+            asyncio.gather(*eval_tasks),
             timeout=_gather_timeout(),
         )
     except asyncio.TimeoutError:
@@ -2648,6 +2651,7 @@ async def _a_evaluate_traces(
             if not t.done():
                 t.cancel()
         await asyncio.gather(*eval_tasks, return_exceptions=True)
+        raise
 
 
 async def _evaluate_test_case_pairs(
@@ -2709,7 +2713,7 @@ async def _evaluate_test_case_pairs(
 
     try:
         await asyncio.wait_for(
-            asyncio.gather(*tasks, return_exceptions=True),
+            asyncio.gather(*tasks),
             timeout=_gather_timeout(),
         )
     except asyncio.TimeoutError:
@@ -2718,6 +2722,7 @@ async def _evaluate_test_case_pairs(
             if not t.done():
                 t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+        raise
 
 
 def _execute_metric(
