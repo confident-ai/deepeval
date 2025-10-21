@@ -34,7 +34,7 @@ response = generate_response("Hey, how are you?")
     type="llm",
     model="claude-sonnet-4-5"
 )
-def generate_response(input: str) -> str:
+def generate_response2(input: str) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=4096,
@@ -61,5 +61,5 @@ goldens = [
 dataset = EvaluationDataset(goldens=goldens)
 
 for golden in dataset.evals_iterator():
-    result = generate_response(golden.input)
+    result = generate_response2(golden.input)
     print(f"Input: {golden.input}\nResponse: {result}\n{'-'*50}")
