@@ -6,14 +6,17 @@ from deepeval.test_case.llm_test_case import ToolCall
 
 class InputParameters(BaseModel):
     model: Optional[str] = None
+    system: Optional[str] = None
     max_tokens: Optional[int] = None
     tools: Optional[List[Dict[str, Any]]] = None
+    input: Optional[str] = None
     messages: Optional[List[Dict[str, Any]]] = None
     tool_descriptions: Optional[Dict[str, str]] = None
 
 
 class OutputParameters(BaseModel):
     content: Optional[Any] = None
+    output: Optional[str] = None
     role: Optional[str] = None
     type: Optional[str] = None
     usage: Optional[Dict[str, int]] = None

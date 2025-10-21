@@ -13,11 +13,8 @@ def generate_response(input: str) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=1024,
+        system="You are a helpful assistant.",
         messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful assistant.",
-            },
             {
                 "role": "user",
                 "content": input,
@@ -38,11 +35,8 @@ def generate_response2(input: str) -> str:
     response = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=4096,
+        system="You are a helpful assistant.",
         messages=[
-            {
-                "role": "system",
-                "content": "You are a helpful assistant."
-            },
             {
                 "role": "user",
                 "content": "Hello, Claude"

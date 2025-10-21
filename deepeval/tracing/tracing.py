@@ -18,6 +18,7 @@ import random
 import atexit
 import queue
 import uuid
+from anthropic import Anthropic
 from openai import OpenAI
 from rich.console import Console
 from rich.progress import Progress
@@ -37,7 +38,7 @@ from deepeval.tracing.api import (
     TraceSpanApiStatus,
 )
 from deepeval.telemetry import capture_send_trace
-from deepeval.tracing.patchers import patch_openai_client
+from deepeval.tracing.patchers import patch_anthropic_client, patch_openai_client
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
@@ -107,6 +108,7 @@ class TraceManager:
 
         self.sampling_rate = settings.CONFIDENT_TRACE_SAMPLE_RATE
         validate_sampling_rate(self.sampling_rate)
+        self.anthropic_client = None
         self.openai_client = None
         self.tracing_enabled = True
 
@@ -145,6 +147,7 @@ class TraceManager:
         environment: Optional[str] = None,
         sampling_rate: Optional[float] = None,
         confident_api_key: Optional[str] = None,
+        anthropic_client: Optional[Anthropic] = None,
         openai_client: Optional[OpenAI] = None,
         tracing_enabled: Optional[bool] = None,
     ) -> None:
@@ -161,6 +164,9 @@ class TraceManager:
         if openai_client is not None:
             self.openai_client = openai_client
             patch_openai_client(openai_client)
+        if anthropic_client is not None:
+            self.anthropic_client = anthropic_client
+            patch_anthropic_client(anthropic_client)
         if tracing_enabled is not None:
             self.tracing_enabled = tracing_enabled
 

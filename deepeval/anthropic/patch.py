@@ -161,8 +161,8 @@ def _update_all_attributes(
     )
     llm_context = current_llm_context.get()
     update_llm_span(
-        input_token_count=output_parameters.prompt_tokens,
-        output_token_count=output_parameters.completion_tokens,
+        input_token_count=output_parameters.usage["input_tokens"],
+        output_token_count=output_parameters.usage["output_tokens"],
         prompt=llm_context.prompt,
     )
     if output_parameters.tools_called:
@@ -180,13 +180,13 @@ def __update_input_and_output_of_current_trace(
     current_trace = current_trace_context.get()
     if current_trace:
         if current_trace.input is None:
-            current_trace.input = input_parameters.messages
+            current_trace.input = input_parameters.input
         if current_trace.output is None:
-            current_trace.output = output_parameters.content
+            current_trace.output = output_parameters.output
 
     return
 
-def unpatch_anthropic_client():
+def unpatch_anthropic_classes():
     """
     Restore Anthropic resource classes to their original state.
     """
