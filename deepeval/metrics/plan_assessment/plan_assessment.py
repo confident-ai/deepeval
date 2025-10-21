@@ -15,8 +15,14 @@ from deepeval.metrics.execution_efficiency.template import (
     ExecutionEfficiencyTemplate,
 )
 from deepeval.metrics.execution_efficiency.schema import Task
-from deepeval.metrics.plan_assessment.schema import AgentPlan, PlanAdherenceScore, PlanQualityScore
-from deepeval.metrics.plan_assessment.template import PlanAdherenceEvaluationTemplate
+from deepeval.metrics.plan_assessment.schema import (
+    AgentPlan,
+    PlanAdherenceScore,
+    PlanQualityScore,
+)
+from deepeval.metrics.plan_assessment.template import (
+    PlanAdherenceEvaluationTemplate,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -74,11 +80,19 @@ class PlanAssessmentMetric(BaseMetric):
             else:
                 task = self._extract_task_from_trace(test_case)
                 agent_plan = self._extract_plan_from_trace(test_case)
-                plan_adherence_score = self._get_plan_adherence_score(task, agent_plan.plan, test_case)
-                plan_quality_score = self._get_plan_quality_score(task, agent_plan.plan, test_case)
-                self.score = (plan_adherence_score.score + plan_quality_score.score) / 2
+                plan_adherence_score = self._get_plan_adherence_score(
+                    task, agent_plan.plan, test_case
+                )
+                plan_quality_score = self._get_plan_quality_score(
+                    task, agent_plan.plan, test_case
+                )
+                self.score = (
+                    plan_adherence_score.score + plan_quality_score.score
+                ) / 2
                 self.success = self.score >= self.threshold
-                self.reason = self._generate_reason(plan_adherence_score, plan_quality_score)
+                self.reason = self._generate_reason(
+                    plan_adherence_score, plan_quality_score
+                )
 
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -98,7 +112,6 @@ class PlanAssessmentMetric(BaseMetric):
                     )
 
                 return self.score
-
 
     async def a_measure(
         self,
@@ -121,11 +134,19 @@ class PlanAssessmentMetric(BaseMetric):
         ):
             task = await self._a_extract_task_from_trace(test_case)
             agent_plan = await self._a_extract_plan_from_trace(test_case)
-            plan_adherence_score = await self._a_get_plan_adherence_score(task, agent_plan.plan, test_case)
-            plan_quality_score = await self._a_get_plan_quality_score(task, agent_plan.plan, test_case)
-            self.score = (plan_adherence_score.score + plan_quality_score.score) / 2
+            plan_adherence_score = await self._a_get_plan_adherence_score(
+                task, agent_plan.plan, test_case
+            )
+            plan_quality_score = await self._a_get_plan_quality_score(
+                task, agent_plan.plan, test_case
+            )
+            self.score = (
+                plan_adherence_score.score + plan_quality_score.score
+            ) / 2
             self.success = self.score >= self.threshold
-            self.reason = self._generate_reason(plan_adherence_score, plan_quality_score)
+            self.reason = self._generate_reason(
+                plan_adherence_score, plan_quality_score
+            )
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -145,12 +166,10 @@ class PlanAssessmentMetric(BaseMetric):
                 )
 
             return self.score
-    
+
     def _get_plan_adherence_score(self, task, plan, test_case):
         prompt = PlanAdherenceEvaluationTemplate.evaluate_adherence(
-            task, 
-            "\n".join(plan),
-            test_case._trace_dict
+            task, "\n".join(plan), test_case._trace_dict
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=PlanAdherenceScore)
@@ -158,37 +177,39 @@ class PlanAssessmentMetric(BaseMetric):
             return res
         else:
             try:
-                res: Task = self.model.generate(prompt, schema=PlanAdherenceScore)
+                res: Task = self.model.generate(
+                    prompt, schema=PlanAdherenceScore
+                )
                 return res
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return PlanAdherenceScore(**data)
-            
+
     async def _a_get_plan_adherence_score(self, task, plan, test_case):
         prompt = PlanAdherenceEvaluationTemplate.evaluate_adherence(
-            task, 
-            "\n".join(plan),
-            test_case._trace_dict
+            task, "\n".join(plan), test_case._trace_dict
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=PlanAdherenceScore)
+            res, cost = await self.model.a_generate(
+                prompt, schema=PlanAdherenceScore
+            )
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: Task = await self.model.a_generate(prompt, schema=PlanAdherenceScore)
+                res: Task = await self.model.a_generate(
+                    prompt, schema=PlanAdherenceScore
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return PlanAdherenceScore(**data)
-            
+
     def _get_plan_quality_score(self, task, plan, test_case):
         prompt = PlanAdherenceEvaluationTemplate.evaluate_plan_quality(
-            task, 
-            "\n".join(plan),
-            test_case._trace_dict
+            task, "\n".join(plan), test_case._trace_dict
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=PlanQualityScore)
@@ -202,26 +223,27 @@ class PlanAssessmentMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return PlanQualityScore(**data)
-            
+
     async def _a_get_plan_quality_score(self, task, plan, test_case):
         prompt = PlanAdherenceEvaluationTemplate.evaluate_plan_quality(
-            task, 
-            "\n".join(plan),
-            test_case._trace_dict
+            task, "\n".join(plan), test_case._trace_dict
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=PlanQualityScore)
+            res, cost = await self.model.a_generate(
+                prompt, schema=PlanQualityScore
+            )
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: Task = await self.model.a_generate(prompt, schema=PlanQualityScore)
+                res: Task = await self.model.a_generate(
+                    prompt, schema=PlanQualityScore
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return PlanQualityScore(**data)
-        
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
         prompt = PlanAdherenceEvaluationTemplate.extract_plan_from_trace(
@@ -239,8 +261,10 @@ class PlanAssessmentMetric(BaseMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return AgentPlan(**data)
-            
-    async def _a_extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
+
+    async def _a_extract_plan_from_trace(
+        self, test_case: LLMTestCase
+    ) -> AgentPlan:
         prompt = PlanAdherenceEvaluationTemplate.extract_plan_from_trace(
             test_case._trace_dict
         )
@@ -250,7 +274,9 @@ class PlanAssessmentMetric(BaseMetric):
             return res
         else:
             try:
-                res: Task = await self.model.a_generate(prompt, schema=AgentPlan)
+                res: Task = await self.model.a_generate(
+                    prompt, schema=AgentPlan
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -290,14 +316,18 @@ class PlanAssessmentMetric(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return data["task"]
-            
-    def _generate_reason(self, adherence_score: PlanAdherenceScore, quality_score: PlanQualityScore):
+
+    def _generate_reason(
+        self,
+        adherence_score: PlanAdherenceScore,
+        quality_score: PlanQualityScore,
+    ):
         final_reason = "[\n"
         final_reason += "\t Plan Adherence: " + adherence_score.reason + "\n"
         final_reason += "\t Plan Quality" + quality_score.reason + "\n"
         final_reason += "]\n"
         return final_reason
-            
+
     def is_successful(self) -> bool:
         if self.error is not None:
             self.success = False

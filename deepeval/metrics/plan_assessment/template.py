@@ -2,6 +2,7 @@ import textwrap
 import json
 from deepeval.tracing.utils import make_json_serializable
 
+
 class PlanAdherenceEvaluationTemplate:
 
     @staticmethod
@@ -42,9 +43,10 @@ class PlanAdherenceEvaluationTemplate:
             """
         )
 
-
     @staticmethod
-    def evaluate_adherence(user_task: str, agent_plan: str, execution_trace: dict) -> str:
+    def evaluate_adherence(
+        user_task: str, agent_plan: str, execution_trace: dict
+    ) -> str:
         return textwrap.dedent(
             f"""You are an expert evaluator assessing the **plan adherence** of an AI agent system.
 
@@ -101,9 +103,11 @@ class PlanAdherenceEvaluationTemplate:
                 JSON:
             """
         )
-    
+
     @staticmethod
-    def evaluate_plan_quality(user_task: str, agent_plan: list, execution_trace: dict) -> str:
+    def evaluate_plan_quality(
+        user_task: str, agent_plan: list, execution_trace: dict
+    ) -> str:
         return textwrap.dedent(
             f"""You are an expert evaluator assessing the **quality of an agent's plan** to complete a user's task, using both the proposed plan and the full execution trace for context.
 
