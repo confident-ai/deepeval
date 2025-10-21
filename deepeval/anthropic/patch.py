@@ -1,13 +1,13 @@
 from typing import Callable, List
 from functools import wraps
 
-from deepeval.anthropic.extractors import (
+from deepeval.openai.extractors import (
     extract_input_parameters,
     extract_output_parameters,
     InputParameters,
     OutputParameters,
 )
-from deepeval.anthropic.utils import create_child_tool_spans
+from deepeval.openai.utils import create_child_tool_spans
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.tracing.context import (
     current_trace_context,

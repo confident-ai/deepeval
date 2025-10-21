@@ -2,7 +2,7 @@ from anthropic.types.message import Message
 from anthropic.types import ToolUseBlock
 from typing import Any, Dict
 
-from deepeval.anthropic.types import InputParameters, OutputParameters
+from deepeval.openai.types import InputParameters, OutputParameters
 from deepeval.anthropic.utils import stringify_anthropic_content
 from deepeval.test_case.llm_test_case import ToolCall
 
