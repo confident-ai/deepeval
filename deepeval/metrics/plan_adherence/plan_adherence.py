@@ -96,7 +96,7 @@ class PlanAdherenceMetric(BaseMetric):
                     self,
                     steps=[
                         f"Task: {task} \n",
-                        f"Agent Plan: \n\n{"\n".join(agent_plan.plan)} \n\n",
+                        f"Agent Plan: \n\n{'\n'.join(agent_plan.plan)} \n\n",
                         f"Final Score: {plan_adherence_score.score} \n",
                         f"Final Reason: {plan_adherence_score.reason} \n",
                     ],
@@ -147,7 +147,7 @@ class PlanAdherenceMetric(BaseMetric):
                 self,
                 steps=[
                     f"Task: {task} \n",
-                    f"Agent Plan: \n\n{"\n".join(agent_plan.plan)} \n\n",
+                    f"Agent Plan: \n\n{'\n'.join(agent_plan.plan)} \n\n",
                     f"Final Score: {plan_adherence_score.score} \n",
                     f"Final Reason: {plan_adherence_score.reason} \n",
                 ],
