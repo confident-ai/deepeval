@@ -21,15 +21,15 @@ prompt.pull(version="00.00.01")
 class Deps:
     client: AsyncClient
 
+
 weather_agent = Agent(
     "openai:gpt-4o-mini",
     instructions="Be concise, reply with one sentence.",
     deps_type=Deps,
     retries=2,
     instrument=ConfidentInstrumentationSettings(
-        is_test_mode=True, 
-        agent_metrics=[AnswerRelevancyMetric()]
-    )
+        is_test_mode=True, agent_metrics=[AnswerRelevancyMetric()]
+    ),
 )
 
 
@@ -97,5 +97,3 @@ if __name__ == "__main__":
     for golden in dataset.evals_iterator():
         task = asyncio.create_task(run_agent(golden.input))
         dataset.evaluate(task)
-
-

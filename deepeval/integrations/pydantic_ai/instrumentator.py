@@ -66,7 +66,8 @@ from deepeval.tracing.perf_epoch_bridge import init_clock_bridge
 
 # OTLP_ENDPOINT = "http://127.0.0.1:4318/v1/traces"
 OTLP_ENDPOINT = "https://otel.confident-ai.com/v1/traces"
-init_clock_bridge() # initialize clock bridge for perf_counter() to epoch_nanos conversion
+init_clock_bridge()  # initialize clock bridge for perf_counter() to epoch_nanos conversion
+
 
 class ConfidentInstrumentationSettings(InstrumentationSettings):
 
@@ -135,6 +136,7 @@ class ConfidentInstrumentationSettings(InstrumentationSettings):
                 )
             )
         super().__init__(tracer_provider=trace_provider)
+
 
 class SpanInterceptor(SpanProcessor):
     def __init__(self, settings_instance: ConfidentInstrumentationSettings):
@@ -226,14 +228,20 @@ class SpanInterceptor(SpanProcessor):
                     str(tool_metric_collection),
                 )
 
-    
     def on_end(self, span):
         if self.settings.is_test_mode:
             if span.attributes.get("confident.span.type") == "agent":
-                def create_agent_span_for_evaluation(span: ReadableSpan) -> AgentSpan:
 
-                    agent_span = ConfidentSpanExporter.prepare_boilerplate_base_span(span)
-                    
+                def create_agent_span_for_evaluation(
+                    span: ReadableSpan,
+                ) -> AgentSpan:
+
+                    agent_span = (
+                        ConfidentSpanExporter.prepare_boilerplate_base_span(
+                            span
+                        )
+                    )
+
                     # tools called
                     normalized_messages = normalize_pydantic_ai_messages(span)
                     tools_called = []
@@ -241,28 +249,34 @@ class SpanInterceptor(SpanProcessor):
                     for message in normalized_messages:
                         for part in message.get("parts", []):
                             if part.get("type") == "tool_call":
-                                name = part.get("name") 
+                                name = part.get("name")
                                 try:
-                                    input_parameters = json.loads(part.get("arguments")) 
+                                    input_parameters = json.loads(
+                                        part.get("arguments")
+                                    )
                                 except Exception:
                                     input_parameters = {}
 
-                                tools_called.append(ToolCall(
-                                    name=name,
-                                    input_parameters=input_parameters,
-                                ))
-                    
+                                tools_called.append(
+                                    ToolCall(
+                                        name=name,
+                                        input_parameters=input_parameters,
+                                    )
+                                )
+
                     # agent_span.tools_called = tools_called
                     return agent_span
-                                               
+
                 agent_span = create_agent_span_for_evaluation(span)
                 agent_span.metrics = self.settings.agent_metrics
 
                 # create a trace for evaluation
                 trace = trace_manager.get_trace_by_uuid(agent_span.trace_uuid)
                 if not trace:
-                    trace = trace_manager.start_new_trace(trace_uuid=agent_span.trace_uuid)
-                
+                    trace = trace_manager.start_new_trace(
+                        trace_uuid=agent_span.trace_uuid
+                    )
+
                 trace.root_spans.append(agent_span)
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()

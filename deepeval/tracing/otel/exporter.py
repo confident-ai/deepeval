@@ -454,9 +454,7 @@ class ConfidentSpanExporter(SpanExporter):
             base_span.output = span_output
 
     @staticmethod
-    def prepare_boilerplate_base_span(
-        span: ReadableSpan
-    ) -> Optional[BaseSpan]:
+    def prepare_boilerplate_base_span(span: ReadableSpan) -> Optional[BaseSpan]:
 
         ################ Get Span Type ################
         span_type = span.attributes.get("confident.span.type")
