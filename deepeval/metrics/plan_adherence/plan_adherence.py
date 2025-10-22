@@ -188,7 +188,6 @@ class PlanAdherenceMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return PlanAdherenceScore(**data)
 
-
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
         prompt = PlanAdherenceTemplate.extract_plan_from_trace(
             test_case._trace_dict

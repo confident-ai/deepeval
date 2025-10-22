@@ -43,7 +43,6 @@ class PlanQualityTemplate:
             """
         )
 
-
     @staticmethod
     def evaluate_plan_quality(
         user_task: str, agent_plan: list, execution_trace: dict
