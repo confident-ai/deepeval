@@ -3,8 +3,8 @@ from functools import wraps
 
 
 from deepeval.openai.extractors import (
-    extract_output_parameters,
-    extract_input_parameters,
+    safe_extract_output_parameters,
+    safe_extract_input_parameters,
     InputParameters,
     OutputParameters,
 )
@@ -16,7 +16,6 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
-from deepeval.openai.utils import create_child_tool_spans
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -123,7 +122,7 @@ def _patch_async_openai_client_method(
 ):
     @wraps(orig_method)
     async def patched_async_openai_method(*args, **kwargs):
-        input_parameters: InputParameters = extract_input_parameters(
+        input_parameters: InputParameters = safe_extract_input_parameters(
             is_completion_method, kwargs
         )
 
@@ -137,7 +136,7 @@ def _patch_async_openai_client_method(
         )
         async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
+            output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
             _update_all_attributes(
@@ -162,7 +161,7 @@ def _patch_sync_openai_client_method(
 ):
     @wraps(orig_method)
     def patched_sync_openai_method(*args, **kwargs):
-        input_parameters: InputParameters = extract_input_parameters(
+        input_parameters: InputParameters = safe_extract_input_parameters(
             is_completion_method, kwargs
         )
 
@@ -176,7 +175,7 @@ def _patch_sync_openai_client_method(
         )
         def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
+            output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
             _update_all_attributes(
@@ -205,8 +204,8 @@ def _update_all_attributes(
 ):
     """Update span and trace attributes with input/output parameters."""
     update_current_span(
-        input=input_parameters.input or input_parameters.messages or "NA",
-        output=output_parameters.output or "NA",
+        input=input_parameters.messages,
+        output=output_parameters.output or output_parameters.tools_called,
         tools_called=output_parameters.tools_called,
         # attributes to be added
         expected_output=expected_output,
@@ -222,9 +221,6 @@ def _update_all_attributes(
         output_token_count=output_parameters.completion_tokens,
         prompt=llm_context.prompt,
     )
-
-    if output_parameters.tools_called:
-        create_child_tool_spans(output_parameters)
 
     __update_input_and_output_of_current_trace(
         input_parameters, output_parameters

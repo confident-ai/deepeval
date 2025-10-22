@@ -1,0 +1,133 @@
+{
+  "uuid": "e690e4e1-ffac-4abf-ba3c-2ea9a7663c2d",
+  "baseSpans": [
+    {
+      "uuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "name": "run_main",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2025-10-17T12:27:09.507Z",
+      "endTime": "2025-10-17T12:27:14.276Z",
+      "input": {},
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": {
+            "location": "San Francisco",
+            "temperature": 18,
+            "unit": "C",
+            "condition": "partly cloudy"
+          },
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ]
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "02d76703-685d-4e5c-a902-444f1e27222b",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "startTime": "2025-10-17T12:27:12.781Z",
+      "endTime": "2025-10-17T12:27:14.276Z",
+      "input": [
+        {
+          "type": "function_call_output",
+          "call_id": "call_XjCbIIBKDMAdpYgdgPA9oAhh",
+          "output": "{\"location\": \"San Francisco\", \"temperature\": 18, \"unit\": \"C\", \"condition\": \"partly cloudy\"}"
+        }
+      ],
+      "output": "The weather in San Francisco is 18\u00b0C and partly cloudy. \n\n**Travel Tip:** Dress in layers to stay comfortable, as the temperature can change throughout the day!",
+      "model": "gpt-4o-mini",
+      "prompt": {},
+      "inputTokenCount": 85.0,
+      "outputTokenCount": 35.0
+    },
+    {
+      "uuid": "579160b5-173d-4f24-a1e6-c15bb5a18c69",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "startTime": "2025-10-17T12:27:09.512Z",
+      "endTime": "2025-10-17T12:27:12.781Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Use tools when they are needed to get accurate data."
+        },
+        {
+          "role": "user",
+          "content": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather."
+        }
+      ],
+      "output": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city.",
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ],
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "description": "Get the current weather for a city.",
+          "inputParameters": {
+            "location": "San Francisco",
+            "unit": "c"
+          }
+        }
+      ],
+      "model": "gpt-4o-mini",
+      "prompt": {},
+      "inputTokenCount": 106.0,
+      "outputTokenCount": 20.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "83fa29ce-95d3-4806-a5ed-92ac425c7325",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "3764d179-31ee-4c6a-838d-97a56cccb9d4",
+      "startTime": "2025-10-17T12:27:12.781Z",
+      "endTime": "2025-10-17T12:27:12.781Z",
+      "input": {
+        "location": "San Francisco",
+        "unit": "c"
+      },
+      "output": {
+        "location": "San Francisco",
+        "temperature": 18,
+        "unit": "C",
+        "condition": "partly cloudy"
+      }
+    }
+  ],
+  "startTime": "2025-10-17T12:27:09.507Z",
+  "endTime": "2025-10-17T12:27:14.276Z",
+  "environment": "development",
+  "input": "What's the weather in San Francisco in celsius? Then give a one-sentence travel tip that fits the weather.",
+  "output": [
+    {
+      "name": "get_weather",
+      "description": "Get the current weather for a city.",
+      "inputParameters": {
+        "location": "San Francisco",
+        "unit": "c"
+      }
+    }
+  ],
+  "status": "SUCCESS"
+}
