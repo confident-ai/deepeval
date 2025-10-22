@@ -5,8 +5,6 @@ import os
 import time
 
 from deepeval.utils import format_turn
-from deepeval.test_case.conversational_test_case import Turn
-from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
 from deepeval.metrics import (
@@ -481,6 +479,18 @@ def count_metrics_in_trace(trace: Trace) -> int:
     return sum(count_metrics_recursive(span) for span in trace.root_spans)
 
 
+def count_total_metrics_for_trace(trace: Trace) -> int:
+    """Span subtree metrics + trace-level metrics."""
+    return count_metrics_in_trace(trace=trace) + len(trace.metrics or [])
+
+
+def count_metrics_in_span_subtree(span: BaseSpan) -> int:
+    total = len(span.metrics or [])
+    for c in span.children or []:
+        total += count_metrics_in_span_subtree(c)
+    return total
+
+
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
     # extract trace result
@@ -523,7 +533,7 @@ def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
         test_results.append(
             TestResult(
                 name=span_api.name,
-                success=span_api.status == "SUCCESS",
+                success=span_api.status == TraceSpanApiStatus.SUCCESS,
                 metrics_data=span_api.metrics_data,
                 input=span_api.input,
                 actual_output=span_api.output,

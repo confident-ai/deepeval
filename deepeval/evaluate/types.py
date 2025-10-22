@@ -10,6 +10,7 @@ from deepeval.test_case import MLLMImage
 class TestResult:
     """Returned from run_test"""
 
+    __test__ = False
     name: str
     success: bool
     metrics_data: Union[List[MetricData], None]
