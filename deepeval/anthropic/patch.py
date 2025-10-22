@@ -1,7 +1,7 @@
 from typing import Callable, List
 from functools import wraps
 
-from deepeval.openai.extractors import (
+from deepeval.anthropic.extractors import (
     extract_input_parameters,
     extract_output_parameters,
     InputParameters,

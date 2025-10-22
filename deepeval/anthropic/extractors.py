@@ -59,13 +59,17 @@ def extract_messages_api_output_parameters(
     input_parameters: InputParameters,
 ) -> OutputParameters:
     content = message_response.content[0]
-    output = str(message_response.content[0].text)
     tools_called = None
     anthropic_tool_calls = [
         block
         for block in message_response.content
         if isinstance(block, ToolUseBlock)
     ]
+    output = None
+    if len(anthropic_tool_calls) == 0:
+        output = str(message_response.content[0].text)
+    else:
+        output = str(message_response.content[0].to_json())
     if anthropic_tool_calls:
         tools_called = []
         tool_descriptions = input_parameters.tool_descriptions or {}
