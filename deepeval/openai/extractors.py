@@ -13,7 +13,6 @@ from deepeval.openai.utils import (
 )
 
 
-
 # guarding against errors to be compatible with legacy APIs
 def safe_extract_input_parameters(
     is_completion: bool, kwargs: Dict[str, Any]
