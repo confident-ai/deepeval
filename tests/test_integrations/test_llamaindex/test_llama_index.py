@@ -8,10 +8,8 @@ from tests.test_integrations.utils import (
 )
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from llama_index.llms.openai import OpenAI
-
-from deepeval.integrations.llama_index import (
-    FunctionAgent,
-)
+from llama_index.core.agent import FunctionAgent
+from deepeval.tracing import trace
 
 
 def multiply(a: float, b: float) -> float:
@@ -28,7 +26,8 @@ agent = FunctionAgent(
 
 
 async def llm_app(input: str):
-    return await agent.run(input)
+    with trace():
+        await agent.run(input)
 
 
 ################################ TESTING CODE #################################
