@@ -17,7 +17,7 @@ class InputParameters(BaseModel):
 
 
 class OutputParameters(BaseModel):
-    output: Optional[str] = None
+    output: Optional[Any] = None
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     tools_called: Optional[List[ToolCall]] = None

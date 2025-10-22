@@ -1,5 +1,9 @@
 import json
-from typing import Any, List, Optional
+
+from typing import Any, Dict, List, Optional, Iterable
+from openai.types.chat.chat_completion_message_param import (
+    ChatCompletionMessageParam,
+)
 
 from deepeval.utils import shorten, len_long
 
@@ -96,3 +100,106 @@ def stringify_multimodal_content(content: Any) -> str:
 
     # unknown dicts and types returned as shortened JSON
     return _compact_dump(content)
+
+
+def render_messages(
+    messages: Iterable[ChatCompletionMessageParam],
+) -> List[Dict[str, Any]]:
+
+    messages_list = []
+
+    for message in messages:
+        role = message.get("role")
+        content = message.get("content")
+        if role == "assistant" and message.get("tool_calls"):
+            tool_calls = message.get("tool_calls")
+            if isinstance(tool_calls, list):
+                for tool_call in tool_calls:
+                    # Extract type - either "function" or "custom"
+                    tool_type = tool_call.get("type", "function")
+
+                    # Extract name and arguments based on type
+                    if tool_type == "function":
+                        function_data = tool_call.get("function", {})
+                        name = function_data.get("name", "")
+                        arguments = function_data.get("arguments", "")
+                    elif tool_type == "custom":
+                        custom_data = tool_call.get("custom", {})
+                        name = custom_data.get("name", "")
+                        arguments = custom_data.get("input", "")
+                    else:
+                        name = ""
+                        arguments = ""
+
+                    messages_list.append(
+                        {
+                            "id": tool_call.get("id", ""),
+                            "call_id": tool_call.get(
+                                "id", ""
+                            ),  # OpenAI uses 'id', not 'call_id'
+                            "name": name,
+                            "type": tool_type,
+                            "arguments": json.loads(arguments),
+                        }
+                    )
+
+        elif role == "tool":
+            messages_list.append(
+                {
+                    "call_id": message.get("tool_call_id", ""),
+                    "type": role,  # "tool"
+                    "output": message.get("content", {}),
+                }
+            )
+        else:
+            messages_list.append(
+                {
+                    "role": role,
+                    "content": content,
+                }
+            )
+
+    return messages_list
+
+
+def render_response_input(input: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
+    messages_list = []
+
+    for item in input:
+        type = item.get("type")
+        role = item.get("role")
+
+        if type == "message":
+            messages_list.append(
+                {
+                    "role": role,
+                    "content": item.get("content"),
+                }
+            )
+        else:
+            messages_list.append(item)
+
+    return messages_list
+
+
+def _render_content(content: Dict[str, Any], indent: int = 0) -> str:
+    """
+    Renders a dictionary as a formatted string with indentation for nested structures.
+    """
+    if not content:
+        return ""
+
+    lines = []
+    prefix = "  " * indent
+
+    for key, value in content.items():
+        if isinstance(value, dict):
+            lines.append(f"{prefix}{key}:")
+            lines.append(_render_content(value, indent + 1))
+        elif isinstance(value, list):
+            lines.append(f"{prefix}{key}: {_compact_dump(value)}")
+        else:
+            lines.append(f"{prefix}{key}: {value}")
+
+    return "\n".join(lines)
