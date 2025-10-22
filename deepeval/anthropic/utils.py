@@ -133,47 +133,59 @@ def render_messages_anthropic(
 
         if role == "assistant":
             if isinstance(content, str):
-                messages_list.append({
-                    "role": role,
-                    "content": content,
-                })
+                messages_list.append(
+                    {
+                        "role": role,
+                        "content": content,
+                    }
+                )
             elif isinstance(content, list):
                 for block in content:
                     block_type = block.get("type")
                     if block_type == "text":
-                        messages_list.append({
-                            "role": role,
-                            "content": block.get("text", ""),
-                        })
+                        messages_list.append(
+                            {
+                                "role": role,
+                                "content": block.get("text", ""),
+                            }
+                        )
                     elif block_type == "tool_use":
-                        messages_list.append({
-                            "id": block.get("id", ""),
-                            "call_id": block.get("id", ""),
-                            "name": block.get("name", ""),
-                            "type": "function",
-                            "arguments": block.get("input", {}),
-                        })
+                        messages_list.append(
+                            {
+                                "id": block.get("id", ""),
+                                "call_id": block.get("id", ""),
+                                "name": block.get("name", ""),
+                                "type": "function",
+                                "arguments": block.get("input", {}),
+                            }
+                        )
 
         elif role == "user":
             if isinstance(content, str):
-                messages_list.append({
-                    "role": role,
-                    "content": content,
-                })
+                messages_list.append(
+                    {
+                        "role": role,
+                        "content": content,
+                    }
+                )
             elif isinstance(content, list):
                 for block in content:
                     block_type = block.get("type")
                     if block_type == "text":
-                        messages_list.append({
-                            "role": role,
-                            "content": block.get("text", ""),
-                        })
+                        messages_list.append(
+                            {
+                                "role": role,
+                                "content": block.get("text", ""),
+                            }
+                        )
                     elif block_type == "image":
-                        messages_list.append({
-                            "role": role,
-                            "content": "[Image content]",
-                            "image_source": block.get("source", {}),
-                        })
+                        messages_list.append(
+                            {
+                                "role": role,
+                                "content": "[Image content]",
+                                "image_source": block.get("source", {}),
+                            }
+                        )
                     elif block_type == "tool_result":
                         tool_content = block.get("content", "")
                         if isinstance(tool_content, list):
@@ -185,24 +197,26 @@ def render_messages_anthropic(
                                             tool_content_block.get("text", "")
                                         )
                                 else:
-                                    output_parts.append(
-                                        str(tool_content_block)
-                                    )
+                                    output_parts.append(str(tool_content_block))
                             output = "\n".join(output_parts)
                         else:
                             output = tool_content
 
-                        messages_list.append({
-                            "call_id": block.get("tool_use_id", ""),
-                            "type": "tool",
-                            "output": output,
-                            "is_error": block.get("is_error", False),
-                        })
+                        messages_list.append(
+                            {
+                                "call_id": block.get("tool_use_id", ""),
+                                "type": "tool",
+                                "output": output,
+                                "is_error": block.get("is_error", False),
+                            }
+                        )
 
         elif role == "system":
-            messages_list.append({
-                "role": role,
-                "content": content,
-            })
+            messages_list.append(
+                {
+                    "role": role,
+                    "content": content,
+                }
+            )
 
     return messages_list

@@ -77,7 +77,9 @@ def _create_async_wrapper(original_method):
 def _patch_sync_anthropic_client_method(original_method: Callable):
     @wraps(original_method)
     def patched_sync_anthropic_method(*args, **kwargs):
-        input_parameters: InputParameters = safe_extract_input_parameters(kwargs)
+        input_parameters: InputParameters = safe_extract_input_parameters(
+            kwargs
+        )
         llm_context = current_llm_context.get()
 
         @observe(
@@ -109,7 +111,9 @@ def _patch_sync_anthropic_client_method(original_method: Callable):
 def _patch_async_anthropic_client_method(original_method: Callable):
     @wraps(original_method)
     async def patched_async_anthropic_method(*args, **kwargs):
-        input_parameters: InputParameters = safe_extract_input_parameters(kwargs)
+        input_parameters: InputParameters = safe_extract_input_parameters(
+            kwargs
+        )
         llm_context = current_llm_context.get()
 
         @observe(
