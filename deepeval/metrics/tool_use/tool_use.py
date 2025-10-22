@@ -9,7 +9,12 @@ from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     initialize_model,
 )
-from deepeval.test_case import ConversationalTestCase, TurnParams, ToolCall, Turn
+from deepeval.test_case import (
+    ConversationalTestCase,
+    TurnParams,
+    ToolCall,
+    Turn,
+)
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -71,9 +76,12 @@ class ToolUseMetric(BaseConversationalMetric):
                 )
             else:
                 unit_interactions = get_unit_interactions(test_case.turns)
-                user_input_and_tools = self._get_user_input_and_turns(unit_interactions)
+                user_input_and_tools = self._get_user_input_and_turns(
+                    unit_interactions
+                )
                 tool_use_scores = [
-                    self._get_tool_use_score(user_and_tools) for user_and_tools in user_input_and_tools
+                    self._get_tool_use_score(user_and_tools)
+                    for user_and_tools in user_input_and_tools
                 ]
                 self.score = self._calculate_score(tool_use_scores)
                 self.reason = self._generate_reason(tool_use_scores)
@@ -113,10 +121,13 @@ class ToolUseMetric(BaseConversationalMetric):
             _in_component=_in_component,
         ):
             unit_interactions = get_unit_interactions(test_case.turns)
-            user_input_and_tools = self._get_user_input_and_turns(unit_interactions)
+            user_input_and_tools = self._get_user_input_and_turns(
+                unit_interactions
+            )
             tool_use_scores = await asyncio.gather(
                 *[
-                    self._a_get_tool_use_score(user_and_tools) for user_and_tools in user_input_and_tools
+                    self._a_get_tool_use_score(user_and_tools)
+                    for user_and_tools in user_input_and_tools
                 ]
             )
             self.score = self._calculate_score(tool_use_scores)
@@ -137,7 +148,7 @@ class ToolUseMetric(BaseConversationalMetric):
                 )
 
             return self.score
-    
+
     def _get_tool_use_score(
         self,
         user_and_tools: UserInputAndTools,
@@ -146,7 +157,7 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.user_messages,
             user_and_tools.assistant_messages,
             user_and_tools.tools_called,
-            user_and_tools.available_tools
+            user_and_tools.available_tools,
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=ToolUseScore)
@@ -154,13 +165,15 @@ class ToolUseMetric(BaseConversationalMetric):
             return res
         else:
             try:
-                res: ToolUseScore = self.model.generate(prompt, schema=ToolUseScore)
+                res: ToolUseScore = self.model.generate(
+                    prompt, schema=ToolUseScore
+                )
                 return res
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return ToolUseScore(**data)
-    
+
     async def _a_get_tool_use_score(
         self,
         user_and_tools: UserInputAndTools,
@@ -169,7 +182,7 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.user_messages,
             user_and_tools.assistant_messages,
             user_and_tools.tools_called,
-            user_and_tools.available_tools
+            user_and_tools.available_tools,
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt, schema=ToolUseScore)
@@ -177,7 +190,9 @@ class ToolUseMetric(BaseConversationalMetric):
             return res
         else:
             try:
-                res: ToolUseScore = await self.model.a_generate(prompt, schema=ToolUseScore)
+                res: ToolUseScore = await self.model.a_generate(
+                    prompt, schema=ToolUseScore
+                )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
@@ -189,7 +204,9 @@ class ToolUseMetric(BaseConversationalMetric):
         unit_interactions: List[List[Turn]],
     ) -> List[UserInputAndTools]:
         user_inputs_and_tools = []
-        available_tools = ",".join([repr(tool) for tool in self.available_tools])
+        available_tools = ",".join(
+            [repr(tool) for tool in self.available_tools]
+        )
         for unit_interaction in unit_interactions:
             if len(unit_interaction) < 2:
                 continue
@@ -211,20 +228,24 @@ class ToolUseMetric(BaseConversationalMetric):
                 user_messages=user_messages,
                 assistant_messages=assistant_messages,
                 tools_called=tools_called,
-                available_tools=available_tools
+                available_tools=available_tools,
             )
             user_inputs_and_tools.append(new_user_input_tools)
         return user_inputs_and_tools
-    
+
     def _calculate_score(self, tool_use_scores: List[ToolUseScore]):
-        scores_sum = sum([tool_use_score.score for tool_use_score in tool_use_scores])
+        scores_sum = sum(
+            [tool_use_score.score for tool_use_score in tool_use_scores]
+        )
         scores_divisor = len(tool_use_scores) if len(tool_use_scores) > 0 else 1
         return scores_sum / scores_divisor
-    
+
     def _generate_reason(self, tool_use_scores: List[ToolUseScore]):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
-            scores_and_reasons += f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
+            scores_and_reasons += (
+                f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
+            )
         prompt = ToolUseTemplate.get_tool_selection_final_reason(
             scores_and_reasons, self.score, self.threshold
         )
@@ -235,11 +256,13 @@ class ToolUseMetric(BaseConversationalMetric):
         else:
             res = self.model.generate(prompt)
             return res
-    
+
     async def _a_generate_reason(self, tool_use_scores: List[ToolUseScore]):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
-            scores_and_reasons += f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
+            scores_and_reasons += (
+                f"\nScore: {tool_use.score} \nReason: {tool_use.reason} \n"
+            )
         prompt = ToolUseTemplate.get_tool_selection_final_reason(
             scores_and_reasons, self.score, self.threshold
         )
@@ -250,7 +273,7 @@ class ToolUseMetric(BaseConversationalMetric):
         else:
             res = await self.model.a_generate(prompt)
             return res
-        
+
     def is_successful(self) -> bool:
         try:
             self.success = self.score >= self.threshold
@@ -261,5 +284,3 @@ class ToolUseMetric(BaseConversationalMetric):
     @property
     def __name__(self):
         return "Tool Use"
-
-

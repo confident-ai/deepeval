@@ -6,7 +6,10 @@ class ToolUseTemplate:
 
     @staticmethod
     def get_tool_selection_score(
-        user_input: str, assistant_messages: str, tools_called: str, available_tools: str
+        user_input: str,
+        assistant_messages: str,
+        tools_called: str,
+        available_tools: str,
     ) -> str:
         return textwrap.dedent(
             f"""You are an expert evaluator assessing the **Tool Selection** quality of an AI agent.
