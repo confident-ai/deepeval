@@ -1,18 +1,26 @@
 from enum import Enum
 from dataclasses import dataclass, field
 from pydantic import BaseModel, Field
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Literal
 from rich.progress import Progress
-from deepeval.tracing.message_types import (
-    ToolOutput,
-    TextMessage,
-    ToolCallMessage,
-)
 
 from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
+
+
+class Message(BaseModel):
+    role: str
+    """To be displayed on the top of the message block."""
+
+    type: Literal["tool_calls", "tool_output", "thinking", "default"] = (
+        "default"
+    )
+    """Decides how the content is rendered."""
+
+    content: Any
+    """The content of the message."""
 
 
 class TraceWorkerStatus(Enum):
@@ -93,12 +101,7 @@ class AgentSpan(BaseSpan):
 
 
 class LlmSpan(BaseSpan):
-    input: Optional[
-        Union[Any, List[Union[TextMessage, ToolCallMessage, ToolOutput]]]
-    ] = None
-    output: Optional[Union[Any, List[Union[TextMessage, ToolCallMessage]]]] = (
-        None
-    )
+
     model: Optional[str] = None
     prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
