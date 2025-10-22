@@ -16,9 +16,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.goal_accuracy.template import (
     GoalAccuracyTemplate,
 )
-from deepeval.metrics.goal_accuracy.utils import (
-    print_goals_and_steps_taken,
-)
 from deepeval.metrics.goal_accuracy.schema import (
     GoalSteps,
     GoalScore,
@@ -98,7 +95,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Goals and steps taken: \n{print_goals_and_steps_taken(goal_and_steps_taken)} \n",
+                        f"Goals and steps taken: \n{self.print_goals_and_steps_taken(goal_and_steps_taken)} \n",
                         f"Goal evaluations: {prettify_list(goal_scores)} \n\n"
                         f"Plan evaluations: {prettify_list(plan_scores)} \n\n"
                         f"Final Score: {self.score}",
@@ -157,7 +154,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Goals and steps taken: \n{print_goals_and_steps_taken(goal_and_steps_taken)} \n",
+                    f"Goals and steps taken: \n{self.print_goals_and_steps_taken(goal_and_steps_taken)} \n",
                     f"Goal evaluations: {prettify_list(goal_scores)} \n\n"
                     f"Plan evaluations: {prettify_list(plan_scores)} \n\n"
                     f"Final Score: {self.score}",
@@ -326,6 +323,15 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return GoalScore(**data)
+
+    def print_goals_and_steps_taken(self, goals_and_steps):
+        final_goals_and_steps = ""
+        for goal_step in goals_and_steps:
+            final_goals_and_steps += f"{goal_step.user_goal} \n"
+            final_goals_and_steps += (
+                f"c{prettify_list(goal_step.steps_taken)} \n\n"
+            )
+        return final_goals_and_steps
 
     def is_successful(self) -> bool:
         if self.error is not None:

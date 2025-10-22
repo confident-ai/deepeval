@@ -1,6 +1,6 @@
 from typing import Optional, List, Union, Dict
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     construct_verbose_logs,
     trimAndLoadJson,
@@ -96,7 +96,7 @@ class PlanQualityMetric(BaseMetric):
                     self,
                     steps=[
                         f"Task: {task} \n",
-                        f"Agent Plan: \n{'\n'.join(agent_plan.plan)} \n",
+                        f"Agent Plan: \n{prettify_list(agent_plan.plan)} \n",
                         f"Final Score Score: {plan_quality_score.score} \n",
                         f"Final Score Reason: {plan_quality_score.reason} \n",
                     ],
@@ -146,7 +146,7 @@ class PlanQualityMetric(BaseMetric):
                 self,
                 steps=[
                     f"Task: {task} \n",
-                    f"Agent Plan: \n{'\n'.join(agent_plan.plan)} \n",
+                    f"Agent Plan: \n{prettify_list(agent_plan.plan)} \n",
                     f"Final Score: {plan_quality_score.score} \n",
                     f"Final Reason: {plan_quality_score.reason} \n",
                 ],
