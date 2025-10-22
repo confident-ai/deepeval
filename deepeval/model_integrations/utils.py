@@ -3,7 +3,12 @@ from typing import List
 
 from deepeval.model_integrations.types import InputParameters, OutputParameters
 from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.tracing.context import current_span_context, current_trace_context, update_current_span, update_llm_span
+from deepeval.tracing.context import (
+    current_span_context,
+    current_trace_context,
+    update_current_span,
+    update_llm_span,
+)
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
 
