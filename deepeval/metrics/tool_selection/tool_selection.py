@@ -98,7 +98,7 @@ class ToolSelectionMetric(BaseConversationalMetric):
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
-                        f"Tool Selection Scores: {prettify_list(tool_use_scores)} \n\n"
+                        f"Tool Selection Scores: {prettify_list(tool_use_scores)} \n",
                         f"Final Score: {self.score}",
                         f"Final Reason: {self.reason}",
                     ],
@@ -151,7 +151,7 @@ class ToolSelectionMetric(BaseConversationalMetric):
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Tool Selection Scores: {prettify_list(tool_use_scores)} \n\n"
+                    f"Tool Selection Scores: {prettify_list(tool_use_scores)} \n",
                     f"Final Score: {self.score}",
                     f"Final Reason: {self.reason}",
                 ],

@@ -123,13 +123,13 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                         f"Interaction Pairs: \n{prettify_list(interaction_pairs)} \n",
                         f"Truth Table:",
                         f"\nTrue Positives:",
-                        f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n"
+                        f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n",
                         f"\nTrue Negatives: ",
-                        f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n"
+                        f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n",
                         f"\nFalse Positives: ",
-                        f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n"
+                        f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n",
                         f"\nFalse Negatives: ",
-                        f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n\n"
+                        f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n",
                         f"Final Score: {self.score}",
                         f"Final Reason: {self.reason}",
                     ],
@@ -203,13 +203,13 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     f"Interaction Pairs: \n{prettify_list(interaction_pairs)} \n",
                     f"Truth Table:",
                     f"\nTrue Positives:",
-                    f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n"
+                    f"Count: {True_Positives[0]}, Reasons: {prettify_list(True_Positives[1])} \n",
                     f"\nTrue Negatives: ",
-                    f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n"
+                    f"Count: {True_Negatives[0]}, Reasons: {prettify_list(True_Negatives[1])} \n",
                     f"\nFalse Positives: ",
-                    f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n"
+                    f"Count: {False_Positives[0]}, Reasons: {prettify_list(False_Positives[1])} \n",
                     f"\nFalse Negatives: ",
-                    f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n\n"
+                    f"Count: {False_Negatives[0]}, Reasons: {prettify_list(False_Negatives[1])} \n",
                     f"Final Score: {self.score}",
                     f"Final Reason: {self.reason}",
                 ],
