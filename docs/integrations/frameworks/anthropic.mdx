@@ -7,15 +7,15 @@ sidebar_label: Anthropic
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-`deepeval` integrates with Anthropic models, allowing you to evaluate and trace Claude LLM requests, whether standalone or within complex applications with multiple components, in both development and production environment.
+`deepeval` integrates with Anthropic models, allowing you to evaluate and trace Claude LLM requests, whether standalone or within complex applications with multiple components, in both development and production environments.
 
 ## Local Evaluations in Development
 
-To evaluate your Claude application during development, opt for local evals. This allows you to run evaluations on the data points directly on your machine.
+To evaluate your Claude application during development, opt for local evals. This allows you to run evaluations directly on your machine.
 
 ### Evaluating Claude as a Standalone
 
-Standalone evaluation treats your application as a black box, assessing its input and output using chosen metrics (e.g: `AnswerRelevancyMetric()`). To begin, simply swap out your existing `Anthropic` client with the one from `deepeval`.
+Standalone evaluation treats the Claude API integration as a single component, assessing its input and actual output using chosen metrics (e.g: `AnswerRelevancyMetric`). To begin, simply replace your existing `Anthropic` client with the one provided by `deepeval`.
 
 <Tabs groupId="anthropic">
 <TabItem value="messages" label="Messages">
@@ -90,21 +90,21 @@ for golden in dataset.evals_iterator():
 </TabItem>
 </Tabs>
 
-The `trace()` context supports **FIVE** optional parameters:
+The `trace` context supports **FIVE** optional parameters:
 
-- `metrics`: List of `BaseMetric` metrics to use.
-- `expected_output`: The reference output string for evaluation.
-- `retrieval_context`: List of retrieved context strings for ground truth comparison.
-- `context`: List of ideal context strings.
-- `expected_tools`: List of expected tool names to be called during generation.
+- `metrics`: List of `BaseMetric` metrics to use when evaluating the model's output.
+- `expected_output`: An ideal output the model should produce for the given input.
+- `retrieval_context`: The specific set of information or documents retrieved for ground truth comparison.
+- `context`: Ideal context snippets the model should use when generating its answer.
+- `expected_tools`: List of tool names/functions you expect the model to call during its response.
 
 :::info
-With `deepeval`’s `Anthropic` client, input and output are auto-extracted for every generation, so you can run evaluations like **Answer Relevancy** without extra setup. For metrics needing extra info (e.g. **Faithfulness**), just pass `retrieval_context` or `context` in the `trace()` context.
+With `deepeval`’s `Anthropic` client, input and actual output are auto-extracted for every generation, so you can run evaluations like **Answer Relevancy** without extra setup. For metrics that require parameters beyond the input and actual output (e.g. **Faithfulness**), just pass `retrieval_context` or `context` in the `trace` context.
 :::
 
 ### Evaluating Claude within Components
 
-For component-level evaluation, use `deepeval`'s `Anthropic` client and add the `@observe` decorator to your component functions. Pass your chosen metrics via the `trace()` context.
+For component-level evaluation, use `deepeval`'s `Anthropic` client and add the `@observe` decorator to your component functions. Pass your chosen metrics via the `trace` context manager.
 
 <Tabs groupId="anthropic">
 <TabItem value="messages" label="Messages">
@@ -201,9 +201,9 @@ When used inside `@observe` components, `deepeval`'s `Anthropic` client automati
 
 ## Online Evaluations in Production
 
-To evaluate your Claude application's traces in production, enable online evals. This runs automatic evaluations on all incoming traces using Confident AI's server.
+To evaluate your Claude application's traces in production, ensure the client is used within an observed function. This enables online evals, which automatically assess incoming traces on Confident AI's server.
 
-Set the `llm_metric_collection` parameter in the `trace()` context manager to evaluate the trace against a collection of metrics.
+Set the `llm_metric_collection` parameter in the `trace` context manager to evaluate the trace against a collection of metrics.
 
 ```python main.py
 from deepeval.anthropic import Anthropic
