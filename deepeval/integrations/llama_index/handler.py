@@ -155,22 +155,6 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 input=bound_args.arguments,
             )
 
-            # check if the instance is a PatchedFunctionAgent
-            if isinstance(instance, PatchedFunctionAgent):
-                span.name = "FunctionAgent"
-                span.metric_collection = instance.metric_collection
-                span.metrics = instance.metrics
-
-            if isinstance(instance, PatchedReActAgent):
-                span.name = "ReActAgent"
-                span.metric_collection = instance.metric_collection
-                span.metrics = instance.metrics
-
-            if isinstance(instance, PatchedCodeActAgent):
-                span.name = "CodeActAgent"
-                span.metric_collection = instance.metric_collection
-                span.metrics = instance.metrics
-
         # prepare input test case params for the span
         prepare_input_llm_test_case_params(
             class_name, method_name, span, bound_args.arguments
