@@ -6,17 +6,10 @@ from deepeval.openai.extractors import (
     extract_output_parameters,
     extract_input_parameters,
     InputParameters,
-    OutputParameters,
-)
-from deepeval.test_case.llm_test_case import ToolCall
-from deepeval.tracing.context import (
-    current_trace_context,
-    update_current_span,
-    update_llm_span,
 )
 from deepeval.tracing import observe
 from deepeval.tracing.trace_context import current_llm_context
-from deepeval.openai.utils import create_child_tool_spans
+from deepeval.model_integrations.utils import _update_all_attributes
 
 # Store original methods for safety and potential unpatching
 _ORIGINAL_METHODS = {}
@@ -193,59 +186,6 @@ def _patch_sync_openai_client_method(
         return llm_generation(*args, **kwargs)
 
     return patched_sync_openai_method
-
-
-def _update_all_attributes(
-    input_parameters: InputParameters,
-    output_parameters: OutputParameters,
-    expected_tools: List[ToolCall],
-    expected_output: str,
-    context: List[str],
-    retrieval_context: List[str],
-):
-    """Update span and trace attributes with input/output parameters."""
-    update_current_span(
-        input=input_parameters.input or input_parameters.messages or "NA",
-        output=output_parameters.output or "NA",
-        tools_called=output_parameters.tools_called,
-        # attributes to be added
-        expected_output=expected_output,
-        expected_tools=expected_tools,
-        context=context,
-        retrieval_context=retrieval_context,
-    )
-
-    llm_context = current_llm_context.get()
-
-    update_llm_span(
-        input_token_count=output_parameters.prompt_tokens,
-        output_token_count=output_parameters.completion_tokens,
-        prompt=llm_context.prompt,
-    )
-
-    if output_parameters.tools_called:
-        create_child_tool_spans(output_parameters)
-
-    __update_input_and_output_of_current_trace(
-        input_parameters, output_parameters
-    )
-
-
-def __update_input_and_output_of_current_trace(
-    input_parameters: InputParameters, output_parameters: OutputParameters
-):
-
-    current_trace = current_trace_context.get()
-    if current_trace:
-        if current_trace.input is None:
-            current_trace.input = (
-                input_parameters.input or input_parameters.messages
-            )
-
-        if current_trace.output is None:
-            current_trace.output = output_parameters.output
-
-    return
 
 
 def unpatch_openai_classes():

@@ -4,8 +4,8 @@ from typing import Any, Union, Dict
 from openai.types.responses import Response
 
 from deepeval.test_case.llm_test_case import ToolCall
+from deepeval.model_integrations.types import InputParameters, OutputParameters
 from deepeval.openai.utils import stringify_multimodal_content
-from deepeval.openai.types import InputParameters, OutputParameters
 
 
 def extract_input_parameters(
