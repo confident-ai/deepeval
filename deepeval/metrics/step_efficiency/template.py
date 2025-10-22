@@ -3,7 +3,7 @@ import json
 from deepeval.tracing.utils import make_json_serializable
 
 
-class ExecutionEfficiencyTemplate:
+class StepEfficiencyTemplate:
 
     @staticmethod
     def extract_task_from_trace(trace: dict) -> str:

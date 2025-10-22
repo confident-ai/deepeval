@@ -11,14 +11,14 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.execution_efficiency.template import (
+from deepeval.metrics.step_efficiency.template import (
     ExecutionEfficiencyTemplate,
 )
-from deepeval.metrics.execution_efficiency.schema import Task, EfficiencyVerdict
+from deepeval.metrics.step_efficiency.schema import Task, EfficiencyVerdict
 from deepeval.metrics.api import metric_data_manager
 
 
-class ExecutionEfficiencyMetric(BaseMetric):
+class StepEfficiencyMetric(BaseMetric):
 
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
@@ -73,9 +73,14 @@ class ExecutionEfficiencyMetric(BaseMetric):
                 task = self._extract_task_from_trace(test_case)
                 efficiency_verdict = self._get_score(task, test_case)
                 self.score = efficiency_verdict.score
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
                 self.reason = efficiency_verdict.reason
                 self.success = self.score >= self.threshold
-
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -114,9 +119,14 @@ class ExecutionEfficiencyMetric(BaseMetric):
             task = await self._a_extract_task_from_trace(test_case)
             efficiency_verdict = await self._a_get_score(task, test_case)
             self.score = efficiency_verdict.score
+            if self.strict_mode:
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
             self.reason = efficiency_verdict.reason
             self.success = self.score >= self.threshold
-
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[

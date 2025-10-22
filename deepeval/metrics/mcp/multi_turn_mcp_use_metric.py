@@ -84,6 +84,12 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 self.score = self._calculate_score(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
                 self.reason = self._generate_reason(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
@@ -152,6 +158,12 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             self.score = self._calculate_score(
                 primitives_accuracy_scores, args_accuracy_scores
             )
+            if self.strict_mode:
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
             self.reason = self._generate_reason(
                 primitives_accuracy_scores, args_accuracy_scores
             )

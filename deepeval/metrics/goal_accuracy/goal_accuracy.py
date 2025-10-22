@@ -13,13 +13,13 @@ from deepeval.test_case import ConversationalTestCase, TurnParams, Turn
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.agent_goal_accuracy.template import (
+from deepeval.metrics.goal_accuracy.template import (
     AgentGoalAccuracyTemplate,
 )
-from deepeval.metrics.agent_goal_accuracy.utils import (
+from deepeval.metrics.goal_accuracy.utils import (
     print_goals_and_steps_taken,
 )
-from deepeval.metrics.agent_goal_accuracy.schema import (
+from deepeval.metrics.goal_accuracy.schema import (
     GoalSteps,
     GoalScore,
     PlanScore,
@@ -27,7 +27,7 @@ from deepeval.metrics.agent_goal_accuracy.schema import (
 from deepeval.metrics.api import metric_data_manager
 
 
-class AgentGoalAccuracyMetric(BaseConversationalMetric):
+class GoalAccuracyMetric(BaseConversationalMetric):
 
     _required_test_case_params = [
         TurnParams.ROLE,
@@ -339,4 +339,4 @@ class AgentGoalAccuracyMetric(BaseConversationalMetric):
 
     @property
     def __name__(self):
-        return "Agent Goal Accuracy"
+        return "Goal Accuracy"

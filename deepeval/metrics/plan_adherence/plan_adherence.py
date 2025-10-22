@@ -11,10 +11,10 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.execution_efficiency.template import (
-    ExecutionEfficiencyTemplate,
+from deepeval.metrics.step_efficiency.template import (
+    StepEfficiencyTemplate,
 )
-from deepeval.metrics.execution_efficiency.schema import Task
+from deepeval.metrics.step_efficiency.schema import Task
 from deepeval.metrics.plan_adherence.schema import (
     AgentPlan,
     PlanAdherenceScore,
@@ -83,6 +83,12 @@ class PlanAdherenceMetric(BaseMetric):
                     task, agent_plan.plan, test_case
                 )
                 self.score = plan_adherence_score.score
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
                 self.success = self.score >= self.threshold
                 self.reason = plan_adherence_score.reason
 
@@ -128,6 +134,12 @@ class PlanAdherenceMetric(BaseMetric):
                 task, agent_plan.plan, test_case
             )
             self.score = plan_adherence_score.score
+            if self.strict_mode:
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
             self.success = self.score >= self.threshold
             self.reason = plan_adherence_score.reason
 
@@ -227,7 +239,7 @@ class PlanAdherenceMetric(BaseMetric):
                 return AgentPlan(**data)
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        prompt = ExecutionEfficiencyTemplate.extract_task_from_trace(
+        prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
         if self.using_native_model:
@@ -244,7 +256,7 @@ class PlanAdherenceMetric(BaseMetric):
                 return data["task"]
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        prompt = ExecutionEfficiencyTemplate.extract_task_from_trace(
+        prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
         if self.using_native_model:

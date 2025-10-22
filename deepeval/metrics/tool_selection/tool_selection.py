@@ -87,6 +87,12 @@ class ToolSelectionMetric(BaseConversationalMetric):
                     for user_and_tools in user_input_and_tools
                 ]
                 self.score = self._calculate_score(tool_use_scores)
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
                 self.reason = self._generate_reason(tool_use_scores)
 
                 self.verbose_logs = construct_verbose_logs(
@@ -134,6 +140,12 @@ class ToolSelectionMetric(BaseConversationalMetric):
                 ]
             )
             self.score = self._calculate_score(tool_use_scores)
+            if self.strict_mode:
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
             self.reason = await self._a_generate_reason(tool_use_scores)
 
             self.verbose_logs = construct_verbose_logs(

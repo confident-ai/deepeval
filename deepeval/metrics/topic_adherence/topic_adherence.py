@@ -103,6 +103,12 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     False_Positives,
                     False_Negatives,
                 )
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(
                     True_Positives,
@@ -180,6 +186,12 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             self.score = self._get_score(
                 True_Positives, True_Negatives, False_Positives, False_Negatives
             )
+            if self.strict_mode:
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(
                 True_Positives, True_Negatives, False_Positives, False_Negatives

@@ -2,7 +2,7 @@ from typing import List
 import textwrap
 
 
-class AgentGoalAccuracyTemplate:
+class GoalAccuracyTemplate:
     @staticmethod
     def get_accuracy_score(task, steps_taken):
         return textwrap.dedent(
