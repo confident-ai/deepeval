@@ -19,7 +19,10 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.tool_selection.template import ToolUseTemplate
-from deepeval.metrics.tool_selection.schema import ToolSelectionScore, UserInputAndTools
+from deepeval.metrics.tool_selection.schema import (
+    ToolSelectionScore,
+    UserInputAndTools,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -185,7 +188,9 @@ class ToolSelectionMetric(BaseConversationalMetric):
             user_and_tools.available_tools,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ToolSelectionScore)
+            res, cost = await self.model.a_generate(
+                prompt, schema=ToolSelectionScore
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -257,7 +262,9 @@ class ToolSelectionMetric(BaseConversationalMetric):
             res = self.model.generate(prompt)
             return res
 
-    async def _a_generate_reason(self, tool_use_scores: List[ToolSelectionScore]):
+    async def _a_generate_reason(
+        self, tool_use_scores: List[ToolSelectionScore]
+    ):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
