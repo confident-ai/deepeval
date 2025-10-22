@@ -281,3 +281,4 @@ class SpanInterceptor(SpanProcessor):
                 trace.status = TraceSpanStatus.SUCCESS
                 trace.end_time = perf_counter()
                 trace_manager.traces_to_evaluate.append(trace)
+                test_exporter.clear_span_json_list()
