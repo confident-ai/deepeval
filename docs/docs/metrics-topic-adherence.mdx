@@ -82,9 +82,9 @@ The `TopicAdherenceMetric` score is calculated through the following process:
 - Find question-answer pairs from the entire conversation, where question is taken from user and answered by the LLM agent.
 - Find the truth table values for all the question-answer pairs.
     - **True Positives**: Question is relevant and the response correctly answers it.
-    - **True Negatives**: Question is relevant, but the assistant refused to answer or gave an irrelevant response.
-    - **False Positives**: Question is NOT relevant, but the assistant still gave an answer
-    - **False Negatives**: Question is NOT relevant, and the assistant correctly refused to answer.
+    - **True Negatives**: Question is NOT relevant, and the assistant correctly refused to answer.
+    - **False Positives**: Question is NOT relevant, but the assistant still gave an answer.
+    - **False Negatives**: Question is relevant, but the assistant refused or gave an irrelevant response.
 
 Now, the metric uses the following formula to find the final score:
 

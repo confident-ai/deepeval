@@ -47,11 +47,7 @@ def agent(input):
         output=output,
         tools_called=tools
     )
-
-    itinerary = itinerary_generator(destination, days)
-    restaurants = restaurant_finder(destination)
-
-    return itinerary + restaurants
+    return output
 
 
 # Create dataset
