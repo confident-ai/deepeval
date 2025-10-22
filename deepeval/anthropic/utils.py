@@ -1,4 +1,6 @@
-from typing import Any, List
+from typing import Any, Iterable, List
+
+from anthropic.types import Message
 
 from deepeval.openai.utils import _fmt_url, _compact_dump
 from deepeval.utils import shorten
@@ -108,3 +110,99 @@ def stringify_anthropic_content(content: Any) -> str:
 
     # unknown dicts and types returned as shortened JSON
     return _compact_dump(content)
+
+
+def render_messages_anthropic(
+    messages: Iterable[Message],
+):
+    """
+    Extracts and normalizes tool calls and tool results from Anthropic API messages
+    for observability/logging purposes.
+
+    Args:
+        messages: Iterable of message dictionaries in Anthropic API format
+
+    Returns:
+        List of normalized message objects suitable for logging/observability
+    """
+    messages_list = []
+
+    for message in messages:
+        role = message.get("role")
+        content = message.get("content")
+
+        if role == "assistant":
+            if isinstance(content, str):
+                messages_list.append({
+                    "role": role,
+                    "content": content,
+                })
+            elif isinstance(content, list):
+                for block in content:
+                    block_type = block.get("type")
+                    if block_type == "text":
+                        messages_list.append({
+                            "role": role,
+                            "content": block.get("text", ""),
+                        })
+                    elif block_type == "tool_use":
+                        messages_list.append({
+                            "id": block.get("id", ""),
+                            "call_id": block.get("id", ""),
+                            "name": block.get("name", ""),
+                            "type": "function",
+                            "arguments": block.get("input", {}),
+                        })
+
+        elif role == "user":
+            if isinstance(content, str):
+                messages_list.append({
+                    "role": role,
+                    "content": content,
+                })
+            elif isinstance(content, list):
+                for block in content:
+                    block_type = block.get("type")
+                    if block_type == "text":
+                        messages_list.append({
+                            "role": role,
+                            "content": block.get("text", ""),
+                        })
+                    elif block_type == "image":
+                        messages_list.append({
+                            "role": role,
+                            "content": "[Image content]",
+                            "image_source": block.get("source", {}),
+                        })
+                    elif block_type == "tool_result":
+                        tool_content = block.get("content", "")
+                        if isinstance(tool_content, list):
+                            output_parts = []
+                            for tool_content_block in tool_content:
+                                if isinstance(tool_content_block, dict):
+                                    if tool_content_block.get("type") == "text":
+                                        output_parts.append(
+                                            tool_content_block.get("text", "")
+                                        )
+                                else:
+                                    output_parts.append(
+                                        str(tool_content_block)
+                                    )
+                            output = "\n".join(output_parts)
+                        else:
+                            output = tool_content
+
+                        messages_list.append({
+                            "call_id": block.get("tool_use_id", ""),
+                            "type": "tool",
+                            "output": output,
+                            "is_error": block.get("is_error", False),
+                        })
+
+        elif role == "system":
+            messages_list.append({
+                "role": role,
+                "content": content,
+            })
+
+    return messages_list

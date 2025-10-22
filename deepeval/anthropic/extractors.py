@@ -2,13 +2,17 @@ from anthropic.types.message import Message
 from anthropic.types import ToolUseBlock
 from typing import Any, Dict
 
-from deepeval.anthropic.utils import stringify_anthropic_content
+from deepeval.anthropic.utils import render_messages_anthropic, stringify_anthropic_content
 from deepeval.model_integrations.types import InputParameters, OutputParameters
 from deepeval.test_case.llm_test_case import ToolCall
 
 
-def extract_input_parameters(kwargs: Dict[str, Any]) -> InputParameters:
-    return extract_messages_api_input_parameters(kwargs)
+def safe_extract_input_parameters(kwargs: Dict[str, Any]) -> InputParameters:
+    # guarding against errors to be compatible with legacy APIs
+    try:
+        return extract_messages_api_input_parameters(kwargs)
+    except:
+        return InputParameters(model="NA")
 
 
 def extract_messages_api_input_parameters(
@@ -39,19 +43,23 @@ def extract_messages_api_input_parameters(
         system=system,
         max_tokens=max_tokens,
         input=stringify_anthropic_content(input_argument),
-        messages=messages,
+        messages=render_messages_anthropic(messages),
         tools=tools,
         tool_descriptions=tool_descriptions,
     )
 
 
-def extract_output_parameters(
+def safe_extract_output_parameters(
     message_response: Message,
     input_parameters: InputParameters,
 ) -> OutputParameters:
-    return extract_messages_api_output_parameters(
-        message_response, input_parameters
-    )
+    # guarding against errors to be compatible with legacy APIs
+    try:
+        return extract_messages_api_output_parameters(
+            message_response, input_parameters
+        )
+    except:
+        return OutputParameters()
 
 
 def extract_messages_api_output_parameters(
