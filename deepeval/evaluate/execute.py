@@ -490,7 +490,10 @@ async def a_execute_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     global_test_run_cache_manager.disable_write_cache = (
         cache_config.write_cache is False
@@ -609,7 +612,20 @@ async def a_execute_test_cases(
                         tasks.append(asyncio.create_task(task))
 
                     await asyncio.sleep(async_config.throttle_value)
-            await asyncio.gather(*tasks)
+
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks),
+                    timeout=_gather_timeout(),
+                )
+            except asyncio.TimeoutError:
+                # Cancel any still-pending tasks and drain them
+                for t in tasks:
+                    if not t.done():
+                        t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                raise
+
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
@@ -682,7 +698,19 @@ async def a_execute_test_cases(
                     tasks.append(asyncio.create_task(task))
 
                 await asyncio.sleep(async_config.throttle_value)
-        await asyncio.gather(*tasks)
+
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*tasks),
+                timeout=_gather_timeout(),
+            )
+        except asyncio.TimeoutError:
+            # Cancel any still-pending tasks and drain them
+            for t in tasks:
+                if not t.done():
+                    t.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
 
     return test_results
 
@@ -1279,7 +1307,10 @@ async def a_execute_agentic_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = cache_config.write_cache
@@ -1326,7 +1357,19 @@ async def a_execute_agentic_test_cases(
                     tasks.append(asyncio.create_task(task))
                     await asyncio.sleep(async_config.throttle_value)
 
-            await asyncio.gather(*tasks)
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks),
+                    timeout=_gather_timeout(),
+                )
+            except asyncio.TimeoutError:
+                # Cancel any still-pending tasks and drain them
+                for t in tasks:
+                    if not t.done():
+                        t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                raise
+
     else:
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -1474,9 +1517,21 @@ async def _a_execute_agentic_test_case(
         if _skip_metrics_for_error(span=span, trace=trace):
             return
 
-        child_tasks = [dfs(trace, child) for child in span.children]
+        child_tasks = [
+            asyncio.create_task(dfs(trace, child)) for child in span.children
+        ]
         if child_tasks:
-            await asyncio.gather(*child_tasks)
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*child_tasks),
+                    timeout=_gather_timeout(),
+                )
+            except asyncio.TimeoutError:
+                for t in child_tasks:
+                    if not t.done():
+                        t.cancel()
+                await asyncio.gather(*child_tasks, return_exceptions=True)
+                raise
 
     test_start_time = time.perf_counter()
 
@@ -2539,7 +2594,10 @@ async def _a_evaluate_traces(
 
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     eval_tasks = []
     # Here, we will work off a fixed-set copy to avoid surprises from potential
@@ -2582,7 +2640,18 @@ async def _a_evaluate_traces(
             )
             eval_tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*eval_tasks)
+
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*eval_tasks),
+            timeout=_gather_timeout(),
+        )
+    except asyncio.TimeoutError:
+        for t in eval_tasks:
+            if not t.done():
+                t.cancel()
+        await asyncio.gather(*eval_tasks, return_exceptions=True)
+        raise
 
 
 async def _evaluate_test_case_pairs(
@@ -2605,7 +2674,10 @@ async def _evaluate_test_case_pairs(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     tasks = []
     for count, test_case_pair in enumerate(test_case_pairs):
@@ -2638,7 +2710,19 @@ async def _evaluate_test_case_pairs(
             )
             tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*tasks)
+
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*tasks),
+            timeout=_gather_timeout(),
+        )
+    except asyncio.TimeoutError:
+        # Cancel any still-pending tasks and drain them
+        for t in tasks:
+            if not t.done():
+                t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
 
 
 def _execute_metric(
