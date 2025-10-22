@@ -10,16 +10,15 @@ from deepeval.test_case import (
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.template import (
     MultimodalGEvalTemplate,
 )
-from deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema import (
-    Steps,
-    ReasonScore,
-)
+import deepeval.metrics.multimodal_metrics.multimodal_g_eval.schema as mgschema
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     initialize_multimodal_model,
     check_mllm_test_case_params,
     construct_verbose_logs,
+    a_gen_and_extract,
+    gen_and_extract,
     trimAndLoadJson,
 )
 from deepeval.metrics.multimodal_metrics.multimodal_g_eval.utils import (
@@ -184,18 +183,14 @@ class MultimodalGEval(BaseMultimodalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = await self.model.a_generate([prompt], schema=Steps)
-            self.evaluation_cost += cost
-            return res.steps
-        else:
-            try:
-                res: Steps = await self.model.a_generate([prompt], schema=Steps)
-                return res.steps
-            except TypeError:
-                res = await self.model.a_generate([prompt])
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            mgschema.Steps,
+            extract_schema=lambda r: r.steps,
+            extract_json=lambda d: d["steps"],
+        )
 
     def _generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -207,18 +202,14 @@ class MultimodalGEval(BaseMultimodalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        if self.using_native_model:
-            res, cost = self.model.generate([prompt], schema=Steps)
-            self.evaluation_cost += cost
-            return res.steps
-        else:
-            try:
-                res: Steps = self.model.generate([prompt], schema=Steps)
-                return res.steps
-            except TypeError:
-                res = self.model.generate([prompt])
-                data = trimAndLoadJson(res, self)
-                return data["steps"]
+
+        return gen_and_extract(
+            self,
+            prompt,
+            mgschema.Steps,
+            extract_schema=lambda r: r.steps,
+            extract_json=lambda d: d["steps"],
+        )
 
     async def _a_evaluate(
         self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
@@ -258,11 +249,12 @@ class MultimodalGEval(BaseMultimodalMetric):
 
             # Don't have to check for using native model
             # since generate raw response only exist for deepeval's native model
-            res, cost = await self.model.a_generate_raw_response(
+            result, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            if self.evaluation_cost is not None:
+                self.evaluation_cost += cost
+            data = trimAndLoadJson(result.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -271,7 +263,7 @@ class MultimodalGEval(BaseMultimodalMetric):
 
             try:
                 weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
+                    score, result
                 )
                 return weighted_summed_score, reason
             except Exception:
@@ -279,21 +271,14 @@ class MultimodalGEval(BaseMultimodalMetric):
         except (
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = await self.model.a_generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
-            else:
-                try:
-                    res: ReasonScore = await self.model.a_generate(
-                        prompt, schema=ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = await self.model.a_generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+
+            return await a_gen_and_extract(
+                self,
+                prompt,
+                mgschema.ReasonScore,
+                extract_schema=lambda r: (r.score, r.reason),
+                extract_json=lambda d: (d["score"], d["reason"]),
+            )
 
     def _evaluate(
         self, test_case: MLLMTestCase, _additional_context: Optional[str] = None
@@ -332,11 +317,12 @@ class MultimodalGEval(BaseMultimodalMetric):
             if no_multimodal_log_prob_support(self.model):
                 raise AttributeError("log_probs unsupported.")
 
-            res, cost = self.model.generate_raw_response(
+            result, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=self.top_logprobs
             )
-            self.evaluation_cost += cost
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            if self.evaluation_cost is not None:
+                self.evaluation_cost += cost
+            data = trimAndLoadJson(result.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -345,28 +331,21 @@ class MultimodalGEval(BaseMultimodalMetric):
 
             try:
                 weighted_summed_score = calculate_weighted_summed_score(
-                    score, res
+                    score, result
                 )
                 return weighted_summed_score, reason
             except Exception:
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            if self.using_native_model:
-                res, cost = self.model.generate(prompt)
-                self.evaluation_cost += cost
-                data = trimAndLoadJson(res, self)
-                return data["score"], data["reason"]
-            else:
-                try:
-                    res: ReasonScore = self.model.generate(
-                        prompt, schema=ReasonScore
-                    )
-                    return res.score, res.reason
-                except TypeError:
-                    res = self.model.generate(prompt)
-                    data = trimAndLoadJson(res, self)
-                    return data["score"], data["reason"]
+
+            return gen_and_extract(
+                self,
+                prompt,
+                mgschema.ReasonScore,
+                extract_schema=lambda r: (r.score, r.reason),
+                extract_json=lambda d: (d["score"], d["reason"]),
+            )
 
     def is_successful(self) -> bool:
         if self.error is not None:

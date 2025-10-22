@@ -23,6 +23,8 @@ from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
+    a_gen_and_extract,
+    gen_and_extract,
     trimAndLoadJson,
     initialize_model,
     convert_turn_to_dict,
@@ -192,18 +194,14 @@ class ConversationalGEval(BaseConversationalMetric):
         prompt = self.evaluation_template.generate_evaluation_steps(
             criteria=self.criteria, parameters=g_eval_params_str
         )
-        result, cost = await self.model.a_generate_with_schema(
-            prompt, schema=cgschema.Steps
+
+        return await a_gen_and_extract(
+            self,
+            prompt,
+            cgschema.Steps,
+            extract_schema=lambda r: r.steps,
+            extract_json=lambda d: d["steps"],
         )
-        if self.evaluation_cost is not None:
-            self.evaluation_cost += cost
-
-        if isinstance(result, cgschema.Steps):
-            steps: List[str] = result.steps
-        else:
-            steps = trimAndLoadJson(result, self)["steps"]
-
-        return steps
 
     def _generate_evaluation_steps(self) -> List[str]:
         if self.evaluation_steps:
@@ -216,18 +214,13 @@ class ConversationalGEval(BaseConversationalMetric):
             criteria=self.criteria, parameters=g_eval_params_str
         )
 
-        result, cost = self.model.generate_with_schema(
-            prompt, schema=cgschema.Steps
+        return gen_and_extract(
+            self,
+            prompt,
+            cgschema.Steps,
+            extract_schema=lambda r: r.steps,
+            extract_json=lambda d: d["steps"],
         )
-        if self.evaluation_cost is not None:
-            self.evaluation_cost += cost
-
-        if isinstance(result, cgschema.Steps):
-            steps: List[str] = result.steps
-        else:
-            steps = trimAndLoadJson(result, self)["steps"]
-
-        return steps
 
     async def _a_evaluate(
         self, test_case: ConversationalTestCase
@@ -261,11 +254,11 @@ class ConversationalGEval(BaseConversationalMetric):
                 parameters=g_eval_params_str,
             )
         try:
-            res, cost = await self.model.a_generate_raw_response(
+            result, cost = await self.model.a_generate_raw_response(
                 prompt, top_logprobs=20
             )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            data = trimAndLoadJson(result.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -274,7 +267,7 @@ class ConversationalGEval(BaseConversationalMetric):
 
             try:
                 weighted_summed_score = self.generate_weighted_summed_score(
-                    score, res
+                    score, result
                 )
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
@@ -282,19 +275,14 @@ class ConversationalGEval(BaseConversationalMetric):
         except (
             AttributeError
         ):  # This catches the case where a_generate_raw_response doesn't exist.
-            result, cost = await self.model.a_generate_with_schema(
-                prompt, schema=cgschema.ReasonScore
+
+            return await a_gen_and_extract(
+                self,
+                prompt,
+                cgschema.ReasonScore,
+                extract_schema=lambda r: (r.score, r.reason),
+                extract_json=lambda d: (d["score"], d["reason"]),
             )
-            if self.evaluation_cost is not None:
-                self.evaluation_cost += cost
-
-            if isinstance(result, cgschema.ReasonScore):
-                score, reason = result.score, result.reason
-            else:
-                data = trimAndLoadJson(result, self)
-                score, reason = data["score"], data["reason"]
-
-            return score, reason
 
     def evaluate(
         self, test_case: ConversationalTestCase
@@ -328,11 +316,11 @@ class ConversationalGEval(BaseConversationalMetric):
                 parameters=g_eval_params_str,
             )
         try:
-            res, cost = self.model.generate_raw_response(
+            result, cost = self.model.generate_raw_response(
                 prompt, top_logprobs=20
             )
             self.evaluation_cost += cost
-            data = trimAndLoadJson(res.choices[0].message.content, self)
+            data = trimAndLoadJson(result.choices[0].message.content, self)
 
             reason = data["reason"]
             score = data["score"]
@@ -341,26 +329,20 @@ class ConversationalGEval(BaseConversationalMetric):
 
             try:
                 weighted_summed_score = self.generate_weighted_summed_score(
-                    score, res
+                    score, result
                 )
                 return weighted_summed_score, reason
             except (KeyError, AttributeError, TypeError, ValueError):
                 return score, reason
         except AttributeError:
             # This catches the case where a_generate_raw_response doesn't exist.
-            result, cost = self.model.generate_with_schema(
-                prompt, schema=cgschema.ReasonScore
+            return gen_and_extract(
+                self,
+                prompt,
+                cgschema.ReasonScore,
+                extract_schema=lambda r: (r.score, r.reason),
+                extract_json=lambda d: (d["score"], d["reason"]),
             )
-            if self.evaluation_cost is not None:
-                self.evaluation_cost += cost
-
-            if isinstance(result, cgschema.ReasonScore):
-                score, reason = result.score, result.reason
-            else:
-                data = trimAndLoadJson(result, self)
-                score, reason = data["score"], data["reason"]
-
-            return score, reason
 
     def generate_weighted_summed_score(
         self, raw_score: int, raw_response: ChatCompletion

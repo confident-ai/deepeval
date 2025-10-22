@@ -2,12 +2,20 @@ import inspect
 import json
 import re
 import sys
-import itertools
-from typing import Any, Dict, Optional, List, Union, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from deepeval.errors import (
     MissingTestCaseParamsError,
-    MismatchedTestCaseInputsError,
 )
 from deepeval.models import (
     DeepEvalBaseLLM,
@@ -45,7 +53,6 @@ from deepeval.metrics import (
 )
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
 from deepeval.test_case import (
-    Turn,
     LLMTestCase,
     LLMTestCaseParams,
     MLLMTestCase,
@@ -57,6 +64,10 @@ from deepeval.test_case import (
     ToolCall,
     TurnParams,
 )
+
+
+SchemaType = TypeVar("SchemaType")
+ReturnType = TypeVar("ReturnType")
 
 
 def copy_metrics(
@@ -579,3 +590,57 @@ def initialize_embedding_model(
     raise TypeError(
         f"Unsupported type for embedding model: {type(model)}. Expected None, str, DeepEvalBaseEmbeddingModel, OpenAIEmbeddingModel, AzureOpenAIEmbeddingModel, OllamaEmbeddingModel, LocalEmbeddingModel."
     )
+
+
+def _accrue_cost(metric_self, cost: float) -> None:
+    # metric_self has `evaluation_cost` (may be None for non-native models)
+    if getattr(metric_self, "evaluation_cost", None) is not None:
+        metric_self.evaluation_cost += cost
+
+
+def gen_and_extract(
+    metric_self,
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    """
+    Synchronous wrapper:
+    - calls model.generate_with_schema(...)
+    - accrues cost if applicable
+    - if schema instance -> extract_schema
+      else parse JSON -> extract_json
+    """
+    result, cost = metric_self.model.generate_with_schema(
+        prompt, schema=schema_cls
+    )
+    _accrue_cost(metric_self, cost)
+
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+    data = trimAndLoadJson(result, metric_self)
+    return extract_json(data)
+
+
+async def a_gen_and_extract(
+    metric_self,
+    prompt: Any,
+    schema_cls: Type[SchemaType],
+    *,
+    extract_schema: Callable[[SchemaType], ReturnType],
+    extract_json: Callable[[Dict[str, Any]], ReturnType],
+) -> ReturnType:
+    """
+    Async wrapper (same idea as gen_and_extract).
+    """
+    result, cost = await metric_self.model.a_generate_with_schema(
+        prompt, schema=schema_cls
+    )
+    _accrue_cost(metric_self, cost)
+
+    if isinstance(result, schema_cls):
+        return extract_schema(result)
+    data = trimAndLoadJson(result, metric_self)
+    return extract_json(data)
