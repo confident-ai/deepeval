@@ -8,6 +8,6 @@ class UserInputAndTools(BaseModel):
     available_tools: str
 
 
-class ToolUseScore(BaseModel):
+class ToolSelectionScore(BaseModel):
     score: float
     reason: str

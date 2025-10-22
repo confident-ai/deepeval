@@ -18,12 +18,12 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.tool_use.template import ToolUseTemplate
-from deepeval.metrics.tool_use.schema import ToolUseScore, UserInputAndTools
+from deepeval.metrics.tool_selection.template import ToolUseTemplate
+from deepeval.metrics.tool_selection.schema import ToolSelectionScore, UserInputAndTools
 from deepeval.metrics.api import metric_data_manager
 
 
-class ToolUseMetric(BaseConversationalMetric):
+class ToolSelectionMetric(BaseConversationalMetric):
 
     _required_test_case_params = [
         TurnParams.ROLE,
@@ -160,19 +160,19 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.available_tools,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ToolUseScore)
+            res, cost = self.model.generate(prompt, schema=ToolSelectionScore)
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: ToolUseScore = self.model.generate(
-                    prompt, schema=ToolUseScore
+                res: ToolSelectionScore = self.model.generate(
+                    prompt, schema=ToolSelectionScore
                 )
                 return res
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ToolUseScore(**data)
+                return ToolSelectionScore(**data)
 
     async def _a_get_tool_use_score(
         self,
@@ -185,19 +185,19 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.available_tools,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=ToolUseScore)
+            res, cost = await self.model.a_generate(prompt, schema=ToolSelectionScore)
             self.evaluation_cost += cost
             return res
         else:
             try:
-                res: ToolUseScore = await self.model.a_generate(
-                    prompt, schema=ToolUseScore
+                res: ToolSelectionScore = await self.model.a_generate(
+                    prompt, schema=ToolSelectionScore
                 )
                 return res
             except TypeError:
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
-                return ToolUseScore(**data)
+                return ToolSelectionScore(**data)
 
     def _get_user_input_and_turns(
         self,
@@ -233,14 +233,14 @@ class ToolUseMetric(BaseConversationalMetric):
             user_inputs_and_tools.append(new_user_input_tools)
         return user_inputs_and_tools
 
-    def _calculate_score(self, tool_use_scores: List[ToolUseScore]):
+    def _calculate_score(self, tool_use_scores: List[ToolSelectionScore]):
         scores_sum = sum(
             [tool_use_score.score for tool_use_score in tool_use_scores]
         )
         scores_divisor = len(tool_use_scores) if len(tool_use_scores) > 0 else 1
         return scores_sum / scores_divisor
 
-    def _generate_reason(self, tool_use_scores: List[ToolUseScore]):
+    def _generate_reason(self, tool_use_scores: List[ToolSelectionScore]):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
@@ -257,7 +257,7 @@ class ToolUseMetric(BaseConversationalMetric):
             res = self.model.generate(prompt)
             return res
 
-    async def _a_generate_reason(self, tool_use_scores: List[ToolUseScore]):
+    async def _a_generate_reason(self, tool_use_scores: List[ToolSelectionScore]):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
@@ -283,4 +283,4 @@ class ToolUseMetric(BaseConversationalMetric):
 
     @property
     def __name__(self):
-        return "Tool Use"
+        return "Tool Selection"
