@@ -56,8 +56,6 @@ from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
-    TaskCompletionMetric,
-    ExecutionEfficiencyMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,

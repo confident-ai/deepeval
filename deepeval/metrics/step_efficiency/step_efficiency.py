@@ -12,7 +12,7 @@ from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.step_efficiency.template import (
-    ExecutionEfficiencyTemplate,
+    StepEfficiencyTemplate,
 )
 from deepeval.metrics.step_efficiency.schema import Task, EfficiencyVerdict
 from deepeval.metrics.api import metric_data_manager
@@ -145,7 +145,7 @@ class StepEfficiencyMetric(BaseMetric):
 
     def _get_score(self, task: str, test_case: LLMTestCase):
         if test_case._trace_dict is not None:
-            prompt = ExecutionEfficiencyTemplate.get_execution_efficiency(
+            prompt = StepEfficiencyTemplate.get_execution_efficiency(
                 task, test_case._trace_dict
             )
 
@@ -166,7 +166,7 @@ class StepEfficiencyMetric(BaseMetric):
 
     async def _a_get_score(self, task: str, test_case: LLMTestCase):
         if test_case._trace_dict is not None:
-            prompt = ExecutionEfficiencyTemplate.get_execution_efficiency(
+            prompt = StepEfficiencyTemplate.get_execution_efficiency(
                 task, test_case._trace_dict
             )
 
@@ -188,7 +188,7 @@ class StepEfficiencyMetric(BaseMetric):
                 return EfficiencyVerdict(**data)
 
     def _extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        prompt = ExecutionEfficiencyTemplate.extract_task_from_trace(
+        prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
         if self.using_native_model:
@@ -205,7 +205,7 @@ class StepEfficiencyMetric(BaseMetric):
                 return data["task"]
 
     async def _a_extract_task_from_trace(self, test_case: LLMTestCase) -> str:
-        prompt = ExecutionEfficiencyTemplate.extract_task_from_trace(
+        prompt = StepEfficiencyTemplate.extract_task_from_trace(
             test_case._trace_dict
         )
         if self.using_native_model:

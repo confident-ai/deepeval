@@ -14,7 +14,7 @@ from deepeval.metrics import BaseConversationalMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.goal_accuracy.template import (
-    AgentGoalAccuracyTemplate,
+    GoalAccuracyTemplate,
 )
 from deepeval.metrics.goal_accuracy.utils import (
     print_goals_and_steps_taken,
@@ -195,7 +195,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         return goal_and_steps_taken
 
     def _get_plan_scores(self, user_goal, steps_taken):
-        prompt = AgentGoalAccuracyTemplate.get_plan_evaluation_score(
+        prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
             user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
@@ -212,7 +212,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 return PlanScore(**data)
 
     async def _a_get_plan_scores(self, user_goal, steps_taken):
-        prompt = AgentGoalAccuracyTemplate.get_plan_evaluation_score(
+        prompt = GoalAccuracyTemplate.get_plan_evaluation_score(
             user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
@@ -255,7 +255,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = AgentGoalAccuracyTemplate.get_final_reason(
+        prompt = GoalAccuracyTemplate.get_final_reason(
             self.score, self.threshold, goal_evaluations, plan_evalautions
         )
         if self.using_native_model:
@@ -280,7 +280,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 f"Score: {plan_score.score}, Reason: {plan_score.reason} \n"
             )
 
-        prompt = AgentGoalAccuracyTemplate.get_final_reason(
+        prompt = GoalAccuracyTemplate.get_final_reason(
             self.score, self.threshold, goal_evaluations, plan_evalautions
         )
         if self.using_native_model:
@@ -292,7 +292,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
             return res
 
     def _get_goal_accuracy_score(self, user_goal, steps_taken):
-        prompt = AgentGoalAccuracyTemplate.get_accuracy_score(
+        prompt = GoalAccuracyTemplate.get_accuracy_score(
             user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
@@ -309,7 +309,7 @@ class GoalAccuracyMetric(BaseConversationalMetric):
                 return GoalScore(**data)
 
     async def _a_get_goal_accuracy_score(self, user_goal, steps_taken):
-        prompt = AgentGoalAccuracyTemplate.get_accuracy_score(
+        prompt = GoalAccuracyTemplate.get_accuracy_score(
             user_goal, "\n".join(steps_taken)
         )
         if self.using_native_model:
