@@ -2,6 +2,7 @@ import os
 import json
 
 import pytest
+import asyncio
 from tests.test_integrations.utils import (
     assert_json_object_structure,
     load_trace_data,
@@ -10,6 +11,12 @@ from deepeval.tracing.trace_test_manager import trace_testing_manager
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent import FunctionAgent
 from deepeval.tracing import trace
+from deepeval.tracing.trace_context import LlmSpanContext, AgentSpanContext
+
+# from deepeval.integrations.llama_index import instrument_llama_index
+# import llama_index.core.instrumentation as instrument
+
+# instrument_llama_index(instrument.get_dispatcher())
 
 
 def multiply(a: float, b: float) -> float:
@@ -26,7 +33,15 @@ agent = FunctionAgent(
 
 
 async def llm_app(input: str):
-    with trace():
+    agent_span_context = AgentSpanContext(
+        metric_collection="test_collection_1",
+    )
+    llm_span_context = LlmSpanContext(
+        metric_collection="test_collection_1",
+    )
+    with trace(
+        agent_span_context=agent_span_context, llm_span_context=llm_span_context
+    ):
         await agent.run(input)
 
 
@@ -36,7 +51,6 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "llama_index.json")
 
 
-@pytest.mark.skip(reason="LlamaIndex is deprecated")
 async def test_json_schema():
     """
     Test the json schema of the trace. Raises an exception if the schema is invalid.

@@ -5,6 +5,10 @@ import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
+from deepeval.tracing.trace_context import (
+    current_llm_context,
+    current_agent_context,
+)
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -22,11 +26,6 @@ try:
         LLMChatEndEvent,
     )
     from llama_index_instrumentation.dispatcher import Dispatcher
-    from deepeval.integrations.llama_index.agent.patched import (
-        FunctionAgent as PatchedFunctionAgent,
-        ReActAgent as PatchedReActAgent,
-        CodeActAgent as PatchedCodeActAgent,
-    )
     from deepeval.integrations.llama_index.utils import (
         parse_id,
         prepare_input_llm_test_case_params,
@@ -67,6 +66,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 ).strip()
                 input_messages.append({"role": role, "content": content})
 
+            llm_span_context = current_llm_context.get()
             # create the span
             llm_span = LlmSpan(
                 name="ConfidentLLMSpan",
@@ -83,6 +83,12 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 ),  # check the model name not coming in this option
                 input=input_messages,
                 output="",
+                metrics=llm_span_context.metrics if llm_span_context else None,
+                metric_collection=(
+                    llm_span_context.metric_collection
+                    if llm_span_context
+                    else None
+                ),
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
@@ -144,6 +150,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
         # conditions to qualify as agent start run span
         if method_name == "run":
+            agent_span_context = current_agent_context.get()
             span = AgentSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -153,6 +160,14 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 start_time=perf_counter(),
                 name="Agent",  # TODO: decide the name of the span
                 input=bound_args.arguments,
+                metrics=(
+                    agent_span_context.metrics if agent_span_context else None
+                ),
+                metric_collection=(
+                    agent_span_context.metric_collection
+                    if agent_span_context
+                    else None
+                ),
             )
 
         # prepare input test case params for the span
