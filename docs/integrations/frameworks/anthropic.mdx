@@ -24,7 +24,7 @@ Standalone evaluation treats the Claude API integration as a single component, a
 from deepeval.anthropic import Anthropic
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace
+from deepeval.tracing import trace, LlmSpanContext
 
 client = Anthropic()
 
@@ -33,10 +33,12 @@ datset.pull(alias="My Dataset")
 
 for golden in dataset.evals_iterator():
     with trace(
-        metrics=[AnswerRelevancyMetric()],
-        expected_output=golden.expected_output,
+        llm_span_context=LlmSpanContext(
+            metrics=[AnswerRelevancyMetric()],
+            expected_output=golden.expected_output,
+        )
     ):
-        client.messages.create(
+        response = client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=4096,
             system="You are a helpful assistant.",
@@ -47,6 +49,7 @@ for golden in dataset.evals_iterator():
                 }
             ],
         )
+        return response.content[0].text
 ```
 
 </TabItem>
@@ -58,16 +61,18 @@ import asyncio
 from deepeval.anthropic import AsyncAnthropic
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace
+from deepeval.tracing import trace, LlmSpanContext
 
 async_client = AsyncAnthropic()
 
 async def llm_app(input):
     with trace(
-        llm_metrics=[AnswerRelevancyMetric()],
-        expected_output=golden.expected_output,
+        llm_span_context=LlmSpanContext(
+            llm_metrics=[AnswerRelevancyMetric()],
+            expected_output=golden.expected_output,
+        )
     ):
-        await async_client.messages.create(
+        response = await async_client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=4096,
             system="You are a helpful assistant.",
@@ -78,6 +83,7 @@ async def llm_app(input):
                 }
             ],
         )
+        return response.content[0].text
 
 dataset = EvaluationDataset()
 datset.pull(alias="My Dataset")
@@ -113,7 +119,7 @@ For component-level evaluation, use `deepeval`'s `Anthropic` client and add the 
 from deepeval.anthropic import Anthropic
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace, observe
+from deepeval.tracing import trace, observe, LlmSpanContext
 
 @observe()
 def retrieve_documents(query):
@@ -125,7 +131,12 @@ def retrieve_documents(query):
 @observe()
 def llm_app(input):
     client = Anthropic()
-    with trace(llm_metrics=[AnswerRelevancyMetric()]):
+    with trace(
+        llm_span_context=LlmSpanContext(
+            metrics=[AnswerRelevancyMetric()],
+            expected_output=golden.expected_output,
+        )
+    ):
         response = client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=4096,
@@ -155,7 +166,7 @@ import asyncio
 from deepeval.anthropic import AsyncAnthropic
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
-from deepeval.tracing import trace, observe
+from deepeval.tracing import trace, observe, LlmSpanContext
 
 @observe()
 def retrieve_documents(query):
@@ -166,9 +177,13 @@ def retrieve_documents(query):
 
 @observe()
 async def llm_app(input):
-    client = AsyncAnthropic()
-    with trace(llm_metrics=[AnswerRelevancyMetric()]):
-        response = await client.responses.create(
+    async_client = AsyncAnthropic()
+    with trace(
+        llm_span_context=LlmSpanContext(
+            metrics=[AnswerRelevancyMetric(), BiasMetric()]
+        ),
+    ):
+        response = await async_client.responses.create(
             model="claude-sonnet-4-5",
             max_tokens=4096,
             system="You are a helpful assistant.",
@@ -207,11 +222,15 @@ Set the `llm_metric_collection` parameter in the `trace` context manager to eval
 
 ```python main.py
 from deepeval.anthropic import Anthropic
-from deepeval.tracing import trace
+from deepeval.tracing import trace, LlmSpanContext
 
 client = Anthropic()
 
-with trace(llm_metric_collection="test_collection_1"):
+with trace(
+    llm_span_context=LlmSpanContext(
+        metric_collection="test_collection_1",
+    ),
+):
     response = client.messages.create(
         model="claude-sonnet-4-5",
         max_tokens=4096,
