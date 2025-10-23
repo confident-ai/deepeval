@@ -422,7 +422,7 @@ class LoopNode(BaseNode):
         for child in self.children:
             if not isinstance(child, TaskNode) and len(self.children) > 1:
                 raise ValueError(
-                    "A LoopNode must only have a single TaskNode in its 'children'."
+                    "A LoopNode must only have a single TaskNode in its 'child'."
                 )
 
         if self.loop_function and self.instructions:
