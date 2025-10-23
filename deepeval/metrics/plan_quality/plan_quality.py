@@ -22,6 +22,9 @@ from deepeval.metrics.plan_quality.schema import (
 from deepeval.metrics.plan_quality.template import (
     PlanQualityTemplate,
 )
+from deepeval.metrics.plan_adherence.template import (
+    PlanAdherenceTemplate,
+)
 from deepeval.metrics.api import metric_data_manager
 
 
@@ -79,26 +82,29 @@ class PlanQualityMetric(BaseMetric):
             else:
                 task = self._extract_task_from_trace(test_case)
                 agent_plan = self._extract_plan_from_trace(test_case)
-                plan_quality_score = self._get_plan_quality_score(
-                    task, agent_plan.plan, test_case
-                )
-                self.score = plan_quality_score.score
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
+                if len(agent_plan.plan) == 0:
+                    self.score = 1
+                    self.reason = "There were no plans to evaluate within the trace of your agent's execution. Please check if the agent's planning or reasoning or thinking is stored in any one of the trace attributes."
+                else:
+                    plan_quality_score = self._get_plan_quality_score(
+                        task, agent_plan.plan
                     )
+                    self.score = plan_quality_score.score
+                    if self.strict_mode:
+                        self.score = (
+                            0
+                            if self.strict_mode and self.score < self.threshold
+                            else self.score
+                        )
+                    self.reason = plan_quality_score.reason
                 self.success = self.score >= self.threshold
-                self.reason = plan_quality_score.reason
-
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
                         f"Task: {task} \n",
                         f"Agent Plan: \n{prettify_list(agent_plan.plan)} \n",
-                        f"Final Score Score: {plan_quality_score.score} \n",
-                        f"Final Score Reason: {plan_quality_score.reason} \n",
+                        f"Final Score Score: {self.score} \n",
+                        f"Final Score Reason: {self.reason} \n",
                     ],
                 )
 
@@ -130,25 +136,29 @@ class PlanQualityMetric(BaseMetric):
         ):
             task = await self._a_extract_task_from_trace(test_case)
             agent_plan = await self._a_extract_plan_from_trace(test_case)
-            plan_quality_score = await self._a_get_plan_quality_score(
-                task, agent_plan.plan, test_case
-            )
-            self.score = plan_quality_score.score
-            if self.strict_mode:
-                self.score = (
-                    0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
+            if len(agent_plan.plan) == 0:
+                self.score = 1
+                self.reason = "There are no plans to evaluate within the trace of your agent's execution. Please check if the agent's planning or reasoning or thinking is stored in the trace attributes."
+            else:
+                plan_quality_score = await self._a_get_plan_quality_score(
+                    task, agent_plan.plan
                 )
+                self.score = plan_quality_score.score
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
+                self.reason = plan_quality_score.reason
             self.success = self.score >= self.threshold
-            self.reason = plan_quality_score.reason
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
                     f"Task: {task} \n",
                     f"Agent Plan: \n{prettify_list(agent_plan.plan)} \n",
-                    f"Final Score: {plan_quality_score.score} \n",
-                    f"Final Reason: {plan_quality_score.reason} \n",
+                    f"Final Score: {self.score} \n",
+                    f"Final Reason: {self.reason} \n",
                 ],
             )
 
@@ -159,9 +169,9 @@ class PlanQualityMetric(BaseMetric):
 
             return self.score
 
-    def _get_plan_quality_score(self, task, plan, test_case):
+    def _get_plan_quality_score(self, task, plan):
         prompt = PlanQualityTemplate.evaluate_plan_quality(
-            task, "\n".join(plan), test_case._trace_dict
+            task, "\n".join(plan)
         )
         if self.using_native_model:
             res, cost = self.model.generate(prompt, schema=PlanQualityScore)
@@ -176,9 +186,9 @@ class PlanQualityMetric(BaseMetric):
                 data = trimAndLoadJson(res, self)
                 return PlanQualityScore(**data)
 
-    async def _a_get_plan_quality_score(self, task, plan, test_case):
+    async def _a_get_plan_quality_score(self, task, plan):
         prompt = PlanQualityTemplate.evaluate_plan_quality(
-            task, "\n".join(plan), test_case._trace_dict
+            task, "\n".join(plan)
         )
         if self.using_native_model:
             res, cost = await self.model.a_generate(
@@ -198,7 +208,7 @@ class PlanQualityMetric(BaseMetric):
                 return PlanQualityScore(**data)
 
     def _extract_plan_from_trace(self, test_case: LLMTestCase) -> AgentPlan:
-        prompt = PlanQualityTemplate.extract_plan_from_trace(
+        prompt = PlanAdherenceTemplate.extract_plan_from_trace(
             test_case._trace_dict
         )
         if self.using_native_model:
@@ -217,7 +227,7 @@ class PlanQualityMetric(BaseMetric):
     async def _a_extract_plan_from_trace(
         self, test_case: LLMTestCase
     ) -> AgentPlan:
-        prompt = PlanQualityTemplate.extract_plan_from_trace(
+        prompt = PlanAdherenceTemplate.extract_plan_from_trace(
             test_case._trace_dict
         )
         if self.using_native_model:

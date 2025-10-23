@@ -6,99 +6,97 @@ from deepeval.tracing.utils import make_json_serializable
 class PlanQualityTemplate:
 
     @staticmethod
-    def extract_plan_from_trace(trace: dict) -> str:
-        return textwrap.dedent(
-            f"""You are a systems analyst tasked with extracting the **agent's internal plan** from its execution trace.
-
-                You are given a full nested trace of an AI agent, including tools, LLM calls, retrievals, and custom components.
-
-                Your job is to:
-                1. Analyze the full execution trace to infer what the agent's intended **step-by-step plan** was for fulfilling the user's request.
-                2. Return a structured natural language list of the plan the agent followed or intended to follow.
-                3. Focus on what the agent seemed to **intend**, not just what it executed — for example, if some steps failed or were not completed.
-
-                ---
-
-                Output Format:
-                Return a JSON object with a single key `"plan"` and a list of strings as the value, where each string is a step in the agent's intended plan.
-
-                Example:
-                {{
-                    "plan": [
-                        "Search for flights to Chicago on the requested date",
-                        "Find hotels in Chicago for the duration of the trip",
-                        "Generate a meeting agenda",
-                        "Retrieve presentation slides from past decks"
-                    ]
-                }}
-
-                Only include the plan. Do not add commentary, trace output, or evaluation.
-
-                ---
-
-                Trace:
-                {json.dumps(trace, indent=2, default=str)}
-
-                JSON:
-            """
-        )
-
-    @staticmethod
     def evaluate_plan_quality(
-        user_task: str, agent_plan: list, execution_trace: dict
+        user_task: str, agent_plan: list
     ) -> str:
         return textwrap.dedent(
-            f"""You are an expert evaluator assessing the **quality of an agent's plan** to complete a user's task, using both the proposed plan and the full execution trace for context.
+            f"""You are a **plan quality evaluator**. Your task is to critically assess the **quality, completeness, and optimality** of an AI agent's plan to accomplish the given user task.
 
-                You are given:
-                - A structured description of the **user's task** — what the agent was supposed to accomplish.
-                - The **agent's plan** — a sequence of steps intended to fulfill the user's task.
-                - The full **execution trace** of the agent's behavior, which can provide additional context for understanding the scope and structure of the plan.
+                INPUTS:
 
-                Your job is to:
-                1. Assess whether the agent's plan, **regardless of execution**, is a high-quality response to the user's task.
-                2. Identify if the plan is:
-                - **Complete**: Does it cover all major aspects of the user’s goal?
-                - **Scoped**: Are the steps appropriately detailed, with no obvious gaps or unjustified complexity?
-                - **Logical**: Are the steps ordered in a coherent and goal-directed manner?
-                3. Use the trace **only as context** to help you understand the agent's operational environment — not to judge execution quality.
+                - **User Task:** The user's explicit goal or instruction.
+                - **Agent Plan:** The ordered list of steps the agent intends to follow to achieve that goal.
+
+                EVALUATION OBJECTIVE:
+
+                Judge the **intrinsic quality** of the plan — whether the plan itself is strong enough to fully and efficiently achieve the user's task.
+
+                The evaluation must be **strict**.  If the plan is incomplete, inefficient, redundant, or missing critical details, assign a very low score.
+
+                STRICT EVALUATION CRITERIA:
+
+                1. Completeness (Most Important)
+                - The plan must fully address all major requirements of the user task.  
+                - Missing even one critical subtask or dependency should reduce the score sharply.
+                - The plan must include all prerequisite actions necessary for the final outcome.
+
+                2. Logical Coherence
+                - Steps must follow a clear, rational sequence that leads directly to completing the task.  
+                - Disordered, redundant, or circular reasoning should be penalized heavily.
+                - Every step must have a clear purpose; no filler or irrelevant actions.
+
+                3. Optimality and Efficiency
+                - The plan must be **minimal but sufficient** — no unnecessary or repetitive steps.
+                - If a more direct, simpler, or logically superior plan could achieve the same outcome, the current plan should receive a lower score.
+
+                4. Level of Detail
+                - Each step should be specific enough for an agent to execute it reliably without ambiguity.  
+                - Vague steps (e.g., “Do research”, “Handle results”) that lack operational clarity 
+                    lower the score.
+
+                5. Alignment with Task
+                - The plan must explicitly and directly target the user's stated goal.  
+                - If any step diverges from the main objective, the score should drop significantly.
 
                 ---
 
-                SCORING GUIDE:
+                SCORING SCALE (STRICT)
 
-                - **1.0** → Excellent plan: Fully aligned with the task, no omissions, clean and purposeful structure.
-                - **0.75** → Good plan: Mostly aligned with the task; may have minor inefficiencies or small gaps.
-                - **0.5** → Mixed plan: Covers some of the task but has structural issues or partial coverage.
-                - **0.25** → Poor plan: Many important steps missing or logic is flawed or unclear.
-                - **0.0** → Inadequate plan: Plan is vague, unrelated, or fundamentally misaligned with the task.
+                - **1.0 — Excellent plan**
+                - Fully complete, logically ordered, and optimally efficient.  
+                - No missing, redundant, or ambiguous steps.  
+                - Directly fulfills every aspect of the user task.
 
-                ---
+                - **0.75 — Good plan**
+                - Covers nearly all aspects of the task with clear logic.  
+                - Minor gaps or small inefficiencies that do not block task completion.
+
+                - **0.5 — Adequate but flawed plan**
+                - Partially complete; key details missing or step order inefficient.  
+                - Some ambiguity or redundancy that would likely affect execution success.
+
+                - **0.25 — Weak plan**
+                - Major missing steps or unclear logic.  
+                - The plan would likely fail to complete the task as written.
+
+                - **0.0 — Inadequate plan**
+                - Irrelevant, incoherent, or severely incomplete plan.  
+                - Does not align with the user’s task or cannot plausibly achieve it.
+
+                *When in doubt, assign the lower score.*
 
                 OUTPUT FORMAT:
 
-                Return a JSON object like this:
+                Return a JSON object with this exact structure:
 
                 {{
-                "score": 0.0,
-                "reason": "..."  // 1-3 precise sentences explaining why the plan did or did not match the task.
+                    "score": 0.0,
+                    "reason": "1-3 short, precise sentences explaining what the plan lacks or how it could fail."
                 }}
 
-                The reason must:
-                - Be specific about what the plan did well or poorly.
-                - Identify missing or unnecessary steps.
-                - Avoid vague language like “looks good” or “reasonable”.
+                The `"reason"` must:
+                - Reference specific missing, unclear, or inefficient steps.
+                - Avoid vague language (“seems fine”, “mostly works”).
+                - Use objective terms describing gaps or weaknesses.
 
-                ---
+                PROVIDED DATA
 
-                USER TASK:
+                User Task:
                 {user_task}
 
-                AGENT PLAN:
+                Agent Plan:
                 {agent_plan}
 
-                TRACE:
-                {json.dumps(execution_trace, default=make_json_serializable, indent=2)}
 
                 JSON:
             """
