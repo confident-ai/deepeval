@@ -88,21 +88,21 @@ module.exports = {
               type: "category",
               label: "Single-Turn",
               items: [
-                "metrics-task-completion",
                 "metrics-argument-correctness",
-                "metrics-tool-correctness",
-                "metrics-step-efficiency",
                 "metrics-plan-adherence",
                 "metrics-plan-quality",
+                "metrics-step-efficiency",
+                "metrics-task-completion",
+                "metrics-tool-correctness",
               ]
             },
             {
               type: "category",
               label: "Multi-Turn",
               items: [
-                "metrics-topic-adherence",
                 "metrics-goal-accuracy",
                 "metrics-tool-selection",
+                "metrics-topic-adherence",
               ]
             }
           ],

@@ -89,9 +89,11 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-The `PlanAdherenceMetric` score is calculated according to the following equation:
+The `PlanAdherenceMetric` score is calculated using the following steps:
 
-<Equation formula="\text{Plan Adherence Score} = \text{PlanQualityScore}(\text{Task}, \text{Plan})" />
+- Extract **Task** from the trace, this defines the user's goal or intent for the agent and is actionable.
+- Extract **Plan** from the trace, a plan is extracted from the agent's `thinking` or `reasoning`. If there are no statements that clearly define or imply a plan from the trace, the metric passes by default with a score of `1`.
 
-- **Task** and **Plan** are extracted from the trace using an LLM.
-- The **PlanQualityScore** measures the quality of the agent's plan for the given task.
+<Equation formula="\text{Plan Adherence Score} = \text{AlignmentScore}(\text{Task}, \text{Plan})" />
+
+- The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and task.

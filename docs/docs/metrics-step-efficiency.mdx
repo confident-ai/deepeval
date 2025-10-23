@@ -90,13 +90,11 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated?
 
-The `StepEfficiencyMetric` score is calculated according to the following equation:
+The `StepEfficiencyMetric` score is calculated using the following steps:
+
+- Extract **Task** from the trace, this defines the user's goal or intent for the agent and is actionable.
+- Evaluate the **agent's execution steps** from the trace and see how efficiently the agent has completed the task. 
 
 <Equation formula="\text{Step Efficiency Score} = \text{AlignmentScore}(\text{Task}, \text{Execution Steps})" />
 
-- **Task** and **Execution Steps** are extracted from the trace using an LLM.
-- The **Alignment Score** measures how efficient the execution steps that the agent took are when finishing the task.
-
-:::info
-The step efficiency metric evaluates only the efficiency of your agent's execution in completing the task. It will penalise any and all of your agent's actions if they were not in the best interest to finish a task.
-:::
+- The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and execution steps. It will penalize any actions taken by the LLM agent that were not strictly required to finish the task.
