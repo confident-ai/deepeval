@@ -126,7 +126,7 @@ The `ToolCorrectnessMetric`, unlike all other `deepeval` metrics, uses both dete
 
 The **tool correctness metric** score is calculated using the following steps:
 
-- Find the deterministic score for `tools_called` using the `expected_tools` using the following equation:
+1. Find the deterministic score for `tools_called` using the `expected_tools` using the following equation:
 
 <Equation
   formula="\text{Tool Correctness} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}
@@ -139,4 +139,4 @@ The **tool correctness metric** score is calculated using the following steps:
 If `exact_match` is not specified and `ToolCall.INPUT_PARAMETERS` is included in `evaluation_params`, correctness may be a percentage score based on the proportion of correct input parameters (assuming the name and output are correct, if applicable).
 :::
 
-- If the `available_tools` are provided, the `ToolCorrectnessMetric` also uses an LLM to find whether the `tools_called` were the most optimal for the given task using the `available_tools` as reference. The final score is the **minimum of both scores**. If `available_tools` is not provided, the LLM-based evaluation does not take place.
+2. If the `available_tools` are provided, the `ToolCorrectnessMetric` also uses an LLM to find whether the `tools_called` were the most optimal for the given task using the `available_tools` as reference. The final score is the **minimum of both scores**. If `available_tools` is not provided, the LLM-based evaluation does not take place.

@@ -76,8 +76,14 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated
 
-The `GoalAccuracyMetric` score is calculated according to the following equation:
+The `GoalAccuracyMetric` score is calculated using the following steps:
 
-<Equation formula="\text{Goal Accuracy Score} = \text{GoalAccuracy}(\text{Task}, \text{Plan}, \text{StepsTaken})" />
+- Find **individual goals and steps** taken by your LLM agent for each user-assistat interactions.
+- Find **goal accuracy scores** for each of the goal-steps pairs using the evaluation model.
+- Find **plan quality and plan adherence scores** for each of the goal-step pairs using the evaluation model.
 
+<Equation formula="\text{Goal Accuracy Score} = \frac{\text{Goal Accuracy Score + Plan Evaluation Score}}{\text{2}}" />
+
+:::info
 The `GoalAccuracyMetric` extracts the task from user's messages in each interaction and evalutes the steps taken by the LLM agent to find it's plan and how accurately it has finished the task or reached the goal in that interaction.
+:::
