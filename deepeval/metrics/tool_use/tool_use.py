@@ -22,7 +22,7 @@ from deepeval.metrics.tool_use.template import ToolUseTemplate
 from deepeval.metrics.tool_use.schema import (
     ToolSelectionScore,
     UserInputAndTools,
-    ArgumentCorrectnessScore
+    ArgumentCorrectnessScore,
 )
 from deepeval.metrics.api import metric_data_manager
 
@@ -89,18 +89,33 @@ class ToolUseMetric(BaseConversationalMetric):
                 ]
                 argument_correctness_scores = [
                     self._get_argument_correctness_score(user_and_tools)
-                    for user_and_tools in user_input_and_tools if user_and_tools.tools_used 
+                    for user_and_tools in user_input_and_tools
+                    if user_and_tools.tools_used
                 ]
-                self.score = self._calculate_score(tool_selection_scores, argument_correctness_scores)
+                self.score = self._calculate_score(
+                    tool_selection_scores, argument_correctness_scores
+                )
                 if self.strict_mode:
                     self.score = (
                         0
                         if self.strict_mode and self.score < self.threshold
                         else self.score
                     )
-                tool_selection_reason = self._generate_reason_for_tool_selection(tool_selection_scores)
-                argument_correctness_reason = self._generate_reason_for_argument_correctness(argument_correctness_scores)
-                self.reason = str("\n".join([tool_selection_reason, argument_correctness_reason]))
+                tool_selection_reason = (
+                    self._generate_reason_for_tool_selection(
+                        tool_selection_scores
+                    )
+                )
+                argument_correctness_reason = (
+                    self._generate_reason_for_argument_correctness(
+                        argument_correctness_scores
+                    )
+                )
+                self.reason = str(
+                    "\n".join(
+                        [tool_selection_reason, argument_correctness_reason]
+                    )
+                )
 
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -150,19 +165,32 @@ class ToolUseMetric(BaseConversationalMetric):
             argument_correctness_scores = await asyncio.gather(
                 *[
                     self._a_get_argument_correctness_score(user_and_tools)
-                    for user_and_tools in user_input_and_tools if user_and_tools.tools_used 
+                    for user_and_tools in user_input_and_tools
+                    if user_and_tools.tools_used
                 ]
             )
-            self.score = self._calculate_score(tool_selection_scores, argument_correctness_scores)
+            self.score = self._calculate_score(
+                tool_selection_scores, argument_correctness_scores
+            )
             if self.strict_mode:
                 self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
-            tool_selection_reason = await self._a_generate_reason_for_tool_selection(tool_selection_scores)
-            argument_correctness_reason = await self._a_generate_reason_for_argument_correctness(argument_correctness_scores)
-            self.reason = str("\n".join([tool_selection_reason, argument_correctness_reason]))
+            tool_selection_reason = (
+                await self._a_generate_reason_for_tool_selection(
+                    tool_selection_scores
+                )
+            )
+            argument_correctness_reason = (
+                await self._a_generate_reason_for_argument_correctness(
+                    argument_correctness_scores
+                )
+            )
+            self.reason = str(
+                "\n".join([tool_selection_reason, argument_correctness_reason])
+            )
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -180,10 +208,9 @@ class ToolUseMetric(BaseConversationalMetric):
                 )
 
             return self.score
-        
+
     def _get_argument_correctness_score(
-        self,
-        user_and_tools: UserInputAndTools
+        self, user_and_tools: UserInputAndTools
     ):
         prompt = ToolUseTemplate.get_argument_correctness_score(
             user_and_tools.user_messages,
@@ -192,7 +219,9 @@ class ToolUseMetric(BaseConversationalMetric):
             user_and_tools.available_tools,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=ArgumentCorrectnessScore)
+            res, cost = self.model.generate(
+                prompt, schema=ArgumentCorrectnessScore
+            )
             self.evaluation_cost += cost
             return res
         else:
@@ -205,7 +234,7 @@ class ToolUseMetric(BaseConversationalMetric):
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 return ArgumentCorrectnessScore(**data)
-            
+
     async def _a_get_argument_correctness_score(
         self,
         user_and_tools: UserInputAndTools,
@@ -317,32 +346,43 @@ class ToolUseMetric(BaseConversationalMetric):
                 assistant_messages=assistant_messages,
                 tools_called=tools_called,
                 available_tools=available_tools,
-                tools_used=tools_used
+                tools_used=tools_used,
             )
             user_inputs_and_tools.append(new_user_input_tools)
         return user_inputs_and_tools
 
     def _calculate_score(
-            self, 
-            tool_use_scores: List[ToolSelectionScore], 
-            argument_correctness_scores: List[ArgumentCorrectnessScore]
-        ):
+        self,
+        tool_use_scores: List[ToolSelectionScore],
+        argument_correctness_scores: List[ArgumentCorrectnessScore],
+    ):
         tools_scores_sum = sum(
             [tool_use_score.score for tool_use_score in tool_use_scores]
         )
         arguments_scores_sum = sum(
-            [argument_correctness_score.score for argument_correctness_score in argument_correctness_scores]
+            [
+                argument_correctness_score.score
+                for argument_correctness_score in argument_correctness_scores
+            ]
         )
-        tool_selections_scores_divisor = len(tool_use_scores) if len(tool_use_scores) > 0 else 1
-        argument_correctness_score_divisor = len(argument_correctness_scores) if len(argument_correctness_scores) > 0 else 1
+        tool_selections_scores_divisor = (
+            len(tool_use_scores) if len(tool_use_scores) > 0 else 1
+        )
+        argument_correctness_score_divisor = (
+            len(argument_correctness_scores)
+            if len(argument_correctness_scores) > 0
+            else 1
+        )
         tools_selction_score = tools_scores_sum / tool_selections_scores_divisor
-        argument_correctness_score = arguments_scores_sum / argument_correctness_score_divisor
+        argument_correctness_score = (
+            arguments_scores_sum / argument_correctness_score_divisor
+        )
         return min(tools_selction_score, argument_correctness_score)
 
     def _generate_reason_for_tool_selection(
-            self, 
-            tool_use_scores: List[ToolSelectionScore],
-        ):
+        self,
+        tool_use_scores: List[ToolSelectionScore],
+    ):
         scores_and_reasons = ""
         for tool_use in tool_use_scores:
             scores_and_reasons += (
@@ -358,11 +398,11 @@ class ToolUseMetric(BaseConversationalMetric):
         else:
             res = self.model.generate(prompt)
             return res
-    
+
     def _generate_reason_for_argument_correctness(
-            self,
-            argument_correctness_scores: List[ArgumentCorrectnessScore],
-        ):
+        self,
+        argument_correctness_scores: List[ArgumentCorrectnessScore],
+    ):
         scores_and_reasons = ""
         for tool_use in argument_correctness_scores:
             scores_and_reasons += (
@@ -397,7 +437,7 @@ class ToolUseMetric(BaseConversationalMetric):
         else:
             res = await self.model.a_generate(prompt)
             return res
-        
+
     async def _a_generate_reason_for_argument_correctness(
         self, argument_correctness_scores: List[ArgumentCorrectnessScore]
     ):

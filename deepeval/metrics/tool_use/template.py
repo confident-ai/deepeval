@@ -69,7 +69,7 @@ class ToolUseTemplate:
                 JSON:
             """
         )
-    
+
     @staticmethod
     def get_argument_correctness_score(
         user_input: str,
@@ -181,7 +181,7 @@ class ToolUseTemplate:
             Final Reason:
             """
         )
-    
+
     @staticmethod
     def get_tool_argument_final_reason(
         all_scores_and_reasons: str, final_score: float, threshold: float

@@ -13,6 +13,7 @@ class ToolSelectionScore(BaseModel):
     score: float
     reason: str
 
+
 class ArgumentCorrectnessScore(BaseModel):
     score: float
     reason: str
