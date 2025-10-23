@@ -79,26 +79,29 @@ class PlanAdherenceMetric(BaseMetric):
             else:
                 task = self._extract_task_from_trace(test_case)
                 agent_plan = self._extract_plan_from_trace(test_case)
-                plan_adherence_score = self._get_plan_adherence_score(
-                    task, agent_plan.plan, test_case
-                )
-                self.score = plan_adherence_score.score
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
+                if len(agent_plan.plan) == 0:
+                    self.score = 1
+                    self.reason = "There were no plans to evaluate within the trace of your agent's execution. Please check if the agent's planning or reasoning or thinking is stored in any one of the trace attributes."
+                else:
+                    plan_adherence_score = self._get_plan_adherence_score(
+                        task, agent_plan.plan, test_case
                     )
+                    self.score = plan_adherence_score.score
+                    if self.strict_mode:
+                        self.score = (
+                            0
+                            if self.strict_mode and self.score < self.threshold
+                            else self.score
+                        )
+                    self.reason = plan_adherence_score.reason
                 self.success = self.score >= self.threshold
-                self.reason = plan_adherence_score.reason
-
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
                         f"Task: {task} \n",
                         f"Agent Plan: \n{prettify_list(agent_plan.plan)} \n",
-                        f"Final Score: {plan_adherence_score.score} \n",
-                        f"Final Reason: {plan_adherence_score.reason} \n",
+                        f"Final Score: {self.score} \n",
+                        f"Final Reason: {self.reason} \n",
                     ],
                 )
 
@@ -130,26 +133,30 @@ class PlanAdherenceMetric(BaseMetric):
         ):
             task = await self._a_extract_task_from_trace(test_case)
             agent_plan = await self._a_extract_plan_from_trace(test_case)
-            plan_adherence_score = await self._a_get_plan_adherence_score(
-                task, agent_plan.plan, test_case
-            )
-            self.score = plan_adherence_score.score
-            if self.strict_mode:
-                self.score = (
-                    0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
+            if len(agent_plan.plan) == 0:
+                self.score = 1
+                self.reason = "There were no plans to evaluate within the trace of your agent's execution. Please check if the agent's planning or reasoning or thinking is stored in any one of the trace attributes."
+            else:
+                plan_adherence_score = await self._a_get_plan_adherence_score(
+                    task, agent_plan.plan, test_case
                 )
+                self.score = plan_adherence_score.score
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
+                self.reason = plan_adherence_score.reason
             self.success = self.score >= self.threshold
-            self.reason = plan_adherence_score.reason
 
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
                     f"Task: {task} \n",
                     f"Agent Plan: \n{prettify_list(agent_plan.plan)} \n",
-                    f"Final Score: {plan_adherence_score.score} \n",
-                    f"Final Reason: {plan_adherence_score.reason} \n",
+                    f"Final Score: {self.score} \n",
+                    f"Final Reason: {self.reason} \n",
                 ],
             )
 
