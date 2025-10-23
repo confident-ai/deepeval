@@ -6,9 +6,7 @@ from deepeval.tracing.utils import make_json_serializable
 class PlanQualityTemplate:
 
     @staticmethod
-    def evaluate_plan_quality(
-        user_task: str, agent_plan: list
-    ) -> str:
+    def evaluate_plan_quality(user_task: str, agent_plan: list) -> str:
         return textwrap.dedent(
             f"""You are a **plan quality evaluator**. Your task is to critically assess the **quality, completeness, and optimality** of an AI agent's plan to accomplish the given user task.
 
