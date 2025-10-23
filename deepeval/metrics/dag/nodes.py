@@ -422,7 +422,7 @@ class LoopNode(BaseNode):
         for child in self.children:
             if not isinstance(child, TaskNode) and len(self.children) > 1:
                 raise ValueError(
-                    "A LoopNode must only have a single TaskNode in its 'child'."
+                    "A LoopNode must only have a single TaskNode as its 'child'."
                 )
 
         if self.loop_function and self.instructions:
@@ -453,7 +453,7 @@ class LoopNode(BaseNode):
             task_node_output = ast.literal_eval(task_node_output)
         except:
             raise ValueError(
-                f"The 'TaskNode' has produced an output is not a valid python expression: {task_node_output}"
+                f"The 'TaskNode' has produced an output that is not a valid python expression: {task_node_output}"
             )
 
         if self.loop_function:
