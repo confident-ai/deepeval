@@ -1,5 +1,3 @@
-import asyncio
-
 from contextvars import ContextVar
 from contextlib import contextmanager
 from dataclasses import dataclass
