@@ -7,6 +7,7 @@ from deepeval.metrics.dag import (
     NonBinaryJudgementNode,
     VerdictNode,
     TaskNode,
+    LoopNode,
     DeepAcyclicGraph,
 )
 from deepeval.metrics.conversational_dag import (
@@ -53,6 +54,7 @@ def is_valid_dag(
             isinstance(node, TaskNode)
             or isinstance(node, BinaryJudgementNode)
             or isinstance(node, NonBinaryJudgementNode)
+            or isinstance(node, LoopNode)
         ):
             for child in node.children:
                 if not is_valid_dag(child, multiturn, visited, stack):
@@ -150,6 +152,7 @@ def copy_graph(original_dag: DeepAcyclicGraph) -> DeepAcyclicGraph:
                 isinstance(node, TaskNode)
                 or isinstance(node, BinaryJudgementNode)
                 or isinstance(node, NonBinaryJudgementNode)
+                or isinstance(node, LoopNode)
             ):
                 copied_node = node_class(
                     **valid_args,
