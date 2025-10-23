@@ -101,7 +101,7 @@ module.exports = {
               label: "Multi-Turn",
               items: [
                 "metrics-goal-accuracy",
-                "metrics-tool-selection",
+                "metrics-tool-use",
                 "metrics-topic-adherence",
               ]
             }

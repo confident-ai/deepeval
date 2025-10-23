@@ -1,7 +1,7 @@
 ---
-id: metrics-tool-selection
-title: Tool Selection
-sidebar_label: Tool Selection
+id: metrics-tool-use
+title: Tool Use
+sidebar_label: Tool Use
 ---
 
 <head>
@@ -16,11 +16,11 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
 
-The Tool Selection metric is a multi-turn agentic metric that evaluates whether your LLM agent has called **the right tools for a given task**. It is a self-explaining eval, which means it outputs a reason for its metric score.
+The Tool Use metric is a multi-turn agentic metric that evaluates whether your LLM agent's **tool selection and argument generation** capablilities. It is a self-explaining eval, which means it outputs a reason for its metric score.
 
 ## Required Arguments
 
-To use the `ToolSelectionMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
+To use the `ToolUseMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
 
 - `turns`
 
@@ -28,11 +28,11 @@ You can learn more about how it is calculated [here](#how-is-it-calculated).
 
 ## Usage
 
-The `ToolSelectionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
+The `ToolUseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import ToolSelectionMetric
+from deepeval.metrics import ToolUseMetric
 from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
 
 convo_test_case = ConversationalTestCase(
@@ -41,7 +41,7 @@ convo_test_case = ConversationalTestCase(
         Turn(role="...", content="...", tools_called=[...])
     ],
 )
-metric = ToolSelectionMetric(threshold=0.5)
+metric = ToolUseMetric(threshold=0.5)
 
 # To run metric as a standalone
 # metric.measure(convo_test_case)
@@ -50,7 +50,7 @@ metric = ToolSelectionMetric(threshold=0.5)
 evaluate(test_cases=[convo_test_case], metrics=[metric])
 ```
 
-There is **ONE** mandatory and **SIX** optional parameters when creating a `ToolSelectionMetric`:
+There is **ONE** mandatory and **SIX** optional parameters when creating a `ToolUseMetric`:
 
 - `available_tools`: a list of `ToolCall`s that give context on all the tools that were available to your LLM agent. This list is used to evaluate your agent's tool selection capability.
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
@@ -62,7 +62,7 @@ There is **ONE** mandatory and **SIX** optional parameters when creating a `Tool
 
 ### As a standalone
 
-You can also run the `ToolSelectionMetric` on a single test case as a standalone, one-off execution.
+You can also run the `ToolUseMetric` on a single test case as a standalone, one-off execution.
 
 ```python
 ...
@@ -77,8 +77,12 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 
 ## How Is It Calculated
 
-The `ToolSelectionMetric` score is calculated according to the following equation:
+The `ToolUseMetric` score is determined through the following process:
 
-<Equation formula="\text{Tool Selection Score} = \text{ToolSelectionScore}(\text{Task}, \text{ToolsCalled}, \text{AvailableTools})" />
+1. Compute the **Tool Selection Score** for each unit interaction.
+2. Compute the **Argument Correctness Score** for all unit interactions that include tool calls.
 
-The `ToolSelectionMetric` extracts the task from user's messages in each interaction and evaluates if the tool calls made for that interaction were the most optimal choices from the list of available tools.
+<Equation formula="\text{Tool Use Score} = \min(\text{ToolSelectionScore}, \text{ArgumentCorrectnessScore})" />
+
+- The **Tool Selection Score** evaluates whether the agent chose the most appropriate tool for the task among all the available tools.
+- The **Argument Correctness Score** assesses whether the arguments provided in the tool call were accurate and suitable for the task. This score is only considered when a tool call has been made.
