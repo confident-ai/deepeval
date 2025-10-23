@@ -26,15 +26,16 @@ agent = Agent(
     ),
 )
 
+
 async def run_agent(input: str):
     return await agent.run(input)
 
+
 def test_evaluate_agent():
 
-    try: 
+    try:
         for golden in dataset.evals_iterator():
             task = asyncio.create_task(run_agent(golden.input))
             dataset.evaluate(task)
     finally:
         assert answer_relavancy_metric.score > 0.0
-
