@@ -1,13 +1,17 @@
-from typing import Optional, List, Dict, Any
+import asyncio
+
 from contextvars import ContextVar
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Optional, List, Dict, Any
 
-from .tracing import trace_manager
-from .context import current_trace_context, update_current_trace
-from deepeval.prompt import Prompt
 from deepeval.metrics import BaseMetric
+from deepeval.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
+from deepeval.tracing.context import current_trace_context, update_current_trace
+from deepeval.tracing.tracing import trace_manager
+from deepeval.tracing.types import TraceWorkerStatus
+from deepeval.tracing.utils import is_async_context
 
 
 @dataclass
@@ -44,6 +48,13 @@ def trace(
     metrics: Optional[List[BaseMetric]] = None,
     metric_collection: Optional[str] = None,
 ):
+    if is_async_context():
+        trace_manager._print_trace_status(
+            message="Warning: Detected use of the synchronous 'trace' context manager within an async method",
+            trace_worker_status=TraceWorkerStatus.WARNING,
+            description="Wrapping an async method with the synchronous 'trace' context manager may lead to unexpected behavior.",
+        )
+
     current_trace = current_trace_context.get()
 
     if not current_trace:
