@@ -117,7 +117,6 @@ class StepEfficiencyMetric(BaseMetric):
             _in_component=_in_component,
         ):
             task = await self._a_extract_task_from_trace(test_case)
-            print(task)
             efficiency_verdict = await self._a_get_score(task, test_case)
             self.score = efficiency_verdict.score
             if self.strict_mode:

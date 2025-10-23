@@ -42,7 +42,7 @@ def test_metrics_imports():
         TopicAdherenceMetric,
         PlanAdherenceMetric,
         PlanQualityMetric,
-        ToolSelectionMetric,
+        ToolUseMetric,
         StepEfficiencyMetric,
         # Conversational metrics
         TurnRelevancyMetric,
@@ -101,7 +101,7 @@ def test_metrics_imports():
         TopicAdherenceMetric,
         PlanAdherenceMetric,
         PlanQualityMetric,
-        ToolSelectionMetric,
+        ToolUseMetric,
         StepEfficiencyMetric,
         KnowledgeRetentionMetric,
         TurnRelevancyMetric,

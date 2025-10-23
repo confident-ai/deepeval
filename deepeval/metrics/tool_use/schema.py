@@ -6,8 +6,13 @@ class UserInputAndTools(BaseModel):
     assistant_messages: str
     tools_called: str
     available_tools: str
+    tools_used: bool
 
 
 class ToolSelectionScore(BaseModel):
+    score: float
+    reason: str
+
+class ArgumentCorrectnessScore(BaseModel):
     score: float
     reason: str

@@ -31,7 +31,7 @@ from .topic_adherence.topic_adherence import TopicAdherenceMetric
 from .step_efficiency.step_efficiency import StepEfficiencyMetric
 from .plan_adherence.plan_adherence import PlanAdherenceMetric
 from .plan_quality.plan_quality import PlanQualityMetric
-from .tool_selection.tool_selection import ToolSelectionMetric
+from .tool_use.tool_use import ToolUseMetric
 from .goal_accuracy.goal_accuracy import GoalAccuracyMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
@@ -109,7 +109,7 @@ __all__ = [
     "StepEfficiencyMetric",
     "PlanAdherenceMetric",
     "PlanQualityMetric",
-    "ToolSelectionMetric",
+    "ToolUseMetric",
     "GoalAccuracyMetric",
     # Conversational metrics
     "TurnRelevancyMetric",
