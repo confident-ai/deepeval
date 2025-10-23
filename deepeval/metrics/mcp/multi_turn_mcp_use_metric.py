@@ -84,6 +84,12 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 self.score = self._calculate_score(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
+                if self.strict_mode:
+                    self.score = (
+                        0
+                        if self.strict_mode and self.score < self.threshold
+                        else self.score
+                    )
                 self.reason = self._generate_reason(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
@@ -125,7 +131,10 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
+            self,
+            async_mode=True,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
         ):
             if not test_case.mcp_servers:
                 error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
@@ -149,6 +158,12 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             self.score = self._calculate_score(
                 primitives_accuracy_scores, args_accuracy_scores
             )
+            if self.strict_mode:
+                self.score = (
+                    0
+                    if self.strict_mode and self.score < self.threshold
+                    else self.score
+                )
             self.reason = self._generate_reason(
                 primitives_accuracy_scores, args_accuracy_scores
             )
