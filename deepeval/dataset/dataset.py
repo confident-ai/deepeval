@@ -49,7 +49,7 @@ from deepeval.utils import (
 from deepeval.test_run import (
     global_test_run_manager,
 )
-from deepeval.openai.utils import openai_test_case_pairs
+
 from deepeval.tracing import trace_manager
 from deepeval.tracing.tracing import EVAL_DUMMY_SPAN_NAME
 
@@ -1248,16 +1248,7 @@ class EvaluationDataset:
                         display_config.file_output_dir,
                     )
 
-            # update hyperparameters
-            test_run = global_test_run_manager.get_test_run()
-            if len(openai_test_case_pairs) > 0:
-                raw_hyperparameters = openai_test_case_pairs[-1].hyperparameters
-                test_run.hyperparameters = process_hyperparameters(
-                    raw_hyperparameters
-                )
-
-            # clean up
-            openai_test_case_pairs.clear()
+            # save test run
             global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 
             # sandwich end trace for OTEL

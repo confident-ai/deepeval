@@ -1,28 +1,85 @@
-import sys
 import os
-import tempfile
-from tests.test_integrations.utils import compare_trace_files
-from crewai_app import execute_agent
+import json
+import asyncio
+import pytest
+from tests.test_integrations.utils import assert_trace_json, generate_trace_json
+
+from crewai import Task, Agent, LLM, Crew
+from crewai.tools import tool
+
+# from deepeval.integrations.crewai import Crew, Agent, LLM
+from deepeval.integrations.crewai import instrument_crewai
+from deepeval.tracing import trace
 
 
-def test_exec_agent_logs():
+@tool
+def get_weather(city: str) -> str:
+    """Fetch weather data for a given city. Returns temperature and conditions."""
+    weather_data = {
+        "New York": {
+            "temperature": "72°F",
+            "condition": "Partly Cloudy",
+            "humidity": "65%",
+        },
+        "London": {
+            "temperature": "60°F",
+            "condition": "Rainy",
+            "humidity": "80%",
+        },
+        "Tokyo": {
+            "temperature": "75°F",
+            "condition": "Sunny",
+            "humidity": "55%",
+        },
+        "Paris": {
+            "temperature": "68°F",
+            "condition": "Cloudy",
+            "humidity": "70%",
+        },
+        "Sydney": {
+            "temperature": "82°F",
+            "condition": "Clear",
+            "humidity": "50%",
+        },
+    }
 
-    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-    tmp_path = tmp.name
-    tmp.close()
+    if city in weather_data:
+        weather = weather_data[city]
+        return f"Weather in {city}: {weather['temperature']}, {weather['condition']}, Humidity: {weather['humidity']}"
+    else:
+        return f"Weather in {city}: 70°F, Clear, Humidity: 60% (default data)"
 
-    try:
-        original_argv = list(sys.argv)
-        sys.argv = [
-            "--deepeval-trace-mode=gen",
-            f"--deepeval-trace-file-name={tmp_path}",
-        ]
-        execute_agent()
-        sys.argv = original_argv
-        expected_path = os.path.join(
-            os.path.dirname(__file__), "crewai_app.json"
-        )
-        compare_trace_files(expected_path, tmp_path)
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+
+agent = Agent(
+    role="Weather Reporter",
+    goal="Provide accurate and helpful weather information to users.",
+    backstory="An experienced meteorologist who loves helping people plan their day with accurate weather reports.",
+    tools=[get_weather],
+    verbose=True,
+)
+
+task = Task(
+    description="Get the current weather for {city} and provide a helpful summary.",
+    expected_output="A clear weather report including temperature, conditions, and humidity.",
+    agent=agent,
+)
+
+crew = Crew(
+    agents=[agent],
+    tasks=[task],
+)
+
+################################ TESTING CODE #################################
+
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, "crewai.json")
+
+
+@assert_trace_json(json_path)
+def test_crewai():
+    crew.kickoff({"city": "London"})
+
+
+if __name__ == "__main__":
+    instrument_crewai()
+    test_crewai()

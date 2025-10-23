@@ -6,6 +6,8 @@ sidebar_label: LLM Arena
 
 import { Timeline, TimelineItem } from "@site/src/components/Timeline";
 import NavigationCards from "@site/src/components/NavigationCards";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
 
 Learn how to evaluate different versions of your LLM app using LLM Arena-as-a-Judge in `deepeval`, a comparison-based LLM eval.
 
@@ -25,6 +27,124 @@ Instead of comparing LLM outputs using a single-output LLM-as-a-Judge method as 
 ## Setup LLM Arena
 
 In `deepeval`, arena test cases are used to compare different versions of your LLM app to see which one performs better. Each test case is an arena containing different contestants as different versions of your LLM app which are evaluated based on their corresponding `LLMTestCase`
+
+:::note
+
+`deepeval` provides a wide selection of LLM models that you can easily choose from and run evaluations with.
+
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
+```python
+from deepeval.metrics import ArenaGEval
+
+task_completion_metric = ArenaGEval(model="gpt-4.1")
+```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import AnthropicModel
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import GeminiModel
+
+model = GeminiModel("gemini-2.5-flash")
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure-openai" label="Ollama">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import OllamaModel
+
+model = OllamaModel("deepseek-r1")
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import GrokModel
+
+model = GrokModel("grok-4-0709")
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure" label="Azure OpenAI">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+<TabItem value="amazon-bedrock" label="Amazon Bedrock">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import AmazonBedrockModel
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+<TabItem value="vertex-ai" label="Vertex AI">
+
+```python
+from deepeval.metrics import ArenaGEval
+from deepeval.models import GeminiModel
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+task_completion_metric = ArenaGEval(model=model)
+```
+
+</TabItem>
+
+</Tabs>
+:::
 
 <Timeline>
 
@@ -65,7 +185,7 @@ You can learn more about `LLMTestCase` [here](https://deepeval.com/docs/evaluati
 
 The [`ArenaGEval`](https://deepeval.com/docs/metrics-arena-g-eval) metric is the only metric that is compatible with `ArenaTestCase`. It picks a winner among the contestants based on the criteria defined.
 
-```python title="main.py"
+```python
 from deepeval.metrics import ArenaGEval
 from deepeval.test_case import LLMTestCaseParams
 
@@ -75,7 +195,7 @@ arena_geval = ArenaGEval(
     evaluation_params=[
         LLMTestCaseParams.INPUT,
         LLMTestCaseParams.ACTUAL_OUTPUT,
-    ],
+    ]
 )
 ```
 

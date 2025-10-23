@@ -91,7 +91,3 @@ def execute_weather_agent():
     output = asyncio.run(run_agent("What's the weather in Paris?"))
     print("===============Weather agent output:===============")
     print(output)
-
-
-if __name__ == "__main__":
-    execute_weather_agent()

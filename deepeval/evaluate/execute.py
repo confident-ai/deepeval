@@ -43,9 +43,14 @@ from deepeval.tracing.api import (
 )
 from deepeval.dataset import Golden
 from deepeval.contextvars import set_current_golden, reset_current_golden
-from deepeval.errors import MissingTestCaseParamsError
+from deepeval.errors import MissingTestCaseParamsError, DeepEvalError
 from deepeval.metrics.utils import copy_metrics
-from deepeval.utils import get_or_create_event_loop, shorten, len_medium
+from deepeval.utils import (
+    get_or_create_event_loop,
+    shorten,
+    len_medium,
+    format_error_text,
+)
 from deepeval.telemetry import capture_evaluation_run
 from deepeval.metrics import (
     BaseMetric,
@@ -61,6 +66,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     MLLMTestCase,
 )
+from deepeval.test_case.api import create_api_test_case
 from deepeval.test_run import (
     global_test_run_manager,
     LLMApiTestCase,
@@ -80,24 +86,143 @@ from deepeval.evaluate.utils import (
     create_api_trace,
     create_metric_data,
     create_test_result,
-    create_api_test_case,
     count_metrics_in_trace,
+    count_total_metrics_for_trace,
+    count_metrics_in_span_subtree,
     extract_trace_test_results,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
-from deepeval.openai.utils import openai_test_case_pairs
-from deepeval.tracing.types import TestCaseMetricPair
+from deepeval.tracing.types import TestCaseMetricPair, TraceSpanStatus
+from deepeval.tracing.api import TraceSpanApiStatus
 from deepeval.config.settings import get_settings
-
+from deepeval.test_run import TEMP_FILE_PATH
+from deepeval.confident.api import is_confident
+from deepeval.test_run.hyperparameters import (
+    process_hyperparameters,
+    process_prompts,
+)
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
+
+
+def _skip_metrics_for_error(
+    span: Optional[BaseSpan] = None,
+    trace: Optional[Trace] = None,
+) -> bool:
+    # trace failure: skip everything under this trace
+    if trace is not None and trace.status == TraceSpanStatus.ERRORED:
+        return True
+    # span failure: skip this span’s metrics
+    if span is not None and span.status == TraceSpanStatus.ERRORED:
+        return True
+    return False
+
+
+def _trace_error(current_trace: Trace) -> Optional[str]:
+    def _first_err(s: BaseSpan) -> Optional[str]:
+        if s.status == TraceSpanStatus.ERRORED and s.error:
+            return s.error
+        for c in s.children or []:
+            e = _first_err(c)
+            if e:
+                return e
+        return None
+
+    for root in current_trace.root_spans or []:
+        e = _first_err(root)
+        if e:
+            return e
+    return None
+
+
+def _get_trace_by_uuid_anywhere(trace_uuid: str):
+    """
+    Resolver for a trace UUID across the manager's state.
+
+    First tries the manager's indexed lookup, which (covers active/in-flight traces,
+    then does a linear scan of the full `trace_manager.traces` list, which covers
+    traces that were recorded/closed earlier or not yet indexed. Returns
+    the concrete Trace object or None if not found.
+    """
+    tr = trace_manager.get_trace_by_uuid(trace_uuid)
+    if tr:
+        return tr
+    for tr in trace_manager.traces:
+        if tr.uuid == trace_uuid:
+            return tr
+    return None
+
+
+def _pick_root_for_marking(trace):
+    """
+    Choose the most appropriate root span to annotate on error/cancel.
+
+    Heuristic:
+      - Prefer the most recent open root, which will have no `end_time` since this is the
+        span currently in flight.
+      - If none are open, use the last root span if it exists.
+      - If the trace has no roots, return None.
+
+    This favors marking the active root in multi root traces while remaining
+    stable for already closed traces.
+    """
+    open_roots = [rs for rs in trace.root_spans if rs.end_time is None]
+    return (
+        open_roots[-1]
+        if open_roots
+        else (trace.root_spans[-1] if trace.root_spans else None)
+    )
+
+
+def _resolve_trace_and_root_for_task(t: asyncio.Task):
+    """
+    Resolve trace and root for a completed task using the weak binding map.
+
+    Steps:
+      1. Look up the task in `trace_manager.task_bindings` to get the
+         bound `trace_uuid` and, if available, `root_span_uuid`.
+      2. Resolve the Trace with `_get_trace_by_uuid_anywhere`.
+      3. If a bound root UUID exists, try to find that exact root on the trace.
+      4. Otherwise, fall back to `_pick_root_for_marking(trace)`.
+
+    Returns a trace / root tuple. Either may be `None` when no binding is
+    present. This function is used by `on_task_done` to robustly mark error/cancel
+    states without assuming a single root trace or a root that is still open.
+    """
+    binding = trace_manager.task_bindings.get(t) or {}
+    trace_uuid = binding.get("trace_uuid")
+    root_span_uuid = binding.get("root_span_uuid")
+
+    trace = _get_trace_by_uuid_anywhere(trace_uuid) if trace_uuid else None
+    root = None
+
+    if trace and root_span_uuid:
+        root = next(
+            (rs for rs in trace.root_spans if rs.uuid == root_span_uuid), None
+        )
+
+    if trace and root is None:
+        root = _pick_root_for_marking(trace)
+
+    return trace, root
 
 
 async def _snapshot_tasks():
     cur = asyncio.current_task()
     # `all_tasks` returns tasks for the current running loop only
     return {t for t in asyncio.all_tasks() if t is not cur}
+
+
+def _per_task_timeout() -> float:
+    return get_settings().DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+
+
+def _gather_timeout() -> float:
+    s = get_settings()
+    return (
+        s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+        + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
+    )
 
 
 ###########################################
@@ -365,7 +490,10 @@ async def a_execute_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     global_test_run_cache_manager.disable_write_cache = (
         cache_config.write_cache is False
@@ -484,7 +612,20 @@ async def a_execute_test_cases(
                         tasks.append(asyncio.create_task(task))
 
                     await asyncio.sleep(async_config.throttle_value)
-            await asyncio.gather(*tasks)
+
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks),
+                    timeout=_gather_timeout(),
+                )
+            except asyncio.TimeoutError:
+                # Cancel any still-pending tasks and drain them
+                for t in tasks:
+                    if not t.done():
+                        t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                raise
+
     else:
         for test_case in test_cases:
             with capture_evaluation_run("test case"):
@@ -557,7 +698,19 @@ async def a_execute_test_cases(
                     tasks.append(asyncio.create_task(task))
 
                 await asyncio.sleep(async_config.throttle_value)
-        await asyncio.gather(*tasks)
+
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*tasks),
+                timeout=_gather_timeout(),
+            )
+        except asyncio.TimeoutError:
+            # Cancel any still-pending tasks and drain them
+            for t in tasks:
+                if not t.done():
+                    t.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            raise
 
     return test_results
 
@@ -832,13 +985,14 @@ def execute_agentic_test_cases(
                     _progress=progress,
                     _pbar_callback_id=pbar_tags_id,
                 ):
+
                     if asyncio.iscoroutinefunction(observed_callback):
                         loop = get_or_create_event_loop()
                         coro = observed_callback(golden.input)
                         loop.run_until_complete(
                             asyncio.wait_for(
                                 coro,
-                                timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                                timeout=_per_task_timeout(),
                             )
                         )
                     else:
@@ -883,14 +1037,16 @@ def execute_agentic_test_cases(
                     pbar_eval_id: Optional[int] = None,
                 ):
                     # Create API Span
-                    metrics: List[BaseMetric] = span.metrics
+                    metrics: List[BaseMetric] = list(span.metrics or [])
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
+
                     if isinstance(span, AgentSpan):
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
                         trace_api.llm_spans.append(api_span)
+                        log_prompt(span, test_run_manager)
                     elif isinstance(span, RetrieverSpan):
                         trace_api.retriever_spans.append(api_span)
                     elif isinstance(span, ToolSpan):
@@ -898,10 +1054,24 @@ def execute_agentic_test_cases(
                     else:
                         trace_api.base_spans.append(api_span)
 
+                    # Skip errored trace/span
+                    if _skip_metrics_for_error(span=span, trace=current_trace):
+                        api_span.status = TraceSpanApiStatus.ERRORED
+                        api_span.error = span.error or _trace_error(
+                            current_trace
+                        )
+                        if progress and pbar_eval_id is not None:
+                            update_pbar(
+                                progress,
+                                pbar_eval_id,
+                                advance=count_metrics_in_span_subtree(span),
+                            )
+                        return
+
                     for child in span.children:
                         dfs(child, progress, pbar_eval_id)
 
-                    if span.metrics is None:
+                    if not span.metrics:
                         return
                     has_task_completion = any(
                         isinstance(metric, TaskCompletionMetric)
@@ -923,10 +1093,6 @@ def execute_agentic_test_cases(
                             tools_called=span.tools_called,
                             expected_tools=span.expected_tools,
                         )
-                    if llm_test_case is None and not has_task_completion:
-                        raise ValueError(
-                            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
-                        )
 
                     # add trace if task completion
                     if has_task_completion:
@@ -935,6 +1101,22 @@ def execute_agentic_test_cases(
                         llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(span)
                         )
+                    else:
+                        if llm_test_case is None:
+                            api_span.status = TraceSpanApiStatus.ERRORED
+                            api_span.error = format_error_text(
+                                DeepEvalError(
+                                    "Span has metrics but no LLMTestCase. "
+                                    "Are you sure you called `update_current_span()`?"
+                                )
+                            )
+                            if progress and pbar_eval_id is not None:
+                                update_pbar(
+                                    progress,
+                                    pbar_eval_id,
+                                    advance=count_metrics_in_span_subtree(span),
+                                )
+                            return
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
@@ -973,72 +1155,111 @@ def execute_agentic_test_cases(
 
                 start_time = time.perf_counter()
 
+                skip_metrics_for_this_golden = False
                 # Handle trace-level metrics
-                if current_trace.metrics:
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in current_trace.metrics
-                    )
-
-                    llm_test_case = None
-                    if current_trace.input:
-                        llm_test_case = LLMTestCase(
-                            input=str(current_trace.input),
-                            actual_output=(
-                                str(current_trace.output)
-                                if current_trace.output is not None
-                                else None
+                if _skip_metrics_for_error(trace=current_trace):
+                    trace_api.status = TraceSpanApiStatus.ERRORED
+                    if progress and pbar_eval_id is not None:
+                        update_pbar(
+                            progress,
+                            pbar_eval_id,
+                            advance=count_total_metrics_for_trace(
+                                current_trace
                             ),
-                            expected_output=current_trace.expected_output,
-                            context=current_trace.context,
-                            retrieval_context=current_trace.retrieval_context,
-                            tools_called=current_trace.tools_called,
-                            expected_tools=current_trace.expected_tools,
                         )
-                    if llm_test_case is None and not has_task_completion:
-                        raise ValueError(
-                            "Unable to run metrics on trace without LLMTestCase. Are you sure you called `update_current_trace()`?"
+                else:
+                    if current_trace.metrics:
+                        has_task_completion = any(
+                            isinstance(metric, TaskCompletionMetric)
+                            for metric in current_trace.metrics
                         )
 
-                    if has_task_completion:
-                        if llm_test_case is None:
-                            llm_test_case = LLMTestCase(input="None")
-                        llm_test_case._trace_dict = (
-                            trace_manager.create_nested_spans_dict(
-                                current_trace.root_spans[0]
+                        llm_test_case = None
+                        if current_trace.input:
+                            llm_test_case = LLMTestCase(
+                                input=str(current_trace.input),
+                                actual_output=(
+                                    str(current_trace.output)
+                                    if current_trace.output is not None
+                                    else None
+                                ),
+                                expected_output=current_trace.expected_output,
+                                context=current_trace.context,
+                                retrieval_context=current_trace.retrieval_context,
+                                tools_called=current_trace.tools_called,
+                                expected_tools=current_trace.expected_tools,
                             )
-                        )
+                        if has_task_completion:
+                            if llm_test_case is None:
+                                llm_test_case = LLMTestCase(input="None")
+                            llm_test_case._trace_dict = (
+                                trace_manager.create_nested_spans_dict(
+                                    current_trace.root_spans[0]
+                                )
+                            )
+                        else:
+                            if llm_test_case is None:
+                                current_trace.status = TraceSpanStatus.ERRORED
+                                trace_api.status = TraceSpanApiStatus.ERRORED
+                                if current_trace.root_spans:
+                                    current_trace.root_spans[0].status = (
+                                        TraceSpanStatus.ERRORED
+                                    )
+                                    current_trace.root_spans[0].error = (
+                                        format_error_text(
+                                            DeepEvalError(
+                                                "Trace has metrics but no LLMTestCase (missing input/output). "
+                                                "Are you sure you called `update_current_trace()`?"
+                                            )
+                                        )
+                                    )
+                                if progress and pbar_eval_id is not None:
+                                    update_pbar(
+                                        progress,
+                                        pbar_eval_id,
+                                        advance=count_total_metrics_for_trace(
+                                            current_trace
+                                        ),
+                                    )
+                                skip_metrics_for_this_golden = True
 
-                    for metric in current_trace.metrics:
-                        metric.skipped = False
-                        metric.error = None
-                        if display_config.verbose_mode is not None:
-                            metric.verbose_mode = display_config.verbose_mode
+                        if not skip_metrics_for_this_golden:
+                            for metric in current_trace.metrics:
+                                metric.skipped = False
+                                metric.error = None
+                                if display_config.verbose_mode is not None:
+                                    metric.verbose_mode = (
+                                        display_config.verbose_mode
+                                    )
 
-                    trace_api.metrics_data = []
-                    for metric in current_trace.metrics:
-                        res = _execute_metric(
-                            metric=metric,
-                            test_case=llm_test_case,
-                            show_metric_indicator=show_metric_indicator,
-                            in_component=True,
-                            error_config=error_config,
-                        )
-                        if res == "skip":
-                            continue
+                            trace_api.metrics_data = []
+                            for metric in current_trace.metrics:
+                                res = _execute_metric(
+                                    metric=metric,
+                                    test_case=llm_test_case,
+                                    show_metric_indicator=show_metric_indicator,
+                                    in_component=True,
+                                    error_config=error_config,
+                                )
+                                if res == "skip":
+                                    continue
 
-                        if not metric.skipped:
-                            metric_data = create_metric_data(metric)
-                            trace_api.metrics_data.append(metric_data)
-                            api_test_case.update_metric_data(metric_data)
-                            api_test_case.update_status(metric_data.success)
-                            update_pbar(progress, pbar_eval_id)
+                                if not metric.skipped:
+                                    metric_data = create_metric_data(metric)
+                                    trace_api.metrics_data.append(metric_data)
+                                    api_test_case.update_metric_data(
+                                        metric_data
+                                    )
+                                    api_test_case.update_status(
+                                        metric_data.success
+                                    )
+                                    update_pbar(progress, pbar_eval_id)
 
-                # Then handle span-level metrics
-                dfs(current_trace.root_spans[0], progress, pbar_eval_id)
+                        # Then handle span-level metrics
+                        dfs(current_trace.root_spans[0], progress, pbar_eval_id)
+
                 end_time = time.perf_counter()
                 run_duration = end_time - start_time
-
                 # Update test run
                 api_test_case.update_run_duration(run_duration)
                 test_run_manager.update_test_run(api_test_case, test_case)
@@ -1086,7 +1307,10 @@ async def a_execute_agentic_test_cases(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     test_run_manager = global_test_run_manager
     test_run_manager.save_to_disk = cache_config.write_cache
@@ -1133,7 +1357,19 @@ async def a_execute_agentic_test_cases(
                     tasks.append(asyncio.create_task(task))
                     await asyncio.sleep(async_config.throttle_value)
 
-            await asyncio.gather(*tasks)
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*tasks),
+                    timeout=_gather_timeout(),
+                )
+            except asyncio.TimeoutError:
+                # Cancel any still-pending tasks and drain them
+                for t in tasks:
+                    if not t.done():
+                        t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                raise
+
     else:
         for golden in goldens:
             with capture_evaluation_run("golden"):
@@ -1196,7 +1432,7 @@ async def _a_execute_agentic_test_case(
             if asyncio.iscoroutinefunction(observed_callback):
                 await asyncio.wait_for(
                     observed_callback(golden.input),
-                    timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS,
+                    timeout=_per_task_timeout(),
                 )
             else:
                 observed_callback(golden.input)
@@ -1250,7 +1486,7 @@ async def _a_execute_agentic_test_case(
     )
 
     await _a_execute_trace_test_case(
-        trace=trace,
+        trace=current_trace,
         trace_api=trace_api,
         api_test_case=api_test_case,
         ignore_errors=ignore_errors,
@@ -1262,9 +1498,10 @@ async def _a_execute_agentic_test_case(
         _use_bar_indicator=_use_bar_indicator,
     )
 
-    async def dfs(span: BaseSpan):
+    async def dfs(trace: Trace, span: BaseSpan):
         await _a_execute_span_test_case(
             span=span,
+            current_trace=trace,
             trace_api=trace_api,
             api_test_case=api_test_case,
             ignore_errors=ignore_errors,
@@ -1273,14 +1510,44 @@ async def _a_execute_agentic_test_case(
             verbose_mode=verbose_mode,
             progress=progress,
             pbar_eval_id=pbar_eval_id,
+            test_run_manager=test_run_manager,
             _use_bar_indicator=_use_bar_indicator,
         )
-        child_tasks = [dfs(child) for child in span.children]
+
+        if _skip_metrics_for_error(span=span, trace=trace):
+            return
+
+        child_tasks = [
+            asyncio.create_task(dfs(trace, child)) for child in span.children
+        ]
         if child_tasks:
-            await asyncio.gather(*child_tasks)
+            try:
+                await asyncio.wait_for(
+                    asyncio.gather(*child_tasks),
+                    timeout=_gather_timeout(),
+                )
+            except asyncio.TimeoutError:
+                for t in child_tasks:
+                    if not t.done():
+                        t.cancel()
+                await asyncio.gather(*child_tasks, return_exceptions=True)
+                raise
 
     test_start_time = time.perf_counter()
-    await dfs(current_trace.root_spans[0])
+
+    if not _skip_metrics_for_error(trace=current_trace):
+        if current_trace and current_trace.root_spans:
+            await dfs(current_trace, current_trace.root_spans[0])
+        else:
+            if (
+                logger.isEnabledFor(logging.DEBUG)
+                and get_settings().DEEPEVAL_VERBOSE_MODE
+            ):
+                logger.debug(
+                    "Skipping DFS: empty trace or no root spans (trace=%s)",
+                    current_trace.uuid if current_trace else None,
+                )
+
     test_end_time = time.perf_counter()
     run_duration = test_end_time - test_start_time
 
@@ -1294,6 +1561,7 @@ async def _a_execute_agentic_test_case(
 
 async def _a_execute_span_test_case(
     span: BaseSpan,
+    current_trace: Trace,
     trace_api: TraceApi,
     api_test_case: LLMApiTestCase,
     ignore_errors: bool,
@@ -1302,6 +1570,7 @@ async def _a_execute_span_test_case(
     verbose_mode: Optional[bool],
     progress: Optional[Progress],
     pbar_eval_id: Optional[int],
+    test_run_manager: Optional[TestRunManager],
     _use_bar_indicator: bool,
 ):
     api_span: BaseApiSpan = trace_manager._convert_span_to_api_span(span)
@@ -1309,6 +1578,7 @@ async def _a_execute_span_test_case(
         trace_api.agent_spans.append(api_span)
     elif isinstance(span, LlmSpan):
         trace_api.llm_spans.append(api_span)
+        log_prompt(span, test_run_manager)
     elif isinstance(span, RetrieverSpan):
         trace_api.retriever_spans.append(api_span)
     elif isinstance(span, ToolSpan):
@@ -1316,11 +1586,23 @@ async def _a_execute_span_test_case(
     else:
         trace_api.base_spans.append(api_span)
 
-    if span.metrics is None:
+    if _skip_metrics_for_error(span=span, trace=current_trace):
+        api_span.status = TraceSpanApiStatus.ERRORED
+        api_span.error = span.error or _trace_error(current_trace)
+        if progress and pbar_eval_id is not None:
+            update_pbar(
+                progress,
+                pbar_eval_id,
+                advance=count_metrics_in_span_subtree(span),
+            )
+        return
+
+    metrics: List[BaseMetric] = list(span.metrics or [])
+    if not metrics:
         return
 
     has_task_completion = any(
-        isinstance(metric, TaskCompletionMetric) for metric in span.metrics
+        isinstance(metric, TaskCompletionMetric) for metric in metrics
     )
 
     llm_test_case = None
@@ -1334,13 +1616,25 @@ async def _a_execute_span_test_case(
             tools_called=span.tools_called,
             expected_tools=span.expected_tools,
         )
-    if llm_test_case is None and not has_task_completion:
-        raise ValueError(
-            "Unable to run metrics on span without LLMTestCase. Are you sure you called `update_current_span()`?"
-        )
+
+    if not has_task_completion:
+        if llm_test_case is None:
+            api_span.status = TraceSpanApiStatus.ERRORED
+            api_span.error = format_error_text(
+                DeepEvalError(
+                    "Span has metrics but no LLMTestCase. "
+                    "Are you sure you called `update_current_span()`?"
+                )
+            )
+            if progress and pbar_eval_id is not None:
+                update_pbar(
+                    progress,
+                    pbar_eval_id,
+                    advance=count_metrics_in_span_subtree(span),
+                )
+            return
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
-    metrics: List[BaseMetric] = span.metrics
     test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
@@ -1388,11 +1682,23 @@ async def _a_execute_trace_test_case(
     pbar_eval_id: Optional[int],
     _use_bar_indicator: bool,
 ):
-    if trace.metrics is None:
+
+    if _skip_metrics_for_error(trace=trace):
+        trace_api.status = TraceSpanApiStatus.ERRORED
+        if progress and pbar_eval_id is not None:
+            update_pbar(
+                progress,
+                pbar_eval_id,
+                advance=count_total_metrics_for_trace(trace),
+            )
+        return
+
+    metrics: List[BaseMetric] = list(trace.metrics or [])
+    if not metrics:
         return
 
     has_task_completion = any(
-        isinstance(metric, TaskCompletionMetric) for metric in trace.metrics
+        isinstance(metric, TaskCompletionMetric) for metric in metrics
     )
 
     llm_test_case = None
@@ -1408,13 +1714,28 @@ async def _a_execute_trace_test_case(
             tools_called=trace.tools_called,
             expected_tools=trace.expected_tools,
         )
-    if llm_test_case is None and not has_task_completion:
-        raise ValueError(
-            "Unable to run metrics on trace without LLMTestCase. Are you sure you called `update_current_trace()`?"
-        )
+
+    if not has_task_completion:
+        if llm_test_case is None:
+            trace.status = TraceSpanStatus.ERRORED
+            trace_api.status = TraceSpanApiStatus.ERRORED
+            if trace.root_spans:
+                trace.root_spans[0].status = TraceSpanStatus.ERRORED
+                trace.root_spans[0].error = format_error_text(
+                    DeepEvalError(
+                        "Trace has metrics but no LLMTestCase (missing input/output). "
+                        "Are you sure you called `update_current_trace()`?"
+                    )
+                )
+            if progress and pbar_eval_id is not None:
+                update_pbar(
+                    progress,
+                    pbar_eval_id,
+                    advance=count_total_metrics_for_trace(trace),
+                )
+            return
 
     show_metrics_indicator = show_indicator and not _use_bar_indicator
-    metrics: List[BaseMetric] = trace.metrics
     test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
@@ -1548,15 +1869,17 @@ def execute_agentic_test_cases_from_loop(
                     pbar_eval_id: Optional[int] = None,
                 ):
                     # Create API Span
-                    metrics: List[BaseMetric] = span.metrics
+                    metrics: List[BaseMetric] = list(span.metrics or [])
 
                     api_span: BaseApiSpan = (
                         trace_manager._convert_span_to_api_span(span)
                     )
+
                     if isinstance(span, AgentSpan):
                         trace_api.agent_spans.append(api_span)
                     elif isinstance(span, LlmSpan):
                         trace_api.llm_spans.append(api_span)
+                        log_prompt(span, test_run_manager)
                     elif isinstance(span, RetrieverSpan):
                         trace_api.retriever_spans.append(api_span)
                     elif isinstance(span, ToolSpan):
@@ -1564,8 +1887,30 @@ def execute_agentic_test_cases_from_loop(
                     else:
                         trace_api.base_spans.append(api_span)
 
+                    # Skip errored trace/span
+                    if _skip_metrics_for_error(span=span, trace=current_trace):
+                        api_span.status = TraceSpanApiStatus.ERRORED
+                        api_span.error = span.error or _trace_error(
+                            current_trace
+                        )
+                        if progress and pbar_eval_id is not None:
+                            update_pbar(
+                                progress,
+                                pbar_eval_id,
+                                advance=count_metrics_in_span_subtree(span),
+                            )
+                        return
+
                     for child in span.children:
                         dfs(child, progress, pbar_eval_id)
+
+                    if not span.metrics:
+                        return
+
+                    has_task_completion = any(
+                        isinstance(metric, TaskCompletionMetric)
+                        for metric in metrics
+                    )
 
                     llm_test_case = None
                     if span.input is not None:
@@ -1582,13 +1927,6 @@ def execute_agentic_test_cases_from_loop(
                             tools_called=span.tools_called,
                             expected_tools=span.expected_tools,
                         )
-                    if span.metrics is None or llm_test_case is None:
-                        return
-
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in metrics
-                    )
 
                     if has_task_completion:
                         if llm_test_case is None:
@@ -1596,6 +1934,22 @@ def execute_agentic_test_cases_from_loop(
                         llm_test_case._trace_dict = (
                             trace_manager.create_nested_spans_dict(span)
                         )
+                    else:
+                        if llm_test_case is None:
+                            api_span.status = TraceSpanApiStatus.ERRORED
+                            api_span.error = format_error_text(
+                                DeepEvalError(
+                                    "Span has metrics but no LLMTestCase. "
+                                    "Are you sure you called `update_current_span()`?"
+                                )
+                            )
+                            if progress and pbar_eval_id is not None:
+                                update_pbar(
+                                    progress,
+                                    pbar_eval_id,
+                                    advance=count_metrics_in_span_subtree(span),
+                                )
+                            return
 
                     # Preparing metric calculation
                     api_span.metrics_data = []
@@ -1639,77 +1993,118 @@ def execute_agentic_test_cases_from_loop(
                 start_time = time.perf_counter()
 
                 # Handle trace-level metrics
-                if current_trace.metrics:
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in current_trace.metrics
-                    )
-
-                    llm_test_case = None
-                    if current_trace.input:
-                        llm_test_case = LLMTestCase(
-                            input=str(current_trace.input),
-                            actual_output=(
-                                str(current_trace.output)
-                                if current_trace.output is not None
-                                else None
+                skip_metrics_for_this_golden = False
+                if _skip_metrics_for_error(trace=current_trace):
+                    trace_api.status = TraceSpanApiStatus.ERRORED
+                    if progress and pbar_eval_id is not None:
+                        update_pbar(
+                            progress,
+                            pbar_eval_id,
+                            advance=count_total_metrics_for_trace(
+                                current_trace
                             ),
-                            expected_output=current_trace.expected_output,
-                            context=current_trace.context,
-                            retrieval_context=current_trace.retrieval_context,
-                            tools_called=current_trace.tools_called,
-                            expected_tools=current_trace.expected_tools,
                         )
-                    if llm_test_case is None and not has_task_completion:
-                        raise ValueError(
-                            "Unable to run metrics on trace without LLMTestCase. Are you sure you called `update_current_trace()`?"
+                else:
+                    if current_trace.metrics:
+                        has_task_completion = any(
+                            isinstance(metric, TaskCompletionMetric)
+                            for metric in current_trace.metrics
                         )
 
-                    if has_task_completion:
-                        if llm_test_case is None:
-                            llm_test_case = LLMTestCase(input="None")
-                        llm_test_case._trace_dict = (
-                            trace_manager.create_nested_spans_dict(
-                                current_trace.root_spans[0]
+                        llm_test_case = None
+                        if current_trace.input:
+                            llm_test_case = LLMTestCase(
+                                input=str(current_trace.input),
+                                actual_output=(
+                                    str(current_trace.output)
+                                    if current_trace.output is not None
+                                    else None
+                                ),
+                                expected_output=current_trace.expected_output,
+                                context=current_trace.context,
+                                retrieval_context=current_trace.retrieval_context,
+                                tools_called=current_trace.tools_called,
+                                expected_tools=current_trace.expected_tools,
                             )
-                        )
 
-                    for metric in current_trace.metrics:
-                        metric.skipped = False
-                        metric.error = None
-                        if display_config.verbose_mode is not None:
-                            metric.verbose_mode = display_config.verbose_mode
+                        if has_task_completion:
+                            if llm_test_case is None:
+                                llm_test_case = LLMTestCase(input="None")
+                            llm_test_case._trace_dict = (
+                                trace_manager.create_nested_spans_dict(
+                                    current_trace.root_spans[0]
+                                )
+                            )
+                        else:
+                            if llm_test_case is None:
+                                current_trace.status = TraceSpanStatus.ERRORED
+                                trace_api.status = TraceSpanApiStatus.ERRORED
+                                if current_trace.root_spans:
+                                    current_trace.root_spans[0].status = (
+                                        TraceSpanStatus.ERRORED
+                                    )
+                                    current_trace.root_spans[0].error = (
+                                        format_error_text(
+                                            DeepEvalError(
+                                                "Trace has metrics but no LLMTestCase (missing input/output). "
+                                                "Are you sure you called `update_current_trace()`?"
+                                            )
+                                        )
+                                    )
+                                if progress and pbar_eval_id is not None:
+                                    update_pbar(
+                                        progress,
+                                        pbar_eval_id,
+                                        advance=count_total_metrics_for_trace(
+                                            current_trace
+                                        ),
+                                    )
+                                skip_metrics_for_this_golden = True
 
-                    trace_api.metrics_data = []
-                    for metric in current_trace.metrics:
-                        res = _execute_metric(
-                            metric=metric,
-                            test_case=llm_test_case,
-                            show_metric_indicator=show_metric_indicator,
-                            in_component=True,
-                            error_config=error_config,
-                        )
-                        if res == "skip":
-                            continue
+                        if not skip_metrics_for_this_golden:
+                            for metric in current_trace.metrics:
+                                metric.skipped = False
+                                metric.error = None
+                                if display_config.verbose_mode is not None:
+                                    metric.verbose_mode = (
+                                        display_config.verbose_mode
+                                    )
 
-                        if not metric.skipped:
-                            metric_data = create_metric_data(metric)
-                            trace_api.metrics_data.append(metric_data)
-                            api_test_case.update_metric_data(metric_data)
-                            api_test_case.update_status(metric_data.success)
-                            update_pbar(progress, pbar_eval_id)
+                            trace_api.metrics_data = []
+                            for metric in current_trace.metrics:
+                                res = _execute_metric(
+                                    metric=metric,
+                                    test_case=llm_test_case,
+                                    show_metric_indicator=show_metric_indicator,
+                                    in_component=True,
+                                    error_config=error_config,
+                                )
+                                if res == "skip":
+                                    continue
 
-                # Then handle span-level metrics
-                dfs(current_trace.root_spans[0], progress, pbar_eval_id)
-                end_time = time.perf_counter()
-                run_duration = end_time - start_time
+                                if not metric.skipped:
+                                    metric_data = create_metric_data(metric)
+                                    trace_api.metrics_data.append(metric_data)
+                                    api_test_case.update_metric_data(
+                                        metric_data
+                                    )
+                                    api_test_case.update_status(
+                                        metric_data.success
+                                    )
+                                    update_pbar(progress, pbar_eval_id)
 
-                # Update test run
-                api_test_case.update_run_duration(run_duration)
-                test_run_manager.update_test_run(api_test_case, test_case)
-                test_results.append(create_test_result(api_test_case))
+                    # Then handle span-level metrics
+                    dfs(current_trace.root_spans[0], progress, pbar_eval_id)
 
-                update_pbar(progress, pbar_id)
+            end_time = time.perf_counter()
+            run_duration = end_time - start_time
+            # Update test run
+            api_test_case.update_run_duration(run_duration)
+            test_run_manager.update_test_run(api_test_case, test_case)
+            test_results.append(create_test_result(api_test_case))
+            test_results.extend(extract_trace_test_results(trace_api))
+
+            update_pbar(progress, pbar_id)
 
     try:
         if display_config.show_indicator and _use_bar_indicator:
@@ -1737,6 +2132,7 @@ def execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 def a_execute_agentic_test_cases_from_loop(
@@ -1753,11 +2149,6 @@ def a_execute_agentic_test_cases_from_loop(
     _is_assert_test: bool = False,
 ) -> Iterator[TestResult]:
 
-    GATHER_TIMEOUT_SECONDS = (
-        settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-        + settings.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
-    )
-
     semaphore = asyncio.Semaphore(async_config.max_concurrent)
     original_create_task = asyncio.create_task
 
@@ -1772,7 +2163,7 @@ def a_execute_agentic_test_cases_from_loop(
     async def execute_callback_with_semaphore(coroutine: Awaitable):
         async with semaphore:
             return await asyncio.wait_for(
-                coroutine, timeout=settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
+                coroutine, timeout=_per_task_timeout()
             )
 
     def evaluate_test_cases(
@@ -1814,39 +2205,137 @@ def a_execute_agentic_test_cases_from_loop(
             }
 
             def on_task_done(t: asyncio.Task):
-                if settings.DEEPEVAL_DEBUG_ASYNC:
+                cancelled = False
+                exc = None
+                trace = None
+                root = None
+                resolved_trace_from_task = False
+                resolved_root_from_task = False
+
+                # Task.exception() raises CancelledError if task was cancelled
+                try:
+                    exc = t.exception()
+                except asyncio.CancelledError:
+                    cancelled = True
+                    exc = None
+
+                meta = task_meta.get(t, {})
+                golden_index = meta.get("golden_index")
+
+                if golden_index is not None and 0 <= golden_index < len(
+                    goldens
+                ):
+                    golden = goldens[golden_index]
+
+                    def _mark_trace_error(trace, root, msg: str):
+                        now = time.perf_counter()
+                        trace.status = TraceSpanStatus.ERRORED
+                        # Close the trace so the API layer has a proper endTime
+                        if trace.end_time is None:
+                            trace.end_time = now
+                        if root:
+                            root.status = TraceSpanStatus.ERRORED
+                            root.error = msg
+                            if root.end_time is None:
+                                root.end_time = now
+
+                    if exc is not None:
+                        msg = format_error_text(exc)
+                        trace, root = _resolve_trace_and_root_for_task(t)
+                        resolved_trace_from_task = bool(trace)
+                        resolved_root_from_task = bool(root)
+                        if trace:
+                            _mark_trace_error(trace, root, msg)
+                        else:
+                            for (
+                                trace
+                            ) in trace_manager.integration_traces_to_evaluate:
+                                if (
+                                    trace_manager.trace_uuid_to_golden.get(
+                                        trace.uuid
+                                    )
+                                    is golden
+                                ):
+                                    root = _pick_root_for_marking(trace)
+                                    _mark_trace_error(trace, root, msg)
+                                    break
+
+                    elif cancelled or t.cancelled():
+                        cancel_exc = DeepEvalError(
+                            "Task was cancelled (likely due to timeout)."
+                        )
+                        msg = format_error_text(cancel_exc)
+                        trace, root = _resolve_trace_and_root_for_task(t)
+                        resolved_trace_from_task = bool(trace)
+                        resolved_root_from_task = bool(root)
+                        if trace:
+                            _mark_trace_error(trace, root, msg)
+                        else:
+                            for (
+                                trace
+                            ) in trace_manager.integration_traces_to_evaluate:
+                                if (
+                                    trace_manager.trace_uuid_to_golden.get(
+                                        trace.uuid
+                                    )
+                                    is golden
+                                ):
+                                    root = _pick_root_for_marking(trace)
+                                    _mark_trace_error(trace, root, msg)
+                                    break
+
+                if get_settings().DEEPEVAL_DEBUG_ASYNC:
                     # Using info level here to make it easy to spot these logs.
-                    # We are gated by DEEPEVAL_DEBUG_ASYNC
-                    meta = task_meta.get(t, {})
+                    golden_name = meta.get("golden_name")
                     duration = time.perf_counter() - meta.get(
                         "started", started
                     )
 
-                    if t.cancelled():
+                    if cancelled or exc is not None:
+                        if not resolved_trace_from_task:
+                            logger.warning(
+                                "[deepeval] on_task_done: no binding for task; falling back to golden->trace. task=%s golden=%r",
+                                t.get_name(),
+                                golden_name,
+                            )
+                        elif not resolved_root_from_task:
+                            logger.warning(
+                                "[deepeval] on_task_done: bound trace found but no bound root; using heuristic. task=%s trace=%s",
+                                t.get_name(),
+                                trace.uuid,
+                            )
+
+                    if cancelled:
                         logger.info(
                             "[deepeval] task CANCELLED %s after %.2fs meta=%r",
                             t.get_name(),
                             duration,
                             meta,
                         )
+                    elif exc is not None:
+                        logger.error(
+                            "[deepeval] task ERROR %s after %.2fs meta=%r",
+                            t.get_name(),
+                            duration,
+                            meta,
+                            exc_info=(
+                                type(exc),
+                                exc,
+                                getattr(exc, "__traceback__", None),
+                            ),
+                        )
                     else:
-                        exc = t.exception()
-                        if exc is not None:
-                            logger.error(
-                                "[deepeval] task ERROR %s after %.2fs meta=%r",
-                                t.get_name(),
-                                duration,
-                                meta,
-                                exc_info=(type(exc), exc, exc.__traceback__),
-                            )
-                        else:
-                            logger.info(
-                                "[deepeval] task OK %s after %.2fs meta={'golden_index': %r}",
-                                t.get_name(),
-                                duration,
-                                meta.get("golden_index"),
-                            )
+                        logger.info(
+                            "[deepeval] task OK %s after %.2fs meta={'golden_index': %r}",
+                            t.get_name(),
+                            duration,
+                            meta.get("golden_index"),
+                        )
 
+                try:
+                    trace_manager.task_bindings.pop(t, None)
+                except Exception:
+                    pass
                 update_pbar(progress, pbar_callback_id)
                 update_pbar(progress, pbar_id)
 
@@ -1888,9 +2377,10 @@ def a_execute_agentic_test_cases_from_loop(
                 loop.run_until_complete(
                     asyncio.wait_for(
                         asyncio.gather(*created_tasks, return_exceptions=True),
-                        timeout=GATHER_TIMEOUT_SECONDS,
+                        timeout=_gather_timeout(),
                     )
                 )
+
             except asyncio.TimeoutError:
                 import traceback
 
@@ -1903,16 +2393,13 @@ def a_execute_agentic_test_cases_from_loop(
                     elapsed_time = time.perf_counter() - start_time
 
                     # Determine if it was a per task or gather timeout based on task's elapsed time
-                    if (
-                        elapsed_time
-                        >= settings.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
-                    ):
+                    if elapsed_time >= _per_task_timeout():
                         timeout_type = "per-task"
                     else:
                         timeout_type = "gather"
 
                     logger.warning(
-                        f"[deepeval] gather TIMEOUT after {GATHER_TIMEOUT_SECONDS}s; "
+                        f"[deepeval] gather TIMEOUT after {_gather_timeout()}s; "
                         f"pending={len(pending)} tasks. Timeout type: {timeout_type}. "
                         f"To give tasks more time, consider increasing "
                         f"DEEPEVAL_PER_TASK_TIMEOUT_SECONDS for longer task completion time or "
@@ -1926,7 +2413,7 @@ def a_execute_agentic_test_cases_from_loop(
                         elapsed_time,
                         meta,
                     )
-                    if loop.get_debug() and settings.DEEPEVAL_DEBUG_ASYNC:
+                    if loop.get_debug() and get_settings().DEEPEVAL_DEBUG_ASYNC:
                         frames = t.get_stack(limit=6)
                         if frames:
                             logger.info("    stack:")
@@ -1947,12 +2434,12 @@ def a_execute_agentic_test_cases_from_loop(
                     return
 
                 try:
+                    current_tasks = set()
                     # Find tasks that were created during this run but we didn’t track
                     current_tasks = loop.run_until_complete(_snapshot_tasks())
                 except RuntimeError:
                     # this might happen if the loop is already closing
-                    # nothing we can do
-                    return
+                    pass
 
                 leftovers = [
                     t
@@ -1962,33 +2449,32 @@ def a_execute_agentic_test_cases_from_loop(
                     and not t.done()
                 ]
 
-                if not leftovers:
-                    return
-
-                if settings.DEEPEVAL_DEBUG_ASYNC:
-                    logger.warning(
-                        "[deepeval] %d stray task(s) not tracked; cancelling...",
-                        len(leftovers),
-                    )
+                if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                    if len(leftovers) > 0:
+                        logger.warning(
+                            "[deepeval] %d stray task(s) not tracked; cancelling...",
+                            len(leftovers),
+                        )
                     for t in leftovers:
                         meta = task_meta.get(t, {})
                         name = t.get_name()
                         logger.warning("  - STRAY %s meta=%s", name, meta)
 
-                for t in leftovers:
-                    t.cancel()
+                if leftovers:
+                    for t in leftovers:
+                        t.cancel()
 
-                # Drain strays so they don’t leak into the next iteration
-                try:
-                    loop.run_until_complete(
-                        asyncio.gather(*leftovers, return_exceptions=True)
-                    )
-                except RuntimeError:
-                    # If the loop is closing here, just continue
-                    if settings.DEEPEVAL_DEBUG_ASYNC:
-                        logger.warning(
-                            "[deepeval] failed to drain stray tasks because loop is closing"
+                    # Drain strays so they don’t leak into the next iteration
+                    try:
+                        loop.run_until_complete(
+                            asyncio.gather(*leftovers, return_exceptions=True)
                         )
+                    except RuntimeError:
+                        # If the loop is closing here, just continue
+                        if get_settings().DEEPEVAL_DEBUG_ASYNC:
+                            logger.warning(
+                                "[deepeval] failed to drain stray tasks because loop is closing"
+                            )
 
         # Evaluate traces
         if trace_manager.traces_to_evaluate:
@@ -2003,25 +2489,6 @@ def a_execute_agentic_test_cases_from_loop(
                     ignore_errors=error_config.ignore_errors,
                     skip_on_missing_params=error_config.skip_on_missing_params,
                     show_indicator=display_config.show_indicator,
-                    throttle_value=async_config.throttle_value,
-                    max_concurrent=async_config.max_concurrent,
-                    _use_bar_indicator=_use_bar_indicator,
-                    _is_assert_test=_is_assert_test,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                )
-            )
-        elif openai_test_case_pairs:
-            loop.run_until_complete(
-                _evaluate_test_case_pairs(
-                    test_case_pairs=openai_test_case_pairs,
-                    test_run=test_run,
-                    test_run_manager=test_run_manager,
-                    test_results=test_results,
-                    ignore_errors=error_config.ignore_errors,
-                    skip_on_missing_params=error_config.skip_on_missing_params,
-                    show_indicator=display_config.show_indicator,
-                    verbose_mode=display_config.verbose_mode,
                     throttle_value=async_config.throttle_value,
                     max_concurrent=async_config.max_concurrent,
                     _use_bar_indicator=_use_bar_indicator,
@@ -2103,6 +2570,7 @@ def a_execute_agentic_test_cases_from_loop(
         local_trace_manager.evaluating = False
         local_trace_manager.traces_to_evaluate_order.clear()
         local_trace_manager.traces_to_evaluate.clear()
+        local_trace_manager.trace_uuid_to_golden.clear()
 
 
 async def _a_evaluate_traces(
@@ -2126,11 +2594,32 @@ async def _a_evaluate_traces(
 
     async def execute_evals_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     eval_tasks = []
-    for count, trace in enumerate(traces_to_evaluate):
-        golden = goldens[count]
+    # Here, we will work off a fixed-set copy to avoid surprises from potential
+    # mid-iteration mutation
+    traces_snapshot = list(traces_to_evaluate or [])
+
+    for count, trace in enumerate(traces_snapshot):
+        # Prefer the explicit mapping from trace -> golden captured at trace creation.
+        golden = trace_manager.trace_uuid_to_golden.get(trace.uuid)
+        if not golden:
+            # trace started during evaluation_loop but the CURRENT_GOLDEN was
+            # not set for some reason. We can’t map it to a golden, so the best
+            # we can do is skip evaluation for this trace.
+            if (
+                logger.isEnabledFor(logging.DEBUG)
+                and get_settings().DEEPEVAL_VERBOSE_MODE
+            ):
+                logger.debug(
+                    "Skipping trace %s: no golden association found during evaluation_loop ",
+                    trace.uuid,
+                )
+            continue
         with capture_evaluation_run("golden"):
             task = execute_evals_with_semaphore(
                 func=_a_execute_agentic_test_case,
@@ -2151,7 +2640,18 @@ async def _a_evaluate_traces(
             )
             eval_tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*eval_tasks)
+
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*eval_tasks),
+            timeout=_gather_timeout(),
+        )
+    except asyncio.TimeoutError:
+        for t in eval_tasks:
+            if not t.done():
+                t.cancel()
+        await asyncio.gather(*eval_tasks, return_exceptions=True)
+        raise
 
 
 async def _evaluate_test_case_pairs(
@@ -2174,7 +2674,10 @@ async def _evaluate_test_case_pairs(
 
     async def execute_with_semaphore(func: Callable, *args, **kwargs):
         async with semaphore:
-            return await func(*args, **kwargs)
+            return await asyncio.wait_for(
+                func(*args, **kwargs),
+                timeout=_per_task_timeout(),
+            )
 
     tasks = []
     for count, test_case_pair in enumerate(test_case_pairs):
@@ -2207,7 +2710,19 @@ async def _evaluate_test_case_pairs(
             )
             tasks.append(asyncio.create_task(task))
             await asyncio.sleep(throttle_value)
-    await asyncio.gather(*tasks)
+
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*tasks),
+            timeout=_gather_timeout(),
+        )
+    except asyncio.TimeoutError:
+        # Cancel any still-pending tasks and drain them
+        for t in tasks:
+            if not t.done():
+                t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
 
 
 def _execute_metric(
@@ -2222,13 +2737,14 @@ def _execute_metric(
             test_case,
             _show_indicator=show_metric_indicator,
             _in_component=in_component,
+            _log_metric_to_confident=False,
         )
     except MissingTestCaseParamsError as e:
         if error_config.skip_on_missing_params:
             return "skip"
         else:
             if error_config.ignore_errors:
-                metric.error = str(e)
+                metric.error = format_error_text(e)
                 metric.success = False
             else:
                 raise
@@ -2240,19 +2756,54 @@ def _execute_metric(
                 return "skip"
             else:
                 if error_config.ignore_errors:
-                    metric.error = str(e)
+                    metric.error = format_error_text(e)
                     metric.success = False
                 else:
                     raise
         except Exception as e:
             if error_config.ignore_errors:
-                metric.error = str(e)
+                metric.error = format_error_text(e)
                 metric.success = False
             else:
                 raise
     except Exception as e:
         if error_config.ignore_errors:
-            metric.error = str(e)
+            metric.error = format_error_text(e)
             metric.success = False
         else:
             raise
+
+
+def log_prompt(
+    llm_span: LlmSpan,
+    test_run_manager: TestRunManager,
+):
+    prompt = llm_span.prompt
+    if prompt is None:
+        return
+
+    span_hyperparameters = {}
+    prompt_version = prompt.version if is_confident() else None
+    key = f"{prompt.alias}_{prompt_version}"
+    span_hyperparameters[key] = prompt
+
+    test_run = test_run_manager.get_test_run()
+    if test_run.prompts is None:
+        test_run.prompts = []
+    if test_run.hyperparameters is None:
+        test_run.hyperparameters = {}
+
+    if key not in test_run.hyperparameters:
+        test_run.hyperparameters.update(
+            process_hyperparameters(span_hyperparameters, False)
+        )
+        existing_prompt_keys = {
+            f"{p.alias}_{p.version}" for p in test_run.prompts
+        }
+        new_prompts = process_prompts(span_hyperparameters)
+        for new_prompt in new_prompts:
+            new_prompt_key = f"{new_prompt.alias}_{new_prompt.version}"
+            if new_prompt_key not in existing_prompt_keys:
+                test_run.prompts.append(new_prompt)
+
+    global_test_run_manager.save_test_run(TEMP_FILE_PATH)

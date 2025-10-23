@@ -17,7 +17,8 @@ from deepeval.metrics.contextual_precision.template import (
     ContextualPrecisionTemplate,
 )
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.contextual_precision.schema import *
+import deepeval.metrics.contextual_precision.schema as cpschema
+from deepeval.metrics.api import metric_data_manager
 
 
 class ContextualPrecisionMetric(BaseMetric):
@@ -53,8 +54,8 @@ class ContextualPrecisionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
-
         check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
@@ -68,10 +69,11 @@ class ContextualPrecisionMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
-                self.verdicts: List[ContextualPrecisionVerdict] = (
+                self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
                         test_case.input,
                         test_case.expected_output,
@@ -88,7 +90,10 @@ class ContextualPrecisionMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
-
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
             return self.score
 
     async def a_measure(
@@ -96,6 +101,7 @@ class ContextualPrecisionMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(test_case, self._required_params, self)
@@ -107,7 +113,7 @@ class ContextualPrecisionMetric(BaseMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.verdicts: List[ContextualPrecisionVerdict] = (
+            self.verdicts: List[cpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(
                     test_case.input,
                     test_case.expected_output,
@@ -124,7 +130,10 @@ class ContextualPrecisionMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_reason(self, input: str):
@@ -132,7 +141,7 @@ class ContextualPrecisionMetric(BaseMetric):
             return None
 
         retrieval_contexts_verdicts = [
-            {"verdict": verdict.verdict, "reasons": verdict.reason}
+            {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
         prompt = self.evaluation_template.generate_reason(
@@ -143,15 +152,15 @@ class ContextualPrecisionMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=ContextualPrecisionScoreReason
+                prompt, schema=cpschema.ContextualPrecisionScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualPrecisionScoreReason = (
+                res: cpschema.ContextualPrecisionScoreReason = (
                     await self.model.a_generate(
-                        prompt, schema=ContextualPrecisionScoreReason
+                        prompt, schema=cpschema.ContextualPrecisionScoreReason
                     )
                 )
                 return res.reason
@@ -165,7 +174,7 @@ class ContextualPrecisionMetric(BaseMetric):
             return None
 
         retrieval_contexts_verdicts = [
-            {"verdict": verdict.verdict, "reasons": verdict.reason}
+            {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
         prompt = self.evaluation_template.generate_reason(
@@ -176,14 +185,16 @@ class ContextualPrecisionMetric(BaseMetric):
 
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=ContextualPrecisionScoreReason
+                prompt, schema=cpschema.ContextualPrecisionScoreReason
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: ContextualPrecisionScoreReason = self.model.generate(
-                    prompt, schema=ContextualPrecisionScoreReason
+                res: cpschema.ContextualPrecisionScoreReason = (
+                    self.model.generate(
+                        prompt, schema=cpschema.ContextualPrecisionScoreReason
+                    )
                 )
                 return res.reason
             except TypeError:
@@ -193,21 +204,23 @@ class ContextualPrecisionMetric(BaseMetric):
 
     async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
-    ) -> List[ContextualPrecisionVerdict]:
+    ) -> List[cpschema.ContextualPrecisionVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
+            res, cost = await self.model.a_generate(
+                prompt, schema=cpschema.Verdicts
+            )
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
+                res: cpschema.Verdicts = await self.model.a_generate(
+                    prompt, schema=cpschema.Verdicts
                 )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
@@ -215,34 +228,36 @@ class ContextualPrecisionMetric(BaseMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    ContextualPrecisionVerdict(**item)
+                    cpschema.ContextualPrecisionVerdict(**item)
                     for item in data["verdicts"]
                 ]
                 return verdicts
 
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
-    ) -> List[ContextualPrecisionVerdict]:
+    ) -> List[cpschema.ContextualPrecisionVerdict]:
         prompt = self.evaluation_template.generate_verdicts(
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
+            res, cost = self.model.generate(prompt, schema=cpschema.Verdicts)
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                res: cpschema.Verdicts = self.model.generate(
+                    prompt, schema=cpschema.Verdicts
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    ContextualPrecisionVerdict(**item)
+                    cpschema.ContextualPrecisionVerdict(**item)
                     for item in data["verdicts"]
                 ]
                 return verdicts
@@ -279,7 +294,7 @@ class ContextualPrecisionMetric(BaseMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

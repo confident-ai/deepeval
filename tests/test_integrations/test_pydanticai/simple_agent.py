@@ -10,6 +10,7 @@ from deepeval.prompt import Prompt
 prompt = Prompt(alias="asd")
 prompt.pull(version="00.00.01")
 
+
 confident_instrumentation_settings = ConfidentInstrumentationSettings(
     thread_id="test_thread_id_1",
     user_id="test_user_id_1",
@@ -24,61 +25,42 @@ confident_instrumentation_settings = ConfidentInstrumentationSettings(
 agent = Agent(
     "openai:gpt-5",
     system_prompt="Be concise, reply with one sentence.",
+    instructions="You are a helpful assistant.",
     instrument=confident_instrumentation_settings,
     name="test_agent",
 )
 
 
 async def execute_simple_agent():
-    with trace() as current_trace:
+    with trace():
         await agent.run("What are the LLMs?")
-        print("===============Result 1: trace ID===============")
-        print(current_trace.uuid)  # ok
-
         await agent.run("What are the LLMs?")
-        print("===============Result 2: Trace ID:===============")
-        print(current_trace.uuid)  # ok
 
 
 def execute_simple_agent_sync():
 
-    with trace() as current_trace:
+    with trace():
         agent.run_sync("What are the LLMs?")
-        print("===============Result 1: trace ID===============")
-        print(current_trace.uuid)  # ok
 
 
-# Test nested trace() calls
-def test_nested_traces():
-    with trace() as outer_trace:
-        outer_uuid = outer_trace.uuid
-        print(f"Outer trace UUID: {outer_uuid}")  # ok
+#################### Testing different trace modes #################################
 
+
+def nested_traces():
+    with trace():
         agent.run_sync("Query 1")
-        print(f"After agent run 1: {outer_trace.uuid}")  # ok
 
         # Nested trace context
-        with trace() as inner_trace:
-            # Should reuse the same trace (based on trace_context.py logic)
-            print(f"Inner trace UUID: {inner_trace.uuid}")  # ok
-
+        with trace():
             agent.run_sync("Query 2")
-            print(f"After agent run 2: {inner_trace.uuid}")  # ok
 
 
 # Test concurrent agent runs
-async def test_concurrent_agents():
-    with trace() as current_trace:
-        initial_uuid = current_trace.uuid
+async def concurrent_agents():
+    with trace():
 
-        # Run multiple agents concurrently
         await asyncio.gather(
             agent.run("Query 1"),
             agent.run("Query 2"),
             agent.run("Query 3"),
         )
-
-        print(f"Initial: {initial_uuid}")
-        print(
-            f"Final: {current_trace.uuid}"
-        )  # print trace uuid of the last agent run

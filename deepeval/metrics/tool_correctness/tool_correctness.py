@@ -12,6 +12,7 @@ from deepeval.test_case import (
     ToolCall,
 )
 from deepeval.metrics import BaseMetric
+from deepeval.metrics.api import metric_data_manager
 
 
 class ToolCorrectnessMetric(BaseMetric):
@@ -45,6 +46,7 @@ class ToolCorrectnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(test_case, self._required_params, self)
@@ -83,6 +85,11 @@ class ToolCorrectnessMetric(BaseMetric):
             ]
             steps.append(f"Score: {self.score}\nReason: {self.reason}")
             self.verbose_logs = construct_verbose_logs(self, steps=steps)
+
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def a_measure(
@@ -90,6 +97,7 @@ class ToolCorrectnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         return self.measure(
             test_case,

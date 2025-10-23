@@ -23,6 +23,7 @@ from deepeval.metrics.faithfulness.schema import (
     Truths,
     Claims,
 )
+from deepeval.metrics.api import metric_data_manager
 
 
 class FaithfulnessMetric(BaseMetric):
@@ -41,6 +42,7 @@ class FaithfulnessMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         truths_extraction_limit: Optional[int] = None,
+        penalize_ambiguous_claims: bool = False,
         evaluation_template: Type[FaithfulnessTemplate] = FaithfulnessTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
@@ -51,6 +53,7 @@ class FaithfulnessMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.evaluation_template = evaluation_template
+        self.penalize_ambiguous_claims = penalize_ambiguous_claims
 
         self.truths_extraction_limit = truths_extraction_limit
         if self.truths_extraction_limit is not None:
@@ -61,6 +64,7 @@ class FaithfulnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(test_case, self._required_params, self)
@@ -76,6 +80,7 @@ class FaithfulnessMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -94,6 +99,10 @@ class FaithfulnessMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
 
             return self.score
 
@@ -102,6 +111,7 @@ class FaithfulnessMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
 
         check_llm_test_case_params(test_case, self._required_params, self)
@@ -130,7 +140,10 @@ class FaithfulnessMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_reason(self) -> str:
@@ -328,6 +341,12 @@ class FaithfulnessMetric(BaseMetric):
         for verdict in self.verdicts:
             if verdict.verdict.strip().lower() != "no":
                 faithfulness_count += 1
+
+            if (
+                self.penalize_ambiguous_claims
+                and verdict.verdict.strip().lower() == "idk"
+            ):
+                faithfulness_count -= 1
 
         score = faithfulness_count / number_of_verdicts
         return 0 if self.strict_mode and score < self.threshold else score

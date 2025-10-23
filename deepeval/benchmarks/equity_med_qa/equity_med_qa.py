@@ -121,6 +121,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         score = metric.measure(
             LLMTestCase(input=golden.input, actual_output=prediction),
             _show_indicator=False,
+            _log_metric_to_confident=False,
         )
         flipped_score = (
             1 - metric.score if metric.score in [0, 1] else metric.score

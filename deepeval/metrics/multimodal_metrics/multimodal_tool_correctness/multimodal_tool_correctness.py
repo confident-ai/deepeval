@@ -3,7 +3,7 @@ from typing import List, Dict
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     construct_verbose_logs,
-    check_llm_test_case_params,
+    check_mllm_test_case_params,
 )
 from deepeval.test_case import (
     MLLMTestCase,
@@ -11,10 +11,10 @@ from deepeval.test_case import (
     ToolCallParams,
     ToolCall,
 )
-from deepeval.metrics import BaseMetric
+from deepeval.metrics import BaseMultimodalMetric
 
 
-class MultimodalToolCorrectnessMetric(BaseMetric):
+class MultimodalToolCorrectnessMetric(BaseMultimodalMetric):
 
     _required_params: List[MLLMTestCaseParams] = [
         MLLMTestCaseParams.INPUT,
@@ -46,8 +46,11 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
-        check_llm_test_case_params(test_case, self._required_params, self)
+        check_mllm_test_case_params(
+            test_case, self._required_params, None, None, self
+        )
         self.test_case = test_case
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
@@ -90,11 +93,13 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         return self.measure(
             test_case,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
+            _log_metric_to_confident=_log_metric_to_confident,
         )
 
     ##################################################
@@ -278,7 +283,7 @@ class MultimodalToolCorrectnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Tool Correctness"
+        return "Multi Modal Tool Correctness"
 
     def indent_multiline_string(self, s, indent_level=4):
         indent = " " * indent_level

@@ -1,0 +1,38 @@
+{
+  "uuid": "330fe36c-9407-4181-b5ee-eead3f92c72d",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "e3283f0c-656a-4463-86fe-4ee0714f0db6",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-17T07:52:56.366Z",
+      "endTime": "2025-10-17T07:52:58.041Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant. Always generate a string response."
+        },
+        {
+          "role": "user",
+          "content": "Hello, how are you?"
+        }
+      ],
+      "output": "Hello! I'm just a program, but I'm here to help you. How can I assist you today?",
+      "model": "gpt-4o",
+      "prompt": {},
+      "inputTokenCount": 29.0,
+      "outputTokenCount": 22.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-17T07:52:56.366Z",
+  "endTime": "2025-10-17T07:52:58.041Z",
+  "environment": "development",
+  "input": "Hello, how are you?",
+  "output": "Hello! I'm just a program, but I'm here to help you. How can I assist you today?",
+  "status": "SUCCESS"
+}

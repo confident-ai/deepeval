@@ -1,7 +1,7 @@
 from typing import Optional, List, Union
 
 from deepeval.metrics import BaseMultimodalMetric
-from deepeval.test_case import MLLMTestCaseParams, MLLMTestCase, MLLMImage
+from deepeval.test_case import MLLMTestCase
 from deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.template import (
     MultiModalContextualPrecisionTemplate,
 )
@@ -14,7 +14,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.test_case import LLMTestCaseParams
 from deepeval.models import DeepEvalBaseMLLM
-from deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.schema import *
+import deepeval.metrics.multimodal_metrics.multimodal_contextual_precision.schema as mcpschema
 from deepeval.metrics.indicator import metric_progress_indicator
 
 
@@ -49,6 +49,7 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         check_mllm_test_case_params(
             test_case, self._required_params, None, None, self
@@ -56,7 +57,9 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, _show_indicator=_show_indicator, _in_component=_in_component
+            self,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
         ):
             if self.async_mode:
                 loop = get_or_create_event_loop()
@@ -65,10 +68,11 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
-                self.verdicts: List[ContextualPrecisionVerdict] = (
+                self.verdicts: List[mcpschema.ContextualPrecisionVerdict] = (
                     self._generate_verdicts(
                         test_case.input,
                         test_case.expected_output,
@@ -93,6 +97,7 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         check_mllm_test_case_params(
             test_case, self._required_params, None, None, self
@@ -105,7 +110,7 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            self.verdicts: List[ContextualPrecisionVerdict] = (
+            self.verdicts: List[mcpschema.ContextualPrecisionVerdict] = (
                 await self._a_generate_verdicts(
                     test_case.input,
                     test_case.expected_output,
@@ -125,12 +130,12 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
             return self.score
 
-    async def _a_generate_reason(self, input: str):
+    async def _a_generate_reason(self, input: str) -> Optional[str]:
         if self.include_reason is False:
             return None
 
         retrieval_contexts_verdicts = [
-            {"verdict": verdict.verdict, "reasons": verdict.reason}
+            {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
         prompt = MultiModalContextualPrecisionTemplate.generate_reason(
@@ -141,15 +146,17 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
         if self.using_native_model:
             res, cost = await self.model.a_generate(
-                prompt, schema=MultimodelContextualPrecisionScoreReason
+                prompt,
+                schema=mcpschema.MultimodelContextualPrecisionScoreReason,
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodelContextualPrecisionScoreReason = (
+                res: mcpschema.MultimodelContextualPrecisionScoreReason = (
                     await self.model.a_generate(
-                        prompt, schema=MultimodelContextualPrecisionScoreReason
+                        prompt,
+                        schema=mcpschema.MultimodelContextualPrecisionScoreReason,
                     )
                 )
                 return res.reason
@@ -158,12 +165,12 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
                 data = trimAndLoadJson(res, self)
                 return data["reason"]
 
-    def _generate_reason(self, input: str):
+    def _generate_reason(self, input: str) -> Optional[str]:
         if self.include_reason is False:
             return None
 
         retrieval_contexts_verdicts = [
-            {"verdict": verdict.verdict, "reasons": verdict.reason}
+            {"verdict": verdict.verdict, "reason": verdict.reason}
             for verdict in self.verdicts
         ]
         prompt = MultiModalContextualPrecisionTemplate.generate_reason(
@@ -174,15 +181,17 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
         if self.using_native_model:
             res, cost = self.model.generate(
-                prompt, schema=MultimodelContextualPrecisionScoreReason
+                prompt,
+                schema=mcpschema.MultimodelContextualPrecisionScoreReason,
             )
             self.evaluation_cost += cost
             return res.reason
         else:
             try:
-                res: MultimodelContextualPrecisionScoreReason = (
+                res: mcpschema.MultimodelContextualPrecisionScoreReason = (
                     self.model.generate(
-                        prompt, schema=MultimodelContextualPrecisionScoreReason
+                        prompt,
+                        schema=mcpschema.MultimodelContextualPrecisionScoreReason,
                     )
                 )
                 return res.reason
@@ -193,21 +202,23 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
 
     async def _a_generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
-    ) -> List[ContextualPrecisionVerdict]:
+    ) -> List[mcpschema.ContextualPrecisionVerdict]:
         prompt = MultiModalContextualPrecisionTemplate.generate_verdicts(
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
         if self.using_native_model:
-            res, cost = await self.model.a_generate(prompt, schema=Verdicts)
+            res, cost = await self.model.a_generate(
+                prompt, schema=mcpschema.Verdicts
+            )
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
-                res: Verdicts = await self.model.a_generate(
-                    prompt, schema=Verdicts
+                res: mcpschema.Verdicts = await self.model.a_generate(
+                    prompt, schema=mcpschema.Verdicts
                 )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
@@ -215,34 +226,36 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
                 res = await self.model.a_generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    ContextualPrecisionVerdict(**item)
+                    mcpschema.ContextualPrecisionVerdict(**item)
                     for item in data["verdicts"]
                 ]
                 return verdicts
 
     def _generate_verdicts(
         self, input: str, expected_output: str, retrieval_context: List[str]
-    ) -> List[ContextualPrecisionVerdict]:
+    ) -> List[mcpschema.ContextualPrecisionVerdict]:
         prompt = MultiModalContextualPrecisionTemplate.generate_verdicts(
             input=input,
             expected_output=expected_output,
             retrieval_context=retrieval_context,
         )
         if self.using_native_model:
-            res, cost = self.model.generate(prompt, schema=Verdicts)
+            res, cost = self.model.generate(prompt, schema=mcpschema.Verdicts)
             self.evaluation_cost += cost
             verdicts = [item for item in res.verdicts]
             return verdicts
         else:
             try:
-                res: Verdicts = self.model.generate(prompt, schema=Verdicts)
+                res: mcpschema.Verdicts = self.model.generate(
+                    prompt, schema=mcpschema.Verdicts
+                )
                 verdicts = [item for item in res.verdicts]
                 return verdicts
             except TypeError:
                 res = self.model.generate(prompt)
                 data = trimAndLoadJson(res, self)
                 verdicts = [
-                    ContextualPrecisionVerdict(**item)
+                    mcpschema.ContextualPrecisionVerdict(**item)
                     for item in data["verdicts"]
                 ]
                 return verdicts
@@ -279,7 +292,7 @@ class MultimodalContextualPrecisionMetric(BaseMultimodalMetric):
         else:
             try:
                 self.success = self.score >= self.threshold
-            except:
+            except TypeError:
                 self.success = False
         return self.success
 

@@ -1,6 +1,6 @@
 import os
 
-from typing import Dict, List, Optional, Type, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 from types import SimpleNamespace
 
 from deepeval.models.base_model import DeepEvalBaseEmbeddingModel
@@ -53,7 +53,7 @@ def _get_langchain():
         )
 
 
-def _get_chromadb():
+def get_chromadb():
     """Return the chromadb module, or raise ImportError with root cause."""
     global _chroma_mod, _chroma_import_error
     if _chroma_mod is not None:
@@ -91,10 +91,16 @@ class DocumentChunker:
     #########################################################
 
     async def a_chunk_doc(
-        self, chunk_size: int = 1024, chunk_overlap: int = 0
+        self,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 0,
+        client: Optional[Any] = None,
+        collection_name: Optional[str] = None,
     ) -> "Collection":
         lc = _get_langchain()
-        chroma = _get_chromadb()
+        chroma = get_chromadb()
+
+        from chromadb.config import Settings as ChromaSettings
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
@@ -102,12 +108,22 @@ class DocumentChunker:
                 "Document Chunker has yet to properly load documents"
             )
 
-        # Create ChromaDB client
+        # Determine client and collection_name
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
-        client = chroma.PersistentClient(path=f".vector_db/{document_name}")
+        if client is None:
+            client = chroma.PersistentClient(
+                path=f".vector_db/{document_name}",
+                settings=ChromaSettings(anonymized_telemetry=True),
+            )
+            default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
+        else:
+            # namespace by doc to support sharing a single client across many docs
+            default_coll = (
+                f"{document_name}_processed_chunks_{chunk_size}_{chunk_overlap}"
+            )
+        collection_name = collection_name or default_coll
 
-        collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
         except Exception:
@@ -140,9 +156,17 @@ class DocumentChunker:
                 )
         return collection
 
-    def chunk_doc(self, chunk_size: int = 1024, chunk_overlap: int = 0):
+    def chunk_doc(
+        self,
+        chunk_size: int = 1024,
+        chunk_overlap: int = 0,
+        client: Optional[Any] = None,
+        collection_name: Optional[str] = None,
+    ):
         lc = _get_langchain()
-        chroma = _get_chromadb()
+        chroma = get_chromadb()
+
+        from chromadb.config import Settings as ChromaSettings
 
         # Raise error if chunk_doc is called before load_doc
         if self.sections is None or self.source_file is None:
@@ -150,12 +174,22 @@ class DocumentChunker:
                 "Document Chunker has yet to properly load documents"
             )
 
-        # Create ChromaDB client
+        # Determine client and collection_name
         full_document_path, _ = os.path.splitext(self.source_file)
         document_name = os.path.basename(full_document_path)
-        client = chroma.PersistentClient(path=f".vector_db/{document_name}")
+        if client is None:
+            client = chroma.PersistentClient(
+                path=f".vector_db/{document_name}",
+                settings=ChromaSettings(anonymized_telemetry=True),
+            )
+            default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
+        else:
+            # namespace by doc to support sharing a single client across many docs
+            default_coll = (
+                f"{document_name}_processed_chunks_{chunk_size}_{chunk_overlap}"
+            )
+        collection_name = collection_name or default_coll
 
-        collection_name = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         try:
             collection = client.get_collection(name=collection_name)
         except Exception:

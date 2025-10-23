@@ -16,15 +16,16 @@ from deepeval.metrics.hallucination.template import HallucinationTemplate
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.hallucination.schema import *
-
-required_params: List[LLMTestCaseParams] = [
-    LLMTestCaseParams.INPUT,
-    LLMTestCaseParams.ACTUAL_OUTPUT,
-    LLMTestCaseParams.CONTEXT,
-]
+from deepeval.metrics.api import metric_data_manager
 
 
 class HallucinationMetric(BaseMetric):
+    _required_params: List[LLMTestCaseParams] = [
+        LLMTestCaseParams.INPUT,
+        LLMTestCaseParams.ACTUAL_OUTPUT,
+        LLMTestCaseParams.CONTEXT,
+    ]
+
     def __init__(
         self,
         threshold: float = 0.5,
@@ -51,9 +52,10 @@ class HallucinationMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -66,6 +68,7 @@ class HallucinationMetric(BaseMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -84,6 +87,10 @@ class HallucinationMetric(BaseMetric):
                         f"Score: {self.score}\nReason: {self.reason}",
                     ],
                 )
+                if _log_metric_to_confident:
+                    metric_data_manager.post_metric_if_enabled(
+                        self, test_case=test_case
+                    )
 
             return self.score
 
@@ -92,9 +99,10 @@ class HallucinationMetric(BaseMetric):
         test_case: LLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
 
-        check_llm_test_case_params(test_case, required_params, self)
+        check_llm_test_case_params(test_case, self._required_params, self)
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
@@ -118,7 +126,10 @@ class HallucinationMetric(BaseMetric):
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
-
+            if _log_metric_to_confident:
+                metric_data_manager.post_metric_if_enabled(
+                    self, test_case=test_case
+                )
             return self.score
 
     async def _a_generate_reason(self):

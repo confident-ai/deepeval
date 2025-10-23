@@ -1,204 +1,295 @@
-from typing import Callable, List, Optional
+from typing import Callable, List
 from functools import wraps
 
-from deepeval.openai.utils import (
-    get_attr_path,
-    set_attr_path,
-    add_test_case,
-    create_child_tool_spans,
-)
+
 from deepeval.openai.extractors import (
-    extract_output_parameters,
-    extract_input_parameters,
+    safe_extract_output_parameters,
+    safe_extract_input_parameters,
     InputParameters,
-    ToolCall,
+    OutputParameters,
 )
-from deepeval.tracing.context import update_current_span, update_llm_span
-from deepeval.tracing import trace_manager, observe
-from deepeval.metrics.base_metric import BaseMetric
-from deepeval.test_case import LLMTestCase
+from deepeval.test_case.llm_test_case import ToolCall
+from deepeval.tracing.context import (
+    current_trace_context,
+    update_current_span,
+    update_llm_span,
+)
+from deepeval.tracing import observe
+from deepeval.tracing.trace_context import current_llm_context
+
+# Store original methods for safety and potential unpatching
+_ORIGINAL_METHODS = {}
+_OPENAI_PATCHED = False
 
 
-def patch_openai(openai_module):
-    if getattr(openai_module, "_deepeval_patched", False):
+def patch_openai_classes():
+    """Monkey patch OpenAI resource classes directly."""
+    global _OPENAI_PATCHED
+
+    # Single guard - if already patched, return immediately
+    if _OPENAI_PATCHED:
         return
 
-    openai_module._deepeval_patched = True
-    openai_class = getattr(openai_module, "OpenAI", None)
-    async_openai_class = getattr(openai_module, "AsyncOpenAI", None)
+    try:
+        from openai.resources.chat.completions import (
+            Completions,
+            AsyncCompletions,
+        )
 
-    if openai_class:
-        patch_openai_client(openai_class, is_async=False)
-    if async_openai_class:
-        patch_openai_client(async_openai_class, is_async=True)
+        # Store original methods before patching
+        if hasattr(Completions, "create"):
+            _ORIGINAL_METHODS["Completions.create"] = Completions.create
+            Completions.create = _create_sync_wrapper(
+                Completions.create, is_completion_method=True
+            )
+
+        if hasattr(Completions, "parse"):
+            _ORIGINAL_METHODS["Completions.parse"] = Completions.parse
+            Completions.parse = _create_sync_wrapper(
+                Completions.parse, is_completion_method=True
+            )
+
+        if hasattr(AsyncCompletions, "create"):
+            _ORIGINAL_METHODS["AsyncCompletions.create"] = (
+                AsyncCompletions.create
+            )
+            AsyncCompletions.create = _create_async_wrapper(
+                AsyncCompletions.create, is_completion_method=True
+            )
+
+        if hasattr(AsyncCompletions, "parse"):
+            _ORIGINAL_METHODS["AsyncCompletions.parse"] = AsyncCompletions.parse
+            AsyncCompletions.parse = _create_async_wrapper(
+                AsyncCompletions.parse, is_completion_method=True
+            )
+
+    except ImportError:
+        pass
+
+    try:
+        from openai.resources.responses import Responses, AsyncResponses
+
+        if hasattr(Responses, "create"):
+            _ORIGINAL_METHODS["Responses.create"] = Responses.create
+            Responses.create = _create_sync_wrapper(
+                Responses.create, is_completion_method=False
+            )
+
+        if hasattr(AsyncResponses, "create"):
+            _ORIGINAL_METHODS["AsyncResponses.create"] = AsyncResponses.create
+            AsyncResponses.create = _create_async_wrapper(
+                AsyncResponses.create, is_completion_method=False
+            )
+
+    except ImportError:
+        pass
+
+    # Set flag at the END after successful patching
+    _OPENAI_PATCHED = True
 
 
-def patch_openai_client(openai_class, is_async: bool):
-    original_init = openai_class.__init__
+def _create_sync_wrapper(original_method, is_completion_method: bool):
+    """Create a wrapper for sync methods - called ONCE during patching."""
 
-    @wraps(original_init)
-    def new_init(self, *args, **kwargs):
-        original_init(self, *args, **kwargs)
-        method_paths = {
-            # path → is_completion_method
-            "chat.completions.create": True,
-            "beta.chat.completions.parse": True,
-            "responses.create": False,
-        }
-        for path, is_completion in method_paths.items():
-            method = get_attr_path(self, path)
-            if not callable(method):
-                continue
-            if is_async:
-                patched_method = patch_async_openai_client_method(
-                    orig_method=method,
-                    is_completion_method=is_completion,
-                )
-            else:
-                patched_method = patch_sync_openai_client_method(
-                    orig_method=method,
-                    is_completion_method=is_completion,
-                )
-            set_attr_path(self, path, patched_method)
+    @wraps(original_method)
+    def method_wrapper(self, *args, **kwargs):
+        bound_method = original_method.__get__(self, type(self))
+        patched = _patch_sync_openai_client_method(
+            orig_method=bound_method, is_completion_method=is_completion_method
+        )
+        return patched(*args, **kwargs)
 
-    openai_class.__init__ = new_init
+    return method_wrapper
 
 
-def patch_async_openai_client_method(
+def _create_async_wrapper(original_method, is_completion_method: bool):
+    """Create a wrapper for async methods - called ONCE during patching."""
+
+    @wraps(original_method)
+    async def method_wrapper(self, *args, **kwargs):
+        bound_method = original_method.__get__(self, type(self))
+        patched = _patch_async_openai_client_method(
+            orig_method=bound_method, is_completion_method=is_completion_method
+        )
+        return await patched(*args, **kwargs)
+
+    return method_wrapper
+
+
+def _patch_async_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
 ):
     @wraps(orig_method)
-    async def patched_async_openai_method(
-        metrics: Optional[List[BaseMetric]] = None,
-        context: Optional[List[str]] = None,
-        retrieval_context: Optional[List[str]] = None,
-        expected_output: Optional[str] = None,
-        expected_tools: Optional[List[ToolCall]] = None,
-        *args,
-        **kwargs
-    ):
-        input_parameters: InputParameters = extract_input_parameters(
+    async def patched_async_openai_method(*args, **kwargs):
+        input_parameters: InputParameters = safe_extract_input_parameters(
             is_completion_method, kwargs
         )
-        is_traced = len(trace_manager.traces) > 0
 
-        if is_traced:
+        llm_context = current_llm_context.get()
 
-            @observe(type="llm", model=input_parameters.model, metrics=metrics)
-            async def llm_generation(*args, **kwargs):
-                response = await orig_method(*args, **kwargs)
-                output_parameters = extract_output_parameters(
-                    is_completion_method, response, input_parameters
-                )
-                update_current_span(
-                    input=input_parameters.input
-                    or input_parameters.messages
-                    or "NA",
-                    output=output_parameters.output or "NA",
-                    expected_output=expected_output,
-                    retrieval_context=retrieval_context,
-                    context=context,
-                    tools_called=output_parameters.tools_called,
-                    expected_tools=expected_tools,
-                )
-                update_llm_span(
-                    input_token_count=output_parameters.prompt_tokens,
-                    output_token_count=output_parameters.completion_tokens,
-                )
-                create_child_tool_spans(output_parameters)
-                return response
-
-            return await llm_generation(*args, **kwargs)
-        else:
+        @observe(
+            type="llm",
+            model=input_parameters.model,
+            metrics=llm_context.metrics,
+            metric_collection=llm_context.metric_collection,
+        )
+        async def llm_generation(*args, **kwargs):
             response = await orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
+            output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
-            test_case = LLMTestCase(
-                input=input_parameters.input,
-                actual_output=output_parameters.output,
-                expected_output=expected_output,
-                retrieval_context=retrieval_context,
-                context=context,
-                tools_called=output_parameters.tools_called,
-                expected_tools=expected_tools,
+            _update_all_attributes(
+                input_parameters,
+                output_parameters,
+                llm_context.expected_tools,
+                llm_context.expected_output,
+                llm_context.context,
+                llm_context.retrieval_context,
             )
-            add_test_case(
-                test_case=test_case,
-                metrics=metrics,
-                input_parameters=input_parameters,
-            )
+
             return response
+
+        return await llm_generation(*args, **kwargs)
 
     return patched_async_openai_method
 
 
-def patch_sync_openai_client_method(
+def _patch_sync_openai_client_method(
     orig_method: Callable,
     is_completion_method: bool = False,
 ):
     @wraps(orig_method)
-    def patched_sync_openai_method(
-        metrics: Optional[List[BaseMetric]] = None,
-        context: Optional[List[str]] = None,
-        retrieval_context: Optional[List[str]] = None,
-        expected_output: Optional[str] = None,
-        expected_tools: Optional[List[ToolCall]] = None,
-        *args,
-        **kwargs
-    ):
-        input_parameters: InputParameters = extract_input_parameters(
+    def patched_sync_openai_method(*args, **kwargs):
+        input_parameters: InputParameters = safe_extract_input_parameters(
             is_completion_method, kwargs
         )
-        is_traced = len(trace_manager.traces) > 0
 
-        if is_traced:
+        llm_context = current_llm_context.get()
 
-            @observe(type="llm", model=input_parameters.model, metrics=metrics)
-            def llm_generation(*args, **kwargs):
-                response = orig_method(*args, **kwargs)
-                output_parameters = extract_output_parameters(
-                    is_completion_method, response, input_parameters
-                )
-                update_current_span(
-                    input=input_parameters.input
-                    or input_parameters.messages
-                    or "NA",
-                    output=output_parameters.output or "NA",
-                    expected_output=expected_output,
-                    retrieval_context=retrieval_context,
-                    context=context,
-                    tools_called=output_parameters.tools_called,
-                    expected_tools=expected_tools,
-                )
-                update_llm_span(
-                    input_token_count=output_parameters.prompt_tokens,
-                    output_token_count=output_parameters.completion_tokens,
-                )
-                create_child_tool_spans(output_parameters)
-                return response
-
-            return llm_generation(*args, **kwargs)
-        else:
+        @observe(
+            type="llm",
+            model=input_parameters.model,
+            metrics=llm_context.metrics,
+            metric_collection=llm_context.metric_collection,
+        )
+        def llm_generation(*args, **kwargs):
             response = orig_method(*args, **kwargs)
-            output_parameters = extract_output_parameters(
+            output_parameters = safe_extract_output_parameters(
                 is_completion_method, response, input_parameters
             )
-            test_case = LLMTestCase(
-                input=input_parameters.input,
-                actual_output=output_parameters.output,
-                expected_output=expected_output,
-                retrieval_context=retrieval_context,
-                context=context,
-                tools_called=output_parameters.tools_called,
-                expected_tools=expected_tools,
+            _update_all_attributes(
+                input_parameters,
+                output_parameters,
+                llm_context.expected_tools,
+                llm_context.expected_output,
+                llm_context.context,
+                llm_context.retrieval_context,
             )
-            add_test_case(
-                test_case=test_case,
-                metrics=metrics,
-                input_parameters=input_parameters,
-            )
+
             return response
 
+        return llm_generation(*args, **kwargs)
+
     return patched_sync_openai_method
+
+
+def _update_all_attributes(
+    input_parameters: InputParameters,
+    output_parameters: OutputParameters,
+    expected_tools: List[ToolCall],
+    expected_output: str,
+    context: List[str],
+    retrieval_context: List[str],
+):
+    """Update span and trace attributes with input/output parameters."""
+    update_current_span(
+        input=input_parameters.messages,
+        output=output_parameters.output or output_parameters.tools_called,
+        tools_called=output_parameters.tools_called,
+        # attributes to be added
+        expected_output=expected_output,
+        expected_tools=expected_tools,
+        context=context,
+        retrieval_context=retrieval_context,
+    )
+
+    llm_context = current_llm_context.get()
+
+    update_llm_span(
+        input_token_count=output_parameters.prompt_tokens,
+        output_token_count=output_parameters.completion_tokens,
+        prompt=llm_context.prompt,
+    )
+
+    __update_input_and_output_of_current_trace(
+        input_parameters, output_parameters
+    )
+
+
+def __update_input_and_output_of_current_trace(
+    input_parameters: InputParameters, output_parameters: OutputParameters
+):
+
+    current_trace = current_trace_context.get()
+    if current_trace:
+        if current_trace.input is None:
+            current_trace.input = (
+                input_parameters.input or input_parameters.messages
+            )
+
+        if current_trace.output is None:
+            current_trace.output = output_parameters.output
+
+    return
+
+
+def unpatch_openai_classes():
+    """Restore OpenAI resource classes to their original state."""
+    global _OPENAI_PATCHED
+
+    # If not patched, nothing to do
+    if not _OPENAI_PATCHED:
+        return
+
+    try:
+        from openai.resources.chat.completions import (
+            Completions,
+            AsyncCompletions,
+        )
+
+        # Restore original methods for Completions
+        if "Completions.create" in _ORIGINAL_METHODS:
+            Completions.create = _ORIGINAL_METHODS["Completions.create"]
+
+        if "Completions.parse" in _ORIGINAL_METHODS:
+            Completions.parse = _ORIGINAL_METHODS["Completions.parse"]
+
+        # Restore original methods for AsyncCompletions
+        if "AsyncCompletions.create" in _ORIGINAL_METHODS:
+            AsyncCompletions.create = _ORIGINAL_METHODS[
+                "AsyncCompletions.create"
+            ]
+
+        if "AsyncCompletions.parse" in _ORIGINAL_METHODS:
+            AsyncCompletions.parse = _ORIGINAL_METHODS["AsyncCompletions.parse"]
+
+    except ImportError:
+        pass
+
+    try:
+        from openai.resources.responses import Responses, AsyncResponses
+
+        # Restore original methods for Responses
+        if "Responses.create" in _ORIGINAL_METHODS:
+            Responses.create = _ORIGINAL_METHODS["Responses.create"]
+
+        # Restore original methods for AsyncResponses
+        if "AsyncResponses.create" in _ORIGINAL_METHODS:
+            AsyncResponses.create = _ORIGINAL_METHODS["AsyncResponses.create"]
+
+    except ImportError:
+        pass
+
+    # Reset the patched flag
+    _OPENAI_PATCHED = False

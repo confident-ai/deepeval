@@ -5,8 +5,6 @@ import os
 import time
 
 from deepeval.utils import format_turn
-from deepeval.test_case.conversational_test_case import Turn
-from deepeval.test_run.api import TurnApi
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.dataset import Golden
 from deepeval.metrics import (
@@ -28,7 +26,6 @@ from deepeval.evaluate.types import TestResult
 from deepeval.tracing.api import TraceApi, BaseApiSpan, TraceSpanApiStatus
 from deepeval.tracing.tracing import BaseSpan, Trace
 from deepeval.tracing.types import TraceSpanStatus
-from deepeval.constants import PYTEST_RUN_TEST_NAME
 from deepeval.tracing.utils import (
     perf_counter_to_datetime,
     to_zod_compatible_iso,
@@ -133,121 +130,6 @@ def create_test_result(
             )
 
 
-def create_api_turn(turn: Turn, index: int) -> TurnApi:
-    return TurnApi(
-        role=turn.role,
-        content=turn.content,
-        user_id=turn.user_id,
-        retrievalContext=turn.retrieval_context,
-        toolsCalled=turn.tools_called,
-        additionalMetadata=turn.additional_metadata,
-        order=index,
-    )
-
-
-def create_api_test_case(
-    test_case: Union[LLMTestCase, ConversationalTestCase, MLLMTestCase],
-    trace: Optional[TraceApi] = None,
-    index: Optional[int] = None,
-) -> Union[LLMApiTestCase, ConversationalApiTestCase]:
-    if isinstance(test_case, ConversationalTestCase):
-        order = (
-            test_case._dataset_rank
-            if test_case._dataset_rank is not None
-            else index
-        )
-        if test_case.name:
-            name = test_case.name
-        else:
-            name = os.getenv(
-                PYTEST_RUN_TEST_NAME, f"conversational_test_case_{order}"
-            )
-
-        api_test_case = ConversationalApiTestCase(
-            name=name,
-            success=True,
-            metricsData=[],
-            runDuration=0,
-            evaluationCost=None,
-            order=order,
-            scenario=test_case.scenario,
-            expectedOutcome=test_case.expected_outcome,
-            userDescription=test_case.user_description,
-            context=test_case.context,
-            tags=test_case.tags,
-            comments=test_case.comments,
-            additionalMetadata=test_case.additional_metadata,
-        )
-        api_test_case.turns = [
-            create_api_turn(
-                turn=turn,
-                index=index,
-            )
-            for index, turn in enumerate(test_case.turns)
-        ]
-
-        return api_test_case
-    else:
-        order = (
-            test_case._dataset_rank
-            if test_case._dataset_rank is not None
-            else index
-        )
-
-        success = True
-        if test_case.name is not None:
-            name = test_case.name
-        else:
-            name = os.getenv(PYTEST_RUN_TEST_NAME, f"test_case_{order}")
-        metrics_data = []
-
-        if isinstance(test_case, LLMTestCase):
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input=test_case.input,
-                actualOutput=test_case.actual_output,
-                expectedOutput=test_case.expected_output,
-                context=test_case.context,
-                retrievalContext=test_case.retrieval_context,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                tags=test_case.tags,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-                trace=trace,
-            )
-        elif isinstance(test_case, MLLMTestCase):
-            api_test_case = LLMApiTestCase(
-                name=name,
-                input="",
-                multimodalInput=test_case.input,
-                multimodalActualOutput=test_case.actual_output,
-                multimodalExpectedOutput=test_case.expected_output,
-                multimodalRetrievalContext=test_case.retrieval_context,
-                multimodalContext=test_case.context,
-                toolsCalled=test_case.tools_called,
-                expectedTools=test_case.expected_tools,
-                tokenCost=test_case.token_cost,
-                completionTime=test_case.completion_time,
-                success=success,
-                metricsData=metrics_data,
-                runDuration=None,
-                evaluationCost=None,
-                order=order,
-                additionalMetadata=test_case.additional_metadata,
-                comments=test_case.comments,
-            )
-        # llm_test_case_lookup_map[instance_id] = api_test_case
-        return api_test_case
-
-
 def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     return TraceApi(
         uuid=trace.uuid,
@@ -308,6 +190,26 @@ def validate_assert_test_inputs(
         raise ValueError(
             "Both 'test_case' and 'metrics' must be provided together."
         )
+
+    if test_case and metrics:
+        if isinstance(test_case, LLMTestCase) and not all(
+            isinstance(metric, BaseMetric) for metric in metrics
+        ):
+            raise ValueError(
+                "All 'metrics' for an 'LLMTestCase' must be instances of 'BaseMetric' only."
+            )
+        if isinstance(test_case, ConversationalTestCase) and not all(
+            isinstance(metric, BaseConversationalMetric) for metric in metrics
+        ):
+            raise ValueError(
+                "All 'metrics' for an 'ConversationalTestCase' must be instances of 'BaseConversationalMetric' only."
+            )
+        if isinstance(test_case, MLLMTestCase) and not all(
+            isinstance(metric, BaseMultimodalMetric) for metric in metrics
+        ):
+            raise ValueError(
+                "All 'metrics' for an 'MLLMTestCase' must be instances of 'BaseMultimodalMetric' only."
+            )
 
     if not ((golden and observed_callback) or (test_case and metrics)):
         raise ValueError(
@@ -577,6 +479,18 @@ def count_metrics_in_trace(trace: Trace) -> int:
     return sum(count_metrics_recursive(span) for span in trace.root_spans)
 
 
+def count_total_metrics_for_trace(trace: Trace) -> int:
+    """Span subtree metrics + trace-level metrics."""
+    return count_metrics_in_trace(trace=trace) + len(trace.metrics or [])
+
+
+def count_metrics_in_span_subtree(span: BaseSpan) -> int:
+    total = len(span.metrics or [])
+    for c in span.children or []:
+        total += count_metrics_in_span_subtree(c)
+    return total
+
+
 def extract_trace_test_results(trace_api: TraceApi) -> List[TestResult]:
     test_results: List[TestResult] = []
     # extract trace result
@@ -619,7 +533,7 @@ def extract_span_test_results(span_api: BaseApiSpan) -> List[TestResult]:
         test_results.append(
             TestResult(
                 name=span_api.name,
-                success=span_api.status == "SUCCESS",
+                success=span_api.status == TraceSpanApiStatus.SUCCESS,
                 metrics_data=span_api.metrics_data,
                 input=span_api.input,
                 actual_output=span_api.output,

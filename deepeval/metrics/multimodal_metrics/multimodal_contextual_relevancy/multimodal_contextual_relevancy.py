@@ -49,6 +49,7 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         check_mllm_test_case_params(
             test_case, self._required_params, None, None, self
@@ -65,6 +66,7 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
                         test_case,
                         _show_indicator=False,
                         _in_component=_in_component,
+                        _log_metric_to_confident=_log_metric_to_confident,
                     )
                 )
             else:
@@ -90,6 +92,7 @@ class MultimodalContextualRelevancyMetric(BaseMultimodalMetric):
         test_case: MLLMTestCase,
         _show_indicator: bool = True,
         _in_component: bool = False,
+        _log_metric_to_confident: bool = True,
     ) -> float:
         check_mllm_test_case_params(
             test_case, self._required_params, None, None, self

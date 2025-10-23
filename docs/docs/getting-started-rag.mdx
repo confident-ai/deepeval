@@ -44,6 +44,124 @@ End-to-end RAG evaluation treats your entire LLM app as a standalone RAG pipelin
 
 The `retrieval_context` in the diagram above is cruical, as it represents the text chunks that were retrieved at evaluation time.
 
+:::note
+
+`deepeval` provides a wide selection of LLM models that you can easily choose from and run evaluations with.
+
+<Tabs>
+
+<TabItem value="openai" label="OpenAI">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+
+task_completion_metric = AnswerRelevancyMetric(model="gpt-4.1")
+```
+
+</TabItem>
+
+<TabItem value="anthropic" label="Anthropic">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import AnthropicModel
+
+model = AnthropicModel("claude-3-7-sonnet-latest")
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="gemini" label="Gemini">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel("gemini-2.5-flash")
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure-openai" label="Ollama">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OllamaModel
+
+model = OllamaModel("deepseek-r1")
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="grok" label="Grok">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GrokModel
+
+model = GrokModel("grok-4-0709")
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="azure" label="Azure OpenAI">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(
+    model_name="gpt-4.1",
+    deployment_name="Test Deployment",
+    azure_openai_api_key="Your Azure OpenAI API Key",
+    openai_api_version="2025-01-01-preview",
+    azure_endpoint="https://example-resource.azure.openai.com/",
+    temperature=0
+)
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="amazon-bedrock" label="Amazon Bedrock">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import AmazonBedrockModel
+
+model = AmazonBedrockModel(
+    model_id="anthropic.claude-3-opus-20240229-v1:0",
+    temperature=0
+)
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+<TabItem value="vertex-ai" label="Vertex AI">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import GeminiModel
+
+model = GeminiModel(
+    model_name="gemini-1.5-pro",
+    project="Your Project ID",
+    location="us-central1",
+    temperature=0
+)
+task_completion_metric = AnswerRelevancyMetric(model=model)
+```
+
+</TabItem>
+
+</Tabs>
+:::
+
 <Timeline>
 <TimelineItem title="Setup RAG pipeline">
 
@@ -163,7 +281,7 @@ test_case = LLMTestCase(
 
 Define RAG metrics to evaluate your RAG pipeline, or define your own using [G-Eval](/docs/metrics-llm-evals).
 
-```python title="main.py" showLineNumbers={true}
+```python
 from deepeval.metrics import AnswerRelevancyMetric, ContextualPrecisionMetric
 
 answer_relevancy = AnswerRelevancyMetric(threshold=0.8)
@@ -461,14 +579,14 @@ Since your chatbot uses RAG, each turn from the assistant should also include th
 
 Define a custom conversational RAG metric to evaluate your chatbot system using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
 
-```python title="main.py" showLineNumbers={true}
+```python
 from deepeval.metrics import ConversationalGEval
 from deepeval.test_case import TurnParams
 
 turn_faithfulness = ConversationalGEval(
     name="Faithfulness",
     criteria="Determine whether the assistant's responses are factually supported by the retrieved context across the entire conversation.",
-    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT, TurnParams.RETRIEVAL_CONTEXT]
+    evaluation_params=[TurnParams.ROLE, TurnParams.CONTENT, TurnParams.RETRIEVAL_CONTEXT],
 )
 ```
 
