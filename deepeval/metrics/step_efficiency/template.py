@@ -8,210 +8,248 @@ class StepEfficiencyTemplate:
     @staticmethod
     def extract_task_from_trace(trace: dict) -> str:
         return textwrap.dedent(
-            f"""You are an expert evaluator tasked with extracting the **user's original goal** from a nested execution trace of an AI agent's workflow.
+            f"""You are a **trace analyst** tasked with extracting the **user's original goal or task** from a complete nested execution trace of an AI agent.
 
-                You are given:
-                - A **trace**: a full nested dictionary representing the entire execution of an agent and its child components (tools, LLM calls, retrievers, custom modules, etc.).
-                - The trace contains a root-level agent with an `input` field representing the user's original instruction or query.
+                YOUR OBJECTIVE:
 
-                Your job is to:
-                1. Identify the user's **full intended task or objective** based strictly on the root-level agent's `input` field.
-                2. Analyze all child spans in the trace to understand what sub-tasks or actions were performed.
-                3. Return a **precise, fact-based, structured description** of the user's goal, expressed from the user's perspective as a clear set of concrete, actionable points.
-                4. Do **not** include any internal agent reasoning, intermediate steps, or component names.
-                5. Do **not** speculate beyond what the trace clearly supports.
-                6. If the user's task cannot be inferred beyond the root input, return that input verbatim.
+                Identify and describe **exactly what the user asked the agent to do**, based only on the user's explicit input and any unambiguous contextual details present in the trace.
 
-                ---
+                Your goal is to produce a **concise, fact-based statement** that captures the *intended user task* — not the agent's plan, actions, reasoning, or assumptions.
 
-                GUIDELINES:
+                STRICT EXTRACTION RULES:
 
-                - The extracted task should reflect only the user's intent.
-                - Use the full trace only to inform what sub-tasks or subtleties the user requested.
-                - Avoid subjective or evaluative language.
-                - Produce output that can serve as a definitive reference to check whether the agent fulfilled the user's request.
+                1. Primary Source: Root-Level User Input
+                - The user's task must be derived **directly and primarily** from the root agent's `"input"` field.  
+                - If that field contains nested `"input"` or `"messages"`, extract the true user instruction or request text from within it.
 
-                ---
+                2. Secondary Context: Subtasks as Clarifiers (Optional)
+                - You may use child spans (tools, retrievers, LLMs) **only** to clarify or disambiguate what the user explicitly asked for — 
+                    e.g., to confirm that the task involves multiple subtasks the user clearly implied (like booking and planning steps for a trip).
+                - You may **NOT** infer new goals that the user did not state or imply.
+
+                3. No Hallucination
+                - Do **NOT** invent goals, assumptions, or implied needs beyond what is explicitly or clearly inferable from the input.
+                - If the user's request is vague, preserve that vagueness — do not expand it.
+
+                4. Agent-Agnostic Rule
+                - Ignore the agent's tools, methods, reasoning, or internal operations.
+                - The task reflects **what the user wanted**, not how the agent chose to approach it.
+
+                5. Perspective
+                - Express the extracted task **from the user's perspective**, as if restating what they asked the system to do.
+                - Avoid any meta or evaluative phrasing (“The user wanted the agent to…”).
+
+                6. Fallback Condition
+                - If the only available information about the task is the raw user input text, return that input verbatim without modification.
 
                 OUTPUT FORMAT:
 
-                Return a JSON object with a single key `"task"` and a string value describing the user's task.
-
-                Use this exact format with double curly braces for the example:
-
-                ---
-
-                Example Trace:
+                Return **only** a JSON object of this form:
 
                 {{
-                "name": "trip_planner",
-                "type": "agent",
-                "input": {{
-                    "input": "Help me plan a business trip to Chicago next week."
-                }},
-                "children": [
-                    {{
-                    "name": "flight_tool",
-                    "type": "tool",
-                    "input": {{
-                        "inputParameters": {{
-                        "destination": "Chicago",
-                        "date": "2024-07-10"
-                        }}
-                    }},
-                    "output": {{
-                        "flights": ["Flight 101", "Flight 202"]
-                    }},
-                    "children": []
-                    }},
-                    {{
-                    "name": "hotel_tool",
-                    "type": "tool",
-                    "input": {{
-                        "inputParameters": {{
-                        "location": "Chicago",
-                        "check_in": "2024-07-10",
-                        "check_out": "2024-07-12"
-                        }}
-                    }},
-                    "output": {{
-                        "hotels": ["The Grand Chicago", "Lakeview Inn"]
-                    }},
-                    "children": []
-                    }},
-                    {{
-                    "name": "agenda_llm",
-                    "type": "llm",
-                    "input": {{
-                        "prompt": "Draft a meeting agenda",
-                        "input": [
-                        {{
-                            "role": "system",
-                            "content": "You are an executive assistant."
-                        }},
-                        {{
-                            "role": "user",
-                            "content": "Create an agenda for a client strategy meeting."
-                        }}
-                        ]
-                    }},
-                    "output": "1. Q2 review\\n2. Client feedback\\n3. Strategy planning",
-                    "children": []
-                    }}
-                ]
+                    "task": "<a single clear sentence summarizing the user's explicit goal>"
                 }}
 
-                Expected JSON:
+                - The `"task"` value should be a single, coherent natural language sentence or two at most.
+                - Do not include commentary, metadata, or any additional fields.
 
-                {{
-                    "task": "Plan a business trip to Chicago next week, including booking a flight, reserving a hotel, and drafting a client meeting agenda."
+                EXAMPLES:
+
+                Example Trace: {{ 
+                    "name": "trip_planner", 
+                    "type": "agent", 
+                    "input": {{ 
+                        "input": "Help me plan a business trip to Chicago next week." 
+                    }}, 
+                    "children": [ 
+                        {{ 
+                            "name": "flight_tool", 
+                            "type": "tool", 
+                            "input": {{ 
+                                "inputParameters": {{ 
+                                    "destination": "Chicago", 
+                                    "date": "2024-07-10" 
+                                }} }}, 
+                                "output": {{ 
+                                    "flights": ["Flight 101", "Flight 202"] 
+                                }}, 
+                                "children": [] 
+                        }}, 
+                        {{ 
+                            "name": "hotel_tool", 
+                            "type": "tool", 
+                            "input": {{ 
+                                "inputParameters": {{ 
+                                    "location": "Chicago", 
+                                    "check_in": "2024-07-10", 
+                                    "check_out": "2024-07-12" 
+                                }} }}, 
+                                "output": {{ 
+                                    "hotels": ["The Grand Chicago", "Lakeview Inn"] 
+                                }}, 
+                                "children": [] 
+                        }}, 
+                        {{ 
+                            "name": "agenda_llm", 
+                            "type": "llm", 
+                            "input": {{ 
+                                "prompt": "Draft a meeting agenda", 
+                                "input": [ 
+                                    {{ 
+                                        "role": "system", 
+                                        "content": "You are an executive assistant." 
+                                    }}, 
+                                    {{ 
+                                        "role": "user", 
+                                        "content": "Create an agenda for a client strategy meeting." 
+                                    }} 
+                                ] 
+                            }}, 
+                        "output": "1. Q2 review\\n2. Client feedback\\n3. Strategy planning", 
+                        "children": [] 
+                        }} 
+                    ] 
+                }} 
+                
+                Expected JSON: 
+                {{ 
+                    "task": "Plan a business trip to Chicago next week, including booking a flight, reserving a hotel, and drafting a client meeting agenda." 
                 }}
 
-                ---
+                IMPORTANT ENFORCEMENT RULES:
 
-                **IMPORTANT**: Only return a single JSON object with the `"task"` key and your extraction as the value.
+                - If multiple user inputs exist, identify the overall task that user has in mind.
+                - Do not include execution details, tools, function names, or reasoning text.
+                - Avoid restating or paraphrasing beyond clarity; preserve the user's intent exactly.
+                - When uncertain, extract **less rather than more** — prefer minimal, factual phrasing over speculative completion.
 
-                Trace:
+                TRACE DATA:
 
                 {json.dumps(trace, default=make_json_serializable, indent=2)}
 
-                JSON:
+                ---
+
+                ### JSON:
             """
         )
 
+    @staticmethod
     def get_execution_efficiency(task: str, trace: dict) -> str:
         return textwrap.dedent(
-            f"""You are an expert evaluator assessing the **execution efficiency** of an AI agent.
+            f"""You are an **efficiency auditor** evaluating how economically an AI agent executed a task.
 
-                You are given:
-                - A **task**: a structured, factual description of what the user intended to accomplish.
-                - A **trace**: a full execution trace showing all components (tools, LLM calls, retrievals, custom functions, etc.) invoked by the agent to fulfill that task.
+                OBJECTIVE:
 
-                Your job is to assign an **efficiency score** from 0.0 to 1.0 based on how precisely and minimally the agent completed the task — **regardless of final output quality**.
+                Determine how **efficiently** the agent executed the given task based on its full execution trace.
+                Efficiency means achieving the user's goal using the **fewest, simplest, and most direct** actions possible.
 
-                ---
+                You must assign a score from **0.0 to 1.0** that reflects how close the execution came to the *minimal necessary sequence of actions*.
 
-                DEFINITION: Execution efficiency refers to how economically the agent used available resources to accomplish the given task.
+                **Important:** You are not evaluating correctness, completeness, creativity, or helpfulness — only the *efficiency* of the execution.
 
-                The most efficient executions:
-                - Use **only** components that are **strictly required** to fulfill the task.
-                - **Avoid** any extra, speculative, redundant, or stylistic steps.
-                - Follow a **logical, minimal, and goal-directed** sequence of actions.
-                - Do **not** attempt to “enrich” the response with unrelated insights, external lookups, or commentary unless explicitly required by the task.
-                - Demonstrate **surgical minimalism**: each action must be **justified by necessity**, not helpfulness.
+                STRICT EVALUATION RULES:
 
-                ---
+                1. Zero-Tolerance for Unnecessary Actions
+                - Every step, tool call, LLM query, or retrieval must be **strictly required** to fulfill the task.  
+                - If a single tool, retrieval, or reasoning step is superfluous, speculative, repetitive, or stylistic, 
+                    the score must be as low as possible, regardless of outcome quality.
+                - Adding “helpful” or “contextual” actions that were not explicitly necessary is an inefficiency.
 
-                INSTRUCTIONS:
+                2. Minimal Action Principle
+                - The ideal execution performs the **exact minimum number of steps** needed to complete the task.  
+                - Each step must directly contribute to completing the task, not to exploration, confirmation, or elaboration.
 
-                Step 1: Read the **task** carefully. Identify what information or deliverables the user asked for — and only that.
+                3. No Speculation or Enrichment
+                - Any activity aimed at *enhancing*, *expanding*, or *beautifying* the answer (e.g., extra retrievals, style edits, rephrasings) 
+                    reduces the score sharply (≤ 0.25).  
+                - Efficiency is about restraint — **doing exactly what's required, nothing more**.
 
-                Step 2: Analyze the **trace**:
-                - What tools or components were used?
-                - Were they required to fulfill the task, or were they optional or speculative?
-                - Could the same output have been achieved **without** certain steps?
-                - Were there **missing** steps that should have been included?
+                4. Directness and Focus
+                - Steps must appear in a logically minimal sequence from input to goal.  
+                - Repetition, re-querying, nested reasoning loops, or tool reuse when not needed 
+                    indicate inefficiency.
 
-                Step 3: Identify violations of efficiency:
-                - **Overuse**: Any step that was not strictly required — even if it improved the output — must reduce the score.
-                - **Misuse**: Use of a tool/LLM/retriever for something that could’ve been done more directly.
-                - **Underuse**: Omitted steps that were necessary to fulfill the task.
+                5. Resource Economy
+                - Use of multiple LLM calls, retrievers, or tools when one would suffice must be penalized.
+                - Avoided resources (if the agent achieved the task through simpler means) improve efficiency.
 
-                ---
+                6. When in Doubt
+                - If it is unclear whether an action was required or not, **assume it was unnecessary** and lower the score.
+                - Err on the side of penalizing over generosity.
 
-                SCORING GUIDE:
+                SCORING SCALE (STRICT)
 
-                - **1.0** → Perfectly efficient: All steps were strictly required. No redundancy, no speculation, no omissions.
-                - **0.75** → Mostly efficient: Minor inefficiency (e.g. a redundant LLM step or unnecessary formatting), but task execution was mostly tight.
-                - **0.5** → Mixed: Some steps were useful but unnecessary; task could have been completed more directly.
-                - **0.25** → Low efficiency: Several irrelevant or unjustified components were used. Core task was overcomplicated or indirect.
-                - **0.0** → Inefficient: Execution was verbose, indirect, exploratory, or speculative; many unnecessary steps or missing essentials.
+                - **1.0 — Perfectly efficient**
+                - Only essential steps taken.  
+                - Each action was directly necessary for task completion.  
+                - No speculative, redundant, or decorative work.
 
-                ---
+                - **0.75 — Strong efficiency**
+                - Mostly minimal execution with one small redundant or stylistic step.  
+                - Slight overuse of a tool or repeated call, but otherwise tight.
+
+                - **0.5 — Moderate efficiency**
+                - Noticeable inefficiency: extra steps, unnecessary tool calls, or indirect methods.  
+                - The same task could clearly have been completed faster or with fewer actions.
+
+                - **0.25 — Low efficiency**
+                - Multiple irrelevant or unjustified actions taken.  
+                - Execution path significantly longer or more complex than needed.
+
+                - **0.0 — Highly inefficient**
+                - Execution was verbose, exploratory, speculative, or wasteful.  
+                - Most actions were unnecessary or unrelated to achieving the core task.
+
+                *When uncertain, always assign the lower score.*
 
                 OUTPUT FORMAT:
 
-                Return a **JSON object** like this:
+                Return a single JSON object in this exact format:
 
                 {{
-                "score": 0.0,
-                "reason": "..."  // 1-3 precise sentences explaining your score.
+                    "score": 0.0,
+                    "reason": "1-3 concise factual sentences describing where inefficiencies occurred."
                 }}
 
-                The reason must:
-                - Be specific about which actions were unnecessary or inefficient.
-                - Avoid vague language like "pretty good" or "reasonable".
-                - Justify deductions clearly: e.g. “LLM was used to restate input”, or “web search added speculative context”.
+                The `reason` must:
+                - Identify specific inefficient actions (e.g., redundant LLM call, unnecessary retrieval, speculative tool use).
+                - Avoid subjective phrasing (“reasonable”, “seems okay”, “somewhat efficient”).
+                - Be direct and concrete: “Extra retrieval used for enrichment”, “Multiple summarizations of same data”, etc.
 
-                EXAMPLE:
+                EXAMPLES
 
-                Task:
-                Answer a direct question using only the information explicitly provided by the user.
+                **Example 1:**
+                Task: "Summarize the given text."
+                Trace: Agent calls an LLM twice, then performs an extra web search.
 
-                Trace:
-                The agent parsed the answer from the input, but then invoked external tools to supplement the response with speculative or enriching content.
-
-                → JSON:
-                {{  
-                    "score": 0.25,  
-                    "reason": "The agent completed the task using unnecessary external tools. The output included additional context not required by the task, which reduced execution efficiency."  
+                → Output:
+                {{
+                    "score": 0.25,
+                    "reason": "The agent used redundant LLM calls and performed an unnecessary web search. Only one LLM call was required for the summary."
                 }}
 
-                ---
+                **Example 2:**
+                Task: "Convert a date to ISO format."
+                Trace: Agent performs one computation directly.
 
-                **IMPORTANT**:
-                - Do not consider output quality, correctness, or helpfulness — this metric only evaluates execution efficiency.
-                - Do not invent or infer intent beyond what is clearly stated in the task.
-                - The agent **MUST ABSOLUTELY NOT** use a tool UNLESS it is 100% required to finsih the task given. Any extra tool calls or other activities that enhance an answer but slow the process should HEAVILY penalise the score.
-                - This metric is built to fail, ONLY give a high score if the agent has done everyting **meticulously** right. If not, give the lowest score possible
+                → Output:
+                {{
+                    "score": 1.0,
+                    "reason": "The agent completed the task with one minimal action and no unnecessary steps."
+                }}
 
-                ---
+                FINAL REMINDERS
+
+                - Efficiency = minimality. Any extra work, enrichment, or indirect approach must lower the score.
+                - Do not consider correctness, helpfulness, or reasoning quality.
+                - A “good answer” can still score **0.0** if it was achieved inefficiently.
+                - This metric is adversarial: assign the lowest score possible unless execution was provably minimal.
 
                 TASK:
                 {task}
 
                 TRACE:
-                {trace}
+                {json.dumps(trace, indent=2, default=str)}
 
                 JSON:
             """
