@@ -6,68 +6,95 @@ class GoalAccuracyTemplate:
     @staticmethod
     def get_accuracy_score(task, steps_taken):
         return textwrap.dedent(
-            f"""You are an expert evaluator assessing the **goal accuracy** of an AI agent based on a given task and the steps the agent took to complete it.
+            f"""You are an expert evaluator assessing the **goal accuracy** of an AI assistant's single interaction.
 
-                You are given:
-                - A **user task**: the user's original request or objective, clearly describing what they wanted the agent to accomplish.
-                - A list of **agent steps**: a complete trace of what the agent did to fulfill the task. This includes:
-                - All **messages** the agent sent to the user (which the user sees).
-                - Any **tool calls** or intermediate actions (which the user does not see unless results are explicitly stated in agent messages).
+                PURPOSE:
 
-                Your job is to determine how completely and correctly the agent fulfilled the task **from the user's perspective** — based only on what the user would experience.
+                Evaluate whether the assistant's **visible output** (what the user actually saw) **fully and correctly achieved the user's stated goal.  
+                Ignore internal reasoning, hidden tool calls, or retriever outputs unless their results were explicitly surfaced to the user.
 
-                ---
+                The evaluation must be **strict and adversarial** — if the goal is not *clearly, fully, and correctly achieved*, assign a low score.
 
-                SCORING RULES:
+                EVALUATION RULES
 
-                You must return a **JSON object** with exactly two fields:
-                - `"score"`: a float from 0.0 to 1.0 representing how accurately the task was completed.
-                - `"reason"`: 1-3 sentences explaining your score, focusing only on what was visible to the user.
+                1. **User-visible fulfillment only**
+                - Base your judgment solely on what the user would see in the assistant's message.
+                - Ignore hidden or internal steps unless their results were explicitly communicated.
 
-                Use this scoring guide:
-                - **1.0** → Task fully and correctly completed; all expected outputs were clearly delivered to the user.
-                - **0.75** → Mostly completed; some minor outputs were missing, ambiguous, or slightly inaccurate.
-                - **0.5** → Partially completed; major parts of the task were fulfilled, but key steps were missing or incorrect.
-                - **0.25** → Minimally completed; some attempt was made, but the result would feel incomplete or wrong to the user.
-                - **0.0** → Task not completed at all; the user would receive no useful or relevant output.
+                2. **Goal completion**
+                - The assistant must explicitly provide everything the user asked for.
+                - If even one subpart of the task is missing, incomplete, or vague, the score must be **≤ 0.5**.
 
-                ---
+                3. **Correctness and relevance**
+                - The information provided must be factually correct and directly relevant to the task.
+                - Hallucinated or unrelated content automatically lowers the score.
 
-                IMPORTANT RULES:
+                4. **Self-sufficiency**
+                - The visible response must stand on its own; the user should not need prior context or follow-up clarification.
 
-                - Do **not** consider internal tool calls or retrievals unless the results were surfaced in an agent message.
-                - Assume the **user only sees the assistant's replies** — no internal state, tool inputs, or outputs.
-                - Penalize any visible **inaccuracies, hallucinations, omissions**, or **failures to report tool results**.
-                - The score must be based on **user-visible experience only**.
+                5. **Strict bias toward failure**
+                - When uncertain, assume the goal was **not achieved**.
+                - The metric is designed to fail unless the assistant's output is precise, complete, and user-visible.
 
-                ---
+                SCORING GUIDE:
 
-                CHAIN OF THOUGHT:
+                - **1.0** → Goal completely and correctly achieved; all required outputs visible to the user.  
+                - **0.75** → Mostly achieved; minor omissions or trivial inaccuracies.  
+                - **0.5** → Partially achieved; core goal addressed, but key parts missing or incorrect.  
+                - **0.25** → Weak attempt; loosely related but fails to satisfy the user’s request.  
+                - **0.0** → Goal not achieved at all; irrelevant, wrong, or missing answer.
 
-                1. Break the user task into distinct actionable parts.
-                2. Review the agent's replies to see which parts were clearly and correctly completed.
-                3. Check whether any tool outputs were mentioned to the user — if not, they do not count toward goal completion.
-                4. Determine if the agent's final response leaves the user with a complete, correct, and self-contained answer.
+                *When in doubt, choose the lower score.*
 
-                ---
+                OUTPUT FORMAT:
 
-                FORMAT:
-
-                Return only a valid JSON object — no commentary or extra text.
-
-                Example:
+                Return only a valid JSON object with this structure:
 
                 {{
-                "score": 0.5,
-                "reason": "The agent responded with a partial itinerary but failed to include hotel options, and tool results were not mentioned to the user."
+                    "score": 0.0,
+                    "reason": "1-3 factual sentences explaining what parts of the user's goal were or were not achieved."
                 }}
 
-                ------------------
+                The reason must:
+                - Be objective and concise.
+                - Refer to **specific missing or incorrect elements**.
+                - Avoid vague language (“somewhat correct”, “pretty accurate”).
 
-                User Task:
+                EXAMPLES:
+
+                **Example 1**
+                Task: "Translate 'good night' into French."  
+                Assistant Reply: "Bonne nuit."  
+                →  
+                {{
+                    "score": 1.0,
+                    "reason": "The assistant provided the exact, correct translation requested by the user."
+                }}
+
+                **Example 2**
+                Task: "List three renewable energy sources."  
+                Assistant Reply: "Solar and wind energy."  
+                →  
+                {{
+                    "score": 0.5,
+                    "reason": "The assistant only listed two sources instead of three, so the goal was partially achieved."
+                }}
+
+                **Example 3**
+                Task: "Summarize this paragraph."  
+                Assistant Reply: "It talks about technology."  
+                →  
+                {{
+                    "score": 0.25,
+                    "reason": "The summary is too vague and fails to convey key information from the text."
+                }}
+
+                *** END OF EXAMPLES ***
+
+                USER TASK:
                 {task}
 
-                Agent Steps:
+                AGENT STEPS:
                 {steps_taken}
 
                 JSON:
@@ -77,74 +104,82 @@ class GoalAccuracyTemplate:
     @staticmethod
     def get_plan_evaluation_score(task, steps_taken):
         return textwrap.dedent(
-            f"""You are an expert evaluator assessing the **planning quality** and **plan adherence** of an AI agent.
+            f"""You are an expert evaluator assessing the **planning quality** and **plan adherence** of an AI agent tasked with fulfilling a user's request.
 
-                You are given:
-                - A **user task**: a clear description of what the user asked the agent to do.
-                - A list of **agent steps**: all visible actions and responses made by the agent, including any tool calls and final replies.
+                OBJECTIVE:
 
-                Your job is to analyze:
-                1. **Plan Quality**: Did the agent demonstrate a well-structured, logical plan to fulfill the user's task?
-                2. **Plan Adherence**: Did the agent's execution follow through on that plan without unnecessary deviations or omissions?
+                Evaluate:
 
-                ---
+                1. **Plan Quality** — Was the agent's plan clear, complete, and logically structured to fully address the user's task?  
+                2. **Plan Adherence** — Did the agent consistently follow that plan without unjustified deviations, omissions, or extraneous steps?
 
-                SCORING FORMAT:
+                Your judgment must be strict: a plan must be well-formed and execution must align with it for a high score.
 
-                You must return a JSON object with exactly two fields:
-                - `"score"`: a float from 0.0 to 1.0 measuring the overall strength of the agent's planning and adherence.
-                - `"reason"`: a concise explanation (1-3 sentences) justifying the score.
+                EVALUATION CRITERIA
 
-                Use intermediate values (e.g. 0.25, 0.5, 0.75) to reflect partial planning or minor deviations.
+                - Plan Quality:  
+                - The plan should explicitly or implicitly outline all necessary steps to fulfill the user's task.  
+                - It must be logically ordered, neither vague nor overly generic.  
+                - Missing critical components or unclear structuring lowers the score drastically.
 
-                ---
+                - Plan Adherence:  
+                - Execution must closely match the planned steps.  
+                - Any skipped, added, or rearranged steps without clear justification count as plan deviations.  
+                - Minor, justified variations are acceptable but reduce the score slightly.
+
+                - General Rules:  
+                - If no discernible plan exists, score ≤ 0.5 regardless of task completion.  
+                - Tool use should be coherent within the plan, not ad hoc or speculative.  
+                - This evaluation excludes correctness or efficiency — focus solely on plan and adherence.
 
                 SCORING GUIDE:
 
-                - **1.0** → The agent clearly formed a complete, logical plan and followed it closely. All steps were purposeful and aligned with the user's goal.
-                - **0.75** → The plan was mostly good, with minor issues or small detours in execution that did not materially impact the outcome.
-                - **0.5** → The plan had some valid components but was incomplete, vague, or partially abandoned during execution.
-                - **0.25** → The agent showed limited or unclear planning, and execution drifted from any coherent strategy.
-                - **0.0** → No evidence of a meaningful plan; actions were random, reactive, or unrelated to the user's goal.
+                - **1.0** → Complete, clear, and logical plan **fully followed** with all steps aligned to the user's goal.  
+                - **0.75** → Mostly clear plan with minor omissions or small execution deviations that do not impact the overall strategy.  
+                - **0.5** → Partial plan exists but is incomplete, vague, or only partially followed; notable deviations present.  
+                - **0.25** → Weak or fragmented plan; execution frequently diverges or lacks coherence with any strategy.  
+                - **0.0** → No evidence of a plan; execution appears random or unrelated to the user's task.
 
-                ---
+                INSTRUCTIONS:
 
-                CHAIN OF THOUGHT:
+                1. Identify the agent's plan from the steps taken (explicit plans stated or implicit structure).  
+                2. Assess plan completeness and logical order relative to the user's task.  
+                3. Compare execution steps against the plan to check for adherence, noting any unjustified deviations.  
+                4. Deduct points for vagueness, missing critical steps, or inconsistent execution.
 
-                1. Identify whether the agent had an implicit or explicit **plan** to complete the user's task.
-                2. Determine whether this plan was logically sound and sufficiently detailed.
-                3. Compare the agent's **execution steps** against this plan:
-                    - Were they consistent with the plan?
-                    - Did they skip or add steps without justification?
-                4. Penalize planning that was vague, overly generic, or clearly ignored during execution.
+                OUTPUT FORMAT:
 
-                ---
+                Return only a valid JSON object with exactly two fields:
 
-                IMPORTANT:
+                {{
+                    "score": 0.0,
+                    "reason": "1-3 concise sentences explaining the quality of the plan and how well execution matched it. Specify missing or extra steps, plan clarity, and adherence issues."
+                }}
 
-                - This evaluation does **not** judge correctness or efficiency — it only evaluates **planning and execution alignment**.
-                - If the agent did not show a clear plan, score should be **≤ 0.5**, even if the task was eventually completed.
-                - Tool use is only valuable if it fits into a well-reasoned and visible plan.
+                EXAMPLE:
 
-                ---
+                User Task: "Plan a business trip including booking a flight, hotel, and preparing an agenda."
 
-                FORMAT:
+                Agent Steps include:
+                - Outlined flight, hotel, and agenda steps explicitly.
+                - Executed flight and hotel booking steps.
+                - Skipped agenda preparation despite mentioning it in the plan.
 
-                Return only a valid JSON object — no commentary or extra text.
-
-                Example:
+                Example JSON:
 
                 {{
                     "score": 0.75,
-                    "reason": "The agent demonstrated a clear plan to gather flights and hotels, but skipped mentioning the slide deck retrieval despite having included it in the early structure."
+                    "reason": "The agent formed a clear plan covering flights, hotel, and agenda, but failed to execute the agenda preparation step, reducing adherence."
                 }}
 
-                ------------------
+                **** END OF EXAMPLE ****
 
-                User Task:
+                INPUTS:
+                
+                USER TASK:
                 {task}
 
-                Agent Steps:
+                AGENT STEPS:
                 {steps_taken}
 
                 JSON:
