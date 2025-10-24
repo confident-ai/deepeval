@@ -223,6 +223,18 @@ def _gather_timeout() -> float:
         + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
     )
 
+def filter_duplicate_results(
+    main_result: TestResult, results: List[TestResult]
+) -> List[TestResult]:
+    return [
+        result for result in results
+        if not (
+            (result.input == main_result.input)
+            and (result.actual_output == main_result.actual_output)
+            and (result.metrics_data == main_result.metrics_data)
+        )
+    ]
+
 
 ###########################################
 ### E2E Evals #############################
@@ -1551,8 +1563,11 @@ async def _a_execute_agentic_test_case(
 
     api_test_case.update_run_duration(run_duration)
     test_run_manager.update_test_run(api_test_case, test_case)
-    test_results.append(create_test_result(api_test_case))
-    test_results.extend(extract_trace_test_results(trace_api))
+    main_result = create_test_result(api_test_case)
+    trace_results = extract_trace_test_results(trace_api)
+    unique_trace_results = filter_duplicate_results(main_result, trace_results)
+    test_results.append(main_result)
+    test_results.extend(unique_trace_results)
 
     update_pbar(progress, pbar_id)
 
@@ -2094,8 +2109,11 @@ def execute_agentic_test_cases_from_loop(
             # Update test run
             api_test_case.update_run_duration(run_duration)
             test_run_manager.update_test_run(api_test_case, test_case)
-            test_results.append(create_test_result(api_test_case))
-            test_results.extend(extract_trace_test_results(trace_api))
+            main_result = create_test_result(api_test_case)
+            trace_results = extract_trace_test_results(trace_api)
+            unique_trace_results = filter_duplicate_results(main_result, trace_results)
+            test_results.append(main_result)
+            test_results.extend(unique_trace_results)
 
             update_pbar(progress, pbar_id)
 
