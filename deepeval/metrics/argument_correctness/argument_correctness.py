@@ -76,7 +76,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             else:
                 if len(test_case.tools_called) == 0:
                     self.verdicts = []
-                    self.score = 1.0
+                    self.score = 0.0
                     self.reason = "No tool calls provided"
                 else:
                     self.verdicts: List[ArgumentCorrectnessVerdict] = (
@@ -119,7 +119,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         ):
             if len(test_case.tools_called) == 0:
                 self.verdicts = []
-                self.score = 1.0
+                self.score = 0.0
                 self.reason = "No tool calls provided"
             else:
                 self.verdicts: List[ArgumentCorrectnessVerdict] = (
