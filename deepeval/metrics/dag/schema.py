@@ -11,7 +11,7 @@ class TaskNodeOutput(BaseModel):
 
 
 class BinaryJudgementVerdict(BaseModel):
-    verdict: Literal[True, False]
+    verdict: bool
     reason: str
 
 
