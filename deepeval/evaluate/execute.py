@@ -223,11 +223,13 @@ def _gather_timeout() -> float:
         + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
     )
 
+
 def filter_duplicate_results(
     main_result: TestResult, results: List[TestResult]
 ) -> List[TestResult]:
     return [
-        result for result in results
+        result
+        for result in results
         if not (
             (result.input == main_result.input)
             and (result.actual_output == main_result.actual_output)
@@ -2111,7 +2113,9 @@ def execute_agentic_test_cases_from_loop(
             test_run_manager.update_test_run(api_test_case, test_case)
             main_result = create_test_result(api_test_case)
             trace_results = extract_trace_test_results(trace_api)
-            unique_trace_results = filter_duplicate_results(main_result, trace_results)
+            unique_trace_results = filter_duplicate_results(
+                main_result, trace_results
+            )
             test_results.append(main_result)
             test_results.extend(unique_trace_results)
 
