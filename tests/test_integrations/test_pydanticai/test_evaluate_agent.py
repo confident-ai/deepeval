@@ -8,6 +8,7 @@ from deepeval.integrations.pydantic_ai.instrumentator import (
 )
 from deepeval.metrics import AnswerRelevancyMetric
 from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.test_run import global_test_run_manager
 
 dataset = EvaluationDataset(
     goldens=[
@@ -40,5 +41,6 @@ def run_eval():
         pass
 
 def test_evaluate_agent():
+    global_test_run_manager.save_to_disk = False
     run_eval()
     assert answer_relavancy_metric.score > 0.0
