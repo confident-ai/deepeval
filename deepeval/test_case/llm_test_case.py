@@ -122,7 +122,7 @@ class ToolCall(BaseModel):
 
         # Handle nested fields like input_parameters
         if self.input_parameters:
-            formatted_input = json.dumps(self.input_parameters, indent=4)
+            formatted_input = json.dumps(self.input_parameters, indent=4, ensure_ascii=False)
             formatted_input = self._indent_nested_field(
                 "input_parameters", formatted_input
             )
@@ -130,7 +130,7 @@ class ToolCall(BaseModel):
 
         # Handle nested fields like output
         if isinstance(self.output, dict):
-            formatted_output = json.dumps(self.output, indent=4)
+            formatted_output = json.dumps(self.output, indent=4, ensure_ascii=False)
             formatted_output = self._indent_nested_field(
                 "output", formatted_output
             )
