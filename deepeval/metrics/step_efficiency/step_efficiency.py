@@ -72,12 +72,11 @@ class StepEfficiencyMetric(BaseMetric):
             else:
                 task = self._extract_task_from_trace(test_case)
                 efficiency_verdict = self._get_score(task, test_case)
-                self.score = efficiency_verdict.score
                 if self.strict_mode:
                     self.score = (
                         0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
+                        if self.strict_mode and efficiency_verdict.score < self.threshold
+                        else efficiency_verdict.score
                     )
                 self.reason = efficiency_verdict.reason
                 self.success = self.score >= self.threshold
@@ -118,12 +117,11 @@ class StepEfficiencyMetric(BaseMetric):
         ):
             task = await self._a_extract_task_from_trace(test_case)
             efficiency_verdict = await self._a_get_score(task, test_case)
-            self.score = efficiency_verdict.score
             if self.strict_mode:
                 self.score = (
                     0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
+                    if self.strict_mode and efficiency_verdict.score < self.threshold
+                    else efficiency_verdict.score
                 )
             self.reason = efficiency_verdict.reason
             self.success = self.score >= self.threshold
