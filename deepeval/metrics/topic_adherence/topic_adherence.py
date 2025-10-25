@@ -103,12 +103,6 @@ class TopicAdherenceMetric(BaseConversationalMetric):
                     False_Positives,
                     False_Negatives,
                 )
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
-                    )
                 self.success = self.score >= self.threshold
                 self.reason = self._generate_reason(
                     True_Positives,
@@ -186,12 +180,6 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             self.score = self._get_score(
                 True_Positives, True_Negatives, False_Positives, False_Negatives
             )
-            if self.strict_mode:
-                self.score = (
-                    0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
-                )
             self.success = self.score >= self.threshold
             self.reason = await self._a_generate_reason(
                 True_Positives, True_Negatives, False_Positives, False_Negatives
@@ -253,8 +241,11 @@ class TopicAdherenceMetric(BaseConversationalMetric):
         true_values = TP[0] + TN[0]
         total = TP[0] + TN[0] + FP[0] + FN[0]
         if total <= 0:
-            return 0
-        return true_values / total
+            score = 0
+        else:
+            score = true_values / total
+        if self.strict_mode:
+            return 0 if score < self.threshold else score
 
     def _get_qa_verdict(self, qa_pair: QAPair) -> RelevancyVerdict:
         prompt = TopicAdherenceTemplate.get_qa_pair_verdict(

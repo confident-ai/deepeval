@@ -236,7 +236,9 @@ class GoalAccuracyMetric(BaseConversationalMetric):
         plan_score_divisor = len(plan_scores) if len(plan_scores) > 0 else 1
         goal_avg = sum(goal_scores) / goal_score_divisor
         plan_avg = sum(plan_scores) / plan_score_divisor
-        return (goal_avg + plan_avg) / 2
+        score = (goal_avg + plan_avg) / 2
+        if self.strict_mode:
+            return 0 if score < self.threshold else score
 
     def _generate_reason(
         self, goal_scores: List[GoalScore], plan_scores: List[PlanScore]

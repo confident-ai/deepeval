@@ -95,12 +95,6 @@ class ToolUseMetric(BaseConversationalMetric):
                 self.score = self._calculate_score(
                     tool_selection_scores, argument_correctness_scores
                 )
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
-                    )
                 tool_selection_reason = (
                     self._generate_reason_for_tool_selection(
                         tool_selection_scores
@@ -172,12 +166,6 @@ class ToolUseMetric(BaseConversationalMetric):
             self.score = self._calculate_score(
                 tool_selection_scores, argument_correctness_scores
             )
-            if self.strict_mode:
-                self.score = (
-                    0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
-                )
             tool_selection_reason = (
                 await self._a_generate_reason_for_tool_selection(
                     tool_selection_scores
@@ -377,7 +365,9 @@ class ToolUseMetric(BaseConversationalMetric):
         argument_correctness_score = (
             arguments_scores_sum / argument_correctness_score_divisor
         )
-        return min(tools_selction_score, argument_correctness_score)
+        score = min(tools_selction_score, argument_correctness_score)
+        if self.strict_mode:
+            return 0 if score < self.threshold else score
 
     def _generate_reason_for_tool_selection(
         self,
