@@ -1,3 +1,4 @@
+import asyncio
 import os
 from typing import Dict, Any
 from datetime import datetime, timezone
@@ -191,3 +192,11 @@ def prepare_tool_call_input_parameters(output: Any) -> Dict[str, Any]:
     if res and not isinstance(res, dict):
         res = {"output": res}
     return res
+
+
+def is_async_context() -> bool:
+    try:
+        asyncio.get_running_loop()
+        return True
+    except RuntimeError:
+        return False

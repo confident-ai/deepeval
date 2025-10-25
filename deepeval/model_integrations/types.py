@@ -11,6 +11,9 @@ class InputParameters(BaseModel):
     instructions: Optional[str] = None
     messages: Optional[List[Dict[str, Any]]] = None
     tool_descriptions: Optional[Dict[str, str]] = None
+    # Anthropic Specific
+    system: Optional[str] = None
+    max_tokens: Optional[int] = None
 
 
 class OutputParameters(BaseModel):
@@ -18,3 +21,8 @@ class OutputParameters(BaseModel):
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
     tools_called: Optional[List[ToolCall]] = None
+    # Anthropic Specific
+    content: Optional[Any] = None
+    role: Optional[str] = None
+    type: Optional[str] = None
+    usage: Optional[Dict[str, int]] = None
