@@ -96,13 +96,10 @@ class ToolCorrectnessMetric(BaseMetric):
                             reason="No available tools were provided to assess tool selection criteria",
                         )
                     )
-                self.score = min(tool_calling_score, tool_selection_score.score)
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
-                    )
+                score = min(tool_calling_score, tool_selection_score.score)
+                self.score = (
+                    0 if self.strict_mode and score < self.threshold else score
+                )
                 tool_calling_reason = self._generate_reason()
                 self.reason = self._construct_final_reason(
                     tool_calling_reason, tool_selection_score.reason
@@ -191,13 +188,10 @@ class ToolCorrectnessMetric(BaseMetric):
                     score=1,
                     reason="No available tools were provided to assess tool selection criteria",
                 )
-            self.score = min(tool_calling_score, tool_selection_score.score)
-            if self.strict_mode:
-                self.score = (
-                    0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
-                )
+            score = min(tool_calling_score, tool_selection_score.score)
+            self.score = (
+                0 if self.strict_mode and score < self.threshold else score
+            )
             tool_calling_reason = self._generate_reason()
             self.reason = self._construct_final_reason(
                 tool_calling_reason, tool_selection_score.reason
