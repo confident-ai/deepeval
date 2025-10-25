@@ -951,10 +951,8 @@ class EvaluationDataset:
                     context=golden.context,
                     name=golden.name,
                     comments=golden.comments,
-                    additional_metadata=getattr(golden, "additional_metadata", None),
-                    custom_column_key_values=getattr(
-                        golden, "custom_column_key_values", None
-                    ),
+                    additional_metadata=golden.additional_metadata,
+                    custom_column_key_values=golden.custom_column_key_values,
                 )
                 for golden in self.goldens
             ]
@@ -969,12 +967,10 @@ class EvaluationDataset:
                     name=golden.name,
                     comments=golden.comments,
                     source_file=golden.source_file,
-                    tools_called=getattr(golden, "tools_called", None),
-                    expected_tools=getattr(golden, "expected_tools", None),
-                    additional_metadata=getattr(golden, "additional_metadata", None),
-                    custom_column_key_values=getattr(
-                        golden, "custom_column_key_values", None
-                    ),
+                    tools_called=golden.tools_called,
+                    expected_tools=golden.expected_tools,
+                    additional_metadata=golden.additional_metadata,
+                    custom_column_key_values=golden.custom_column_key_values,
                 )
                 for golden in self.goldens
             ]
@@ -1022,12 +1018,8 @@ class EvaluationDataset:
                                 "context": golden.context,
                                 "name": golden.name,
                                 "comments": golden.comments,
-                                "additional_metadata": getattr(
-                                    golden, "additional_metadata", None
-                                ),
-                                "custom_column_key_values": getattr(
-                                    golden, "custom_column_key_values", None
-                                ),
+                                "additional_metadata": golden.additional_metadata,
+                                "custom_column_key_values": golden.custom_column_key_values,
                             }
                         )
                 else:
@@ -1059,18 +1051,10 @@ class EvaluationDataset:
                                 "name": golden.name,
                                 "comments": golden.comments,
                                 "source_file": golden.source_file,
-                                "tools_called": _dump_tools(
-                                    getattr(golden, "tools_called", None)
-                                ),
-                                "expected_tools": _dump_tools(
-                                    getattr(golden, "expected_tools", None)
-                                ),
-                                "additional_metadata": getattr(
-                                    golden, "additional_metadata", None
-                                ),
-                                "custom_column_key_values": getattr(
-                                    golden, "custom_column_key_values", None
-                                ),
+                                "tools_called": _dump_tools(golden.tools_called),
+                                "expected_tools": _dump_tools(golden.expected_tools),
+                                "additional_metadata": golden.additional_metadata,
+                                "custom_column_key_values": golden.custom_column_key_values,
                             }
                         )
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
@@ -1105,16 +1089,13 @@ class EvaluationDataset:
                             else None
                         )
                         additional_metadata = (
-                            json.dumps(getattr(golden, "additional_metadata", None), ensure_ascii=False)
-                            if getattr(golden, "additional_metadata", None) is not None
+                            json.dumps(golden.additional_metadata, ensure_ascii=False)
+                            if golden.additional_metadata is not None
                             else None
                         )
                         custom_cols = (
-                            json.dumps(
-                                getattr(golden, "custom_column_key_values", None),
-                                ensure_ascii=False,
-                            )
-                            if getattr(golden, "custom_column_key_values", None)
+                            json.dumps(golden.custom_column_key_values, ensure_ascii=False)
+                            if golden.custom_column_key_values
                             else None
                         )
                         writer.writerow(
@@ -1174,23 +1155,16 @@ class EvaluationDataset:
                                     dumped.append(t)
                             return json.dumps(dumped, ensure_ascii=False)
 
-                        tools_called = _dump_tools_csv(
-                            getattr(golden, "tools_called", None)
-                        )
-                        expected_tools = _dump_tools_csv(
-                            getattr(golden, "expected_tools", None)
-                        )
+                        tools_called = _dump_tools_csv(golden.tools_called)
+                        expected_tools = _dump_tools_csv(golden.expected_tools)
                         additional_metadata = (
-                            json.dumps(getattr(golden, "additional_metadata", None), ensure_ascii=False)
-                            if getattr(golden, "additional_metadata", None) is not None
+                            json.dumps(golden.additional_metadata, ensure_ascii=False)
+                            if golden.additional_metadata is not None
                             else None
                         )
                         custom_cols = (
-                            json.dumps(
-                                getattr(golden, "custom_column_key_values", None),
-                                ensure_ascii=False,
-                            )
-                            if getattr(golden, "custom_column_key_values", None)
+                            json.dumps(golden.custom_column_key_values, ensure_ascii=False)
+                            if golden.custom_column_key_values
                             else None
                         )
                         writer.writerow(
@@ -1226,12 +1200,8 @@ class EvaluationDataset:
                             "context": golden.context,
                             "name": golden.name,
                             "comments": golden.comments,
-                            "additional_metadata": getattr(
-                                golden, "additional_metadata", None
-                            ),
-                            "custom_column_key_values": getattr(
-                                golden, "custom_column_key_values", None
-                            ),
+                            "additional_metadata": golden.additional_metadata,
+                            "custom_column_key_values": golden.custom_column_key_values,
                         }
                     else:
                         retrieval_context = (
@@ -1266,18 +1236,10 @@ class EvaluationDataset:
                             "expected_output": golden.expected_output,
                             "retrieval_context": retrieval_context,
                             "context": context,
-                            "tools_called": _dump_tools(
-                                getattr(golden, "tools_called", None)
-                            ),
-                            "expected_tools": _dump_tools(
-                                getattr(golden, "expected_tools", None)
-                            ),
-                            "additional_metadata": getattr(
-                                golden, "additional_metadata", None
-                            ),
-                            "custom_column_key_values": getattr(
-                                golden, "custom_column_key_values", None
-                            ),
+                            "tools_called": _dump_tools(golden.tools_called),
+                            "expected_tools": _dump_tools(golden.expected_tools),
+                            "additional_metadata": golden.additional_metadata,
+                            "custom_column_key_values": golden.custom_column_key_values,
                         }
 
                     file.write(json.dumps(record, ensure_ascii=False) + "\n")
