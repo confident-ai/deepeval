@@ -1,0 +1,100 @@
+---
+id: metrics-step-efficiency
+title: Step Efficiency
+sidebar_label: Step Efficiency
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-step-efficiency"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer usesLLMs={true} singleTurn={true} agent={true} referenceless={true} />
+
+The Step Efficiency metric is an agentic metric that extracts the task from your agent's trace and evaluates the **efficiency of your agent's execution steps** in completing that task. It is a self-explaining eval, which means it outputs a reason for its metric score.
+
+:::info
+Step Efficiency analyzes your **agent's full trace** to determine the task and execution efficiency, which requires [setting up tracing](/docs/evaluation-llm-tracing).
+:::
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `StepEfficiencyMetric()` to your agent's `@observe` tag or in the `evals_iterator` method.
+
+```python
+from somewhere import llm
+from deepeval.tracing import observe
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import StepEfficiencyMetric
+
+
+@observe
+def tool_call(input):
+    ...
+    return [ToolCall(name="CheckWhether")]
+
+@observe
+def agent(input):
+    tools = tool_call(input)
+    output = llm(input, tools)
+    update_current_trace(
+        input=input,
+        output=output,
+        tools_called=tools
+    )
+    return output
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like in SF?")])
+
+# Initialize metric
+step_efficiency = StepEfficiencyMetric(threshold=0.7, model="gpt-4o")
+
+# Loop through dataset
+for goldens in dataset.evals_iterator(metrics=[step_efficiency]):
+    trip_planner_agent(golden.input)
+```
+
+There are **SEVEN** optional parameters when creating a `StepEfficiencyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+
+### As a standalone
+
+You can also run the `StepEfficiencyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+
+## How Is It Calculated?
+
+The `StepEfficiencyMetric` score is calculated using the following steps:
+
+- Extract **Task** from the trace, this defines the user's goal or intent for the agent and is actionable.
+- Evaluate the **agent's execution steps** from the trace and see how efficiently the agent has completed the task. 
+
+<Equation formula="\text{Step Efficiency Score} = \text{AlignmentScore}(\text{Task}, \text{Execution Steps})" />
+
+- The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan and execution steps. It will penalize any actions taken by the LLM agent that were not strictly required to finish the task.

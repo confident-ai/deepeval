@@ -1,0 +1,100 @@
+---
+id: metrics-plan-adherence
+title: Plan Adherence
+sidebar_label: Plan Adherence
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-plan-adherence"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer usesLLMs={true} singleTurn={true} agent={true} referenceless={true} />
+
+The Plan Adherence metric is an agentic metric that extracts the task and plan from your agent's trace which are then used to evaluate **how well your agent has adhered to the plan** in completing the task. It is a self-explaining eval, which means it outputs a reason for its metric score.
+
+:::info
+Plan Adherence metric analyzes your **agent's full trace** to extract the plan and analyse agent's execution in adhering to this plan, this requires [setting up tracing](/docs/evaluation-llm-tracing).
+:::
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and simply supply the `PlanAdherenceMetric()` to your agent's `@observe` tag or in the `evals_iterator` method.
+
+```python
+from somewhere import llm
+from deepeval.tracing import observe
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics import PlanAdherenceMetric
+
+
+@observe
+def tool_call(input):
+    ...
+    return [ToolCall(name="CheckWhether")]
+
+@observe
+def agent(input):
+    tools = tool_call(input)
+    output = llm(input, tools)
+    update_current_trace(
+        input=input,
+        output=output,
+        tools_called=tools
+    )
+    return output
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What's the weather like in SF?")])
+
+# Initialize metric
+plan_adherence = PlanAdherenceMetric(threshold=0.7, model="gpt-4o")
+
+# Loop through dataset
+for goldens in dataset.evals_iterator(metrics=[plan_adherence]):
+    trip_planner_agent(golden.input)
+```
+
+There are **SEVEN** optional parameters when creating a `PlanAdherenceMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+To learn more about how the `evals_iterator` work, [click here.](/docs/evaluation-end-to-end-llm-evals#e2e-evals-for-tracing)
+
+### As a standalone
+
+You can also run the `PlanAdherenceMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+## How Is It Calculated?
+
+The `PlanAdherenceMetric` score is calculated by following these steps:
+
+- Extract **Task** from the trace, this defines the user's goal or intent for the agent and is actionable.
+- Extract **Plan** from the trace, a plan is extracted from the agent's `thinking` or `reasoning`. If there are no statements that clearly define or imply a plan from the trace, the metric passes by default with a score of `1`.
+- Evaluate the **agent's execution steps** from the trace and see how accurately the agent has adhered to the plan.
+
+<Equation formula="\text{Plan Adherence Score} = \text{AlignmentScore}(\text{(Task, Plan)}, \text{Execution Steps})" />
+
+- The **Alignment Score** uses an LLM to generate the final score with all the pre-processed and extracted information like plan, task and execution steps.

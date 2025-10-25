@@ -16,12 +16,12 @@ import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
 
 <MetricTagsDisplayer
   singleTurn={true}
-  usesLLMs={false}
+  usesLLMs={true}
   agent={true}
   referenceless={true}
 />
 
-The tool correctness metric is an agentic LLM metric that assesses your LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called.
+The tool correctness metric is an agentic LLM metric that assesses your LLM agent's function/tool calling ability. It is calculated by comparing whether every tool that is expected to be used was indeed called and if the selection of the tools made by the LLM agent were the most optimal.
 
 :::note
 The `ToolCorrectnessMetric` allows you to define the **strictness** of correctness. By default, it considers matching tool names to be correct, but you can also require input parameters and output to match.
@@ -63,8 +63,9 @@ metric = ToolCorrectnessMetric()
 evaluate(test_cases=[test_case], metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `ToolCorrectnessMetric`:
+There are **EIGHT** optional parameters when creating a `ToolCorrectnessMetric`:
 
+- [Optional] `available_tools`: a list of `ToolCall`s that give context on all the tools that were available to your LLM agent. This list is used to evaluate your agent's tool selection capability.
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
   [Optional] `evaluation_params`: A list of `ToolCallParams` indicating the strictness of the correctness criteria, available options are `ToolCallParams.INPUT_PARAMETERS` and `ToolCallParams.OUTPUT`. For example, supplying a list containing `ToolCallParams.INPUT_PARAMETERS` but excluding `ToolCallParams.OUTPUT`, will deem a tool correct if the tool name and input parameters match, even if the output does not. Defaults to a an empty list.
 - [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
@@ -120,19 +121,22 @@ This is great for debugging or if you wish to build your own evaluation pipeline
 ## How Is It Calculated?
 
 :::note
-The `ToolCorrectnessMetric`, unlike all other `deepeval` metrics, are not calculated using any models or LLMs, and instead via exact matching between the `expected_tools` and `tools_called` parameters.
+The `ToolCorrectnessMetric`, unlike all other `deepeval` metrics, uses both deterministic and non-deterministic evaluation to give a final score. It uses `tools_called`, `expected_tools` and `available_tools` to find the final score.
 :::
 
-The **tool correctness metric** score is calculated according to the following equation:
+The **tool correctness metric** score is calculated using the following steps:
+
+1. Find the deterministic score for `tools_called` using the `expected_tools` using the following equation:
 
 <Equation
   formula="\text{Tool Correctness} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}
 "
 />
 
-This metric assesses the accuracy of your agent's tool usage by comparing the `tools_called` by your LLM agent to the list of `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent were called correctly according to the list of `expected_tools`, `should_consider_ordering`, and `should_exact_match`, while a score of 0 signifies that none of the `tools_called` were called correctly.
+- This metric assesses the accuracy of your agent's tool usage by comparing the `tools_called` by your LLM agent to the list of `expected_tools`. A score of 1 indicates that every tool utilized by your LLM agent were called correctly according to the list of `expected_tools`, `should_consider_ordering`, and `should_exact_match`, while a score of 0 signifies that none of the `tools_called` were called correctly.
 
 :::info
 If `exact_match` is not specified and `ToolCall.INPUT_PARAMETERS` is included in `evaluation_params`, correctness may be a percentage score based on the proportion of correct input parameters (assuming the name and output are correct, if applicable).
-
 :::
+
+2. If the `available_tools` are provided, the `ToolCorrectnessMetric` also uses an LLM to find whether the `tools_called` were the most optimal for the given task using the `available_tools` as reference. The final score is the **minimum of both scores**. If `available_tools` is not provided, the LLM-based evaluation does not take place.

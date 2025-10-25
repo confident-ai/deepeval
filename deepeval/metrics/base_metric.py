@@ -27,6 +27,7 @@ class BaseMetric:
     evaluation_cost: Optional[float] = None
     verbose_logs: Optional[str] = None
     skipped = False
+    requires_trace: bool = False
     model = Optional[DeepEvalBaseLLM]
     using_native_model = Optional[bool]
 

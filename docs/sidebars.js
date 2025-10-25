@@ -84,9 +84,27 @@ module.exports = {
           type: "category",
           label: "Agentic",
           items: [
-            "metrics-task-completion",
-            "metrics-tool-correctness",
-            "metrics-argument-correctness",
+            {
+              type: "category",
+              label: "Single-Turn",
+              items: [
+                "metrics-argument-correctness",
+                "metrics-plan-adherence",
+                "metrics-plan-quality",
+                "metrics-step-efficiency",
+                "metrics-task-completion",
+                "metrics-tool-correctness",
+              ]
+            },
+            {
+              type: "category",
+              label: "Multi-Turn",
+              items: [
+                "metrics-goal-accuracy",
+                "metrics-tool-use",
+                "metrics-topic-adherence",
+              ]
+            }
           ],
           collapsed: true,
         },

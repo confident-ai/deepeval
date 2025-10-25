@@ -56,7 +56,6 @@ from deepeval.metrics import (
     BaseMetric,
     BaseConversationalMetric,
     BaseMultimodalMetric,
-    TaskCompletionMetric,
 )
 from deepeval.metrics.indicator import (
     measure_metrics_with_indicator,
@@ -223,6 +222,20 @@ def _gather_timeout() -> float:
         s.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS
         + s.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
     )
+
+
+def filter_duplicate_results(
+    main_result: TestResult, results: List[TestResult]
+) -> List[TestResult]:
+    return [
+        result
+        for result in results
+        if not (
+            (result.input == main_result.input)
+            and (result.actual_output == main_result.actual_output)
+            and (result.metrics_data == main_result.metrics_data)
+        )
+    ]
 
 
 ###########################################
@@ -1073,9 +1086,8 @@ def execute_agentic_test_cases(
 
                     if not span.metrics:
                         return
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in span.metrics
+                    requires_trace = any(
+                        metric.requires_trace for metric in span.metrics
                     )
 
                     llm_test_case = None
@@ -1095,7 +1107,7 @@ def execute_agentic_test_cases(
                         )
 
                     # add trace if task completion
-                    if has_task_completion:
+                    if requires_trace:
                         if llm_test_case is None:
                             llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
@@ -1169,8 +1181,8 @@ def execute_agentic_test_cases(
                         )
                 else:
                     if current_trace.metrics:
-                        has_task_completion = any(
-                            isinstance(metric, TaskCompletionMetric)
+                        requires_trace = any(
+                            metric.requires_trace
                             for metric in current_trace.metrics
                         )
 
@@ -1189,7 +1201,7 @@ def execute_agentic_test_cases(
                                 tools_called=current_trace.tools_called,
                                 expected_tools=current_trace.expected_tools,
                             )
-                        if has_task_completion:
+                        if requires_trace:
                             if llm_test_case is None:
                                 llm_test_case = LLMTestCase(input="None")
                             llm_test_case._trace_dict = (
@@ -1553,8 +1565,11 @@ async def _a_execute_agentic_test_case(
 
     api_test_case.update_run_duration(run_duration)
     test_run_manager.update_test_run(api_test_case, test_case)
-    test_results.append(create_test_result(api_test_case))
-    test_results.extend(extract_trace_test_results(trace_api))
+    main_result = create_test_result(api_test_case)
+    trace_results = extract_trace_test_results(trace_api)
+    unique_trace_results = filter_duplicate_results(main_result, trace_results)
+    test_results.append(main_result)
+    test_results.extend(unique_trace_results)
 
     update_pbar(progress, pbar_id)
 
@@ -1601,9 +1616,7 @@ async def _a_execute_span_test_case(
     if not metrics:
         return
 
-    has_task_completion = any(
-        isinstance(metric, TaskCompletionMetric) for metric in metrics
-    )
+    requires_trace = any(metric.requires_trace for metric in metrics)
 
     llm_test_case = None
     if span.input:
@@ -1617,7 +1630,7 @@ async def _a_execute_span_test_case(
             expected_tools=span.expected_tools,
         )
 
-    if not has_task_completion:
+    if not requires_trace:
         if llm_test_case is None:
             api_span.status = TraceSpanApiStatus.ERRORED
             api_span.error = format_error_text(
@@ -1638,7 +1651,7 @@ async def _a_execute_span_test_case(
     test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
-    if has_task_completion:
+    if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(span)
@@ -1697,9 +1710,7 @@ async def _a_execute_trace_test_case(
     if not metrics:
         return
 
-    has_task_completion = any(
-        isinstance(metric, TaskCompletionMetric) for metric in metrics
-    )
+    requires_trace = any(metric.requires_trace for metric in metrics)
 
     llm_test_case = None
     if trace.input:
@@ -1715,7 +1726,7 @@ async def _a_execute_trace_test_case(
             expected_tools=trace.expected_tools,
         )
 
-    if not has_task_completion:
+    if not requires_trace:
         if llm_test_case is None:
             trace.status = TraceSpanStatus.ERRORED
             trace_api.status = TraceSpanApiStatus.ERRORED
@@ -1739,7 +1750,7 @@ async def _a_execute_trace_test_case(
     test_case: Optional[LLMTestCase] = llm_test_case
 
     # add trace if task completion
-    if has_task_completion:
+    if requires_trace:
         if test_case is None:
             test_case = LLMTestCase(input="None")
         test_case._trace_dict = trace_manager.create_nested_spans_dict(
@@ -1907,9 +1918,8 @@ def execute_agentic_test_cases_from_loop(
                     if not span.metrics:
                         return
 
-                    has_task_completion = any(
-                        isinstance(metric, TaskCompletionMetric)
-                        for metric in metrics
+                    requires_trace = any(
+                        metric.requires_trace for metric in metrics
                     )
 
                     llm_test_case = None
@@ -1928,7 +1938,7 @@ def execute_agentic_test_cases_from_loop(
                             expected_tools=span.expected_tools,
                         )
 
-                    if has_task_completion:
+                    if requires_trace:
                         if llm_test_case is None:
                             llm_test_case = LLMTestCase(input="None")
                         llm_test_case._trace_dict = (
@@ -2006,8 +2016,8 @@ def execute_agentic_test_cases_from_loop(
                         )
                 else:
                     if current_trace.metrics:
-                        has_task_completion = any(
-                            isinstance(metric, TaskCompletionMetric)
+                        requires_trace = any(
+                            metric.requires_trace
                             for metric in current_trace.metrics
                         )
 
@@ -2027,7 +2037,7 @@ def execute_agentic_test_cases_from_loop(
                                 expected_tools=current_trace.expected_tools,
                             )
 
-                        if has_task_completion:
+                        if requires_trace:
                             if llm_test_case is None:
                                 llm_test_case = LLMTestCase(input="None")
                             llm_test_case._trace_dict = (
@@ -2101,8 +2111,13 @@ def execute_agentic_test_cases_from_loop(
             # Update test run
             api_test_case.update_run_duration(run_duration)
             test_run_manager.update_test_run(api_test_case, test_case)
-            test_results.append(create_test_result(api_test_case))
-            test_results.extend(extract_trace_test_results(trace_api))
+            main_result = create_test_result(api_test_case)
+            trace_results = extract_trace_test_results(trace_api)
+            unique_trace_results = filter_duplicate_results(
+                main_result, trace_results
+            )
+            test_results.append(main_result)
+            test_results.extend(unique_trace_results)
 
             update_pbar(progress, pbar_id)
 
