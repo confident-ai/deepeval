@@ -75,7 +75,8 @@ class StepEfficiencyMetric(BaseMetric):
                 if self.strict_mode:
                     self.score = (
                         0
-                        if self.strict_mode and efficiency_verdict.score < self.threshold
+                        if self.strict_mode
+                        and efficiency_verdict.score < self.threshold
                         else efficiency_verdict.score
                     )
                 self.reason = efficiency_verdict.reason
@@ -120,7 +121,8 @@ class StepEfficiencyMetric(BaseMetric):
             if self.strict_mode:
                 self.score = (
                     0
-                    if self.strict_mode and efficiency_verdict.score < self.threshold
+                    if self.strict_mode
+                    and efficiency_verdict.score < self.threshold
                     else efficiency_verdict.score
                 )
             self.reason = efficiency_verdict.reason
