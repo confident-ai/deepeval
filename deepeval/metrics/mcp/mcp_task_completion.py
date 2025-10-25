@@ -79,12 +79,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     self._get_task_score(task) for task in self.tasks
                 ]
                 self.score = self._calculate_score(self.task_scores)
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
-                    )
                 self.reason = self._generate_reason(self.task_scores)
                 self.scores_reasons_list = [
                     (task_score.score, task_score.reason)
@@ -138,12 +132,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 for task_score in self.task_scores
             ]
             self.score = self._calculate_score(self.task_scores)
-            if self.strict_mode:
-                self.score = (
-                    0
-                    if self.strict_mode and self.score < self.threshold
-                    else self.score
-                )
             self.reason = self._generate_reason(self.task_scores)
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
@@ -258,7 +246,9 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
     def _calculate_score(self, scores: List[TaskScore]) -> float:
         score_divsor = len(scores) if len(scores) > 0 else 1
         total_score = sum(score.score for score in scores)
-        return total_score / score_divsor
+        score = total_score / score_divsor
+        if self.strict_mode:
+            return 0 if score < self.threshold else score
 
     def is_successful(self) -> bool:
         if self.error is not None:
