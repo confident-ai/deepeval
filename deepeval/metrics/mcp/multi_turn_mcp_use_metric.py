@@ -328,8 +328,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             sum(score.score for score in args_accuracy_score) / args_divisor
         )
         score = min(tool_score, args_score)
-        if self.strict_mode:
-            return 0 if score < self.threshold else score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason(
         self,

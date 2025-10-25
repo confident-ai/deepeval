@@ -366,8 +366,7 @@ class ToolUseMetric(BaseConversationalMetric):
             arguments_scores_sum / argument_correctness_score_divisor
         )
         score = min(tools_selction_score, argument_correctness_score)
-        if self.strict_mode:
-            return 0 if score < self.threshold else score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason_for_tool_selection(
         self,

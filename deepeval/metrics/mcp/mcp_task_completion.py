@@ -247,8 +247,7 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         score_divsor = len(scores) if len(scores) > 0 else 1
         total_score = sum(score.score for score in scores)
         score = total_score / score_divsor
-        if self.strict_mode:
-            return 0 if score < self.threshold else score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def is_successful(self) -> bool:
         if self.error is not None:

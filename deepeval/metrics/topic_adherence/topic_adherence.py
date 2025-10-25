@@ -244,8 +244,7 @@ class TopicAdherenceMetric(BaseConversationalMetric):
             score = 0
         else:
             score = true_values / total
-        if self.strict_mode:
-            return 0 if score < self.threshold else score
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _get_qa_verdict(self, qa_pair: QAPair) -> RelevancyVerdict:
         prompt = TopicAdherenceTemplate.get_qa_pair_verdict(

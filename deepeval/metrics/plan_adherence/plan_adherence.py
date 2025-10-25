@@ -86,13 +86,12 @@ class PlanAdherenceMetric(BaseMetric):
                     plan_adherence_score = self._get_plan_adherence_score(
                         task, agent_plan.plan, test_case
                     )
-                    self.score = plan_adherence_score.score
-                    if self.strict_mode:
-                        self.score = (
-                            0
-                            if self.strict_mode and self.score < self.threshold
-                            else self.score
-                        )
+                    self.score = (
+                        0
+                        if self.strict_mode
+                        and plan_adherence_score.score < self.threshold
+                        else plan_adherence_score.score
+                    )
                     self.reason = plan_adherence_score.reason
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
@@ -140,13 +139,12 @@ class PlanAdherenceMetric(BaseMetric):
                 plan_adherence_score = await self._a_get_plan_adherence_score(
                     task, agent_plan.plan, test_case
                 )
-                self.score = plan_adherence_score.score
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
-                    )
+                self.score = (
+                    0
+                    if self.strict_mode
+                    and plan_adherence_score.score < self.threshold
+                    else plan_adherence_score.score
+                )
                 self.reason = plan_adherence_score.reason
             self.success = self.score >= self.threshold
 

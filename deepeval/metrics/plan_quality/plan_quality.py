@@ -89,13 +89,12 @@ class PlanQualityMetric(BaseMetric):
                     plan_quality_score = self._get_plan_quality_score(
                         task, agent_plan.plan
                     )
-                    self.score = plan_quality_score.score
-                    if self.strict_mode:
-                        self.score = (
-                            0
-                            if self.strict_mode and self.score < self.threshold
-                            else self.score
-                        )
+                    self.score = (
+                        0
+                        if self.strict_mode
+                        and plan_quality_score.score < self.threshold
+                        else plan_quality_score.score
+                    )
                     self.reason = plan_quality_score.reason
                 self.success = self.score >= self.threshold
                 self.verbose_logs = construct_verbose_logs(
@@ -143,13 +142,12 @@ class PlanQualityMetric(BaseMetric):
                 plan_quality_score = await self._a_get_plan_quality_score(
                     task, agent_plan.plan
                 )
-                self.score = plan_quality_score.score
-                if self.strict_mode:
-                    self.score = (
-                        0
-                        if self.strict_mode and self.score < self.threshold
-                        else self.score
-                    )
+                self.score = (
+                    0
+                    if self.strict_mode
+                    and plan_quality_score.score < self.threshold
+                    else plan_quality_score.score
+                )
                 self.reason = plan_quality_score.reason
             self.success = self.score >= self.threshold
             self.verbose_logs = construct_verbose_logs(
