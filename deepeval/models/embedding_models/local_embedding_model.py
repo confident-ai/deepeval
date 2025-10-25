@@ -1,5 +1,5 @@
 from openai import OpenAI, AsyncOpenAI
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from deepeval.key_handler import EmbeddingKeyValues, KEY_FILE_HANDLER
 from deepeval.models import DeepEvalBaseEmbeddingModel
@@ -15,25 +15,32 @@ retry_local = create_retry_decorator(PS.LOCAL)
 
 
 class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
-    def __init__(self, **kwargs):
-        self.base_url = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
-        )
-        model_name = KEY_FILE_HANDLER.fetch_data(
-            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
-        )
-        self.api_key = KEY_FILE_HANDLER.fetch_data(
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+        generation_kwargs: Optional[Dict] = None,
+        **client_kwargs,
+    ):
+        self.api_key = api_key or KEY_FILE_HANDLER.fetch_data(
             EmbeddingKeyValues.LOCAL_EMBEDDING_API_KEY
         )
-        self.kwargs = kwargs
-        super().__init__(model_name)
+        self.base_url = base_url or KEY_FILE_HANDLER.fetch_data(
+            EmbeddingKeyValues.LOCAL_EMBEDDING_BASE_URL
+        )
+        self.model_name = model or KEY_FILE_HANDLER.fetch_data(
+            EmbeddingKeyValues.LOCAL_EMBEDDING_MODEL_NAME
+        )
+        self.client_kwargs = client_kwargs or {}
+        self.generation_kwargs = generation_kwargs or {}
+        super().__init__(self.model_name)
 
     @retry_local
     def embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model()
         response = embedding_model.embeddings.create(
-            model=self.model_name,
-            input=[text],
+            model=self.model_name, input=[text], **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -41,8 +48,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     def embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model()
         response = embedding_model.embeddings.create(
-            model=self.model_name,
-            input=texts,
+            model=self.model_name, input=texts, **self.generation_kwargs
         )
         return [data.embedding for data in response.data]
 
@@ -50,8 +56,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_text(self, text: str) -> List[float]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embeddings.create(
-            model=self.model_name,
-            input=[text],
+            model=self.model_name, input=[text], **self.generation_kwargs
         )
         return response.data[0].embedding
 
@@ -59,8 +64,7 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
     async def a_embed_texts(self, texts: List[str]) -> List[List[float]]:
         embedding_model = self.load_model(async_mode=True)
         response = await embedding_model.embeddings.create(
-            model=self.model_name,
-            input=texts,
+            model=self.model_name, input=texts, **self.generation_kwargs
         )
         return [data.embedding for data in response.data]
 
@@ -76,27 +80,21 @@ class LocalEmbeddingModel(DeepEvalBaseEmbeddingModel):
             return self._build_client(OpenAI)
         return self._build_client(AsyncOpenAI)
 
-    def _client_kwargs(self) -> Dict:
-        """
-        If Tenacity manages retries, turn off OpenAI SDK retries to avoid double retrying.
-        If users opt into SDK retries via DEEPEVAL_SDK_RETRY_PROVIDERS=local, leave them enabled.
-        """
-        kwargs = dict(self.kwargs or {})
-        if not sdk_retries_for(PS.LOCAL):
-            kwargs["max_retries"] = 0
-        return kwargs
-
     def _build_client(self, cls):
-        kw = dict(
+        client_kwargs = self.client_kwargs.copy()
+        if not sdk_retries_for(PS.LOCAL):
+            client_kwargs["max_retries"] = 0
+
+        client_init_kwargs = dict(
             api_key=self.api_key,
             base_url=self.base_url,
-            **self._client_kwargs(),
+            **client_kwargs,
         )
         try:
-            return cls(**kw)
+            return cls(**client_init_kwargs)
         except TypeError as e:
-            # Older OpenAI SDKs may not accept max_retries; drop and retry once.
+            # older OpenAI SDKs may not accept max_retries, in that case remove and retry once
             if "max_retries" in str(e):
-                kw.pop("max_retries", None)
-                return cls(**kw)
+                client_init_kwargs.pop("max_retries", None)
+                return cls(**client_init_kwargs)
             raise

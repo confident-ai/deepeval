@@ -94,7 +94,7 @@ def test_crewai_component():
         metadata={"crewai": "crewai"},
         user_id="crewai",
         thread_id="crewai",
-        trace_metric_collection="test_collection_1",
+        metric_collection="test_collection_1",
     ):
         crew.kickoff({"city": "London"})
 
