@@ -44,6 +44,7 @@ class TaskCompletionMetric(BaseMetric):
         self.async_mode = async_mode
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
+        self.requires_trace = True
 
     def measure(
         self,

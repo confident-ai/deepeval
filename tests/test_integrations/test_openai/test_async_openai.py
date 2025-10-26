@@ -1,8 +1,10 @@
+import asyncio
 import pytest
 from openai import AsyncOpenAI
 from deepeval.tracing import trace
 from deepeval.prompt import Prompt
-from tests.test_integrations.utils import assert_trace_json
+from deepeval.tracing.trace_context import LlmSpanContext
+from tests.test_integrations.utils import assert_trace_json, generate_trace_json
 import os
 
 
@@ -27,13 +29,15 @@ async def test_async_openai_without_trace():
 @pytest.mark.skip
 async def test_async_openai_with_trace():
     with trace(
-        prompt=prompt,
-        thread_id="test_thread_id_1",
-        llm_metric_collection="test_collection_1",
+        llm_span_context=LlmSpanContext(
+            prompt=prompt,
+            metric_collection="test_collection_1",
+        ),
         name="test_name_1",
         tags=["test_tag_1"],
         metadata={"test_metadata_1": "test_value_1"},
         user_id="test_user_id_1",
+        thread_id="test_thread_id_1",
     ):
         await client.chat.completions.create(
             model="gpt-4o",
@@ -57,13 +61,15 @@ async def test_async_response_create_without_trace():
 )
 async def test_async_response_create_with_trace():
     with trace(
-        prompt=prompt,
-        thread_id="test_thread_id_1",
-        llm_metric_collection="test_collection_1",
+        llm_span_context=LlmSpanContext(
+            prompt=prompt,
+            metric_collection="test_collection_1",
+        ),
         name="test_name_1",
         tags=["test_tag_1"],
         metadata={"test_metadata_1": "test_value_1"},
         user_id="test_user_id_1",
+        thread_id="test_thread_id_1",
     ):
         await client.responses.create(
             model="gpt-4o",
@@ -74,6 +80,9 @@ async def test_async_response_create_with_trace():
 
 async def generate_all_json_dumps():
     await test_async_openai_without_trace()
-    await test_async_openai_with_trace()
-    await test_async_response_create_without_trace()
+    # await test_async_openai_with_trace()
+    # await test_async_response_create_without_trace()
     await test_async_response_create_with_trace()
+
+
+# asyncio.run(generate_all_json_dumps())
