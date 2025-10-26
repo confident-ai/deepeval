@@ -17,6 +17,7 @@ def _expose_public_api() -> None:
     # Do not do this at module level or ruff will complain with E402
     global __version__, evaluate, assert_test, compare
     global on_test_run_end, log_hyperparameters, login, telemetry
+    global AsyncConfig, DisplayConfig, CacheConfig, ErrorConfig
 
     from ._version import __version__ as _version
     from deepeval.evaluate import (
@@ -24,6 +25,12 @@ def _expose_public_api() -> None:
         assert_test as _assert_test,
     )
     from deepeval.evaluate.compare import compare as _compare
+    from deepeval.evaluate.configs import (
+        AsyncConfig as _AsyncConfig,
+        DisplayConfig as _DisplayConfig,
+        CacheConfig as _CacheConfig,
+        ErrorConfig as _ErrorConfig,
+    )
     from deepeval.test_run import (
         on_test_run_end as _on_end,
         log_hyperparameters as _log_hparams,
@@ -35,6 +42,10 @@ def _expose_public_api() -> None:
     evaluate = _evaluate
     assert_test = _assert_test
     compare = _compare
+    AsyncConfig = _AsyncConfig
+    DisplayConfig = _DisplayConfig
+    CacheConfig = _CacheConfig
+    ErrorConfig = _ErrorConfig
     on_test_run_end = _on_end
     log_hyperparameters = _log_hparams
     login = _login
@@ -60,6 +71,10 @@ __all__ = [
     "assert_test",
     "on_test_run_end",
     "compare",
+    "AsyncConfig",
+    "DisplayConfig",
+    "CacheConfig",
+    "ErrorConfig",
 ]
 
 
