@@ -125,7 +125,10 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
 
         self.evaluation_cost = 0 if self.using_native_model else None
         with metric_progress_indicator(
-            self, async_mode=True, _show_indicator=_show_indicator
+            self,
+            async_mode=True,
+            _show_indicator=_show_indicator,
+            _in_component=_in_component,
         ):
             if not test_case.mcp_servers:
                 error_str = "'mcp_servers' in a conversational test case cannot be empty for the 'MultiTurnMCPUseMetric' metric."
@@ -324,7 +327,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         args_score = (
             sum(score.score for score in args_accuracy_score) / args_divisor
         )
-        return min(tool_score, args_score)
+        score = min(tool_score, args_score)
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason(
         self,
