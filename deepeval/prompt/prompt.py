@@ -202,6 +202,7 @@ class Prompt:
                     "Unable to interpolate empty prompt template. Please pull a prompt from Confident AI or set template manually to continue."
                 )
 
+            print("@@@@@")
             return interpolate_text(interpolation_type, text_template, **kwargs)
 
         elif prompt_type == PromptType.LIST:
