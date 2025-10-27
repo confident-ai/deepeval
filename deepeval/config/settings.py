@@ -655,7 +655,7 @@ class Settings(BaseSettings):
         - Else, ON signal:
           - DEEPEVAL_TELEMETRY_OPT_OUT = falsy   -> ON
           - DEEPEVAL_TELEMETRY_ENABLED = truthy  -> ON
-        - Else None (unset) -> OFF
+        - Else None (unset) -> ON
         """
 
         def normalize(x):
@@ -692,8 +692,8 @@ class Settings(BaseSettings):
         if on_signal:
             return False  # ON
 
-        # Unset means OFF for security
-        return True
+        # Unset means ON
+        return False
 
     #######################
     # Persistence support #

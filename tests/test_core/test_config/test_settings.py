@@ -392,13 +392,13 @@ def test_alias_both_present_enabled_false_forces_opt_out(monkeypatch):
     assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
 
 
-def test_alias_unset_defaults_off(monkeypatch):
+def test_neither_set_defaults_on(monkeypatch):
     # neither var present means default OFF (for security)
     _clear_telemetry_env(monkeypatch)
     reset_settings(reload_dotenv=False)
 
     settings = get_settings()
-    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True  # OFF by default
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is False  # ON by default
 
 
 ##################################################
