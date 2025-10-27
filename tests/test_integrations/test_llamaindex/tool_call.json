@@ -1,0 +1,689 @@
+{
+  "uuid": "f0caed5b-cfa7-4164-9e51-ba6a08e9976d",
+  "baseSpans": [
+    {
+      "uuid": "ReActAgent._done-837896c3-74d5-480e-bd1b-f6ad1f82de27",
+      "name": "_done",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:08.160Z",
+      "endTime": "2025-10-27T18:25:08.161Z",
+      "input": {
+        "ctx": {
+          "is_running": false
+        },
+        "ev": {}
+      }
+    },
+    {
+      "uuid": "ReActAgent.parse_agent_output-27bf9270-0bf5-4ee3-b6ba-57c6d4b0bdfd",
+      "name": "parse_agent_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:08.158Z",
+      "endTime": "2025-10-27T18:25:08.160Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time."
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_name": "get_weather",
+              "tool_kwargs": {
+                "location": "sf"
+              },
+              "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab"
+            }
+          ],
+          "retry_messages": []
+        }
+      },
+      "output": {}
+    },
+    {
+      "uuid": "ReActAgent.run_agent_step-138dd393-3e7f-4a6b-af95-b3fbf5272af8",
+      "name": "run_agent_step",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:06.080Z",
+      "endTime": "2025-10-27T18:25:08.157Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "what is the weather in sf"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time."
+            }
+          ]
+        },
+        "current_agent_name": "Agent",
+        "tool_calls": [
+          {
+            "tool_name": "get_weather",
+            "tool_kwargs": {
+              "location": "sf"
+            },
+            "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab"
+          }
+        ],
+        "retry_messages": []
+      }
+    },
+    {
+      "uuid": "ReActOutputParser.parse-8a938e21-7252-48c8-a1e7-04b1a63ca122",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-138dd393-3e7f-4a6b-af95-b3fbf5272af8",
+      "startTime": "2025-10-27T18:25:08.156Z",
+      "endTime": "2025-10-27T18:25:08.156Z",
+      "input": {
+        "output": "Thought: I cannot answer the question with the provided tools.\nAnswer: I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time.",
+        "is_streaming": false
+      },
+      "output": {
+        "thought": "I cannot answer the question with the provided tools.",
+        "response": "I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time.",
+        "is_streaming": false
+      }
+    },
+    {
+      "uuid": "OpenAI.astream_chat-f2ccf03e-b320-41d9-b765-03ee6911d0bd",
+      "name": "astream_chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-138dd393-3e7f-4a6b-af95-b3fbf5272af8",
+      "startTime": "2025-10-27T18:25:06.080Z",
+      "endTime": "2025-10-27T18:25:06.081Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(location: str) -> str\nUseful for getting the weather for a given location.\nTool Args: {\"properties\": {\"location\": {\"title\": \"Location\", \"type\": \"string\"}}, \"required\": [\"location\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages.\n"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "what is the weather in sf"
+              }
+            ]
+          },
+          {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'location': 'sf'}"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Observation: Weather data not available for sf"
+              }
+            ]
+          }
+        ]
+      },
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x114ef9d80>"
+    },
+    {
+      "uuid": "ReActAgent.setup_agent-de432498-3b2e-450b-8fd5-df22de586b1c",
+      "name": "setup_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:06.079Z",
+      "endTime": "2025-10-27T18:25:06.079Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "what is the weather in sf"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "what is the weather in sf"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.aggregate_tool_results-d33f559e-26a3-4489-9256-41e05c694cb6",
+      "name": "aggregate_tool_results",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:06.078Z",
+      "endTime": "2025-10-27T18:25:06.079Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "tool_name": "get_weather",
+          "tool_kwargs": {
+            "location": "sf"
+          },
+          "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab",
+          "tool_output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Weather data not available for sf"
+              }
+            ],
+            "tool_name": "get_weather",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "location": "sf"
+              }
+            },
+            "raw_output": "Weather data not available for sf",
+            "is_error": false
+          },
+          "return_direct": false
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "what is the weather in sf"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.call_tool-dd29e189-a386-4190-b358-c0fd61962a16",
+      "name": "call_tool",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:06.077Z",
+      "endTime": "2025-10-27T18:25:06.078Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "tool_name": "get_weather",
+          "tool_kwargs": {
+            "location": "sf"
+          },
+          "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab"
+        }
+      },
+      "output": {
+        "tool_name": "get_weather",
+        "tool_kwargs": {
+          "location": "sf"
+        },
+        "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab",
+        "tool_output": {
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Weather data not available for sf"
+            }
+          ],
+          "tool_name": "get_weather",
+          "raw_input": {
+            "args": "<circular>",
+            "kwargs": {
+              "location": "sf"
+            }
+          },
+          "raw_output": "Weather data not available for sf",
+          "is_error": false
+        },
+        "return_direct": false
+      },
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": {
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Weather data not available for sf"
+              }
+            ],
+            "tool_name": "get_weather",
+            "raw_input": {
+              "args": [],
+              "kwargs": {
+                "location": "sf"
+              }
+            },
+            "raw_output": "Weather data not available for sf",
+            "is_error": false
+          },
+          "inputParameters": {
+            "location": "sf"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "ReActAgent.parse_agent_output-1d38fe57-9321-441a-8c6d-d3cc34cba167",
+      "name": "parse_agent_output",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:06.076Z",
+      "endTime": "2025-10-27T18:25:06.077Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "response": {
+            "role": "assistant",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"location\":\"sf\"}"
+              }
+            ]
+          },
+          "current_agent_name": "Agent",
+          "tool_calls": [
+            {
+              "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab",
+              "tool_name": "get_weather",
+              "tool_kwargs": {
+                "location": "sf"
+              }
+            }
+          ],
+          "retry_messages": []
+        }
+      }
+    },
+    {
+      "uuid": "ReActAgent.run_agent_step-e50c6e0b-d6c3-4b31-be54-ed95bf8bbfa2",
+      "name": "run_agent_step",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:03.677Z",
+      "endTime": "2025-10-27T18:25:06.075Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "what is the weather in sf"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"location\":\"sf\"}"
+            }
+          ]
+        },
+        "current_agent_name": "Agent",
+        "tool_calls": [
+          {
+            "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab",
+            "tool_name": "get_weather",
+            "tool_kwargs": {
+              "location": "sf"
+            }
+          }
+        ],
+        "retry_messages": []
+      }
+    },
+    {
+      "uuid": "ReActOutputParser.parse-26d4cd58-f48f-4e30-81d5-ccf8f35deae0",
+      "name": "parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-e50c6e0b-d6c3-4b31-be54-ed95bf8bbfa2",
+      "startTime": "2025-10-27T18:25:06.070Z",
+      "endTime": "2025-10-27T18:25:06.075Z",
+      "input": {
+        "output": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"location\":\"sf\"}",
+        "is_streaming": false
+      },
+      "output": {
+        "thought": "The current language of the user is: English. I need to use a tool to help me answer the question.",
+        "action": "get_weather",
+        "action_input": {
+          "location": "sf"
+        }
+      }
+    },
+    {
+      "uuid": "OpenAI.astream_chat-bf17b514-49b7-4201-9cfc-847818b4c075",
+      "name": "astream_chat",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run_agent_step-e50c6e0b-d6c3-4b31-be54-ed95bf8bbfa2",
+      "startTime": "2025-10-27T18:25:03.677Z",
+      "endTime": "2025-10-27T18:25:03.683Z",
+      "input": {
+        "messages": [
+          {
+            "role": "system",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(location: str) -> str\nUseful for getting the weather for a given location.\nTool Args: {\"properties\": {\"location\": {\"title\": \"Location\", \"type\": \"string\"}}, \"required\": [\"location\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages.\n"
+              }
+            ]
+          },
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "what is the weather in sf"
+              }
+            ]
+          }
+        ]
+      },
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x113903520>"
+    },
+    {
+      "uuid": "ReActAgent.setup_agent-d20b6959-d805-4025-ab71-6e71a563b5c6",
+      "name": "setup_agent",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:03.677Z",
+      "endTime": "2025-10-27T18:25:03.677Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "input": [
+            {
+              "role": "user",
+              "additional_kwargs": {},
+              "blocks": [
+                {
+                  "block_type": "text",
+                  "text": "what is the weather in sf"
+                }
+              ]
+            }
+          ],
+          "current_agent_name": "Agent"
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "what is the weather in sf"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    },
+    {
+      "uuid": "ReActAgent.init_run-695ffc85-33f9-4161-8e9f-f73be778027d",
+      "name": "init_run",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "startTime": "2025-10-27T18:25:03.617Z",
+      "endTime": "2025-10-27T18:25:03.676Z",
+      "input": {
+        "ctx": "<circular>",
+        "ev": {
+          "user_msg": "what is the weather in sf",
+          "chat_history": null,
+          "max_iterations": null
+        }
+      },
+      "output": {
+        "input": [
+          {
+            "role": "user",
+            "additional_kwargs": {},
+            "blocks": [
+              {
+                "block_type": "text",
+                "text": "what is the weather in sf"
+              }
+            ]
+          }
+        ],
+        "current_agent_name": "Agent"
+      }
+    }
+  ],
+  "agentSpans": [
+    {
+      "uuid": "ReActAgent.run-9e469112-a3c7-4444-a89f-2c9892b573cb",
+      "name": "Agent",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2025-10-27T18:25:03.617Z",
+      "endTime": "2025-10-27T18:25:08.161Z",
+      "input": {
+        "ctx": null,
+        "start_event": {
+          "user_msg": "what is the weather in sf",
+          "chat_history": null,
+          "max_iterations": null
+        }
+      },
+      "output": {
+        "response": {
+          "role": "assistant",
+          "additional_kwargs": {},
+          "blocks": [
+            {
+              "block_type": "text",
+              "text": "I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time."
+            }
+          ]
+        },
+        "current_agent_name": "Agent",
+        "tool_calls": [
+          {
+            "tool_name": "get_weather",
+            "tool_kwargs": {
+              "location": "sf"
+            },
+            "tool_id": "5e089aed-071e-4d31-86ea-fa71fe6be0ab"
+          }
+        ],
+        "retry_messages": []
+      },
+      "availableTools": [],
+      "agentHandoffs": []
+    }
+  ],
+  "llmSpans": [
+    {
+      "uuid": "fdbd4206-ea8c-4f6c-bef3-e70fcc5d6212",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.astream_chat-f2ccf03e-b320-41d9-b765-03ee6911d0bd",
+      "startTime": "2025-10-27T18:25:06.080Z",
+      "endTime": "2025-10-27T18:25:08.156Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(location: str) -> str\nUseful for getting the weather for a given location.\nTool Args: {\"properties\": {\"location\": {\"title\": \"Location\", \"type\": \"string\"}}, \"required\": [\"location\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages."
+        },
+        {
+          "role": "user",
+          "content": "what is the weather in sf"
+        },
+        {
+          "role": "assistant",
+          "content": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {'location': 'sf'}"
+        },
+        {
+          "role": "user",
+          "content": "Observation: Weather data not available for sf"
+        }
+      ],
+      "output": "Thought: I cannot answer the question with the provided tools.\nAnswer: I'm sorry, but I couldn't retrieve the weather data for San Francisco at this time.",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    },
+    {
+      "uuid": "dc1eb6cd-ef02-4196-86a0-2f24aafe519d",
+      "name": "ConfidentLLMSpan",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "OpenAI.astream_chat-bf17b514-49b7-4201-9cfc-847818b4c075",
+      "startTime": "2025-10-27T18:25:03.677Z",
+      "endTime": "2025-10-27T18:25:06.069Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are designed to help with a variety of tasks, from answering questions to providing summaries to other types of analyses.\n\n## Tools\n\nYou have access to a wide variety of tools. You are responsible for using the tools in any sequence you deem appropriate to complete the task at hand.\nThis may require breaking the task into subtasks and using different tools to complete each subtask.\n\nYou have access to the following tools:\n> Tool Name: get_weather\nTool Description: get_weather(location: str) -> str\nUseful for getting the weather for a given location.\nTool Args: {\"properties\": {\"location\": {\"title\": \"Location\", \"type\": \"string\"}}, \"required\": [\"location\"], \"type\": \"object\"}\n\n\n\n## Output Format\n\nPlease answer in the same language as the question and use the following format:\n\n```\nThought: The current language of the user is: (user's language). I need to use a tool to help me answer the question.\nAction: tool name (one of get_weather) if using a tool.\nAction Input: the input to the tool, in a JSON format representing the kwargs (e.g. {\"input\": \"hello world\", \"num_beams\": 5})\n```\n\nPlease ALWAYS start with a Thought.\n\nNEVER surround your response with markdown code markers. You may use code markers within your response if you need to.\n\nPlease use a valid JSON format for the Action Input. Do NOT do this {'input': 'hello world', 'num_beams': 5}. If you include the \"Action:\" line, then you MUST include the \"Action Input:\" line too, even if the tool does not need kwargs, in that case you MUST use \"Action Input: {}\".\n\nIf this format is used, the tool will respond in the following format:\n\n```\nObservation: tool response\n```\n\nYou should keep repeating the above format till you have enough information to answer the question without using any more tools. At that point, you MUST respond in one of the following two formats:\n\n```\nThought: I can answer without using any more tools. I'll use the user's language to answer\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n```\nThought: I cannot answer the question with the provided tools.\nAnswer: [your answer here (In the same language as the user's question)]\n```\n\n## Current Conversation\n\nBelow is the current conversation consisting of interleaving human and assistant messages."
+        },
+        {
+          "role": "user",
+          "content": "what is the weather in sf"
+        }
+      ],
+      "output": "Thought: The current language of the user is: English. I need to use a tool to help me answer the question.\nAction: get_weather\nAction Input: {\"location\":\"sf\"}",
+      "model": "gpt-4o-mini",
+      "prompt": {}
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "FunctionTool.acall-b6b76f38-467d-4136-9459-aba94894d2e7",
+      "name": "get_weather",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "ReActAgent.call_tool-dd29e189-a386-4190-b358-c0fd61962a16",
+      "startTime": "2025-10-27T18:25:06.077Z",
+      "endTime": "2025-10-27T18:25:06.077Z",
+      "input": {
+        "kwargs": {
+          "location": "sf"
+        }
+      },
+      "output": {
+        "blocks": [
+          {
+            "block_type": "text",
+            "text": "Weather data not available for sf"
+          }
+        ],
+        "tool_name": "get_weather",
+        "raw_input": {
+          "args": "<circular>",
+          "kwargs": {
+            "location": "sf"
+          }
+        },
+        "raw_output": "Weather data not available for sf",
+        "is_error": false
+      }
+    }
+  ],
+  "startTime": "2025-10-27T18:25:03.617Z",
+  "endTime": "2025-10-27T18:25:08.162Z",
+  "environment": "development",
+  "status": "SUCCESS"
+}

@@ -1,11 +1,9 @@
-import asyncio
+import os
 from llama_index.llms.openai import OpenAI
 from llama_index.core.agent.workflow import ReActAgent
 from llama_index.core.tools import FunctionTool
-import llama_index.core.instrumentation as instrument
-from deepeval.integrations.llama_index import instrument_llama_index
+from tests.test_integrations.utils import generate_trace_json, assert_trace_json
 
-instrument_llama_index(instrument.get_dispatcher())
 
 def get_weather(location: str) -> str:
     """Useful for getting the weather for a given location."""
@@ -27,7 +25,13 @@ tool = FunctionTool.from_defaults(
 llm = OpenAI(model="gpt-4o-mini")
 agent = ReActAgent(llm=llm, tools=[tool])
 
-async def llm_app(input: str):
-    return await agent.run(input)
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, "tool_call.json")
 
-asyncio.run(llm_app("what is the weather in sf"))
+async def run_agent():
+    await agent.run("what is the weather in sf")
+
+# @generate_trace_json(json_path)
+@assert_trace_json(json_path)
+async def test_execute_agent():
+    await run_agent()
