@@ -4,11 +4,12 @@ from time import perf_counter
 import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.types import AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
+from deepeval.tracing.types import ToolSpan, AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
 from deepeval.tracing.trace_context import (
     current_llm_context,
     current_agent_context,
 )
+from deepeval.tracing.utils import make_json_serializable
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -169,7 +170,17 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     else None
                 ),
             )
-
+        elif method_name == "acall":
+            span = ToolSpan(
+                uuid=id_,
+                status=TraceSpanStatus.IN_PROGRESS,
+                children=[],
+                trace_uuid=trace_uuid,
+                parent_uuid=parent_span_id,
+                start_time=perf_counter(),
+                input=bound_args.arguments,
+                name="Tool",
+            )
         # prepare input test case params for the span
         prepare_input_llm_test_case_params(
             class_name, method_name, span, bound_args.arguments
@@ -195,6 +206,11 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = result
+
+        if isinstance(base_span, ToolSpan):
+            result_json = make_json_serializable(result)
+            if result_json and isinstance(result_json, dict):
+                base_span.name = result_json.get("tool_name", "Tool")
 
         if base_span.llm_test_case:
             class_name, method_name = parse_id(id_)
