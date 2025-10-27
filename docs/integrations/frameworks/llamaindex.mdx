@@ -31,20 +31,22 @@ deepeval login
 
 <TimelineItem title="Configure LlamaIndex">
 
-Create a `FunctionAgent` with a list of metrics you wish to use, and pass it to your LlamaIndex application's `run` method.
+Setup tracing for LlamaIndex and create an Agent. Use `trace` context manager to set up the `AgentSpanContext` (or `LlmSpanContext` if you want to evaluate the LLM span).
 
-```python title="main.py" showLineNumbers {8,9,21}
+```python title="main.py" showLineNumbers
 import asyncio
 
 from llama_index.llms.openai import OpenAI
+from llama_index.core.agent import FunctionAgent
 import llama_index.core.instrumentation as instrument
 
-from deepeval.integrations.llama_index import instrument_llama_index, FunctionAgent
-
+from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.tracing.trace_context import AgentSpanContext
 from deepeval.metrics import AnswerRelevancyMetric
-answer_relevance_metric = AnswerRelevancyMetric()
+from deepeval.tracing import trace
 
 instrument_llama_index(instrument.get_dispatcher())
+
 
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
@@ -54,17 +56,20 @@ agent = FunctionAgent(
     tools=[multiply],
     llm=OpenAI(model="gpt-4o-mini"),
     system_prompt="You are a helpful assistant that can perform calculations.",
-    metrics=[answer_relevance_metric]
 )
 
-async def llm_app(input: str):
-    return await agent.run(input)
+answer_relevancy_metric = AnswerRelevancyMetric()
 
-# asyncio.run(llm_app("What is 3 * 12?"))
+async def llm_app(input: str):
+    agent_span_context = AgentSpanContext(
+        metrics=[answer_relevancy_metric],
+    )
+    with trace(agent_span_context=agent_span_context):
+        return await agent.run(input)
 ```
 
 :::info
-Evaluations are supported for LlamaIndex `FunctionAgent`, `ReActAgent` and `CodeActAgent`. Only metrics with LLM parameters `input` and `output` are eligible for evaluation.
+Only metrics with LLM parameters `input` and `output` are eligible for evaluation.
 :::
 
 </TimelineItem>
@@ -78,10 +83,9 @@ Create an `EvaluationDataset` and invoke your LlamaIndex application for each go
 ```python title="main.py" showLineNumbers
 from deepeval.dataset import EvaluationDataset, Golden
 
-dataset = EvaluationDataset(goldens=[
-    Golden(input="What is 3 * 12?"),
-    Golden(input="What is 4 * 13?")
-])
+dataset = EvaluationDataset(
+    goldens=[Golden(input="What is 3 * 12?"), Golden(input="What is 4 * 13?")]
+)
 
 for golden in dataset.evals_iterator():
     task = asyncio.create_task(llm_app(golden.input))
@@ -110,19 +114,13 @@ If you need to evaluate individual components of your LlamaIndex application, [s
 
 ## Evals in Production
 
-To run online evaluations in production, simply replace `metrics` in `FunctionAgent` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LlamaIndex agent to production.
+To run online evaluations in production, simply replace `metric_collection` in `AgentSpanContext` with a [metric collection](https://documentation.confident-ai.com/docs/llm-tracing/evaluations#online-evaluations) string from Confident AI, and push your LlamaIndex agent to production.
 
 ```python filename="main.py" showLineNumbers
-...
-
-# Invoke your agent with the metric collection name
-agent = FunctionAgent(
-    tools=[multiply],
-    llm=OpenAI(model="gpt-4o-mini"),
-    system_prompt="You are a helpful assistant that can perform calculations.",
-    # metrics=[answer_relevance_metric],
-    metric_collection="test_collection_1"
-)
-
-agent.run("What is 3 * 12?")
+async def llm_app(input: str):
+    agent_span_context = AgentSpanContext(
+        metric_collection="test_collection_1",
+    )
+    with trace(agent_span_context=agent_span_context):
+        return await agent.run(input)
 ```

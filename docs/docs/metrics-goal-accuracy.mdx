@@ -1,0 +1,89 @@
+---
+id: metrics-goal-accuracy
+title: Goal Accuracy
+sidebar_label: Goal Accuracy
+---
+
+<head>
+  <link
+    rel="canonical"
+    href="https://deepeval.com/docs/metrics-goal-accuracy"
+  />
+</head>
+
+import Equation from "@site/src/components/Equation";
+import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+
+<MetricTagsDisplayer usesLLMs={true} multiTurn={true} agent={true} referenceless={true} />
+
+The Goal Accuracy metric is a multi-turn agentic metric that evaluates your LLM agent's abilities **on planning and executing the plan to finish a task or reach a goal**. It is a self-explaining eval, which means it outputs a reason for its metric score.
+
+## Required Arguments
+
+To use the `GoalAccuracyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](https://www.deepeval.com/docs/evaluation-multiturn-test-cases):
+
+- `turns`
+
+You can learn more about how it is calculated [here](#how-is-it-calculated).
+
+## Usage
+
+The `GoalAccuracyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluations of agents.
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import GoalAccuracyMetric
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="...", content="..."), 
+        Turn(role="...", content="...", tools_called=[...])
+    ],
+)
+metric = GoalAccuracyMetric(threshold=0.5)
+
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+There are **SIX** optional parameters when creating a `GoalAccuracyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-a-metric-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+
+### As a standalone
+
+You can also run the `GoalAccuracyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+:::caution
+This is great for debugging or if you wish to build your own evaluation pipeline, but you will **NOT** get the benefits (testing reports) and all the optimizations (speed, caching, computation) the `evaluate()` function or `deepeval test run` offers.
+:::
+
+## How Is It Calculated
+
+The `GoalAccuracyMetric` score is calculated using the following steps:
+
+- Find **individual goals and steps** taken by your LLM agent for each user-assistat interactions.
+- Find **goal accuracy scores** for each of the goal-steps pairs using the evaluation model.
+- Find **plan quality and plan adherence scores** for each of the goal-step pairs using the evaluation model.
+
+<Equation formula="\text{Goal Accuracy Score} = \frac{\text{Goal Accuracy Score + Plan Evaluation Score}}{\text{2}}" />
+
+:::info
+The `GoalAccuracyMetric` extracts the task from user's messages in each interaction and evalutes the steps taken by the LLM agent to find it's plan and how accurately it has finished the task or reached the goal in that interaction.
+:::

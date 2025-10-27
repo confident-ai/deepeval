@@ -23,14 +23,29 @@ class LlmSpanContext:
     retrieval_context: Optional[List[str]] = None
 
 
+@dataclass
+class AgentSpanContext:
+    metrics: Optional[List[BaseMetric]] = None
+    metric_collection: Optional[str] = None
+    expected_output: Optional[str] = None
+    expected_tools: Optional[List[ToolCall]] = None
+    context: Optional[List[str]] = None
+    retrieval_context: Optional[List[str]] = None
+
+
 current_llm_context: ContextVar[Optional[LlmSpanContext]] = ContextVar(
     "current_llm_context", default=LlmSpanContext()
+)
+
+current_agent_context: ContextVar[Optional[AgentSpanContext]] = ContextVar(
+    "current_agent_context", default=AgentSpanContext()
 )
 
 
 @contextmanager
 def trace(
     llm_span_context: Optional[LlmSpanContext] = None,
+    agent_span_context: Optional[AgentSpanContext] = None,
     name: Optional[str] = None,
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
@@ -83,7 +98,10 @@ def trace(
 
     if llm_span_context:
         current_llm_context.set(llm_span_context)
+    if agent_span_context:
+        current_agent_context.set(agent_span_context)
     try:
         yield current_trace
     finally:
         current_llm_context.set(LlmSpanContext())
+        current_agent_context.set(AgentSpanContext())

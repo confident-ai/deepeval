@@ -271,9 +271,10 @@ class MCPUseMetric(BaseMetric):
         primitives_used_score: MCPPrimitivesScore,
         argument_correctness_score: MCPArgsScore,
     ) -> float:
-        return min(
+        score = min(
             primitives_used_score.score, argument_correctness_score.score
         )
+        return 0 if self.strict_mode and score < self.threshold else score
 
     def _get_reason(
         self,
