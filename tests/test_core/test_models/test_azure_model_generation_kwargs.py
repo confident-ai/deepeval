@@ -16,63 +16,55 @@ class SampleSchema(BaseModel):
 class TestAzureOpenAIModelGenerationKwargs:
     """Test suite for AzureOpenAIModel generation_kwargs functionality"""
 
-    def test_init_without_generation_kwargs(self):
+    def test_init_without_generation_kwargs(self, settings):
         """Test that AzureOpenAIModel initializes correctly without generation_kwargs"""
-        with patch.dict(
-            "os.environ",
-            {
-                "AZURE_OPENAI_API_KEY": "test-key",
-                "AZURE_OPENAI_ENDPOINT": "test-endpoint",
-                "AZURE_DEPLOYMENT_NAME": "test-deployment",
-                "AZURE_MODEL_NAME": "gpt-4",
-                "OPENAI_API_VERSION": "2024-02-15-preview",
-            },
-        ):
-            model = AzureOpenAIModel()
-            assert model.generation_kwargs == {}
-            assert model.kwargs == {}
+        with settings.edit(persist=False):
+            settings.AZURE_OPENAI_API_KEY = "test-key"
+            settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
+            settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
+            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
-    def test_init_with_generation_kwargs(self):
+        model = AzureOpenAIModel()
+        assert model.generation_kwargs == {}
+        assert model.kwargs == {}
+
+    def test_init_with_generation_kwargs(self, settings):
         """Test that AzureOpenAIModel initializes correctly with generation_kwargs"""
-        with patch.dict(
-            "os.environ",
-            {
-                "AZURE_OPENAI_API_KEY": "test-key",
-                "AZURE_OPENAI_ENDPOINT": "test-endpoint",
-                "AZURE_DEPLOYMENT_NAME": "test-deployment",
-                "AZURE_MODEL_NAME": "gpt-4",
-                "OPENAI_API_VERSION": "2024-02-15-preview",
-            },
-        ):
-            generation_kwargs = {
-                "max_tokens": 1000,
-                "top_p": 0.9,
-                "frequency_penalty": 0.1,
-            }
-            model = AzureOpenAIModel(generation_kwargs=generation_kwargs)
-            assert model.generation_kwargs == generation_kwargs
-            assert model.kwargs == {}
+        with settings.edit(persist=False):
+            settings.AZURE_OPENAI_API_KEY = "test-key"
+            settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
+            settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
+            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
-    def test_init_with_both_client_and_generation_kwargs(self):
+        generation_kwargs = {
+            "max_tokens": 1000,
+            "top_p": 0.9,
+            "frequency_penalty": 0.1,
+        }
+        model = AzureOpenAIModel(generation_kwargs=generation_kwargs)
+        assert model.generation_kwargs == generation_kwargs
+        assert model.kwargs == {}
+
+    def test_init_with_both_client_and_generation_kwargs(self, settings):
         """Test that client kwargs and generation_kwargs are kept separate"""
-        with patch.dict(
-            "os.environ",
-            {
-                "AZURE_OPENAI_API_KEY": "test-key",
-                "AZURE_OPENAI_ENDPOINT": "test-endpoint",
-                "AZURE_DEPLOYMENT_NAME": "test-deployment",
-                "AZURE_MODEL_NAME": "gpt-4",
-                "OPENAI_API_VERSION": "2024-02-15-preview",
-            },
-        ):
-            generation_kwargs = {"max_tokens": 500}
-            model = AzureOpenAIModel(
-                generation_kwargs=generation_kwargs,
-                timeout=30,  # client kwarg
-                max_retries=3,  # client kwarg
-            )
-            assert model.generation_kwargs == generation_kwargs
-            assert model.kwargs == {"timeout": 30, "max_retries": 3}
+
+        with settings.edit(persist=False):
+            settings.AZURE_OPENAI_API_KEY = "test-key"
+            settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
+            settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
+            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.OPENAI_API_VERSION = "2024-02-15-preview"
+
+        generation_kwargs = {"max_tokens": 500}
+        model = AzureOpenAIModel(
+            generation_kwargs=generation_kwargs,
+            timeout=30,  # client kwarg
+            max_retries=3,  # client kwarg
+        )
+        assert model.generation_kwargs == generation_kwargs
+        assert model.kwargs == {"timeout": 30, "max_retries": 3}
 
     @patch("deepeval.models.llms.azure_model.AzureOpenAIModel.load_model")
     def test_generate_with_generation_kwargs(self, mock_load_model):
@@ -168,55 +160,45 @@ class TestAzureOpenAIModelGenerationKwargs:
         # deepeval disables SDK retries to avoid double retries (Tenacity handles them)
         assert call_kwargs["max_retries"] == 0
 
-    def test_backwards_compatibility(self):
+    def test_backwards_compatibility(self, settings):
         """Test that existing code without generation_kwargs still works"""
-        with patch.dict(
-            "os.environ",
-            {
-                "AZURE_OPENAI_API_KEY": "test-key",
-                "AZURE_OPENAI_ENDPOINT": "test-endpoint",
-                "AZURE_DEPLOYMENT_NAME": "test-deployment",
-                "AZURE_MODEL_NAME": "gpt-4",
-                "OPENAI_API_VERSION": "2024-02-15-preview",
-            },
-        ):
-            # This should work exactly as before
-            model = AzureOpenAIModel(
-                temperature=0.5, timeout=30  # client kwarg
-            )
-            assert model.temperature == 0.5
-            assert model.kwargs == {"timeout": 30}
-            assert model.generation_kwargs == {}
 
-    def test_empty_generation_kwargs(self):
+        with settings.edit(persist=False):
+            settings.AZURE_OPENAI_API_KEY = "test-key"
+            settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
+            settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
+            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.OPENAI_API_VERSION = "2024-02-15-preview"
+
+        # This should work exactly as before
+        model = AzureOpenAIModel(temperature=0.5, timeout=30)  # client kwarg
+        assert model.temperature == 0.5
+        assert model.kwargs == {"timeout": 30}
+        assert model.generation_kwargs == {}
+
+    def test_empty_generation_kwargs(self, settings):
         """Test that empty generation_kwargs dict works correctly"""
-        with patch.dict(
-            "os.environ",
-            {
-                "AZURE_OPENAI_API_KEY": "test-key",
-                "AZURE_OPENAI_ENDPOINT": "test-endpoint",
-                "AZURE_DEPLOYMENT_NAME": "test-deployment",
-                "AZURE_MODEL_NAME": "gpt-4",
-                "OPENAI_API_VERSION": "2024-02-15-preview",
-            },
-        ):
-            model = AzureOpenAIModel(generation_kwargs={})
-            assert model.generation_kwargs == {}
+        with settings.edit(persist=False):
+            settings.AZURE_OPENAI_API_KEY = "test-key"
+            settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
+            settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
+            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.OPENAI_API_VERSION = "2024-02-15-preview"
 
-    def test_none_generation_kwargs(self):
+        model = AzureOpenAIModel(generation_kwargs={})
+        assert model.generation_kwargs == {}
+
+    def test_none_generation_kwargs(self, settings):
         """Test that None generation_kwargs is handled correctly"""
-        with patch.dict(
-            "os.environ",
-            {
-                "AZURE_OPENAI_API_KEY": "test-key",
-                "AZURE_OPENAI_ENDPOINT": "test-endpoint",
-                "AZURE_DEPLOYMENT_NAME": "test-deployment",
-                "AZURE_MODEL_NAME": "gpt-4",
-                "OPENAI_API_VERSION": "2024-02-15-preview",
-            },
-        ):
-            model = AzureOpenAIModel(generation_kwargs=None)
-            assert model.generation_kwargs == {}
+        with settings.edit(persist=False):
+            settings.AZURE_OPENAI_API_KEY = "test-key"
+            settings.AZURE_OPENAI_ENDPOINT = "http://test-endpoint"
+            settings.AZURE_DEPLOYMENT_NAME = "test-deployment"
+            settings.AZURE_MODEL_NAME = "gpt-4"
+            settings.OPENAI_API_VERSION = "2024-02-15-preview"
+
+        model = AzureOpenAIModel(generation_kwargs=None)
+        assert model.generation_kwargs == {}
 
 
 if __name__ == "__main__":
