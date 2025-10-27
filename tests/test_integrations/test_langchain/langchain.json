@@ -1,1 +1,184 @@
-{"uuid": "a8618cf3-d6ef-46f3-a427-4f6ada14574a", "baseSpans": [{"uuid": "e17160b2-cbd3-424b-b4d9-0ec2aaf8c047", "name": "AgentExecutor", "status": "SUCCESS", "type": "base", "startTime": "2025-10-03T21:35:48.162Z", "endTime": "2025-10-03T21:35:50.504Z", "input": {"input": "What is 8 multiplied by 6?"}, "output": {"output": "8 multiplied by 6 is 48."}, "metricCollection": "task_completion"}], "agentSpans": [], "llmSpans": [{"uuid": "a0fcd6ae-2ccf-4e77-9057-116ff60018f0", "name": "ChatOpenAI", "status": "SUCCESS", "type": "llm", "parentUuid": "e17160b2-cbd3-424b-b4d9-0ec2aaf8c047", "startTime": "2025-10-03T21:35:49.807Z", "endTime": "2025-10-03T21:35:50.503Z", "input": [{"role": "system", "content": "You are a helpful assistant that can perform mathematical operations."}, {"role": "human", "content": "What is 8 multiplied by 6?"}, {"role": "ai", "content": ""}, {"role": "tool", "content": "48"}, {"role": "Tool Input", "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"}], "output": {"role": "AI", "content": "8 multiplied by 6 is 48.", "tool_calls": []}, "model": "gpt-4o-mini-2024-07-18", "prompt": {"alias": "asd", "version": "00.00.01"}, "tokenIntervals": {"2025-10-03T21:35:50.369923Z": "", "2025-10-03T21:35:50.396446Z": "8", "2025-10-03T21:35:50.396770Z": " multiplied", "2025-10-03T21:35:50.420299Z": " by", "2025-10-03T21:35:50.420940Z": " ", "2025-10-03T21:35:50.447277Z": "6", "2025-10-03T21:35:50.447480Z": " is", "2025-10-03T21:35:50.484471Z": " ", "2025-10-03T21:35:50.484622Z": "48", "2025-10-03T21:35:50.488205Z": ".", "2025-10-03T21:35:50.488345Z": ""}, "metricCollection": "test_collection_1"}, {"uuid": "f830dc80-5d98-4952-a1e2-dcfb1d1a5769", "name": "ChatOpenAI", "status": "SUCCESS", "type": "llm", "parentUuid": "e17160b2-cbd3-424b-b4d9-0ec2aaf8c047", "startTime": "2025-10-03T21:35:48.164Z", "endTime": "2025-10-03T21:35:49.802Z", "input": [{"role": "system", "content": "You are a helpful assistant that can perform mathematical operations."}, {"role": "human", "content": "What is 8 multiplied by 6?"}, {"role": "Tool Input", "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"}], "output": {"role": "AI", "content": "", "tool_calls": [{"name": "multiply", "args": {"a": 8, "b": 6}, "id": "call_4uDURtkBgHpsXnekuOBeJJq5"}]}, "model": "gpt-4o-mini-2024-07-18", "prompt": {"alias": "asd", "version": "00.00.01"}, "tokenIntervals": {"2025-10-03T21:35:49.655640Z": "", "2025-10-03T21:35:49.668297Z": "", "2025-10-03T21:35:49.668919Z": "", "2025-10-03T21:35:49.695678Z": "", "2025-10-03T21:35:49.696212Z": "", "2025-10-03T21:35:49.745720Z": "", "2025-10-03T21:35:49.746181Z": "", "2025-10-03T21:35:49.785904Z": "", "2025-10-03T21:35:49.786586Z": "", "2025-10-03T21:35:49.793579Z": "", "2025-10-03T21:35:49.794587Z": ""}, "metricCollection": "test_collection_1"}], "retrieverSpans": [], "toolSpans": [{"uuid": "52a120bb-7914-4656-bac3-aa376a2d35d0", "name": "multiply", "status": "SUCCESS", "type": "tool", "parentUuid": "e17160b2-cbd3-424b-b4d9-0ec2aaf8c047", "startTime": "2025-10-03T21:35:49.804Z", "endTime": "2025-10-03T21:35:49.804Z", "input": {"a": 8, "b": 6}, "output": 48, "metricCollection": "test_collection_1"}], "startTime": "2025-10-03T21:35:48.161Z", "endTime": "2025-10-03T21:35:50.504Z", "environment": "development", "input": {"input": "What is 8 multiplied by 6?"}, "output": {"output": "8 multiplied by 6 is 48."}, "status": "SUCCESS"}
+{
+  "uuid": "510f0a6f-a396-4cd9-82eb-5316ab5ce71e",
+  "baseSpans": [
+    {
+      "uuid": "777a6269-f005-443f-9148-8181aa7ff76c",
+      "name": "AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "startTime": "2025-10-27T11:51:29.723Z",
+      "endTime": "2025-10-27T11:51:31.819Z",
+      "input": {
+        "input": "What is 8 multiplied by 6?"
+      },
+      "output": {
+        "output": "8 multiplied by 6 is 48."
+      },
+      "toolsCalled": [
+        {
+          "name": "multiply",
+          "output": 48,
+          "inputParameters": {
+            "a": 8,
+            "b": 6
+          }
+        }
+      ],
+      "metricCollection": "task_completion"
+    }
+  ],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "788ee75c-8d96-400f-be86-c80e156952e0",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
+      "startTime": "2025-10-27T11:51:30.918Z",
+      "endTime": "2025-10-27T11:51:31.817Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant that can perform mathematical operations."
+        },
+        {
+          "role": "human",
+          "content": "What is 8 multiplied by 6?"
+        },
+        {
+          "role": "ai",
+          "content": ""
+        },
+        {
+          "role": "tool",
+          "content": "48"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "8 multiplied by 6 is 48.",
+        "tool_calls": []
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "tokenIntervals": {
+        "2025-10-27T11:51:31.601041Z": "",
+        "2025-10-27T11:51:31.625156Z": "8",
+        "2025-10-27T11:51:31.625846Z": " multiplied",
+        "2025-10-27T11:51:31.656635Z": " by",
+        "2025-10-27T11:51:31.657268Z": " ",
+        "2025-10-27T11:51:31.731089Z": "6",
+        "2025-10-27T11:51:31.731818Z": " is",
+        "2025-10-27T11:51:31.798890Z": " ",
+        "2025-10-27T11:51:31.799604Z": "48",
+        "2025-10-27T11:51:31.802986Z": ".",
+        "2025-10-27T11:51:31.803654Z": "",
+        "2025-10-27T11:51:31.804490Z": ""
+      },
+      "metricCollection": "test_collection_1"
+    },
+    {
+      "uuid": "efbbe7dc-b402-4d6b-8eb7-937a78efa7d2",
+      "name": "ChatOpenAI",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
+      "startTime": "2025-10-27T11:51:29.725Z",
+      "endTime": "2025-10-27T11:51:30.912Z",
+      "input": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant that can perform mathematical operations."
+        },
+        {
+          "role": "human",
+          "content": "What is 8 multiplied by 6?"
+        },
+        {
+          "role": "Tool Input",
+          "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+        }
+      ],
+      "output": {
+        "role": "AI",
+        "content": "",
+        "tool_calls": [
+          {
+            "name": "multiply",
+            "args": {
+              "a": 8,
+              "b": 6
+            },
+            "id": "call_qJmLsryAQS9bFYYJpBUpJ0k7"
+          }
+        ]
+      },
+      "model": "gpt-4o-mini-2024-07-18",
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
+      "tokenIntervals": {
+        "2025-10-27T11:51:30.772180Z": "",
+        "2025-10-27T11:51:30.777234Z": "",
+        "2025-10-27T11:51:30.777621Z": "",
+        "2025-10-27T11:51:30.818538Z": "",
+        "2025-10-27T11:51:30.819034Z": "",
+        "2025-10-27T11:51:30.882415Z": "",
+        "2025-10-27T11:51:30.883403Z": "",
+        "2025-10-27T11:51:30.897397Z": "",
+        "2025-10-27T11:51:30.898656Z": "",
+        "2025-10-27T11:51:30.904001Z": "",
+        "2025-10-27T11:51:30.905056Z": "",
+        "2025-10-27T11:51:30.907320Z": ""
+      },
+      "metricCollection": "test_collection_1"
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [
+    {
+      "uuid": "4a492248-4373-43b3-996e-0c478c84fd60",
+      "name": "multiply",
+      "status": "SUCCESS",
+      "type": "tool",
+      "parentUuid": "777a6269-f005-443f-9148-8181aa7ff76c",
+      "startTime": "2025-10-27T11:51:30.913Z",
+      "endTime": "2025-10-27T11:51:30.914Z",
+      "input": {
+        "a": 8,
+        "b": 6
+      },
+      "output": 48,
+      "metricCollection": "test_collection_1"
+    }
+  ],
+  "startTime": "2025-10-27T11:51:29.723Z",
+  "endTime": "2025-10-27T11:51:31.819Z",
+  "environment": "development",
+  "input": {
+    "input": "What is 8 multiplied by 6?"
+  },
+  "output": {
+    "output": "8 multiplied by 6 is 48."
+  },
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "multiply",
+      "output": 48,
+      "inputParameters": {
+        "a": 8,
+        "b": 6
+      }
+    }
+  ]
+}
