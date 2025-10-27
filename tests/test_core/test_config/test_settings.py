@@ -6,6 +6,7 @@ from deepeval.config.utils import parse_bool
 from deepeval.config.settings import (
     autoload_dotenv,
     get_settings,
+    reset_settings,
 )
 
 
@@ -339,3 +340,108 @@ def test_switch_model_provider_flips_all_use_flags(monkeypatch):
                 assert getattr(s, field) is True
             else:
                 assert getattr(s, field) is False
+
+
+############################################################
+# DEEPEVAL_TELEMETRY_ENABLED -> alias for *_OPT_OUT (secure)
+############################################################
+
+
+def _clear_telemetry_env(monkeypatch):
+    monkeypatch.delenv("DEEPEVAL_TELEMETRY_OPT_OUT", raising=False)
+    monkeypatch.delenv("DEEPEVAL_TELEMETRY_ENABLED", raising=False)
+
+
+def test_alias_only_enabled_yes_sets_opt_out_false(monkeypatch):
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "YES")
+    reset_settings(reload_dotenv=False)
+
+    s = get_settings()
+    assert s.DEEPEVAL_TELEMETRY_OPT_OUT is False  # ON
+
+
+def test_alias_only_enabled_no_sets_opt_out_true(monkeypatch):
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "no")
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
+
+
+def test_alias_both_present_opt_out_wins(monkeypatch):
+    # Conflict: OPT_OUT says OFF, legacy says ON means OFF wins
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")  # OFF
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "YES")  # ON
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
+
+
+def test_alias_both_present_enabled_false_forces_opt_out(monkeypatch):
+    # Conflict: OPT_OUT says ON, legacy says OFF means OFF wins
+    _clear_telemetry_env(monkeypatch)
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "no")  # ON
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "0")  # OFF
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True
+
+
+def test_alias_unset_defaults_off(monkeypatch):
+    # neither var present means default OFF (for security)
+    _clear_telemetry_env(monkeypatch)
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is True  # OFF by default
+
+
+##################################################
+# Do not persist DEEPEVAL_TELEMETRY_ENABLED
+##################################################
+
+
+@pytest.mark.enable_dotenv
+def test_legacy_enabled_alias_not_persisted_to_dotenv(
+    monkeypatch, env_dir: Path
+):
+    """
+    We persist DEEPEVAL_TELEMETRY_OPT_OUT, but never the legacy DEEPEVAL_TELEMETRY_ENABLED.
+    """
+    dotenv_path = env_dir / ".env"
+    monkeypatch.setenv("DEEPEVAL_DEFAULT_SAVE", f"dotenv:{dotenv_path}")
+
+    _clear_telemetry_env(monkeypatch)
+    # Seed legacy alias to YES so OPT_OUT starts as False.
+    monkeypatch.setenv("DEEPEVAL_TELEMETRY_ENABLED", "YES")
+    reset_settings(reload_dotenv=False)
+
+    settings = get_settings()
+    # _ENABLED is ON -> OPT_OUT False
+    assert settings.DEEPEVAL_TELEMETRY_OPT_OUT is False
+
+    with settings.edit() as ctx:
+        # Now flip it so a diff is recorded and persisted
+        settings.DEEPEVAL_TELEMETRY_OPT_OUT = True  # OFF
+        settings.DEEPEVAL_VERBOSE_MODE = True
+
+    assert ctx.result is not None
+    updated = ctx.result.updated
+
+    # Legacy DEEPEVAL_TELEMETRY_ENABLED must not appear in the persisted updates
+    assert "DEEPEVAL_TELEMETRY_ENABLED" not in updated
+    # but other fields should
+    assert "DEEPEVAL_TELEMETRY_OPT_OUT" in updated
+    assert "DEEPEVAL_VERBOSE_MODE" in updated
+
+    # Dotenv should not contain DEEPEVAL_TELEMETRY_ENABLED
+    content = dotenv_path.read_text()
+    assert "DEEPEVAL_TELEMETRY_ENABLED" not in content
+    # Booleans are persisted as 1 or 0
+    assert "DEEPEVAL_TELEMETRY_OPT_OUT=1" in content
+    assert "DEEPEVAL_VERBOSE_MODE=1" in content

@@ -644,6 +644,57 @@ class Settings(BaseSettings):
             "CRITICAL, NOTSET, or a numeric logging level."
         )
 
+    @field_validator("DEEPEVAL_TELEMETRY_OPT_OUT", mode="before")
+    @classmethod
+    def _apply_telemetry_enabled_alias(cls, v):
+        """
+        Precedence (most secure):
+        - Any OFF signal wins if both are set:
+          - DEEPEVAL_TELEMETRY_OPT_OUT = truthy  -> OFF
+          - DEEPEVAL_TELEMETRY_ENABLED = falsy   -> OFF
+        - Else, ON signal:
+          - DEEPEVAL_TELEMETRY_OPT_OUT = falsy   -> ON
+          - DEEPEVAL_TELEMETRY_ENABLED = truthy  -> ON
+        - Else None (unset) -> OFF
+        """
+
+        def normalize(x):
+            if x is None:
+                return None
+            s = str(x).strip()
+            return None if s == "" else parse_bool(s, default=False)
+
+        new_opt_out = normalize(v)  # True means OFF, False means ON
+        legacy_enabled = normalize(
+            os.getenv("DEEPEVAL_TELEMETRY_ENABLED")
+        )  # True means ON, False means OFF
+
+        off_signal = (new_opt_out is True) or (legacy_enabled is False)
+        on_signal = (new_opt_out is False) or (legacy_enabled is True)
+
+        # Conflict: simultaneous OFF and ON signals
+        if off_signal and on_signal:
+            # Only warn if verbose or debug
+            if parse_bool(
+                os.getenv("DEEPEVAL_VERBOSE_MODE"), default=False
+            ) or logger.isEnabledFor(logging.DEBUG):
+                logger.warning(
+                    "Conflicting telemetry flags detected: DEEPEVAL_TELEMETRY_OPT_OUT=%r, "
+                    "DEEPEVAL_TELEMETRY_ENABLED=%r. Defaulting to OFF.",
+                    new_opt_out,
+                    legacy_enabled,
+                )
+            return True  # OFF wins
+
+        # Clear winner
+        if off_signal:
+            return True  # OFF
+        if on_signal:
+            return False  # ON
+
+        # Unset means OFF for security
+        return True
+
     #######################
     # Persistence support #
     #######################
@@ -822,7 +873,11 @@ _settings_lock = threading.RLock()
 def _calc_env_fingerprint() -> str:
     env = os.environ.copy()
     # must hash in a stable order.
-    keys = sorted(Settings.model_fields.keys())
+    keys = sorted(
+        key
+        for key in Settings.model_fields.keys()
+        if key != "_DEPRECATED_TELEMETRY_ENABLED"  # exclude deprecated
+    )
     # encode as triples: (key, present?, value)
     items = [(k, k in env, env.get(k)) for k in keys]
     payload = json.dumps(items, ensure_ascii=False, separators=(",", ":"))
