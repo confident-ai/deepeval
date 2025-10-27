@@ -10,7 +10,7 @@ from deepeval.tracing.trace_context import (
     current_agent_context,
 )
 from deepeval.tracing.utils import make_json_serializable
-
+from deepeval.test_case import ToolCall
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
     from llama_index.core.instrumentation.event_handlers.base import (
@@ -203,6 +203,19 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         if base_span is None:
             return None
 
+        class_name, method_name = parse_id(id_)
+        if method_name == "call_tool":
+            output_json = make_json_serializable(result)
+            if output_json and isinstance(output_json, dict):
+                if base_span.tools_called is None:
+                    base_span.tools_called = []
+                base_span.tools_called.append(
+                    ToolCall(
+                        name=output_json.get("tool_name", "Tool"),
+                        input_parameters=output_json.get("tool_kwargs", {}),
+                        output=output_json.get("tool_output", {})
+                    )
+                )
         base_span.end_time = perf_counter()
         base_span.status = TraceSpanStatus.SUCCESS
         base_span.output = result
