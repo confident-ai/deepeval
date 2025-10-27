@@ -9,7 +9,7 @@ module.exports = {
         "frameworks/langgraph",
         "frameworks/llamaindex",
         "frameworks/crewai",
-        // "frameworks/pydanticai",
+        "frameworks/pydanticai",
       ],
       collapsed: false,
     },
