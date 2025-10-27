@@ -9,10 +9,13 @@ Central config for DeepEval.
   type coercion.
 """
 
+import hashlib
+import json
 import logging
 import math
 import os
 import re
+import threading
 
 from dotenv import dotenv_values
 from pathlib import Path
@@ -812,16 +815,35 @@ class Settings(BaseSettings):
 
 
 _settings_singleton: Optional[Settings] = None
+_settings_env_fingerprint: "str | None" = None
+_settings_lock = threading.RLock()
+
+
+def _calc_env_fingerprint() -> str:
+    env = os.environ.copy()
+    # must hash in a stable order.
+    keys = sorted(Settings.model_fields.keys())
+    # encode as triples: (key, present?, value)
+    items = [(k, k in env, env.get(k)) for k in keys]
+    payload = json.dumps(items, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def get_settings() -> Settings:
-    global _settings_singleton
-    if _settings_singleton is None:
-        _settings_singleton = Settings()
-        from deepeval.config.logging import apply_deepeval_log_level
+    global _settings_singleton, _settings_env_fingerprint
+    fingerprint = _calc_env_fingerprint()
 
-        apply_deepeval_log_level()
-    return _settings_singleton
+    with _settings_lock:
+        if (
+            _settings_singleton is None
+            or _settings_env_fingerprint != fingerprint
+        ):
+            _settings_singleton = Settings()
+            _settings_env_fingerprint = fingerprint
+            from deepeval.config.logging import apply_deepeval_log_level
+
+            apply_deepeval_log_level()
+        return _settings_singleton
 
 
 def reset_settings(*, reload_dotenv: bool = False) -> Settings:
@@ -837,8 +859,10 @@ def reset_settings(*, reload_dotenv: bool = False) -> Settings:
     Returns:
         The fresh Settings instance.
     """
-    global _settings_singleton
-    if reload_dotenv:
-        autoload_dotenv()
-    _settings_singleton = None
+    global _settings_singleton, _settings_env_fingerprint
+    with _settings_lock:
+        if reload_dotenv:
+            autoload_dotenv()
+        _settings_singleton = None
+        _settings_env_fingerprint = None
     return get_settings()
