@@ -30,6 +30,7 @@ from typing import Any, Dict, List, Optional, NamedTuple
 from deepeval.config.utils import (
     parse_bool,
     coerce_to_list,
+    constrain_between,
     dedupe_preserve_order,
 )
 from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
@@ -336,6 +337,7 @@ class Settings(BaseSettings):
     IGNORE_DEEPEVAL_ERRORS: Optional[bool] = None
     SKIP_DEEPEVAL_MISSING_PARAMS: Optional[bool] = None
     DEEPEVAL_VERBOSE_MODE: Optional[bool] = None
+    DEEPEVAL_LOG_STACK_TRACES: Optional[bool] = None
     ENABLE_DEEPEVAL_CACHE: Optional[bool] = None
 
     CONFIDENT_TRACE_FLUSH: Optional[bool] = None
@@ -355,11 +357,19 @@ class Settings(BaseSettings):
     #
     MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS: float = 3.05
     MEDIA_IMAGE_READ_TIMEOUT_SECONDS: float = 10.0
-    # DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS: per-attempt timeout for provider calls enforced by our retry decorator.
-    # This timeout interacts with retry policy and the task level budget (DEEPEVAL_PER_TASK_TIMEOUT_SECONDS) below.
-    # If you leave this at 0/None, the computed outer budget defaults to 180s.
-    DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS: Optional[confloat(ge=0)] = (
-        None  # per-attempt timeout. Set 0/None to disable
+    # DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE
+    # Per-attempt timeout (seconds) for provider calls used by the retry policy.
+    # This is an OVERRIDE setting. The effective value you should rely on at runtime is
+    # the computed property: DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS.
+    #
+    # If this is None or 0 the DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS is computed from either:
+    #   - DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: slice the outer budget
+    #     across attempts after subtracting expected backoff and a small safety buffer
+    #   - the default outer budget (180s) if no outer override is set.
+    #
+    # Tip: Set this OR the outer override, but generally not both
+    DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(gt=0)] = (
+        None
     )
 
     #
@@ -373,75 +383,114 @@ class Settings(BaseSettings):
     #
     DEEPEVAL_TIMEOUT_THREAD_LIMIT: conint(ge=1) = 128
     DEEPEVAL_TIMEOUT_SEMAPHORE_WARN_AFTER_SECONDS: confloat(ge=0) = 5.0
-    # DEEPEVAL_PER_TASK_TIMEOUT_SECONDS is the outer time budget for one metric/task.
-    # It is computed from per-attempt timeout + retries/backoff unless you explicitly override it.
-    # - OVERRIDE = None or 0 -> auto compute as:
-    #     attempts * per_attempt_timeout + sum(backoff_sleeps) + ~jitter/2 per sleep + 1s safety
-    #   (If per_attempt_timeout is 0/None, the auto outer budget defaults to 180s.)
-    # - OVERRIDE > 0         -> use that exact value. A warning is logged if it is likely too small
-    #   to permit the configured attempts/backoff.
+    # DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE
+    # Outer time budget (seconds) for a single metric/test-case, including retries and backoff.
+    # This is an OVERRIDE setting. If None or 0 the DEEPEVAL_PER_TASK_TIMEOUT_SECONDS field is computed:
+    #     attempts * per_attempt_timeout + expected_backoff + 1s safety
+    # (When neither override is set 180s is used.)
     #
-    # Tip:
-    #   Most users only need to set DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS and DEEPEVAL_RETRY_MAX_ATTEMPTS.
-    #   Leave the outer budget on auto unless you have very strict SLAs.
-    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: Optional[conint(ge=0)] = None
+    # If > 0, we use the value exactly and log a warning if it is likely too small
+    # to accommodate the configured attempts/backoff.
+    #
+    # usage:
+    #   - set DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE along with DEEPEVAL_RETRY_MAX_ATTEMPTS, or
+    #   - set DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE alone.
+    DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE: Optional[confloat(ge=0)] = None
 
     # Buffer time for gathering results from all tasks, added to the longest task duration
     # Increase if many tasks are running concurrently
-    DEEPEVAL_TASK_GATHER_BUFFER_SECONDS: confloat(ge=0) = 60
+    # DEEPEVAL_TASK_GATHER_BUFFER_SECONDS: confloat(ge=0) = (
+    #     30  # 15s seemed like not enough. we may make this computed later.
+    # )
+    DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE: Optional[confloat(ge=0)] = (
+        None
+    )
 
     ###################
     # Computed Fields #
     ###################
 
-    def _calc_auto_outer_timeout(self) -> int:
+    def _calc_auto_outer_timeout(self) -> float:
         """Compute outer budget from per-attempt timeout + retries/backoff.
         Never reference the computed property itself here.
         """
         attempts = self.DEEPEVAL_RETRY_MAX_ATTEMPTS or 1
-        timeout_seconds = float(self.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0)
+        timeout_seconds = float(
+            self.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE or 0
+        )
         if timeout_seconds <= 0:
             # No per-attempt timeout set -> default outer budget
             return 180
 
-        sleeps = max(0, attempts - 1)
-        cur = float(self.DEEPEVAL_RETRY_INITIAL_SECONDS)
-        cap = float(self.DEEPEVAL_RETRY_CAP_SECONDS)
-        base = float(self.DEEPEVAL_RETRY_EXP_BASE)
-        jitter = float(self.DEEPEVAL_RETRY_JITTER)
-
-        backoff = 0.0
-        for _ in range(sleeps):
-            backoff += min(cap, cur)
-            cur *= base
-        backoff += sleeps * (jitter / 2.0)  # expected jitter
-
+        backoff = self._expected_backoff(attempts)
         safety_overhead = 1.0
-        return int(
+        return float(
             math.ceil(attempts * timeout_seconds + backoff + safety_overhead)
         )
 
     @computed_field
     @property
-    def DEEPEVAL_PER_TASK_TIMEOUT_SECONDS(self) -> int:
+    def DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS(self) -> float:
+        over = self.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE
+        if over is not None and float(over) > 0:
+            return float(over)
+
+        attempts = int(self.DEEPEVAL_RETRY_MAX_ATTEMPTS or 1)
+        outer_over = self.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE
+
+        # If the user set an outer override, slice it up
+        if outer_over and float(outer_over) > 0 and attempts > 0:
+            backoff = self._expected_backoff(attempts)
+            safety = 1.0
+            usable = max(0.0, float(outer_over) - backoff - safety)
+            return 0.0 if usable <= 0 else (usable / attempts)
+
+        # NEW: when neither override is set, derive from the default outer (180s)
+        default_outer = 180.0
+        backoff = self._expected_backoff(attempts)
+        safety = 1.0
+        usable = max(0.0, default_outer - backoff - safety)
+        # Keep per-attempt sensible (cap to at least 1s)
+        return 0.0 if usable <= 0 else max(1.0, usable / attempts)
+
+    @computed_field
+    @property
+    def DEEPEVAL_PER_TASK_TIMEOUT_SECONDS(self) -> float:
         """If OVERRIDE is set (nonzero), return it; else return the derived budget."""
         outer = self.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE
         if outer not in (None, 0):
             # Warn if user-provided outer is likely to truncate retries
             if (self.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS or 0) > 0:
                 min_needed = self._calc_auto_outer_timeout()
-                if int(outer) < min_needed:
+                if float(outer) < min_needed:
                     if self.DEEPEVAL_VERBOSE_MODE:
                         logger.warning(
                             "Metric timeout (outer=%ss) is less than attempts × per-attempt "
                             "timeout + backoff (≈%ss). Retries may be cut short.",
-                            int(outer),
+                            float(outer),
                             min_needed,
                         )
-            return int(outer)
+            return float(outer)
 
         # Auto mode
         return self._calc_auto_outer_timeout()
+
+    @computed_field
+    @property
+    def DEEPEVAL_TASK_GATHER_BUFFER_SECONDS(self) -> float:
+        """
+        Buffer time we add to the longest task’s duration to allow gather/drain
+        to complete. If an override is provided, use it; otherwise derive a
+        sensible default from the task-level budget:
+            buffer = constrain_between(0.15 * DEEPEVAL_PER_TASK_TIMEOUT_SECONDS, 10, 60)
+        """
+        over = self.DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE
+        if over is not None and float(over) >= 0:
+            return float(over)
+
+        outer = float(self.DEEPEVAL_PER_TASK_TIMEOUT_SECONDS or 0.0)
+        base = 0.15 * outer
+        return constrain_between(base, 10.0, 60.0)
 
     ##############
     # Validators #
@@ -809,6 +858,25 @@ class Settings(BaseSettings):
         with self.edit(save=save) as ctx:
             ctx.switch_model_provider(target)
         return ctx.result
+
+    def _expected_backoff(self, attempts: int) -> float:
+        """Sum of expected sleeps for (attempts-1) retries, including jitter expectation."""
+        sleeps = max(0, attempts - 1)
+        cur = float(self.DEEPEVAL_RETRY_INITIAL_SECONDS)
+        cap = float(self.DEEPEVAL_RETRY_CAP_SECONDS)
+        base = float(self.DEEPEVAL_RETRY_EXP_BASE)
+        jitter = float(self.DEEPEVAL_RETRY_JITTER)
+
+        backoff = 0.0
+        for _ in range(sleeps):
+            backoff += min(cap, cur)
+            cur *= base
+        backoff += sleeps * (jitter / 2.0)  # expected jitter
+        return backoff
+
+    def _constrain_between(self, value: float, lo: float, hi: float) -> float:
+        """Return value constrained to the inclusive range [lo, hi]."""
+        return min(max(value, lo), hi)
 
 
 _settings_singleton: Optional[Settings] = None

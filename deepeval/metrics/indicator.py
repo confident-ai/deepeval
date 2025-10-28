@@ -18,6 +18,10 @@ from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import capture_metric_type
 from deepeval.utils import update_pbar
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def format_metric_description(
     metric: Union[BaseMetric, BaseConversationalMetric, BaseArenaMetric],
@@ -43,7 +47,7 @@ def metric_progress_indicator(
     _show_indicator: bool = True,
     _in_component: bool = False,
 ):
-    captured_async_mode = False if async_mode == None else async_mode
+    captured_async_mode = False if async_mode is None else async_mode
     with capture_metric_type(
         metric.__name__,
         async_mode=captured_async_mode,
@@ -250,6 +254,21 @@ async def safe_a_measure(
             _log_metric_to_confident=False,
         )
         update_pbar(progress, pbar_eval_id)
+
+    except asyncio.CancelledError:
+        logger.info("caught asyncio.CancelledError")
+
+        # treat cancellation as a timeout so we still emit a MetricData
+        metric.error = (
+            "Timed out/cancelled while evaluating metric. "
+            "Increase DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE or set "
+            "DEEPEVAL_LOG_STACK_TRACES=1 for full traceback."
+        )
+        metric.success = False
+
+        if not ignore_errors:
+            raise
+
     except MissingTestCaseParamsError as e:
         if skip_on_missing_params:
             metric.skipped = True
@@ -277,5 +296,6 @@ async def safe_a_measure(
         if ignore_errors:
             metric.error = str(e)
             metric.success = False  # Assuming you want to set success to False
+            logger.info("a metric was marked as errored")
         else:
             raise
