@@ -66,6 +66,7 @@ class ConversationSimulator:
         self,
         conversational_goldens: List[ConversationalGolden],
         max_user_simulations: int = 10,
+        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
 
@@ -85,6 +86,7 @@ class ConversationSimulator:
                     self._a_simulate(
                         conversational_goldens=conversational_goldens,
                         max_user_simulations=max_user_simulations,
+                        on_simulation_complete=on_simulation_complete,
                         progress=progress,
                         pbar_id=pbar_id,
                     )
@@ -101,6 +103,7 @@ class ConversationSimulator:
                             index=conversation_index,
                             progress=progress,
                             pbar_id=pbar_id,
+                            on_simulation_complete=on_simulation_complete,
                         )
                     )
                     conversational_test_cases.append(conversational_test_case)
@@ -113,6 +116,7 @@ class ConversationSimulator:
         self,
         conversational_goldens: List[ConversationalGolden],
         max_user_simulations: int,
+        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
@@ -129,6 +133,7 @@ class ConversationSimulator:
                     index=conversation_index,
                     progress=progress,
                     pbar_id=pbar_id,
+                    on_simulation_complete=on_simulation_complete,
                 )
 
         tasks = [
@@ -148,6 +153,7 @@ class ConversationSimulator:
         index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
+        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:
@@ -217,7 +223,7 @@ class ConversationSimulator:
             turns.append(turn)
 
         update_pbar(progress, pbar_id)
-        return ConversationalTestCase(
+        conversational_test_case = ConversationalTestCase(
             turns=turns,
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
@@ -233,6 +239,9 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
+        if on_simulation_complete:
+            on_simulation_complete(conversational_test_case, index)
+        return conversational_test_case
 
     async def _a_simulate_single_conversation(
         self,
@@ -241,6 +250,7 @@ class ConversationSimulator:
         index: Optional[int] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
+        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:
@@ -310,7 +320,7 @@ class ConversationSimulator:
             turns.append(turn)
 
         update_pbar(progress, pbar_id)
-        return ConversationalTestCase(
+        conversational_test_case = ConversationalTestCase(
             turns=turns,
             scenario=golden.scenario,
             expected_outcome=golden.expected_outcome,
@@ -326,6 +336,9 @@ class ConversationSimulator:
             _dataset_alias=golden._dataset_alias,
             _dataset_id=golden._dataset_id,
         )
+        if on_simulation_complete:
+            on_simulation_complete(conversational_test_case, index)
+        return conversational_test_case
 
     ############################################
     ### Generate User Inputs ###################

@@ -108,7 +108,39 @@ A simulation ends either when the converaiton achieves the expected outcome outl
 You can also generate conversations from existing turns. Simply populate your `ConversationalGolden` with a list of initial `Turn`s, and the simulator will continue the conversation.
 :::
 
-## Include Opening Message
+## Advanced Usage
+
+### Lifecycle hooks
+
+The `ConversationSimulator` provides lifecycle hooks that allow you to execute custom logic at specific points during the simulation process. This is useful for logging, monitoring progress, or saving conversations as they complete.
+
+#### on_simulation_complete
+
+The `on_simulation_complete` hook is called immediately after each conversation simulation completes. This allows you to process each `ConversationalTestCase` as soon as it's generated, rather than waiting for all simulations to finish.
+
+```python
+from deepeval.simulator import ConversationSimulator
+from deepeval.test_case import ConversationalTestCase
+
+def handle_simulation_complete(test_case: ConversationalTestCase, index: int):
+    print(f"Conversation {index} completed with {len(test_case.turns)} turns")
+
+conversational_test_cases = simulator.simulate(
+    conversational_goldens=[golden1, golden2, golden3],
+    on_simulation_complete=handle_simulation_complete
+)
+```
+
+The hook function receives two parameters:
+
+- `test_case`: the completed `ConversationalTestCase` object containing all turns and metadata.
+- `index`: the index of the corresponding golden that was simulated (**ording is perserved** during simulation).
+
+:::tip
+When using `async_mode=True`, conversations may complete in any order due to concurrent execution. Use the `index` parameter to track which golden each test case corresponds to.
+:::
+
+### Existing turns
 
 If your multi-turn chatbot has one or more predefined turns (for example, a hardcoded assistant message at the beginning of a conversation), you would simply include this as part of the simulation by providing a list of preexisting `turns` to a `ConversationalGolden`:
 
