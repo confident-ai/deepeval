@@ -533,7 +533,7 @@ def test_sync_timeout_is_retryable_and_capped(monkeypatch, policy, settings):
         time.sleep(0.05)  # longer than per-attempt timeout
 
     with settings.edit(persist=False):
-        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS = (
+        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE = (
             0.01  # force per-attempt timeout
         )
         settings.DEEPEVAL_RETRY_MAX_ATTEMPTS = 3
