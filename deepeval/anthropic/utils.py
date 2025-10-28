@@ -102,7 +102,10 @@ def stringify_anthropic_content(content: Any) -> str:
         # Thinking block (for extended thinking models)
         if t == "thinking":
             thinking_text = content.get("thinking", "")
-            return f"[thinking:{shorten(thinking_text, max_len=100)}]"
+            return {
+                "role": "thinking",
+                "content": shorten(thinking_text, max_len=100),
+            }
 
         # readability for other block types we don't currently handle
         if t:
