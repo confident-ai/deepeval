@@ -694,8 +694,13 @@ class Settings(BaseSettings):
     # Persistence support #
     #######################
     class _SettingsEditCtx:
+        # TODO: will generate this list in future PR
         COMPUTED_FIELDS: frozenset[str] = frozenset(
-            {"DEEPEVAL_PER_TASK_TIMEOUT_SECONDS"}
+            {
+                "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS",
+                "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS",
+                "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS",
+            }
         )
 
         def __init__(
