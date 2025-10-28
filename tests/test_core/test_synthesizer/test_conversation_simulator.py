@@ -3,7 +3,10 @@ from openai import AsyncOpenAI, OpenAI
 import pytest
 
 from deepeval.simulator import ConversationSimulator
-from deepeval.test_case.conversational_test_case import Turn, ConversationalTestCase
+from deepeval.test_case.conversational_test_case import (
+    Turn,
+    ConversationalTestCase,
+)
 from deepeval.dataset.golden import ConversationalGolden
 
 

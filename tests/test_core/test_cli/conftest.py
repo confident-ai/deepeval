@@ -16,7 +16,7 @@ def _reset_key_file_handler():
     This prevents in-memory cache pollution between tests.
     """
     from deepeval.key_handler import KEY_FILE_HANDLER
-    
+
     # Clear in-memory cache before test
     KEY_FILE_HANDLER.data = {}
     yield
@@ -45,14 +45,14 @@ def _protect_critical_env_vars():
         "LOCAL_MODEL_API_KEY",
         "LOCAL_EMBEDDING_API_KEY",
     ]
-    
+
     # Backup original values
     backup = {}
     for var in critical_vars:
         backup[var] = os.environ.get(var)
-    
+
     yield
-    
+
     # Restore original values after test
     for var, value in backup.items():
         if value is None:

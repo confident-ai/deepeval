@@ -66,7 +66,9 @@ class ConversationSimulator:
         self,
         conversational_goldens: List[ConversationalGolden],
         max_user_simulations: int = 10,
-        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
     ) -> List[ConversationalTestCase]:
         self.simulation_cost = 0 if self.using_native_model else None
 
@@ -116,7 +118,9 @@ class ConversationSimulator:
         self,
         conversational_goldens: List[ConversationalGolden],
         max_user_simulations: int,
-        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
     ) -> List[ConversationalTestCase]:
@@ -153,7 +157,9 @@ class ConversationSimulator:
         index: int,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
-        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:
@@ -250,7 +256,9 @@ class ConversationSimulator:
         index: Optional[int] = None,
         progress: Optional[Progress] = None,
         pbar_id: Optional[int] = None,
-        on_simulation_complete: Optional[Callable[[ConversationalTestCase, int], None]] = None,
+        on_simulation_complete: Optional[
+            Callable[[ConversationalTestCase, int], None]
+        ] = None,
     ) -> ConversationalTestCase:
         simulation_counter = 0
         if max_user_simulations <= 0:

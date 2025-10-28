@@ -132,7 +132,10 @@ class TestSaveAndLoad:
                 # Turns are now structured arrays, not lossy strings
                 assert isinstance(data[0]["turns"], list)
                 assert data[0]["turns"][0]["role"] == "user"
-                assert data[0]["turns"][0]["content"] == "Find me a flight to Tokyo"
+                assert (
+                    data[0]["turns"][0]["content"]
+                    == "Find me a flight to Tokyo"
+                )
 
             csv_path = dataset.save_as(
                 "csv", directory=tmpdir, file_name="test_convo_csv"
@@ -156,7 +159,11 @@ class TestSaveAndLoad:
                 name="n",
                 comments="c",
                 tools_called=[
-                    ToolCall(name="search", input_parameters={"q": "foo"}, output={"ok": True})
+                    ToolCall(
+                        name="search",
+                        input_parameters={"q": "foo"},
+                        output={"ok": True},
+                    )
                 ],
                 expected_tools=[ToolCall(name="finalize")],
                 additional_metadata={"k": "v"},
@@ -167,27 +174,45 @@ class TestSaveAndLoad:
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # JSON
-            json_path = dataset.save_as("json", directory=tmpdir, file_name="single_json")
+            json_path = dataset.save_as(
+                "json", directory=tmpdir, file_name="single_json"
+            )
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 row = data[0]
-                assert isinstance(row["tools_called"], list) and row["tools_called"][0]["name"] == "search"
-                assert isinstance(row["expected_tools"], list) and row["expected_tools"][0]["name"] == "finalize"
+                assert (
+                    isinstance(row["tools_called"], list)
+                    and row["tools_called"][0]["name"] == "search"
+                )
+                assert (
+                    isinstance(row["expected_tools"], list)
+                    and row["expected_tools"][0]["name"] == "finalize"
+                )
                 assert row["additional_metadata"]["k"] == "v"
                 assert row["custom_column_key_values"]["col"] == "val"
 
             # JSONL
-            jsonl_path = dataset.save_as("jsonl", directory=tmpdir, file_name="single_jsonl")
+            jsonl_path = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="single_jsonl"
+            )
             with open(jsonl_path, "r", encoding="utf-8") as f:
                 line = f.readline().strip()
                 row = json.loads(line)
-                assert isinstance(row["tools_called"], list) and row["tools_called"][0]["name"] == "search"
-                assert isinstance(row["expected_tools"], list) and row["expected_tools"][0]["name"] == "finalize"
+                assert (
+                    isinstance(row["tools_called"], list)
+                    and row["tools_called"][0]["name"] == "search"
+                )
+                assert (
+                    isinstance(row["expected_tools"], list)
+                    and row["expected_tools"][0]["name"] == "finalize"
+                )
                 assert row["additional_metadata"]["k"] == "v"
                 assert row["custom_column_key_values"]["col"] == "val"
 
             # CSV
-            csv_path = dataset.save_as("csv", directory=tmpdir, file_name="single_csv")
+            csv_path = dataset.save_as(
+                "csv", directory=tmpdir, file_name="single_csv"
+            )
             with open(csv_path, "r", encoding="utf-8") as f:
                 rows = list(csv.reader(f))
                 header = rows[0]
@@ -240,7 +265,9 @@ class TestSaveAndLoad:
         dataset = EvaluationDataset(convo)
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            p_json = dataset.save_as("json", directory=tmpdir, file_name="convo_json")
+            p_json = dataset.save_as(
+                "json", directory=tmpdir, file_name="convo_json"
+            )
             with open(p_json, "r", encoding="utf-8") as f:
                 data = json.load(f)[0]
                 turns = data["turns"]
@@ -249,7 +276,9 @@ class TestSaveAndLoad:
                 assert data["additional_metadata"]["gk"] == "gv"
                 assert data["custom_column_key_values"]["col"] == "val"
 
-            p_jsonl = dataset.save_as("jsonl", directory=tmpdir, file_name="convo_jsonl")
+            p_jsonl = dataset.save_as(
+                "jsonl", directory=tmpdir, file_name="convo_jsonl"
+            )
             with open(p_jsonl, "r", encoding="utf-8") as f:
                 rec = json.loads(f.readline())
                 turns = rec["turns"]

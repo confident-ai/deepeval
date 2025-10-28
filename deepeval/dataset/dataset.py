@@ -1033,7 +1033,9 @@ class EvaluationDataset:
                             for t in tools:
                                 if hasattr(t, "model_dump"):
                                     dumped.append(
-                                        t.model_dump(by_alias=True, exclude_none=True)
+                                        t.model_dump(
+                                            by_alias=True, exclude_none=True
+                                        )
                                     )
                                 elif hasattr(t, "dict"):
                                     dumped.append(t.dict(exclude_none=True))
@@ -1051,8 +1053,12 @@ class EvaluationDataset:
                                 "name": golden.name,
                                 "comments": golden.comments,
                                 "source_file": golden.source_file,
-                                "tools_called": _dump_tools(golden.tools_called),
-                                "expected_tools": _dump_tools(golden.expected_tools),
+                                "tools_called": _dump_tools(
+                                    golden.tools_called
+                                ),
+                                "expected_tools": _dump_tools(
+                                    golden.expected_tools
+                                ),
                                 "additional_metadata": golden.additional_metadata,
                                 "custom_column_key_values": golden.custom_column_key_values,
                             }
@@ -1089,12 +1095,17 @@ class EvaluationDataset:
                             else None
                         )
                         additional_metadata = (
-                            json.dumps(golden.additional_metadata, ensure_ascii=False)
+                            json.dumps(
+                                golden.additional_metadata, ensure_ascii=False
+                            )
                             if golden.additional_metadata is not None
                             else None
                         )
                         custom_cols = (
-                            json.dumps(golden.custom_column_key_values, ensure_ascii=False)
+                            json.dumps(
+                                golden.custom_column_key_values,
+                                ensure_ascii=False,
+                            )
                             if golden.custom_column_key_values
                             else None
                         )
@@ -1139,6 +1150,7 @@ class EvaluationDataset:
                             if golden.context is not None
                             else None
                         )
+
                         # Dump tools as JSON strings for CSV
                         def _dump_tools_csv(tools):
                             if not tools:
@@ -1147,7 +1159,9 @@ class EvaluationDataset:
                             for t in tools:
                                 if hasattr(t, "model_dump"):
                                     dumped.append(
-                                        t.model_dump(by_alias=True, exclude_none=True)
+                                        t.model_dump(
+                                            by_alias=True, exclude_none=True
+                                        )
                                     )
                                 elif hasattr(t, "dict"):
                                     dumped.append(t.dict(exclude_none=True))
@@ -1158,12 +1172,17 @@ class EvaluationDataset:
                         tools_called = _dump_tools_csv(golden.tools_called)
                         expected_tools = _dump_tools_csv(golden.expected_tools)
                         additional_metadata = (
-                            json.dumps(golden.additional_metadata, ensure_ascii=False)
+                            json.dumps(
+                                golden.additional_metadata, ensure_ascii=False
+                            )
                             if golden.additional_metadata is not None
                             else None
                         )
                         custom_cols = (
-                            json.dumps(golden.custom_column_key_values, ensure_ascii=False)
+                            json.dumps(
+                                golden.custom_column_key_values,
+                                ensure_ascii=False,
+                            )
                             if golden.custom_column_key_values
                             else None
                         )
@@ -1214,6 +1233,7 @@ class EvaluationDataset:
                             if golden.context is not None
                             else None
                         )
+
                         # Convert ToolCall lists to list[dict]
                         def _dump_tools(tools):
                             if not tools:
@@ -1222,7 +1242,9 @@ class EvaluationDataset:
                             for t in tools:
                                 if hasattr(t, "model_dump"):
                                     dumped.append(
-                                        t.model_dump(by_alias=True, exclude_none=True)
+                                        t.model_dump(
+                                            by_alias=True, exclude_none=True
+                                        )
                                     )
                                 elif hasattr(t, "dict"):
                                     dumped.append(t.dict(exclude_none=True))
@@ -1237,7 +1259,9 @@ class EvaluationDataset:
                             "retrieval_context": retrieval_context,
                             "context": context,
                             "tools_called": _dump_tools(golden.tools_called),
-                            "expected_tools": _dump_tools(golden.expected_tools),
+                            "expected_tools": _dump_tools(
+                                golden.expected_tools
+                            ),
                             "additional_metadata": golden.additional_metadata,
                             "custom_column_key_values": golden.custom_column_key_values,
                         }
