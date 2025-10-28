@@ -9,13 +9,10 @@ Central config for DeepEval.
   type coercion.
 """
 
-import hashlib
-import json
 import logging
 import math
 import os
 import re
-import threading
 
 from dotenv import dotenv_values
 from pathlib import Path
@@ -693,57 +690,6 @@ class Settings(BaseSettings):
             "CRITICAL, NOTSET, or a numeric logging level."
         )
 
-    @field_validator("DEEPEVAL_TELEMETRY_OPT_OUT", mode="before")
-    @classmethod
-    def _apply_telemetry_enabled_alias(cls, v):
-        """
-        Precedence (most secure):
-        - Any OFF signal wins if both are set:
-          - DEEPEVAL_TELEMETRY_OPT_OUT = truthy  -> OFF
-          - DEEPEVAL_TELEMETRY_ENABLED = falsy   -> OFF
-        - Else, ON signal:
-          - DEEPEVAL_TELEMETRY_OPT_OUT = falsy   -> ON
-          - DEEPEVAL_TELEMETRY_ENABLED = truthy  -> ON
-        - Else None (unset) -> ON
-        """
-
-        def normalize(x):
-            if x is None:
-                return None
-            s = str(x).strip()
-            return None if s == "" else parse_bool(s, default=False)
-
-        new_opt_out = normalize(v)  # True means OFF, False means ON
-        legacy_enabled = normalize(
-            os.getenv("DEEPEVAL_TELEMETRY_ENABLED")
-        )  # True means ON, False means OFF
-
-        off_signal = (new_opt_out is True) or (legacy_enabled is False)
-        on_signal = (new_opt_out is False) or (legacy_enabled is True)
-
-        # Conflict: simultaneous OFF and ON signals
-        if off_signal and on_signal:
-            # Only warn if verbose or debug
-            if parse_bool(
-                os.getenv("DEEPEVAL_VERBOSE_MODE"), default=False
-            ) or logger.isEnabledFor(logging.DEBUG):
-                logger.warning(
-                    "Conflicting telemetry flags detected: DEEPEVAL_TELEMETRY_OPT_OUT=%r, "
-                    "DEEPEVAL_TELEMETRY_ENABLED=%r. Defaulting to OFF.",
-                    new_opt_out,
-                    legacy_enabled,
-                )
-            return True  # OFF wins
-
-        # Clear winner
-        if off_signal:
-            return True  # OFF
-        if on_signal:
-            return False  # ON
-
-        # Unset means ON
-        return False
-
     #######################
     # Persistence support #
     #######################
@@ -934,39 +880,16 @@ class Settings(BaseSettings):
 
 
 _settings_singleton: Optional[Settings] = None
-_settings_env_fingerprint: "str | None" = None
-_settings_lock = threading.RLock()
-
-
-def _calc_env_fingerprint() -> str:
-    env = os.environ.copy()
-    # must hash in a stable order.
-    keys = sorted(
-        key
-        for key in Settings.model_fields.keys()
-        if key != "_DEPRECATED_TELEMETRY_ENABLED"  # exclude deprecated
-    )
-    # encode as triples: (key, present?, value)
-    items = [(k, k in env, env.get(k)) for k in keys]
-    payload = json.dumps(items, ensure_ascii=False, separators=(",", ":"))
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def get_settings() -> Settings:
-    global _settings_singleton, _settings_env_fingerprint
-    fingerprint = _calc_env_fingerprint()
+    global _settings_singleton
+    if _settings_singleton is None:
+        _settings_singleton = Settings()
+        from deepeval.config.logging import apply_deepeval_log_level
 
-    with _settings_lock:
-        if (
-            _settings_singleton is None
-            or _settings_env_fingerprint != fingerprint
-        ):
-            _settings_singleton = Settings()
-            _settings_env_fingerprint = fingerprint
-            from deepeval.config.logging import apply_deepeval_log_level
-
-            apply_deepeval_log_level()
-        return _settings_singleton
+        apply_deepeval_log_level()
+    return _settings_singleton
 
 
 def reset_settings(*, reload_dotenv: bool = False) -> Settings:
@@ -982,10 +905,8 @@ def reset_settings(*, reload_dotenv: bool = False) -> Settings:
     Returns:
         The fresh Settings instance.
     """
-    global _settings_singleton, _settings_env_fingerprint
-    with _settings_lock:
-        if reload_dotenv:
-            autoload_dotenv()
-        _settings_singleton = None
-        _settings_env_fingerprint = None
+    global _settings_singleton
+    if reload_dotenv:
+        autoload_dotenv()
+    _settings_singleton = None
     return get_settings()
