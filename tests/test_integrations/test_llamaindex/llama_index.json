@@ -1,14 +1,14 @@
 {
-  "uuid": "2276baa5-d43d-4a77-8659-84d0560fe395",
+  "uuid": "f845d51a-0fc1-4052-b1ef-7c3250ecf05c",
   "baseSpans": [
     {
-      "uuid": "FunctionAgent._done-48857503-6b49-4ef8-9d09-57a877baec1e",
+      "uuid": "FunctionAgent._done-7772fd4e-2659-4157-be9b-29a399aae683",
       "name": "_done",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:02.458Z",
-      "endTime": "2025-10-28T08:26:02.458Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:39.293Z",
+      "endTime": "2025-10-28T13:37:39.293Z",
       "input": {
         "ctx": {
           "is_running": false
@@ -17,13 +17,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.parse_agent_output-b91decfd-b907-4080-987f-0ab288df4793",
+      "uuid": "FunctionAgent.parse_agent_output-4529a4f5-292f-464f-8248-bca786388685",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:02.457Z",
-      "endTime": "2025-10-28T08:26:02.457Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:39.292Z",
+      "endTime": "2025-10-28T13:37:39.293Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -45,7 +45,7 @@
                 "a": 3,
                 "b": 12
               },
-              "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+              "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
             }
           ],
           "retry_messages": []
@@ -54,13 +54,13 @@
       "output": {}
     },
     {
-      "uuid": "FunctionAgent.run_agent_step-cdbbf19c-9c17-493b-b4aa-7779c38fa72e",
+      "uuid": "FunctionAgent.run_agent_step-26484cde-5893-4d69-a9f8-8f8ace3ded78",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:01.298Z",
-      "endTime": "2025-10-28T08:26:02.456Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:38.189Z",
+      "endTime": "2025-10-28T13:37:39.292Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -108,20 +108,20 @@
               "a": 3,
               "b": 12
             },
-            "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+            "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
           }
         ],
         "retry_messages": []
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-3c7aead9-a6ec-464b-a0a4-4372ce85c376",
+      "uuid": "OpenAI.astream_chat-2d843507-1e98-4e5b-b002-cbc54c8fe161",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-cdbbf19c-9c17-493b-b4aa-7779c38fa72e",
-      "startTime": "2025-10-28T08:26:01.298Z",
-      "endTime": "2025-10-28T08:26:01.299Z",
+      "parentUuid": "FunctionAgent.run_agent_step-26484cde-5893-4d69-a9f8-8f8ace3ded78",
+      "startTime": "2025-10-28T13:37:38.189Z",
+      "endTime": "2025-10-28T13:37:38.190Z",
       "input": {
         "messages": [
           {
@@ -150,7 +150,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
                   "function": {
                     "arguments": "{\"a\":3,\"b\":12}",
                     "name": "multiply"
@@ -169,7 +169,7 @@
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+              "tool_call_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
             },
             "blocks": [
               {
@@ -211,16 +211,16 @@
           "tool_choice": "auto"
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11f5c67a0>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x117e267a0>"
     },
     {
-      "uuid": "OpenAI._prepare_chat_with_tools-4c8807c4-f96a-415f-971a-64745d5cdcc4",
+      "uuid": "OpenAI._prepare_chat_with_tools-4530865d-c900-453e-b6d5-21201e11ac34",
       "name": "_prepare_chat_with_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-cdbbf19c-9c17-493b-b4aa-7779c38fa72e",
-      "startTime": "2025-10-28T08:26:01.298Z",
-      "endTime": "2025-10-28T08:26:01.298Z",
+      "parentUuid": "FunctionAgent.run_agent_step-26484cde-5893-4d69-a9f8-8f8ace3ded78",
+      "startTime": "2025-10-28T13:37:38.189Z",
+      "endTime": "2025-10-28T13:37:38.189Z",
       "input": {
         "tools": [
           {
@@ -257,7 +257,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
                   "function": {
                     "arguments": "{\"a\":3,\"b\":12}",
                     "name": "multiply"
@@ -276,7 +276,7 @@
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+              "tool_call_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
             },
             "blocks": [
               {
@@ -318,7 +318,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
                   "function": {
                     "arguments": "{\"a\":3,\"b\":12}",
                     "name": "multiply"
@@ -337,7 +337,7 @@
           {
             "role": "tool",
             "additional_kwargs": {
-              "tool_call_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+              "tool_call_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
             },
             "blocks": [
               {
@@ -379,13 +379,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.setup_agent-2960cb52-652a-4763-838f-c12a4b6478b3",
+      "uuid": "FunctionAgent.setup_agent-07fbfbad-9ce7-420f-b89d-a9f6bb7077d2",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:01.297Z",
-      "endTime": "2025-10-28T08:26:01.297Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:38.189Z",
+      "endTime": "2025-10-28T13:37:38.189Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -431,13 +431,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.aggregate_tool_results-febe1d96-51c9-4a46-ad47-11e4cd1c1b98",
+      "uuid": "FunctionAgent.aggregate_tool_results-24325da6-ecb9-4a79-a60a-c62b4471928d",
       "name": "aggregate_tool_results",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:01.297Z",
-      "endTime": "2025-10-28T08:26:01.297Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:38.188Z",
+      "endTime": "2025-10-28T13:37:38.188Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -446,7 +446,7 @@
             "a": 3,
             "b": 12
           },
-          "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+          "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
           "tool_output": {
             "blocks": [
               {
@@ -485,13 +485,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.call_tool-c7bfee8b-8539-4df7-8bcf-09af392dcec0",
+      "uuid": "FunctionAgent.call_tool-ade25798-dc44-4aef-9e1a-bbca1b33fd41",
       "name": "call_tool",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:01.295Z",
-      "endTime": "2025-10-28T08:26:01.296Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:38.187Z",
+      "endTime": "2025-10-28T13:37:38.188Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -500,7 +500,7 @@
             "a": 3,
             "b": 12
           },
-          "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+          "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
         }
       },
       "output": {
@@ -509,7 +509,7 @@
           "a": 3,
           "b": 12
         },
-        "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+        "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
         "tool_output": {
           "blocks": [
             {
@@ -559,13 +559,13 @@
       ]
     },
     {
-      "uuid": "FunctionAgent.parse_agent_output-28454128-a5fb-4da7-9f72-22da36b8ce1e",
+      "uuid": "FunctionAgent.parse_agent_output-336c1e30-9f93-46b5-af36-9eebb3c92a86",
       "name": "parse_agent_output",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:01.295Z",
-      "endTime": "2025-10-28T08:26:01.295Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:38.187Z",
+      "endTime": "2025-10-28T13:37:38.187Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -575,7 +575,7 @@
               "tool_calls": [
                 {
                   "index": 0,
-                  "id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+                  "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
                   "function": {
                     "arguments": "{\"a\":3,\"b\":12}",
                     "name": "multiply"
@@ -594,7 +594,7 @@
           "current_agent_name": "Agent",
           "tool_calls": [
             {
-              "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+              "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
               "tool_name": "multiply",
               "tool_kwargs": {
                 "a": 3,
@@ -607,13 +607,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.run_agent_step-a5d142a3-78b6-4bbb-b025-d16395b8e8b6",
+      "uuid": "FunctionAgent.run_agent_step-19d02100-8bad-4766-9df3-c86153716f6c",
       "name": "run_agent_step",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:00.061Z",
-      "endTime": "2025-10-28T08:26:01.293Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:36.942Z",
+      "endTime": "2025-10-28T13:37:38.186Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -649,7 +649,7 @@
             "tool_calls": [
               {
                 "index": 0,
-                "id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+                "id": "call_smTJVgMl3qhVwZheg4zLHzkp",
                 "function": {
                   "arguments": "{\"a\":3,\"b\":12}",
                   "name": "multiply"
@@ -668,7 +668,7 @@
         "current_agent_name": "Agent",
         "tool_calls": [
           {
-            "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S",
+            "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp",
             "tool_name": "multiply",
             "tool_kwargs": {
               "a": 3,
@@ -680,13 +680,13 @@
       }
     },
     {
-      "uuid": "OpenAI.astream_chat-1982eb03-6bdf-4e91-9365-daafe37760fd",
+      "uuid": "OpenAI.astream_chat-1067bcd8-3f94-4ba8-b8ef-0225c29bef4a",
       "name": "astream_chat",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-a5d142a3-78b6-4bbb-b025-d16395b8e8b6",
-      "startTime": "2025-10-28T08:26:00.062Z",
-      "endTime": "2025-10-28T08:26:00.067Z",
+      "parentUuid": "FunctionAgent.run_agent_step-19d02100-8bad-4766-9df3-c86153716f6c",
+      "startTime": "2025-10-28T13:37:36.943Z",
+      "endTime": "2025-10-28T13:37:36.948Z",
       "input": {
         "messages": [
           {
@@ -742,16 +742,16 @@
           "tool_choice": "auto"
         }
       },
-      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x11dfd8b80>"
+      "output": "<async_generator object llm_chat_callback.<locals>.wrap.<locals>.wrapped_async_llm_chat.<locals>.wrapped_gen at 0x117869240>"
     },
     {
-      "uuid": "OpenAI._prepare_chat_with_tools-9a42a839-4eb5-41e7-b168-8be5dd35cb80",
+      "uuid": "OpenAI._prepare_chat_with_tools-2bc7bc4b-5ec5-4160-bd36-31b7174d98ac",
       "name": "_prepare_chat_with_tools",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run_agent_step-a5d142a3-78b6-4bbb-b025-d16395b8e8b6",
-      "startTime": "2025-10-28T08:26:00.061Z",
-      "endTime": "2025-10-28T08:26:00.062Z",
+      "parentUuid": "FunctionAgent.run_agent_step-19d02100-8bad-4766-9df3-c86153716f6c",
+      "startTime": "2025-10-28T13:37:36.942Z",
+      "endTime": "2025-10-28T13:37:36.943Z",
       "input": {
         "tools": [
           "<circular>"
@@ -838,13 +838,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.setup_agent-21429800-3081-411a-b9f2-55441719292a",
+      "uuid": "FunctionAgent.setup_agent-0c354653-b0cb-4660-926a-b092bd5c0192",
       "name": "setup_agent",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:26:00.061Z",
-      "endTime": "2025-10-28T08:26:00.061Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:36.942Z",
+      "endTime": "2025-10-28T13:37:36.942Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -890,13 +890,13 @@
       }
     },
     {
-      "uuid": "FunctionAgent.init_run-b00f972d-9fd7-476b-bb13-caf6c77b72df",
+      "uuid": "FunctionAgent.init_run-f1474106-873c-4956-8866-4657dfb97396",
       "name": "init_run",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
-      "startTime": "2025-10-28T08:25:59.998Z",
-      "endTime": "2025-10-28T08:26:00.061Z",
+      "parentUuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
+      "startTime": "2025-10-28T13:37:36.881Z",
+      "endTime": "2025-10-28T13:37:36.942Z",
       "input": {
         "ctx": "<circular>",
         "ev": {
@@ -924,12 +924,12 @@
   ],
   "agentSpans": [
     {
-      "uuid": "FunctionAgent.run-362a7f00-f3e1-4636-9338-29762f4d93c9",
+      "uuid": "FunctionAgent.run-b60645f5-fa7c-44e5-8630-5fe8a97f0603",
       "name": "Agent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2025-10-28T08:25:59.997Z",
-      "endTime": "2025-10-28T08:26:02.459Z",
+      "startTime": "2025-10-28T13:37:36.881Z",
+      "endTime": "2025-10-28T13:37:39.294Z",
       "input": {
         "user_msg": "What is 3 * 12?",
         "chat_history": null,
@@ -954,7 +954,7 @@
               "a": 3,
               "b": 12
             },
-            "tool_id": "call_W9M8RGQrZ4CA5PxCseuFRB4S"
+            "tool_id": "call_smTJVgMl3qhVwZheg4zLHzkp"
           }
         ],
         "retry_messages": []
@@ -966,13 +966,13 @@
   ],
   "llmSpans": [
     {
-      "uuid": "efacc698-5700-4ce3-9300-1056fe05712c",
+      "uuid": "575431c3-cde7-45e9-9440-bf3e4d5fdedb",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-3c7aead9-a6ec-464b-a0a4-4372ce85c376",
-      "startTime": "2025-10-28T08:26:01.299Z",
-      "endTime": "2025-10-28T08:26:02.455Z",
+      "parentUuid": "OpenAI.astream_chat-2d843507-1e98-4e5b-b002-cbc54c8fe161",
+      "startTime": "2025-10-28T13:37:38.189Z",
+      "endTime": "2025-10-28T13:37:39.292Z",
       "input": [
         {
           "role": "system",
@@ -991,19 +991,27 @@
           "content": "36"
         }
       ],
-      "output": "The result of \\( 3 \\times 12 \\) is 36.",
+      "output": [
+        {
+          "role": "assistant",
+          "content": "The result of \\( 3 \\times 12 \\) is 36."
+        }
+      ],
       "model": "gpt-4o-mini",
-      "prompt": {},
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
       "metricCollection": "test_collection_1"
     },
     {
-      "uuid": "f818f286-b9ae-4b88-b266-9d4a64830569",
+      "uuid": "0e812482-588b-477a-a8c7-a57d88d8e073",
       "name": "ConfidentLLMSpan",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "OpenAI.astream_chat-1982eb03-6bdf-4e91-9365-daafe37760fd",
-      "startTime": "2025-10-28T08:26:00.062Z",
-      "endTime": "2025-10-28T08:26:01.293Z",
+      "parentUuid": "OpenAI.astream_chat-1067bcd8-3f94-4ba8-b8ef-0225c29bef4a",
+      "startTime": "2025-10-28T13:37:36.943Z",
+      "endTime": "2025-10-28T13:37:38.186Z",
       "input": [
         {
           "role": "system",
@@ -1014,22 +1022,30 @@
           "content": "What is 3 * 12?"
         }
       ],
-      "output": "",
+      "output": [
+        {
+          "role": "assistant",
+          "content": ""
+        }
+      ],
       "model": "gpt-4o-mini",
-      "prompt": {},
+      "prompt": {
+        "alias": "asd",
+        "version": "00.00.01"
+      },
       "metricCollection": "test_collection_1"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "FunctionTool.acall-be0742f1-1ffd-442a-a46d-c9cc47c31777",
+      "uuid": "FunctionTool.acall-a0088c8a-b252-4e88-907f-d2d5dc1b4de2",
       "name": "multiply",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "FunctionAgent.call_tool-c7bfee8b-8539-4df7-8bcf-09af392dcec0",
-      "startTime": "2025-10-28T08:26:01.295Z",
-      "endTime": "2025-10-28T08:26:01.296Z",
+      "parentUuid": "FunctionAgent.call_tool-ade25798-dc44-4aef-9e1a-bbca1b33fd41",
+      "startTime": "2025-10-28T13:37:38.187Z",
+      "endTime": "2025-10-28T13:37:38.188Z",
       "input": {
         "kwargs": {
           "a": 3,
@@ -1056,8 +1072,8 @@
       }
     }
   ],
-  "startTime": "2025-10-28T08:25:59.997Z",
-  "endTime": "2025-10-28T08:26:02.459Z",
+  "startTime": "2025-10-28T13:37:36.881Z",
+  "endTime": "2025-10-28T13:37:39.294Z",
   "environment": "development",
   "status": "SUCCESS"
 }
