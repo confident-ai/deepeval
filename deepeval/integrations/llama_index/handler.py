@@ -2,6 +2,8 @@ from typing import Any, Dict, Optional
 import inspect
 from time import perf_counter
 import uuid
+
+from llama_index.core.agent.workflow.workflow_events import AgentWorkflowStartEvent
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
@@ -15,8 +17,8 @@ from deepeval.tracing.trace_context import (
     current_llm_context,
     current_agent_context,
 )
-from deepeval.tracing.utils import make_json_serializable
 from deepeval.test_case import ToolCall
+from deepeval.tracing.utils import make_json_serializable
 
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
@@ -159,6 +161,14 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
         # conditions to qualify as agent start run span
         if method_name == "run":
             agent_span_context = current_agent_context.get()
+            start_event = bound_args.arguments.get("start_event")
+
+            if start_event and isinstance(start_event, AgentWorkflowStartEvent):
+                input = start_event.model_dump()
+                
+            else:
+                input = bound_args.arguments
+
             span = AgentSpan(
                 uuid=id_,
                 status=TraceSpanStatus.IN_PROGRESS,
@@ -167,7 +177,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                 parent_uuid=parent_span_id,
                 start_time=perf_counter(),
                 name="Agent",  # TODO: decide the name of the span
-                input=bound_args.arguments,
+                input=input,
                 metrics=(
                     agent_span_context.metrics if agent_span_context else None
                 ),
