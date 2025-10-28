@@ -112,11 +112,7 @@ You can also generate conversations from existing turns. Simply populate your `C
 
 ### Lifecycle hooks
 
-The `ConversationSimulator` provides lifecycle hooks that allow you to execute custom logic at specific points during the simulation process. This is useful for logging, monitoring progress, or saving conversations as they complete.
-
-#### on_simulation_complete
-
-The `on_simulation_complete` hook is called immediately after each conversation simulation completes. This allows you to process each `ConversationalTestCase` as soon as it's generated, rather than waiting for all simulations to finish.
+The `ConversationSimulator` provides a `on_simulation_complete` hooks that allow you to execute custom logic whenever a simulation of an individual test case has completed. This allows you to process each `ConversationalTestCase` as soon as it's generated, rather than waiting for all simulations to finish.
 
 ```python
 from deepeval.simulator import ConversationSimulator
