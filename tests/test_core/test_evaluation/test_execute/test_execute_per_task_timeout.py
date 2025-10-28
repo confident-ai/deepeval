@@ -1,4 +1,3 @@
-# tests/test_execute_per_task_timeout_integration.py
 import asyncio
 import pytest
 from deepeval.evaluate import execute as execute_module
@@ -16,7 +15,7 @@ from tests.test_core.stubs import _SleepyMetric
 async def test_per_task_timeout_via_a_execute_test_cases(settings):
     """Test that per-task timeout works in a_execute_test_cases"""
     with settings.edit(persist=False):
-        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS = 2
+        settings.DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE = 2
 
     tc = LLMTestCase(input="hello", actual_output="test")
     metric = _SleepyMetric(async_sleep=10)
