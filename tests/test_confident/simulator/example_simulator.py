@@ -57,18 +57,3 @@ async def chatbot_callback(input, turns: List[Turn]):
         messages=messages,
     )
     return Turn(role="assistant", content=response.choices[0].message.content)
-
-
-# Run Simulation
-simulator = ConversationSimulator(
-    model_callback=chatbot_callback,
-    opening_message="Hi, I'm here to help you purchase a ticket.",
-    run_remote=True,
-)
-conversational_test_cases = simulator.simulate(
-    conversational_goldens=goldens, max_user_simulations=3
-)
-
-for conversational_test_case in conversational_test_cases:
-    print(len(conversational_test_case.turns))
-    print(conversational_test_case)

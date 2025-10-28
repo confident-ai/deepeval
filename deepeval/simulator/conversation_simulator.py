@@ -35,7 +35,6 @@ class ConversationSimulator:
         self,
         model_callback: Callable[[str], str],
         simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        opening_message: Optional[str] = None,
         max_concurrent: int = 5,
         async_mode: bool = True,
         language: str = "English",
@@ -45,7 +44,6 @@ class ConversationSimulator:
         self.is_callback_async = inspect.iscoroutinefunction(
             self.model_callback
         )
-        self.opening_message = opening_message
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.async_mode = async_mode
         self.language = language
@@ -166,8 +164,6 @@ class ConversationSimulator:
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
-        if self.opening_message and golden.turns is None:
-            turns.append(Turn(role="assistant", content=self.opening_message))
 
         if golden.turns is not None:
             turns.extend(golden.turns)
@@ -187,11 +183,7 @@ class ConversationSimulator:
             if simulation_counter >= max_user_simulations:
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            if len(turns) == 0 or (
-                len(turns) == 1
-                and self.opening_message
-                and golden.turns is None
-            ):
+            if len(turns) == 0:
                 # Generate first user input
                 user_input = self.generate_first_user_input(golden)
                 turns.append(Turn(role="user", content=user_input))
@@ -265,8 +257,6 @@ class ConversationSimulator:
         user_input = None
         thread_id = str(uuid.uuid4())
         turns: List[Turn] = []
-        if self.opening_message and golden.turns is None:
-            turns.append(Turn(role="assistant", content=self.opening_message))
 
         if golden.turns is not None:
             turns.extend(golden.turns)
@@ -286,11 +276,7 @@ class ConversationSimulator:
             if simulation_counter >= max_user_simulations:
                 update_pbar(progress, pbar_max_user_simluations_id)
                 break
-            if len(turns) == 0 or (
-                len(turns) == 1
-                and self.opening_message
-                and golden.turns is None
-            ):
+            if len(turns) == 0:
                 # Generate first user input
                 user_input = await self.a_generate_first_user_input(golden)
                 turns.append(Turn(role="user", content=user_input))
