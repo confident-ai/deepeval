@@ -17,6 +17,7 @@ from deepeval.integrations.llama_index import instrument_llama_index
 # import llama_index.core.instrumentation as instrument
 # instrument_llama_index(instrument.get_dispatcher())
 
+
 def multiply(a: float, b: float) -> float:
     """Useful for multiplying two numbers."""
     return a * b
@@ -51,5 +52,5 @@ json_path = os.path.join(_current_dir, "llama_index.json")
 
 # @generate_trace_json(json_path)
 @assert_trace_json(json_path)
-async def test_json_schema():    
+async def test_json_schema():
     await llm_app("What is 3 * 12?")

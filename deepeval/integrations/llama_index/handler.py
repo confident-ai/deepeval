@@ -4,13 +4,20 @@ from time import perf_counter
 import uuid
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
-from deepeval.tracing.types import ToolSpan, AgentSpan, BaseSpan, LlmSpan, TraceSpanStatus
+from deepeval.tracing.types import (
+    ToolSpan,
+    AgentSpan,
+    BaseSpan,
+    LlmSpan,
+    TraceSpanStatus,
+)
 from deepeval.tracing.trace_context import (
     current_llm_context,
     current_agent_context,
 )
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.test_case import ToolCall
+
 try:
     from llama_index.core.instrumentation.events.base import BaseEvent
     from llama_index.core.instrumentation.event_handlers.base import (
@@ -213,7 +220,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     ToolCall(
                         name=output_json.get("tool_name", "Tool"),
                         input_parameters=output_json.get("tool_kwargs", {}),
-                        output=output_json.get("tool_output", {})
+                        output=output_json.get("tool_output", {}),
                     )
                 )
         base_span.end_time = perf_counter()
