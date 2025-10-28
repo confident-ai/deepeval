@@ -45,6 +45,7 @@ agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "langchain.json")
 
+
 # @generate_trace_json(json_path)
 @assert_trace_json(json_path)
 def test_execute_agent():
@@ -54,6 +55,7 @@ def test_execute_agent():
             "callbacks": [CallbackHandler(metric_collection="task_completion")]
         },
     )
+
 
 if __name__ == "__main__":
     test_execute_agent()

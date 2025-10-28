@@ -276,23 +276,25 @@ class CallbackHandler(BaseCallbackHandler):
 
         # set the tools called in the parent span as well as on the trace level
         tool_call = ToolCall(
-            name=tool_span.name, 
+            name=tool_span.name,
             description=tool_span.description,
             output=output,
-            input_parameters=prepare_tool_call_input_parameters(tool_span.input),
+            input_parameters=prepare_tool_call_input_parameters(
+                tool_span.input
+            ),
         )
         parent_span = current_span_context.get()
         if parent_span:
             if parent_span.tools_called is None:
                 parent_span.tools_called = []
-                
+
             parent_span.tools_called.append(tool_call)
 
         trace = current_trace_context.get()
         if trace:
             if trace.tools_called is None:
                 trace.tools_called = []
-                
+
             trace.tools_called.append(tool_call)
 
     def on_tool_error(
