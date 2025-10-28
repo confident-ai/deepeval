@@ -3,12 +3,12 @@ import logging
 import os
 import socket
 import sys
-from threading import Event
 import uuid
 import sentry_sdk
 from enum import Enum
 from typing import List, Dict
 import requests
+from deepeval.config.settings import get_settings
 from deepeval.constants import LOGIN_PROMPT, HIDDEN_DIR, KEY_FILE
 from posthog import Posthog
 
@@ -34,7 +34,7 @@ TELEMETRY_PATH = os.path.join(HIDDEN_DIR, TELEMETRY_DATA_FILE)
 
 
 def telemetry_opt_out():
-    return os.getenv("DEEPEVAL_TELEMETRY_OPT_OUT") == "1"
+    return get_settings().DEEPEVAL_TELEMETRY_OPT_OUT
 
 
 def blocked_by_firewall():
@@ -131,7 +131,7 @@ if not telemetry_opt_out():
 
 
 if (
-    os.getenv("ERROR_REPORTING") == "1"
+    get_settings().ERROR_REPORTING
     and not blocked_by_firewall()
     and not telemetry_opt_out()
 ):
