@@ -10,8 +10,9 @@ except Exception:
 import os
 import pytest
 import tenacity
-
 from pathlib import Path
+from pydantic import SecretStr
+
 from deepeval.tracing.tracing import trace_manager
 from deepeval.config.settings import get_settings, reset_settings
 
@@ -105,6 +106,19 @@ def _core_mode_no_confident(monkeypatch):
 
     # Yield control to the test
     yield
+
+
+@pytest.fixture(autouse=True)
+def _fake_openai_key():
+    settings = get_settings()
+    sk = settings.OPENAI_API_KEY
+
+    key_not_set = (sk is None) or (not sk.get_secret_value().strip())
+    if key_not_set:
+        with settings.edit(persist=False):
+            settings.OPENAI_API_KEY = SecretStr(
+                "sk-open-ai-dummy-key-if-you-need-a-real-one-set-it-in-your-test"
+            )
 
 
 @pytest.fixture(autouse=False)
