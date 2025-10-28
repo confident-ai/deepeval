@@ -100,6 +100,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     if llm_span_context
                     else None
                 ),
+                prompt=llm_span_context.prompt if llm_span_context else None,
             )
             trace_manager.add_span(llm_span)
             trace_manager.add_span_to_trace(llm_span)
