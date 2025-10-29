@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from anthropic import Anthropic
+from deepeval.anthropic import Anthropic
 from deepeval.prompt import Prompt
 from deepeval.tracing import LlmSpanContext, trace
 from tests.test_integrations.utils import assert_trace_json
@@ -10,7 +10,7 @@ from tests.test_integrations.utils import assert_trace_json
 client = Anthropic()
 
 prompt = Prompt(alias="asd")
-prompt._version = "00.00.01"
+prompt.pull(version="00.00.01")
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -23,6 +23,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 def test_sync_messages_create_without_trace():
     client.messages.create(
         model="claude-sonnet-4-5",
+        max_tokens=1024,
         system="You are a helpful assistant. Always generate a string response.",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
@@ -43,6 +44,7 @@ def test_sync_messages_create_with_trace():
     ):
         client.responses.create(
             model="claude-sonnet-4-5",
+            max_tokens=1024,
             system="You are a helpful assistant. Always generate a string response.",
             messages=[{"role": "user", "content": "Hello, how are you?"}],
         )

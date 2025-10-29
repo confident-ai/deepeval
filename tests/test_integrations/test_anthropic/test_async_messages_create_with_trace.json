@@ -30,6 +30,7 @@
   "tags": ["test_tag_1"],
   "environment": "development",
   "userId": "test_user_id_1",
+  "threadId": "test_thread_id_1",
   "input": "Hello, how are you?",
   "output": "Hello! I'm doing well, thank you for asking! I'm here and ready to help you with any questions or tasks you might have. How are you doing today? Is there anything I can assist you with?",
   "status": "SUCCESS"
