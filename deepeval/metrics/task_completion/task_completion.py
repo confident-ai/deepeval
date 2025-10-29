@@ -36,6 +36,11 @@ class TaskCompletionMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
+        if task is None:
+            self._is_task_provided = False
+        else:
+            self._is_task_provided = True
+            
         self.task = task
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
@@ -73,7 +78,8 @@ class TaskCompletionMetric(BaseMetric):
                 )
             else:
                 task, self.outcome = self._extract_task_and_outcome(test_case)
-                self.task = task if self.task is None else self.task
+                if self.task is None or not self._is_task_provided:
+                    self.task = task
                 self.verdict, self.reason = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.success = self.score >= self.threshold
@@ -108,7 +114,8 @@ class TaskCompletionMetric(BaseMetric):
             task, self.outcome = await self._a_extract_task_and_outcome(
                 test_case
             )
-            self.task = task if self.task is None else self.task
+            if self.task is None or not self._is_task_provided:
+                self.task = task
             self.verdict, self.reason = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.success = self.score >= self.threshold
