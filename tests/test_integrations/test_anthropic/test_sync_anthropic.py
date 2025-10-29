@@ -3,7 +3,7 @@ import pytest
 
 from anthropic import Anthropic
 from deepeval.prompt import Prompt
-from deepeval.tracing import trace
+from deepeval.tracing import LlmSpanContext, trace
 from tests.test_integrations.utils import assert_trace_json
 
 
@@ -31,13 +31,15 @@ def test_sync_messages_create_without_trace():
 @pytest.mark.skip
 def test_sync_messages_create_with_trace():
     with trace(
-        prompt=prompt,
-        thread_id="test_thread_id_1",
-        llm_metric_collection="test_collection_1",
+        llm_span_context=LlmSpanContext(
+            prompt=prompt,
+            metric_collection="test_collection_1",
+        ),
         name="test_name_1",
         tags=["test_tag_1"],
         metadata={"test_metadata_1": "test_value_1"},
         user_id="test_user_id_1",
+        thread_id="test_thread_id_1",
     ):
         client.responses.create(
             model="claude-sonnet-4-5",
