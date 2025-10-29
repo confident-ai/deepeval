@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from anthropic import AsyncAnthropic
+from deepeval.anthropic import AsyncAnthropic
 from deepeval.tracing import LlmSpanContext, trace
 from deepeval.prompt import Prompt
 from tests.test_integrations.utils import assert_trace_json
@@ -10,7 +10,7 @@ from tests.test_integrations.utils import assert_trace_json
 client = AsyncAnthropic()
 
 prompt = Prompt(alias="asd")
-prompt._version = "00.00.01"
+prompt.pull(version="00.00.01")
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
