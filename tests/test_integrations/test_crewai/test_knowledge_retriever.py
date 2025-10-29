@@ -1,9 +1,12 @@
 import os
 from crewai import Agent, Task, Crew, Process, LLM
-from crewai.knowledge.source.string_knowledge_source import StringKnowledgeSource
+from crewai.knowledge.source.string_knowledge_source import (
+    StringKnowledgeSource,
+)
 
 from deepeval.integrations.crewai import instrument_crewai
 from tests.test_integrations.utils import assert_trace_json, generate_trace_json
+
 # instrument_crewai()
 
 # Create a knowledge source
@@ -34,12 +37,17 @@ crew = Crew(
     tasks=[task],
     verbose=True,
     process=Process.sequential,
-    knowledge_sources=[string_source], # Enable knowledge by adding the sources here
+    knowledge_sources=[
+        string_source
+    ],  # Enable knowledge by adding the sources here
 )
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "knowledge_retriever.json")
 
+
 @assert_trace_json(json_path)
 def test_knowledge_retriever():
-    crew.kickoff(inputs={"question": "What city does John live in and how old is he?"})
+    crew.kickoff(
+        inputs={"question": "What city does John live in and how old is he?"}
+    )

@@ -178,13 +178,15 @@ class CrewAIEventsListener(BaseEventListener):
                 func_name="knowledge_retrieval",
                 function_kwargs={},
             )
-            self.span_observers[self.get_knowledge_execution_id(source, event)] = (
-                observer
-            )
+            self.span_observers[
+                self.get_knowledge_execution_id(source, event)
+            ] = observer
             observer.__enter__()
 
         @crewai_event_bus.on(KnowledgeRetrievalCompletedEvent)
-        def on_knowledge_completed(source, event: KnowledgeRetrievalCompletedEvent):
+        def on_knowledge_completed(
+            source, event: KnowledgeRetrievalCompletedEvent
+        ):
             observer = self.span_observers.pop(
                 self.get_knowledge_execution_id(source, event)
             )
