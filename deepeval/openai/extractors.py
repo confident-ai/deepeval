@@ -4,13 +4,13 @@ from typing import Any, Union, Dict
 from openai.types.responses import Response
 
 from deepeval.test_case.llm_test_case import ToolCall
+
+from deepeval.model_integrations.types import InputParameters, OutputParameters
 from deepeval.openai.utils import (
     render_response_input,
     stringify_multimodal_content,
     render_messages,
 )
-from deepeval.openai.types import InputParameters, OutputParameters
-from deepeval.tracing.types import Message
 
 
 # guarding against errors to be compatible with legacy APIs

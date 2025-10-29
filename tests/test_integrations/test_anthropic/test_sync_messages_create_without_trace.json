@@ -1,0 +1,70 @@
+{
+  "uuid": "cd751bee-8d34-437f-b701-218af48fe0dd",
+  "baseSpans": [],
+  "agentSpans": [],
+  "llmSpans": [
+    {
+      "uuid": "ad5b77e5-b19f-4a5a-b60d-0916745eb6cd",
+      "name": "generate_response",
+      "status": "SUCCESS",
+      "type": "llm",
+      "startTime": "2025-10-21T12:34:18.493Z",
+      "endTime": "2025-10-21T12:34:21.197Z",
+      "input": {
+        "input": "Hey, how are you?"
+      },
+      "output": {
+        "id": "msg_01WA1J3QuBAgpgogx9QoJkN2",
+        "content": [
+          {
+            "citations": null,
+            "text": "I'm doing well, thank you for asking! How are you doing today? Is there anything I can help you with?",
+            "type": "text"
+          }
+        ],
+        "model": "claude-sonnet-4-5-20250929",
+        "role": "assistant",
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 0,
+          "input_tokens": 19,
+          "output_tokens": 28,
+          "server_tool_use": null,
+          "service_tier": "standard"
+        }
+      },
+      "model": "claude-sonnet-4-5",
+      "prompt": {}
+    },
+    {
+      "uuid": "6d22a756-fb5c-42ea-ae67-83d50d37b0aa",
+      "name": "llm_generation",
+      "status": "SUCCESS",
+      "type": "llm",
+      "parentUuid": "ad5b77e5-b19f-4a5a-b60d-0916745eb6cd",
+      "startTime": "2025-10-21T12:34:18.493Z",
+      "endTime": "2025-10-21T12:34:21.197Z",
+      "input": "Hey, how are you?",
+      "output": "I'm doing well, thank you for asking! How are you doing today? Is there anything I can help you with?",
+      "model": "claude-sonnet-4-5",
+      "prompt": {},
+      "inputTokenCount": 19.0,
+      "outputTokenCount": 28.0
+    }
+  ],
+  "retrieverSpans": [],
+  "toolSpans": [],
+  "startTime": "2025-10-21T12:34:18.493Z",
+  "endTime": "2025-10-21T12:34:21.197Z",
+  "environment": "development",
+  "input": "Hey, how are you?",
+  "output": "I'm doing well, thank you for asking! How are you doing today? Is there anything I can help you with?",
+  "status": "SUCCESS"
+}
