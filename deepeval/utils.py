@@ -751,7 +751,7 @@ custom_console = Console(theme=my_theme)
 
 
 def format_error_text(
-    exc: BaseException, *, with_stack: bool | None = None
+    exc: BaseException, *, with_stack: Optional[bool] = None
 ) -> str:
     if with_stack is None:
         with_stack = logging.getLogger("deepeval").isEnabledFor(logging.DEBUG)
