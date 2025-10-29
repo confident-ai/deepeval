@@ -2,7 +2,7 @@ import os
 import pytest
 
 from anthropic import AsyncAnthropic
-from deepeval.tracing import trace
+from deepeval.tracing import LlmSpanContext, trace
 from deepeval.prompt import Prompt
 from tests.test_integrations.utils import assert_trace_json
 
@@ -32,13 +32,15 @@ async def test_async_messages_create_without_trace():
 )
 async def test_async_messages_create_with_trace():
     with trace(
-        prompt=prompt,
-        thread_id="test_thread_id_1",
-        llm_metric_collection="test_collection_1",
+        llm_span_context=LlmSpanContext(
+            prompt=prompt,
+            metric_collection="test_collection_1",
+        ),
         name="test_name_1",
         tags=["test_tag_1"],
         metadata={"test_metadata_1": "test_value_1"},
         user_id="test_user_id_1",
+        thread_id="test_thread_id_1",
     ):
         await client.messages.create(
             model="claude-sonnet-4-5",
