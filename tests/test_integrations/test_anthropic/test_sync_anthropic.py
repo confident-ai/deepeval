@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from deepeval.anthropic import Anthropic
+from anthropic import Anthropic
 from deepeval.prompt import Prompt
 from deepeval.tracing import LlmSpanContext, trace
 from tests.test_integrations.utils import assert_trace_json

@@ -1,9 +1,9 @@
-from deepeval.anthropic import Anthropic, AsyncAnthropic
+from anthropic import Anthropic, AsyncAnthropic
 from deepeval.tracing import LlmSpanContext, trace, observe
 from deepeval.prompt import Prompt
 
 prompt = Prompt(alias="asd")
-prompt._version = "00.00.01"
+prompt.pull(version="00.00.01")
 
 client = Anthropic()
 async_client = AsyncAnthropic()
