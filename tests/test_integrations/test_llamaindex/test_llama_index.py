@@ -13,6 +13,7 @@ from deepeval.tracing import trace
 from deepeval.tracing.trace_context import LlmSpanContext, AgentSpanContext
 
 from deepeval.integrations.llama_index import instrument_llama_index
+from deepeval.prompt.prompt import Prompt
 
 # import llama_index.core.instrumentation as instrument
 # instrument_llama_index(instrument.get_dispatcher())
@@ -30,6 +31,9 @@ agent = FunctionAgent(
     metric_collection="test_collection_1",
 )
 
+prompt = Prompt(alias="asd")
+prompt._version = "00.00.01"
+
 
 async def llm_app(input: str):
     agent_span_context = AgentSpanContext(
@@ -37,6 +41,7 @@ async def llm_app(input: str):
     )
     llm_span_context = LlmSpanContext(
         metric_collection="test_collection_1",
+        prompt=prompt,
     )
     with trace(
         agent_span_context=agent_span_context, llm_span_context=llm_span_context

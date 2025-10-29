@@ -3,8 +3,12 @@ import inspect
 from time import perf_counter
 import uuid
 
-from llama_index.core.agent.workflow.workflow_events import AgentWorkflowStartEvent
-from deepeval.integrations.llama_index.utils import extract_output_from_llm_chat_end_event
+from llama_index.core.agent.workflow.workflow_events import (
+    AgentWorkflowStartEvent,
+)
+from deepeval.integrations.llama_index.utils import (
+    extract_output_from_llm_chat_end_event,
+)
 from deepeval.telemetry import capture_tracing_integration
 from deepeval.tracing import trace_manager
 from deepeval.tracing.types import (
@@ -118,7 +122,9 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
                     llm_span.status = TraceSpanStatus.SUCCESS
                     llm_span.end_time = perf_counter()
                     llm_span.input = llm_span.input
-                    llm_span.output = extract_output_from_llm_chat_end_event(event)
+                    llm_span.output = extract_output_from_llm_chat_end_event(
+                        event
+                    )
                     trace_manager.remove_span(llm_span.uuid)
                     del self.open_ai_astream_to_llm_span_map[event.span_id]
 
@@ -167,7 +173,7 @@ class LLamaIndexHandler(BaseEventHandler, BaseSpanHandler):
 
             if start_event and isinstance(start_event, AgentWorkflowStartEvent):
                 input = start_event.model_dump()
-                
+
             else:
                 input = bound_args.arguments
 
