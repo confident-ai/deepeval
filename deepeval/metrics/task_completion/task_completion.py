@@ -40,7 +40,7 @@ class TaskCompletionMetric(BaseMetric):
             self._is_task_provided = False
         else:
             self._is_task_provided = True
-            
+
         self.task = task
         self.threshold = 1 if strict_mode else threshold
         self.model, self.using_native_model = initialize_model(model)
