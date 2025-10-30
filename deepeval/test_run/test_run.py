@@ -19,6 +19,7 @@ from deepeval.test_run.api import (
     TestRunHttpResponse,
     MetricData,
 )
+from deepeval.tracing.trace_test_manager import trace_testing_manager
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing.api import SpanApiType, span_api_type_literals
 from deepeval.test_case import LLMTestCase, ConversationalTestCase, MLLMTestCase
@@ -833,11 +834,15 @@ class TestRunManager:
         json_str = json.dumps(body, cls=TestRunEncoder)
         body = json.loads(json_str)
 
-        data, link = api.send_request(
-            method=HttpMethods.POST,
-            endpoint=Endpoints.TEST_RUN_ENDPOINT,
-            body=body,
-        )
+        if trace_testing_manager.run_name:
+            trace_testing_manager.test_dict = body
+            return None, None
+        else:
+            data, link = api.send_request(
+                method=HttpMethods.POST,
+                endpoint=Endpoints.TEST_RUN_ENDPOINT,
+                body=body,
+            )
 
         if not isinstance(data, dict) or "id" not in data:
             # try to show helpful details
@@ -867,6 +872,8 @@ class TestRunManager:
             if total_remaining > 0
             else 0
         )
+
+        print(f"Sending {num_remaining_batches} batches of {BATCH_SIZE} test cases")
 
         for i in range(num_remaining_batches):
             start_index = i * BATCH_SIZE
