@@ -1,0 +1,396 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What is 3 * 12?",
+      "actualOutput": "{'output': 'The result of \\\\( 3 \\\\times 12 \\\\) is 36.'}",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 11.061228292004671,
+      "order": 0,
+      "trace": {
+        "uuid": "6fcf7811-4074-488e-a2d5-b5d9c7300c21",
+        "baseSpans": [
+          {
+            "uuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
+            "name": "AgentExecutor",
+            "status": "SUCCESS",
+            "type": "base",
+            "startTime": "2025-10-30T13:52:03.318Z",
+            "endTime": "2025-10-30T13:52:12.627Z",
+            "input": {
+              "input": "What is 3 * 12?"
+            },
+            "output": {
+              "output": "The result of \\( 3 \\times 12 \\) is 36."
+            },
+            "metricsData": [
+              {
+                "name": "Task Completion",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The system correctly interpreted the task, performed the multiplication, and provided the correct answer of 36. The actual outcome fully aligns with the desired task.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.006528,
+                "verboseLogs": "Task: Calculate the result of 3 multiplied by 12. \n \nOutcome: The system used an LLM with the system prompt indicating mathematical capability to interpret the user's question and generated a tool call to a 'multiply' function with arguments 3 and 12. The 'multiply' tool was invoked with these arguments and returned 36. The LLM then generated a response stating that the result of 3 times 12 is 36."
+              }
+            ]
+          }
+        ],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "2f9a3923-d3f5-4746-a1e3-ab1dec36d457",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
+            "startTime": "2025-10-30T13:52:03.321Z",
+            "endTime": "2025-10-30T13:52:11.547Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform mathematical operations."
+              },
+              {
+                "role": "human",
+                "content": "What is 3 * 12?"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "",
+              "tool_calls": [
+                {
+                  "name": "multiply",
+                  "args": {
+                    "a": 3,
+                    "b": 12
+                  },
+                  "id": "call_Y3xf4F9P5vkbWjRZihPghdoB"
+                }
+              ]
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "tokenIntervals": {
+              "2025-10-30T13:52:11.529961Z": "",
+              "2025-10-30T13:52:11.530509Z": "",
+              "2025-10-30T13:52:11.531325Z": "",
+              "2025-10-30T13:52:11.532017Z": "",
+              "2025-10-30T13:52:11.532394Z": "",
+              "2025-10-30T13:52:11.532807Z": "",
+              "2025-10-30T13:52:11.533170Z": "",
+              "2025-10-30T13:52:11.533548Z": "",
+              "2025-10-30T13:52:11.533854Z": "",
+              "2025-10-30T13:52:11.544137Z": "",
+              "2025-10-30T13:52:11.544653Z": "",
+              "2025-10-30T13:52:11.546527Z": ""
+            }
+          },
+          {
+            "uuid": "f4624735-d39e-4caf-af94-eb501c8079b5",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
+            "startTime": "2025-10-30T13:52:11.553Z",
+            "endTime": "2025-10-30T13:52:12.624Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform mathematical operations."
+              },
+              {
+                "role": "human",
+                "content": "What is 3 * 12?"
+              },
+              {
+                "role": "ai",
+                "content": ""
+              },
+              {
+                "role": "tool",
+                "content": "36"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "The result of \\( 3 \\times 12 \\) is 36.",
+              "tool_calls": []
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "tokenIntervals": {
+              "2025-10-30T13:52:12.352284Z": "",
+              "2025-10-30T13:52:12.352597Z": "The",
+              "2025-10-30T13:52:12.366418Z": " result",
+              "2025-10-30T13:52:12.367085Z": " of",
+              "2025-10-30T13:52:12.394795Z": " \\(",
+              "2025-10-30T13:52:12.395171Z": " ",
+              "2025-10-30T13:52:12.424007Z": "3",
+              "2025-10-30T13:52:12.424240Z": " \\",
+              "2025-10-30T13:52:12.595953Z": "times",
+              "2025-10-30T13:52:12.596349Z": " ",
+              "2025-10-30T13:52:12.596833Z": "12",
+              "2025-10-30T13:52:12.597132Z": " \\",
+              "2025-10-30T13:52:12.621959Z": ")",
+              "2025-10-30T13:52:12.622310Z": " is",
+              "2025-10-30T13:52:12.622823Z": " ",
+              "2025-10-30T13:52:12.623150Z": "36",
+              "2025-10-30T13:52:12.623570Z": ".",
+              "2025-10-30T13:52:12.623883Z": "",
+              "2025-10-30T13:52:12.624219Z": ""
+            }
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [
+          {
+            "uuid": "15a91dbf-0def-47a3-af51-203183e9848d",
+            "name": "multiply",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
+            "startTime": "2025-10-30T13:52:11.549Z",
+            "endTime": "2025-10-30T13:52:11.550Z",
+            "input": {
+              "a": 3,
+              "b": 12
+            },
+            "output": 36
+          }
+        ],
+        "startTime": "2025-10-30T13:52:03.317Z",
+        "endTime": "2025-10-30T13:52:12.627Z",
+        "input": {
+          "input": "What is 3 * 12?"
+        },
+        "output": {
+          "output": "The result of \\( 3 \\times 12 \\) is 36."
+        },
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What is 8 * 6?",
+      "actualOutput": "{'output': '8 * 6 equals 48.'}",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 7.028265125001781,
+      "order": 1,
+      "trace": {
+        "uuid": "6ee6e54c-f12c-4aa8-b494-7bb011b7eea4",
+        "baseSpans": [
+          {
+            "uuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
+            "name": "AgentExecutor",
+            "status": "SUCCESS",
+            "type": "base",
+            "startTime": "2025-10-30T13:52:12.646Z",
+            "endTime": "2025-10-30T13:52:15.408Z",
+            "input": {
+              "input": "What is 8 * 6?"
+            },
+            "output": {
+              "output": "8 * 6 equals 48."
+            },
+            "metricsData": [
+              {
+                "name": "Task Completion",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The system correctly interpreted the task, performed the multiplication, and provided the correct answer (48) in a clear response. The actual outcome perfectly aligns with the desired task.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.006117999999999999,
+                "verboseLogs": "Task: Calculate the product of 8 and 6. \n \nOutcome: The system used an LLM (gpt-4o-mini-2024-07-18) to interpret the user's request and called a 'multiply' tool with inputs 8 and 6. The tool returned 48. The LLM then generated the response '8 * 6 equals 48.' as the final output."
+              }
+            ]
+          }
+        ],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "90c369b7-b715-46fc-a05b-c4297fb72ea1",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
+            "startTime": "2025-10-30T13:52:12.651Z",
+            "endTime": "2025-10-30T13:52:13.950Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform mathematical operations."
+              },
+              {
+                "role": "human",
+                "content": "What is 8 * 6?"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "",
+              "tool_calls": [
+                {
+                  "name": "multiply",
+                  "args": {
+                    "a": 8,
+                    "b": 6
+                  },
+                  "id": "call_bxe3Z2ON7Qxtj9apump6KqFO"
+                }
+              ]
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "tokenIntervals": {
+              "2025-10-30T13:52:13.435735Z": "",
+              "2025-10-30T13:52:13.468346Z": "",
+              "2025-10-30T13:52:13.468762Z": "",
+              "2025-10-30T13:52:13.645692Z": "",
+              "2025-10-30T13:52:13.646664Z": "",
+              "2025-10-30T13:52:13.647388Z": "",
+              "2025-10-30T13:52:13.647882Z": "",
+              "2025-10-30T13:52:13.935352Z": "",
+              "2025-10-30T13:52:13.936759Z": "",
+              "2025-10-30T13:52:13.939099Z": "",
+              "2025-10-30T13:52:13.939644Z": "",
+              "2025-10-30T13:52:13.939909Z": ""
+            }
+          },
+          {
+            "uuid": "dc31ad71-3649-481a-a369-d481e28e25b7",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
+            "startTime": "2025-10-30T13:52:13.958Z",
+            "endTime": "2025-10-30T13:52:15.406Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant that can perform mathematical operations."
+              },
+              {
+                "role": "human",
+                "content": "What is 8 * 6?"
+              },
+              {
+                "role": "ai",
+                "content": ""
+              },
+              {
+                "role": "tool",
+                "content": "48"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'multiply', 'description': 'Returns the product of two numbers', 'parameters': {'properties': {'a': {'type': 'integer'}, 'b': {'type': 'integer'}}, 'required': ['a', 'b'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "8 * 6 equals 48.",
+              "tool_calls": []
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "tokenIntervals": {
+              "2025-10-30T13:52:14.994195Z": "",
+              "2025-10-30T13:52:14.994738Z": "8",
+              "2025-10-30T13:52:14.995092Z": " *",
+              "2025-10-30T13:52:15.072788Z": " ",
+              "2025-10-30T13:52:15.073078Z": "6",
+              "2025-10-30T13:52:15.073627Z": " equals",
+              "2025-10-30T13:52:15.073841Z": " ",
+              "2025-10-30T13:52:15.119843Z": "48",
+              "2025-10-30T13:52:15.120553Z": ".",
+              "2025-10-30T13:52:15.121507Z": "",
+              "2025-10-30T13:52:15.121864Z": ""
+            }
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [
+          {
+            "uuid": "a5a51ea2-4c78-4b14-bb28-185b3a8f00cb",
+            "name": "multiply",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
+            "startTime": "2025-10-30T13:52:13.954Z",
+            "endTime": "2025-10-30T13:52:13.955Z",
+            "input": {
+              "a": 8,
+              "b": 6
+            },
+            "output": 48
+          }
+        ],
+        "startTime": "2025-10-30T13:52:12.646Z",
+        "endTime": "2025-10-30T13:52:15.408Z",
+        "input": {
+          "input": "What is 8 * 6?"
+        },
+        "output": {
+          "output": "8 * 6 equals 48."
+        },
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Task Completion",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {},
+    "tool": {},
+    "retriever": {},
+    "llm": {},
+    "base": {
+      "AgentExecutor": {
+        "Task Completion": {
+          "metric": "Task Completion",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 23.16889720899053
+}
