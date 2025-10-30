@@ -32,8 +32,12 @@ Thank you and come ask any questions or discuss any new PRs you have in mind on 
 
 ## Issue lifecycle & staleness policy
 
-We close issues with no activity for ≥12 months. Commenting re-opens.
+* **Stale closure:** We close issues with no activity for **≥ 12 months**.
+* **Reopening:** If your issue is still relevant:
 
-**Exclusions:** issues labeled `security`, `roadmap`.
+  1. Leave a comment mentioning `@confident-ai/maintainers` and include any new details (version, repro steps, logs).
+  2. If you don’t get a response in a few days, open a **new issue** and reference the old one (e.g., “Follow-up to #1234”).
+
+**Exclusions:** Issues labeled `security` or `roadmap`.
 
 **Why:** Keeps the tracker actionable and reflects the current roadmap. If your issue still matters, please comment and we’ll re-open.
