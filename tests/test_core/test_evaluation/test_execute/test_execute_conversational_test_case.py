@@ -1,6 +1,7 @@
 import time
 import asyncio
 import importlib
+import os
 import pytest
 
 from deepeval.evaluate.evaluate import evaluate as run_evaluate
@@ -15,6 +16,11 @@ from deepeval.models.llms.openai_model import GPTModel
 
 
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
+pytestmark = pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
+)
 
 
 @pytest.mark.asyncio
