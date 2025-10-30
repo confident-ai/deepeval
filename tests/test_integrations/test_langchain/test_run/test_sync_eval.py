@@ -28,11 +28,7 @@ agent_executor = AgentExecutor(agent=agent, tools=[multiply], verbose=True)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# @assert_trace_json(
-#     json_path=os.path.join(_current_dir, "test_sync_eval.json"),
-#     is_run=True
-# )
-@generate_trace_json(
+@assert_trace_json(
     json_path=os.path.join(_current_dir, "test_sync_eval.json"),
     is_run=True
 )
@@ -49,7 +45,3 @@ def test_run_sync_eval():
             {"input": golden.input},
             config={"callbacks": [CallbackHandler(metrics=[TaskCompletionMetric()])]}
         )
-
-
-if __name__ == "__main__":
-    test_run_sync_eval()

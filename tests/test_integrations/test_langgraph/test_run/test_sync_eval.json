@@ -1,0 +1,904 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What is the weather in Bogot\u00e1, Colombia?",
+      "actualOutput": "{'messages': [HumanMessage(content='What is the weather in Bogot\u00e1, Colombia?', additional_kwargs={}, response_metadata={}, id='c6f327ed-e292-4b9f-b493-57b6f1c5e310'), AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'call_0I6uR68NXuQK3ExaAd1PDdQA', 'function': {'arguments': '{\"city\":\"Bogot\u00e1\"}', 'name': 'get_weather'}, 'type': 'function'}], 'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 15, 'prompt_tokens': 59, 'total_tokens': 74, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name': 'gpt-4o-mini-2024-07-18', 'system_fingerprint': 'fp_560af6e559', 'id': 'chatcmpl-CWNba5E47LFPbFocbiuSIRVpQcoId', 'service_tier': 'default', 'finish_reason': 'tool_calls', 'logprobs': None}, id='run--b5994189-bf50-4995-81d8-87e93340ba58-0', tool_calls=[{'name': 'get_weather', 'args': {'city': 'Bogot\u00e1'}, 'id': 'call_0I6uR68NXuQK3ExaAd1PDdQA', 'type': 'tool_call'}], usage_metadata={'input_tokens': 59, 'output_tokens': 15, 'total_tokens': 74, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}), ToolMessage(content=\"It's always sunny in Bogot\u00e1!\", name='get_weather', id='2f7a647c-b454-4251-8d01-5c93f53d4786', tool_call_id='call_0I6uR68NXuQK3ExaAd1PDdQA'), AIMessage(content='The weather in Bogot\u00e1, Colombia, is always sunny!', additional_kwargs={'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 12, 'prompt_tokens': 88, 'total_tokens': 100, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name': 'gpt-4o-mini-2024-07-18', 'system_fingerprint': 'fp_560af6e559', 'id': 'chatcmpl-CWNbc282xrXbbl083lwmInkagFVyR', 'service_tier': 'default', 'finish_reason': 'stop', 'logprobs': None}, id='run--72860b00-fc9b-4457-ab00-7f9a48cc34e4-0', usage_metadata={'input_tokens': 88, 'output_tokens': 12, 'total_tokens': 100, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}})]}",
+      "success": false,
+      "metricsData": [],
+      "runDuration": 7.840444667002885,
+      "order": 0,
+      "trace": {
+        "uuid": "8326d40c-01d0-4ce0-8819-598e9aa58b17",
+        "baseSpans": [
+          {
+            "uuid": "a0914972-6a46-4ffb-8702-7f0e9e7a8964",
+            "name": "LangGraph",
+            "status": "SUCCESS",
+            "type": "base",
+            "startTime": "2025-10-30T14:07:49.890Z",
+            "endTime": "2025-10-30T14:07:53.333Z",
+            "input": {
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "What is the weather in Bogot\u00e1, Colombia?"
+                }
+              ]
+            },
+            "output": {
+              "messages": [
+                {
+                  "content": "What is the weather in Bogot\u00e1, Colombia?",
+                  "additional_kwargs": {},
+                  "response_metadata": {},
+                  "type": "human",
+                  "id": "c6f327ed-e292-4b9f-b493-57b6f1c5e310",
+                  "example": false
+                },
+                {
+                  "content": "",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+                        "function": {
+                          "arguments": "{\"city\":\"Bogot\u00e1\"}",
+                          "name": "get_weather"
+                        },
+                        "type": "function"
+                      }
+                    ],
+                    "refusal": null
+                  },
+                  "response_metadata": {
+                    "token_usage": {
+                      "completion_tokens": 15,
+                      "prompt_tokens": 59,
+                      "total_tokens": 74,
+                      "completion_tokens_details": {
+                        "accepted_prediction_tokens": 0,
+                        "audio_tokens": 0,
+                        "reasoning_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                      },
+                      "prompt_tokens_details": {
+                        "audio_tokens": 0,
+                        "cached_tokens": 0
+                      }
+                    },
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_560af6e559",
+                    "id": "chatcmpl-CWNba5E47LFPbFocbiuSIRVpQcoId",
+                    "service_tier": "default",
+                    "finish_reason": "tool_calls",
+                    "logprobs": null
+                  },
+                  "type": "ai",
+                  "id": "run--b5994189-bf50-4995-81d8-87e93340ba58-0",
+                  "example": false,
+                  "tool_calls": [
+                    {
+                      "name": "get_weather",
+                      "args": {
+                        "city": "Bogot\u00e1"
+                      },
+                      "id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+                      "type": "tool_call"
+                    }
+                  ],
+                  "invalid_tool_calls": [],
+                  "usage_metadata": {
+                    "input_tokens": 59,
+                    "output_tokens": 15,
+                    "total_tokens": 74,
+                    "input_token_details": {
+                      "audio": 0,
+                      "cache_read": 0
+                    },
+                    "output_token_details": {
+                      "audio": 0,
+                      "reasoning": 0
+                    }
+                  }
+                },
+                {
+                  "content": "It's always sunny in Bogot\u00e1!",
+                  "additional_kwargs": {},
+                  "response_metadata": {},
+                  "type": "tool",
+                  "name": "get_weather",
+                  "id": "2f7a647c-b454-4251-8d01-5c93f53d4786",
+                  "tool_call_id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+                  "status": "success"
+                },
+                {
+                  "content": "The weather in Bogot\u00e1, Colombia, is always sunny!",
+                  "additional_kwargs": {
+                    "refusal": null
+                  },
+                  "response_metadata": {
+                    "token_usage": {
+                      "completion_tokens": 12,
+                      "prompt_tokens": 88,
+                      "total_tokens": 100,
+                      "completion_tokens_details": {
+                        "accepted_prediction_tokens": 0,
+                        "audio_tokens": 0,
+                        "reasoning_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                      },
+                      "prompt_tokens_details": {
+                        "audio_tokens": 0,
+                        "cached_tokens": 0
+                      }
+                    },
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_560af6e559",
+                    "id": "chatcmpl-CWNbc282xrXbbl083lwmInkagFVyR",
+                    "service_tier": "default",
+                    "finish_reason": "stop",
+                    "logprobs": null
+                  },
+                  "type": "ai",
+                  "id": "run--72860b00-fc9b-4457-ab00-7f9a48cc34e4-0",
+                  "example": false,
+                  "tool_calls": [],
+                  "invalid_tool_calls": [],
+                  "usage_metadata": {
+                    "input_tokens": 88,
+                    "output_tokens": 12,
+                    "total_tokens": 100,
+                    "input_token_details": {
+                      "audio": 0,
+                      "cache_read": 0
+                    },
+                    "output_token_details": {
+                      "audio": 0,
+                      "reasoning": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "metricsData": [
+              {
+                "name": "Task Completion",
+                "threshold": 0.5,
+                "success": false,
+                "score": 0.2,
+                "reason": "The actual outcome did not provide the current weather in Bogot\u00e1, Colombia, but instead gave a generic and inaccurate statement ('It's always sunny in Bogot\u00e1!'). While the system attempted to use a weather tool, the final response did not fulfill the user's request for current weather information.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.008081999999999999,
+                "verboseLogs": "Task: Provide the current weather in Bogot\u00e1, Colombia. \n \nOutcome: The system received a user request for the weather in Bogot\u00e1, Colombia. An LLM (gpt-4o-mini-2024-07-18) generated a tool call to 'get_weather' with the argument 'city' set to 'Bogot\u00e1'. The 'get_weather' tool was invoked and returned the response 'It's always sunny in Bogot\u00e1!'. The LLM then generated the final response: 'The weather in Bogot\u00e1, Colombia, is always sunny!'."
+              }
+            ]
+          }
+        ],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "b5994189-bf50-4995-81d8-87e93340ba58",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "a0914972-6a46-4ffb-8702-7f0e9e7a8964",
+            "startTime": "2025-10-30T14:07:49.893Z",
+            "endTime": "2025-10-30T14:07:51.241Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant"
+              },
+              {
+                "role": "human",
+                "content": "What is the weather in Bogot\u00e1, Colombia?"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the weather in a city', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "",
+              "tool_calls": [
+                {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Bogot\u00e1"
+                  },
+                  "id": "call_0I6uR68NXuQK3ExaAd1PDdQA"
+                }
+              ]
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "inputTokenCount": 59.0,
+            "outputTokenCount": 15.0
+          },
+          {
+            "uuid": "72860b00-fc9b-4457-ab00-7f9a48cc34e4",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "a0914972-6a46-4ffb-8702-7f0e9e7a8964",
+            "startTime": "2025-10-30T14:07:51.243Z",
+            "endTime": "2025-10-30T14:07:53.332Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant"
+              },
+              {
+                "role": "human",
+                "content": "What is the weather in Bogot\u00e1, Colombia?"
+              },
+              {
+                "role": "ai",
+                "content": ""
+              },
+              {
+                "role": "tool",
+                "content": "It's always sunny in Bogot\u00e1!"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the weather in a city', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "The weather in Bogot\u00e1, Colombia, is always sunny!",
+              "tool_calls": []
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "inputTokenCount": 88.0,
+            "outputTokenCount": 12.0
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [
+          {
+            "uuid": "7c1f17a3-aad9-4c9d-9118-e58bd0f91500",
+            "name": "get_weather",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "a0914972-6a46-4ffb-8702-7f0e9e7a8964",
+            "startTime": "2025-10-30T14:07:51.242Z",
+            "endTime": "2025-10-30T14:07:51.242Z",
+            "input": {
+              "city": "Bogot\u00e1"
+            },
+            "output": {
+              "content": "It's always sunny in Bogot\u00e1!",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "tool",
+              "name": "get_weather",
+              "id": "2f7a647c-b454-4251-8d01-5c93f53d4786",
+              "tool_call_id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+              "status": "success"
+            }
+          }
+        ],
+        "startTime": "2025-10-30T14:07:49.889Z",
+        "endTime": "2025-10-30T14:07:53.334Z",
+        "input": {
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the weather in Bogot\u00e1, Colombia?"
+            }
+          ]
+        },
+        "output": {
+          "messages": [
+            {
+              "content": "What is the weather in Bogot\u00e1, Colombia?",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "human",
+              "id": "c6f327ed-e292-4b9f-b493-57b6f1c5e310",
+              "example": false
+            },
+            {
+              "content": "",
+              "additional_kwargs": {
+                "tool_calls": [
+                  {
+                    "id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+                    "function": {
+                      "arguments": "{\"city\":\"Bogot\u00e1\"}",
+                      "name": "get_weather"
+                    },
+                    "type": "function"
+                  }
+                ],
+                "refusal": null
+              },
+              "response_metadata": {
+                "token_usage": {
+                  "completion_tokens": 15,
+                  "prompt_tokens": 59,
+                  "total_tokens": 74,
+                  "completion_tokens_details": {
+                    "accepted_prediction_tokens": 0,
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 0
+                  }
+                },
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_560af6e559",
+                "id": "chatcmpl-CWNba5E47LFPbFocbiuSIRVpQcoId",
+                "service_tier": "default",
+                "finish_reason": "tool_calls",
+                "logprobs": null
+              },
+              "type": "ai",
+              "id": "run--b5994189-bf50-4995-81d8-87e93340ba58-0",
+              "example": false,
+              "tool_calls": [
+                {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Bogot\u00e1"
+                  },
+                  "id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+                  "type": "tool_call"
+                }
+              ],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 59,
+                "output_tokens": 15,
+                "total_tokens": 74,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            },
+            {
+              "content": "It's always sunny in Bogot\u00e1!",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "tool",
+              "name": "get_weather",
+              "id": "2f7a647c-b454-4251-8d01-5c93f53d4786",
+              "tool_call_id": "call_0I6uR68NXuQK3ExaAd1PDdQA",
+              "status": "success"
+            },
+            {
+              "content": "The weather in Bogot\u00e1, Colombia, is always sunny!",
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "token_usage": {
+                  "completion_tokens": 12,
+                  "prompt_tokens": 88,
+                  "total_tokens": 100,
+                  "completion_tokens_details": {
+                    "accepted_prediction_tokens": 0,
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 0
+                  }
+                },
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_560af6e559",
+                "id": "chatcmpl-CWNbc282xrXbbl083lwmInkagFVyR",
+                "service_tier": "default",
+                "finish_reason": "stop",
+                "logprobs": null
+              },
+              "type": "ai",
+              "id": "run--72860b00-fc9b-4457-ab00-7f9a48cc34e4-0",
+              "example": false,
+              "tool_calls": [],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 88,
+                "output_tokens": 12,
+                "total_tokens": 100,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          ]
+        },
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What is the weather in Paris, France?",
+      "actualOutput": "{'messages': [HumanMessage(content='What is the weather in Paris, France?', additional_kwargs={}, response_metadata={}, id='0c06fefd-495f-4f7b-81dc-56720a7928ca'), AIMessage(content='', additional_kwargs={'tool_calls': [{'id': 'call_RtWzBH8OSBXR5l1tomdF5NX9', 'function': {'arguments': '{\"city\":\"Paris, France\"}', 'name': 'get_weather'}, 'type': 'function'}], 'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 16, 'prompt_tokens': 59, 'total_tokens': 75, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name': 'gpt-4o-mini-2024-07-18', 'system_fingerprint': 'fp_560af6e559', 'id': 'chatcmpl-CWNbdysc4AZfSZhw41N0yhvBpZSsN', 'service_tier': 'default', 'finish_reason': 'tool_calls', 'logprobs': None}, id='run--583f45fb-8f85-479f-9611-2596d58278b8-0', tool_calls=[{'name': 'get_weather', 'args': {'city': 'Paris, France'}, 'id': 'call_RtWzBH8OSBXR5l1tomdF5NX9', 'type': 'tool_call'}], usage_metadata={'input_tokens': 59, 'output_tokens': 16, 'total_tokens': 75, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}}), ToolMessage(content=\"It's always sunny in Paris, France!\", name='get_weather', id='f0716613-006c-4328-b88d-134b72681f97', tool_call_id='call_RtWzBH8OSBXR5l1tomdF5NX9'), AIMessage(content='The weather in Paris, France is currently sunny!', additional_kwargs={'refusal': None}, response_metadata={'token_usage': {'completion_tokens': 11, 'prompt_tokens': 91, 'total_tokens': 102, 'completion_tokens_details': {'accepted_prediction_tokens': 0, 'audio_tokens': 0, 'reasoning_tokens': 0, 'rejected_prediction_tokens': 0}, 'prompt_tokens_details': {'audio_tokens': 0, 'cached_tokens': 0}}, 'model_name': 'gpt-4o-mini-2024-07-18', 'system_fingerprint': 'fp_560af6e559', 'id': 'chatcmpl-CWNbfFsLKOxhxO9FR7Qp8pZwEraPY', 'service_tier': 'default', 'finish_reason': 'stop', 'logprobs': None}, id='run--a7b54993-3a75-4e82-b8d5-2744446041a2-0', usage_metadata={'input_tokens': 91, 'output_tokens': 11, 'total_tokens': 102, 'input_token_details': {'audio': 0, 'cache_read': 0}, 'output_token_details': {'audio': 0, 'reasoning': 0}})]}",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 7.856533333004336,
+      "order": 1,
+      "trace": {
+        "uuid": "08020663-3322-4223-83cb-53bf70a835a0",
+        "baseSpans": [
+          {
+            "uuid": "ed13245b-97af-4362-8f24-df46ecdcaa21",
+            "name": "LangGraph",
+            "status": "SUCCESS",
+            "type": "base",
+            "startTime": "2025-10-30T14:07:53.349Z",
+            "endTime": "2025-10-30T14:07:55.836Z",
+            "input": {
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "What is the weather in Paris, France?"
+                }
+              ]
+            },
+            "output": {
+              "messages": [
+                {
+                  "content": "What is the weather in Paris, France?",
+                  "additional_kwargs": {},
+                  "response_metadata": {},
+                  "type": "human",
+                  "id": "0c06fefd-495f-4f7b-81dc-56720a7928ca",
+                  "example": false
+                },
+                {
+                  "content": "",
+                  "additional_kwargs": {
+                    "tool_calls": [
+                      {
+                        "id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+                        "function": {
+                          "arguments": "{\"city\":\"Paris, France\"}",
+                          "name": "get_weather"
+                        },
+                        "type": "function"
+                      }
+                    ],
+                    "refusal": null
+                  },
+                  "response_metadata": {
+                    "token_usage": {
+                      "completion_tokens": 16,
+                      "prompt_tokens": 59,
+                      "total_tokens": 75,
+                      "completion_tokens_details": {
+                        "accepted_prediction_tokens": 0,
+                        "audio_tokens": 0,
+                        "reasoning_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                      },
+                      "prompt_tokens_details": {
+                        "audio_tokens": 0,
+                        "cached_tokens": 0
+                      }
+                    },
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_560af6e559",
+                    "id": "chatcmpl-CWNbdysc4AZfSZhw41N0yhvBpZSsN",
+                    "service_tier": "default",
+                    "finish_reason": "tool_calls",
+                    "logprobs": null
+                  },
+                  "type": "ai",
+                  "id": "run--583f45fb-8f85-479f-9611-2596d58278b8-0",
+                  "example": false,
+                  "tool_calls": [
+                    {
+                      "name": "get_weather",
+                      "args": {
+                        "city": "Paris, France"
+                      },
+                      "id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+                      "type": "tool_call"
+                    }
+                  ],
+                  "invalid_tool_calls": [],
+                  "usage_metadata": {
+                    "input_tokens": 59,
+                    "output_tokens": 16,
+                    "total_tokens": 75,
+                    "input_token_details": {
+                      "audio": 0,
+                      "cache_read": 0
+                    },
+                    "output_token_details": {
+                      "audio": 0,
+                      "reasoning": 0
+                    }
+                  }
+                },
+                {
+                  "content": "It's always sunny in Paris, France!",
+                  "additional_kwargs": {},
+                  "response_metadata": {},
+                  "type": "tool",
+                  "name": "get_weather",
+                  "id": "f0716613-006c-4328-b88d-134b72681f97",
+                  "tool_call_id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+                  "status": "success"
+                },
+                {
+                  "content": "The weather in Paris, France is currently sunny!",
+                  "additional_kwargs": {
+                    "refusal": null
+                  },
+                  "response_metadata": {
+                    "token_usage": {
+                      "completion_tokens": 11,
+                      "prompt_tokens": 91,
+                      "total_tokens": 102,
+                      "completion_tokens_details": {
+                        "accepted_prediction_tokens": 0,
+                        "audio_tokens": 0,
+                        "reasoning_tokens": 0,
+                        "rejected_prediction_tokens": 0
+                      },
+                      "prompt_tokens_details": {
+                        "audio_tokens": 0,
+                        "cached_tokens": 0
+                      }
+                    },
+                    "model_name": "gpt-4o-mini-2024-07-18",
+                    "system_fingerprint": "fp_560af6e559",
+                    "id": "chatcmpl-CWNbfFsLKOxhxO9FR7Qp8pZwEraPY",
+                    "service_tier": "default",
+                    "finish_reason": "stop",
+                    "logprobs": null
+                  },
+                  "type": "ai",
+                  "id": "run--a7b54993-3a75-4e82-b8d5-2744446041a2-0",
+                  "example": false,
+                  "tool_calls": [],
+                  "invalid_tool_calls": [],
+                  "usage_metadata": {
+                    "input_tokens": 91,
+                    "output_tokens": 11,
+                    "total_tokens": 102,
+                    "input_token_details": {
+                      "audio": 0,
+                      "cache_read": 0
+                    },
+                    "output_token_details": {
+                      "audio": 0,
+                      "reasoning": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "metricsData": [
+              {
+                "name": "Task Completion",
+                "threshold": 0.5,
+                "success": true,
+                "score": 0.6,
+                "reason": "The system provided a weather description for Paris, France, which aligns with the user's request. However, the response 'It's always sunny in Paris, France!' is not an accurate or real-time weather report, but rather a generic or possibly humorous statement. The final answer 'The weather in Paris, France is currently sunny!' is plausible but not based on actual current data, reducing the alignment with the task of providing the current weather.",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.008003999999999999,
+                "verboseLogs": "Task: Provide the current weather in Paris, France. \n \nOutcome: The system used an LLM to interpret the user's request and generated a tool call to 'get_weather' with the argument 'city' set to 'Paris, France'. The 'get_weather' tool returned the response 'It's always sunny in Paris, France!'. The LLM then generated the final response: 'The weather in Paris, France is currently sunny!'."
+              }
+            ]
+          }
+        ],
+        "agentSpans": [],
+        "llmSpans": [
+          {
+            "uuid": "583f45fb-8f85-479f-9611-2596d58278b8",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "ed13245b-97af-4362-8f24-df46ecdcaa21",
+            "startTime": "2025-10-30T14:07:53.350Z",
+            "endTime": "2025-10-30T14:07:54.823Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant"
+              },
+              {
+                "role": "human",
+                "content": "What is the weather in Paris, France?"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the weather in a city', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "",
+              "tool_calls": [
+                {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Paris, France"
+                  },
+                  "id": "call_RtWzBH8OSBXR5l1tomdF5NX9"
+                }
+              ]
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "inputTokenCount": 59.0,
+            "outputTokenCount": 16.0
+          },
+          {
+            "uuid": "a7b54993-3a75-4e82-b8d5-2744446041a2",
+            "name": "ChatOpenAI",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "ed13245b-97af-4362-8f24-df46ecdcaa21",
+            "startTime": "2025-10-30T14:07:54.827Z",
+            "endTime": "2025-10-30T14:07:55.835Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are a helpful assistant"
+              },
+              {
+                "role": "human",
+                "content": "What is the weather in Paris, France?"
+              },
+              {
+                "role": "ai",
+                "content": ""
+              },
+              {
+                "role": "tool",
+                "content": "It's always sunny in Paris, France!"
+              },
+              {
+                "role": "Tool Input",
+                "content": "{'type': 'function', 'function': {'name': 'get_weather', 'description': 'Returns the weather in a city', 'parameters': {'properties': {'city': {'type': 'string'}}, 'required': ['city'], 'type': 'object'}}}"
+              }
+            ],
+            "output": {
+              "role": "AI",
+              "content": "The weather in Paris, France is currently sunny!",
+              "tool_calls": []
+            },
+            "model": "gpt-4o-mini-2024-07-18",
+            "prompt": {},
+            "inputTokenCount": 91.0,
+            "outputTokenCount": 11.0
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [
+          {
+            "uuid": "b2b5ec8e-e7af-4c53-b65d-9ba807d7f0cb",
+            "name": "get_weather",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "ed13245b-97af-4362-8f24-df46ecdcaa21",
+            "startTime": "2025-10-30T14:07:54.824Z",
+            "endTime": "2025-10-30T14:07:54.825Z",
+            "input": {
+              "city": "Paris, France"
+            },
+            "output": {
+              "content": "It's always sunny in Paris, France!",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "tool",
+              "name": "get_weather",
+              "id": "f0716613-006c-4328-b88d-134b72681f97",
+              "tool_call_id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+              "status": "success"
+            }
+          }
+        ],
+        "startTime": "2025-10-30T14:07:53.349Z",
+        "endTime": "2025-10-30T14:07:55.836Z",
+        "input": {
+          "messages": [
+            {
+              "role": "user",
+              "content": "What is the weather in Paris, France?"
+            }
+          ]
+        },
+        "output": {
+          "messages": [
+            {
+              "content": "What is the weather in Paris, France?",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "human",
+              "id": "0c06fefd-495f-4f7b-81dc-56720a7928ca",
+              "example": false
+            },
+            {
+              "content": "",
+              "additional_kwargs": {
+                "tool_calls": [
+                  {
+                    "id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+                    "function": {
+                      "arguments": "{\"city\":\"Paris, France\"}",
+                      "name": "get_weather"
+                    },
+                    "type": "function"
+                  }
+                ],
+                "refusal": null
+              },
+              "response_metadata": {
+                "token_usage": {
+                  "completion_tokens": 16,
+                  "prompt_tokens": 59,
+                  "total_tokens": 75,
+                  "completion_tokens_details": {
+                    "accepted_prediction_tokens": 0,
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 0
+                  }
+                },
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_560af6e559",
+                "id": "chatcmpl-CWNbdysc4AZfSZhw41N0yhvBpZSsN",
+                "service_tier": "default",
+                "finish_reason": "tool_calls",
+                "logprobs": null
+              },
+              "type": "ai",
+              "id": "run--583f45fb-8f85-479f-9611-2596d58278b8-0",
+              "example": false,
+              "tool_calls": [
+                {
+                  "name": "get_weather",
+                  "args": {
+                    "city": "Paris, France"
+                  },
+                  "id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+                  "type": "tool_call"
+                }
+              ],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 59,
+                "output_tokens": 16,
+                "total_tokens": 75,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            },
+            {
+              "content": "It's always sunny in Paris, France!",
+              "additional_kwargs": {},
+              "response_metadata": {},
+              "type": "tool",
+              "name": "get_weather",
+              "id": "f0716613-006c-4328-b88d-134b72681f97",
+              "tool_call_id": "call_RtWzBH8OSBXR5l1tomdF5NX9",
+              "status": "success"
+            },
+            {
+              "content": "The weather in Paris, France is currently sunny!",
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "token_usage": {
+                  "completion_tokens": 11,
+                  "prompt_tokens": 91,
+                  "total_tokens": 102,
+                  "completion_tokens_details": {
+                    "accepted_prediction_tokens": 0,
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  },
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 0
+                  }
+                },
+                "model_name": "gpt-4o-mini-2024-07-18",
+                "system_fingerprint": "fp_560af6e559",
+                "id": "chatcmpl-CWNbfFsLKOxhxO9FR7Qp8pZwEraPY",
+                "service_tier": "default",
+                "finish_reason": "stop",
+                "logprobs": null
+              },
+              "type": "ai",
+              "id": "run--a7b54993-3a75-4e82-b8d5-2744446041a2-0",
+              "example": false,
+              "tool_calls": [],
+              "invalid_tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 91,
+                "output_tokens": 11,
+                "total_tokens": 102,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 0
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              }
+            }
+          ]
+        },
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Task Completion",
+      "scores": [
+        0.2,
+        0.6
+      ],
+      "passes": 1,
+      "fails": 1,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {},
+    "tool": {},
+    "retriever": {},
+    "llm": {},
+    "base": {
+      "LangGraph": {
+        "Task Completion": {
+          "metric": "Task Completion",
+          "scores": [
+            0.2,
+            0.6
+          ],
+          "passes": 1,
+          "fails": 1,
+          "errors": 0
+        }
+      }
+    }
+  },
+  "testPassed": 1,
+  "testFailed": 1,
+  "runDuration": 13.834574124994106
+}

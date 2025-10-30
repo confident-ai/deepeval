@@ -1,23 +1,23 @@
 {
   "testCases": [
     {
-      "name": "test_case_0",
+      "name": "test_run_sync_eval",
       "input": "What is 3 * 12?",
       "actualOutput": "{'output': 'The result of \\\\( 3 \\\\times 12 \\\\) is 36.'}",
       "success": true,
       "metricsData": [],
-      "runDuration": 11.061228292004671,
+      "runDuration": 7.1582900829962455,
       "order": 0,
       "trace": {
-        "uuid": "6fcf7811-4074-488e-a2d5-b5d9c7300c21",
+        "uuid": "6f2380e3-0f5e-4214-8d52-b52abe73dcea",
         "baseSpans": [
           {
-            "uuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
+            "uuid": "352d0e0a-5a7c-422c-82ad-1f8813a8db29",
             "name": "AgentExecutor",
             "status": "SUCCESS",
             "type": "base",
-            "startTime": "2025-10-30T13:52:03.318Z",
-            "endTime": "2025-10-30T13:52:12.627Z",
+            "startTime": "2025-10-30T14:09:51.308Z",
+            "endTime": "2025-10-30T14:09:53.913Z",
             "input": {
               "input": "What is 3 * 12?"
             },
@@ -30,11 +30,11 @@
                 "threshold": 0.5,
                 "success": true,
                 "score": 1.0,
-                "reason": "The system correctly interpreted the task, performed the multiplication, and provided the correct answer of 36. The actual outcome fully aligns with the desired task.",
+                "reason": "The system correctly interpreted the task, performed the multiplication, and provided the correct answer (36) in its response. The actual outcome fully aligns with the desired task.",
                 "strictMode": false,
                 "evaluationModel": "gpt-4.1",
-                "evaluationCost": 0.006528,
-                "verboseLogs": "Task: Calculate the result of 3 multiplied by 12. \n \nOutcome: The system used an LLM with the system prompt indicating mathematical capability to interpret the user's question and generated a tool call to a 'multiply' function with arguments 3 and 12. The 'multiply' tool was invoked with these arguments and returned 36. The LLM then generated a response stating that the result of 3 times 12 is 36."
+                "evaluationCost": 0.006466,
+                "verboseLogs": "Task: Calculate the result of 3 multiplied by 12. \n \nOutcome: The system used an LLM to interpret the user's question and generated a tool call to a 'multiply' function with arguments 3 and 12. The 'multiply' tool returned the value 36. The LLM then produced a response stating that the result of 3 times 12 is 36."
               }
             ]
           }
@@ -42,13 +42,13 @@
         "agentSpans": [],
         "llmSpans": [
           {
-            "uuid": "2f9a3923-d3f5-4746-a1e3-ab1dec36d457",
+            "uuid": "62e975d8-4da9-45e8-a559-dfa8048e8c01",
             "name": "ChatOpenAI",
             "status": "SUCCESS",
             "type": "llm",
-            "parentUuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
-            "startTime": "2025-10-30T13:52:03.321Z",
-            "endTime": "2025-10-30T13:52:11.547Z",
+            "parentUuid": "352d0e0a-5a7c-422c-82ad-1f8813a8db29",
+            "startTime": "2025-10-30T14:09:51.310Z",
+            "endTime": "2025-10-30T14:09:52.590Z",
             "input": [
               {
                 "role": "system",
@@ -73,35 +73,35 @@
                     "a": 3,
                     "b": 12
                   },
-                  "id": "call_Y3xf4F9P5vkbWjRZihPghdoB"
+                  "id": "call_IIkVd9Nkk7xhN8XnPI9UxdFu"
                 }
               ]
             },
             "model": "gpt-4o-mini-2024-07-18",
             "prompt": {},
             "tokenIntervals": {
-              "2025-10-30T13:52:11.529961Z": "",
-              "2025-10-30T13:52:11.530509Z": "",
-              "2025-10-30T13:52:11.531325Z": "",
-              "2025-10-30T13:52:11.532017Z": "",
-              "2025-10-30T13:52:11.532394Z": "",
-              "2025-10-30T13:52:11.532807Z": "",
-              "2025-10-30T13:52:11.533170Z": "",
-              "2025-10-30T13:52:11.533548Z": "",
-              "2025-10-30T13:52:11.533854Z": "",
-              "2025-10-30T13:52:11.544137Z": "",
-              "2025-10-30T13:52:11.544653Z": "",
-              "2025-10-30T13:52:11.546527Z": ""
+              "2025-10-30T14:09:52.374733Z": "",
+              "2025-10-30T14:09:52.375461Z": "",
+              "2025-10-30T14:09:52.376019Z": "",
+              "2025-10-30T14:09:52.430221Z": "",
+              "2025-10-30T14:09:52.431279Z": "",
+              "2025-10-30T14:09:52.464016Z": "",
+              "2025-10-30T14:09:52.465145Z": "",
+              "2025-10-30T14:09:52.557014Z": "",
+              "2025-10-30T14:09:52.558097Z": "",
+              "2025-10-30T14:09:52.585812Z": "",
+              "2025-10-30T14:09:52.586573Z": "",
+              "2025-10-30T14:09:52.587215Z": ""
             }
           },
           {
-            "uuid": "f4624735-d39e-4caf-af94-eb501c8079b5",
+            "uuid": "861ed5e4-b626-422e-aecc-c2f5c9c87b25",
             "name": "ChatOpenAI",
             "status": "SUCCESS",
             "type": "llm",
-            "parentUuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
-            "startTime": "2025-10-30T13:52:11.553Z",
-            "endTime": "2025-10-30T13:52:12.624Z",
+            "parentUuid": "352d0e0a-5a7c-422c-82ad-1f8813a8db29",
+            "startTime": "2025-10-30T14:09:52.596Z",
+            "endTime": "2025-10-30T14:09:53.911Z",
             "input": [
               {
                 "role": "system",
@@ -132,38 +132,38 @@
             "model": "gpt-4o-mini-2024-07-18",
             "prompt": {},
             "tokenIntervals": {
-              "2025-10-30T13:52:12.352284Z": "",
-              "2025-10-30T13:52:12.352597Z": "The",
-              "2025-10-30T13:52:12.366418Z": " result",
-              "2025-10-30T13:52:12.367085Z": " of",
-              "2025-10-30T13:52:12.394795Z": " \\(",
-              "2025-10-30T13:52:12.395171Z": " ",
-              "2025-10-30T13:52:12.424007Z": "3",
-              "2025-10-30T13:52:12.424240Z": " \\",
-              "2025-10-30T13:52:12.595953Z": "times",
-              "2025-10-30T13:52:12.596349Z": " ",
-              "2025-10-30T13:52:12.596833Z": "12",
-              "2025-10-30T13:52:12.597132Z": " \\",
-              "2025-10-30T13:52:12.621959Z": ")",
-              "2025-10-30T13:52:12.622310Z": " is",
-              "2025-10-30T13:52:12.622823Z": " ",
-              "2025-10-30T13:52:12.623150Z": "36",
-              "2025-10-30T13:52:12.623570Z": ".",
-              "2025-10-30T13:52:12.623883Z": "",
-              "2025-10-30T13:52:12.624219Z": ""
+              "2025-10-30T14:09:53.577404Z": "",
+              "2025-10-30T14:09:53.578128Z": "The",
+              "2025-10-30T14:09:53.578737Z": " result",
+              "2025-10-30T14:09:53.613145Z": " of",
+              "2025-10-30T14:09:53.613872Z": " \\(",
+              "2025-10-30T14:09:53.714532Z": " ",
+              "2025-10-30T14:09:53.715221Z": "3",
+              "2025-10-30T14:09:53.727854Z": " \\",
+              "2025-10-30T14:09:53.728472Z": "times",
+              "2025-10-30T14:09:53.761334Z": " ",
+              "2025-10-30T14:09:53.761940Z": "12",
+              "2025-10-30T14:09:53.811163Z": " \\",
+              "2025-10-30T14:09:53.811863Z": ")",
+              "2025-10-30T14:09:53.831208Z": " is",
+              "2025-10-30T14:09:53.831544Z": " ",
+              "2025-10-30T14:09:53.897854Z": "36",
+              "2025-10-30T14:09:53.899026Z": ".",
+              "2025-10-30T14:09:53.899473Z": "",
+              "2025-10-30T14:09:53.900113Z": ""
             }
           }
         ],
         "retrieverSpans": [],
         "toolSpans": [
           {
-            "uuid": "15a91dbf-0def-47a3-af51-203183e9848d",
+            "uuid": "121f5e0f-a8ca-4fb5-b0a1-07e7938e5d0b",
             "name": "multiply",
             "status": "SUCCESS",
             "type": "tool",
-            "parentUuid": "1fb1f5b8-d0e4-4125-a124-f8fe28140533",
-            "startTime": "2025-10-30T13:52:11.549Z",
-            "endTime": "2025-10-30T13:52:11.550Z",
+            "parentUuid": "352d0e0a-5a7c-422c-82ad-1f8813a8db29",
+            "startTime": "2025-10-30T14:09:52.591Z",
+            "endTime": "2025-10-30T14:09:52.592Z",
             "input": {
               "a": 3,
               "b": 12
@@ -171,8 +171,8 @@
             "output": 36
           }
         ],
-        "startTime": "2025-10-30T13:52:03.317Z",
-        "endTime": "2025-10-30T13:52:12.627Z",
+        "startTime": "2025-10-30T14:09:51.308Z",
+        "endTime": "2025-10-30T14:09:53.913Z",
         "input": {
           "input": "What is 3 * 12?"
         },
@@ -183,28 +183,28 @@
       }
     },
     {
-      "name": "test_case_1",
+      "name": "test_run_sync_eval",
       "input": "What is 8 * 6?",
-      "actualOutput": "{'output': '8 * 6 equals 48.'}",
+      "actualOutput": "{'output': 'The product of 8 and 6 is 48.'}",
       "success": true,
       "metricsData": [],
-      "runDuration": 7.028265125001781,
+      "runDuration": 4.1963531660003355,
       "order": 1,
       "trace": {
-        "uuid": "6ee6e54c-f12c-4aa8-b494-7bb011b7eea4",
+        "uuid": "6ed8d00e-1912-4523-b56d-9f2731bd1536",
         "baseSpans": [
           {
-            "uuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
+            "uuid": "bf9f0aed-2ee6-4038-badc-35ba5f9d0035",
             "name": "AgentExecutor",
             "status": "SUCCESS",
             "type": "base",
-            "startTime": "2025-10-30T13:52:12.646Z",
-            "endTime": "2025-10-30T13:52:15.408Z",
+            "startTime": "2025-10-30T14:09:53.930Z",
+            "endTime": "2025-10-30T14:09:56.122Z",
             "input": {
               "input": "What is 8 * 6?"
             },
             "output": {
-              "output": "8 * 6 equals 48."
+              "output": "The product of 8 and 6 is 48."
             },
             "metricsData": [
               {
@@ -212,11 +212,11 @@
                 "threshold": 0.5,
                 "success": true,
                 "score": 1.0,
-                "reason": "The system correctly interpreted the task, performed the multiplication, and provided the correct answer (48) in a clear response. The actual outcome perfectly aligns with the desired task.",
+                "reason": "The system correctly interpreted the task, performed the multiplication, and provided the correct answer in a clear response. The actual outcome fully aligns with the desired task.",
                 "strictMode": false,
                 "evaluationModel": "gpt-4.1",
-                "evaluationCost": 0.006117999999999999,
-                "verboseLogs": "Task: Calculate the product of 8 and 6. \n \nOutcome: The system used an LLM (gpt-4o-mini-2024-07-18) to interpret the user's request and called a 'multiply' tool with inputs 8 and 6. The tool returned 48. The LLM then generated the response '8 * 6 equals 48.' as the final output."
+                "evaluationCost": 0.0061200000000000004,
+                "verboseLogs": "Task: Calculate the product of 8 and 6. \n \nOutcome: The system used an LLM to interpret the user's request and called a 'multiply' tool with inputs 8 and 6. The tool returned 48. The LLM then generated the response 'The product of 8 and 6 is 48.'"
               }
             ]
           }
@@ -224,13 +224,13 @@
         "agentSpans": [],
         "llmSpans": [
           {
-            "uuid": "90c369b7-b715-46fc-a05b-c4297fb72ea1",
+            "uuid": "184555da-b31c-4be5-8f3b-8f2991686744",
             "name": "ChatOpenAI",
             "status": "SUCCESS",
             "type": "llm",
-            "parentUuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
-            "startTime": "2025-10-30T13:52:12.651Z",
-            "endTime": "2025-10-30T13:52:13.950Z",
+            "parentUuid": "bf9f0aed-2ee6-4038-badc-35ba5f9d0035",
+            "startTime": "2025-10-30T14:09:53.933Z",
+            "endTime": "2025-10-30T14:09:55.205Z",
             "input": [
               {
                 "role": "system",
@@ -255,35 +255,35 @@
                     "a": 8,
                     "b": 6
                   },
-                  "id": "call_bxe3Z2ON7Qxtj9apump6KqFO"
+                  "id": "call_ZaJhwLYG7im2oTjHHt8OqOXG"
                 }
               ]
             },
             "model": "gpt-4o-mini-2024-07-18",
             "prompt": {},
             "tokenIntervals": {
-              "2025-10-30T13:52:13.435735Z": "",
-              "2025-10-30T13:52:13.468346Z": "",
-              "2025-10-30T13:52:13.468762Z": "",
-              "2025-10-30T13:52:13.645692Z": "",
-              "2025-10-30T13:52:13.646664Z": "",
-              "2025-10-30T13:52:13.647388Z": "",
-              "2025-10-30T13:52:13.647882Z": "",
-              "2025-10-30T13:52:13.935352Z": "",
-              "2025-10-30T13:52:13.936759Z": "",
-              "2025-10-30T13:52:13.939099Z": "",
-              "2025-10-30T13:52:13.939644Z": "",
-              "2025-10-30T13:52:13.939909Z": ""
+              "2025-10-30T14:09:54.936914Z": "",
+              "2025-10-30T14:09:54.950519Z": "",
+              "2025-10-30T14:09:54.950721Z": "",
+              "2025-10-30T14:09:55.005633Z": "",
+              "2025-10-30T14:09:55.005895Z": "",
+              "2025-10-30T14:09:55.068675Z": "",
+              "2025-10-30T14:09:55.069215Z": "",
+              "2025-10-30T14:09:55.164029Z": "",
+              "2025-10-30T14:09:55.165250Z": "",
+              "2025-10-30T14:09:55.188516Z": "",
+              "2025-10-30T14:09:55.189034Z": "",
+              "2025-10-30T14:09:55.189511Z": ""
             }
           },
           {
-            "uuid": "dc31ad71-3649-481a-a369-d481e28e25b7",
+            "uuid": "e85775f9-dbc4-40d5-8421-5c740a7e9448",
             "name": "ChatOpenAI",
             "status": "SUCCESS",
             "type": "llm",
-            "parentUuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
-            "startTime": "2025-10-30T13:52:13.958Z",
-            "endTime": "2025-10-30T13:52:15.406Z",
+            "parentUuid": "bf9f0aed-2ee6-4038-badc-35ba5f9d0035",
+            "startTime": "2025-10-30T14:09:55.211Z",
+            "endTime": "2025-10-30T14:09:56.121Z",
             "input": [
               {
                 "role": "system",
@@ -308,36 +308,40 @@
             ],
             "output": {
               "role": "AI",
-              "content": "8 * 6 equals 48.",
+              "content": "The product of 8 and 6 is 48.",
               "tool_calls": []
             },
             "model": "gpt-4o-mini-2024-07-18",
             "prompt": {},
             "tokenIntervals": {
-              "2025-10-30T13:52:14.994195Z": "",
-              "2025-10-30T13:52:14.994738Z": "8",
-              "2025-10-30T13:52:14.995092Z": " *",
-              "2025-10-30T13:52:15.072788Z": " ",
-              "2025-10-30T13:52:15.073078Z": "6",
-              "2025-10-30T13:52:15.073627Z": " equals",
-              "2025-10-30T13:52:15.073841Z": " ",
-              "2025-10-30T13:52:15.119843Z": "48",
-              "2025-10-30T13:52:15.120553Z": ".",
-              "2025-10-30T13:52:15.121507Z": "",
-              "2025-10-30T13:52:15.121864Z": ""
+              "2025-10-30T14:09:55.996591Z": "",
+              "2025-10-30T14:09:56.007243Z": "The",
+              "2025-10-30T14:09:56.007445Z": " product",
+              "2025-10-30T14:09:56.025314Z": " of",
+              "2025-10-30T14:09:56.025573Z": " ",
+              "2025-10-30T14:09:56.028760Z": "8",
+              "2025-10-30T14:09:56.028973Z": " and",
+              "2025-10-30T14:09:56.036662Z": " ",
+              "2025-10-30T14:09:56.036878Z": "6",
+              "2025-10-30T14:09:56.052318Z": " is",
+              "2025-10-30T14:09:56.052663Z": " ",
+              "2025-10-30T14:09:56.094640Z": "48",
+              "2025-10-30T14:09:56.095081Z": ".",
+              "2025-10-30T14:09:56.112496Z": "",
+              "2025-10-30T14:09:56.113182Z": ""
             }
           }
         ],
         "retrieverSpans": [],
         "toolSpans": [
           {
-            "uuid": "a5a51ea2-4c78-4b14-bb28-185b3a8f00cb",
+            "uuid": "d4fca71c-483e-4c90-9123-54cd310308c2",
             "name": "multiply",
             "status": "SUCCESS",
             "type": "tool",
-            "parentUuid": "a9b4c4aa-1e33-4ba3-b85d-e8853de98924",
-            "startTime": "2025-10-30T13:52:13.954Z",
-            "endTime": "2025-10-30T13:52:13.955Z",
+            "parentUuid": "bf9f0aed-2ee6-4038-badc-35ba5f9d0035",
+            "startTime": "2025-10-30T14:09:55.207Z",
+            "endTime": "2025-10-30T14:09:55.208Z",
             "input": {
               "a": 8,
               "b": 6
@@ -345,13 +349,13 @@
             "output": 48
           }
         ],
-        "startTime": "2025-10-30T13:52:12.646Z",
-        "endTime": "2025-10-30T13:52:15.408Z",
+        "startTime": "2025-10-30T14:09:53.930Z",
+        "endTime": "2025-10-30T14:09:56.122Z",
         "input": {
           "input": "What is 8 * 6?"
         },
         "output": {
-          "output": "8 * 6 equals 48."
+          "output": "The product of 8 and 6 is 48."
         },
         "status": "SUCCESS"
       }
@@ -392,5 +396,5 @@
   },
   "testPassed": 2,
   "testFailed": 0,
-  "runDuration": 23.16889720899053
+  "runDuration": 11.997408374998486
 }
