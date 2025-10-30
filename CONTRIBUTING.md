@@ -36,7 +36,7 @@ Thank you and come ask any questions or discuss any new PRs you have in mind on 
 * **Reopening:** If your issue is still relevant:
 
   1. Leave a comment mentioning `@confident-ai/maintainers` and include any new details (version, repro steps, logs).
-  2. If you don’t get a response in a few days, open a **new issue** and reference the old one (e.g., “Follow-up to #1234”).
+  2. If you don’t get a response in a few days, open a **new issue** and reference the old one.
 
 **Exclusions:** Issues labeled `security` or `roadmap`.
 
