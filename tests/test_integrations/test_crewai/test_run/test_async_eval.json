@@ -1,0 +1,335 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "London",
+      "actualOutput": "The current weather in London is 79\u00b0F with rainy conditions and a humidity level of 42%.",
+      "success": true,
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": true,
+          "score": 1.0,
+          "reason": "The score is 1.00 because the response was fully relevant to the input with no irrelevant statements. Great job staying focused and on-topic!",
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1",
+          "evaluationCost": 0.0065840000000000004,
+          "verboseLogs": "Statements:\n[\n    \"The current weather in London is 79\u00b0F.\",\n    \"London is experiencing rainy conditions.\",\n    \"The humidity level in London is 42%.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+        }
+      ],
+      "runDuration": 5.0130566250009,
+      "evaluationCost": 0.0065840000000000004,
+      "order": 0,
+      "trace": {
+        "uuid": "9e20914a-269e-4846-a830-13a04352b2eb",
+        "baseSpans": [
+          {
+            "uuid": "122a7fae-960a-4696-957c-96d19a1b5454",
+            "name": "kickoff_async",
+            "status": "SUCCESS",
+            "type": "base",
+            "startTime": "2025-10-30T15:08:09.108Z",
+            "endTime": "2025-10-30T15:08:12.760Z",
+            "input": {}
+          },
+          {
+            "uuid": "18431c13-63cc-4e94-a738-08bd1b19989c",
+            "name": "kickoff",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "122a7fae-960a-4696-957c-96d19a1b5454",
+            "startTime": "2025-10-30T15:08:09.109Z",
+            "endTime": "2025-10-30T15:08:12.760Z",
+            "input": {
+              "city": "London"
+            },
+            "output": "The current weather in London is 79\u00b0F with rainy conditions and a humidity level of 42%."
+          }
+        ],
+        "agentSpans": [
+          {
+            "uuid": "5e51b328-2739-46c2-8868-274bf0ab0a90",
+            "name": "execute_task",
+            "status": "SUCCESS",
+            "type": "agent",
+            "parentUuid": "18431c13-63cc-4e94-a738-08bd1b19989c",
+            "startTime": "2025-10-30T15:08:09.111Z",
+            "endTime": "2025-10-30T15:08:12.757Z",
+            "input": "Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
+            "output": "The current weather in London is 79\u00b0F with rainy conditions and a humidity level of 42%.",
+            "toolsCalled": [
+              {
+                "name": "get_weather",
+                "output": "Weather in London: 79\u00b0F, Rainy, Humidity: 42%",
+                "inputParameters": {
+                  "output": "{\"city\": \"London\"}"
+                }
+              }
+            ],
+            "availableTools": [],
+            "agentHandoffs": []
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "8198affb-5871-4b7e-8656-045d9f5bb93e",
+            "name": "call",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "5e51b328-2739-46c2-8868-274bf0ab0a90",
+            "startTime": "2025-10-30T15:08:09.112Z",
+            "endTime": "2025-10-30T15:08:10.853Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.\nYou ONLY have access to the following tools, and should NEVER make up tools that are not listed here:\n\nTool Name: get_weather\nTool Arguments: {'city': {'description': None, 'type': 'str'}}\nTool Description: Fetch weather data for a given city. Returns temperature and conditions.\n\nIMPORTANT: Use the following format in your response:\n\n```\nThought: you should always think about what to do\nAction: the action to take, only one name of [get_weather], just the name, exactly as it's written.\nAction Input: the input to the action, just a simple JSON object, enclosed in curly braces, using \" to wrap keys and values.\nObservation: the result of the action\n```\n\nOnce all necessary information is gathered, return the following format:\n\n```\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n```"
+              },
+              {
+                "role": "user",
+                "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+              }
+            ],
+            "output": "I need to get the current weather data for London to provide an accurate report. \nAction: get_weather\nAction Input: {\"city\":\"London\"}",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          },
+          {
+            "uuid": "3685b062-d3e8-44c6-88cc-eeae7b031494",
+            "name": "call",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "5e51b328-2739-46c2-8868-274bf0ab0a90",
+            "startTime": "2025-10-30T15:08:10.862Z",
+            "endTime": "2025-10-30T15:08:12.754Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.\nYou ONLY have access to the following tools, and should NEVER make up tools that are not listed here:\n\nTool Name: get_weather\nTool Arguments: {'city': {'description': None, 'type': 'str'}}\nTool Description: Fetch weather data for a given city. Returns temperature and conditions.\n\nIMPORTANT: Use the following format in your response:\n\n```\nThought: you should always think about what to do\nAction: the action to take, only one name of [get_weather], just the name, exactly as it's written.\nAction Input: the input to the action, just a simple JSON object, enclosed in curly braces, using \" to wrap keys and values.\nObservation: the result of the action\n```\n\nOnce all necessary information is gathered, return the following format:\n\n```\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n```"
+              },
+              {
+                "role": "user",
+                "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+              },
+              {
+                "role": "assistant",
+                "content": "I need to get the current weather data for London to provide an accurate report. \nAction: get_weather\nAction Input: {\"city\":\"London\"}\nObservation: Weather in London: 79\u00b0F, Rainy, Humidity: 42%"
+              }
+            ],
+            "output": "```\nThought: I now know the final answer\nFinal Answer: The current weather in London is 79\u00b0F with rainy conditions and a humidity level of 42%.\n```",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [
+          {
+            "uuid": "ab0a986e-fdaf-4e5a-a5dd-84a9852c0f63",
+            "name": "get_weather",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "5e51b328-2739-46c2-8868-274bf0ab0a90",
+            "startTime": "2025-10-30T15:08:10.855Z",
+            "endTime": "2025-10-30T15:08:10.858Z",
+            "input": "{\"city\": \"London\"}",
+            "output": "Weather in London: 79\u00b0F, Rainy, Humidity: 42%"
+          }
+        ],
+        "startTime": "2025-10-30T15:08:09.108Z",
+        "endTime": "2025-10-30T15:08:12.760Z",
+        "input": {
+          "city": "London"
+        },
+        "output": "The current weather in London is 79\u00b0F with rainy conditions and a humidity level of 42%.",
+        "status": "SUCCESS",
+        "metricsData": [
+          {
+            "name": "Answer Relevancy",
+            "threshold": 0.5,
+            "success": true,
+            "score": 1.0,
+            "reason": "The score is 1.00 because the response was fully relevant to the input with no irrelevant statements. Great job staying focused and on-topic!",
+            "strictMode": false,
+            "evaluationModel": "gpt-4.1",
+            "evaluationCost": 0.0065840000000000004,
+            "verboseLogs": "Statements:\n[\n    \"The current weather in London is 79\u00b0F.\",\n    \"London is experiencing rainy conditions.\",\n    \"The humidity level in London is 42%.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "Paris",
+      "actualOutput": "The current weather in Paris is 83\u00b0F with cloudy conditions and a humidity level of 81%.",
+      "success": true,
+      "metricsData": [
+        {
+          "name": "Answer Relevancy",
+          "threshold": 0.5,
+          "success": true,
+          "score": 1.0,
+          "reason": "The score is 1.00 because every part of the answer was directly relevant to the input. Great job staying focused and on-topic!",
+          "strictMode": false,
+          "evaluationModel": "gpt-4.1",
+          "evaluationCost": 0.005766,
+          "verboseLogs": "Statements:\n[\n    \"The current weather in London is 79\u00b0F.\",\n    \"London is experiencing rainy conditions.\",\n    \"The humidity level in London is 42%.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+        }
+      ],
+      "runDuration": 4.515919333003694,
+      "evaluationCost": 0.005766,
+      "order": 1,
+      "trace": {
+        "uuid": "5c3f19de-dad8-477b-b0da-06e5aa313192",
+        "baseSpans": [
+          {
+            "uuid": "8fcd4774-62ca-47fe-b4d9-d55acef8a771",
+            "name": "kickoff_async",
+            "status": "SUCCESS",
+            "type": "base",
+            "startTime": "2025-10-30T15:08:09.109Z",
+            "endTime": "2025-10-30T15:08:12.221Z",
+            "input": {}
+          },
+          {
+            "uuid": "f090720e-5d09-4118-b61b-aa1d1d34e73a",
+            "name": "kickoff",
+            "status": "SUCCESS",
+            "type": "base",
+            "parentUuid": "8fcd4774-62ca-47fe-b4d9-d55acef8a771",
+            "startTime": "2025-10-30T15:08:09.109Z",
+            "endTime": "2025-10-30T15:08:12.221Z",
+            "input": {
+              "city": "Paris"
+            },
+            "output": "The current weather in Paris is 83\u00b0F with cloudy conditions and a humidity level of 81%."
+          }
+        ],
+        "agentSpans": [
+          {
+            "uuid": "cfbfde03-f161-453e-b013-422758b9c5d7",
+            "name": "execute_task",
+            "status": "SUCCESS",
+            "type": "agent",
+            "parentUuid": "f090720e-5d09-4118-b61b-aa1d1d34e73a",
+            "startTime": "2025-10-30T15:08:09.116Z",
+            "endTime": "2025-10-30T15:08:12.217Z",
+            "input": "Get the current weather for Paris and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
+            "output": "The current weather in Paris is 83\u00b0F with cloudy conditions and a humidity level of 81%.",
+            "toolsCalled": [
+              {
+                "name": "get_weather",
+                "output": "Weather in Paris: 83\u00b0F, Cloudy, Humidity: 81%",
+                "inputParameters": {
+                  "output": "{\"city\": \"Paris\"}"
+                }
+              }
+            ],
+            "availableTools": [],
+            "agentHandoffs": []
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "8be66f39-ce5b-468c-b947-e0923a475ecb",
+            "name": "call",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "cfbfde03-f161-453e-b013-422758b9c5d7",
+            "startTime": "2025-10-30T15:08:09.116Z",
+            "endTime": "2025-10-30T15:08:10.657Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.\nYou ONLY have access to the following tools, and should NEVER make up tools that are not listed here:\n\nTool Name: get_weather\nTool Arguments: {'city': {'description': None, 'type': 'str'}}\nTool Description: Fetch weather data for a given city. Returns temperature and conditions.\n\nIMPORTANT: Use the following format in your response:\n\n```\nThought: you should always think about what to do\nAction: the action to take, only one name of [get_weather], just the name, exactly as it's written.\nAction Input: the input to the action, just a simple JSON object, enclosed in curly braces, using \" to wrap keys and values.\nObservation: the result of the action\n```\n\nOnce all necessary information is gathered, return the following format:\n\n```\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n```"
+              },
+              {
+                "role": "user",
+                "content": "\nCurrent Task: Get the current weather for Paris and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+              }
+            ],
+            "output": "I need to fetch the current weather for Paris to provide an accurate report. \nAction: get_weather\nAction Input: {\"city\":\"Paris\"}",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          },
+          {
+            "uuid": "708ab855-2b84-4b28-971d-2241f4949e1d",
+            "name": "call",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "cfbfde03-f161-453e-b013-422758b9c5d7",
+            "startTime": "2025-10-30T15:08:10.666Z",
+            "endTime": "2025-10-30T15:08:12.214Z",
+            "input": [
+              {
+                "role": "system",
+                "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.\nYou ONLY have access to the following tools, and should NEVER make up tools that are not listed here:\n\nTool Name: get_weather\nTool Arguments: {'city': {'description': None, 'type': 'str'}}\nTool Description: Fetch weather data for a given city. Returns temperature and conditions.\n\nIMPORTANT: Use the following format in your response:\n\n```\nThought: you should always think about what to do\nAction: the action to take, only one name of [get_weather], just the name, exactly as it's written.\nAction Input: the input to the action, just a simple JSON object, enclosed in curly braces, using \" to wrap keys and values.\nObservation: the result of the action\n```\n\nOnce all necessary information is gathered, return the following format:\n\n```\nThought: I now know the final answer\nFinal Answer: the final answer to the original input question\n```"
+              },
+              {
+                "role": "user",
+                "content": "\nCurrent Task: Get the current weather for Paris and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nBegin! This is VERY important to you, use the tools available and give your best Final Answer, your job depends on it!\n\nThought:"
+              },
+              {
+                "role": "assistant",
+                "content": "I need to fetch the current weather for Paris to provide an accurate report. \nAction: get_weather\nAction Input: {\"city\":\"Paris\"}\nObservation: Weather in Paris: 83\u00b0F, Cloudy, Humidity: 81%"
+              }
+            ],
+            "output": "```\nThought: I now know the final answer\nFinal Answer: The current weather in Paris is 83\u00b0F with cloudy conditions and a humidity level of 81%.\n```",
+            "model": "gpt-4o-mini",
+            "prompt": {}
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [
+          {
+            "uuid": "79d752f7-6ad1-452d-b8ce-db408b4ccc2f",
+            "name": "get_weather",
+            "status": "SUCCESS",
+            "type": "tool",
+            "parentUuid": "cfbfde03-f161-453e-b013-422758b9c5d7",
+            "startTime": "2025-10-30T15:08:10.658Z",
+            "endTime": "2025-10-30T15:08:10.661Z",
+            "input": "{\"city\": \"Paris\"}",
+            "output": "Weather in Paris: 83\u00b0F, Cloudy, Humidity: 81%"
+          }
+        ],
+        "startTime": "2025-10-30T15:08:09.109Z",
+        "endTime": "2025-10-30T15:08:12.221Z",
+        "input": {
+          "city": "Paris"
+        },
+        "output": "The current weather in Paris is 83\u00b0F with cloudy conditions and a humidity level of 81%.",
+        "status": "SUCCESS",
+        "metricsData": [
+          {
+            "name": "Answer Relevancy",
+            "threshold": 0.5,
+            "success": true,
+            "score": 1.0,
+            "reason": "The score is 1.00 because every part of the answer was directly relevant to the input. Great job staying focused and on-topic!",
+            "strictMode": false,
+            "evaluationModel": "gpt-4.1",
+            "evaluationCost": 0.005766,
+            "verboseLogs": "Statements:\n[\n    \"The current weather in London is 79\u00b0F.\",\n    \"London is experiencing rainy conditions.\",\n    \"The humidity level in London is 42%.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+          }
+        ]
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 8.674457334011095,
+  "evaluationCost": 0.01235
+}
