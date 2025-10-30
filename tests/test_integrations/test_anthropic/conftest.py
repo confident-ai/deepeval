@@ -6,7 +6,7 @@ def _setup_anthropic_instrumentation():
     from deepeval.anthropic.patch import (
         # patch_anthropic_classes,
         # unpatch_anthropic_classes,
-        _ANTHROPIC_PATCHED
+        _ANTHROPIC_PATCHED,
     )
 
     # patch_anthropic_classes()

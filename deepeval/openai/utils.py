@@ -11,6 +11,7 @@ from deepeval.tracing.context import current_span_context
 from deepeval.model_integrations.types import OutputParameters
 from deepeval.model_integrations.utils import compact_dump, fmt_url
 
+
 def create_child_tool_spans(output_parameters: OutputParameters):
 
     if output_parameters.tools_called is None:
