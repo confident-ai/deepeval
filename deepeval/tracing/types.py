@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass, field
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, Dict, List, Optional, Union, Literal
 from rich.progress import Progress
 
@@ -55,6 +55,8 @@ class LlmOutput(BaseModel):
 
 
 class BaseSpan(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     uuid: str
     status: TraceSpanStatus
     children: List["BaseSpan"] = Field(default_factory=list)
@@ -89,9 +91,6 @@ class BaseSpan(BaseModel):
     expected_tools: Optional[List[ToolCall]] = Field(
         None, serialization_alias="expectedTools"
     )
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class AgentSpan(BaseSpan):
@@ -140,6 +139,8 @@ class ToolSpan(BaseSpan):
 
 
 class Trace(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     uuid: str = Field(serialization_alias="uuid")
     status: TraceSpanStatus
     root_spans: List[BaseSpan] = Field(serialization_alias="rootSpans")
@@ -173,9 +174,6 @@ class Trace(BaseModel):
     expected_tools: Optional[List[ToolCall]] = Field(
         None, serialization_alias="expectedTools"
     )
-
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class TraceAttributes(BaseModel):

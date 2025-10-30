@@ -5,7 +5,7 @@ from rich.console import Console
 import time
 import json
 import os
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, ConfigDict
 import asyncio
 import portalocker
 import threading
@@ -77,6 +77,8 @@ class CustomEncoder(json.JSONEncoder):
 
 
 class CachedPrompt(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     alias: str
     version: str
     label: Optional[str] = None
@@ -88,9 +90,6 @@ class CachedPrompt(BaseModel):
     model_settings: Optional[ModelSettings]
     output_type: Optional[OutputType]
     output_schema: Optional[OutputSchema]
-
-    class Config:
-        use_enum_values = True
 
 
 class Prompt:

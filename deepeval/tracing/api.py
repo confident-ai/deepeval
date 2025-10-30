@@ -42,6 +42,8 @@ class MetricData(BaseModel):
 
 
 class BaseApiSpan(BaseModel):
+    model_config = ConfigDict(use_enum_values=True, validate_assignment=True)
+
     uuid: str
     name: str = None
     status: TraceSpanApiStatus
@@ -96,12 +98,10 @@ class BaseApiSpan(BaseModel):
     metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
 
-    class Config:
-        use_enum_values = True
-        validate_assignment = True
-
 
 class TraceApi(BaseModel):
+    model_config = ConfigDict(use_enum_values=True, validate_assignment=True)
+
     uuid: str
     base_spans: Optional[List[BaseApiSpan]] = Field(None, alias="baseSpans")
     agent_spans: Optional[List[BaseApiSpan]] = Field(None, alias="agentSpans")
@@ -139,7 +139,3 @@ class TraceApi(BaseModel):
 
     # Don't serialize these
     confident_api_key: Optional[str] = Field(None, exclude=True)
-
-    class Config:
-        use_enum_values = True
-        validate_assignment = True

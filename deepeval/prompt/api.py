@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import BaseModel, Field, AliasChoices, ConfigDict
 from enum import Enum
 from typing import List, Optional
 from pydantic import TypeAdapter
@@ -92,6 +92,8 @@ class SchemaDataType(Enum):
 
 
 class OutputSchemaField(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     id: str
     type: SchemaDataType
     name: str
@@ -101,9 +103,6 @@ class OutputSchemaField(BaseModel):
         serialization_alias="parentId",
         validation_alias=AliasChoices("parent_id", "parentId"),
     )
-
-    class Config:
-        use_enum_values = True
 
 
 class OutputSchema(BaseModel):
@@ -187,6 +186,8 @@ class PromptHttpResponse(BaseModel):
 
 
 class PromptPushRequest(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     alias: str
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
@@ -203,11 +204,10 @@ class PromptPushRequest(BaseModel):
         default=None, serialization_alias="outputType"
     )
 
-    class Config:
-        use_enum_values = True
-
 
 class PromptUpdateRequest(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
     text: Optional[str] = None
     messages: Optional[List[PromptMessage]] = None
     interpolation_type: PromptInterpolationType = Field(
@@ -222,9 +222,6 @@ class PromptUpdateRequest(BaseModel):
     output_type: Optional[OutputType] = Field(
         default=None, serialization_alias="outputType"
     )
-
-    class Config:
-        use_enum_values = True
 
 
 class PromptApi(BaseModel):
