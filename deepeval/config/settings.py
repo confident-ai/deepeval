@@ -25,6 +25,7 @@ from pydantic import (
     confloat,
     conint,
     field_validator,
+    model_validator,
     SecretStr,
 )
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -41,6 +42,13 @@ from deepeval.constants import SUPPORTED_PROVIDER_SLUGS, slugify
 
 logger = logging.getLogger(__name__)
 _SAVE_RE = re.compile(r"^(?P<scheme>dotenv)(?::(?P<path>.+))?$")
+
+# settings that were converted to computed fields with override counterparts
+_DEPRECATED_TO_OVERRIDE = {
+    "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS": "DEEPEVAL_PER_TASK_TIMEOUT_SECONDS_OVERRIDE",
+    "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS": "DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE",
+    "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS": "DEEPEVAL_TASK_GATHER_BUFFER_SECONDS_OVERRIDE",
+}
 
 
 def _find_legacy_enum(env_key: str):
@@ -743,6 +751,57 @@ class Settings(BaseSettings):
 
         # Unset means ON
         return False
+
+    @model_validator(mode="after")
+    def _apply_deprecated_computed_env_aliases(self):
+        """
+        Backwards compatibility courtesy:
+        - If users still set a deprecated computed field in the environment,
+          emit a deprecation warning and mirror its value into the matching
+          *_OVERRIDE field (unless the override is already set).
+        - Override always wins if both are present.
+        """
+        for old_key, override_key in _DEPRECATED_TO_OVERRIDE.items():
+            raw = os.getenv(old_key)
+            if raw is None or str(raw).strip() == "":
+                continue
+
+            # if override already set, ignore the deprecated one but log a warning
+            if getattr(self, override_key) is not None:
+                logger.warning(
+                    "Config deprecation: %s is deprecated and was ignored because %s "
+                    "is already set. Please remove %s and use %s going forward.",
+                    old_key,
+                    override_key,
+                    old_key,
+                    override_key,
+                )
+                continue
+
+            # apply the deprecated value into the override field.
+            try:
+                # let pydantic coerce the string to the target type on assignment
+                setattr(self, override_key, raw)
+                logger.warning(
+                    "Config deprecation: %s is deprecated. Its value (%r) was applied to %s. "
+                    "Please migrate to %s and remove %s from your environment.",
+                    old_key,
+                    raw,
+                    override_key,
+                    override_key,
+                    old_key,
+                )
+            except Exception as e:
+                # do not let exception bubble up, just warn
+                logger.warning(
+                    "Config deprecation: %s is deprecated and could not be applied to %s "
+                    "(value=%r): %s",
+                    old_key,
+                    override_key,
+                    raw,
+                    e,
+                )
+        return self
 
     #######################
     # Persistence support #
