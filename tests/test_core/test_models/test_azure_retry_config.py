@@ -80,27 +80,19 @@ def test_length_finish_reason_is_non_retryable():
     assert pred(LengthFinishReasonError()) is False
 
 
-def test_azure_sdk_retries_opt_in_respects_user_max_retries():
-    from deepeval.config.settings import get_settings
+def test_azure_sdk_retries_opt_in_respects_user_max_retries(settings):
 
-    s = get_settings()
+    # configure SDK managed retries for Azure
+    with settings.edit(persist=False):
+        settings.DEEPEVAL_SDK_RETRY_PROVIDERS = ["azure"]
 
-    # turn ON SDK managed retries for Azure
-    with s.edit(persist=False):
-        s.DEEPEVAL_SDK_RETRY_PROVIDERS = ["azure"]
-
-    try:
-        m = azure_model.AzureOpenAIModel(
-            deployment_name="dummy",
-            model_name="gpt-4o-mini",
-            azure_openai_api_key="x",
-            openai_api_version="2024-02-01",
-            azure_endpoint="https://example",
-            max_retries=5,  # should be honored when SDK retries are enabled
-        )
-        client = m.load_model(async_mode=False)
-        assert client.max_retries == 5
-    finally:
-        # clean up to avoid bleeding state into other tests
-        with s.edit(persist=False):
-            s.DEEPEVAL_SDK_RETRY_PROVIDERS = []
+    m = azure_model.AzureOpenAIModel(
+        deployment_name="dummy",
+        model_name="gpt-4o-mini",
+        azure_openai_api_key="x",
+        openai_api_version="2024-02-01",
+        azure_endpoint="https://example",
+        max_retries=5,  # should be honored when SDK retries are enabled
+    )
+    client = m.load_model(async_mode=False)
+    assert client.max_retries == 5
