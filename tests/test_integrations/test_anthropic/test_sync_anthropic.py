@@ -23,6 +23,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 def test_sync_messages_create_without_trace():
     client.messages.create(
         model="claude-sonnet-4-5",
+        max_tokens=1024,
         system="You are a helpful assistant. Always generate a string response.",
         messages=[{"role": "user", "content": "Hello, how are you?"}],
     )
@@ -43,6 +44,7 @@ def test_sync_messages_create_with_trace():
     ):
         client.responses.create(
             model="claude-sonnet-4-5",
+            max_tokens=1024,
             system="You are a helpful assistant. Always generate a string response.",
             messages=[{"role": "user", "content": "Hello, how are you?"}],
         )

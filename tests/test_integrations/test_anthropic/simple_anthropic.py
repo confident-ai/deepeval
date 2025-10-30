@@ -1,4 +1,4 @@
-from deepeval.anthropic import Anthropic, AsyncAnthropic
+from anthropic import Anthropic, AsyncAnthropic
 from deepeval.tracing import LlmSpanContext, trace, observe
 from deepeval.prompt import Prompt
 
