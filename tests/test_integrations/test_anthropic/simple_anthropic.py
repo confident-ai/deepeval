@@ -3,7 +3,7 @@ from deepeval.tracing import LlmSpanContext, trace, observe
 from deepeval.prompt import Prompt
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 client = Anthropic()
 async_client = AsyncAnthropic()

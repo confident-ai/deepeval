@@ -10,7 +10,7 @@ from tests.test_integrations.utils import assert_trace_json
 client = AsyncAnthropic()
 
 prompt = Prompt(alias="asd")
-prompt.pull(version="00.00.01")
+prompt._version = "00.00.01"
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
