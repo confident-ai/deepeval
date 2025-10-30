@@ -1,5 +1,6 @@
+import json
 import uuid
-from typing import List
+from typing import Any, List, Optional
 
 from deepeval.model_integrations.types import InputParameters, OutputParameters
 from deepeval.test_case.llm_test_case import ToolCall
@@ -11,6 +12,7 @@ from deepeval.tracing.context import (
 )
 from deepeval.tracing.trace_context import current_llm_context
 from deepeval.tracing.types import ToolSpan, TraceSpanStatus
+from deepeval.utils import shorten, len_long
 
 
 def _update_all_attributes(
@@ -88,3 +90,27 @@ def create_child_tool_spans(output_parameters: OutputParameters):
             }
         )
         current_span.children.append(tool_span)
+
+
+_URL_MAX = 200
+_JSON_MAX = max(
+    len_long(), 400
+)  # <- make this bigger by increasing DEEPEVAL_MAXLEN_LONG above 400
+
+
+def compact_dump(value: Any) -> str:
+    try:
+        dumped = json.dumps(
+            value, ensure_ascii=False, default=str, separators=(",", ":")
+        )
+    except Exception:
+        dumped = repr(value)
+    return shorten(dumped, max_len=_JSON_MAX)
+
+
+def fmt_url(url: Optional[str]) -> str:
+    if not url:
+        return ""
+    if url.startswith("data:"):
+        return "[data-uri]"
+    return shorten(url, max_len=_URL_MAX)
