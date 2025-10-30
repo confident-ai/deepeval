@@ -7,6 +7,8 @@ class TraceTestingManager:
     test_name: Optional[str] = None
     test_dict: Optional[Dict[str, Any]] = None
 
+    run_name: Optional[str] = None
+
     async def wait_for_test_dict(
         self, timeout: float = 10.0, poll_interval: float = 0.05
     ) -> Dict[str, Any]:

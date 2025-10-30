@@ -1,0 +1,256 @@
+{
+  "testCases": [
+    {
+      "name": "test_case_0",
+      "input": "What's the weather in UK?",
+      "actualOutput": "Could you please specify which location in the UK you are interested in? The weather varies greatly between regions (for example, London, Manchester, Edinburgh, etc.). If you provide a city or region and a specific date or time frame, I can give a more accurate weather update!",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 6.018788125002175,
+      "order": 0,
+      "trace": {
+        "uuid": "trace_2c53bc2cb3374742890d2d8c94b23641",
+        "baseSpans": [],
+        "agentSpans": [
+          {
+            "uuid": "0ff515f0-f32b-4f97-87a1-0b85a4c28229",
+            "name": "Weather Agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "startTime": "2025-10-30T13:39:01.047Z",
+            "endTime": "2025-10-30T13:39:03.334Z",
+            "metadata": {
+              "output_type": "str"
+            },
+            "input": "What's the weather in UK?",
+            "output": "Could you please specify which location in the UK you are interested in? The weather varies greatly between regions (for example, London, Manchester, Edinburgh, etc.). If you provide a city or region and a specific date or time frame, I can give a more accurate weather update!",
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because the answer was fully relevant and addressed the question directly with no irrelevant information. Great job staying on topic!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.005962,
+                "verboseLogs": "Statements:\n[\n    \"France covers a large area.\",\n    \"The weather in France can vary depending on the region and time of year.\",\n    \"You should specify a city or region and whether you want the current weather or a forecast.\",\n    \"Paris: Mostly cloudy with temperatures around 18-23\u00b0C.\",\n    \"Nice (French Riviera): Sunny to partly cloudy, temperatures around 22-26\u00b0C.\",\n    \"Lyon: Partly cloudy, temperatures around 20-25\u00b0C.\",\n    \"Bordeaux: Mostly sunny, around 21-26\u00b0C.\",\n    \"For an up-to-date and precise forecast, you should specify the location in France.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"This statement provides examples of regions in the UK, which could help clarify the input, but does not directly address the weather question.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "0ff93552-d307-456d-86e2-7bdf800c7e9b",
+            "name": "LLM Generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "0ff515f0-f32b-4f97-87a1-0b85a4c28229",
+            "startTime": "2025-10-30T13:39:01.052Z",
+            "endTime": "2025-10-30T13:39:03.333Z",
+            "metadata": {
+              "cached_input_tokens": 0,
+              "ouptut_reasoning_tokens": 0,
+              "invocation_params": {
+                "parallel_tool_calls": true,
+                "temperature": 1.0,
+                "tool_choice": "auto",
+                "tools": [],
+                "top_p": 1.0,
+                "reasoning": {},
+                "text": {
+                  "format": {
+                    "type": "text"
+                  },
+                  "verbosity": "medium"
+                },
+                "truncation": "disabled"
+              }
+            },
+            "input": [
+              {
+                "type": "message",
+                "role": "system",
+                "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+              },
+              {
+                "type": "message",
+                "role": "user",
+                "content": "What's the weather in UK?"
+              }
+            ],
+            "output": "Could you please specify which location in the UK you are interested in? The weather varies greatly between regions (for example, London, Manchester, Edinburgh, etc.). If you provide a city or region and a specific date or time frame, I can give a more accurate weather update!",
+            "model": "gpt-4.1-2025-04-14",
+            "prompt": {},
+            "inputTokenCount": 38.0,
+            "outputTokenCount": 57.0
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-30T13:39:01.047Z",
+        "endTime": "2025-10-30T13:39:03.334Z",
+        "input": [
+          {
+            "type": "message",
+            "role": "system",
+            "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+          },
+          {
+            "type": "message",
+            "role": "user",
+            "content": "What's the weather in UK?"
+          }
+        ],
+        "output": "Could you please specify which location in the UK you are interested in? The weather varies greatly between regions (for example, London, Manchester, Edinburgh, etc.). If you provide a city or region and a specific date or time frame, I can give a more accurate weather update!",
+        "status": "SUCCESS"
+      }
+    },
+    {
+      "name": "test_case_1",
+      "input": "What's the weather in France?",
+      "actualOutput": "France covers a large area, so the weather can vary depending on the region and time of year. Could you please specify a city or region (e.g., Paris, Nice, Lyon, Bordeaux) and if you are looking for the current weather or a forecast?\n\nIf you want a general idea for today (early June):\n\n- **Paris**: Mostly cloudy with temperatures around 18-23\u00b0C.\n- **Nice (French Riviera)**: Sunny to partly cloudy, temperatures around 22-26\u00b0C.\n- **Lyon**: Partly cloudy, temperatures around 20-25\u00b0C.\n- **Bordeaux**: Mostly sunny, around 21-26\u00b0C.\n\nFor an up-to-date and precise forecast, please specify the location in France!",
+      "success": true,
+      "metricsData": [],
+      "runDuration": 7.913225374999456,
+      "order": 1,
+      "trace": {
+        "uuid": "trace_746c6def90ce4172a26ca972842ac100",
+        "baseSpans": [],
+        "agentSpans": [
+          {
+            "uuid": "bf319de8-3ad3-4ab7-891b-1ab7341767d9",
+            "name": "Weather Agent",
+            "status": "SUCCESS",
+            "type": "agent",
+            "startTime": "2025-10-30T13:39:03.334Z",
+            "endTime": "2025-10-30T13:39:08.797Z",
+            "metadata": {
+              "output_type": "str"
+            },
+            "input": "What's the weather in France?",
+            "output": "France covers a large area, so the weather can vary depending on the region and time of year. Could you please specify a city or region (e.g., Paris, Nice, Lyon, Bordeaux) and if you are looking for the current weather or a forecast?\n\nIf you want a general idea for today (early June):\n\n- **Paris**: Mostly cloudy with temperatures around 18-23\u00b0C.\n- **Nice (French Riviera)**: Sunny to partly cloudy, temperatures around 22-26\u00b0C.\n- **Lyon**: Partly cloudy, temperatures around 20-25\u00b0C.\n- **Bordeaux**: Mostly sunny, around 21-26\u00b0C.\n\nFor an up-to-date and precise forecast, please specify the location in France!",
+            "availableTools": [],
+            "agentHandoffs": [],
+            "metricsData": [
+              {
+                "name": "Answer Relevancy",
+                "threshold": 0.5,
+                "success": true,
+                "score": 1.0,
+                "reason": "The score is 1.00 because every part of the answer was directly relevant to the question, with no irrelevant information included. Great job staying focused and concise!",
+                "strictMode": false,
+                "evaluationModel": "gpt-4.1",
+                "evaluationCost": 0.009548000000000001,
+                "verboseLogs": "Statements:\n[\n    \"France covers a large area.\",\n    \"The weather in France can vary depending on the region and time of year.\",\n    \"You should specify a city or region and whether you want the current weather or a forecast.\",\n    \"Paris: Mostly cloudy with temperatures around 18-23\u00b0C.\",\n    \"Nice (French Riviera): Sunny to partly cloudy, temperatures around 22-26\u00b0C.\",\n    \"Lyon: Partly cloudy, temperatures around 20-25\u00b0C.\",\n    \"Bordeaux: Mostly sunny, around 21-26\u00b0C.\",\n    \"For an up-to-date and precise forecast, you should specify the location in France.\"\n] \n \nVerdicts:\n[\n    {\n        \"verdict\": \"idk\",\n        \"reason\": \"While the statement provides context about France's size, it does not directly address the weather but helps explain why weather can vary.\"\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    },\n    {\n        \"verdict\": \"yes\",\n        \"reason\": null\n    }\n]"
+              }
+            ]
+          }
+        ],
+        "llmSpans": [
+          {
+            "uuid": "b585c4eb-cf67-4927-84df-f8c725122be6",
+            "name": "LLM Generation",
+            "status": "SUCCESS",
+            "type": "llm",
+            "parentUuid": "bf319de8-3ad3-4ab7-891b-1ab7341767d9",
+            "startTime": "2025-10-30T13:39:03.334Z",
+            "endTime": "2025-10-30T13:39:08.796Z",
+            "metadata": {
+              "cached_input_tokens": 0,
+              "ouptut_reasoning_tokens": 0,
+              "invocation_params": {
+                "parallel_tool_calls": true,
+                "temperature": 1.0,
+                "tool_choice": "auto",
+                "tools": [],
+                "top_p": 1.0,
+                "reasoning": {},
+                "text": {
+                  "format": {
+                    "type": "text"
+                  },
+                  "verbosity": "medium"
+                },
+                "truncation": "disabled"
+              }
+            },
+            "input": [
+              {
+                "type": "message",
+                "role": "system",
+                "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+              },
+              {
+                "type": "message",
+                "role": "user",
+                "content": "What's the weather in France?"
+              }
+            ],
+            "output": "France covers a large area, so the weather can vary depending on the region and time of year. Could you please specify a city or region (e.g., Paris, Nice, Lyon, Bordeaux) and if you are looking for the current weather or a forecast?\n\nIf you want a general idea for today (early June):\n\n- **Paris**: Mostly cloudy with temperatures around 18-23\u00b0C.\n- **Nice (French Riviera)**: Sunny to partly cloudy, temperatures around 22-26\u00b0C.\n- **Lyon**: Partly cloudy, temperatures around 20-25\u00b0C.\n- **Bordeaux**: Mostly sunny, around 21-26\u00b0C.\n\nFor an up-to-date and precise forecast, please specify the location in France!",
+            "model": "gpt-4.1-2025-04-14",
+            "prompt": {},
+            "inputTokenCount": 38.0,
+            "outputTokenCount": 153.0
+          }
+        ],
+        "retrieverSpans": [],
+        "toolSpans": [],
+        "startTime": "2025-10-30T13:39:03.334Z",
+        "endTime": "2025-10-30T13:39:08.797Z",
+        "input": [
+          {
+            "type": "message",
+            "role": "system",
+            "content": "You are a weather agent. You are given a question about the weather and you need to answer it."
+          },
+          {
+            "type": "message",
+            "role": "user",
+            "content": "What's the weather in France?"
+          }
+        ],
+        "output": "France covers a large area, so the weather can vary depending on the region and time of year. Could you please specify a city or region (e.g., Paris, Nice, Lyon, Bordeaux) and if you are looking for the current weather or a forecast?\n\nIf you want a general idea for today (early June):\n\n- **Paris**: Mostly cloudy with temperatures around 18-23\u00b0C.\n- **Nice (French Riviera)**: Sunny to partly cloudy, temperatures around 22-26\u00b0C.\n- **Lyon**: Partly cloudy, temperatures around 20-25\u00b0C.\n- **Bordeaux**: Mostly sunny, around 21-26\u00b0C.\n\nFor an up-to-date and precise forecast, please specify the location in France!",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "conversationalTestCases": [],
+  "metricsScores": [
+    {
+      "metric": "Answer Relevancy",
+      "scores": [
+        1.0,
+        1.0
+      ],
+      "passes": 2,
+      "fails": 0,
+      "errors": 0
+    }
+  ],
+  "traceMetricsScores": {
+    "agent": {
+      "Weather Agent": {
+        "Answer Relevancy": {
+          "metric": "Answer Relevancy",
+          "scores": [
+            1.0,
+            1.0
+          ],
+          "passes": 2,
+          "fails": 0,
+          "errors": 0
+        }
+      }
+    },
+    "tool": {},
+    "retriever": {},
+    "llm": {},
+    "base": {}
+  },
+  "testPassed": 2,
+  "testFailed": 0,
+  "runDuration": 15.698954624996986
+}

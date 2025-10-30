@@ -95,7 +95,7 @@ def load_trace_data(file_path: str):
         return json.load(file)
 
 
-def generate_trace_json(json_path: str):
+def generate_trace_json(json_path: str, is_run: bool = False):
     """
     Decorator that generates and saves trace data to a JSON file.
 
@@ -116,7 +116,10 @@ def generate_trace_json(json_path: str):
             )
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
                 result = await func(*args, **kwargs)
                 actual_dict = await trace_testing_manager.wait_for_test_dict()
 
@@ -127,6 +130,7 @@ def generate_trace_json(json_path: str):
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -136,7 +140,10 @@ def generate_trace_json(json_path: str):
             import asyncio
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
@@ -152,6 +159,7 @@ def generate_trace_json(json_path: str):
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         if inspect.iscoroutinefunction(func):
             return async_wrapper
@@ -161,7 +169,7 @@ def generate_trace_json(json_path: str):
     return decorator
 
 
-def assert_trace_json(json_path: str):
+def assert_trace_json(json_path: str, is_run: bool = False):
     """
     Decorator that tests trace data against an expected JSON file.
 
@@ -186,7 +194,11 @@ def assert_trace_json(json_path: str):
             )
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
+                
                 result = await func(*args, **kwargs)
                 actual_dict = await trace_testing_manager.wait_for_test_dict()
                 expected_dict = load_trace_data(json_path)
@@ -197,6 +209,7 @@ def assert_trace_json(json_path: str):
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -206,7 +219,11 @@ def assert_trace_json(json_path: str):
             import asyncio
 
             try:
-                trace_testing_manager.test_name = json_path
+                if is_run:
+                    trace_testing_manager.run_name = json_path
+                else:
+                    trace_testing_manager.test_name = json_path
+                
                 result = func(*args, **kwargs)
 
                 # For sync functions, we need to handle the async wait differently
@@ -222,6 +239,7 @@ def assert_trace_json(json_path: str):
             finally:
                 trace_testing_manager.test_name = None
                 trace_testing_manager.test_dict = None
+                trace_testing_manager.run_name = None
 
         if inspect.iscoroutinefunction(func):
             return async_wrapper
