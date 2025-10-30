@@ -22,6 +22,13 @@ if TYPE_CHECKING:
     from _pytest.fixtures import FixtureRequest
 
 
+PRESERVE_FROM_BASELINE = {
+    name
+    for name in Settings.model_fields.keys()
+    if name.endswith("_API_KEY") and not name.startswith("CONFIDENT")
+}
+
+
 @pytest.fixture(autouse=True)
 def _ensure_hidden_store_dir(tmp_path: Path):
     d = tmp_path / ".deepeval"
@@ -94,25 +101,37 @@ def _restore_env_to(baseline: dict[str, str]) -> None:
 
 
 @pytest.fixture(autouse=True)
-def _env_sandbox(_session_env_baseline, request):
-    # ensure each test starts from the session baseline
+def _env_sandbox(_session_env_baseline, request, monkeypatch):
+    # Start from the session baseline (CI secrets included)
     _restore_env_to(_session_env_baseline)
 
+    # Save whitelisted secrets from the session baseline
+    preserved = {
+        k: v
+        for k, v in _session_env_baseline.items()
+        if k in PRESERVE_FROM_BASELINE and isinstance(v, str) and v.strip()
+    }
+
+    # Clear ALL Settings keys to avoid leaking config (file system mode, default save, etc.)
     for setting_key in list(Settings.model_fields.keys()):
-        os.environ.pop(setting_key, None)
+        monkeypatch.delenv(setting_key, raising=False)
 
-    # default to disabling dotenv unless explicitly enabled via @pytest.mark.enable_dotenv
+    # Re-inject only the secrets we explicitly want to preserve
+    for k, v in preserved.items():
+        monkeypatch.setenv(k, v)
+
+    # Disable dotenv by default unless the test opts in via @pytest.mark.enable_dotenv
     if not request.node.get_closest_marker("enable_dotenv"):
-        os.environ["DEEPEVAL_DISABLE_DOTENV"] = "1"
+        monkeypatch.setenv("DEEPEVAL_DISABLE_DOTENV", "1")
     else:
-        os.environ.pop("DEEPEVAL_DISABLE_DOTENV", None)
+        monkeypatch.delenv("DEEPEVAL_DISABLE_DOTENV", raising=False)
 
-    # fresh Settings for this test
+    # Fresh Settings for this test
     reset_settings(reload_dotenv=False)
 
     yield
 
-    # return to the session baseline again
+    # Restore to the session baseline after the test
     _restore_env_to(_session_env_baseline)
     reset_settings(reload_dotenv=False)
 
