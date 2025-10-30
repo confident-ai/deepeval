@@ -1,6 +1,7 @@
 import asyncio
 import importlib
 import pytest
+import os
 
 from deepeval.evaluate.configs import CacheConfig, DisplayConfig, ErrorConfig
 from deepeval.evaluate.execute import _a_execute_agentic_test_case
@@ -13,6 +14,11 @@ from deepeval.dataset.golden import Golden
 exec_mod = importlib.import_module("deepeval.evaluate.execute")
 
 
+@pytest.mark.skipif(
+    os.getenv("OPENAI_API_KEY") is None
+    or not os.getenv("OPENAI_API_KEY").strip(),
+    reason="needs OPENAI_API_KEY",
+)
 @pytest.mark.asyncio
 @pytest.mark.parametrize("ignore_errors", [True, False])
 async def test_agentic_async_persists_metric_on_cancel(
