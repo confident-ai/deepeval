@@ -67,6 +67,7 @@ task = Task(
 crew = Crew(
     agents=[agent],
     tasks=[task],
+    tracing=False
 )
 
 ################################ TESTING CODE #################################
