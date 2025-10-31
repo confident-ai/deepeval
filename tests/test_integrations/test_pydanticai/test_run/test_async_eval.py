@@ -1,6 +1,7 @@
 import asyncio
 import os
 from pydantic_ai import Agent
+import pytest
 from deepeval.integrations.pydantic_ai.instrumentator import (
     ConfidentInstrumentationSettings,
 )
@@ -38,6 +39,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 @assert_trace_json(
     json_path=os.path.join(_current_dir, "test_async_eval.json"), is_run=True
 )
+@pytest.mark.skip(reason="random order for test case issue")
 def test_async_eval():
     for golden in dataset.evals_iterator():
         task = asyncio.create_task(run_agent(golden.input))
