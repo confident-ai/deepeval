@@ -9,6 +9,7 @@ from .dag.dag import DAGMetric, DeepAcyclicGraph
 from .conversational_dag.conversational_dag import ConversationalDAGMetric
 from .bias.bias import BiasMetric
 from .exact_match.exact_match import ExactMatchMetric
+from .pattern_match.pattern_match import PatternMatchMetric
 from .toxicity.toxicity import ToxicityMetric
 from .pii_leakage.pii_leakage import PIILeakageMetric
 from .non_advice.non_advice import NonAdviceMetric
@@ -72,6 +73,7 @@ __all__ = [
     "BaseArenaMetric",
     # Non-LLM metrics
     "ExactMatchMetric",
+    "PatternMatchMetric",
     # Core metrics
     "GEval",
     "ArenaGEval",
