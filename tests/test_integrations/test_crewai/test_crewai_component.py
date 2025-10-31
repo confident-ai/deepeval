@@ -76,7 +76,7 @@ crew = Crew(
     agents=[agent],
     tasks=[task],
     metric_collection="test_collection_1",
-    tracing=False
+    tracing=False,
 )
 
 ################################ TESTING CODE #################################
