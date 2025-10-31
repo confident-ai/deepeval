@@ -2,7 +2,7 @@ from typing import Any, Iterable, List
 
 from anthropic.types import Message
 
-from deepeval.openai.utils import _fmt_url, _compact_dump
+from deepeval.model_integrations.utils import compact_dump, fmt_url
 from deepeval.utils import shorten
 
 
@@ -61,7 +61,7 @@ def stringify_anthropic_content(content: Any) -> str:
                 return f"[image:{media_type}:base64:{data_preview}...]"
             elif source_type == "url":
                 url = source.get("url", "")
-                return f"[image:{_fmt_url(url)}]"
+                return f"[image:{fmt_url(url)}]"
             else:
                 return f"[image:{source_type or 'unknown'}]"
 
@@ -70,7 +70,7 @@ def stringify_anthropic_content(content: Any) -> str:
             tool_name = content.get("name", "unknown")
             tool_id = content.get("id", "")
             tool_input = content.get("input", {})
-            input_str = _compact_dump(tool_input) if tool_input else ""
+            input_str = compact_dump(tool_input) if tool_input else ""
             return f"[tool_use:{tool_name}:{tool_id}:{input_str}]"
 
         # Tool result block (in user messages)
@@ -95,7 +95,7 @@ def stringify_anthropic_content(content: Any) -> str:
                 return f"[document:{media_type}:base64]"
             elif source_type == "url":
                 url = source.get("url", "")
-                return f"[document:{_fmt_url(url)}]"
+                return f"[document:{fmt_url(url)}]"
             else:
                 return f"[document:{source_type or 'unknown'}]"
 
@@ -112,7 +112,7 @@ def stringify_anthropic_content(content: Any) -> str:
             return f"[{t}]"
 
     # unknown dicts and types returned as shortened JSON
-    return _compact_dump(content)
+    return compact_dump(content)
 
 
 def render_messages_anthropic(
