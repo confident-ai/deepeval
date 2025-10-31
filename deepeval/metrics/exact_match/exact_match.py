@@ -52,8 +52,8 @@ class ExactMatchMetric(BaseMetric):
                     "The actual and expected outputs are exact matches."
                 )
             elif self.compute_f1:
-                self.precision, self.recall, self.f1, matched_tokens = self._compute_precision_recall_f1(
-                    expected, actual
+                self.precision, self.recall, self.f1, matched_tokens = (
+                    self._compute_precision_recall_f1(expected, actual)
                 )
                 self.score = self.f1
                 self.reason = (
