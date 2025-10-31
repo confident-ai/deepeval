@@ -13,6 +13,7 @@ from deepeval.test_case import LLMTestCase, LLMTestCaseParams
 
 _TOKENIZER = re.compile(r"\w+")
 
+
 class RecallMetric(BaseMetric):
     _required_params: List[LLMTestCaseParams] = [
         LLMTestCaseParams.INPUT,
@@ -43,7 +44,9 @@ class RecallMetric(BaseMetric):
             expected = test_case.expected_output.strip()
             actual = test_case.actual_output.strip()
 
-            self.score, expected_tokens, actual_tokens, matched_tokens = self._compute_recall(expected, actual)
+            self.score, expected_tokens, actual_tokens, matched_tokens = (
+                self._compute_recall(expected, actual)
+            )
             self.reason = (
                 f"Expected Output tokens: {expected_tokens} "
                 f"Actual Output tokens: {actual_tokens} "
@@ -84,9 +87,7 @@ class RecallMetric(BaseMetric):
     def _tokenize(self, text: str) -> List[str]:
         return _TOKENIZER.findall(text.lower())
 
-    def _compute_recall(
-        self, expected: str, actual: str
-    ):
+    def _compute_recall(self, expected: str, actual: str):
         expected_tokens = self._tokenize(expected)
         actual_tokens = self._tokenize(actual)
 
