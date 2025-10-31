@@ -21,12 +21,51 @@ from pydantic import BaseModel
 from rich.progress import Progress
 from rich.console import Console, Theme
 
-from deepeval.confident.api import set_confident_api_key
 from deepeval.config.settings import get_settings
 from deepeval.config.utils import (
     get_env_bool,
     set_env_bool,
 )
+
+
+#####################
+# Pydantic Compat   #
+#####################
+
+import pydantic
+
+PYDANTIC_V2 = pydantic.VERSION.startswith("2")
+
+
+def make_model_config(**kwargs):
+    """
+    Create a model configuration that works with both Pydantic v1 and v2.
+    
+    Usage in a model (Pydantic v2 style):
+        class MyModel(BaseModel):
+            model_config = make_model_config(arbitrary_types_allowed=True)
+            field: str
+    
+    This will work correctly in both v1 and v2:
+    - In v2: Returns ConfigDict(**kwargs)
+    - In v1: Returns a Config class with the attributes set
+    
+    Args:
+        **kwargs: Configuration options (e.g., use_enum_values=True, arbitrary_types_allowed=True)
+    
+    Returns:
+        ConfigDict (v2) or Config class (v1)
+    """
+    if PYDANTIC_V2:
+        from pydantic import ConfigDict
+        return ConfigDict(**kwargs)
+    else:
+        # For Pydantic v1, create an inner Config class
+        class Config:
+            pass
+        for key, value in kwargs.items():
+            setattr(Config, key, value)
+        return Config
 
 
 ###############
@@ -232,6 +271,7 @@ def login(api_key: str):
         raise ValueError("Unable to login, please provide a non-empty api key.")
 
     from rich import print
+    from deepeval.confident.api import set_confident_api_key
 
     set_confident_api_key(api_key)
     print(

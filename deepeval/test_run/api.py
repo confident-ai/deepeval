@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from typing import Optional, List, Union, Dict
 
 from deepeval.test_case import MLLMImage, ToolCall
 from deepeval.tracing.api import TraceApi, MetricData
+from deepeval.utils import make_model_config
 
 
 class LLMApiTestCase(BaseModel):
@@ -49,7 +50,7 @@ class LLMApiTestCase(BaseModel):
     comments: Optional[str] = Field(None)
     trace: Optional[TraceApi] = Field(None)
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = make_model_config(arbitrary_types_allowed=True)
     # metric_collection: Optional[str] = Field(None, alias="metricCollection")
 
     def update_metric_data(self, metric_data: MetricData):

@@ -1,9 +1,11 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from typing import Any, Optional
+
+from deepeval.utils import make_model_config
 
 
 class ApiResponse(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = make_model_config(extra="ignore")
 
     success: bool
     data: Optional[Any] = None
