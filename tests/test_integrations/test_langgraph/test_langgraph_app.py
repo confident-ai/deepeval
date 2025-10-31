@@ -3,8 +3,8 @@ from deepeval.integrations.langchain import CallbackHandler, tool
 import os
 import json
 from tests.test_integrations.utils import (
-    assert_json_object_structure,
-    load_trace_data,
+    assert_trace_json,
+    generate_trace_json,
 )
 from deepeval.tracing.trace_test_manager import trace_testing_manager
 from langchain_openai import ChatOpenAI
@@ -31,9 +31,14 @@ agent = create_react_agent(
     prompt="You are a helpful assistant",
 )
 
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+json_path = os.path.join(_current_dir, "langgraph.json")
 
-def execute_agent():
-    return agent.invoke(
+
+# @generate_trace_json(json_path)
+@assert_trace_json(json_path)
+def test_execute_agent():
+    agent.invoke(
         input={
             "messages": [
                 {"role": "user", "content": "what is the weather in sf"}
@@ -54,39 +59,5 @@ def execute_agent():
     )
 
 
-################################ TESTING CODE #################################
-
-_current_dir = os.path.dirname(os.path.abspath(__file__))
-json_path = os.path.join(_current_dir, "langgraph.json")
-
-
-async def test_json_schema():
-    """
-    Test the json schema of the trace. Raises an exception if the schema is invalid.
-    """
-    try:
-        trace_testing_manager.test_name = json_path
-        execute_agent()
-        actual_dict = await trace_testing_manager.wait_for_test_dict()
-        expected_dict = load_trace_data(json_path)
-
-        assert assert_json_object_structure(expected_dict, actual_dict)
-    finally:
-        trace_testing_manager.test_name = None
-        trace_testing_manager.test_dict = None
-
-
-################################ Generate Actual JSON Dump Code #################################
-
-
-async def generate_actual_json_dump():
-    try:
-        trace_testing_manager.test_name = json_path
-        execute_agent()
-        actual_dict = await trace_testing_manager.wait_for_test_dict()
-
-        with open(json_path, "w") as f:
-            json.dump(actual_dict, f)
-    finally:
-        trace_testing_manager.test_name = None
-        trace_testing_manager.test_dict = None
+if __name__ == "__main__":
+    test_execute_agent()
