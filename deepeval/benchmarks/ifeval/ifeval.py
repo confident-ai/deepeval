@@ -1,8 +1,8 @@
-from pydantic.config import ConfigDict
 from deepeval.benchmarks.base_benchmark import (
     DeepEvalBaseBenchmark,
     DeepEvalBaseBenchmarkResult,
 )
+from deepeval.utils import make_model_config
 from typing import List, Optional, Dict, Any, Tuple
 from tqdm import tqdm
 import re
@@ -19,7 +19,7 @@ from deepeval.telemetry import capture_benchmark_run
 
 
 class IFEvalResult(DeepEvalBaseBenchmarkResult):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+    model_config = make_model_config(arbitrary_types_allowed=True)
     instruction_breakdown: dict[str, Any]
     predictions: "pd.DataFrame"
 

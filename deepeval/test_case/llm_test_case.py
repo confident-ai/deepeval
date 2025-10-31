@@ -1,5 +1,4 @@
 from pydantic import (
-    ConfigDict,
     Field,
     BaseModel,
     model_validator,
@@ -10,6 +9,8 @@ from typing import List, Optional, Dict, Any
 from enum import Enum
 import json
 import uuid
+
+from deepeval.utils import make_model_config
 
 from deepeval.test_case.mcp import (
     MCPServer,
@@ -156,7 +157,7 @@ class ToolCall(BaseModel):
 
 
 class LLMTestCase(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = make_model_config(extra="ignore")
 
     input: str
     actual_output: Optional[str] = Field(

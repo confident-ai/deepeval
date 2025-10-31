@@ -10,6 +10,8 @@ import asyncio
 import portalocker
 import threading
 
+from deepeval.utils import make_model_config
+
 from deepeval.prompt.api import (
     PromptHttpResponse,
     PromptMessage,
@@ -77,8 +79,8 @@ class CustomEncoder(json.JSONEncoder):
 
 
 class CachedPrompt(BaseModel):
-    model_config = ConfigDict(use_enum_values=True)
-
+    model_config = make_model_config(use_enum_values=True)
+    
     alias: str
     version: str
     label: Optional[str] = None

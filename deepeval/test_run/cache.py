@@ -4,7 +4,9 @@ import json
 import os
 from typing import List, Optional, Union, Dict, Union
 from enum import Enum
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
+
+from deepeval.utils import make_model_config
 
 from deepeval.test_case import LLMTestCaseParams, LLMTestCase, ToolCallParams
 from deepeval.test_run.api import MetricData
@@ -20,8 +22,8 @@ TEMP_CACHE_FILE_NAME = f"{HIDDEN_DIR}/.temp-deepeval-cache.json"
 
 
 class MetricConfiguration(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    model_config = make_model_config(arbitrary_types_allowed=True)
+    
     ##### Required fields #####
     threshold: float
     evaluation_model: Optional[str] = None
