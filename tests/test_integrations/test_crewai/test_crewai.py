@@ -64,10 +64,7 @@ task = Task(
     agent=agent,
 )
 
-crew = Crew(
-    agents=[agent],
-    tasks=[task],
-)
+crew = Crew(agents=[agent], tasks=[task], tracing=False)
 
 ################################ TESTING CODE #################################
 
