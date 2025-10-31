@@ -22,14 +22,12 @@ class PatternMatchMetric(BaseMetric):
         expected_pattern: str,
         case_sensitive: bool = False,
         threshold: float = 1.0,
-        strict_mode: bool = False,
         verbose_mode: bool = False,
     ):
         self.expected_pattern = expected_pattern.strip()
         self.case_sensitive = case_sensitive
-        self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
-        self.threshold = 1.0 if strict_mode else threshold
+        self.threshold = threshold
 
         flags = 0 if case_sensitive else re.IGNORECASE
         try:

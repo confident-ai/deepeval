@@ -24,16 +24,10 @@ class ExactMatchMetric(BaseMetric):
     def __init__(
         self,
         compute_f1: bool = True,
-        threshold: float = 0.5,
-        include_reason: bool = True,
-        async_mode: bool = True,
-        strict_mode: bool = False,
+        threshold: float = 1,
         verbose_mode: bool = False,
     ):
-        self.threshold = 1 if strict_mode else threshold
-        self.include_reason = include_reason
-        self.async_mode = async_mode
-        self.strict_mode = strict_mode
+        self.threshold = threshold
         self.verbose_mode = verbose_mode
         self.compute_f1 = compute_f1
 
@@ -58,13 +52,14 @@ class ExactMatchMetric(BaseMetric):
                     "The actual and expected outputs are exact matches."
                 )
             elif self.compute_f1:
-                self.precision, self.recall, self.f1 = (
-                    self._compute_precision_recall_f1(expected, actual)
+                self.precision, self.recall, self.f1, matched_tokens = self._compute_precision_recall_f1(
+                    expected, actual
                 )
                 self.score = self.f1
                 self.reason = (
                     f"Outputs are not exact matches. "
-                    f"Precision={self.precision:.2f}, Recall={self.recall:.2f}, F1={self.f1:.2f}"
+                    f"Precision={self.precision:.2f}, Recall={self.recall:.2f}, F1={self.f1:.2f} "
+                    f"Matched Tokens: {matched_tokens} "
                 )
             else:
                 self.score = self.precision = self.recall = self.f1 = 0.0
@@ -118,6 +113,7 @@ class ExactMatchMetric(BaseMetric):
         expected_counts = Counter(expected_tokens)
         actual_counts = Counter(actual_tokens)
         overlap = sum((expected_counts & actual_counts).values())
+        overlap_tokens = list((expected_counts & actual_counts).elements())
 
         len_expected, len_actual = len(expected_tokens), len(actual_tokens)
         if len_expected == 0 or len_actual == 0:
@@ -131,7 +127,7 @@ class ExactMatchMetric(BaseMetric):
             else 0.0
         )
 
-        return precision, recall, f1
+        return precision, recall, f1, overlap_tokens
 
     def is_successful(self) -> bool:
         if self.error is not None:
