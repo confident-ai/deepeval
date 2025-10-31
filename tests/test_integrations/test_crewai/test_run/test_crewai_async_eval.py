@@ -44,11 +44,7 @@ task = Task(
     agent=agent,
 )
 
-crew = Crew(
-    agents=[agent],
-    tasks=[task],
-    tracing=False
-)
+crew = Crew(agents=[agent], tasks=[task], tracing=False)
 
 _current_dir = os.path.dirname(os.path.abspath(__file__))
 
